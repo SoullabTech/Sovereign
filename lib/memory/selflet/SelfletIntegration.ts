@@ -22,8 +22,6 @@
 import { selfletChain } from './SelfletChain';
 import { selfletBoundaryDetector } from './SelfletBoundaryDetector';
 import { selfletRituals } from './SelfletRituals';
-import { calculateSurfacingScore, type SurfacingResult } from './SelfletSurfacingScore';
-import { SELFLET_SURFACING_CONFIG } from './SelfletSurfacingConfig';
 import {
   SelfletContext,
   BoundarySignal,
@@ -31,74 +29,6 @@ import {
   Element,
   ReflectionPrompt,
 } from './types';
-
-// ═══════════════════════════════════════════════════════════════
-// THEME INFERENCE (fallback when relationship memory is empty)
-// ═══════════════════════════════════════════════════════════════
-
-const THEME_KEYWORDS: Record<string, string[]> = {
-  earth: ['ground', 'grounding', 'stable', 'stability', 'root', 'body', 'practical', 'secure', 'safety', 'home'],
-  water: ['feel', 'feeling', 'emotion', 'grief', 'love', 'heart', 'flow', 'tears', 'sad', 'relationship'],
-  fire: ['passion', 'action', 'will', 'courage', 'anger', 'drive', 'purpose', 'vision', 'decide', 'transform'],
-  air: ['think', 'thought', 'mind', 'clarity', 'understand', 'communicate', 'idea', 'analyze', 'perspective'],
-  aether: ['soul', 'spirit', 'meaning', 'mystery', 'dream', 'synchronicity', 'sacred', 'wisdom', 'archetype'],
-};
-
-/**
- * Extract themes from user message text (fallback for new users)
- */
-function inferThemesFromMessage(message: string): string[] {
-  if (!message) return [];
-  const t = message.toLowerCase();
-  const themes: string[] = [];
-
-  for (const [theme, keywords] of Object.entries(THEME_KEYWORDS)) {
-    if (keywords.some(kw => t.includes(kw))) {
-      themes.push(theme);
-    }
-  }
-
-  return themes;
-}
-
-/**
- * Word-boundary-aware literal theme matching.
- * Prevents false positives like "distrust" matching "trust".
- * Handles both single words (token match) and phrases (padded substring).
- * Punctuation-safe: "inner wisdom," still matches "inner wisdom".
- */
-function literalThemeMatches(msgText: string, themes: string[]): string[] {
-  // Clean text once: remove punctuation, normalize whitespace
-  const cleaned = msgText
-    .toLowerCase()
-    .replace(/[^a-z0-9\s'-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // Early return for empty input
-  if (!cleaned) return [];
-
-  const norm = ` ${cleaned} `;
-  const tokens = new Set(cleaned.split(' ').filter(Boolean));
-
-  return (themes ?? []).filter(t => {
-    // Normalize theme: strip quotes, then clean same way as message
-    const themeClean = (t ?? '')
-      .toLowerCase()
-      .trim()
-      .replace(/^["']|["']$/g, '')
-      .replace(/[^a-z0-9\s'-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (!themeClean) return false;
-
-    // single word → token match (prevents distrust/thrust false positives)
-    if (!themeClean.includes(' ')) return tokens.has(themeClean);
-
-    // phrase → whitespace-padded substring match
-    return norm.includes(` ${themeClean} `);
-  });
-}
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT LOADING
@@ -116,21 +46,6 @@ export interface SelfletLoadResult {
   surfacedMessagePrompt?: string;
   // Phase 2E fallback: If model doesn't naturally include acknowledgment, prepend this
   requiredAcknowledgment?: string;
-<<<<<<< HEAD
-}
-
-/**
- * Phase 2I: Extended options for surfacing gating
- */
-export interface SelfletLoadOptions {
-  currentThemes?: string[];
-  userMessage?: string;
-  sessionId?: string;
-  turnNumber?: number;
-  emotionalIntensity?: number;
-  contextMode?: string;
-=======
->>>>>>> ecstatic-brown
 }
 
 /**
@@ -139,24 +54,12 @@ export interface SelfletLoadOptions {
  *
  * Uses granular try/catch so failures in one area don't block others.
  * surfacedMessageId is ALWAYS returned (null if no message).
-<<<<<<< HEAD
- *
- * Phase 2I: Now includes surfacing gating (cooldowns, limits, intensity checks)
-=======
->>>>>>> ecstatic-brown
  */
 export async function loadSelfletContext(
   userId: string,
-  currentThemesOrOptions?: string[] | SelfletLoadOptions,
+  currentThemes?: string[],
   userMessage?: string
 ): Promise<SelfletLoadResult> {
-<<<<<<< HEAD
-  // Normalize arguments (backward compatible)
-  const opts: SelfletLoadOptions = Array.isArray(currentThemesOrOptions)
-    ? { currentThemes: currentThemesOrOptions, userMessage }
-    : (currentThemesOrOptions ?? {});
-
-  const currentThemes = opts.currentThemes;
   // Initialize with safe defaults
   let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
   let promptInjection = '';
@@ -167,18 +70,6 @@ export async function loadSelfletContext(
   let surfacedMessagePrompt: string | undefined;
   let requiredAcknowledgment: string | undefined;
 
-=======
-  // Initialize with safe defaults
-  let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
-  let promptInjection = '';
-  let pendingReflection: ReflectionPrompt | null = null;
-  let shouldSurfaceReflection = false;
-  let surfacedMessageId: string | undefined;
-  let surfacedDeliveryContext: Record<string, unknown> | undefined;
-  let surfacedMessagePrompt: string | undefined;
-  let requiredAcknowledgment: string | undefined;
-
->>>>>>> ecstatic-brown
   // 1) Build base context (should not prevent pending-message surfacing)
   try {
     context = await selfletChain.buildContext(userId);
@@ -208,108 +99,6 @@ export async function loadSelfletContext(
     } catch (err) {
       console.error('[SELFLET] shouldSurfaceReflection failed:', err);
     }
-<<<<<<< HEAD
-  }
-
-  // 3) Fetch pending message for context (CRITICAL for delivery marking)
-  // Phase 2I: Apply surfacing gating before choosing to surface
-  try {
-    const pendingMsg = await selfletChain.getPendingMessageForContext({
-      userId,
-      currentThemes: currentThemes ?? [],
-      limit: 1,
-    });
-
-    if (pendingMsg) {
-      // Phase 2I: Check gating rules before surfacing
-      const userState = await selfletChain.getUserSelfletState(
-        userId,
-        opts.sessionId
-      );
-
-      // Combine relationship themes with inferred themes from user message
-      const relationshipThemes = currentThemes ?? [];
-      const inferredThemes = opts.userMessage ? inferThemesFromMessage(opts.userMessage) : [];
-
-      // Second pass: word-boundary-aware literal theme matching
-      // This catches human themes like 'trust', 'patience', 'growth' that elemental inference misses
-      // Uses token matching to prevent false positives (e.g., "distrust" won't match "trust")
-      const literalMatches = literalThemeMatches(
-        opts.userMessage ?? '',
-        pendingMsg.relevanceThemes ?? []
-      );
-
-      const detectedThemes = [...new Set([...relationshipThemes, ...inferredThemes, ...literalMatches])];
-
-      const surfacingResult: SurfacingResult = calculateSurfacingScore(
-        pendingMsg,
-        {
-          sessionId: opts.sessionId,
-          turnNumber: opts.turnNumber,
-          detectedThemes,
-          emotionalIntensity: opts.emotionalIntensity ?? 0,
-          contextMode: opts.contextMode,
-          lastSelfletTurn: userState.lastSelfletTurn,
-          lastSelfletTime: userState.lastSelfletTime,
-          selfletsSurfacedThisSession: userState.countThisSession,
-        },
-        SELFLET_SURFACING_CONFIG
-      );
-
-      if (!surfacingResult.shouldSurface) {
-        // Structured gating log for debugging
-        console.log('[SELFLET] ⏸️ Gated:', JSON.stringify({
-          userId,
-          messageId: pendingMsg.id,
-          sessionId: opts.sessionId,
-          turnNumber: opts.turnNumber,
-          reason: surfacingResult.reason,
-          blockedBy: surfacingResult.blockedBy,
-          score: surfacingResult.score,
-          detectedThemes,
-          messageThemes: pendingMsg.relevanceThemes,
-          cooldownTurns: SELFLET_SURFACING_CONFIG.cooldownTurns,
-          cooldownMinutes: SELFLET_SURFACING_CONFIG.cooldownMinutes,
-          sessionCount: userState.countThisSession,
-          lastSelfletTurn: userState.lastSelfletTurn,
-        }));
-        // Skip surfacing - leave pendingMsg undelivered for later
-      } else {
-        surfacedMessageId = pendingMsg.id;
-        surfacedDeliveryContext = {
-          messageTitle: pendingMsg.title,
-          messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
-          messageType: pendingMsg.messageType,
-          fromSelfletId: pendingMsg.fromSelfletId,
-          relevanceThemes: pendingMsg.relevanceThemes,
-          surfacedAt: new Date().toISOString(),
-          // Phase 2I: Include session/turn for delivery tracking
-          sessionId: opts.sessionId,
-          turnNumber: opts.turnNumber,
-          surfacingScore: surfacingResult.score,
-          // Phase 2K-b: delivery count for "Returning" badge
-          deliveryCount: pendingMsg.deliveryCount ?? 0,
-        };
-        surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
-        requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
-        // Structured surfacing log
-        console.log('[SELFLET] 📬 Surfaced:', JSON.stringify({
-          userId,
-          sessionId: opts.sessionId,
-          turnNumber: opts.turnNumber,
-          messageId: pendingMsg.id,
-          title: pendingMsg.title,
-          score: surfacingResult.score,
-          detectedThemes,
-          messageThemes: pendingMsg.relevanceThemes,
-        }));
-      }
-    }
-  } catch (err) {
-    console.error('[SELFLET] getPendingMessageForContext failed:', err);
-  }
-
-=======
   }
 
   // 3) Fetch pending message for context (CRITICAL for delivery marking)
@@ -337,7 +126,6 @@ export async function loadSelfletContext(
     console.error('[SELFLET] getPendingMessageForContext failed:', err);
   }
 
->>>>>>> ecstatic-brown
   return {
     context,
     promptInjection,
@@ -426,10 +214,6 @@ export interface PostResponseInput {
   sessionDurationMinutes?: number;
   breakthroughCountThisSession?: number;
 
-  // Phase 2I: Session/turn tracking for delivery gating
-  sessionId?: string;
-  turnNumber?: number;
-
   // Message that was surfaced during loadSelfletContext()
   surfacedSelfletMessageId?: string;
   surfacedDeliveryContext?: Record<string, unknown>;
@@ -486,30 +270,17 @@ export async function processSelfletAfterResponse(
 
     // Phase 2C: Mark surfaced message as delivered (BEFORE boundary detection)
     // This ensures messages are marked delivered once surfaced, regardless of boundary
-<<<<<<< HEAD
-    // Phase 2I: Include session/turn for cooldown gating
-=======
->>>>>>> ecstatic-brown
     if (input.surfacedSelfletMessageId) {
       try {
         await selfletChain.markMessageDeliveredById({
           messageId: input.surfacedSelfletMessageId,
-<<<<<<< HEAD
-          deliveredSessionId: input.sessionId,
-          deliveredTurnId: input.turnNumber,
-=======
->>>>>>> ecstatic-brown
           deliveryContext: {
             ...(input.surfacedDeliveryContext || {}),
             deliveredAt: new Date().toISOString(),
             assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
           },
         });
-<<<<<<< HEAD
-        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered (session=${input.sessionId}, turn=${input.turnNumber})`);
-=======
         console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
->>>>>>> ecstatic-brown
       } catch (deliveryErr) {
         console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
       }

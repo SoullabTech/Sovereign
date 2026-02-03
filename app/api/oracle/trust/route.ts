@@ -1,8 +1,6 @@
 // @ts-nocheck
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-<<<<<<< HEAD
-=======
 
 export const revalidate = false;
 
@@ -24,20 +22,12 @@ async function getLogger() {
   }
   return _logger;
 }
->>>>>>> ecstatic-brown
 
 /**
- * Oracle Trust Metrics API - Temporarily unavailable
- * PersonalOracleAgent is being migrated from legacy backend
+ * GET /api/oracle/trust
+ * Get user's trust metrics and stage evolution
  */
-
 export async function GET(request: NextRequest) {
-<<<<<<< HEAD
-  return NextResponse.json(
-    { ok: false, error: 'Trust metrics temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-=======
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
@@ -92,17 +82,13 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
->>>>>>> ecstatic-brown
 }
 
+/**
+ * POST /api/oracle/trust/feedback
+ * Process user feedback to evolve trust and personality
+ */
 export async function POST(request: NextRequest) {
-<<<<<<< HEAD
-  return NextResponse.json(
-    { ok: false, error: 'Trust metrics temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-}
-=======
   try {
     const body = await request.json();
     const { userId, feedback } = body;
@@ -148,4 +134,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
->>>>>>> ecstatic-brown

@@ -1,9 +1,6 @@
 // @ts-nocheck - Prototype file, not type-checked
-<<<<<<< HEAD
-=======
 // Production requires force-dynamic for per-user database access
 export const dynamic = 'force-dynamic';
->>>>>>> ecstatic-brown
 import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;

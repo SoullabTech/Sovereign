@@ -18,11 +18,7 @@ import {
 import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
-<<<<<<< HEAD
-import { PARENTING_REPAIR_SYSTEM_PROMPT } from '@/lib/consciousness/parentingRepairPrompt';
-=======
 import { PARENTING_REPAIR_SYSTEM_PROMPT } from '@/backend/src/agents/prompts/parentingRepairPrompt';
->>>>>>> ecstatic-brown
 import {
   evaluateResponseAgainstAxioms,
   hasOpusRupture,
@@ -30,7 +26,6 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
-import type { ConsciousnessLevel } from '@/lib/consciousness/ConsciousnessLevelDetector';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -72,7 +67,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60; // seconds
 
 const ORACLE_PROFILE = 'DEEP' as const;
-const ORACLE_LEVEL: ConsciousnessLevel = 5;
+const ORACLE_LEVEL = 5 as const;
 
 // Optional hard gate for the premium endpoint (recommended for beta)
 const ORACLE_API_KEY = process.env.ORACLE_API_KEY || '';
@@ -302,12 +297,7 @@ export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
-<<<<<<< HEAD
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let body: Record<string, unknown> | null = null; // Declared outside try for catch-block access
-=======
   let body: ConversationBody | undefined;
->>>>>>> ecstatic-brown
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -359,14 +349,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-<<<<<<< HEAD
-    body = await request.json() as Record<string, unknown>;
-    const { message, userId, sessionId } = body as { message?: string; userId?: string; sessionId?: string };
-=======
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
     const { message, userId, sessionId } = parsed;
->>>>>>> ecstatic-brown
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -433,13 +418,8 @@ export async function POST(request: NextRequest) {
       if (cognitiveProfile) {
         fieldSafety = enforceFieldSafety({
           cognitiveProfile,
-<<<<<<< HEAD
-          element: body?.element as string | null | undefined,
-          userName: body?.userName as string | null | undefined,
-=======
           element: body.element,
           userName: serverUserName, // Use server-derived name, not body.userName
->>>>>>> ecstatic-brown
           context: 'oracle',
         });
 
@@ -791,16 +771,7 @@ export async function POST(request: NextRequest) {
             violations: axiomSummary.violations,
             ruptureDetected,
             warningsDetected,
-<<<<<<< HEAD
-            evaluations: axiomEvals.map(e => ({
-              id: e.axiomId,
-              severity: (e.severity ?? 'info') as 'gold' | 'warning' | 'violation' | 'info',
-              ok: e.ok,
-              notes: e.notes ? [e.notes] : undefined,
-            })),
-=======
             evaluations: axiomEvals as any,
->>>>>>> ecstatic-brown
             notes: axiomSummary.notes,
           },
         });
@@ -953,16 +924,6 @@ export async function POST(request: NextRequest) {
         {
           messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
           fieldStates: [{
-<<<<<<< HEAD
-            fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
-            water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
-            earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
-            air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
-            aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4,
-            coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
-          }],
-          insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
-=======
             fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
             water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
             earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
@@ -971,15 +932,11 @@ export async function POST(request: NextRequest) {
             coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
           }],
           insights: extractedInsights,  // 🧠 Use extracted insights instead of just symbol patterns
->>>>>>> ecstatic-brown
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
             phase: spiralogicCell.phase,
-<<<<<<< HEAD
-=======
             canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
->>>>>>> ecstatic-brown
             trustLevel,
             conversationDepth
           }
@@ -1006,23 +963,6 @@ export async function POST(request: NextRequest) {
         archetypalResonances: activeFrameworks,
         frameworksActive: activeFrameworks,
         elementalLevels: {
-<<<<<<< HEAD
-          fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4
-        },
-        fieldStates: [{
-          fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4,
-          coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
-        }],
-        insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
-=======
           fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
           water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
           earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
@@ -1038,15 +978,11 @@ export async function POST(request: NextRequest) {
           coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
         }],
         insights: extractedInsights,  // 🧠 Use extracted insights
->>>>>>> ecstatic-brown
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
           phase: spiralogicCell.phase,
-<<<<<<< HEAD
-=======
           canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
->>>>>>> ecstatic-brown
           trustLevel,
           conversationDepth
         }
@@ -1066,7 +1002,7 @@ export async function POST(request: NextRequest) {
         conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
         spiralDynamics: {
           currentStage: memoryContext?.spiralDevelopmentContext?.currentPrimaryStage || null,
-          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.context}`,
+          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.canonicalQuestion}`,
         },
         sessionThread: {
           emergingAwareness: memoryContext?.relatedInsights?.map((i: any) => i.insight_type) || []
@@ -1281,13 +1217,8 @@ export async function POST(request: NextRequest) {
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
       requestId,
-<<<<<<< HEAD
-      userId: body?.userId as string | undefined,
-      sessionId: body?.sessionId as string | undefined,
-=======
       userId: body?.userId,
       sessionId: body?.sessionId,
->>>>>>> ecstatic-brown
       ip,
       level: ORACLE_LEVEL,
       status: 'error',
@@ -1395,7 +1326,7 @@ async function generateSpiralogicResponseWithLLM(
   suggestedInterventions: Array<{flowId: string; name: string; description: string; confidence: number}>,
   conversationDepth: number,
   trustLevel: number,
-  consciousnessLevel: ConsciousnessLevel,
+  consciousnessLevel: number,
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,

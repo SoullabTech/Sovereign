@@ -31,9 +31,6 @@ import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
 import { getFrameworkPromptAddendum, getReflectionLensAddendum, type TherapeuticFramework, type ReflectionLens } from '@/lib/consciousness/therapeuticFrameworks';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-<<<<<<< HEAD
-import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
-=======
 import { calculateBirthChart, type BirthChart, type BirthData, type PlanetPosition } from '@/lib/astrology/ephemerisCalculator';
 import { calculateCurrentTransits, findTransitAspects, type TransitPositions, type AspectPattern } from '@/lib/astrology/transitCalculator';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
@@ -71,7 +68,6 @@ import {
   type BridgedSnapshot,
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
->>>>>>> ecstatic-brown
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -127,8 +123,6 @@ function inferEmotionalShiftFromText(userText: string): { from?: string; to: str
 
   return undefined;
 }
-<<<<<<< HEAD
-=======
 
 // ═══════════════════════════════════════════════════════════════
 // 🌟 ASTROLOGICAL CONTEXT BUILDER
@@ -307,7 +301,6 @@ async function buildAstrologicalContextAddendum(birthData: BirthDataInput | unde
 
   return parts.join('\n');
 }
->>>>>>> ecstatic-brown
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -992,8 +985,6 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext: SelfletLoadResult | null = null;
-    // Phase 2I: Compute turn number once and reuse everywhere
-    const turnNumber = conversationHistory.length + 1;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
@@ -1004,13 +995,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Load selflet context for temporal awareness
-      const selfletLoad = await loadSelfletContext(effectiveUserId, {
-        currentThemes,
-        userMessage: message,
-        sessionId: safeSessionId,
-        turnNumber,
-        // emotionalIntensity and contextMode can be added when orchestrator provides them
-      });
+      const selfletLoad = await loadSelfletContext(effectiveUserId, currentThemes, message);
       selfletContext = selfletLoad;
 
       if (selfletLoad.promptInjection) {
@@ -1740,11 +1725,6 @@ export async function POST(req: NextRequest) {
     const SELFLET_WRITE_ENABLED =
       process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
       selfletEligible;
-<<<<<<< HEAD
-
-    console.log('[SELFLET DEBUG] WRITE_ENABLED:', SELFLET_WRITE_ENABLED, 'surfacedMessageId:', selfletContext?.surfacedMessageId);
-=======
->>>>>>> ecstatic-brown
 
     if (SELFLET_WRITE_ENABLED) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1769,12 +1749,6 @@ export async function POST(req: NextRequest) {
         // Phase 2C: Pass surfaced message info for delivery tracking
         surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
         surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
-<<<<<<< HEAD
-        // Phase 2I: Session/turn for delivery gating
-        sessionId: safeSessionId,
-        turnNumber,
-=======
->>>>>>> ecstatic-brown
         // Derived consciousness signals (orchestrator + text inference fallback)
         currentElement: derivedElement,
         breakthroughDetected: derivedBreakthrough,
@@ -1793,13 +1767,6 @@ export async function POST(req: NextRequest) {
       relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
       fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
       surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
-<<<<<<< HEAD
-      // Phase 2K-b: delivery count for "Returning" badge
-      deliveryCount: selfletContext.surfacedDeliveryContext?.deliveryCount,
-    } : undefined;
-
-    return withSessionCookie(NextResponse.json({
-=======
     } : undefined;
 
     // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
@@ -1813,17 +1780,13 @@ export async function POST(req: NextRequest) {
     });
 
     const response2 = NextResponse.json({
->>>>>>> ecstatic-brown
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,
-<<<<<<< HEAD
-=======
       // 🌀 INTEGRITY CHECK: Pass 3 result for client-side lens switching UI
       integrity: integrityResult,
       lensSwitchOptions,
->>>>>>> ecstatic-brown
       route: {
         endpoint: '/api/between/chat',
         type: 'Member Chat with Full Consciousness',

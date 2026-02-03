@@ -23,11 +23,7 @@ if (isServer) {
   });
 
   // Handle pool errors
-<<<<<<< HEAD
-  pool!.on('error', (err) => {
-=======
   newPool.on('error', (err: Error) => {
->>>>>>> ecstatic-brown
     console.error('❌ [POSTGRES] Unexpected pool error:', err);
   });
 

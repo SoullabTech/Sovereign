@@ -1,11 +1,6 @@
 // Production requires force-dynamic for per-user database access
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-<<<<<<< HEAD:app/api/journal/route.ts
-
-// Force dynamic for Docker/dev builds
-export const dynamic = 'force-dynamic';
-=======
 
 export const revalidate = false;
 import { z } from "zod";
@@ -14,27 +9,68 @@ import { llamaService } from "../../_backend/src/services/memory/LlamaService";
 import { logger } from "../../_backend/src/utils/logger";
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
->>>>>>> ecstatic-brown:app/api/journal/list/route.ts
 
-/**
- * Journal API - Temporarily unavailable
- * Services are being migrated from legacy backend
- */
+const JournalSchema = z.object({
+  userId: z.string(),
+  title: z.string(),
+  content: z.string(),
+  mood: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
 
 export async function POST(req: NextRequest) {
-  return NextResponse.json(
-    { ok: false, error: 'Journal service temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
+  try {
+    const body = await req.json();
+    const parsed = JournalSchema.parse(body);
+
+    // Initialize memory services if needed
+    const dbPath = process.env.MEMORY_DB_PATH || './data/soullab.sqlite';
+    await memoryStore.init(dbPath);
+    await llamaService.init();
+
+    // 1. Save in SQLite with enhanced metadata
+    const entryId = await memoryStore.saveJournalEntry(
+      parsed.userId,
+      parsed.title,
+      parsed.content,
+      parsed.mood,
+      parsed.tags
+    );
+
+    // 2. Index in LlamaIndex for semantic search
+    await llamaService.addMemory(parsed.userId, {
+      id: entryId,
+      type: "journal",
+      content: parsed.content,
+      meta: { 
+        title: parsed.title, 
+        mood: parsed.mood, 
+        tags: parsed.tags,
+        timestamp: new Date().toISOString()
+      },
+    });
+
+    logger.info("Journal entry saved and indexed", {
+      userId: parsed.userId.substring(0, 8) + '...',
+      entryId,
+      contentLength: parsed.content.length
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      entryId,
+      message: "Journal entry saved and indexed for Oracle memory"
+    });
+  } catch (err: any) {
+    logger.error("Journal POST error:", err);
+    return NextResponse.json({ 
+      error: err.message,
+      details: err instanceof z.ZodError ? err.errors : undefined
+    }, { status: 500 });
+  }
 }
 
 export async function GET(req: NextRequest) {
-<<<<<<< HEAD:app/api/journal/route.ts
-  return NextResponse.json(
-    { ok: false, error: 'Journal service temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-=======
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
@@ -85,5 +121,38 @@ export async function GET(req: NextRequest) {
       error: err.message 
     }, { status: 500 });
   }
->>>>>>> ecstatic-brown:app/api/journal/list/route.ts
+}
+
+// Retrieve a specific journal entry
+export async function getEntry(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const userId = req.nextUrl.searchParams.get("userId");
+    
+    if (!userId) {
+      return NextResponse.json({ 
+        error: "userId parameter is required" 
+      }, { status: 400 });
+    }
+
+    const dbPath = process.env.MEMORY_DB_PATH || './data/soullab.sqlite';
+    await memoryStore.init(dbPath);
+
+    const entry = await memoryStore.getJournalEntry(userId, params.id);
+    
+    if (!entry) {
+      return NextResponse.json({ 
+        error: "Journal entry not found" 
+      }, { status: 404 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      entry 
+    });
+  } catch (err: any) {
+    logger.error("Journal entry retrieval error:", err);
+    return NextResponse.json({ 
+      error: err.message 
+    }, { status: 500 });
+  }
 }

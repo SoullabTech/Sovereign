@@ -222,57 +222,35 @@ export default function TarotOraclePage() {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="min-h-screen bg-[#06060A] relative overflow-hidden">
-      {/* Atmospheric backdrop */}
-=======
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] via-[#7FB5B3] to-[#5A9A97] relative overflow-hidden">
       {/* Atmospheric Particles */}
->>>>>>> ecstatic-brown
       <div className="fixed inset-0 pointer-events-none">
-        {/* Multi-colored radial gradients */}
-        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(255,180,120,0.12),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(255,120,150,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(180,140,255,0.08),transparent_60%)]" />
-        {/* Dark overlay gradient */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
-        {/* Starfield dot pattern */}
-        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-      </div>
-
-      {/* Subtle atmospheric particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+        {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-<<<<<<< HEAD
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
-=======
             className="absolute w-1 h-1 bg-white/30 rounded-full"
->>>>>>> ecstatic-brown
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -30, 0],
-              opacity: [0.1, 0.4, 0.1],
-              scale: [1, 1.3, 1],
+              y: [0, -40, 0],
+              opacity: [0.2, 0.6, 0.2],
+              scale: [1, 1.5, 1],
             }}
             transition={{
-              duration: 5 + Math.random() * 7,
+              duration: 4 + Math.random() * 6,
               repeat: Infinity,
-              delay: Math.random() * 4,
+              delay: Math.random() * 3,
               ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-<<<<<<< HEAD
-=======
       {/* Subtle glow from below */}
       <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-teal-900/20 via-teal-800/10 to-transparent pointer-events-none" />
 
->>>>>>> ecstatic-brown
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
         <div className="w-full max-w-5xl">
@@ -285,24 +263,15 @@ export default function TarotOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-<<<<<<< HEAD
-              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm backdrop-blur hover:bg-white/10"
-=======
               className="flex items-center gap-2 text-teal-900/70 hover:text-teal-900 transition-colors"
->>>>>>> ecstatic-brown
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Oracle</span>
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm">Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-<<<<<<< HEAD
-              <Star className="w-6 h-6 text-amber-400/80" />
-              <h1 className="text-2xl font-light text-white tracking-wide">Tarot Oracle</h1>
-=======
               <Star className="w-6 h-6 text-teal-800" />
               <h1 className="text-2xl font-light text-teal-900 tracking-wide">Tarot Oracle</h1>
->>>>>>> ecstatic-brown
             </div>
 
             <div className="w-24" /> {/* Spacer for centering */}
@@ -331,15 +300,6 @@ export default function TarotOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-<<<<<<< HEAD
-                    <Star className="w-16 h-16 text-amber-400/60" />
-                  </motion.div>
-
-                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
-                    Ask Your Question
-                  </h2>
-                  <p className="text-white/70 text-lg">
-=======
                     <Star className="w-16 h-16 text-teal-800/80" />
                   </motion.div>
 
@@ -347,36 +307,23 @@ export default function TarotOraclePage() {
                     Ask Your Question
                   </h2>
                   <p className="text-teal-800/70 text-lg">
->>>>>>> ecstatic-brown
                     The cards are listening. Speak from your heart.
                   </p>
                 </div>
 
-<<<<<<< HEAD
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-=======
                 <div className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl">
->>>>>>> ecstatic-brown
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the cards?"
-<<<<<<< HEAD
-                    className="w-full h-32 px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all resize-none"
-=======
                     className="w-full h-32 px-4 py-3 bg-white/50 border border-teal-600/40 rounded-lg text-teal-900 placeholder-teal-700/50 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all resize-none"
->>>>>>> ecstatic-brown
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-<<<<<<< HEAD
-                    className="w-full mt-6 px-6 py-4 bg-white/10 hover:bg-white/15 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-=======
                     className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 disabled:from-teal-400/30 disabled:to-teal-500/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
->>>>>>> ecstatic-brown
                   >
                     <Sparkles className="w-5 h-5" />
                     Continue to Card Selection
@@ -394,17 +341,10 @@ export default function TarotOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="text-center mb-8">
-<<<<<<< HEAD
-                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
-                    Choose Your Spread
-                  </h2>
-                  <p className="text-white/70 text-lg max-w-2xl mx-auto">
-=======
                   <h2 className="text-4xl font-bold text-teal-900 mb-4">
                     Choose Your Spread
                   </h2>
                   <p className="text-teal-800/70 text-lg max-w-2xl mx-auto">
->>>>>>> ecstatic-brown
                     Each spread offers a different perspective on your question
                   </p>
                 </div>
@@ -419,35 +359,6 @@ export default function TarotOraclePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-<<<<<<< HEAD
-                        className="group p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.07] hover:border-amber-400/30 transition-all duration-300"
-                        whileHover={{ y: -4, scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex flex-col items-center text-center relative">
-                          {/* Subtle sigil in background */}
-                          <div className="absolute right-0 top-0 text-4xl font-semibold text-white/10 pointer-events-none select-none">
-                            ✶
-                          </div>
-
-                          <div className="w-16 h-16 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center mb-4 transition-colors">
-                            <Icon className="w-8 h-8 text-white/80" />
-                          </div>
-
-                          <h3 className="text-xl font-semibold text-white mb-2 tracking-tight">
-                            {spread.name}
-                          </h3>
-
-                          <span className="inline-block px-3 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/80 text-xs rounded-full mb-3">
-                            {spread.recommended}
-                          </span>
-
-                          <p className="text-white/70 text-sm mb-3">
-                            {spread.description}
-                          </p>
-
-                          <div className="text-white/50 text-xs">
-=======
                         className="group p-6 bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl hover:border-teal-500/50 hover:shadow-2xl hover:shadow-teal-600/20 transition-all duration-300"
                         whileHover={{ y: -4, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -470,7 +381,6 @@ export default function TarotOraclePage() {
                           </p>
 
                           <div className="text-teal-700/60 text-xs">
->>>>>>> ecstatic-brown
                             {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
                           </div>
                         </div>
@@ -501,15 +411,6 @@ export default function TarotOraclePage() {
                   }}
                   className="mb-8"
                 >
-<<<<<<< HEAD
-                  <Sparkles className="w-20 h-20 text-amber-400/60" />
-                </motion.div>
-
-                <h2 className="text-3xl font-semibold text-white mb-4 tracking-tight">
-                  Drawing the Cards...
-                </h2>
-                <p className="text-white/70 text-lg">
-=======
                   <Sparkles className="w-20 h-20 text-teal-800" />
                 </motion.div>
 
@@ -517,7 +418,6 @@ export default function TarotOraclePage() {
                   Drawing the Cards...
                 </h2>
                 <p className="text-teal-800/70 text-lg">
->>>>>>> ecstatic-brown
                   The oracle speaks through sacred symbols
                 </p>
               </motion.div>
@@ -532,11 +432,7 @@ export default function TarotOraclePage() {
               >
                 {/* Cards Display */}
                 <div className="mb-12">
-<<<<<<< HEAD
-                  <h2 className="text-3xl font-semibold text-white text-center mb-8 tracking-tight">
-=======
                   <h2 className="text-3xl font-bold text-teal-900 text-center mb-8">
->>>>>>> ecstatic-brown
                     {reading.spreadName}
                   </h2>
 
@@ -556,21 +452,6 @@ export default function TarotOraclePage() {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="perspective-1000"
                       >
-<<<<<<< HEAD
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl relative overflow-hidden">
-                          {/* Subtle sigil in background */}
-                          <div className="absolute right-3 top-3 text-6xl font-semibold text-white/10 pointer-events-none select-none">
-                            ✶
-                          </div>
-
-                          <div className="text-center mb-4 relative">
-                            <div className="text-white/50 text-xs uppercase tracking-wider mb-2">
-                              {card.position}
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">
-                              {card.name}
-                              {card.reversed && <span className="text-rose-400 ml-2">(R)</span>}
-=======
                         <div className="bg-white/40 backdrop-blur-xl border border-teal-600/40 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl">
                           <div className="text-center mb-4">
                             <div className="text-teal-700/70 text-xs uppercase tracking-wider mb-2">
@@ -579,7 +460,6 @@ export default function TarotOraclePage() {
                             <h3 className="text-lg font-bold text-teal-900">
                               {card.name}
                               {card.reversed && <span className="text-red-600 ml-2">(R)</span>}
->>>>>>> ecstatic-brown
                             </h3>
                           </div>
 
@@ -592,11 +472,7 @@ export default function TarotOraclePage() {
                               {card.keywords.slice(0, 3).map((keyword, i) => (
                                 <span
                                   key={i}
-<<<<<<< HEAD
-                                  className="px-2 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/70 text-xs rounded"
-=======
                                   className="px-2 py-1 bg-teal-700/20 text-teal-800 text-xs rounded"
->>>>>>> ecstatic-brown
                                 >
                                   {keyword}
                                 </span>
@@ -615,58 +491,29 @@ export default function TarotOraclePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-<<<<<<< HEAD
-                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
-                  >
-                    <div className="flex items-center gap-3 mb-6">
-                      <BookOpen className="w-6 h-6 text-amber-400/80" />
-                      <h3 className="text-2xl font-semibold text-white tracking-tight">Oracle's Wisdom</h3>
-=======
                     className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl"
                   >
                     <div className="flex items-center gap-3 mb-6">
                       <BookOpen className="w-6 h-6 text-teal-800" />
                       <h3 className="text-2xl font-bold text-teal-900">Oracle's Wisdom</h3>
->>>>>>> ecstatic-brown
                     </div>
 
                     <div className="space-y-6">
                       <div>
-<<<<<<< HEAD
-                        <h4 className="text-white/90 font-medium mb-2">Overall Message:</h4>
-                        <p className="text-white/70 leading-relaxed">
-=======
                         <h4 className="text-teal-800 font-semibold mb-2">Overall Message:</h4>
                         <p className="text-teal-900/80 leading-relaxed">
->>>>>>> ecstatic-brown
                           {reading.overallMessage}
                         </p>
                       </div>
 
                       <div>
-<<<<<<< HEAD
-                        <h4 className="text-white/90 font-medium mb-2">Guidance:</h4>
-                        <p className="text-white/70 leading-relaxed">
-=======
                         <h4 className="text-teal-800 font-semibold mb-2">Guidance:</h4>
                         <p className="text-teal-900/80 leading-relaxed">
->>>>>>> ecstatic-brown
                           {reading.advice}
                         </p>
                       </div>
 
                       {/* Individual Card Interpretations */}
-<<<<<<< HEAD
-                      <div className="border-t border-white/10 pt-6 mt-6">
-                        <h4 className="text-white/90 font-medium mb-4">Card Details:</h4>
-                        <div className="space-y-4">
-                          {reading.cards.map((card, index) => (
-                            <div key={index} className="bg-black/20 border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-2">
-                                {card.name} - {card.position}
-                              </h5>
-                              <p className="text-white/70 text-sm">
-=======
                       <div className="border-t border-teal-600/30 pt-6 mt-6">
                         <h4 className="text-teal-800 font-semibold mb-4">Card Details:</h4>
                         <div className="space-y-4">
@@ -676,19 +523,10 @@ export default function TarotOraclePage() {
                                 {card.name} - {card.position}
                               </h5>
                               <p className="text-teal-800/70 text-sm">
->>>>>>> ecstatic-brown
                                 {card.interpretation}
                               </p>
                             </div>
                           ))}
-                        </div>
-                      </div>
-
-                      {/* Ritual cue section */}
-                      <div className="border border-white/10 bg-black/20 rounded-xl px-4 py-3">
-                        <div className="text-xs font-medium text-white/80">Ritual cue</div>
-                        <div className="mt-1 text-sm text-white/70">
-                          Hold the question gently. Let the image speak first.
                         </div>
                       </div>
                     </div>
@@ -746,22 +584,14 @@ export default function TarotOraclePage() {
                       </button>
                       <button
                         onClick={handleNewReading}
-<<<<<<< HEAD
-                        className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-=======
                         className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
->>>>>>> ecstatic-brown
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-<<<<<<< HEAD
-                        className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 font-medium rounded-lg transition-all duration-300"
-=======
                         className="px-6 py-3 bg-teal-800/20 hover:bg-teal-700/30 text-teal-900 font-semibold rounded-lg transition-all duration-300"
->>>>>>> ecstatic-brown
                       >
                         Back to Oracle
                       </button>

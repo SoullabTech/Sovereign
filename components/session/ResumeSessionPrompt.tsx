@@ -2,21 +2,13 @@
 
 import React from 'react';
 import { Play, Plus } from 'lucide-react';
-<<<<<<< HEAD
-import { SessionPhase } from '@/lib/session/SessionTimer';
-=======
 import type { SessionPhase } from '@/lib/session/SessionTimer';
->>>>>>> ecstatic-brown
 
 interface ResumeSessionPromptProps {
   onResume?: () => void;
   onNewSession?: () => void;
   lastSessionTime?: string;
-<<<<<<< HEAD
-  // Additional props from OracleConversation
-=======
   // Extended props for OracleConversation.tsx
->>>>>>> ecstatic-brown
   isOpen?: boolean;
   remainingTime?: string;
   phase?: SessionPhase;
@@ -24,22 +16,7 @@ interface ResumeSessionPromptProps {
   onDismiss?: () => void;
 }
 
-export function ResumeSessionPrompt({
-  onResume,
-  onNewSession,
-  lastSessionTime,
-  isOpen = true,
-  remainingTime,
-  phase,
-  onStartNew,
-  onDismiss
-}: ResumeSessionPromptProps) {
-  // If isOpen is explicitly false, don't render
-  if (!isOpen) return null;
-
-  // Use onStartNew if provided, otherwise fall back to onNewSession
-  const handleNewSession = onStartNew ?? onNewSession;
-
+export function ResumeSessionPrompt({ onResume, onNewSession, lastSessionTime }: ResumeSessionPromptProps) {
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
       <div className="flex items-center justify-between">
@@ -58,25 +35,14 @@ export function ResumeSessionPrompt({
             Resume
           </button>
           <button
-            onClick={handleNewSession}
+            onClick={onNewSession}
             className="flex items-center gap-1 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
           >
             <Plus className="w-3 h-3" />
             New
           </button>
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="flex items-center gap-1 px-3 py-1 bg-transparent text-gray-500 rounded text-sm hover:bg-gray-100"
-            >
-              Dismiss
-            </button>
-          )}
         </div>
       </div>
-      {remainingTime && (
-        <p className="text-xs text-blue-500 mt-1">Time remaining: {remainingTime}</p>
-      )}
     </div>
   );
 }

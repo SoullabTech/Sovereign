@@ -1,7 +1,5 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-<<<<<<< HEAD
-=======
 
 export const revalidate = false;
 import { personalOracleAgent } from '../../_backend/src/agents/PersonalOracleAgent';
@@ -11,20 +9,12 @@ import { LlamaService } from '../../_backend/src/services/memory/LlamaService';
 import { logger } from '../../_backend/src/utils/logger';
 
 // Skip during static export (Capacitor builds)
->>>>>>> ecstatic-brown
 
 /**
- * Oracle Memory Stats API - Temporarily unavailable
- * Memory services are being migrated from legacy backend
+ * GET /api/oracle/memory/stats
+ * Get user's memory statistics
  */
-
 export async function GET(request: NextRequest) {
-<<<<<<< HEAD
-  return NextResponse.json(
-    { ok: false, error: 'Memory stats temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-=======
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
@@ -71,12 +61,58 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
->>>>>>> ecstatic-brown
 }
 
+/**
+ * POST /api/oracle/memory/search
+ * Search user's memories
+ */
 export async function POST(request: NextRequest) {
-  return NextResponse.json(
-    { ok: false, error: 'Memory service temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
+  try {
+    const body = await request.json();
+    const { userId, query, limit = 10 } = body;
+
+    if (!userId || !query) {
+      return NextResponse.json(
+        { error: 'userId and query are required' },
+        { status: 400 }
+      );
+    }
+
+    // Initialize services
+    const memoryStore = new MemoryStore();
+    const llamaService = new LlamaService();
+    await memoryStore.init('./soullab.sqlite');
+    await llamaService.init();
+    
+    const memoryRetrieval = new EnhancedMemoryRetrieval(llamaService, memoryStore);
+
+    // Search memories
+    const memoryContext = await memoryRetrieval.retrieveMemoryContext(
+      userId,
+      query,
+      limit
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        query,
+        hasResults: memoryContext.hasRelevantMemories,
+        memories: memoryContext.memories,
+        formattedContext: memoryContext.formattedContext,
+        totalFound: memoryContext.memories.length
+      }
+    });
+
+  } catch (error) {
+    logger.error('Failed to search memories', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

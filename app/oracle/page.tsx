@@ -12,10 +12,7 @@ import {
   Compass,
   ChevronRight,
   Shield,
-<<<<<<< HEAD
-=======
   BookOpen,
->>>>>>> ecstatic-brown
 } from 'lucide-react';
 
 type MemberTier = 'free' | 'personal' | 'stewardship' | 'pro';
@@ -263,8 +260,6 @@ export default function OraclePage() {
           })}
         </div>
 
-<<<<<<< HEAD
-=======
         {/* View Saved Readings */}
         <div className="mt-8 flex justify-center">
           <button
@@ -276,7 +271,6 @@ export default function OraclePage() {
           </button>
         </div>
 
->>>>>>> ecstatic-brown
         {/* footer note */}
         <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70 backdrop-blur">
           <div className="text-white/85 font-medium">A Soullab note</div>

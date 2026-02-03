@@ -62,12 +62,9 @@ interface SacredLabDrawerProps {
   isAudioPlaying?: boolean;
   showChatInterface?: boolean;
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
-<<<<<<< HEAD
-=======
   // Session & Prompt props
   sessionPhase?: 'opening' | 'exploration' | 'integration' | 'closure' | 'complete';
   sessionMinutesRemaining?: number;
->>>>>>> ecstatic-brown
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({

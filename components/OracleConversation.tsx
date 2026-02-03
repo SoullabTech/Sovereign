@@ -124,14 +124,9 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 // import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
-import PastSelfCard, { type PastSelfPayload } from './selflet/PastSelfCard';
-import { SelfletArchiveDrawer } from './selflet/SelfletArchiveDrawer';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-<<<<<<< HEAD
-=======
 import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
->>>>>>> ecstatic-brown
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
 import PromptPicker from './prompts/PromptPicker';
@@ -143,6 +138,7 @@ import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
@@ -197,31 +193,6 @@ function getTimeGreeting(): string {
   if (hour >= 12 && hour < 17) return 'Good afternoon';
   if (hour >= 17 && hour < 21) return 'Good evening';
   return 'Good evening'; // Late night feels like evening
-}
-
-// 🎯 Deduplicate messages to prevent overlapping repeats from restore paths
-// Uses two-tier deduplication: by ID first, then by content+role as fallback
-// This handles temp-id vs server-id collisions (same message, different IDs)
-function dedupeMessages<T extends { id?: string; text?: string; role?: string }>(messages: T[]): T[] {
-  const seenIds = new Set<string>();
-  const seenContent = new Set<string>();
-  const out: T[] = [];
-
-  for (const m of messages) {
-    const id = m?.id ? String(m.id) : '';
-    const contentKey = `${m?.role || ''}:${(m?.text || '').slice(0, 100)}`;
-
-    // Skip if we've seen this exact ID
-    if (id && seenIds.has(id)) continue;
-
-    // Skip if we've seen this exact content+role combo (catches temp-id vs server-id dupes)
-    if (contentKey.length > 1 && seenContent.has(contentKey)) continue;
-
-    if (id) seenIds.add(id);
-    if (contentKey.length > 1) seenContent.add(contentKey);
-    out.push(m);
-  }
-  return out;
 }
 
 // Canon Wrap localStorage helpers (default-on for Care mode)
@@ -375,38 +346,6 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
-<<<<<<< HEAD
-  pastSelf?: PastSelfPayload;
-}
-
-// 🌀 SELFLET: Strip past-self preface when card is shown (prevent duplicate)
-// Tolerant to whitespace variations and quote styles
-function stripPastSelfPreface(
-  text: string | undefined | null,
-  pastSelf?: PastSelfPayload
-): string | undefined {
-  if (!text) return text ?? undefined;
-  if (!pastSelf?.content) return text;
-
-  const prefix = 'Your past self left you a message:';
-  if (!text.startsWith(prefix)) return text;
-
-  // Find the first occurrence of the content after the prefix
-  const afterPrefix = text.slice(prefix.length);
-  const idx = afterPrefix.indexOf(pastSelf.content);
-  if (idx === -1) return text;
-
-  // Move cursor to end of content
-  let cut = prefix.length + idx + pastSelf.content.length;
-
-  // If there's a closing quote right after, include it (handles smart quotes)
-  const QUOTES = new Set(['"', "'", '\u201C', '\u201D', '\u2018', '\u2019']);
-  const nextChar = text[cut];
-  if (nextChar && QUOTES.has(nextChar)) cut += 1;
-
-  // Strip whitespace/newlines after the preface
-  return text.slice(cut).trimStart();
-=======
   // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
   integrity?: IntegrityResult;
   lensSwitchOptions?: {
@@ -430,7 +369,6 @@ function stripPastSelfPreface(
       meta?: { agentName: string | null; patternType: string | null };
     };
   };
->>>>>>> ecstatic-brown
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -634,7 +572,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     userMessage: string;
   } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
-  const [showSelfletArchive, setShowSelfletArchive] = useState(false); // Phase 2K-a
 
   // Sync local state with parent when prop changes
   useEffect(() => {
@@ -687,9 +624,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
   const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
   const [showWelcome, setShowWelcome] = useState(true);
-  // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower or sends message)
-  const [hasActivated, setHasActivated] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [daysSinceLastVisit, setDaysSinceLastVisit] = useState<number>(0);
   const [isSavingJournal, setIsSavingJournal] = useState(false);
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
@@ -2334,17 +2270,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-<<<<<<< HEAD
-            // 🎯 Dedupe to prevent overlapping repeats
-            const clean = dedupeMessages(parsedMessages);
-            console.log(`💾 [localStorage] Restored ${clean.length} messages (deduped from ${parsedMessages.length})`);
-            setMessages(clean);
-            // 🎯 FIX: Hide welcome overlay when restoring existing conversation
-            if (clean.length > 0) setHasActivated(true);
-=======
             loadedMessages = parsedMessages;
             console.log(`💾 [localStorage] Loaded ${loadedMessages.length} messages for MAIA context (UI starts fresh)`);
->>>>>>> ecstatic-brown
           }
         } catch (error) {
           console.error('💾 [localStorage] Failed to parse stored messages:', error);
@@ -2367,29 +2294,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               source: 'restored'
             }));
 
-<<<<<<< HEAD
-          if (success && supabaseMessages.length > 0) {
-            // 🎯 Dedupe to prevent overlapping repeats
-            const clean = dedupeMessages(supabaseMessages);
-            // Only use Supabase messages if:
-            // 1. localStorage was empty, OR
-            // 2. Supabase has MORE messages than localStorage
-            if (!localStored || clean.length > (JSON.parse(localStored || '[]').length)) {
-              console.log(`💾 [Supabase] Restored ${clean.length} messages (deduped, cross-device sync)`);
-              setMessages(clean);
-
-              // Update localStorage with Supabase data for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(clean.slice(-50)));
-              // 🎯 FIX: Hide welcome overlay when restoring existing conversation
-              if (clean.length > 0) setHasActivated(true);
-=======
             // Use PostgreSQL if it has more messages
             if (pgMessages.length > loadedMessages.length) {
               loadedMessages = pgMessages;
               console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
               // Sync to localStorage for faster next load
               localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
->>>>>>> ecstatic-brown
             }
           }
         }
@@ -2405,25 +2315,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     loadConversationHistory();
   }, [sessionId, userId]);
 
-<<<<<<< HEAD
-  // 🎯 BULLETPROOF: Sync hasActivated with reality — if messages exist, we're activated
-  useEffect(() => {
-    if (messages.length > 0 && !hasActivated) {
-      // Dev-only invariant warning to catch impossible states early
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[OracleConversation] invariant: messages exist but hasActivated is false — auto-fixing');
-      }
-      setHasActivated(true);
-    }
-  }, [messages.length, hasActivated]);
-
-  // 💾 HYBRID PERSISTENCE: Save to localStorage (instant) + Supabase (async sync)
-=======
   // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
   // Track last synced message count to avoid duplicate saves
   const lastSyncedCountRef = useRef(0);
 
->>>>>>> ecstatic-brown
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
 
@@ -2633,12 +2528,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // Add greeting message on mount (for returning users)
     const isFirstVisit = !localStorage.getItem('betaOnboardingComplete');
     const lastSessionDate = localStorage.getItem('lastSessionDate');
-    const daysSinceLastVisit = lastSessionDate
+    const computedDaysSinceLastVisit = lastSessionDate
       ? Math.floor((Date.now() - new Date(lastSessionDate).getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
+    // Store in state for welcome screen
+    setDaysSinceLastVisit(computedDaysSinceLastVisit);
+
     // Check if returning user
-    setIsReturningUser(!isFirstVisit && daysSinceLastVisit > 0);
+    setIsReturningUser(!isFirstVisit && computedDaysSinceLastVisit > 0);
 
     // Load soul-recognized greeting asynchronously
     (async () => {
@@ -2669,7 +2567,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             sessionType: 'returning',
             lastReason: lastReason || undefined,
             lastFeeling: lastFeeling || undefined,
-            lastSeenDays: daysSinceLastVisit,
+            lastSeenDays: computedDaysSinceLastVisit,
             partnerContext: partnerContext || 'general',
             partnerContextData: partnerContextData ? JSON.parse(partnerContextData) : undefined,
             hasConversationHistory: messages.length > 0
@@ -2704,8 +2602,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userName: resolvedName,
           userId: userId, // Pass userId for soul-level recognition
           isFirstVisit,
-          daysSinceLastVisit,
-          daysActive: daysSinceLastVisit > 0 ? 7 : 1,
+          daysSinceLastVisit: computedDaysSinceLastVisit,
+          daysActive: computedDaysSinceLastVisit > 0 ? 7 : 1,
           mode: realtimeMode, // 🎯 Pass mode for Talk/Care/Note aware greetings
           onboardingContext, // Pass onboarding metadata for first contact
           returningContext, // Pass returning session metadata
@@ -3215,108 +3113,6 @@ I'm not sure what I'm feeling yet.`;
     window.addEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
     return () => window.removeEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
   }, []);
-
-  // Listen for Lab Actions dispatched from page.tsx
-  useEffect(() => {
-    const handleLabAction = (e: Event) => {
-      const ce = e as CustomEvent<{ action: string }>;
-      const action = ce.detail?.action;
-      if (!action) return;
-
-      console.log('🔬 [LabAction] Received from page:', action);
-
-      // Route to appropriate handler
-      if (action === 'open-prompt-picker') {
-        console.log('🔬 [LabAction] Opening prompt picker');
-        setShowPromptPicker(true);
-        return;
-      }
-
-      if (action === 'show-session-arc') {
-        console.log('🔬 [LabAction] Show session arc - handled by FloatingSessionIndicator');
-        // Session arc is displayed via the FloatingSessionIndicator component
-        return;
-      }
-
-      if (action === 'show-session-synthesis') {
-        console.log('🔬 [LabAction] Generating session synthesis');
-        if (messages.length > 0) {
-          setSessionSynthesisData({
-            patterns: ['Pattern detection in progress...'],
-            invitation: 'Continue exploring what emerged in this conversation.',
-            savedToMemory: !isSanctuary,
-            durationMinutes: sessionTimer?.getElapsedMinutes?.() || undefined
-          });
-          setShowSessionSynthesis(true);
-        }
-        return;
-      }
-
-      if (action === 'session-recap') {
-        console.log('🔬 [LabAction] Generating session recap');
-        if (messages.length > 0) {
-          setSessionRecapData({
-            duration: sessionTimer?.getElapsedMinutes?.() || Math.floor(messages.length / 2),
-            messageCount: messages.length,
-            themes: ['Self-reflection', 'Growth'],
-            elements: {
-              fire: 0.3,
-              water: 0.5,
-              earth: 0.4,
-              air: 0.6,
-              aether: 0.2
-            },
-            invitation: 'Continue reflecting on what emerged today.'
-          });
-          setShowSessionRecap(true);
-        }
-        return;
-      }
-
-      if (action === 'daily-checkin') {
-        console.log('🔬 [LabAction] Opening daily check-in');
-        setShowDailyCheckin(true);
-        return;
-      }
-
-      if (action === 'element-discovery') {
-        console.log('🔬 [LabAction] Opening element discovery');
-        setShowElementDiscovery(true);
-        return;
-      }
-
-      if (action === 'toggle-vocabulary-tooltips') {
-        const newValue = !enableVocabularyTooltips;
-        setEnableVocabularyTooltips(newValue);
-        localStorage.setItem('maia.vocabularyTooltips', String(newValue));
-        console.log('🔬 [LabAction] Vocabulary tooltips:', newValue);
-        return;
-      }
-
-      if (action === 'choose-guide') {
-        console.log('🔬 [LabAction] Opening wisdom council');
-        setShowWisdomCouncil(true);
-        return;
-      }
-
-      if (action === 'capture-spirit') {
-        // Defer to allow state to settle after drawer close
-        setTimeout(() => {
-          if (handleCaptureSpiritRef.current) {
-            handleCaptureSpiritRef.current();
-          } else {
-            console.error('❌ [LabAction] handleCaptureSpirit not available');
-          }
-        }, 100);
-        return;
-      }
-
-      console.log('🔬 [LabAction] Unhandled action:', action);
-    };
-
-    window.addEventListener('labAction', handleLabAction as EventListener);
-    return () => window.removeEventListener('labAction', handleLabAction as EventListener);
-  }, [messages.length, isSanctuary, sessionTimer, enableVocabularyTooltips]);
 
   // Update motion state based on voice activity
   // NOTE: isListening is controlled by handleRecordingStateChange (from ContinuousConversation)
@@ -4315,13 +4111,9 @@ I'm not sure what I'm feeling yet.`;
       let element = 'aether'; // Default element, will be updated from metadata if available
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
-<<<<<<< HEAD
-      let pastSelf: PastSelfPayload | undefined = undefined; // Past-self message for temporal identity
-=======
       // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
       let integrity: IntegrityResult | undefined = undefined;
       let lensSwitchOptions: ConversationMessage['lensSwitchOptions'] = null;
->>>>>>> ecstatic-brown
 
       if (isStreaming) {
         // Handle streaming response (voice mode - fastest)
@@ -4659,18 +4451,11 @@ I'm not sure what I'm feeling yet.`;
           console.log(`🜔 Opus Axioms received: ${opusAxioms.isGold ? 'GOLD' : 'Standard'} | ${opusAxioms.passed}/8 passed`);
         }
 
-<<<<<<< HEAD
-        // 🌀 SELFLET PHASE 2H: Extract past-self message for UI card
-        if (responseData.pastSelf?.id && responseData.pastSelf?.content) {
-          pastSelf = responseData.pastSelf as PastSelfPayload;
-          console.log(`⏳ Past-Self message surfaced: "${pastSelf.title || 'untitled'}"`);
-=======
         // 🌀 INTEGRITY CHECK: Extract Pass 3 result for lens switching UI
         integrity = responseData.integrity as IntegrityResult | undefined;
         lensSwitchOptions = responseData.lensSwitchOptions as ConversationMessage['lensSwitchOptions'];
         if (integrity?.decision === 'offer_switch') {
           console.log(`🌀 [INTEGRITY] Lens switch offered: ${JSON.stringify(lensSwitchOptions)}`);
->>>>>>> ecstatic-brown
         }
       }
 
@@ -4765,9 +4550,6 @@ I'm not sure what I'm feeling yet.`;
         source: 'maia',
         opusAxioms,
         turnId,
-<<<<<<< HEAD
-        pastSelf  // 🌀 SELFLET: Past-self message for UI card
-=======
         // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
         integrity,
         lensSwitchOptions,
@@ -4778,7 +4560,6 @@ I'm not sure what I'm feeling yet.`;
             meta: wisdomRouting.meta
           } : undefined
         }
->>>>>>> ecstatic-brown
       };
 
       // Trigger wisdom tool reveal if activated
@@ -5672,9 +5453,6 @@ I'm not sure what I'm feeling yet.`;
     if (isScribing && !scribeSession.isAside) {
       console.log('📝 [Scribe Mode] Recording voice transcript passively:', cleanedText.substring(0, 50) + '...');
       recordVoiceTranscript(cleanedText);
-<<<<<<< HEAD
-      return; // Don't trigger MAIA response
-=======
       return; // Don't trigger MAIA response when witnessing
     }
 
@@ -5682,7 +5460,6 @@ I'm not sure what I'm feeling yet.`;
     if (isScribing && scribeSession.isAside) {
       console.log('💬 [Aside Mode] Private consultation (not recorded):', cleanedText.substring(0, 50) + '...');
       // Continue to process and get MAIA response, but don't record
->>>>>>> ecstatic-brown
     }
 
     try {
@@ -6182,15 +5959,18 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
-<<<<<<< HEAD
-      {/* Claude-like Welcome Greeting - Shows only when no messages exist (bulletproof gate) */}
-      <AnimatePresence>
-        {messages.length === 0 && !hasActivated && !isProcessing && !isResponding && (
-=======
       {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
       <AnimatePresence>
-        {!hasActivated && !isProcessing && !isResponding && (
->>>>>>> ecstatic-brown
+        {!hasActivated && !isProcessing && !isResponding && (() => {
+          // Generate personalized welcome greeting (one clean signal)
+          const welcomeGreeting = generateWelcomeGreeting({
+            userName,
+            daysSinceLastVisit,
+            // lastConversationTheme: TODO - wire in when available
+            // memberStyleProfile: TODO - wire in from user preferences
+          });
+
+          return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -6230,11 +6010,11 @@ I'm not sure what I'm feeling yet.`;
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  {getTimeGreeting()}{userName ? `, ${userName}` : ''}
+                  {welcomeGreeting.greeting}
                 </motion.h1>
               </div>
 
-              {/* Welcome Invitation - atmospheric text, not interactive */}
+              {/* Welcome Invitation - one clean signal, context-aware */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -6245,12 +6025,13 @@ I'm not sure what I'm feeling yet.`;
                   className="text-maia-ink-60 text-lg md:text-xl"
                   style={{ fontFamily: 'Spectral, Georgia, serif' }}
                 >
-                  I'm here when you're ready
+                  {welcomeGreeting.subtext}
                 </p>
               </motion.div>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Scribe Mode Recording Indicator - Red when witnessing, Blue when aside */}
@@ -6289,14 +6070,6 @@ I'm not sure what I'm feeling yet.`;
                         : 'bg-red-500 shadow-[0_0_16px_rgba(239,68,68,0.9)]'
                   }`}
                 />
-<<<<<<< HEAD
-                <div>
-                  <div className="text-jade-jade text-sm font-medium">📝 Scribe Mode Active</div>
-                  <div className="text-jade-mineral/70 text-xs">
-                    Recording session •
-                    {scribeSession?.voiceTranscripts?.length || 0} voice +
-                    {scribeSession?.consultationMessages?.length || 0} consultations
-=======
 
                 {/* Status text */}
                 <div className="flex-1">
@@ -6325,7 +6098,6 @@ I'm not sure what I'm feeling yet.`;
                           : scribeSession.container === 'witness'
                             ? 'Observing • not responding'
                             : 'Session notes • skill tracking'}
->>>>>>> ecstatic-brown
                   </div>
                 </div>
 
@@ -6443,37 +6215,6 @@ I'm not sure what I'm feeling yet.`;
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-<<<<<<< HEAD
-              console.log('🌸 Holoflower clicked!');
-
-              // Enable audio context first
-              await enableAudio();
-
-              // Use isListening state instead of isMuted for accurate toggle
-              if (voiceMicRef.current) {
-                if (!isListening) {
-                  // Start listening
-                  console.log('🎤 Starting voice via holoflower...');
-                  setIsMuted(false);
-                  try {
-                    await voiceMicRef.current.startListening();
-                    console.log('✅ Voice started successfully');
-                  } catch (error: any) {
-                    console.error('❌ Failed to start microphone:', error);
-                    setIsMuted(true); // Reset on error
-                    if (error.message === 'MICROPHONE_UNAVAILABLE') {
-                      toast.error('Microphone not available. Please check permissions in your browser settings.');
-                    } else {
-                      toast.error('Unable to access microphone. Please try again.');
-                    }
-                  }
-                } else {
-                  // Stop listening
-                  console.log('🔇 Stopping voice via holoflower...');
-                  setIsMuted(true);
-                  voiceMicRef.current.stopListening();
-                  console.log('✅ Voice stopped successfully');
-=======
               console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
 
               // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
@@ -6517,13 +6258,8 @@ I'm not sure what I'm feeling yet.`;
                   iosWarmedAudioRef.current = audio;
                 } catch (err) {
                   console.warn('⚠️ [iOS] Failed to create warmed audio:', err);
->>>>>>> ecstatic-brown
                 }
-              } else {
-                console.warn('⚠️ Voice ref not available');
               }
-<<<<<<< HEAD
-=======
 
               // Enable audio context (can be async now that audio element is warmed)
               await enableAudio();
@@ -6644,7 +6380,6 @@ I'm not sure what I'm feeling yet.`;
                 console.warn('⚠️ Voice ref not available');
                 toast.error('⚠️ Voice component not mounted!');
               }
->>>>>>> ecstatic-brown
             }}
           >
         {/* Holoflower container - smaller, upper-left, visible but not dominating */}
@@ -6663,11 +6398,7 @@ I'm not sure what I'm feeling yet.`;
             interactive={false}
             showLabels={false}
             motionState={currentMotionState}
-<<<<<<< HEAD
-            isListening={voiceMicRef.current?.isListening || false}
-=======
             isListening={isListening}
->>>>>>> ecstatic-brown
             isProcessing={isProcessing}
             isResponding={isResponding}
             showBreakthrough={showBreakthrough}
@@ -7365,20 +7096,6 @@ I'm not sure what I'm feeling yet.`;
                 {messages
                   .filter(m => !m.id?.startsWith('greeting-'))
                   .map((message, index) => {
-<<<<<<< HEAD
-                    const handleCopyMessage = () => {
-                      const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
-                      navigator.clipboard.writeText(textToCopy);
-                      toast.success('Message copied!', {
-                        duration: 2000,
-                        position: 'bottom-center',
-                        style: {
-                          background: '#1a1f2e',
-                          color: '#d4b896',
-                          border: '1px solid rgba(212, 184, 150, 0.2)',
-                        },
-                      });
-=======
                     const handleCopyMessage = async () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
                       try {
@@ -7398,7 +7115,6 @@ I'm not sure what I'm feeling yet.`;
                           position: 'bottom-center',
                         });
                       }
->>>>>>> ecstatic-brown
                     };
 
                     return (
@@ -7426,28 +7142,12 @@ I'm not sure what I'm feeling yet.`;
                           <span className="text-maia-spice-400">Copy</span>
                         </div>
                       </div>
-<<<<<<< HEAD
-
-                      {/* 🌀 SELFLET: Past-Self Card - shown above MAIA's response */}
-                      {message.role === 'oracle' && message.pastSelf && (
-                        <PastSelfCard
-                          pastSelf={message.pastSelf}
-                          userId={userId}
-                          onOpenArchive={() => setShowSelfletArchive(true)}
-                        />
-                      )}
-
-                      <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
-                        {message.role === 'oracle' ? (
-                          <FormattedMessage text={stripPastSelfPreface(message.text, message.pastSelf)} />
-=======
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage
                             text={message.text}
                             enableVocabularyTooltips={enableVocabularyTooltips}
                           />
->>>>>>> ecstatic-brown
                         ) : (
                           message.text
                         )}
@@ -8107,14 +7807,6 @@ I'm not sure what I'm feeling yet.`;
               downloadScribeTranscript?.();
               setShowLabDrawer(false);
             } else {
-<<<<<<< HEAD
-              // Start scribing
-              startScribing?.();
-              toast.success('Scribe Mode activated - Recording session passively');
-              setShowLabDrawer(false);
-            }
-            return;
-=======
               // Start scribing (default to witness for backwards compatibility)
               startScribeSession?.('witness');
               toast.success('Scribe Mode activated - 2nd Chair Witness');
@@ -8141,7 +7833,6 @@ I'm not sure what I'm feeling yet.`;
             toast.success('📋 3rd Chair Practitioner - Session notes');
             setShowLabDrawer(false);
             return;
->>>>>>> ecstatic-brown
           }
 
           // 📝 SCRIBE MODE: Review session with MAIA for supervision
@@ -8170,13 +7861,6 @@ I'm not sure what I'm feeling yet.`;
         voice={voice}
         sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
         sessionMinutesRemaining={sessionTimer?.getRemainingMinutes?.()}
-      />
-
-      {/* 🌀 SELFLET: Archive Drawer - Phase 2K-a */}
-      <SelfletArchiveDrawer
-        open={showSelfletArchive}
-        onClose={() => setShowSelfletArchive(false)}
-        userId={userId}
       />
 
       {/* 🌊 LIQUID AI - Rhythm Metrics Debug Overlay */}

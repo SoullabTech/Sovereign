@@ -22,8 +22,6 @@ import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety, type FieldSafetyDecision } from '../field/enforceFieldSafety';
 import { getCognitiveProfile, type CognitiveProfile } from '../consciousness/cognitiveProfileService';
-<<<<<<< HEAD
-=======
 import {
   generatePFIMindState,
   isPFIMindEnabled,
@@ -37,7 +35,6 @@ import {
   logPresenceModeTelemetry,
   type ResponseMode,
 } from './presenceMode';
->>>>>>> ecstatic-brown
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
@@ -189,14 +186,11 @@ interface SelfletDeliveryContext {
 /**
  * Apply selflet delivery guard - ensures past-self message acknowledgment appears exactly once.
  * Used at FAST, CORE, and DEEP path exit points.
-<<<<<<< HEAD
-=======
  *
  * Edge cases handled:
  * 1. Marker already present → no change (idempotent)
  * 2. Ack text present but no marker → inject marker after ack
  * 3. Neither present → prepend both
->>>>>>> ecstatic-brown
  */
 function applySelfletDeliveryGuard(
   response: string,
@@ -205,11 +199,6 @@ function applySelfletDeliveryGuard(
   const requiredAck = selfletContext?.requiredAcknowledgment;
   if (!requiredAck) return response;
 
-<<<<<<< HEAD
-  // Already has marker or acknowledgment → no change
-  if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
-
-=======
   // If marker exists, we're done (idempotent).
   if (response.includes(SELFLET_MARKER)) return response;
 
@@ -220,7 +209,6 @@ function applySelfletDeliveryGuard(
   }
 
   // Otherwise prepend both.
->>>>>>> ecstatic-brown
   console.log('[SELFLET] Prepending past-self acknowledgment');
   return requiredAck + SELFLET_MARKER + response;
 }
@@ -1012,11 +1000,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-<<<<<<< HEAD
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}
-=======
 ${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}
->>>>>>> ecstatic-brown
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1058,12 +1042,6 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
 
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   validatedResponse = filterModeLanguage(validatedResponse, input, normalizeMode(mode));
-<<<<<<< HEAD
-
-  // 🌀 SELFLET PHASE 2F: Apply delivery guard
-  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
-=======
->>>>>>> ecstatic-brown
 
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
@@ -1127,8 +1105,6 @@ async function corePathResponse(
     }
   }
 
-<<<<<<< HEAD
-=======
   // 🔥 ELEMENTAL ORACLE (CORE path): Quick pattern-based elemental classification
   let elementalResult: ElementalResponse | null = null;
   try {
@@ -1155,7 +1131,6 @@ async function corePathResponse(
     console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
   }
 
->>>>>>> ecstatic-brown
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
   const selfletContext = (meta as any)?.selfletContext;
   const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
@@ -1242,8 +1217,6 @@ async function corePathResponse(
     adaptivePrompt = adaptivePrompt + '\n\n' + selfletPromptBlock;
   }
 
-<<<<<<< HEAD
-=======
   // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
   const isSanctuaryCore = (meta as any)?.sanctuary === true;
   if (isSanctuaryCore) {
@@ -1299,7 +1272,6 @@ The current user has not provided their name. Address them as "friend" or "there
     (meta as any).wisdomRouting = wisdomRoutingCore;
   }
 
->>>>>>> ecstatic-brown
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
   if (policy) {
     adaptivePrompt = adaptResponsePromptWithPolicy(adaptivePrompt, policy);
@@ -1369,11 +1341,7 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-<<<<<<< HEAD
-  return validatedResponse;
-=======
   return { response: validatedResponse, provider: coreProvider };
->>>>>>> ecstatic-brown
 }
 
 /**
@@ -1437,8 +1405,6 @@ async function deepPathResponse(
   const selfletContext = (meta as any)?.selfletContext;
   (meta as any).selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
-<<<<<<< HEAD
-=======
   // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
   if (isSanctuaryDeep) {
     (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n🔒 SANCTUARY SESSION ACTIVE:
@@ -1473,7 +1439,6 @@ The current user has not provided their name. Address them as "friend" or "there
 - Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
   }
 
->>>>>>> ecstatic-brown
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
   // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
   let effectiveHistory = conversationHistory;
@@ -2864,8 +2829,6 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // The marker is only for idempotency within the pipeline - never expose to clients
     text = text.replaceAll(SELFLET_MARKER, '');
 
-<<<<<<< HEAD
-=======
     // 🔄 Build metadata with feedback linkage IDs
     const responseMetadata = {
       ...(responsePatterns.length > 0 ? { patterns: responsePatterns } : {}),
@@ -2880,7 +2843,6 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       responseMetadata.decisionId ||
       responseMetadata.deliberationId;
 
->>>>>>> ecstatic-brown
     return {
       text,
       processingProfile,

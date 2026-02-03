@@ -1,8 +1,5 @@
 // @ts-nocheck - Prototype file, not type-checked
-<<<<<<< HEAD
-=======
 export const dynamic = 'force-dynamic';
->>>>>>> ecstatic-brown
 /**
  * CEREMONIAL CONSCIOUSNESS API
  *

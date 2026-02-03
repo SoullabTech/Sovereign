@@ -1,8 +1,6 @@
 // @ts-nocheck - Prototype file, not type-checked
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-<<<<<<< HEAD
-=======
 
 export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
@@ -16,17 +14,23 @@ const correlationEngine = new DreamConsciousnessCorrelationEngine();
 
 // Initialize the engine on startup
 correlationEngine.initialize().catch(console.error);
->>>>>>> ecstatic-brown
 
 /**
  * DREAM-SLEEP-CONSCIOUSNESS CORRELATION ANALYTICS API
  *
- * Temporarily unavailable - DreamWeaver Engine is being migrated
+ * Provides comprehensive correlation analysis across:
+ * - Dreams and archetypal patterns
+ * - Sleep quality and circadian rhythms
+ * - Real-time conversation insights
+ * - Wisdom emergence tracking
+ *
+ * Routes:
+ * POST /api/analytics/consciousness-correlations - Generate new correlation analysis
+ * GET  /api/analytics/consciousness-correlations - Retrieve historical analyses
  */
 
+// Generate new correlation analysis
 export async function POST(request: NextRequest) {
-<<<<<<< HEAD
-=======
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {
@@ -468,16 +472,8 @@ async function generateWisdomTrajectory(analysis: any) {
 
 // Handle unsupported methods
 export async function DELETE() {
->>>>>>> ecstatic-brown
   return NextResponse.json(
-    { ok: false, error: 'Consciousness correlation analytics temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-}
-
-export async function GET(request: NextRequest) {
-  return NextResponse.json(
-    { ok: false, error: 'Consciousness correlation analytics temporarily unavailable while services are being migrated.' },
-    { status: 503 }
+    { message: 'Method not allowed.' },
+    { status: 405 }
   );
 }

@@ -1,7 +1,5 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-<<<<<<< HEAD
-=======
 
 export const revalidate = false;
 import fs from "fs/promises";
@@ -249,14 +247,11 @@ export async function POST(req: NextRequest) {
     );
   }
 }
->>>>>>> ecstatic-brown
 
 /**
- * Voice Transcription API - Temporarily unavailable
- * Memory and Llama services are being migrated from legacy backend
+ * GET /api/voice/transcribe/:voiceNoteId
+ * Retrieve a specific voice note transcription
  */
-<<<<<<< HEAD
-=======
 export async function GET(req: NextRequest) {
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
@@ -267,23 +262,14 @@ export async function GET(req: NextRequest) {
     const pathParts = url.pathname.split('/');
     const voiceNoteId = pathParts[pathParts.length - 1];
     const userId = url.searchParams.get('userId');
->>>>>>> ecstatic-brown
 
-export async function POST(req: NextRequest) {
-  return NextResponse.json(
-    { ok: false, error: 'Voice transcription temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-}
+    if (!voiceNoteId || !userId) {
+      return NextResponse.json(
+        { error: 'voiceNoteId and userId are required' },
+        { status: 400 }
+      );
+    }
 
-<<<<<<< HEAD
-export async function GET() {
-  return NextResponse.json(
-    { message: 'Method not allowed. Use POST to transcribe voice.' },
-    { status: 405 }
-  );
-}
-=======
     // Initialize memory store if needed
     if (!memoryStore.isInitialized) {
       const dbPath = path.join(process.cwd(), "backend", "src", "services", "memory", "soullab.sqlite");
@@ -324,4 +310,3 @@ export async function GET() {
     );
   }
 }
->>>>>>> ecstatic-brown

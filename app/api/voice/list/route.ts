@@ -1,21 +1,5 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
-<<<<<<< HEAD
-
-// Force dynamic for Docker/dev builds
-export const dynamic = 'force-dynamic';
-
-/**
- * Voice List API - Temporarily unavailable
- * Memory services are being migrated from legacy backend
- */
-
-export async function GET(req: NextRequest) {
-  return NextResponse.json(
-    { ok: false, error: 'Voice list temporarily unavailable while services are being migrated.' },
-    { status: 503 }
-  );
-=======
 
 export const revalidate = false;
 import path from "path";
@@ -111,5 +95,31 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
->>>>>>> ecstatic-brown
+}
+
+/**
+ * Simple emotion detection based on keywords
+ * In production, you might use sentiment analysis or AI
+ */
+function detectEmotion(text: string): string | undefined {
+  const lowercaseText = text.toLowerCase();
+  
+  const emotionKeywords = {
+    happy: ["happy", "joy", "excited", "wonderful", "great", "amazing", "love"],
+    sad: ["sad", "depressed", "down", "upset", "cry", "tears", "lonely"],
+    anxious: ["anxious", "worried", "nervous", "stress", "panic", "fear"],
+    angry: ["angry", "mad", "frustrated", "annoyed", "irritated", "furious"],
+    calm: ["calm", "peaceful", "relaxed", "serene", "tranquil", "centered"],
+    grateful: ["grateful", "thankful", "blessed", "appreciate", "gratitude"],
+    confused: ["confused", "lost", "uncertain", "unsure", "don't know"],
+    hopeful: ["hope", "optimistic", "looking forward", "believe", "faith"]
+  };
+
+  for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
+    if (keywords.some(keyword => lowercaseText.includes(keyword))) {
+      return emotion;
+    }
+  }
+
+  return undefined;
 }

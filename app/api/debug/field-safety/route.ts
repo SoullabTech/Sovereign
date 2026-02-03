@@ -1,8 +1,5 @@
 // @ts-nocheck - Debug route, not type-checked
-<<<<<<< HEAD
-=======
 export const dynamic = 'force-dynamic';
->>>>>>> ecstatic-brown
 // backend: app/api/debug/field-safety/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
