@@ -59,10 +59,6 @@ ENV BUILD_DATE=${BUILD_DATE}
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
   && rm -rf /var/lib/apt/lists/*
 
-# Install psql for Render preDeployCommand (migrations run in runtime container)
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
-  && rm -rf /var/lib/apt/lists/*
-
 # Copy standalone output + static assets
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
@@ -77,8 +73,6 @@ COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@
 COPY --from=builder --chown=node:node /app/database ./database
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 
-<<<<<<< HEAD
-=======
 # Scripts + tsx for embedding worker
 COPY --from=builder --chown=node:node /app/scripts ./scripts
 RUN chmod +x ./scripts/entrypoint.sh ./scripts/ensure-migrations.sh
@@ -92,7 +86,6 @@ COPY --from=builder --chown=node:node /app/node_modules/resolve-pkg-maps ./node_
 COPY --from=builder --chown=node:node /app/lib ./lib
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 
->>>>>>> ecstatic-brown
 USER node
 EXPOSE 3000
 
