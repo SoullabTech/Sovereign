@@ -6421,15 +6421,27 @@ I'm not sure what I'm feeling yet.`;
               />
             </motion.div>
 
-            {/* Holoflower Image - Amber radiance */}
+            {/* Holoflower Image - Nested design: white background, colorful foreground */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              {/* Outer holoflower - white and translucent (background) */}
               <img
-                src="/logo_flower 2.png"
-                alt="Holoflower"
-                className="object-contain"
+                src="/holoflower.png"
+                alt="Holoflower background"
+                className="object-contain absolute"
                 style={{
                   width: `${holoflowerSize * 0.85}px`,
                   height: `${holoflowerSize * 0.85}px`,
+                  opacity: 0.5,
+                }}
+              />
+              {/* Inner nested holoflower - colorful (foreground) */}
+              <img
+                src="/logo_flower 2.png"
+                alt="Holoflower"
+                className="object-contain absolute"
+                style={{
+                  width: `${holoflowerSize * 0.55}px`,
+                  height: `${holoflowerSize * 0.55}px`,
                 }}
               />
             </div>
