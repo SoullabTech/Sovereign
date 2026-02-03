@@ -6449,9 +6449,9 @@ I'm not sure what I'm feeling yet.`;
               <div
                 className="absolute rounded-full"
                 style={{
-                  width: `${holoflowerSize * 0.05}px`,
-                  height: `${holoflowerSize * 0.05}px`,
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                  width: `${holoflowerSize * 0.12}px`,
+                  height: `${holoflowerSize * 0.12}px`,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 60%, transparent 100%)',
                 }}
               />
             </div>
