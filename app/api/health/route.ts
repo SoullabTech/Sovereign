@@ -239,7 +239,7 @@ export async function GET(request: NextRequest) {
     requestId,
     timestamp: new Date().toISOString(),
     uptime: Math.round((Date.now() - startTime) / 1000),
-    version: process.env.npm_package_version || process.env.NEXT_PUBLIC_BUILD_ID || 'unknown',
+    version: process.env.GIT_COMMIT || 'unknown',
     safeMode: isSafeMode,
     components,
   };

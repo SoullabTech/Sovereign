@@ -17,6 +17,8 @@
 x-maia-build: &maia_build
   context: .
   dockerfile: Dockerfile
+  args:
+    GIT_COMMIT: ${GIT_COMMIT:-unknown}
 
 x-maia-image: &maia_image maia-sovereign:prod
 
