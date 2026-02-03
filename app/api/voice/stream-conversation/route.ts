@@ -23,6 +23,7 @@
 
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import {
@@ -390,6 +391,33 @@ export async function POST(req: NextRequest) {
     finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
   });
 
+  // ═══ TIER-BASED VOICE LIMITS CHECK ═══
+  const isAnon = !userId;
+  const anonId = isAnon ? `anon_voice_${crypto.randomUUID().slice(0, 8)}` : undefined;
+  const memberTier: MemberTier = isAnon ? 'free' : userId ? await getMemberTier(userId) : 'free';
+
+  // Pre-check voice limits before processing
+  const voiceLimitsCheck = await LimitsEnforcer.checkUsage({
+    memberId: userId || undefined,
+    anonId,
+    tier: memberTier,
+    resource: 'voice_tts', // Voice conversation involves TTS
+    amount: 30, // Estimate 30 seconds per voice turn (adjust based on actual usage patterns)
+  });
+
+  if (voiceLimitsCheck.action === 'block') {
+    console.log(`[StreamConversation] Voice usage blocked for ${userId || anonId}: ${voiceLimitsCheck.message}`);
+    return new Response(JSON.stringify({
+      error: voiceLimitsCheck.message,
+      blocked: true,
+      tier: memberTier,
+      upgradeHint: 'upgradeHint' in voiceLimitsCheck ? voiceLimitsCheck.upgradeHint : undefined,
+    }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // Initialize timing instrumentation
   const timer = createVoiceTimer();
   timer.mark('request_received');
@@ -686,6 +714,18 @@ export async function POST(req: NextRequest) {
             });
           }
 
+          // ═══ RECORD VOICE USAGE (threshold path, non-blocking) ═══
+          if (thresholdAudioEmitted) {
+            // Threshold responses are typically short (5-15 seconds)
+            LimitsEnforcer.recordUsage({
+              memberId: userId || undefined,
+              anonId,
+              tier: memberTier,
+              resource: 'voice_tts',
+              amount: 10, // Conservative estimate for threshold responses
+            }).catch(err => console.error('[StreamConversation] Threshold voice usage recording failed:', err));
+          }
+
           // Compute moveIntent for threshold path
           const thresholdMoveIntent = deriveMoveIntent({
             maiaMode: voiceSession.relationalStack.currentMode,
@@ -858,6 +898,22 @@ export async function POST(req: NextRequest) {
             // Wait for all TTS to complete before closing stream
             await Promise.all(ttsPromises);
             timer.mark('all_tts_done');
+
+            // ═══ RECORD VOICE USAGE (non-blocking) ═══
+            // Estimate voice duration from timing (TTS processing roughly equals audio length)
+            const ttsStartMs = timer.timeTo('tts_0_done');
+            const ttsEndMs = timer.timeTo('all_tts_done');
+            const estimatedVoiceSeconds = (ttsStartMs !== null && ttsEndMs !== null)
+              ? Math.ceil((ttsEndMs - ttsStartMs) / 1000) + 5 // TTS time + estimated playback buffer
+              : 30; // Fallback estimate
+
+            LimitsEnforcer.recordUsage({
+              memberId: userId || undefined,
+              anonId,
+              tier: memberTier,
+              resource: 'voice_tts',
+              amount: Math.max(estimatedVoiceSeconds, 5), // Minimum 5 seconds per voice turn
+            }).catch(err => console.error('[StreamConversation] Voice usage recording failed:', err));
 
             // Compute moveIntent for LLM path
             const llmMoveIntent = deriveMoveIntent({

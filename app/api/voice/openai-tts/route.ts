@@ -1,5 +1,8 @@
 // backend: app/api/voice/openai-tts/route.ts
 import OpenAI from "openai";
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
+import { NextRequest } from 'next/server';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -22,7 +25,7 @@ function jsonError(message: string, status = 500, extra?: Record<string, unknown
   });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
@@ -30,6 +33,16 @@ export async function POST(req: Request) {
       return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
     }
 
+    // ═══ IDENTITY RESOLUTION ═══
+    const memberId = await getMemberIdFromRequest(req);
+    const anonId = memberId ? undefined : `anon_${requestId.slice(0, 8)}`;
+    const isAnon = !memberId;
+
+    // ═══ TIER-BASED LIMITS CHECK ═══
+    const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
+
+    // Estimate TTS duration: ~150 words/min at average pace, ~5 chars/word
+    // So roughly 750 chars/min → ~12.5 chars/sec → estimate seconds from text length
     const body = await req.json().catch(() => null) as null | {
       text?: string;
       voice?: string;
@@ -40,6 +53,31 @@ export async function POST(req: Request) {
 
     const text = body?.text?.trim();
     if (!text) return jsonError("Missing 'text' in request body", 400, { requestId });
+
+    // Estimate duration for pre-check (refine after actual synthesis)
+    const estimatedSeconds = Math.ceil(text.length / 12.5);
+
+    const limitsCheck = await LimitsEnforcer.checkUsage({
+      memberId: memberId || undefined,
+      anonId,
+      tier: memberTier,
+      resource: 'voice_tts',
+      amount: estimatedSeconds,
+    });
+
+    if (limitsCheck.action === 'block') {
+      console.log(`[openai-tts:${requestId}] Usage blocked: ${limitsCheck.message}`);
+      return new Response(JSON.stringify({
+        error: limitsCheck.message,
+        blocked: true,
+        tier: memberTier,
+        upgradeHint: 'upgradeHint' in limitsCheck ? limitsCheck.upgradeHint : undefined,
+        requestId,
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     // Default to tts-1 for stability; can use tts-1-hd or gpt-4o-mini-tts if desired
     const model = body?.model ?? "tts-1";
@@ -69,6 +107,17 @@ export async function POST(req: Request) {
 
     // Helpful server logs (you'll see these in Docker/server logs)
     console.log(`[openai-tts:${requestId}] ok model=${model} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
+
+    // ═══ RECORD VOICE USAGE (non-blocking) ═══
+    // Use actual synthesis time as a proxy for audio duration
+    const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
+    LimitsEnforcer.recordUsage({
+      memberId: memberId || undefined,
+      anonId,
+      tier: memberTier,
+      resource: 'voice_tts',
+      amount: actualSeconds,
+    }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
 
     const contentType =
       format === "mp3" ? "audio/mpeg"
