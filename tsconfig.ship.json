@@ -1,7 +1,4 @@
 {
-<<<<<<< HEAD
-  "extends": "./tsconfig.typecheck.json"
-=======
   "extends": "./tsconfig.core.json",
   "compilerOptions": {
     "noEmit": true
@@ -71,5 +68,4 @@
     "**/*.spec.*",
     "**/*.backup.*"
   ]
->>>>>>> ecstatic-brown
 }
