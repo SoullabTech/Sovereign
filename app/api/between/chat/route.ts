@@ -99,6 +99,15 @@ function hasMeaningfulRelationshipMemory(m: unknown): boolean {
  */
 const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
 
+/**
+ * TS narrowing tripwire: ensures 'block' decisions never reach the logging zone.
+ * If refactoring accidentally lets 'block' slip past the 429 early-return,
+ * this will fail at compile time (x is 'never') and runtime (loud error).
+ */
+function unreachableBlockDecision(x: never): never {
+  throw new Error(`[INVARIANT VIOLATION] Block decision reached logging zone: ${JSON.stringify(x)}`);
+}
+
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
 // ═══════════════════════════════════════════════════════════════
@@ -954,6 +963,12 @@ This user is in guest mode (no authenticated identity).
         status: 429,
         headers: makeCanonHeaders({ requestId: reqId, pipeline: 'direct', source: 'direct' }),
       });
+    }
+
+    // 🔒 TS narrowing tripwire: 'block' must never reach below (429 returned above)
+    // TS already enforces this at compile time (TS2367), but runtime guard catches `as any` escapes
+    if ((limitsCheck as EnforcementDecision).action === 'block') {
+      unreachableBlockDecision(limitsCheck as never);
     }
 
     // Store nudge for later injection into response (if applicable)
