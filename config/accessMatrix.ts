@@ -308,7 +308,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/stripe/membership/checkout', minTier: 'free', notes: 'Create checkout' },
 
   // Pro API
-  { exact: '/api/practitioners/create', minTier: 'pro', notes: 'Create practitioner' },
+  { exact: '/api/practitioners/create', minTier: 'free', notes: 'Create practitioner - must be open to allow becoming a practitioner' },
   { prefix: '/api/practitioner/practices', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practice management' },
   { prefix: '/api/practitioner/sessions', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Session management' },
   { prefix: '/api/practitioner/containers', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Container management' },
