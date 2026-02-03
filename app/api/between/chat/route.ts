@@ -41,6 +41,7 @@ import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
   computeMemberSpiralState,
   buildSpiralSnapshot,
@@ -913,6 +914,42 @@ This user is in guest mode (no authenticated identity).
 - Journal and capture context are unavailable in guest mode`
       : null;
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚦 LIMITS ENFORCEMENT: Check usage before processing
+    // ═══════════════════════════════════════════════════════════════════════
+    const memberTier: MemberTier = isAnon
+      ? 'free'
+      : authUserId
+        ? await getMemberTier(authUserId)
+        : 'free';
+
+    const limitsCheck = await LimitsEnforcer.checkUsage({
+      memberId: isAnon ? undefined : authUserId ?? undefined,
+      anonId: isAnon ? effectiveUserId : undefined,
+      tier: memberTier,
+      resource: 'text',
+    });
+
+    // Handle enforcement decisions
+    if (limitsCheck.action === 'block') {
+      console.log(`[Chat API] 🚫 Usage blocked for ${effectiveUserId}: ${limitsCheck.message}`);
+      return NextResponse.json({
+        message: limitsCheck.message,
+        upgradeHint: limitsCheck.upgradeHint,
+        blocked: true,
+        tier: memberTier,
+      }, {
+        status: 429,
+        headers: makeCanonHeaders({ requestId: reqId, pipeline: 'limits-enforcer', source: 'direct' }),
+      });
+    }
+
+    // Store nudge for later injection into response (if applicable)
+    const limitNudge = limitsCheck.action === 'nudge' ? limitsCheck : null;
+    if (limitNudge) {
+      console.log(`[Chat API] 💬 Usage nudge for ${effectiveUserId}: ${limitNudge.nudgeType}`);
+    }
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
@@ -1540,18 +1577,7 @@ This user is in guest mode (no authenticated identity).
       contextWarnings.push('W_CAPTURE_EMPTY');
     }
 
-    if (contextWarnings.length > 0) {
-      console.warn('[MAIA CONTEXT]', {
-        warnings: contextWarnings,
-        reqId,
-        userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
-        recognized: !isAnon,
-        // "Why this should exist" signals
-        birthDataPresent: !!birthData?.date,
-        hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
-        hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
-      });
-    }
+    // Note: warnings logged AFTER orchestratorResult for route context
 
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
@@ -1587,6 +1613,21 @@ This user is in guest mode (no authenticated identity).
       originRoute: '/api/between/chat',
       processingProfileOverride: 'BETWEEN',
     });
+
+    // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
+    if (contextWarnings.length > 0) {
+      console.warn('[MAIA CONTEXT]', {
+        warnings: contextWarnings,
+        reqId,
+        userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
+        recognized: !isAnon,
+        route: orchestratorResult.route?.mode ?? 'unknown',
+        // "Why this should exist" signals
+        birthDataPresent: !!birthData?.date,
+        hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
+        hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
+      });
+    }
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
     // Dev-only simulation headers for calibration testing
@@ -1931,12 +1972,32 @@ This user is in guest mode (no authenticated identity).
           isGold: socraticValidation2.isGold,
           passes: socraticValidation2.passes,
         } : undefined,
+        // 🚦 Usage limits nudge (for gentle client-side messaging)
+        limitNudge: limitNudge ? {
+          message: limitNudge.message,
+          nudgeType: limitNudge.nudgeType,
+        } : undefined,
+        tier: memberTier,
       }
     });
 
     // Apply canon headers to response
     Object.entries(canonHeaders2).forEach(([key, value]) => {
       response2.headers.set(key, value);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚦 LIMITS: Record usage after successful response (non-blocking)
+    // ═══════════════════════════════════════════════════════════════════════
+    LimitsEnforcer.recordUsage({
+      memberId: isAnon ? undefined : authUserId ?? undefined,
+      anonId: isAnon ? effectiveUserId : undefined,
+      tier: memberTier,
+      resource: 'text',
+      tokensIn: orchestratorResult.metadata?.tokensUsed?.input ?? 0,
+      tokensOut: orchestratorResult.metadata?.tokensUsed?.output ?? 0,
+    }).catch(err => {
+      console.error('[LimitsEnforcer] Failed to record usage:', err);
     });
 
     return withSessionCookie(response2, sessionCookie);
