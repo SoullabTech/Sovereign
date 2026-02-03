@@ -1501,14 +1501,22 @@ This user is in guest mode (no authenticated identity).
     });
 
     // 🚨 SELF-ALERTING: Warn when addenda should exist but arrived empty
+    // Greppable codes: W_ASTRO_EMPTY, W_REL_EMPTY, W_CAPTURE_EMPTY
+    const CAPTURE_ADDENDUM_ENABLED = false; // Flip when capture plumbing is wired
+    const contextWarnings: string[] = [];
+
     if (birthData?.date && safeAddenda.astro.length === 0) {
-      console.warn('[MAIA CONTEXT] ⚠️ birthData present but astro addendum is empty');
+      contextWarnings.push('W_ASTRO_EMPTY');
     }
     if (!isAnon && relationshipMemory && safeAddenda.relationshipMode.length === 0) {
-      console.warn('[MAIA CONTEXT] ⚠️ recognized user with memory but relationshipMode is empty');
+      contextWarnings.push('W_REL_EMPTY');
     }
-    if (selfletContext?.surfacedMessageId && safeAddenda.capture.length === 0) {
-      console.warn('[MAIA CONTEXT] ⚠️ active capture surfaced but capture addendum is empty');
+    if (CAPTURE_ADDENDUM_ENABLED && selfletContext?.surfacedMessageId && safeAddenda.capture.length === 0) {
+      contextWarnings.push('W_CAPTURE_EMPTY');
+    }
+
+    if (contextWarnings.length > 0) {
+      console.warn('[MAIA CONTEXT]', { warnings: contextWarnings });
     }
 
     // Use full fail-soft consciousness orchestrator
