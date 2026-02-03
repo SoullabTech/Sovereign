@@ -42,7 +42,8 @@ import {
   ClipboardList,
   Briefcase,
   Users,
-  GraduationCap
+  GraduationCap,
+  LayoutGrid,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -237,6 +238,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       title: 'PRACTITIONER',
       icon: '⚕️',
       items: [
+        {
+          icon: LayoutGrid,
+          label: 'Studio',
+          action: () => onNavigate('/studio'),
+          description: 'Services, calendar, clients & bookings',
+          badge: '✨ New'
+        },
         {
           icon: MessageSquare,
           label: 'Client Comms',
