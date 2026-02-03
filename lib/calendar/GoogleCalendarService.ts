@@ -62,6 +62,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/gmail.send',  // Send emails on user's behalf
   'https://www.googleapis.com/auth/userinfo.email',  // Get user's email address
+  'https://www.googleapis.com/auth/contacts.readonly',  // Read contacts for client import
 ];
 
 function getConfig() {
@@ -252,9 +253,12 @@ export async function getValidAccessToken(userId: string): Promise<string | null
  */
 export async function isConnected(userId: string): Promise<boolean> {
   try {
+    console.log('[GoogleCalendar] isConnected checking for userId:', userId);
     const creds = await findOne<StoredCredentials>('google_calendar_credentials', 'user_id', userId);
+    console.log('[GoogleCalendar] isConnected found creds:', !!creds, 'has refresh:', !!creds?.refresh_token);
     return !!creds?.refresh_token;
   } catch (error) {
+    console.error('[GoogleCalendar] isConnected error:', error);
     return false;
   }
 }
@@ -285,7 +289,8 @@ export async function listCalendars(userId: string): Promise<CalendarInfo[]> {
     });
 
     if (!response.ok) {
-      console.error('[GoogleCalendar] Failed to list calendars');
+      const errorText = await response.text();
+      console.error('[GoogleCalendar] Failed to list calendars:', response.status, errorText);
       return [];
     }
 
@@ -437,6 +442,100 @@ export async function getUpcomingEvents(userId: string, maxResults = 10): Promis
   }
 }
 
+interface GoogleCalendarEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+  location?: string;
+  status: string;
+}
+
+/**
+ * Get events within a date range across all calendars
+ */
+export async function getEventsInRange(
+  userId: string,
+  from: Date,
+  to: Date,
+  calendarIds?: string[]
+): Promise<Array<GoogleCalendarEvent & { calendarId: string; calendarName: string }>> {
+  const accessToken = await getValidAccessToken(userId);
+  if (!accessToken) return [];
+
+  try {
+    // Get list of calendars if not specified
+    let calendarsToFetch = calendarIds || [];
+    if (!calendarIds || calendarIds.length === 0) {
+      const calendars = await listCalendars(userId);
+      if (calendars.length > 0) {
+        // Include ALL calendars the user has access to
+        calendarsToFetch = calendars.map(cal => cal.id);
+      } else {
+        // Fallback to primary if no calendars found
+        calendarsToFetch = ['primary'];
+      }
+    }
+
+    const allEvents: Array<GoogleCalendarEvent & { calendarId: string; calendarName: string }> = [];
+    const calendarMap = new Map<string, string>();
+
+    // Get calendar names for display
+    const calendars = await listCalendars(userId);
+    calendars.forEach(cal => calendarMap.set(cal.id, cal.summary));
+
+    // Fetch events from each calendar in parallel
+    const eventPromises = calendarsToFetch.map(async (calendarId) => {
+      const params = new URLSearchParams({
+        timeMin: from.toISOString(),
+        timeMax: to.toISOString(),
+        orderBy: 'startTime',
+        singleEvents: 'true',
+        maxResults: '100',
+      });
+
+      const response = await fetch(
+        `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`[GoogleCalendar] Failed to fetch events for calendar ${calendarId}:`, response.status);
+        return [];
+      }
+
+      const data = await response.json();
+      const calendarName = calendarMap.get(calendarId) || calendarId;
+
+      return (data.items || [])
+        .filter((event: GoogleCalendarEvent) => event.status !== 'cancelled')
+        .map((event: GoogleCalendarEvent) => ({
+          ...event,
+          calendarId,
+          calendarName,
+        }));
+    });
+
+    const results = await Promise.all(eventPromises);
+    results.forEach(events => allEvents.push(...events));
+
+    // Sort by start time
+    allEvents.sort((a, b) => {
+      const aStart = a.start.dateTime || a.start.date || '';
+      const bStart = b.start.dateTime || b.start.date || '';
+      return aStart.localeCompare(bStart);
+    });
+
+    return allEvents;
+  } catch (error) {
+    console.error('[GoogleCalendar] Error fetching events in range:', error);
+    return [];
+  }
+}
+
 /**
  * Delete a calendar event
  */
@@ -538,6 +637,7 @@ export const GoogleCalendarService = {
   createCalendar,
   createEvent,
   getUpcomingEvents,
+  getEventsInRange,
   deleteEvent,
 
   // Focus Tools
