@@ -46,7 +46,7 @@ import {
   THERAPEUTIC_FRAMEWORKS,
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
-import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch, clearAuthState } from '@/lib/http/apiBase';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -513,16 +513,21 @@ function MAIAPageContent() {
     window.dispatchEvent(new Event('conversationStyleChanged'));
   };
 
-  const handleSignOut = () => {
-    // Remove ONLY active session token, keep user identity
-    localStorage.removeItem('beta_user');
+  const handleSignOut = async () => {
+    try {
+      // 1) Kill server session + clear cookies
+      await apiFetch('/api/members/signout', { method: 'POST' });
+    } catch (e) {
+      console.warn('[MAIA] Server signout failed (continuing with client cleanup):', e);
+    }
 
-    // ✅ KEEP these - they identify a returning user:
-    // - betaOnboardingComplete
-    // - explorerId (used by root page to detect returning user)
-    // - explorerName (preserves personalization)
+    // 2) Clear ALL local auth state (prevents rehydration loop)
+    clearAuthState();
+    sessionStorage.removeItem('maia_root_redirect_once');
 
-    router.push('/');
+    // 3) Hard navigation to force clean bootstrap
+    // (router.push allows stale state rehydration on iOS)
+    window.location.href = '/signin';
   };
 
   const handleWeekZeroComplete = (onboardingData: any) => {

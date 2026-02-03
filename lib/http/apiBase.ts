@@ -290,18 +290,38 @@ export async function healIdentity(): Promise<HealedIdentity | null> {
 
 /**
  * Clear all auth-related local storage (for poisoned states)
+ *
+ * IMPORTANT: This must be exhaustive. Any leftover identity key can
+ * trigger rehydration loops where the app thinks the user is still signed in.
  */
 export function clearAuthState(): void {
   if (typeof window === 'undefined') return;
 
-  console.warn('[auth] Clearing poisoned auth state');
+  console.warn('[auth] Clearing auth state for clean signout');
+
+  // Primary session
   localStorage.removeItem('beta_user');
+  localStorage.removeItem('beta_users'); // Legacy plaintext store
+
+  // Member identity
   localStorage.removeItem('memberId');
+  localStorage.removeItem('soullab_member');
+  localStorage.removeItem('member_profile');
+
+  // Explorer identity (all variants)
   localStorage.removeItem('explorerId');
   localStorage.removeItem('explorerName');
+  localStorage.removeItem('explorerPreferredName');
+
+  // Onboarding state
+  localStorage.removeItem('betaOnboardingComplete');
   localStorage.removeItem('signup_completed');
+
+  // Session markers
   localStorage.removeItem('maia_session_version');
   localStorage.removeItem('maia_session_token'); // Safari/iOS header-based auth
+  localStorage.removeItem('maia_session_id');
+  localStorage.removeItem('maia_session_date');
 }
 
 // Expose healIdentity for console debugging

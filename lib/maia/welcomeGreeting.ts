@@ -11,7 +11,7 @@
  * - No neediness or attachment-seeking
  */
 
-export type MemberStyleProfile = 'direct' | 'warm' | 'playful' | 'minimal';
+export type MemberStyleProfile = 'direct' | 'warm' | 'playful' | 'minimal' | 'mystic' | 'professional';
 
 export type WelcomeEnrichmentType = 'memory' | 'time_gap' | 'time_flavor' | 'default';
 
@@ -71,6 +71,10 @@ function memoryLine(theme: string, style: MemberStyleProfile): string {
       return `Still working on ${t}?`;
     case 'playful':
       return `We left off around ${t}. Pick up that thread?`;
+    case 'mystic':
+      return `The thread of ${t} remains. Shall we follow it?`;
+    case 'professional':
+      return `Our last focus was ${t}. Continue there?`;
     default: // warm
       return `Last time, we were exploring ${t}. Continue there or shift?`;
   }
@@ -86,6 +90,10 @@ function gapLine(days: number, style: MemberStyleProfile): string {
         return 'Pick up where we left off, or start fresh.';
       case 'playful':
         return 'A few days. No pressure—where do we begin?';
+      case 'mystic':
+        return 'A few turns of the wheel. What calls you now?';
+      case 'professional':
+        return 'A few days since our last session. Where shall we focus?';
       default: // warm
         return 'It\'s been a few days. Where would you like to start?';
     }
@@ -98,6 +106,10 @@ function gapLine(days: number, style: MemberStyleProfile): string {
       return 'Resume or reset—your call.';
     case 'playful':
       return 'It\'s been a minute. Short path in, or scenic route?';
+    case 'mystic':
+      return 'Time has passed. Fresh ground, or familiar paths?';
+    case 'professional':
+      return 'It\'s been a while. Resume previous work, or start fresh?';
     default: // warm
       return 'It\'s been a little while. Want to resume, or begin anew?';
   }
@@ -112,6 +124,10 @@ function timeFlavorLine(hour: number, style: MemberStyleProfile): string {
         return 'Quiet hours. We can keep it focused.';
       case 'playful':
         return 'Late hours. No small talk unless you request it.';
+      case 'mystic':
+        return 'The liminal hours. What stirs?';
+      case 'professional':
+        return 'Late session. What\'s on your mind?';
       default: // warm
         return 'The quiet hours have their own quality.';
     }
@@ -125,6 +141,10 @@ function timeFlavorLine(hour: number, style: MemberStyleProfile): string {
         return 'Early start. What\'s first?';
       case 'playful':
         return 'Early hours. Bold move—what\'s on deck?';
+      case 'mystic':
+        return 'Dawn light. What emerges?';
+      case 'professional':
+        return 'Early start. What\'s the priority?';
       default: // warm
         return 'An early start. What feels most useful right now?';
     }
@@ -141,6 +161,10 @@ function defaultLine(style: MemberStyleProfile): string {
       return 'Ready when you are.';
     case 'playful':
       return 'No ceremony required.';
+    case 'mystic':
+      return 'The space is open.';
+    case 'professional':
+      return 'How can we make progress today?';
     default: // warm
       return 'I\'m here when you\'re ready.';
   }
