@@ -94,10 +94,20 @@ function hasMeaningfulRelationshipMemory(m: unknown): boolean {
 }
 
 /**
- * Routes that should have relationship context when continuity is expected.
- * Used for tier-aware W_REL_EMPTY filtering.
+ * Internal conversation modes (mapped from client mode names).
+ * - dialogue: Talk mode (quick conversational)
+ * - counsel: Care mode (deep therapeutic) — expects relationship context
+ * - scribe: Note mode (witnessing, documentation)
  */
-const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
+export const CONVERSATION_MODES = ['dialogue', 'counsel', 'scribe'] as const;
+export type ConversationMode = (typeof CONVERSATION_MODES)[number];
+
+/**
+ * Modes that should have relationship context when continuity is expected.
+ * Used for tier-aware W_REL_EMPTY filtering.
+ * Note: Uses internal mode names (counsel = Care mode), not user-facing names.
+ */
+const RELATIONSHIP_MODES: ReadonlySet<ConversationMode> = new Set(['counsel']);
 
 /**
  * Exhaustive switch tripwire: ensures all EnforcementDecision actions are handled.
@@ -1659,17 +1669,18 @@ This user is in guest mode (no authenticated identity).
     });
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
-    const routeMode = orchestratorResult.route?.mode ?? 'unknown';
+    // Note: `mode` is the actual conversation mode (dialogue/counsel/scribe), not orchestrator.route.mode
+    // (orchestrator.route.mode is hardcoded to 'fail-soft-orchestration' and doesn't reflect conversation mode)
 
-    // Tier-aware + route-aware filtering for W_REL_EMPTY
-    // Only warn when: continuity tier + relationship-expecting route + meaningful memory + empty addendum
+    // Tier-aware + mode-aware filtering for W_REL_EMPTY
+    // Only warn when: continuity tier + relationship-expecting mode + meaningful memory + empty addendum
     const accessTier = toMemberTier(memberTier); // Canonical mapping from LimitsEnforcer → tierAccess
     const continuityExpected = hasContinuityAccess({ tier: accessTier });
-    const routeShouldHaveRelationship = RELATIONSHIP_ROUTES.has(routeMode);
+    const modeShouldHaveRelationship = RELATIONSHIP_MODES.has(mode as ConversationMode);
     const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
 
     const filteredWarnings = contextWarnings.filter(w => {
-      if (w === 'W_REL_EMPTY' && (!continuityExpected || !routeShouldHaveRelationship || !hasRel)) {
+      if (w === 'W_REL_EMPTY' && (!continuityExpected || !modeShouldHaveRelationship || !hasRel)) {
         return false;
       }
       return true;
@@ -1684,17 +1695,11 @@ This user is in guest mode (no authenticated identity).
         limitsTier: memberTier,  // LimitsEnforcer vocabulary
         accessTier,              // tierAccess vocabulary (mapped)
         enforcement: enforcementForLog, // Policy decision (allow/nudge/block)
-        // Full route object (typed, all fields)
-        route: orchestratorResult.route ? {
-          mode: orchestratorResult.route.mode,
-          type: orchestratorResult.route.type,
-          safeMode: orchestratorResult.route.safeMode,
-          operational: orchestratorResult.route.operational,
-          endpoint: orchestratorResult.route.endpoint,
-        } : null,
+        // Conversation mode (actual mode, not orchestrator.route.mode which is hardcoded)
+        conversationMode: mode, // dialogue | counsel | scribe
         // "Why this should exist" signals
         continuityExpected,
-        routeShouldHaveRelationship,
+        modeShouldHaveRelationship, // true only for 'counsel' (Care mode)
         birthDataPresent: !!birthData?.date,
         hasRelationshipMemory: hasRel,
         hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
