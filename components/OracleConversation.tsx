@@ -6421,20 +6421,31 @@ I'm not sure what I'm feeling yet.`;
               />
             </motion.div>
 
-            {/* Holoflower Image - Nested design: white background, colorful foreground */}
+            {/* Holoflower Image - Layered design like petals unfolding */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-              {/* Outer holoflower - white and translucent (background) */}
+              {/* Outer layer - white, subtle, largest */}
               <img
                 src="/holoflower.png"
-                alt="Holoflower background"
+                alt="Holoflower outer layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.85}px`,
-                  height: `${holoflowerSize * 0.85}px`,
+                  width: `${holoflowerSize * 0.90}px`,
+                  height: `${holoflowerSize * 0.90}px`,
+                  opacity: 0.35,
+                }}
+              />
+              {/* Middle layer - white, more visible */}
+              <img
+                src="/holoflower.png"
+                alt="Holoflower middle layer"
+                className="object-contain absolute"
+                style={{
+                  width: `${holoflowerSize * 0.65}px`,
+                  height: `${holoflowerSize * 0.65}px`,
                   opacity: 0.5,
                 }}
               />
-              {/* Inner nested holoflower - colorful (foreground) */}
+              {/* Inner layer - colorful, focal point */}
               <img
                 src="/logo_flower 2.png"
                 alt="Holoflower"
