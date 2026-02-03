@@ -78,13 +78,13 @@ export default function StudioLayout({
         {/* Header with Logo and Time */}
         <div className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
               <Image
-                src="/soullab-logo-transparent.jpg"
+                src="/holoflower-v2.png"
                 alt="Soullab"
                 width={32}
                 height={32}
-                className="w-8 h-8 object-contain invert"
+                className="w-8 h-8 object-cover"
               />
             </div>
             {!collapsed && <span className="font-semibold text-white">Studio</span>}
