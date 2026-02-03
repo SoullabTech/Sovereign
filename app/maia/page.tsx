@@ -514,22 +514,22 @@ function MAIAPageContent() {
   };
 
   const handleSignOut = async () => {
-    // 1) Set signout latch FIRST (survives iOS WebView restore)
-    localStorage.setItem('maia_signed_out', '1');
-    localStorage.setItem('maia_signed_out_at', String(Date.now()));
-
     try {
-      // 2) Kill server session + clear cookies
+      // 1) Kill server session + clear cookies
       await apiFetch('/api/members/signout', { method: 'POST' });
     } catch (e) {
       console.warn('[MAIA] Server signout failed (continuing with client cleanup):', e);
     }
 
-    // 3) Clear ALL local auth state (prevents rehydration loop)
+    // 2) Clear ALL local auth state
     clearAuthState();
     sessionStorage.removeItem('maia_root_redirect_once');
 
-    // 4) Hard navigation to signin (bypass root router entirely)
+    // 3) Set signout latch AFTER cleanup (survives any future broad clears)
+    localStorage.setItem('maia_signed_out', '1');
+    localStorage.setItem('maia_signed_out_at', String(Date.now()));
+
+    // 4) Hard navigation to signin
     window.location.replace('/signin?from=signout');
   };
 
