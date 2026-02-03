@@ -80,7 +80,7 @@ export default function StudioLayout({
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 flex-shrink-0">
               <Image
-                src="/holoflower-studio.png"
+                src="/logo_flower 2.png"
                 alt="Soullab"
                 width={28}
                 height={28}
