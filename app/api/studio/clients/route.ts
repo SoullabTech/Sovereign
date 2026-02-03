@@ -10,7 +10,7 @@ export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { randomUUID } from 'crypto';
 
 const VALID_STATUSES = ['active', 'inactive', 'archived', 'waitlist'] as const;
@@ -20,62 +20,61 @@ function isValidStatus(s: string): s is ClientStatus {
   return VALID_STATUSES.includes(s as ClientStatus);
 }
 
-async function getPractitionerId(): Promise<string | null> {
-  // TODO: Link members to practitioners properly
-  // For now, use hardcoded 'stellium' practitioner
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    const { practitionerId } = identity;
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const search = searchParams.get('search');
     const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 200);
 
+    // Query clients with computed session data from practitioner_sessions
     let sql = `
       SELECT
         c.id,
         c.practitioner_id,
         c.email,
         c.name,
-        c.preferred_name,
         c.status,
         c.tier,
         c.tags,
-        c.first_session,
-        c.last_session,
-        c.total_sessions,
         c.key_placements,
         c.total_revenue,
         c.birth_date,
         c.birth_time,
         c.birth_location,
-        c.birth_timezone,
-        c.has_chart,
+        c.internal_notes,
+        c.chart_image_url,
         c.created_at,
         c.updated_at,
-        c.next_session
+        c.last_session_at,
+        -- Compute next scheduled session
+        (
+          SELECT MIN(s.scheduled_at)
+          FROM practitioner_sessions s
+          WHERE s.client_id = c.id
+            AND s.status IN ('scheduled', 'confirmed')
+            AND s.scheduled_at > NOW()
+        ) as next_session_at,
+        -- Count total sessions
+        (
+          SELECT COUNT(*)
+          FROM practitioner_sessions s
+          WHERE s.client_id = c.id
+            AND s.status = 'completed'
+        ) as total_sessions
       FROM practitioner_clients c
       WHERE c.practitioner_id = $1
     `;
     const params: (string | number)[] = [practitionerId];
 
-    // Status filter
+    // Status filter (map 'active' to DB values)
     if (status && isValidStatus(status)) {
       sql += ` AND c.status = $${params.length + 1}`;
       params.push(status);
@@ -87,7 +86,7 @@ export async function GET(request: NextRequest) {
       params.push(`%${search}%`);
     }
 
-    sql += ` ORDER BY c.last_session DESC NULLS LAST, c.created_at DESC LIMIT $${params.length + 1}`;
+    sql += ` ORDER BY c.last_session_at DESC NULLS LAST, c.created_at DESC LIMIT $${params.length + 1}`;
     params.push(limit);
 
     const result = await db.query(sql, params);
@@ -97,21 +96,19 @@ export async function GET(request: NextRequest) {
       practitionerId: row.practitioner_id,
       email: row.email,
       name: row.name,
-      preferredName: row.preferred_name,
       status: row.status,
       tier: row.tier,
       tags: row.tags || [],
-      firstSession: row.first_session,
-      lastSession: row.last_session,
-      totalSessions: row.total_sessions,
       keyPlacements: row.key_placements,
-      totalRevenue: row.total_revenue,
-      nextSession: row.next_session,
+      totalRevenue: parseFloat(row.total_revenue) || 0,
       birthDate: row.birth_date,
       birthTime: row.birth_time,
       birthLocation: row.birth_location,
-      birthTimezone: row.birth_timezone,
-      hasChart: row.has_chart,
+      internalNotes: row.internal_notes,
+      chartImageUrl: row.chart_image_url,
+      lastSessionAt: row.last_session_at,
+      nextSessionAt: row.next_session_at,
+      totalSessions: parseInt(row.total_sessions) || 0,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -128,29 +125,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    const { practitionerId } = identity;
 
     const body = await request.json();
     const {
       name,
       email,
       phone,
-      preferredName,
       status = 'active',
       tier = 'free',
       tags = [],
       birthDate,
       birthTime,
       birthLocation,
-      birthTimezone,
+      internalNotes,
     } = body;
 
     if (!name?.trim()) {
@@ -184,8 +177,8 @@ export async function POST(request: NextRequest) {
     const clientId = randomUUID();
     const result = await db.query(
       `INSERT INTO practitioner_clients
-        (id, practitioner_id, name, email, phone, preferred_name, status, tier, tags, birth_date, birth_time, birth_location, birth_timezone)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        (id, practitioner_id, name, email, phone, status, tier, tags, birth_date, birth_time, birth_location, internal_notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         clientId,
@@ -193,14 +186,13 @@ export async function POST(request: NextRequest) {
         name.trim(),
         email?.trim().toLowerCase() || null,
         phone?.trim() || null,
-        preferredName?.trim() || null,
         status,
         tier,
-        tags,
+        JSON.stringify(tags),
         birthDate || null,
         birthTime || null,
         birthLocation?.trim() || null,
-        birthTimezone || null,
+        internalNotes?.trim() || null,
       ]
     );
 
@@ -211,18 +203,16 @@ export async function POST(request: NextRequest) {
         practitionerId: client.practitioner_id,
         email: client.email,
         name: client.name,
-        preferredName: client.preferred_name,
         status: client.status,
         tier: client.tier,
         tags: client.tags || [],
-        firstSession: client.first_session,
-        lastSession: client.last_session,
-        totalSessions: client.total_sessions,
         birthDate: client.birth_date,
         birthTime: client.birth_time,
         birthLocation: client.birth_location,
-        birthTimezone: client.birth_timezone,
-        hasChart: client.has_chart,
+        internalNotes: client.internal_notes,
+        lastSessionAt: client.last_session_at,
+        nextSessionAt: null,
+        totalSessions: 0,
         createdAt: client.created_at,
         updatedAt: client.updated_at,
       },
@@ -238,15 +228,12 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    const { practitionerId } = identity;
 
     const body = await request.json();
     const { id, ...updates } = body;
@@ -269,6 +256,11 @@ export async function PATCH(request: NextRequest) {
       params.push(updates.email.trim().toLowerCase());
     }
 
+    if (updates.phone !== undefined) {
+      updateFields.push(`phone = $${params.length + 1}`);
+      params.push(updates.phone?.trim() || null);
+    }
+
     if (updates.status !== undefined) {
       if (!isValidStatus(updates.status)) {
         return NextResponse.json(
@@ -287,12 +279,7 @@ export async function PATCH(request: NextRequest) {
 
     if (updates.tags !== undefined) {
       updateFields.push(`tags = $${params.length + 1}`);
-      params.push(updates.tags);
-    }
-
-    if (updates.preferredName !== undefined) {
-      updateFields.push(`preferred_name = $${params.length + 1}`);
-      params.push(updates.preferredName?.trim() || null);
+      params.push(JSON.stringify(updates.tags));
     }
 
     if (updates.birthDate !== undefined) {
@@ -310,9 +297,9 @@ export async function PATCH(request: NextRequest) {
       params.push(updates.birthLocation?.trim() || null);
     }
 
-    if (updates.birthTimezone !== undefined) {
-      updateFields.push(`birth_timezone = $${params.length + 1}`);
-      params.push(updates.birthTimezone || null);
+    if (updates.internalNotes !== undefined) {
+      updateFields.push(`internal_notes = $${params.length + 1}`);
+      params.push(updates.internalNotes?.trim() || null);
     }
 
     if (updateFields.length === 0) {
@@ -340,18 +327,14 @@ export async function PATCH(request: NextRequest) {
         practitionerId: client.practitioner_id,
         email: client.email,
         name: client.name,
-        preferredName: client.preferred_name,
         status: client.status,
         tier: client.tier,
         tags: client.tags || [],
-        firstSession: client.first_session,
-        lastSession: client.last_session,
-        totalSessions: client.total_sessions,
         birthDate: client.birth_date,
         birthTime: client.birth_time,
         birthLocation: client.birth_location,
-        birthTimezone: client.birth_timezone,
-        hasChart: client.has_chart,
+        internalNotes: client.internal_notes,
+        lastSessionAt: client.last_session_at,
         createdAt: client.created_at,
         updatedAt: client.updated_at,
       },
@@ -367,15 +350,12 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    const { practitionerId } = identity;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
