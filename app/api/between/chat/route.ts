@@ -124,6 +124,33 @@ function assertNeverConversationMode(x: never): never {
 }
 
 /**
+ * Normalize client mode names to internal ConversationMode.
+ * Maps: normal→dialogue, patient→counsel, session→scribe
+ * Defaults to 'dialogue' if undefined or unrecognized.
+ *
+ * @returns ConversationMode (typed, never undefined)
+ */
+function normalizeConversationMode(
+  rawMode: 'dialogue' | 'counsel' | 'scribe' | 'normal' | 'patient' | 'session' | undefined
+): ConversationMode {
+  switch (rawMode) {
+    // Client legacy names
+    case 'normal':  return 'dialogue';
+    case 'patient': return 'counsel';
+    case 'session': return 'scribe';
+    // Already normalized
+    case 'dialogue':
+    case 'counsel':
+    case 'scribe':
+      return rawMode;
+    // Undefined or unrecognized → default
+    case undefined:
+    default:
+      return 'dialogue';
+  }
+}
+
+/**
  * Exhaustive switch tripwire: ensures all EnforcementDecision actions are handled.
  * - Compile-time: TS forces you to handle new actions if EnforcementDecision evolves
  * - Runtime: catches `as any` escapes or JSON drift with a loud error
@@ -836,10 +863,7 @@ export async function POST(req: NextRequest) {
 
     // 🔄 MODE NORMALIZATION: Map client mode names to API mode names
     // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
-    const mode = rawMode === 'patient' ? 'counsel'
-               : rawMode === 'session' ? 'scribe'
-               : rawMode === 'normal' ? 'dialogue'
-               : rawMode; // Pass through if already normalized
+    const mode = normalizeConversationMode(rawMode);
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
     // When true: no content retention, no patterns formed, no training data
@@ -1657,7 +1681,7 @@ This user is in guest mode (no authenticated identity).
       context: {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
-        mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
+        mode, // Pass mode (Talk/Care/Note) for appropriate system prompts — typed ConversationMode
         userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
         localHour, // Client's local hour (0-23) for correct time-of-day greetings
         relationshipMemory, // ✅ Relational continuity
@@ -1690,7 +1714,7 @@ This user is in guest mode (no authenticated identity).
     // Only warn when: continuity tier + relationship-expecting mode + meaningful memory + empty addendum
     const accessTier = toMemberTier(memberTier); // Canonical mapping from LimitsEnforcer → tierAccess
     const continuityExpected = hasContinuityAccess({ tier: accessTier });
-    const modeShouldHaveRelationship = isRelationshipMode(mode as ConversationMode);
+    const modeShouldHaveRelationship = isRelationshipMode(mode);
     const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
 
     const filteredWarnings = contextWarnings.filter(w => {
@@ -1711,6 +1735,7 @@ This user is in guest mode (no authenticated identity).
         enforcement: enforcementForLog, // Policy decision (allow/nudge/block)
         // Conversation mode (actual mode, not orchestrator.route.mode which is hardcoded)
         conversationMode: mode, // dialogue | counsel | scribe
+        orchestratorRoute: orchestratorResult.route?.mode, // Diagnostic: what orchestrator thought it was doing
         // "Why this should exist" signals
         continuityExpected,
         modeShouldHaveRelationship, // true only for 'counsel' (Care mode)
