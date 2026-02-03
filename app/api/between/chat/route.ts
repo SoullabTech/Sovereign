@@ -105,7 +105,7 @@ const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
  * - Runtime: catches `as any` escapes or JSON drift with a loud error
  */
 function assertNeverEnforcement(x: never): never {
-  throw new Error(`[INVARIANT VIOLATION] Unexpected enforcement action: ${JSON.stringify(x)}`);
+  throw new Error(`[E_INVARIANT_ENFORCEMENT_ACTION] Unexpected enforcement action: ${JSON.stringify(x)}`);
 }
 
 // ═══════════════════════════════════════════════════════════════
