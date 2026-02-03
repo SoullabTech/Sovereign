@@ -78,13 +78,13 @@ export default function StudioLayout({
         {/* Header with Logo and Time */}
         <div className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0">
+            <div className="w-7 h-7 flex-shrink-0">
               <Image
-                src="/holoflower-whatsapp.png"
+                src="/holoflower-studio.png"
                 alt="Soullab"
                 width={28}
                 height={28}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
             {!collapsed && <span className="font-semibold text-white">Studio</span>}
