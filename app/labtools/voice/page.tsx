@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import VoiceSettings, { VoiceConfiguration } from '@/components/VoiceSettings';
 import { Mic, BarChart, Settings2, TestTube, Sparkles } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 export default function VoiceLabPage() {
   const [voiceConfig, setVoiceConfig] = useState<VoiceConfiguration>({
@@ -106,7 +107,7 @@ export default function VoiceLabPage() {
     const startTime = Date.now();
 
     try {
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

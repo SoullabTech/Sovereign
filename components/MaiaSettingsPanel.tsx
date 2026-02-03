@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Save, RotateCcw, Play, Globe, Brain, RefreshCw, Check } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 import { ClaudeCodeSettingsToggle } from '@/components/ui/ClaudeCodeIndicator';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
@@ -199,7 +200,7 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   const testVoice = async () => {
     setTestingVoice(true);
     try {
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
