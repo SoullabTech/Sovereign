@@ -940,7 +940,7 @@ This user is in guest mode (no authenticated identity).
         tier: memberTier,
       }, {
         status: 429,
-        headers: makeCanonHeaders({ requestId: reqId, pipeline: 'limits-enforcer', source: 'direct' }),
+        headers: makeCanonHeaders({ requestId: reqId, pipeline: 'direct', source: 'direct' }),
       });
     }
 
