@@ -80,6 +80,12 @@ export interface MaiaContext {
   maiaModeAddendum?: string;
   // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
   scribeSessionDiscussionAddendum?: string;
+  // 📓 JOURNAL CONTEXT: User's journal entries for continuity (placeholder)
+  journalContextAddendum?: string;
+  // 📸 CAPTURE CONTEXT: User's captured moments/insights (placeholder)
+  captureContextAddendum?: string;
+  // 👤 GUEST CONTEXT: Explicit messaging when user is anonymous/guest
+  guestContextAddendum?: string;
 }
 
 /**
@@ -678,68 +684,96 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
     console.log(`🧠 [Self-Awareness] Enabled (${detail} detail) - MAIA can explain her architecture`);
   }
 
-  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
-  if (context.epistemicPathAddendum) {
-    adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
-    console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
-  }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ADDENDA INJECTION ORDER (stable, intentional sequence)
+  // 1. Relationship/Governor (who they are, how we relate)
+  // 2. Guest context (explicit when context unavailable)
+  // 3. Memory/Journal/Capture (what we know about them)
+  // 4. Astrology (cosmic context)
+  // 5. Spiral/WuXing/Bridge (current state computation)
+  // 6. Framework/Lens (mode-specific guidance)
+  // 7. Epistemic/MAIA mode (how to respond)
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
-  // This is the always-on substrate that anchors all Care Mode responses
-  if (context.spiralSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.spiralSnapshotAddendum}`;
-    console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
-  }
-
-  // 🌿 WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
-  if (context.wuxingSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.wuxingSnapshotAddendum}`;
-    console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
-  }
-
-  // 🌉 BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
-  if (context.bridgeSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.bridgeSnapshotAddendum}`;
-    console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
-  }
-
-  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
-  if (context.therapeuticFrameworkAddendum) {
-    adaptedPrompt += `\n\n${context.therapeuticFrameworkAddendum}`;
-    console.log(`🧘 [Therapeutic Framework] Applied: ${context.therapeuticFrameworkAddendum.split('\n')[0]}`);
-  }
-
-  // 🔮 REFLECTION LENS: Mode-specific lens for Scribe mode
-  if (context.reflectionLensAddendum) {
-    adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
-    console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
-  }
-
-  // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-  if (context.astrologicalContextAddendum) {
-    adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
-    console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
-  }
-
-  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
-  if (context.governorAddendum) {
-    adaptedPrompt += `\n\n${context.governorAddendum}`;
-    console.log(`🌀 [Governor] Posture guidance injected`);
-  }
-
-  // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
+  // 1️⃣ RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
   if (context.relationshipModeAddendum) {
     adaptedPrompt += `\n\n${context.relationshipModeAddendum}`;
     console.log(`💫 [Relationship] Mode: ${context.relationshipModeAddendum.split('\n')[0]}`);
   }
 
-  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  // 2️⃣ DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  if (context.governorAddendum) {
+    adaptedPrompt += `\n\n${context.governorAddendum}`;
+    console.log(`🌀 [Governor] Posture guidance injected`);
+  }
+
+  // 3️⃣ GUEST CONTEXT: Explicit messaging when user is anonymous/guest
+  if (context.guestContextAddendum) {
+    adaptedPrompt += `\n\n${context.guestContextAddendum}`;
+    console.log(`👤 [Guest] Context limitation note injected`);
+  }
+
+  // 4️⃣ JOURNAL CONTEXT: User's journal entries for continuity (placeholder)
+  if (context.journalContextAddendum) {
+    adaptedPrompt += `\n\n${context.journalContextAddendum}`;
+    console.log(`📓 [Journal] Context injected`);
+  }
+
+  // 5️⃣ CAPTURE CONTEXT: User's captured moments/insights (placeholder)
+  if (context.captureContextAddendum) {
+    adaptedPrompt += `\n\n${context.captureContextAddendum}`;
+    console.log(`📸 [Capture] Context injected`);
+  }
+
+  // 6️⃣ ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+  if (context.astrologicalContextAddendum) {
+    adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
+    console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
+  }
+
+  // 7️⃣ SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
+  if (context.spiralSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.spiralSnapshotAddendum}`;
+    console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
+  }
+
+  // 8️⃣ WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
+  if (context.wuxingSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.wuxingSnapshotAddendum}`;
+    console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
+  }
+
+  // 9️⃣ BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
+  if (context.bridgeSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.bridgeSnapshotAddendum}`;
+    console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
+  }
+
+  // 🔟 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
+  if (context.therapeuticFrameworkAddendum) {
+    adaptedPrompt += `\n\n${context.therapeuticFrameworkAddendum}`;
+    console.log(`🧘 [Therapeutic Framework] Applied: ${context.therapeuticFrameworkAddendum.split('\n')[0]}`);
+  }
+
+  // 1️⃣1️⃣ REFLECTION LENS: Mode-specific lens for Scribe mode
+  if (context.reflectionLensAddendum) {
+    adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
+    console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
+  }
+
+  // 1️⃣2️⃣ EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  if (context.epistemicPathAddendum) {
+    adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
+    console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
+  }
+
+  // 1️⃣3️⃣ MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
   if (context.maiaModeAddendum) {
     adaptedPrompt += `\n\n${context.maiaModeAddendum}`;
     console.log(`🎭 [MAIA Mode] Relational mode guidance injected`);
   }
 
-  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  // 1️⃣4️⃣ SCRIBE SESSION DISCUSSION: Context for discussing a past session
   if (context.scribeSessionDiscussionAddendum) {
     adaptedPrompt += `\n\n${context.scribeSessionDiscussionAddendum}`;
     console.log(`📝 [Scribe Discussion] Session context injected`);

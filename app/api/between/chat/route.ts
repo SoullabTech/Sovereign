@@ -879,6 +879,18 @@ export async function POST(req: NextRequest) {
     const isAnon = effectiveUserId.startsWith('anon:');
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
 
+    // 👤 GUEST CONTEXT: Explicit messaging when context is unavailable
+    // Prevents MAIA from hallucinating "I remember you" or assuming prior history
+    const guestContextAddendum = isAnon
+      ? `👤 GUEST CONTEXT NOTE:
+This user is in guest mode (no authenticated identity).
+- Do NOT assume long-term memory, profile, or prior sessions
+- Do NOT say "I remember" or reference past conversations
+- Keep responses self-contained and complete
+- If continuity context would help, ask ONE gentle clarifying question
+- Journal and capture context are unavailable in guest mode`
+      : null;
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
@@ -1464,15 +1476,19 @@ export async function POST(req: NextRequest) {
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
-        epistemicPathAddendum, // 🧭 User-chosen epistemic lens
-        spiralSnapshotAddendum, // 🌀 Computed spiral state (Pass 1)
-        wuxingSnapshotAddendum, // 🌿 Wu Xing five element state
-        bridgeSnapshotAddendum, // 🌉 Spiral × Wu Xing bridged awareness
-        therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
-        reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
-        astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
-        governorAddendum, // 🌀 Spiralogic posture constraints
-        relationshipModeAddendum, // 💫 Tier-based relationship depth
+        // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence) ═══
+        relationshipModeAddendum, // 1️⃣ Tier-based relationship depth
+        governorAddendum, // 2️⃣ Spiralogic posture constraints
+        guestContextAddendum, // 3️⃣ Guest mode explicit messaging
+        journalContextAddendum: null, // 4️⃣ Placeholder: user's journal entries
+        captureContextAddendum: null, // 5️⃣ Placeholder: user's captured insights
+        astrologicalContextAddendum, // 6️⃣ User's birth data for cosmic insights
+        spiralSnapshotAddendum, // 7️⃣ Computed spiral state (Pass 1)
+        wuxingSnapshotAddendum, // 8️⃣ Wu Xing five element state
+        bridgeSnapshotAddendum, // 9️⃣ Spiral × Wu Xing bridged awareness
+        therapeuticFrameworkAddendum, // 🔟 Therapeutic framework for Counsel mode
+        reflectionLensAddendum, // 1️⃣1️⃣ Reflection lens for Scribe mode
+        epistemicPathAddendum, // 1️⃣2️⃣ User-chosen epistemic lens
       },
       // Route/profile tracing for corpus callosum filtering
       originRoute: '/api/between/chat',

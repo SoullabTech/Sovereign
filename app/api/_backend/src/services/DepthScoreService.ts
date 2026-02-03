@@ -54,6 +54,20 @@ function countQuestionClauses(text: string) {
 }
 
 export class DepthScoreService {
+  // Thresholds for band classification and flags
+  private static readonly THRESHOLDS = {
+    deepMin: 65,
+    guidedMin: 35,
+    precisionMin: 8,
+  };
+
+  /**
+   * Expose thresholds for trace logging (makes traces self-documenting)
+   */
+  static thresholds() {
+    return this.THRESHOLDS;
+  }
+
   static compute(inputs: DepthInputs): DepthScoreResult {
     const query = inputs.query ?? '';
     const q = query.toLowerCase();
@@ -182,10 +196,12 @@ export class DepthScoreService {
     const raw = contextLoad + synthesis + precision + careWeight;
     const score = clamp(Math.round(raw), 0, 100);
 
-    const band: DepthBand = score >= 65 ? 'DEEP' : score >= 35 ? 'GUIDED' : 'SWIFT';
+    const band: DepthBand =
+      score >= this.THRESHOLDS.deepMin ? 'DEEP' :
+      score >= this.THRESHOLDS.guidedMin ? 'GUIDED' : 'SWIFT';
 
     // precision mode: separate switch (can be true even in SWIFT)
-    const precisionMode = precision >= 8; // tune later if needed
+    const precisionMode = precision >= this.THRESHOLDS.precisionMin;
 
     return {
       score,
