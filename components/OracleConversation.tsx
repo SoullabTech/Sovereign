@@ -6421,7 +6421,7 @@ I'm not sure what I'm feeling yet.`;
               />
             </motion.div>
 
-            {/* Holoflower Image - Sacred geometry golden ratio (φ) proportions */}
+            {/* Holoflower Image - Two layers with golden ratio */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
               {/* Outer layer - 90% */}
               <img
@@ -6431,39 +6431,18 @@ I'm not sure what I'm feeling yet.`;
                 style={{
                   width: `${holoflowerSize * 0.90}px`,
                   height: `${holoflowerSize * 0.90}px`,
-                  opacity: 0.35,
+                  opacity: 0.4,
                 }}
               />
-              {/* Middle layer - 90% / φ ≈ 55.6% */}
-              <img
-                src="/holoflower.png"
-                alt="Holoflower middle layer"
-                className="object-contain absolute"
-                style={{
-                  width: `${holoflowerSize * 0.556}px`,
-                  height: `${holoflowerSize * 0.556}px`,
-                  opacity: 0.55,
-                }}
-              />
-              {/* Inner layer - 55.6% / φ ≈ 34.4% */}
+              {/* Inner layer - 90% / φ ≈ 55.6% */}
               <img
                 src="/holoflower.png"
                 alt="Holoflower inner layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.344}px`,
-                  height: `${holoflowerSize * 0.344}px`,
-                  opacity: 0.8,
-                }}
-              />
-              {/* Sacred center - white light point */}
-              <div
-                className="absolute rounded-full"
-                style={{
-                  width: `${holoflowerSize * 0.08}px`,
-                  height: `${holoflowerSize * 0.08}px`,
-                  background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
-                  boxShadow: '0 0 20px rgba(255,255,255,0.6)',
+                  width: `${holoflowerSize * 0.556}px`,
+                  height: `${holoflowerSize * 0.556}px`,
+                  opacity: 0.7,
                 }}
               />
             </div>
