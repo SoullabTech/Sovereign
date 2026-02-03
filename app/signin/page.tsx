@@ -233,6 +233,10 @@ function SigninContent() {
       localStorage.setItem('maia_session_token', sessionToken);
       console.log('[storeSession] Stored session token for header-based auth');
     }
+
+    // Clear signout latch - user has consciously signed in again
+    localStorage.removeItem('maia_signed_out');
+    localStorage.removeItem('maia_signed_out_at');
   }
 
   // Passkey sign-in (biometric) - uses unified biometry on native platforms
