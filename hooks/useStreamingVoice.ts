@@ -51,12 +51,21 @@ export type StreamingVoicePlaybackSignal =
   | { type: 'AUDIO_FAILED'; reason: string }
   | { type: 'AUDIO_BLOCKED'; reason: string };
 
+/** Limits block response from API (429 + blocked: true) */
+interface LimitsBlockData {
+  message: string;
+  upgradeHint?: string;
+  tier?: string;
+}
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
   onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
   onSilence?: (silence: SilenceResponse) => void;
   onMoveOutcome?: (outcome: MoveOutcomeEvent) => void;
   onError?: (error: string) => void;
+  /** Called when voice is blocked due to tier limits (429 + blocked) */
+  onLimitsBlock?: (data: LimitsBlockData) => void;
   /** PWA playback signal callback for confirmed audio states */
   onPlaybackSignal?: (signal: StreamingVoicePlaybackSignal) => void;
   voice?: string;
@@ -213,6 +222,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onSilence,
     onMoveOutcome,
     onError,
+    onLimitsBlock,  // 🛑 Tier limits callback
     onPlaybackSignal,  // 🎤 PWA playback signals
     voice = 'maya',
     speed = 1.0,
@@ -558,6 +568,20 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       console.log('[StreamingVoice] Response status:', response.status);
 
       if (!response.ok) {
+        // 🛑 LIMITS ENFORCEMENT: Check for tier-based voice limit (429)
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.blocked) {
+            console.log('[StreamingVoice] Voice limit reached:', errData.error || errData.message);
+            setState(prev => ({ ...prev, isStreaming: false, error: 'Voice limit reached' }));
+            onLimitsBlock?.({
+              message: errData.error ?? errData.message ?? "You've reached your voice limit for this tier.",
+              upgradeHint: errData.upgradeHint,
+              tier: errData.tier,
+            });
+            return; // Don't throw - handled gracefully
+          }
+        }
         throw new Error(`Stream request failed: ${response.status}`);
       }
 
@@ -813,7 +837,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk, forceRecoverFromFalseSpeaking]);
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
 
   /**
    * Stop streaming and playback

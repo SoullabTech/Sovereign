@@ -694,6 +694,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
 
+  // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
+  const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
+  const [limitsBlock, setLimitsBlock] = useState<null | { message: string; upgradeHint?: string; tier?: string }>(null);
+
   // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
   // This is separate from messages - history can be restored but greeting shows until activation
   const [hasActivated, setHasActivated] = useState(false);
@@ -4124,6 +4128,21 @@ I'm not sure what I'm feeling yet.`;
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // 🛑 LIMITS ENFORCEMENT: Check for tier-based usage block (429)
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.blocked) {
+            console.log('[OracleConversation] Usage limit reached:', errData.message);
+            setLimitsBlock({
+              message: errData.message ?? "You've reached a limit for this tier.",
+              upgradeHint: errData.upgradeHint,
+              tier: errData.tier,
+            });
+            setIsResponding(false);
+            return; // Don't show fallback - show limits UI instead
+          }
+        }
+
         const errorText = await response.text().catch(() => '(no body)');
         console.error('[fetch] non-OK response:', response.status, errorText);
 
@@ -4495,6 +4514,16 @@ I'm not sure what I'm feeling yet.`;
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
+
+        // 🛑 LIMITS NUDGE: Check for soft cap warnings (non-blocking)
+        if (responseData?.metadata?.limitNudge?.message) {
+          setLimitsBanner({
+            message: responseData.metadata.limitNudge.message,
+            nudgeType: responseData.metadata.limitNudge.nudgeType,
+            tier: responseData.metadata.tier,
+          });
+        }
+
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
         responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
@@ -6013,6 +6042,66 @@ I'm not sure what I'm feeling yet.`;
       )}
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
+
+      {/* 🛑 LIMITS BANNER: Soft cap nudge (non-blocking, dismissible) */}
+      {limitsBanner && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)]">
+          <div className="rounded-xl border border-white/10 bg-soul-background/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-400/80 text-lg">✦</span>
+              <div className="flex-1">
+                <p className="text-sm text-white/80">{limitsBanner.message}</p>
+              </div>
+              <button
+                onClick={() => setLimitsBanner(null)}
+                className="text-white/40 hover:text-white/60 transition-colors"
+                aria-label="Dismiss"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🛑 LIMITS BLOCK: Hard cap reached (modal overlay) */}
+      {limitsBlock && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full rounded-2xl border border-white/10 bg-soul-background p-6 shadow-2xl">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-amber-400 text-xl">✦</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white/90 font-medium mb-2">Taking a pause</h3>
+                <p className="text-sm text-white/70 mb-3">{limitsBlock.message}</p>
+                {limitsBlock.upgradeHint && (
+                  <p className="text-xs text-white/50 mb-4">{limitsBlock.upgradeHint}</p>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setLimitsBlock(null)}
+                    className="flex-1 rounded-lg bg-white/10 px-4 py-2.5 text-sm text-white/85 hover:bg-white/15 transition-colors"
+                  >
+                    OK
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLimitsBlock(null);
+                      window.location.href = '/settings/billing';
+                    }}
+                    className="flex-1 rounded-lg bg-amber-500/90 px-4 py-2.5 text-sm text-black font-medium hover:bg-amber-400 transition-colors"
+                  >
+                    See options
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
       <AnimatePresence>

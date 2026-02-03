@@ -93,6 +93,12 @@ function hasMeaningfulRelationshipMemory(m: unknown): boolean {
   return false;
 }
 
+/**
+ * Routes that should have relationship context when continuity is expected.
+ * Used for tier-aware W_REL_EMPTY filtering.
+ */
+const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
+
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
 // ═══════════════════════════════════════════════════════════════
@@ -1620,8 +1626,9 @@ This user is in guest mode (no authenticated identity).
 
     // Tier-aware + route-aware filtering for W_REL_EMPTY
     // Only warn when: continuity tier + relationship-expecting route + meaningful memory + empty addendum
-    const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
-    const continuityExpected = hasContinuityAccess({ tier: memberTier });
+    // Map LimitsEnforcer tier to tierAccess tier for continuity check
+    const tierAccessTier = memberTier === 'member_plus' ? 'personal' : memberTier === 'studio_pro' ? 'pro' : 'free';
+    const continuityExpected = hasContinuityAccess({ tier: tierAccessTier });
     const routeShouldHaveRelationship = RELATIONSHIP_ROUTES.has(routeMode);
     const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
 
