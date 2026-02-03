@@ -393,7 +393,10 @@ export async function POST(req: NextRequest) {
 
   // ═══ TIER-BASED VOICE LIMITS CHECK ═══
   const isAnon = !userId;
-  const anonId = isAnon ? `anon_voice_${crypto.randomUUID().slice(0, 8)}` : undefined;
+  // Use stable anon ID from client header (persisted in localStorage) instead of random per-request ID
+  // This ensures Free tier usage actually accumulates across requests
+  const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
+  const anonId = isAnon ? (headerAnonId || `anon_voice_${crypto.randomUUID().slice(0, 8)}`) : undefined;
   const memberTier: MemberTier = isAnon ? 'free' : userId ? await getMemberTier(userId) : 'free';
 
   // Pre-check voice limits before processing

@@ -35,7 +35,10 @@ export async function POST(req: NextRequest) {
 
     // ═══ IDENTITY RESOLUTION ═══
     const memberId = await getMemberIdFromRequest(req);
-    const anonId = memberId ? undefined : `anon_${requestId.slice(0, 8)}`;
+    // Use stable anon ID from client header (persisted in localStorage) instead of random per-request ID
+    // This ensures Free tier usage actually accumulates across requests
+    const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
+    const anonId = memberId ? undefined : (headerAnonId || `anon_${requestId.slice(0, 8)}`);
     const isAnon = !memberId;
 
     // ═══ TIER-BASED LIMITS CHECK ═══

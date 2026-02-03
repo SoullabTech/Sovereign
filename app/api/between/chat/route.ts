@@ -907,6 +907,11 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET eligibility (allow override for local testing)
     const SELFLET_ALLOW_ANON = process.env.MAIA_SELFLET_ALLOW_ANON === '1';
     const isAnon = effectiveUserId.startsWith('anon:');
+
+    // Stable anon ID for usage tracking - prefer header (shared with voice routes)
+    // This ensures Free tier limits accumulate consistently across text AND voice
+    const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
+    const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
 
     // 👤 GUEST CONTEXT: Explicit messaging when context is unavailable
@@ -932,7 +937,7 @@ This user is in guest mode (no authenticated identity).
 
     const limitsCheck = await LimitsEnforcer.checkUsage({
       memberId: isAnon ? undefined : authUserId ?? undefined,
-      anonId: isAnon ? effectiveUserId : undefined,
+      anonId: stableAnonId,
       tier: memberTier,
       resource: 'text',
     });
@@ -2035,7 +2040,7 @@ This user is in guest mode (no authenticated identity).
     // ═══════════════════════════════════════════════════════════════════════
     LimitsEnforcer.recordUsage({
       memberId: isAnon ? undefined : authUserId ?? undefined,
-      anonId: isAnon ? effectiveUserId : undefined,
+      anonId: stableAnonId,
       tier: memberTier,
       resource: 'text',
       tokensIn: orchestratorResult.metadata?.tokensUsed?.input ?? 0,
