@@ -57,11 +57,6 @@ export async function GET(request: NextRequest) {
         practitionerId: identity.practitionerId,
         slug: identity.practitionerSlug,
         name: identity.practitionerName,
-        hasNotificationSettings: Object.keys(identity.notificationSettings || {}).length > 0,
-        notificationChannels: {
-          telegram: !!identity.notificationSettings?.telegram_chat_id,
-          phone: !!identity.notificationSettings?.phone,
-        },
       },
       authMethod,
     });
