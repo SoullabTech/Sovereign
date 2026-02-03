@@ -6456,6 +6456,16 @@ I'm not sure what I'm feeling yet.`;
                   opacity: 0.8,
                 }}
               />
+              {/* Sacred center - white light point */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: `${holoflowerSize * 0.08}px`,
+                  height: `${holoflowerSize * 0.08}px`,
+                  background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
+                  boxShadow: '0 0 20px rgba(255,255,255,0.6)',
+                }}
+              />
             </div>
 
             {/* 💜 ULTRAVIOLET GLOW - When ready/listening (responds to user voice amplitude) */}
