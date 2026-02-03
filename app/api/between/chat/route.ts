@@ -40,6 +40,7 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { hasContinuityAccess } from '@/lib/auth/tierAccess';
 import { query } from '@/lib/db/postgres';
 import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
@@ -1619,10 +1620,15 @@ This user is in guest mode (no authenticated identity).
 
     // Tier-aware + route-aware filtering for W_REL_EMPTY
     // Only warn when: continuity tier + relationship-expecting route + meaningful memory + empty addendum
-    const continuityExpected = memberTier !== 'free';
-    const routeShouldHaveRelationship = ['care', 'mentor', 'deep'].includes(routeMode);
+    const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
+    const continuityExpected = hasContinuityAccess({ tier: memberTier });
+    const routeShouldHaveRelationship = RELATIONSHIP_ROUTES.has(routeMode);
+    const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
+
     const filteredWarnings = contextWarnings.filter(w => {
-      if (w === 'W_REL_EMPTY' && (!continuityExpected || !routeShouldHaveRelationship)) return false;
+      if (w === 'W_REL_EMPTY' && (!continuityExpected || !routeShouldHaveRelationship || !hasRel)) {
+        return false;
+      }
       return true;
     });
 
@@ -1645,7 +1651,7 @@ This user is in guest mode (no authenticated identity).
         continuityExpected,
         routeShouldHaveRelationship,
         birthDataPresent: !!birthData?.date,
-        hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
+        hasRelationshipMemory: hasRel,
         hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
       });
     }
