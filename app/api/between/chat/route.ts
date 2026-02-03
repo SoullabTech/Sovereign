@@ -40,7 +40,7 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { hasContinuityAccess } from '@/lib/auth/tierAccess';
+import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { query } from '@/lib/db/postgres';
 import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
@@ -1626,9 +1626,8 @@ This user is in guest mode (no authenticated identity).
 
     // Tier-aware + route-aware filtering for W_REL_EMPTY
     // Only warn when: continuity tier + relationship-expecting route + meaningful memory + empty addendum
-    // Map LimitsEnforcer tier to tierAccess tier for continuity check
-    const tierAccessTier = memberTier === 'member_plus' ? 'personal' : memberTier === 'studio_pro' ? 'pro' : 'free';
-    const continuityExpected = hasContinuityAccess({ tier: tierAccessTier });
+    const accessTier = toMemberTier(memberTier); // Canonical mapping from LimitsEnforcer → tierAccess
+    const continuityExpected = hasContinuityAccess({ tier: accessTier });
     const routeShouldHaveRelationship = RELATIONSHIP_ROUTES.has(routeMode);
     const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
 
@@ -1645,7 +1644,8 @@ This user is in guest mode (no authenticated identity).
         reqId,
         userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
         recognized: !isAnon,
-        tier: memberTier,
+        limitsTier: memberTier,  // LimitsEnforcer vocabulary
+        accessTier,              // tierAccess vocabulary (mapped)
         // Full route object (typed, all fields)
         route: orchestratorResult.route ? {
           mode: orchestratorResult.route.mode,

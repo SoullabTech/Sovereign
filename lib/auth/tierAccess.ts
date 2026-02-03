@@ -17,6 +17,35 @@ export interface TierInfo {
   tier_started_at?: Date | string;
 }
 
+/**
+ * LimitsEnforcer tier vocabulary (billing/enforcement layer).
+ * Maps to MemberTier for access checks.
+ */
+export type LimitsTier = 'free' | 'member_plus' | 'studio_pro';
+
+/**
+ * Convert LimitsEnforcer tier to access-tier vocabulary.
+ * Centralizes the mapping so routes don't diverge.
+ */
+export function toMemberTier(limitsTier: LimitsTier | string | null | undefined): MemberTier {
+  if (!limitsTier) return 'free';
+  if (limitsTier === 'studio_pro') return 'pro';
+  if (limitsTier === 'member_plus') return 'personal';
+  // If already in MemberTier vocabulary, pass through
+  if (limitsTier === 'personal' || limitsTier === 'pro' || limitsTier === 'free') {
+    return limitsTier as MemberTier;
+  }
+  return 'free';
+}
+
+/**
+ * Ergonomic wrapper: check continuity access from tier string directly.
+ * Delegates to hasContinuityAccess for policy.
+ */
+export function hasContinuityTier(tier: MemberTier | null | undefined): boolean {
+  return hasContinuityAccess(tier ? { tier } : null);
+}
+
 // ============================================
 // Core Access Checks (principle-based)
 // ============================================
