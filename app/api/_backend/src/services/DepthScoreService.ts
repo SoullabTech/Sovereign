@@ -61,11 +61,21 @@ export class DepthScoreService {
     precisionMin: 8,
   };
 
+  // Version tag for scoring algorithm (bump when weights/heuristics change)
+  private static readonly VERSION = 'depthscore_v1';
+
   /**
    * Expose thresholds for trace logging (makes traces self-documenting)
    */
   static thresholds() {
     return this.THRESHOLDS;
+  }
+
+  /**
+   * Scoring version for trace comparability across builds
+   */
+  static version() {
+    return this.VERSION;
   }
 
   static compute(inputs: DepthInputs): DepthScoreResult {

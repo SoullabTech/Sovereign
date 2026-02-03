@@ -146,13 +146,15 @@ export function runSymbolicRouter(args: {
 
           // Inputs (for explainability)
           inputs: {
+            existingIntent,
             intent: maiaNativeIntent,
             numTurns: depthInputs?.numTurns ?? 0,
             memoryHitsCount: depthInputs?.memoryHitsCount ?? 0,
             retrievedSourceTypesCount: (depthInputs?.retrievedSourceTypes ?? []).length,
           },
 
-          // Thresholds (self-documenting trace)
+          // Scoring metadata (self-documenting trace)
+          depthScoreVersion: DepthScoreService.version(),
           thresholds: DepthScoreService.thresholds(),
 
           // Human-readable reason codes
