@@ -21,6 +21,15 @@ function WelcomeBackContent() {
   const isPartnerEntry = institution === 'yale' && context;
 
   useEffect(() => {
+    // SIGNOUT LATCH: If user explicitly signed out, route to signin immediately
+    // This prevents iOS WebView restore from bypassing explicit signout
+    const signedOut = localStorage.getItem('maia_signed_out') === '1';
+    if (signedOut) {
+      console.log('[NAV] /welcome-back -> /signin (reason: signout latch active)');
+      window.location.replace('/signin?from=signed_out_latch');
+      return;
+    }
+
     const sessionState = betaSession.restoreSession();
 
     if (sessionState.isAuthenticated && sessionState.user) {

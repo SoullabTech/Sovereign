@@ -182,6 +182,15 @@ function SigninContent() {
       return;
     }
 
+    // SIGNOUT LATCH: If user explicitly signed out, stay on signin
+    // This prevents any auto-redirect from overriding explicit signout
+    const signedOut = localStorage.getItem('maia_signed_out') === '1';
+    if (signedOut) {
+      console.log('[SIGNIN PAGE] latch active - skipping auto-redirect');
+      setCheckingAuth(false);
+      return;
+    }
+
     // NATIVE: Never do auth preflight
     if (isNative) {
       console.log('[SIGNIN PAGE] Native - form ready');
