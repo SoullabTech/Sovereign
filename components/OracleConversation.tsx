@@ -6445,6 +6445,15 @@ I'm not sure what I'm feeling yet.`;
                   opacity: 0.7,
                 }}
               />
+              {/* White center dot - covers dark center */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: `${holoflowerSize * 0.05}px`,
+                  height: `${holoflowerSize * 0.05}px`,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                }}
+              />
             </div>
 
             {/* 💜 ULTRAVIOLET GLOW - When ready/listening (responds to user voice amplitude) */}
