@@ -110,10 +110,10 @@ describe('isRelationshipMode', () => {
   });
 
   // ==========================================================================
-  // BUSINESS INVARIANT: Only counsel expects relationship context
+  // CANARY: only counsel is relationship-bearing
   // ==========================================================================
-  // This is the "canary" test. If someone changes which modes are relationship-
-  // bearing, this test MUST be updated intentionally — not silently.
+  // If someone changes which modes are relationship-bearing, this test MUST
+  // be updated intentionally — grep "CANARY" to find all such invariants.
 
   it.each([
     ['dialogue', false],
