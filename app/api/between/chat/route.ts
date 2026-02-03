@@ -1460,6 +1460,46 @@ This user is in guest mode (no authenticated identity).
     const relationshipResult = await buildRelationshipAddendumForUser(effectiveUserId);
     const relationshipModeAddendum = relationshipResult?.addendum ?? null;
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🛡️ SAFE ADDENDA: Normalize all addenda to safe strings (Track 2B)
+    // Prevents null/undefined/"undefined"/"null" from reaching MAIA
+    // ═══════════════════════════════════════════════════════════════════════════
+    const asSafeAddendum = (v: unknown): string => {
+      if (typeof v !== 'string') return '';
+      const s = v.trim();
+      // Guard against accidental stringified null/undefined
+      if (s === 'undefined' || s === 'null' || s === '') return '';
+      return s;
+    };
+
+    const safeAddenda = {
+      relationshipMode: asSafeAddendum(relationshipModeAddendum),
+      governor: asSafeAddendum(governorAddendum),
+      guest: asSafeAddendum(guestContextAddendum),
+      journal: asSafeAddendum(null), // Placeholder: wire when available
+      capture: asSafeAddendum(null), // Placeholder: wire when available
+      astro: asSafeAddendum(astrologicalContextAddendum),
+      spiral: asSafeAddendum(spiralSnapshotAddendum),
+      wuxing: asSafeAddendum(wuxingSnapshotAddendum),
+      bridge: asSafeAddendum(bridgeSnapshotAddendum),
+      therapeuticFramework: asSafeAddendum(therapeuticFrameworkAddendum),
+      reflectionLens: asSafeAddendum(reflectionLensAddendum),
+      epistemicPath: asSafeAddendum(epistemicPathAddendum),
+    };
+
+    // 📊 DIAGNOSTIC: Context plumbing visibility (catches null/undefined instantly)
+    console.log('[MAIA CONTEXT]', {
+      effectiveUserId: effectiveUserId.substring(0, 8) + '...',
+      recognized: !isAnon,
+      relationshipLen: safeAddenda.relationshipMode.length,
+      governorLen: safeAddenda.governor.length,
+      journalLen: safeAddenda.journal.length,
+      captureLen: safeAddenda.capture.length,
+      astroLen: safeAddenda.astro.length,
+      spiralLen: safeAddenda.spiral.length,
+      wuxingLen: safeAddenda.wuxing.length,
+    });
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1476,19 +1516,19 @@ This user is in guest mode (no authenticated identity).
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
-        // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence) ═══
-        relationshipModeAddendum, // 1️⃣ Tier-based relationship depth
-        governorAddendum, // 2️⃣ Spiralogic posture constraints
-        guestContextAddendum, // 3️⃣ Guest mode explicit messaging
-        journalContextAddendum: null, // 4️⃣ Placeholder: user's journal entries
-        captureContextAddendum: null, // 5️⃣ Placeholder: user's captured insights
-        astrologicalContextAddendum, // 6️⃣ User's birth data for cosmic insights
-        spiralSnapshotAddendum, // 7️⃣ Computed spiral state (Pass 1)
-        wuxingSnapshotAddendum, // 8️⃣ Wu Xing five element state
-        bridgeSnapshotAddendum, // 9️⃣ Spiral × Wu Xing bridged awareness
-        therapeuticFrameworkAddendum, // 🔟 Therapeutic framework for Counsel mode
-        reflectionLensAddendum, // 1️⃣1️⃣ Reflection lens for Scribe mode
-        epistemicPathAddendum, // 1️⃣2️⃣ User-chosen epistemic lens
+        // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence, safe-wrapped) ═══
+        relationshipModeAddendum: safeAddenda.relationshipMode || undefined,
+        governorAddendum: safeAddenda.governor || undefined,
+        guestContextAddendum: safeAddenda.guest || undefined,
+        journalContextAddendum: safeAddenda.journal || undefined,
+        captureContextAddendum: safeAddenda.capture || undefined,
+        astrologicalContextAddendum: safeAddenda.astro || undefined,
+        spiralSnapshotAddendum: safeAddenda.spiral || undefined,
+        wuxingSnapshotAddendum: safeAddenda.wuxing || undefined,
+        bridgeSnapshotAddendum: safeAddenda.bridge || undefined,
+        therapeuticFrameworkAddendum: safeAddenda.therapeuticFramework || undefined,
+        reflectionLensAddendum: safeAddenda.reflectionLens || undefined,
+        epistemicPathAddendum: safeAddenda.epistemicPath || undefined
       },
       // Route/profile tracing for corpus callosum filtering
       originRoute: '/api/between/chat',

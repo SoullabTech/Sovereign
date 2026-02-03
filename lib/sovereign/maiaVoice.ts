@@ -695,87 +695,109 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   // 7. Epistemic/MAIA mode (how to respond)
   // ═══════════════════════════════════════════════════════════════════════════
 
+  // 🛡️ SAFE ADDENDUM WRAPPER: Final guarantee against null/undefined (Track 2B)
+  const safeAddendum = (v: unknown): string => {
+    if (typeof v !== 'string') return '';
+    const s = v.trim();
+    if (!s || s === 'undefined' || s === 'null') return '';
+    return s;
+  };
+
   // 1️⃣ RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
-  if (context.relationshipModeAddendum) {
-    adaptedPrompt += `\n\n${context.relationshipModeAddendum}`;
-    console.log(`💫 [Relationship] Mode: ${context.relationshipModeAddendum.split('\n')[0]}`);
+  const relationshipSafe = safeAddendum(context.relationshipModeAddendum);
+  if (relationshipSafe) {
+    adaptedPrompt += `\n\n${relationshipSafe}`;
+    console.log(`💫 [Relationship] Mode: ${relationshipSafe.split('\n')[0]}`);
   }
 
   // 2️⃣ DECISION GOVERNOR: Spiralogic posture constraints from preflight
-  if (context.governorAddendum) {
-    adaptedPrompt += `\n\n${context.governorAddendum}`;
+  const governorSafe = safeAddendum(context.governorAddendum);
+  if (governorSafe) {
+    adaptedPrompt += `\n\n${governorSafe}`;
     console.log(`🌀 [Governor] Posture guidance injected`);
   }
 
   // 3️⃣ GUEST CONTEXT: Explicit messaging when user is anonymous/guest
-  if (context.guestContextAddendum) {
-    adaptedPrompt += `\n\n${context.guestContextAddendum}`;
+  const guestSafe = safeAddendum(context.guestContextAddendum);
+  if (guestSafe) {
+    adaptedPrompt += `\n\n${guestSafe}`;
     console.log(`👤 [Guest] Context limitation note injected`);
   }
 
-  // 4️⃣ JOURNAL CONTEXT: User's journal entries for continuity (placeholder)
-  if (context.journalContextAddendum) {
-    adaptedPrompt += `\n\n${context.journalContextAddendum}`;
+  // 4️⃣ JOURNAL CONTEXT: User's journal entries for continuity
+  const journalSafe = safeAddendum(context.journalContextAddendum);
+  if (journalSafe) {
+    adaptedPrompt += `\n\n${journalSafe}`;
     console.log(`📓 [Journal] Context injected`);
   }
 
-  // 5️⃣ CAPTURE CONTEXT: User's captured moments/insights (placeholder)
-  if (context.captureContextAddendum) {
-    adaptedPrompt += `\n\n${context.captureContextAddendum}`;
+  // 5️⃣ CAPTURE CONTEXT: User's captured moments/insights
+  const captureSafe = safeAddendum(context.captureContextAddendum);
+  if (captureSafe) {
+    adaptedPrompt += `\n\n${captureSafe}`;
     console.log(`📸 [Capture] Context injected`);
   }
 
   // 6️⃣ ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-  if (context.astrologicalContextAddendum) {
-    adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
+  const astroSafe = safeAddendum(context.astrologicalContextAddendum);
+  if (astroSafe) {
+    adaptedPrompt += `\n\n${astroSafe}`;
     console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
   }
 
   // 7️⃣ SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
-  if (context.spiralSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.spiralSnapshotAddendum}`;
+  const spiralSafe = safeAddendum(context.spiralSnapshotAddendum);
+  if (spiralSafe) {
+    adaptedPrompt += `\n\n${spiralSafe}`;
     console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
   }
 
   // 8️⃣ WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
-  if (context.wuxingSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.wuxingSnapshotAddendum}`;
+  const wuxingSafe = safeAddendum(context.wuxingSnapshotAddendum);
+  if (wuxingSafe) {
+    adaptedPrompt += `\n\n${wuxingSafe}`;
     console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
   }
 
   // 9️⃣ BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
-  if (context.bridgeSnapshotAddendum) {
-    adaptedPrompt += `\n\n${context.bridgeSnapshotAddendum}`;
+  const bridgeSafe = safeAddendum(context.bridgeSnapshotAddendum);
+  if (bridgeSafe) {
+    adaptedPrompt += `\n\n${bridgeSafe}`;
     console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
   }
 
   // 🔟 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
-  if (context.therapeuticFrameworkAddendum) {
-    adaptedPrompt += `\n\n${context.therapeuticFrameworkAddendum}`;
-    console.log(`🧘 [Therapeutic Framework] Applied: ${context.therapeuticFrameworkAddendum.split('\n')[0]}`);
+  const therapeuticSafe = safeAddendum(context.therapeuticFrameworkAddendum);
+  if (therapeuticSafe) {
+    adaptedPrompt += `\n\n${therapeuticSafe}`;
+    console.log(`🧘 [Therapeutic Framework] Applied: ${therapeuticSafe.split('\n')[0]}`);
   }
 
   // 1️⃣1️⃣ REFLECTION LENS: Mode-specific lens for Scribe mode
-  if (context.reflectionLensAddendum) {
-    adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
-    console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
+  const reflectionSafe = safeAddendum(context.reflectionLensAddendum);
+  if (reflectionSafe) {
+    adaptedPrompt += `\n\n${reflectionSafe}`;
+    console.log(`🔮 [Reflection Lens] Applied: ${reflectionSafe.split('\n')[0]}`);
   }
 
   // 1️⃣2️⃣ EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
-  if (context.epistemicPathAddendum) {
-    adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
-    console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
+  const epistemicSafe = safeAddendum(context.epistemicPathAddendum);
+  if (epistemicSafe) {
+    adaptedPrompt += `\n\n${epistemicSafe}`;
+    console.log(`🧭 [Epistemic Path] Applied: ${epistemicSafe.split('\n')[0]}`);
   }
 
   // 1️⃣3️⃣ MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
-  if (context.maiaModeAddendum) {
-    adaptedPrompt += `\n\n${context.maiaModeAddendum}`;
+  const maiaModeSafe = safeAddendum(context.maiaModeAddendum);
+  if (maiaModeSafe) {
+    adaptedPrompt += `\n\n${maiaModeSafe}`;
     console.log(`🎭 [MAIA Mode] Relational mode guidance injected`);
   }
 
   // 1️⃣4️⃣ SCRIBE SESSION DISCUSSION: Context for discussing a past session
-  if (context.scribeSessionDiscussionAddendum) {
-    adaptedPrompt += `\n\n${context.scribeSessionDiscussionAddendum}`;
+  const scribeDiscussionSafe = safeAddendum(context.scribeSessionDiscussionAddendum);
+  if (scribeDiscussionSafe) {
+    adaptedPrompt += `\n\n${scribeDiscussionSafe}`;
     console.log(`📝 [Scribe Discussion] Session context injected`);
   }
 
