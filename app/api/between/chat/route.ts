@@ -70,6 +70,28 @@ import {
 } from '@/lib/consciousness/bridgedSnapshot';
 
 // ═══════════════════════════════════════════════════════════════
+// CONTEXT PLUMBING HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Tight gating for relationship memory: only returns true if memory has real content.
+ * Avoids false positives from placeholder objects like {} or { version: "" }.
+ */
+function hasMeaningfulRelationshipMemory(m: unknown): boolean {
+  if (!m || typeof m !== 'object') return false;
+  const mem = m as Record<string, unknown>;
+  // Shape drift escape hatch: recognize future markers
+  if (typeof mem.kind === 'string' && (mem.kind as string).length > 0) return true;
+  if (typeof mem.version === 'string' && (mem.version as string).length > 0) return true;
+  // Real memory signals: summary text or populated arrays
+  if (typeof mem.summary === 'string' && (mem.summary as string).trim().length > 0) return true;
+  if (Array.isArray(mem.themes) && mem.themes.length > 0) return true;
+  if (Array.isArray(mem.patterns) && mem.patterns.length > 0) return true;
+  if (Array.isArray(mem.events) && mem.events.length > 0) return true;
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
 // ═══════════════════════════════════════════════════════════════
 
@@ -1505,18 +1527,6 @@ This user is in guest mode (no authenticated identity).
     const CAPTURE_ADDENDUM_ENABLED =
       process.env.CAPTURE_ADDENDUM_ENABLED === '1' ||
       process.env.CAPTURE_ADDENDUM_ENABLED === 'true';
-
-    // Tight gating: only count relationship memory if it has real content
-    const hasMeaningfulRelationshipMemory = (m: unknown): boolean => {
-      if (!m || typeof m !== 'object') return false;
-      const mem = m as Record<string, unknown>;
-      // Real memory signals: summary text or populated arrays
-      if (typeof mem.summary === 'string' && (mem.summary as string).trim().length > 0) return true;
-      if (Array.isArray(mem.themes) && mem.themes.length > 0) return true;
-      if (Array.isArray(mem.patterns) && mem.patterns.length > 0) return true;
-      if (Array.isArray(mem.events) && mem.events.length > 0) return true;
-      return false;
-    };
 
     const contextWarnings: string[] = [];
 
