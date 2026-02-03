@@ -210,6 +210,61 @@ function setCanonWrapEnabled(enabled: boolean) {
   window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
 }
 
+// ============================================================================
+// Welcome Greeting Helpers (Track 1: personalized greetings)
+// ============================================================================
+
+type WelcomeMemberStyleProfile =
+  | 'warm'
+  | 'direct'
+  | 'playful'
+  | 'mystic'
+  | 'minimal'
+  | 'professional';
+
+function safeJsonParse<T>(raw: string | null): T | null {
+  if (!raw) return null;
+  try { return JSON.parse(raw) as T; } catch { return null; }
+}
+
+function coerceStyleProfile(input: unknown): WelcomeMemberStyleProfile | undefined {
+  const s = (typeof input === 'string' ? input : '').toLowerCase().trim();
+  if (!s) return undefined;
+
+  // Permissive matching for whatever is already stored
+  if (['warm', 'gentle', 'soft', 'kind'].includes(s)) return 'warm';
+  if (['direct', 'clear', 'straight', 'concise'].includes(s)) return 'direct';
+  if (['playful', 'fun', 'light'].includes(s)) return 'playful';
+  if (['mystic', 'mythic', 'symbolic', 'poetic'].includes(s)) return 'mystic';
+  if (['minimal', 'short', 'brief'].includes(s)) return 'minimal';
+  if (['professional', 'clinical', 'coach'].includes(s)) return 'professional';
+
+  return undefined;
+}
+
+function pickLastConversationTheme(opts: {
+  lastUserText?: string;
+  lastAssistantText?: string;
+}): string | undefined {
+  const text = `${opts.lastUserText ?? ''}\n${opts.lastAssistantText ?? ''}`.toLowerCase();
+  if (!text.trim()) return undefined;
+
+  // Simple keyword-based theme detection (no new system, just heuristic)
+  if (text.includes('dream')) return 'dreams';
+  if (text.includes('shadow') || text.includes('trigger') || text.includes('projection')) return 'shadow work';
+  if (text.includes('relationship') || text.includes('partner') || text.includes('marriage')) return 'relationships';
+  if (text.includes('journal')) return 'journaling';
+  if (text.includes('iching') || text.includes('i ching') || text.includes('hexagram')) return 'I Ching';
+  if (text.includes('tarot')) return 'tarot';
+  if (text.includes('astrology') || text.includes('natal') || text.includes('transit')) return 'astrology';
+  if (text.includes('work') || text.includes('business') || text.includes('client')) return 'work';
+  if (text.includes('anxiety') || text.includes('anxious') || text.includes('worried')) return 'anxiety';
+  if (text.includes('grief') || text.includes('loss') || text.includes('death')) return 'grief';
+  if (text.includes('decision') || text.includes('choice') || text.includes('stuck')) return 'decision-making';
+
+  return undefined;
+}
+
 // Performance: Cap conversation history to prevent UI lag and API bloat
 const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
 const MAX_API_HISTORY = 30; // Send last 30 messages (15 exchanges) to API
@@ -5962,13 +6017,39 @@ I'm not sure what I'm feeling yet.`;
       {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
       <AnimatePresence>
         {!hasActivated && !isProcessing && !isResponding && (() => {
+          // Derive memberStyleProfile from beta_user preferences (if stored)
+          const betaUser = safeJsonParse<Record<string, unknown>>(
+            typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null
+          );
+          const memberStyleProfile = coerceStyleProfile(
+            betaUser?.memberStyleProfile ??
+            betaUser?.styleProfile ??
+            (betaUser?.voiceProfile as Record<string, unknown> | undefined)?.styleProfile ??
+            (betaUser?.voiceProfile as Record<string, unknown> | undefined)?.tone ??
+            (betaUser?.preferences as Record<string, unknown> | undefined)?.tone
+          );
+
+          // Derive lastConversationTheme from historical messages (if any)
+          const history = historicalMessagesRef.current;
+          const lastUserMsg = history.filter(m => m.role === 'user').pop();
+          const lastAssistantMsg = history.filter(m => m.role === 'oracle' || m.role === 'assistant').pop();
+          const lastConversationTheme = pickLastConversationTheme({
+            lastUserText: typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : undefined,
+            lastAssistantText: typeof lastAssistantMsg?.content === 'string' ? lastAssistantMsg.content : undefined,
+          });
+
           // Generate personalized welcome greeting (one clean signal)
+          const hourLocal = new Date().getHours();
           const welcomeGreeting = generateWelcomeGreeting({
             userName,
             daysSinceLastVisit,
-            // lastConversationTheme: TODO - wire in when available
-            // memberStyleProfile: TODO - wire in from user preferences
+            hourLocal,
+            memberStyleProfile,
+            lastConversationTheme,
           });
+
+          // Debug: verify one-signal principle
+          console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
 
           return (
           <motion.div
