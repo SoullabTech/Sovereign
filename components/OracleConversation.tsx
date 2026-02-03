@@ -2005,6 +2005,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     element: undefined, // Will be set dynamically per message
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,
+    // 🛑 LIMITS BLOCK: Show modal when voice limit hit (429 + blocked)
+    onLimitsBlock: (data) => {
+      console.log('[StreamingVoice] Voice limit reached:', data.message);
+      setLimitsBlock({
+        message: data.message,
+        upgradeHint: data.upgradeHint,
+        tier: data.tier,
+      });
+      // Reset voice state so user isn't stuck
+      setIsProcessing(false);
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      setIsListening(false);
+      isProcessingRef.current = false;
+      isRespondingRef.current = false;
+      isAudioPlayingRef.current = false;
+      isMicrophonePausedRef.current = false;
+    },
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
       setMaiaResponseText(text);
