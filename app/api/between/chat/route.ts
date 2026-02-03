@@ -1502,7 +1502,7 @@ This user is in guest mode (no authenticated identity).
 
     // 🚨 SELF-ALERTING: Warn when addenda should exist but arrived empty
     // Greppable codes: W_ASTRO_EMPTY, W_REL_EMPTY, W_CAPTURE_EMPTY
-    const CAPTURE_ADDENDUM_ENABLED = false; // Flip when capture plumbing is wired
+    const CAPTURE_ADDENDUM_ENABLED = process.env.CAPTURE_ADDENDUM_ENABLED === '1';
     const contextWarnings: string[] = [];
 
     if (birthData?.date && safeAddenda.astro.length === 0) {
@@ -1516,7 +1516,16 @@ This user is in guest mode (no authenticated identity).
     }
 
     if (contextWarnings.length > 0) {
-      console.warn('[MAIA CONTEXT]', { warnings: contextWarnings });
+      console.warn('[MAIA CONTEXT]', {
+        warnings: contextWarnings,
+        reqId,
+        userId: effectiveUserId.substring(0, 8),
+        recognized: !isAnon,
+        // "Why this should exist" signals
+        birthDataPresent: !!birthData?.date,
+        hasRelationshipMemory: !!relationshipMemory,
+        hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
+      });
     }
 
     // Use full fail-soft consciousness orchestrator
