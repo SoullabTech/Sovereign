@@ -6440,19 +6440,20 @@ I'm not sure what I'm feeling yet.`;
                 alt="Holoflower middle layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.65}px`,
-                  height: `${holoflowerSize * 0.65}px`,
+                  width: `${holoflowerSize * 0.70}px`,
+                  height: `${holoflowerSize * 0.70}px`,
                   opacity: 0.5,
                 }}
               />
-              {/* Inner layer - colorful, focal point */}
+              {/* Inner layer - white, brightest */}
               <img
-                src="/logo_flower 2.png"
-                alt="Holoflower"
+                src="/holoflower.png"
+                alt="Holoflower inner layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.45}px`,
-                  height: `${holoflowerSize * 0.45}px`,
+                  width: `${holoflowerSize * 0.50}px`,
+                  height: `${holoflowerSize * 0.50}px`,
+                  opacity: 0.7,
                 }}
               />
             </div>
