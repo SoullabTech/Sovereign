@@ -107,20 +107,12 @@ export async function POST(request: NextRequest) {
       const practitionerId = uuid();
       const now = new Date().toISOString();
 
-      // Default notification settings for new practitioners
-      const defaultNotificationSettings = {
-        preferred_channel: 'email',
-        reminder_24h: true,
-        reminder_1h: true,
-        booking_confirmation: true,
-      };
-
       // Create practitioner record (status defaults to 'onboarding')
       await client.query(
         `INSERT INTO practitioners (
-          id, member_id, slug, name, email, portal_type, notification_settings, created_at, updated_at
+          id, member_id, slug, name, email, portal_type, status, created_at, updated_at
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [practitionerId, memberId, slug, practiceName, email, portalType, JSON.stringify(defaultNotificationSettings), now, now]
+        [practitionerId, memberId, slug, practiceName, email, portalType, 'active', now, now]
       );
 
       // Create initial practitioner_themes record with defaults
@@ -178,7 +170,7 @@ export async function POST(request: NextRequest) {
         name: practiceName,
         email,
         portal_type: portalType,
-        status: 'onboarding',
+        status: 'active',
         created_at: now,
         updated_at: now,
       };
