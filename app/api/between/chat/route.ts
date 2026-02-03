@@ -100,12 +100,12 @@ function hasMeaningfulRelationshipMemory(m: unknown): boolean {
 const RELATIONSHIP_ROUTES = new Set(['care', 'mentor', 'deep']);
 
 /**
- * TS narrowing tripwire: ensures 'block' decisions never reach the logging zone.
- * If refactoring accidentally lets 'block' slip past the 429 early-return,
- * this will fail at compile time (x is 'never') and runtime (loud error).
+ * Exhaustive switch tripwire: ensures all EnforcementDecision actions are handled.
+ * - Compile-time: TS forces you to handle new actions if EnforcementDecision evolves
+ * - Runtime: catches `as any` escapes or JSON drift with a loud error
  */
-function unreachableBlockDecision(x: never): never {
-  throw new Error(`[INVARIANT VIOLATION] Block decision reached logging zone: ${JSON.stringify(x)}`);
+function assertNeverEnforcement(x: never): never {
+  throw new Error(`[INVARIANT VIOLATION] Unexpected enforcement action: ${JSON.stringify(x)}`);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -951,35 +951,40 @@ This user is in guest mode (no authenticated identity).
       resource: 'text',
     });
 
-    // Handle enforcement decisions
-    if (limitsCheck.action === 'block') {
-      console.log(`[Chat API] 🚫 Usage blocked for ${effectiveUserId}: ${limitsCheck.message}`);
-      return NextResponse.json({
-        message: limitsCheck.message,
-        upgradeHint: limitsCheck.upgradeHint,
-        blocked: true,
-        tier: memberTier,
-      }, {
-        status: 429,
-        headers: makeCanonHeaders({ requestId: reqId, pipeline: 'direct', source: 'direct' }),
-      });
-    }
+    // Handle enforcement decisions (exhaustive switch for structural safety)
+    // - Compile-time: TS forces handling of new actions if EnforcementDecision evolves
+    // - Runtime: default case catches `as any` escapes or JSON drift
+    let limitNudge: Extract<EnforcementDecision, { action: 'nudge' }> | null = null;
 
-    // 🔒 TS narrowing tripwire: 'block' must never reach below (429 returned above)
-    // TS already enforces this at compile time (TS2367), but runtime guard catches `as any` escapes
-    if ((limitsCheck as EnforcementDecision).action === 'block') {
-      unreachableBlockDecision(limitsCheck as never);
-    }
+    switch (limitsCheck.action) {
+      case 'block':
+        console.log(`[Chat API] 🚫 Usage blocked for ${effectiveUserId}: ${limitsCheck.message}`);
+        return NextResponse.json({
+          message: limitsCheck.message,
+          upgradeHint: limitsCheck.upgradeHint,
+          blocked: true,
+          tier: memberTier,
+        }, {
+          status: 429,
+          headers: makeCanonHeaders({ requestId: reqId, pipeline: 'direct', source: 'direct' }),
+        });
 
-    // Store nudge for later injection into response (if applicable)
-    const limitNudge = limitsCheck.action === 'nudge' ? limitsCheck : null;
-    if (limitNudge) {
-      console.log(`[Chat API] 💬 Usage nudge for ${effectiveUserId}: ${limitNudge.nudgeType}`);
+      case 'nudge':
+        limitNudge = limitsCheck;
+        console.log(`[Chat API] 💬 Usage nudge for ${effectiveUserId}: ${limitsCheck.nudgeType}`);
+        break;
+
+      case 'allow':
+      case 'suggest_addon':
+        break;
+
+      default:
+        // If types drift or something came in as `any`, fail loudly
+        assertNeverEnforcement(limitsCheck);
     }
 
     // Log-safe enforcement snapshot (for diagnostic warnings, not response body)
     // Only stable scalars + reason codes — never log `message` (user-facing content)
-    // Note: 'block' is already handled above (429 return), so only allow/nudge/suggest_addon reach here
     const enforcementForLog = {
       action: limitsCheck.action,
       nudgeType: limitsCheck.action === 'nudge' ? limitsCheck.nudgeType : null,
