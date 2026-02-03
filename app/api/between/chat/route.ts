@@ -957,6 +957,15 @@ This user is in guest mode (no authenticated identity).
       console.log(`[Chat API] 💬 Usage nudge for ${effectiveUserId}: ${limitNudge.nudgeType}`);
     }
 
+    // Log-safe enforcement snapshot (for diagnostic warnings, not response body)
+    // Only stable scalars + reason codes — never log `message` (user-facing content)
+    // Note: 'block' is already handled above (429 return), so only allow/nudge/suggest_addon reach here
+    const enforcementForLog = {
+      action: limitsCheck.action,
+      nudgeType: limitsCheck.action === 'nudge' ? limitsCheck.nudgeType : null,
+      addonType: limitsCheck.action === 'suggest_addon' ? limitsCheck.addonType : null,
+    };
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
@@ -1646,6 +1655,7 @@ This user is in guest mode (no authenticated identity).
         recognized: !isAnon,
         limitsTier: memberTier,  // LimitsEnforcer vocabulary
         accessTier,              // tierAccess vocabulary (mapped)
+        enforcement: enforcementForLog, // Policy decision (allow/nudge/block)
         // Full route object (typed, all fields)
         route: orchestratorResult.route ? {
           mode: orchestratorResult.route.mode,
