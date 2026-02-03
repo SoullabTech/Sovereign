@@ -1,3 +1,6 @@
+<!-- CONFIDENTIAL: Internal operating doctrine. Do not share externally. -->
+<!-- Source of truth. Obsidian copy should reference this file. -->
+
 # MAIA Limits and Stewardship
 
 > **Purpose**: Single source of truth for technical caps, user-facing language, and ethical invariants.
