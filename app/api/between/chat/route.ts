@@ -1502,13 +1502,28 @@ This user is in guest mode (no authenticated identity).
 
     // 🚨 SELF-ALERTING: Warn when addenda should exist but arrived empty
     // Greppable codes: W_ASTRO_EMPTY, W_REL_EMPTY, W_CAPTURE_EMPTY
-    const CAPTURE_ADDENDUM_ENABLED = process.env.CAPTURE_ADDENDUM_ENABLED === '1';
+    const CAPTURE_ADDENDUM_ENABLED =
+      process.env.CAPTURE_ADDENDUM_ENABLED === '1' ||
+      process.env.CAPTURE_ADDENDUM_ENABLED === 'true';
+
+    // Tight gating: only count relationship memory if it has real content
+    const hasMeaningfulRelationshipMemory = (m: unknown): boolean => {
+      if (!m || typeof m !== 'object') return false;
+      const mem = m as Record<string, unknown>;
+      // Real memory signals: summary text or populated arrays
+      if (typeof mem.summary === 'string' && (mem.summary as string).trim().length > 0) return true;
+      if (Array.isArray(mem.themes) && mem.themes.length > 0) return true;
+      if (Array.isArray(mem.patterns) && mem.patterns.length > 0) return true;
+      if (Array.isArray(mem.events) && mem.events.length > 0) return true;
+      return false;
+    };
+
     const contextWarnings: string[] = [];
 
     if (birthData?.date && safeAddenda.astro.length === 0) {
       contextWarnings.push('W_ASTRO_EMPTY');
     }
-    if (!isAnon && relationshipMemory && safeAddenda.relationshipMode.length === 0) {
+    if (!isAnon && hasMeaningfulRelationshipMemory(relationshipMemory) && safeAddenda.relationshipMode.length === 0) {
       contextWarnings.push('W_REL_EMPTY');
     }
     if (CAPTURE_ADDENDUM_ENABLED && selfletContext?.surfacedMessageId && safeAddenda.capture.length === 0) {
@@ -1519,11 +1534,11 @@ This user is in guest mode (no authenticated identity).
       console.warn('[MAIA CONTEXT]', {
         warnings: contextWarnings,
         reqId,
-        userId: effectiveUserId.substring(0, 8),
+        userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
         recognized: !isAnon,
         // "Why this should exist" signals
         birthDataPresent: !!birthData?.date,
-        hasRelationshipMemory: !!relationshipMemory,
+        hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
         hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
       });
     }
