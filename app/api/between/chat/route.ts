@@ -41,6 +41,7 @@ import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
+import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
 import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
@@ -91,63 +92,6 @@ function hasMeaningfulRelationshipMemory(m: unknown): boolean {
   if (Array.isArray(mem.patterns) && mem.patterns.length > 0) return true;
   if (Array.isArray(mem.events) && mem.events.length > 0) return true;
   return false;
-}
-
-/**
- * Internal conversation modes (mapped from client mode names).
- * - dialogue: Talk mode (quick conversational)
- * - counsel: Care mode (deep therapeutic) — expects relationship context
- * - scribe: Note mode (witnessing, documentation)
- */
-export const CONVERSATION_MODES = ['dialogue', 'counsel', 'scribe'] as const;
-export type ConversationMode = (typeof CONVERSATION_MODES)[number];
-
-/**
- * Exhaustive check: does this conversation mode expect relationship context?
- * - Compile-time: TS forces handling new modes if ConversationMode evolves
- * - Runtime: default case catches `as any` escapes
- */
-function isRelationshipMode(mode: ConversationMode): boolean {
-  switch (mode) {
-    case 'counsel': // Care mode — deep therapeutic, expects relationship context
-      return true;
-    case 'dialogue': // Talk mode — quick conversational
-    case 'scribe':   // Note mode — witnessing, documentation
-      return false;
-    default:
-      return assertNeverConversationMode(mode);
-  }
-}
-
-function assertNeverConversationMode(x: never): never {
-  throw new Error(`[E_INVARIANT_CONVERSATION_MODE] Unexpected conversation mode: ${JSON.stringify(x)}`);
-}
-
-/**
- * Normalize client mode names to internal ConversationMode.
- * Maps: normal→dialogue, patient→counsel, session→scribe
- * Defaults to 'dialogue' if undefined, null, or unrecognized.
- *
- * Input is `string | null | undefined` (not the strict union) to harden
- * against upstream schema drift — request bodies are inherently loose.
- *
- * @returns ConversationMode (typed, never undefined)
- */
-function normalizeConversationMode(rawMode: string | null | undefined): ConversationMode {
-  switch (rawMode) {
-    // Client legacy names
-    case 'normal':  return 'dialogue';
-    case 'patient': return 'counsel';
-    case 'session': return 'scribe';
-    // Already normalized
-    case 'dialogue':
-    case 'counsel':
-    case 'scribe':
-      return rawMode;
-    // Null, undefined, or unrecognized → default
-    default:
-      return 'dialogue';
-  }
 }
 
 /**
