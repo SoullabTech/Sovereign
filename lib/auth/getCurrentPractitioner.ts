@@ -7,13 +7,6 @@ export interface PractitionerIdentity {
   practitionerId: string;
   practitionerSlug: string;
   practitionerName: string;
-  notificationSettings: {
-    telegram_chat_id?: string;
-    phone?: string;
-    preferred_channel?: string;
-    reminder_24h?: boolean;
-    reminder_1h?: boolean;
-  };
 }
 
 /**
@@ -40,8 +33,7 @@ export async function getCurrentPractitioner(
     `SELECT
        p.id as practitioner_id,
        p.slug,
-       p.name,
-       p.notification_settings
+       p.name
      FROM practitioners p
      WHERE p.member_id = $1
        AND p.status = 'active'
@@ -60,7 +52,6 @@ export async function getCurrentPractitioner(
     practitionerId: row.practitioner_id,
     practitionerSlug: row.slug,
     practitionerName: row.name,
-    notificationSettings: row.notification_settings || {},
   };
 }
 
