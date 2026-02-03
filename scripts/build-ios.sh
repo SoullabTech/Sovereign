@@ -71,27 +71,44 @@ fi
 
 echo "✅ iOS archive created successfully!"
 
-# Export IPA
+# Export IPA / Upload to App Store Connect
 if [ "$BUILD_TYPE" == "release" ]; then
-    echo "📦 Exporting IPA for App Store distribution..."
+    # Check export destination from plist
+    DESTINATION=$(/usr/libexec/PlistBuddy -c 'Print :destination' exportOptions.plist 2>/dev/null || echo "export")
+
+    echo "📦 Exporting archive (destination: ${DESTINATION})..."
     xcodebuild -exportArchive \
         -archivePath ./build/App.xcarchive \
         -exportPath ./output \
         -exportOptionsPlist exportOptions.plist \
         -allowProvisioningUpdates
 
-    if [ -f "./output/App.ipa" ]; then
-        IPA_SIZE=$(du -h "./output/App.ipa" | cut -f1)
-        echo "✅ iOS IPA exported successfully!"
-        echo "📁 Location: $(pwd)/output/App.ipa"
-        echo "📏 Size: $IPA_SIZE"
+    EXPORT_EXIT=$?
 
-        # Copy to root directory for easy access
-        cp "./output/App.ipa" "../../maia-ios-${BUILD_TYPE}.ipa"
-        echo "📋 Copied to: ../../maia-ios-${BUILD_TYPE}.ipa"
+    if [ "$DESTINATION" = "upload" ]; then
+        # Direct upload mode - no local IPA produced
+        if [ $EXPORT_EXIT -eq 0 ]; then
+            echo "✅ Build uploaded to App Store Connect!"
+            echo "📱 Check TestFlight for processing status"
+        else
+            echo "❌ Upload to App Store Connect failed!"
+            exit 1
+        fi
     else
-        echo "❌ IPA export failed!"
-        exit 1
+        # Local export mode - check for IPA file
+        if [ -f "./output/App.ipa" ]; then
+            IPA_SIZE=$(du -h "./output/App.ipa" | cut -f1)
+            echo "✅ iOS IPA exported successfully!"
+            echo "📁 Location: $(pwd)/output/App.ipa"
+            echo "📏 Size: $IPA_SIZE"
+
+            # Copy to root directory for easy access
+            cp "./output/App.ipa" "../../maia-ios-${BUILD_TYPE}.ipa"
+            echo "📋 Copied to: ../../maia-ios-${BUILD_TYPE}.ipa"
+        else
+            echo "❌ IPA export failed!"
+            exit 1
+        fi
     fi
 fi
 
