@@ -103,11 +103,25 @@ export const CONVERSATION_MODES = ['dialogue', 'counsel', 'scribe'] as const;
 export type ConversationMode = (typeof CONVERSATION_MODES)[number];
 
 /**
- * Modes that should have relationship context when continuity is expected.
- * Used for tier-aware W_REL_EMPTY filtering.
- * Note: Uses internal mode names (counsel = Care mode), not user-facing names.
+ * Exhaustive check: does this conversation mode expect relationship context?
+ * - Compile-time: TS forces handling new modes if ConversationMode evolves
+ * - Runtime: default case catches `as any` escapes
  */
-const RELATIONSHIP_MODES: ReadonlySet<ConversationMode> = new Set(['counsel']);
+function isRelationshipMode(mode: ConversationMode): boolean {
+  switch (mode) {
+    case 'counsel': // Care mode — deep therapeutic, expects relationship context
+      return true;
+    case 'dialogue': // Talk mode — quick conversational
+    case 'scribe':   // Note mode — witnessing, documentation
+      return false;
+    default:
+      return assertNeverConversationMode(mode);
+  }
+}
+
+function assertNeverConversationMode(x: never): never {
+  throw new Error(`[E_INVARIANT_CONVERSATION_MODE] Unexpected conversation mode: ${JSON.stringify(x)}`);
+}
 
 /**
  * Exhaustive switch tripwire: ensures all EnforcementDecision actions are handled.
@@ -1676,7 +1690,7 @@ This user is in guest mode (no authenticated identity).
     // Only warn when: continuity tier + relationship-expecting mode + meaningful memory + empty addendum
     const accessTier = toMemberTier(memberTier); // Canonical mapping from LimitsEnforcer → tierAccess
     const continuityExpected = hasContinuityAccess({ tier: accessTier });
-    const modeShouldHaveRelationship = RELATIONSHIP_MODES.has(mode as ConversationMode);
+    const modeShouldHaveRelationship = isRelationshipMode(mode as ConversationMode);
     const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
 
     const filteredWarnings = contextWarnings.filter(w => {
