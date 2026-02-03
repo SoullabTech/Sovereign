@@ -1,4 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 /**
  * Subscription and Billing Management API
@@ -174,6 +179,10 @@ const subscriptionTiers: Map<SubscriptionTier, any> = new Map([
 const userSubscriptions: Map<string, Subscription[]> = new Map();
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

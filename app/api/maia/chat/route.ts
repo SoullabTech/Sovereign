@@ -1,3 +1,5 @@
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 /**
  * DISABLED LEGACY ENDPOINT
  *
@@ -9,6 +11,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 export async function POST(request: NextRequest) {
   console.warn('🚫 BLOCKED: Attempt to use disabled legacy endpoint /api/maia/chat');

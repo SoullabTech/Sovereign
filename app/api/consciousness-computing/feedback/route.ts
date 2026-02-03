@@ -1,5 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
+
+// Skip during static export (Capacitor builds)
 
 const prisma = new PrismaClient();
 
@@ -85,6 +90,10 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint for retrieving feedback analytics (admin/research use)
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');

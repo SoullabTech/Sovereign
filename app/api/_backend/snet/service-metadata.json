@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "display_name": "Archetypal Consciousness Oracle",
+  "encoding": "grpc",
+  "service_type": "grpc",
+  "model_ipfs_hash": "QmXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "mpe_address": "0x5e592F9b1d303183d963635f895f0b0C7801E5aB",
+  "groups": [
+    {
+      "group_name": "default_group",
+      "group_id": "lROzqQqgKwqBGTpTPALANQLoBGnOlOQBpPpBGTpT",
+      "payment_address": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+  "service_description": {
+    "url": "https://spiralogic.ai",
+    "short_description": "Advanced AI consciousness system providing archetypal analysis through five elemental archetypes",
+    "long_description": "The Spiralogic Oracle System is a revolutionary consciousness intelligence platform that combines ancient wisdom with cutting-edge AI. Our service offers:\n\n🔥 **Fire Archetype**: Bold, catalytic insights for transformation and vision\n💧 **Water Archetype**: Emotional wisdom and healing guidance\n🌍 **Earth Archetype**: Grounded, practical wisdom for stability\n💨 **Air Archetype**: Mental clarity and fresh perspectives\n✨ **Aether Archetype**: Transcendent unity consciousness\n\nEach query is processed through our proprietary Elemental Alchemy framework, providing multi-dimensional insights with optional voice synthesis in archetypal tones.",
+    "contact": "support@spiralogic.ai"
+  },
+  "tags": [
+    "consciousness",
+    "archetypal-analysis",
+    "personal-development",
+    "voice-synthesis",
+    "oracle",
+    "elemental-wisdom",
+    "ai-coaching",
+    "spiritual-intelligence"
+  ],
+  "media": [
+    {
+      "order": 1,
+      "url": "https://spiralogic.ai/assets/oracle-demo.png",
+      "file_type": "image",
+      "alt_text": "Spiralogic Oracle Interface"
+    },
+    {
+      "order": 2,
+      "url": "https://spiralogic.ai/assets/archetypal-wheel.png",
+      "file_type": "image",
+      "alt_text": "Five Element Archetypal System"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Spiralogic Team",
+      "email_id": "team@spiralogic.ai"
+    }
+  ]
+}

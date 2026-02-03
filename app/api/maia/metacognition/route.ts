@@ -1,12 +1,14 @@
+export const dynamic = 'force-dynamic';
 // MAIA Metacognitive Reflection API
 // Enables MAIA to explain her own process and therapeutic framework usage
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { analyzeTherapeuticFrameworks, generateTransparencyReport, type FrameworkAnalysis } from '@/lib/consciousness/therapeuticFrameworkTracker';
 import { getMAIAArchitectureContext, buildSelfAwareContext } from '@/lib/consciousness/maiaArchitectureContext';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 /**
  * Security: Require research API key for all endpoints
@@ -30,6 +32,10 @@ function requireResearchKey(request: NextRequest): NextResponse | null {
  * Returns MAIA's architectural context and capabilities
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const authError = requireResearchKey(request);
   if (authError) return authError;
 

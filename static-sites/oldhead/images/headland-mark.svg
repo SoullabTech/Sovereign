@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80">
+  <!-- The Headland Mark - Full Lockup SVG -->
+  <defs>
+    <style>
+      .brand { font-family: Georgia, 'Times New Roman', serif; }
+    </style>
+  </defs>
+
+  <!-- Circle Seal Mark -->
+  <g transform="translate(40, 40)" fill="none" stroke="#FAFAF8">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="32" stroke-width="2"/>
+    <!-- Inner circle -->
+    <circle cx="0" cy="0" r="26" stroke-width="1"/>
+
+    <!-- H inside circle -->
+    <g stroke="none" fill="#FAFAF8">
+      <!-- Left vertical -->
+      <rect x="-10" y="-20" width="4" height="40"/>
+      <!-- Right vertical -->
+      <rect x="6" y="-20" width="4" height="40"/>
+      <!-- Crossbar (part of horizon line) -->
+      <rect x="-10" y="-2" width="20" height="4"/>
+    </g>
+
+    <!-- Horizon line extending beyond circle -->
+    <line x1="-38" y1="0" x2="38" y2="0" stroke-width="2"/>
+  </g>
+
+  <!-- OLD HEAD text -->
+  <text x="88" y="35" class="brand" font-size="24" font-weight="700" fill="#FAFAF8" letter-spacing="3">OLD HEAD</text>
+
+  <!-- Decorative line left of PLASTER -->
+  <line x1="88" y1="48" x2="112" y2="48" stroke="#A8935C" stroke-width="1"/>
+
+  <!-- PLASTER text in brass -->
+  <text x="118" y="52" class="brand" font-size="11" fill="#A8935C" letter-spacing="5">PLASTER</text>
+
+  <!-- Decorative line right of PLASTER -->
+  <line x1="192" y1="48" x2="216" y2="48" stroke="#A8935C" stroke-width="1"/>
+
+  <!-- EST. COUNTY MAYO -->
+  <text x="152" y="68" class="brand" font-size="8" fill="#FAFAF8" letter-spacing="1.5" text-anchor="middle" opacity="0.5">EST. COUNTY MAYO</text>
+</svg>

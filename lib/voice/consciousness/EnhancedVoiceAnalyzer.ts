@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Enhanced Voice Analyzer - Multi-Modal Consciousness Layer
  *

@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAIA-Sovereign | Strategic Overview</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --fire: #a94724;
+      --air: #cea22c;
+      --earth: #6d7934;
+      --water: #236586;
+      --navy: #1a3a52;
+      --warm-white: #f8f7f5;
+      --sage: #5a7a6f;
+      --violet: #6b5a98;
+      --text-dark: #292524;
+      --text-muted: #57534e;
+      --text-light: #ffffff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .presentation {
+      width: 100%;
+      max-width: 1200px;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .slide.bg-navy {
+      background: var(--navy);
+      color: var(--text-light);
+    }
+
+    .slide.bg-light {
+      background: var(--warm-white);
+      color: var(--text-dark);
+    }
+
+    .section-label {
+      padding: 24px 48px 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--sage);
+    }
+
+    .slide-content {
+      flex: 1;
+      padding: 24px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .divider {
+      width: 80px;
+      height: 2px;
+      background: var(--air);
+      margin: 20px 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.6);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .element-card {
+      border: 2px solid;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .element-name {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .element-question {
+      font-size: 22px;
+      font-weight: 600;
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    .element-domain {
+      font-size: 9px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .insight-box {
+      background: var(--navy);
+      color: var(--text-light);
+      padding: 24px;
+      border-radius: 8px;
+      margin-top: auto;
+    }
+
+    .insight-box h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .insight-box p {
+      font-size: 12px;
+      line-height: 1.7;
+      opacity: 0.85;
+    }
+
+    .pillar {
+      padding: 24px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .role-card {
+      border: 2px solid;
+      border-radius: 8px;
+      padding: 20px;
+      background: white;
+    }
+
+    .role-title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .role-subtitle {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+
+    .role-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .role-badge {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .column-box {
+      padding: 24px;
+      border-radius: 8px;
+    }
+
+    .column-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .list-item {
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .quote {
+      font-size: 22px;
+      font-style: italic;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    /* Controls */
+    .controls {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 0 32px;
+      z-index: 100;
+    }
+
+    .slide-indicators {
+      display: flex;
+      gap: 6px;
+    }
+
+    .indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--sage);
+      opacity: 0.4;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .indicator.active {
+      width: 24px;
+      opacity: 1;
+    }
+
+    .indicator:hover {
+      opacity: 0.7;
+    }
+
+    .control-btn {
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .slide.bg-navy .control-btn {
+      background: rgba(255,255,255,0.1);
+      color: var(--text-light);
+    }
+
+    .slide.bg-light .control-btn {
+      background: rgba(0,0,0,0.05);
+      color: var(--text-dark);
+    }
+
+    .control-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .slide-counter {
+      position: absolute;
+      left: 32px;
+      font-size: 11px;
+      opacity: 0.5;
+    }
+
+    .control-group {
+      position: absolute;
+      right: 32px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: var(--sage);
+      transition: width 0.1s linear;
+    }
+
+    /* Click areas */
+    .nav-area {
+      position: absolute;
+      top: 0;
+      bottom: 60px;
+      width: 25%;
+      cursor: pointer;
+      z-index: 50;
+    }
+
+    .nav-area.left {
+      left: 0;
+    }
+
+    .nav-area.right {
+      right: 0;
+    }
+
+    /* Decorative elements */
+    .circle-decoration {
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 32px;
+    }
+
+    .flex-1 {
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 350px;
+      background: var(--navy);
+      border-radius: 8px;
+      padding: 28px;
+      color: var(--text-light);
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--sage);
+      margin-bottom: 20px;
+    }
+
+    .sidebar-item {
+      margin-bottom: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--sage);
+      margin: 20px 0;
+    }
+
+    .sidebar-quote {
+      font-size: 12px;
+      font-style: italic;
+      opacity: 0.8;
+      line-height: 1.6;
+    }
+
+    .bullet-list {
+      list-style: none;
+    }
+
+    .bullet-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+
+    .bullet {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .accent-bar {
+      width: 4px;
+      border-radius: 2px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .problem-card {
+      display: flex;
+    }
+
+    .problem-content {
+      flex: 1;
+      background: rgba(255,255,255,0.6);
+      padding: 20px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .reason-item {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .footer-text {
+      font-size: 9px;
+      font-style: italic;
+      color: var(--sage);
+      margin-top: 16px;
+    }
+
+    .opp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .opp-item {
+      margin-bottom: 16px;
+    }
+
+    .opp-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .opp-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--sage);
+    }
+
+    .opp-title {
+      font-size: 13px;
+      font-weight: 600;
+      padding-top: 4px;
+    }
+
+    .opp-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .option-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .closing-layout {
+      display: flex;
+      height: 100%;
+    }
+
+    .closing-decoration {
+      width: 25%;
+      position: relative;
+    }
+
+    .closing-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-3, .grid-5, .two-column, .opp-grid, .options-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 { font-size: 28px; }
+      h2 { font-size: 22px; }
+      .slide-content { padding: 16px 24px; }
+      .section-label { padding: 16px 24px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="presentation" id="presentation">
+    <!-- SLIDE 1: Title -->
+    <div class="slide bg-navy active" data-timing="45">
+      <div class="slide-content" style="flex-direction: row; align-items: center;">
+        <div class="flex-1">
+          <h1>MAIA-SOVEREIGN</h1>
+          <p class="subtitle">A Reciprocity-Based AI Platform for<br>Care, Consciousness & Commons Stewardship</p>
+          <div class="divider"></div>
+          <p style="font-size: 14px; font-style: italic; opacity: 0.7;">Strategic Overview for Early Partners</p>
+          <p style="font-size: 12px; color: var(--sage); margin-top: 32px;">soullab.life</p>
+        </div>
+        <div style="width: 280px; display: flex; align-items: center; justify-content: center;">
+          <img src="logo_flower_2.png" alt="Soullab Holoflower" style="width: 240px; height: 240px; object-fit: contain;">
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: The Problem -->
+    <div class="slide bg-light" data-timing="90">
+      <div class="section-label">THE PROBLEM</div>
+      <div class="slide-content">
+        <h2>Most AI Platforms Fail in Three Critical Ways</h2>
+        <div class="grid-3" style="margin-top: 24px;">
+          <div class="problem-card">
+            <div class="accent-bar" style="background: var(--fire); height: auto;"></div>
+            <div class="problem-content">
+              <div class="card-title">1. Extract Without Context</div>
+              <div class="card-body">AI tools scale output, not responsibility. Care, coaching, and guidance get flattened into transactions.</div>
+            </div>
+          </div>
+          <div class="problem-card">
+            <div class="accent-bar" style="background: var(--air); height: auto;"></div>
+            <div class="problem-content">
+              <div class="card-title">2. Break Under Ethics</div>
+              <div class="card-body">Either everything is paywalled and exclusionary, or 'free' and unsustainable. Very few systems model reciprocity.</div>
+            </div>
+          </div>
+          <div class="problem-card">
+            <div class="accent-bar" style="background: var(--water); height: auto;"></div>
+            <div class="problem-content">
+              <div class="card-title">3. Ignore the Care Economy</div>
+              <div class="card-body">Helpers are underpaid and overworked. Platforms either exploit them or price them out. Clients hit paywalls at their most vulnerable.</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: auto; padding: 16px; background: rgba(90,122,111,0.1); border-radius: 8px;">
+          <p style="text-align: center; font-weight: 500; font-style: italic; color: var(--sage);">
+            MAIA-Sovereign is designed to solve all three — structurally, not aspirationally.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: What MAIA-Sovereign Is -->
+    <div class="slide bg-light" data-timing="75">
+      <div class="section-label">THE PLATFORM</div>
+      <div class="slide-content">
+        <h2>A Relational AI Platform That Supports</h2>
+        <div class="flex-row" style="margin-top: 24px;">
+          <div class="flex-1">
+            <ul class="bullet-list">
+              <li><span class="bullet" style="background: var(--fire);"></span> Personal Growth</li>
+              <li><span class="bullet" style="background: var(--air);"></span> Practitioner-Client Relationships</li>
+              <li><span class="bullet" style="background: var(--earth);"></span> Care-Based Practices</li>
+              <li><span class="bullet" style="background: var(--water);"></span> Ethical AI Assistance</li>
+            </ul>
+          </div>
+          <div class="sidebar">
+            <div class="sidebar-title">MAIA-SOVEREIGN IS NOT</div>
+            <div class="sidebar-item">× Just an AI chatbot</div>
+            <div class="sidebar-item">× Just practice management software</div>
+            <div class="sidebar-item">× Just a consciousness app</div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-quote">It is a commons-based operating system for care, with AI embedded inside an ethical container.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: The Elemental Architecture -->
+    <div class="slide bg-light" data-timing="105">
+      <div class="section-label">THE ARCHITECTURE</div>
+      <div class="slide-content">
+        <h2>Five Parallel Processing Fields</h2>
+        <p style="color: var(--text-muted); font-style: italic; margin-bottom: 20px;">Elemental Alchemy: The consciousness architecture behind MAIA</p>
+        <div class="grid-5">
+          <div class="element-card" style="border-color: var(--fire); background: rgba(169,71,36,0.08);">
+            <div class="element-name" style="color: var(--fire);">FIRE</div>
+            <div class="element-question">If?</div>
+            <div class="element-domain">Inspiration • Vision • Will</div>
+          </div>
+          <div class="element-card" style="border-color: var(--water); background: rgba(35,101,134,0.08);">
+            <div class="element-name" style="color: var(--water);">WATER</div>
+            <div class="element-question">Why?</div>
+            <div class="element-domain">Intention • Psyche • Depth</div>
+          </div>
+          <div class="element-card" style="border-color: var(--earth); background: rgba(109,121,52,0.08);">
+            <div class="element-name" style="color: var(--earth);">EARTH</div>
+            <div class="element-question">How?</div>
+            <div class="element-domain">Implementation • Structure • Form</div>
+          </div>
+          <div class="element-card" style="border-color: var(--air); background: rgba(206,162,44,0.08);">
+            <div class="element-name" style="color: var(--air);">AIR</div>
+            <div class="element-question">What?</div>
+            <div class="element-domain">Expression • Articulation • Sharing</div>
+          </div>
+          <div class="element-card" style="border-color: var(--sage); background: rgba(90,122,111,0.08);">
+            <div class="element-name" style="color: var(--sage);">AETHER</div>
+            <div class="element-question">Who?</div>
+            <div class="element-domain">Integration • Soul Awareness • Design</div>
+          </div>
+        </div>
+        <div class="insight-box">
+          <h3>These are not metaphors — they are parallel processing domains.</h3>
+          <p>Like the brain's hemispheres connected by the corpus callosum, human consciousness processes reality through multiple co-functioning awareness fields simultaneously. Traditional AI forces linear thinking. MAIA supports multi-dimensional awareness — the way humans actually work.</p>
+        </div>
+        <p class="footer-text">Built on: McGilchrist's hemispheric integration • Herrmann's Whole Brain Model • Jung's individuation</p>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: The Core Insight -->
+    <div class="slide bg-navy" data-timing="75">
+      <div class="section-label">THE CORE INSIGHT</div>
+      <div class="slide-content">
+        <h2 style="margin-bottom: 16px;">Care systems collapse when:</h2>
+        <div style="margin-bottom: 32px;">
+          <p class="reason-item" style="color: var(--air);">→ Clients are paywalled</p>
+          <p class="reason-item" style="color: var(--air);">→ Helpers are squeezed</p>
+          <p class="reason-item" style="color: var(--air);">→ Platforms externalize cost</p>
+        </div>
+        <p style="font-size: 18px; font-weight: 600; margin-bottom: 32px;">MAIA-Sovereign flips this by separating care from infrastructure.</p>
+        <div class="grid-3">
+          <div class="pillar" style="background: rgba(109,121,52,0.5);">Care is never paywalled</div>
+          <div class="pillar" style="background: rgba(35,101,134,0.5);">Infrastructure is stewarded</div>
+          <div class="pillar" style="background: rgba(90,122,111,0.5);">AI scales support, not extraction</div>
+        </div>
+        <p style="font-size: 13px; font-style: italic; color: var(--air); margin-top: auto;">That single design decision unlocks everything else.</p>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: The Reciprocity Economy -->
+    <div class="slide bg-light" data-timing="90">
+      <div class="section-label">THE MODEL</div>
+      <div class="slide-content">
+        <h2>Reciprocity-Based Economy</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Not a coercive subscription model — a system where people move fluidly between roles.</p>
+        <div class="grid-3">
+          <div class="role-card" style="border-color: var(--earth);">
+            <div class="role-title" style="color: var(--earth);">MEMBERS</div>
+            <div class="role-subtitle">Personal Growth</div>
+            <div class="role-desc">Journaling, reflection, clients supported by practitioners</div>
+            <div class="role-badge" style="background: rgba(109,121,52,0.15); color: var(--earth);">Always Free</div>
+          </div>
+          <div class="role-card" style="border-color: var(--water);">
+            <div class="role-title" style="color: var(--water);">PRACTITIONERS</div>
+            <div class="role-subtitle">Care Providers</div>
+            <div class="role-desc">Therapists, coaches, healers, guides using MAIA to run their practice</div>
+            <div class="role-badge" style="background: rgba(35,101,134,0.15); color: var(--water);">Choose How to Contribute</div>
+          </div>
+          <div class="role-card" style="border-color: var(--sage);">
+            <div class="role-title" style="color: var(--sage);">STEWARDS</div>
+            <div class="role-subtitle">Commons Builders</div>
+            <div class="role-desc">Fund shared infrastructure so care stays accessible for everyone</div>
+            <div class="role-badge" style="background: rgba(90,122,111,0.15); color: var(--sage);">Support the Commons</div>
+          </div>
+        </div>
+        <div style="margin-top: auto;">
+          <p style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">Two Practitioner Contribution Paths:</p>
+          <p style="font-size: 12px; color: var(--text-muted);">Pay-as-you-earn: Small % only when money flows • Studio Membership: Flat monthly, reduced fees</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Ethical Feature Gating -->
+    <div class="slide bg-light" data-timing="75">
+      <div class="section-label">THE ETHICS</div>
+      <div class="slide-content">
+        <h2>We Never Lock Care — We Modulate Scale</h2>
+        <div class="two-column" style="margin-top: 20px;">
+          <div class="column-box" style="background: rgba(109,121,52,0.1);">
+            <div class="column-title" style="color: var(--earth);">ALWAYS AVAILABLE</div>
+            <div class="list-item">✓ Client portal access</div>
+            <div class="list-item">✓ 1:1 care relationships</div>
+            <div class="list-item">✓ Notes, records, continuity</div>
+            <div class="list-item">✓ Sanctuary mode (privacy)</div>
+            <div class="list-item">✓ Data export & sovereignty</div>
+          </div>
+          <div class="column-box" style="background: rgba(107,90,152,0.1);">
+            <div class="column-title" style="color: var(--violet);">ETHICALLY LIMITED</div>
+            <p style="font-size: 10px; font-style: italic; color: var(--text-muted); margin-bottom: 16px;">(because they cost real resources)</p>
+            <div class="list-item">◇ Bulk reminders & automation</div>
+            <div class="list-item">◇ Sequences & workflows</div>
+            <div class="list-item">◇ Analytics & insights</div>
+            <div class="list-item">◇ High-volume AI processing</div>
+          </div>
+        </div>
+        <div class="insight-box" style="margin-top: auto;">
+          <p style="text-align: center; font-size: 12px; line-height: 1.7;">Limits are transparent, invitational, reversible, and often sponsored.<br>This avoids both exploitative monetization AND free-rider collapse.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Where AI Fits -->
+    <div class="slide bg-navy" data-timing="90">
+      <div class="section-label">THE AI</div>
+      <div class="slide-content">
+        <h2>AI is Not the Product — It's Supporting Intelligence</h2>
+        <div class="two-column" style="margin-top: 20px;">
+          <div>
+            <div class="column-title" style="color: var(--air);">MAIA assists with:</div>
+            <div class="list-item" style="opacity: 0.9;">→ Reflection & journaling</div>
+            <div class="list-item" style="opacity: 0.9;">→ Pattern recognition over time</div>
+            <div class="list-item" style="opacity: 0.9;">→ Insight synthesis</div>
+            <div class="list-item" style="opacity: 0.9;">→ Practitioner support tools</div>
+            <div class="list-item" style="opacity: 0.9;">→ Client continuity between sessions</div>
+          </div>
+          <div>
+            <div class="column-title" style="color: var(--sage);">AI is always:</div>
+            <div class="list-item" style="opacity: 0.9;">◆ Contextual & role-aware</div>
+            <div class="list-item" style="opacity: 0.9;">◆ Relationship-aware</div>
+            <div class="list-item" style="opacity: 0.9;">◆ Ethically bounded</div>
+            <div class="list-item" style="opacity: 0.9;">◆ Never authoritative</div>
+            <div class="list-item" style="opacity: 0.9;">◆ Never manipulative</div>
+          </div>
+        </div>
+        <div class="column-box" style="background: rgba(90,122,111,0.4); margin-top: auto;">
+          <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; opacity: 0.8; margin-bottom: 12px;">THIS CREATES:</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 600;">Lower hallucination risk</div>
+            <div style="font-size: 12px; font-weight: 600;">Higher trust</div>
+            <div style="font-size: 12px; font-weight: 600;">Deeper long-term engagement</div>
+            <div style="font-size: 12px; font-weight: 600;">Rich signal environment</div>
+          </div>
+        </div>
+        <p style="font-size: 13px; font-style: italic; color: var(--air); margin-top: 20px;">MAIA is a high-quality signal environment for relational intelligence.</p>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Strategic Opportunity -->
+    <div class="slide bg-light" data-timing="90">
+      <div class="section-label">THE OPPORTUNITY</div>
+      <div class="slide-content">
+        <h2>Why This Is Strategically Interesting</h2>
+        <div class="opp-grid" style="margin-top: 24px;">
+          <div class="opp-item">
+            <div class="opp-header">
+              <span class="opp-num">01</span>
+              <span class="opp-title">Solves AI Ethics by Design</span>
+            </div>
+            <p class="opp-desc">No retrofitting. No policy theater. Ethics is infrastructure.</p>
+          </div>
+          <div class="opp-item">
+            <div class="opp-header">
+              <span class="opp-num">02</span>
+              <span class="opp-title">Opens Care Economy Responsibly</span>
+            </div>
+            <p class="opp-desc">Mental health, coaching, guidance — massive markets, fragile. We handle them with care.</p>
+          </div>
+          <div class="opp-item">
+            <div class="opp-header">
+              <span class="opp-num">03</span>
+              <span class="opp-title">Creates Loyal User Base</span>
+            </div>
+            <p class="opp-desc">Helpers don't churn lightly when a platform respects them.</p>
+          </div>
+          <div class="opp-item">
+            <div class="opp-header">
+              <span class="opp-num">04</span>
+              <span class="opp-title">Highly Extensible</span>
+            </div>
+            <p class="opp-desc">Enterprise • Clinics • Education • Community health • Ethical AI pilots</p>
+          </div>
+          <div class="opp-item">
+            <div class="opp-header">
+              <span class="opp-num">05</span>
+              <span class="opp-title">Early Stage = Influence</span>
+            </div>
+            <p class="opp-desc">Architectural influence. Strategic alignment. Co-evolution, not acquisition pressure.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: Partnership -->
+    <div class="slide bg-light" data-timing="60">
+      <div class="section-label">THE INVITATION</div>
+      <div class="slide-content">
+        <h2>What Support Could Look Like</h2>
+        <p style="color: var(--text-muted); font-style: italic; margin-bottom: 24px;">We're opening a door, not pitching a single thing.</p>
+        <div class="options-grid">
+          <div class="option-item"><span class="option-dot" style="background: var(--fire);"></span> Early strategic guidance</div>
+          <div class="option-item"><span class="option-dot" style="background: var(--air);"></span> Infrastructure sponsorship</div>
+          <div class="option-item"><span class="option-dot" style="background: var(--earth);"></span> AI research collaboration</div>
+          <div class="option-item"><span class="option-dot" style="background: var(--water);"></span> Capital investment</div>
+          <div class="option-item"><span class="option-dot" style="background: var(--sage);"></span> Advisory role</div>
+          <div class="option-item"><span class="option-dot" style="background: var(--violet);"></span> Long-term partnership</div>
+        </div>
+        <div class="insight-box" style="margin-top: auto;">
+          <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 12px;">WHAT WE'RE OFFERING</div>
+          <p style="font-size: 14px; line-height: 1.7;">A chance to help shape a platform that doesn't repeat the mistakes of Web2 or extractive AI — one designed from the ground up to earn trust in the most sensitive domain there is.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Closing -->
+    <div class="slide bg-navy" data-timing="45">
+      <div class="closing-layout">
+        <div class="closing-decoration" style="display: flex; align-items: center; justify-content: center; padding-left: 20px;">
+          <img src="logo_flower_2.png" alt="Soullab Holoflower" style="width: 160px; height: 160px; object-fit: contain;">
+        </div>
+        <div class="closing-content">
+          <p class="quote">"We're not trying to build the biggest AI platform.<br>We're trying to build one that can actually be trusted —<br>by people doing the most sensitive work there is."</p>
+          <div class="divider" style="background: var(--sage);"></div>
+          <p style="font-size: 16px; font-weight: 600; color: var(--air); margin-bottom: 8px;">MAIA-Sovereign treats ethics as infrastructure, not messaging.</p>
+          <p style="font-style: italic; opacity: 0.7; margin-bottom: 40px;">That's a sentence very few founders can honestly say.</p>
+          <p style="color: var(--sage);">soullab.life</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation click areas -->
+    <div class="nav-area left" onclick="prevSlide()"></div>
+    <div class="nav-area right" onclick="nextSlide()"></div>
+
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Controls (will be dynamically positioned based on active slide) -->
+    <div class="controls" id="controls">
+      <span class="slide-counter" id="slideCounter">1 / 11</span>
+      <div class="slide-indicators" id="slideIndicators"></div>
+      <div class="control-group">
+        <button class="control-btn" id="modeBtn" onclick="toggleAutoPlay()">Auto-Play</button>
+        <button class="control-btn" id="pauseBtn" onclick="togglePause()" style="display: none;">Pause</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const indicators = document.getElementById('slideIndicators');
+    const counter = document.getElementById('slideCounter');
+    const progressBar = document.getElementById('progressBar');
+    const modeBtn = document.getElementById('modeBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const controls = document.getElementById('controls');
+
+    let currentSlide = 0;
+    let isAutoPlay = false;
+    let isPaused = false;
+    let autoPlayTimer = null;
+    let progressTimer = null;
+    let progress = 0;
+
+    // Create slide indicators
+    slides.forEach((_, i) => {
+      const indicator = document.createElement('button');
+      indicator.className = 'indicator' + (i === 0 ? ' active' : '');
+      indicator.onclick = () => goToSlide(i);
+      indicators.appendChild(indicator);
+    });
+
+    function updateControlColors() {
+      const slide = slides[currentSlide];
+      const isDark = slide.classList.contains('bg-navy');
+      const btns = controls.querySelectorAll('.control-btn');
+      btns.forEach(btn => {
+        btn.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+        btn.style.color = isDark ? '#ffffff' : '#292524';
+      });
+      counter.style.color = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+    }
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+
+      slides[currentSlide].classList.remove('active');
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+
+      // Update indicators
+      document.querySelectorAll('.indicator').forEach((ind, i) => {
+        ind.classList.toggle('active', i === currentSlide);
+      });
+
+      // Update counter
+      counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+
+      // Reset progress
+      progress = 0;
+      progressBar.style.width = '0%';
+
+      // Update control colors
+      updateControlColors();
+
+      // Restart auto-play timer if active
+      if (isAutoPlay && !isPaused) {
+        startAutoPlay();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        goToSlide(currentSlide + 1);
+      } else if (isAutoPlay) {
+        toggleAutoPlay(); // Stop at last slide
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        goToSlide(currentSlide - 1);
+      }
+    }
+
+    function startAutoPlay() {
+      clearInterval(autoPlayTimer);
+      clearInterval(progressTimer);
+
+      const timing = parseInt(slides[currentSlide].dataset.timing) * 1000;
+      progress = 0;
+
+      progressTimer = setInterval(() => {
+        if (!isPaused) {
+          progress += 100;
+          progressBar.style.width = `${(progress / timing) * 100}%`;
+        }
+      }, 100);
+
+      autoPlayTimer = setTimeout(() => {
+        if (!isPaused) {
+          nextSlide();
+        }
+      }, timing);
+    }
+
+    function toggleAutoPlay() {
+      isAutoPlay = !isAutoPlay;
+      modeBtn.textContent = isAutoPlay ? 'Manual' : 'Auto-Play';
+      pauseBtn.style.display = isAutoPlay ? 'inline-block' : 'none';
+
+      if (isAutoPlay) {
+        startAutoPlay();
+      } else {
+        clearInterval(autoPlayTimer);
+        clearInterval(progressTimer);
+        progressBar.style.width = '0%';
+      }
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+
+      if (!isPaused && isAutoPlay) {
+        startAutoPlay();
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'p') {
+        toggleAutoPlay();
+      } else if (e.key === 'Escape') {
+        togglePause();
+      }
+    });
+
+    // Initialize
+    updateControlColors();
+  </script>
+</body>
+</html>

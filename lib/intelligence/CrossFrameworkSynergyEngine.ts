@@ -114,6 +114,26 @@ export class CrossFrameworkSynergyEngine {
     if (cognitiveFusionSignature) signatures.push(cognitiveFusionSignature);
 
     // ========================================================================
+    // TCM SYNERGY PATTERNS (Traditional Chinese Medicine Integration)
+    // ========================================================================
+
+    // Pattern 19: Liver Qi Stagnation Cascade
+    const liverQiStagnationSignature = this.detectLiverQiStagnationCascade(extraction);
+    if (liverQiStagnationSignature) signatures.push(liverQiStagnationSignature);
+
+    // Pattern 20: Heart-Kidney Axis Imbalance
+    const heartKidneyAxisSignature = this.detectHeartKidneyAxisImbalance(extraction);
+    if (heartKidneyAxisSignature) signatures.push(heartKidneyAxisSignature);
+
+    // Pattern 21: Kidney Depletion Collapse
+    const kidneyDepletionSignature = this.detectKidneyDepletionCollapse(extraction);
+    if (kidneyDepletionSignature) signatures.push(kidneyDepletionSignature);
+
+    // Pattern 22: Shen Disturbance Crisis
+    const shenDisturbanceSignature = this.detectShenDisturbanceCrisis(extraction);
+    if (shenDisturbanceSignature) signatures.push(shenDisturbanceSignature);
+
+    // ========================================================================
     // ADVANCED SYNERGY ENGINE (5-9 Frameworks)
     // ========================================================================
     // The advanced engine detects high-complexity patterns (5-9 framework combinations)
@@ -757,6 +777,176 @@ export class CrossFrameworkSynergyEngine {
           'Key question: "What if this thought isn\'t as true as it feels?"'
         ],
         urgency: 'moderate'
+      };
+    }
+
+    return null;
+  }
+
+  // ========================================================================
+  // TCM SYNERGY PATTERNS (Patterns 19-22)
+  // ========================================================================
+
+  /**
+   * PATTERN 19: Liver Qi Stagnation Cascade
+   * TCM Liver Qi Stagnation + Levine Trapped Fight + Gestalt Retroflection + Polyvagal Sympathetic
+   */
+  private detectLiverQiStagnationCascade(extraction: ExtractionResult): TransformationSignature | null {
+    const hasLiverStagnation = extraction.tcmState?.organPatterns.some(
+      p => p.pattern.toLowerCase().includes('liver') && p.pattern.toLowerCase().includes('stagnation')
+    );
+    const hasWoodElement = extraction.tcmState?.elementalState.stagnant === 'wood' ||
+                          extraction.tcmState?.elementalState.dominant === 'wood';
+    const hasTrappedFight = extraction.somaticState?.incompleteResponse.type === 'fight';
+    const hasRetroflection = extraction.gestaltState?.contactDisturbances.retroflection.detected;
+    const hasSympathetic = extraction.polyvagalState?.state === 'sympathetic';
+
+    if ((hasLiverStagnation || hasWoodElement) && (hasTrappedFight || hasRetroflection) && hasSympathetic) {
+      return {
+        name: 'Liver Qi Stagnation Cascade',
+        description: 'TCM Liver Qi stagnation + trapped fight response + retroflection + sympathetic activation',
+        frameworks: ['TCM', 'Levine', 'Gestalt', 'Polyvagal'],
+        frameworkCount: 4,
+        complexity: 'basic',
+        confidence: 0.88,
+        clinicalMeaning: 'Classical Liver Qi stagnation pattern seen through multiple frameworks: Wood element blocked (frustration, anger), incomplete fight response trapped in body, aggression turned against self (retroflection), sympathetic nervous system activated but unable to discharge. The Hun (ethereal soul) is disturbed.',
+        therapeuticFocus: 'Move stagnant Liver Qi, complete fight response, redirect retroflection outward',
+        interventions: [
+          'TCM: Move Liver Qi (acupuncture LV3, LV14, GB34; herbs like Xiao Yao San)',
+          'Levine: Complete fight response through contained expression',
+          'Gestalt: Redirect retroflection outward (empty chair for anger)',
+          'Polyvagal: Support sympathetic discharge (shaking, trembling)',
+          'Somatic: Track jaw, shoulders, fists - allow micro-movements',
+          'Key: "What did you need to say/do that couldn\'t be expressed?"'
+        ],
+        urgency: 'high'
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * PATTERN 20: Heart-Kidney Axis Imbalance
+   * TCM Heart-Kidney disconnect + Shen disturbance + Existential crisis + Unstable ventral
+   */
+  private detectHeartKidneyAxisImbalance(extraction: ExtractionResult): TransformationSignature | null {
+    const hasAxisImbalance = extraction.tcmState?.heartKidneyAxis.balanced === false;
+    const hasShenDisturbance = extraction.tcmState?.spiritState.disturbedSpirits.some(
+      s => s.spirit.toLowerCase() === 'shen'
+    );
+    const hasZhiDisturbance = extraction.tcmState?.spiritState.disturbedSpirits.some(
+      s => s.spirit.toLowerCase() === 'zhi'
+    );
+    const hasMeaningCrisis = extraction.existentialState?.existentialGivens.meaninglessness.detected;
+    const hasUnstableVentral = extraction.polyvagalState?.state !== 'ventral' ||
+                               (extraction.polyvagalState?.safety && extraction.polyvagalState.safety < 0.5);
+
+    if (hasAxisImbalance && (hasShenDisturbance || hasZhiDisturbance) && (hasMeaningCrisis || hasUnstableVentral)) {
+      return {
+        name: 'Heart-Kidney Axis Imbalance',
+        description: 'Fire-Water disconnection with spirit disturbance and existential/nervous system instability',
+        frameworks: ['TCM', 'Existential', 'Polyvagal'],
+        frameworkCount: 3,
+        complexity: 'basic',
+        confidence: 0.85,
+        clinicalMeaning: 'Heart Fire not descending, Kidney Water not ascending - the critical axis of consciousness-instinct communication is broken. Shen (consciousness, meaning) disconnected from Zhi (will, survival instinct). This creates anxiety above, fear below, and existential disorientation throughout.',
+        therapeuticFocus: 'Restore Heart-Kidney communication, ground Shen, nourish Zhi',
+        interventions: [
+          'TCM: Restore Heart-Kidney axis (HT7, KD3, KD6; Tian Wang Bu Xin Dan)',
+          'Grounding: Connect heart awareness with pelvic/kidney awareness',
+          'Existential: Address meaning crisis while honoring mortality fear',
+          'Polyvagal: Build ventral capacity through co-regulation',
+          'Meditation: Heart-kidney breathing (descend fire, ascend water)',
+          'Key: "Connect what you know in your heart with what you feel in your bones"'
+        ],
+        urgency: 'high'
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * PATTERN 21: Kidney Depletion Collapse
+   * TCM Kidney Yang Deficiency + Polyvagal Dorsal + Existential dread + Alchemy Nigredo
+   */
+  private detectKidneyDepletionCollapse(extraction: ExtractionResult): TransformationSignature | null {
+    const hasKidneyDeficiency = extraction.tcmState?.organPatterns.some(
+      p => p.pattern.toLowerCase().includes('kidney') &&
+          (p.pattern.toLowerCase().includes('deficiency') || p.pattern.toLowerCase().includes('depleted'))
+    );
+    const hasWaterDeficient = extraction.tcmState?.elementalState.deficient === 'water';
+    const hasZhiDisturbance = extraction.tcmState?.spiritState.disturbedSpirits.some(
+      s => s.spirit.toLowerCase() === 'zhi'
+    );
+    const hasDorsal = extraction.polyvagalState?.state === 'dorsal';
+    const hasExistentialDread = extraction.existentialState?.existentialGivens.death.detected ||
+                                extraction.existentialState?.existentialGivens.groundlessness?.detected;
+    const hasNigredo = extraction.alchemicalStage?.primaryStage === 'nigredo';
+
+    if ((hasKidneyDeficiency || hasWaterDeficient || hasZhiDisturbance) && (hasDorsal || hasNigredo) && hasExistentialDread) {
+      return {
+        name: 'Kidney Depletion Collapse',
+        description: 'Kidney/Water depletion + dorsal vagal collapse + existential dread + nigredo dissolution',
+        frameworks: ['TCM', 'Polyvagal', 'Existential', 'Alchemy'],
+        frameworkCount: 4,
+        complexity: 'basic',
+        confidence: 0.90,
+        clinicalMeaning: 'Fundamental life force (Jing) depleted. Zhi (will) has collapsed, creating deep fear and giving up. The nervous system has gone into conservation mode (dorsal). Existential dread about annihilation/death. This is the burnout that goes to the bone level - ancestral and constitutional.',
+        therapeuticFocus: 'Gentle restoration of Kidney essence, honor nigredo, small movements toward life',
+        interventions: [
+          'PRIORITY: Rest, rest, rest - this is constitutional depletion',
+          'TCM: Tonify Kidney Yang (moxa on Ren4/Du4, Bu Zhong Yi Qi Tang)',
+          'Polyvagal: Gentle co-regulation, don\'t push for activation',
+          'Existential: Honor the proximity to death, find meaning in limit awareness',
+          'Alchemy: Respect nigredo - no pushing toward light yet',
+          'Key: "Your body is asking for restoration at the deepest level"'
+        ],
+        urgency: 'critical'
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * PATTERN 22: Shen Disturbance Crisis
+   * TCM Shen/Heart disturbed + Low Self energy + Anxious attachment + ACT psychological inflexibility
+   */
+  private detectShenDisturbanceCrisis(extraction: ExtractionResult): TransformationSignature | null {
+    const hasShenDisturbance = extraction.tcmState?.spiritState.disturbedSpirits.some(
+      s => s.spirit.toLowerCase() === 'shen' && s.confidence > 0.6
+    );
+    const hasLowShenClarity = extraction.tcmState?.spiritState.shenClarity &&
+                              extraction.tcmState.spiritState.shenClarity < 0.5;
+    const hasHeartPattern = extraction.tcmState?.organPatterns.some(
+      p => p.organ === 'Heart'
+    );
+    const hasLowSelfEnergy = extraction.ifsParts?.selfEnergy && extraction.ifsParts.selfEnergy < 0.4;
+    const hasPsychologicalInflexibility = extraction.actState?.hexaflex.psychologicalFlexibility &&
+                                          extraction.actState.hexaflex.psychologicalFlexibility < 0.4;
+
+    if ((hasShenDisturbance || hasLowShenClarity || hasHeartPattern) &&
+        (hasLowSelfEnergy || hasPsychologicalInflexibility)) {
+      return {
+        name: 'Shen Disturbance Crisis',
+        description: 'Spirit/consciousness disturbance + depleted Self energy + psychological rigidity',
+        frameworks: ['TCM', 'IFS', 'ACT'],
+        frameworkCount: 3,
+        complexity: 'basic',
+        confidence: 0.83,
+        clinicalMeaning: 'The Shen (spirit/consciousness housed in Heart) is disturbed - creating anxiety, insomnia, confusion, and disconnection from self. In IFS terms, Self energy is depleted and parts are running the show. ACT would see fusion with thoughts and loss of present-moment awareness.',
+        therapeuticFocus: 'Calm and anchor Shen, invite Self energy, increase psychological flexibility',
+        interventions: [
+          'TCM: Calm Shen (HT7, PC6; An Shen Bu Xin Wan)',
+          'IFS: Access Self energy ("What part is speaking right now?")',
+          'ACT: Defusion and present moment awareness',
+          'Environment: Quiet, calm space - reduce stimulation',
+          'Sleep: Address insomnia as priority (Shen needs rest to return)',
+          'Key: "Your spirit is disturbed but not lost - let\'s create safety for it to settle"'
+        ],
+        urgency: 'high'
       };
     }
 

@@ -1,17 +1,13 @@
 /**
- * Maya Memory Orchestration Manager
- * Unifies all memory layers for deep, contextualized intelligence
+ * Maya Memory Orchestration Manager - STUB
+ *
+ * This module previously orchestrated Mem0, LangChain, and Sesame clients.
+ * Now using postgres-only architecture via DevelopmentalMemory and TurnsStore.
+ *
+ * @deprecated Use lib/memory/DevelopmentalMemory.ts and lib/memory/stores/TurnsStore.ts instead
  */
 
-import { Mem0Client } from './clients/Mem0Client';
-import { LangChainVectorStore } from './clients/LangChainStore';
-import { SesameClient } from './clients/SesameClient';
-import { JournalDatabase } from './clients/JournalDatabase';
-import { MemoryPrioritizer } from './prioritizer';
-import { MemoryFallbackHandler } from './fallback';
-import { TurnsStore } from './stores/TurnsStore';
-
-// Core Types
+// Core Types - preserved for compatibility
 export interface ConversationTurn {
   role: 'user' | 'maya';
   content: string;
@@ -35,14 +31,14 @@ export interface UserProfile {
   userId: string;
   currentPhase: SpiralogicPhase;
   preferences: Record<string, any>;
-  oracleHistory: OracleSession[];
+  oracleHistory: any[];
   archetypalLeanings: string[];
-  growthMetrics: GrowthMetrics;
+  growthMetrics: any;
 }
 
 export interface ArchetypalContext {
   dominantArchetype: string;
-  elementalResonance: ElementalBalance;
+  elementalResonance: any;
   geometricPattern: string;
   collectiveTheme: string;
 }
@@ -55,14 +51,14 @@ export interface ShadowEntry {
 }
 
 export interface EmotionalVector {
-  valence: number;  // -1 to 1
-  arousal: number;  // 0 to 1
+  valence: number;
+  arousal: number;
   dominantEmotion: string;
 }
 
-export type SpiralogicPhase = 
+export type SpiralogicPhase =
   | 'initiation'
-  | 'exploration' 
+  | 'exploration'
   | 'integration'
   | 'mastery'
   | 'transcendence';
@@ -95,279 +91,46 @@ export interface MemoryOptions {
   };
 }
 
-// Main Orchestrator
-export class MemoryOrchestrator {
-  private mem0Client: Mem0Client;
-  private langchain: LangChainVectorStore;
-  private sesame: SesameClient;
-  private journalDb: JournalDatabase;
-  private prioritizer: MemoryPrioritizer;
-  private fallbackHandler: MemoryFallbackHandler;
-  private sessionStore = TurnsStore;  // Cross-session turn storage
-  
-  constructor(config: MemoryOrchestratorConfig) {
-    this.mem0Client = new Mem0Client(config.mem0);
-    this.langchain = new LangChainVectorStore(config.langchain);
-    this.sesame = new SesameClient(config.sesame);
-    this.journalDb = new JournalDatabase(config.journal);
-    this.prioritizer = new MemoryPrioritizer();
-    this.fallbackHandler = new MemoryFallbackHandler();
-  }
-  
-  /**
-   * Build unified memory context from all sources
-   */
-  async buildContext(
-    userId: string,
-    userInput: string,
-    options: MemoryOptions = {}
-  ): Promise<MemoryContext> {
-    const failures: MemorySourceFailure[] = [];
-    
-    // Parallel fetch with error handling
-    const [session, journals, profile, symbolic] = await Promise.allSettled([
-      this.getSessionContext(userId, options.maxSessionTurns),
-      this.getRelevantJournals(userId, userInput, options.maxJournals),
-      this.getLongTermProfile(userId),
-      this.getSymbolicEnrichment(userId, userInput)
-    ]).then(results => {
-      return results.map((result, index) => {
-        if (result.status === 'rejected') {
-          const sources = ['session', 'journals', 'longTerm', 'symbolic'];
-          failures.push({ source: sources[index], error: result.reason });
-          return null;
-        }
-        return result.value;
-      });
-    });
-    
-    // Handle failures gracefully
-    if (failures.length > 0) {
-      console.warn('Memory sources failed:', failures);
-      if (failures.length === 4) {
-        // Total failure, use fallback
-        return this.fallbackHandler.handlePartialFailure(failures);
-      }
-    }
-    
-    // Rank and filter memories
-    const rankedJournals = journals ? 
-      this.prioritizer.rank(journals, userInput, options.priorityWeights) : [];
-    
-    // Check for shadow relevance (if enabled)
-    const shadow = options.includeShadow ? 
-      await this.checkShadowRelevance(userId, userInput, { session, journals: rankedJournals }) : 
-      null;
-    
-    // Build final context
-    const context: MemoryContext = {
-      session: session || [],
-      journals: rankedJournals,
-      longTerm: profile,
-      symbolic,
-      shadow,
-      metadata: {
-        timestamp: new Date(),
-        phase: profile?.currentPhase || 'initiation',
-        emotionalState: await this.analyzeEmotionalState(userInput),
-        memoryQuality: this.assessMemoryQuality({ session, journals: rankedJournals, profile, symbolic })
-      }
-    };
-    
-    return context;
-  }
-  
-  /**
-   * Get recent conversation history
-   */
-  private async getSessionContext(
-    userId: string,
-    maxTurns = 10
-  ): Promise<ConversationTurn[]> {
-    try {
-      const turns = await this.sessionStore.getRecentTurns(userId, maxTurns);
-      return turns.map(t => ({
-        role: t.role === 'assistant' ? 'maya' : 'user', // normalize role name
-        content: t.content,
-        timestamp: new Date(t.createdAt),
-      }));
-    } catch (error) {
-      console.error('Session context error:', error);
-      return [];
-    }
-  }
-  
-  /**
-   * Retrieve semantically relevant journal entries
-   */
-  private async getRelevantJournals(
-    userId: string,
-    query: string,
-    limit = 5
-  ): Promise<JournalEntry[]> {
-    return this.langchain.searchJournals(userId, query, limit);
-  }
-  
-  /**
-   * Fetch long-term user profile from Mem0
-   */
-  private async getLongTermProfile(userId: string): Promise<UserProfile | null> {
-    try {
-      return await this.mem0Client.getUserProfile(userId);
-    } catch (error) {
-      console.error('Failed to fetch Mem0 profile:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Get symbolic/archetypal enrichment from Sesame
-   */
-  private async getSymbolicEnrichment(
-    userId: string,
-    input: string
-  ): Promise<ArchetypalContext | null> {
-    try {
-      return await this.sesame.getSymbolicContext(userId, input);
-    } catch (error) {
-      console.warn('Sesame enrichment unavailable:', error);
-      return null;
-    }
-  }
-  
-  /**
-   * Check if shadow work is relevant to current context
-   */
-  private async checkShadowRelevance(
-    userId: string,
-    input: string,
-    context: Partial<MemoryContext>
-  ): Promise<ShadowEntry[] | null> {
-    // Shadow detection logic
-    const shadowPatterns = [
-      'denial', 'projection', 'repression', 
-      'can\'t', 'hate', 'never', 'always'
-    ];
-    
-    const hasPattern = shadowPatterns.some(p => 
-      input.toLowerCase().includes(p)
-    );
-    
-    if (!hasPattern) return null;
-    
-    // Fetch relevant shadow entries
-    const shadowEntries = await this.journalDb.getShadowEntries(userId, {
-      pattern: 'matching',
-      limit: 3
-    });
-    
-    return shadowEntries;
-  }
-  
-  /**
-   * Analyze emotional state from input
-   */
-  private async analyzeEmotionalState(input: string): Promise<EmotionalVector> {
-    // This could use a sentiment analysis service or local model
-    // For now, simplified implementation
-    const emotions = {
-      joy: ['happy', 'excited', 'grateful'],
-      sadness: ['sad', 'depressed', 'lonely'],
-      anger: ['angry', 'frustrated', 'annoyed'],
-      fear: ['afraid', 'anxious', 'worried']
-    };
-    
-    let dominantEmotion = 'neutral';
-    let valence = 0;
-    let arousal = 0.5;
-    
-    for (const [emotion, keywords] of Object.entries(emotions)) {
-      if (keywords.some(k => input.toLowerCase().includes(k))) {
-        dominantEmotion = emotion;
-        valence = emotion === 'joy' ? 0.8 : -0.6;
-        arousal = ['joy', 'anger'].includes(emotion) ? 0.8 : 0.3;
-        break;
-      }
-    }
-    
-    return { valence, arousal, dominantEmotion };
-  }
-  
-  /**
-   * Assess quality of retrieved memory
-   */
-  private assessMemoryQuality(context: any): MemoryQuality {
-    const sources = [
-      context.session?.length > 0,
-      context.journals?.length > 0,
-      context.profile !== null,
-      context.symbolic !== null
-    ].filter(Boolean).length;
-    
-    if (sources >= 3) return 'full';
-    if (sources >= 2) return 'partial';
-    return 'minimal';
-  }
-  
-  /**
-   * Update memory stores after response
-   */
-  async updateMemoryStores(
-    userId: string,
-    userInput: string,
-    mayaResponse: string
-  ): Promise<void> {
-    // Update session - use addExchange for paired storage
-    try {
-      await this.sessionStore.addExchange(userId, undefined, userInput, mayaResponse);
-    } catch (error) {
-      console.error('Failed to update session store:', error);
-    }
-    
-    // Update long-term memory if significant
-    if (this.isSignificantInteraction(userInput, mayaResponse)) {
-      await this.mem0Client.updateMemory(
-        userId,
-        'last_significant_interaction',
-        {
-          input: userInput,
-          response: mayaResponse,
-          timestamp: new Date()
-        }
-      );
-    }
-  }
-  
-  private isSignificantInteraction(input: string, response: string): boolean {
-    // Check for significance markers
-    const significantMarkers = [
-      'breakthrough', 'realize', 'understand',
-      'pattern', 'always', 'never', 'important'
-    ];
-    
-    return significantMarkers.some(m => 
-      input.toLowerCase().includes(m) || 
-      response.toLowerCase().includes(m)
-    );
-  }
+export interface MemoryOrchestratorConfig {
+  mem0?: { apiKey: string; endpoint: string };
+  langchain?: { vectorStore: string; embedder: string };
+  sesame?: { endpoint: string; apiKey?: string };
+  journal?: { database: string; connectionString: string };
 }
 
-// Configuration interface
-export interface MemoryOrchestratorConfig {
-  mem0: {
-    apiKey: string;
-    endpoint: string;
-  };
-  langchain: {
-    vectorStore: string;
-    embedder: string;
-  };
-  sesame: {
-    endpoint: string;
-    apiKey?: string;
-  };
-  journal: {
-    database: string;
-    connectionString: string;
-  };
+/**
+ * @deprecated Use postgres-native memory stores instead
+ */
+export class MemoryOrchestrator {
+  constructor(_config?: MemoryOrchestratorConfig) {
+    console.warn('[MemoryOrchestrator] DEPRECATED - use postgres-native memory stores');
+  }
+
+  async buildContext(
+    _userId: string,
+    _userInput: string,
+    _options: MemoryOptions = {}
+  ): Promise<MemoryContext> {
+    return {
+      session: [],
+      journals: [],
+      longTerm: null,
+      symbolic: null,
+      shadow: null,
+      metadata: {
+        timestamp: new Date(),
+        phase: 'initiation',
+        emotionalState: { valence: 0, arousal: 0.5, dominantEmotion: 'neutral' },
+        memoryQuality: 'minimal'
+      }
+    };
+  }
+
+  async updateMemoryStores(
+    _userId: string,
+    _userInput: string,
+    _mayaResponse: string
+  ): Promise<void> {
+    // No-op - use TurnsStore.addExchange() instead
+  }
 }

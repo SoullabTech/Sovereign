@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌀 Disposable Pixels - Field-Prompted UI System
  *

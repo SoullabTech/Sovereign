@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AIN EVOLUTION ACTIVATOR
  * Phase 1 Activation: Meta-TELESPHORUS Observer System

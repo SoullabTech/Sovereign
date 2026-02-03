@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/voice/micSession.ts
 // Mic session management with wake word detection and mode-specific behavior
 

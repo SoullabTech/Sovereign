@@ -13,9 +13,10 @@
 import { ClaudeService } from './ClaudeService';
 import TelesphoresSystem from '../maia/complete-agent-field-system';
 import type { UserReadiness } from './UserReadinessService';
+import type { ArchetypeKey } from './archetypeService';
 
 // Intent types that determine routing
-export type MaiaIntent =
+export type MaiaIntentType =
   | 'deep_presence'      // Complex emotional/spiritual work → Claude
   | 'field_resonance'    // Archetypal pattern work → Telesphorus
   | 'meditation_request' // Guided meditation → Internal generation
@@ -25,7 +26,7 @@ export type MaiaIntent =
   | 'kairos_threshold';  // Sacred moment → Telesphorus kairos detection
 
 export interface MaiaIntent {
-  type: MaiaIntent;
+  type: MaiaIntentType;
   confidence: number;
   reasoning: string;
   params?: any;
@@ -39,7 +40,7 @@ export interface OrchestratorContext {
   conversationHistory?: any[];
   sessionContext?: any;
   userReadiness?: UserReadiness;
-  currentArchetype?: string;
+  currentArchetype?: ArchetypeKey;
   emotionalIntensity?: number;
   intimacyLevel?: number;
 }
@@ -225,7 +226,9 @@ export class MaiaOrchestrator {
     }
 
     // Deep presence work (complex emotional/spiritual)
-    if (context.userReadiness && context.userReadiness.depthLevel > 0.6) {
+    // UserReadiness is a string type like 'practitioner', 'mystic', 'seeker'
+    const deepReadinessTypes = ['practitioner', 'mystic', 'seeker'];
+    if (context.userReadiness && deepReadinessTypes.includes(context.userReadiness)) {
       return {
         type: 'deep_presence',
         confidence: 0.75,
@@ -339,7 +342,7 @@ class MaiaVoiceFilter {
   transform(
     rawResponse: any,
     context: OrchestratorContext,
-    intentType: MaiaIntent
+    intentType: MaiaIntentType
   ): { text: string; soulMetadata?: any } {
     // Handle Telesphorus field output
     if (rawResponse.response !== undefined && rawResponse.field) {
@@ -375,7 +378,7 @@ class MaiaVoiceFilter {
   /**
    * Ensure response maintains Maia's voice characteristics
    */
-  private ensureMaiaVoice(text: string, intentType: MaiaIntent): string {
+  private ensureMaiaVoice(text: string, intentType: MaiaIntentType): string {
     if (!text) return "I'm here.";
 
     // Maia never uses:

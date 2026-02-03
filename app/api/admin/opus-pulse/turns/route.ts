@@ -1,13 +1,30 @@
+export const dynamic = 'force-dynamic';
 // backend: app/api/admin/opus-pulse/turns/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { getPool } from '@/lib/database/postgres';
 
+// Skip during static export (Capacitor builds)
+
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
+  try {
+    searchParams = new URL(req.url).searchParams;
+  } catch {
+    // During static export, return empty data
+    return NextResponse.json({ items: [] });
+  }
+
   const pool = getPool();
 
   try {
-    const { searchParams } = new URL(req.url);
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? Math.max(1, Math.min(200, Number(limitParam))) : 50;
 

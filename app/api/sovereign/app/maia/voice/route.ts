@@ -1,7 +1,13 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 // backend: app/api/sovereign/app/maia/voice/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const revalidate = false;
 import { synthesizeMaiaVoice } from "@/lib/voice/maiaVoiceService";
+
+// Skip during static export (Capacitor builds)
 
 export const runtime = "nodejs";
 

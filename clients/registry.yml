@@ -1,0 +1,43 @@
+# MAIA Client Registry - Single Source of Truth
+# This file governs all client deployments and their configurations.
+#
+# Status values: lead | onboarding | active | paused | archived
+# Tier values: seed | root | crown
+#
+# When adding a new client, run: maia new-client <slug>
+
+clients:
+  loralee:
+    name: "Loralee Starweaver"
+    domain: "loralee.soullab.life"
+    status: active
+    tier: root
+    modules:
+      - stellium
+      - voice
+      - journaling
+    db_schema: public
+    vault_folder: "Clients/Loralee"
+    stripe_customer: null
+    launched_at: "2026-01-15"
+    notes: "First full portal client. Astrology-focused practitioner."
+
+  oldhead:
+    name: "Old Head Plaster"
+    domain: "oldhead.soullab.life"
+    status: active
+    tier: seed
+    modules:
+      - astro-site
+      - virtual-daragh
+    db_schema: public
+    vault_folder: "Clients/OldHead"
+    stripe_customer: null
+    launched_at: "2026-01-20"
+    notes: "Traditional Irish plastering. Astro SSR site on port 4321."
+
+# Business Tiers Reference:
+#
+# seed   - Setup + 1-2 iterations + hosting
+# root   - Monthly: monitoring, backups, small changes
+# crown  - Feature requests, integrations, custom agents

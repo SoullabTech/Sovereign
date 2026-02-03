@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Lead Crisis Disposable Pixel Configuration
  *

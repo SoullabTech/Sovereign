@@ -1,3 +1,5 @@
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 /**
  * CONSCIOUSNESS EVENT INTEGRATION API
  *
@@ -21,10 +23,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { lattice } from '@/lib/memory/ConsciousnessMemoryLattice';
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

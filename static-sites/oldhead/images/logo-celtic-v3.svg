@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- Celtic OH Monogram V3 - Shield/seal style with old head promontory hint -->
+  <g fill="#FAFAF8">
+    <!-- Main circle -->
+    <circle cx="30" cy="30" r="27" fill="none" stroke="#FAFAF8" stroke-width="2.5"/>
+
+    <!-- OH integrated - O is implied by circle, H is prominent -->
+    <!-- H left pillar -->
+    <rect x="14" y="14" width="5" height="32"/>
+    <!-- H right pillar -->
+    <rect x="41" y="14" width="5" height="32"/>
+    <!-- H crossbeam -->
+    <rect x="14" y="27" width="32" height="6"/>
+
+    <!-- Horizontal line through (like horizon/sea) -->
+    <line x1="6" y1="30" x2="14" y2="30" stroke="#FAFAF8" stroke-width="2"/>
+    <line x1="46" y1="30" x2="54" y2="30" stroke="#FAFAF8" stroke-width="2"/>
+
+    <!-- Small inner detail -->
+    <circle cx="30" cy="30" r="3" opacity="0.5"/>
+  </g>
+</svg>

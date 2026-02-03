@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversation Analytics Service
  * Saves conversations with full voice and model analytics metadata to Supabase

@@ -1,0 +1,51 @@
+# deploy.yaml - Water Agent Akash Network Deployment
+version: "2.0"
+services:
+  water-agent:
+    image: your-registry/water-agent:latest
+    env:
+      - NODE_ENV=production
+      - PORT=3002
+      - EMOTIONAL_INTELLIGENCE_ENABLED=true
+      - FLOW_STATE_DETECTION_ENABLED=true
+      - TRAUMA_INFORMED_MODE=true
+    expose:
+      - port: 3002
+        as: 80
+        to:
+          - global: true
+    resources:
+      cpu:
+        limit: "1.0"
+      memory:
+        limit: "1Gi"
+      storage:
+        limit: "10Gi"
+
+profiles:
+  compute:
+    water-agent:
+      resources:
+        cpu:
+          limit: "1.0"
+        memory:
+          limit: "1Gi"
+        storage:
+          limit: "10Gi"
+  placement:
+    westcoast:
+      attributes:
+        region: us-west
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        water-agent:
+          denom: uakt
+          amount: 1000
+
+deployment:
+  water-agent:
+    westcoast:
+      profile: water-agent
+      count: 1

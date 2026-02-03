@@ -1,7 +1,12 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+
+// Skip during static export (Capacitor builds)
 
 const execAsync = promisify(exec);
 

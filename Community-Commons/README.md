@@ -66,6 +66,8 @@ The first scalable system for systematic wisdom development. Community Commons c
 
 **A living library for depth work with alchemical images and psychological transformation**
 
+**[→ Member Guides (Start Here)](./01-Member-Guides/README.md)** — Quick references for MAIA members
+
 ---
 
 ## ✨ What You Have Here

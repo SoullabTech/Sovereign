@@ -1,0 +1,85 @@
+{
+  "price_model": "fixed_price_per_method",
+  "version": 1,
+  "values": {
+    "ProcessQuery": {
+      "price_in_agix": "0.00001000",
+      "price_in_cogs": "1000000",
+      "description": "Single consciousness query with archetypal analysis",
+      "estimated_response_time": "3-5 seconds",
+      "includes": [
+        "Archetypal analysis",
+        "Pattern recognition",
+        "Elemental balance tracking",
+        "Consciousness state update"
+      ]
+    },
+    "ProcessQueryWithVoice": {
+      "price_in_agix": "0.00002000",
+      "price_in_cogs": "2000000",
+      "description": "Consciousness query with archetypal voice synthesis",
+      "estimated_response_time": "5-8 seconds",
+      "includes": [
+        "All ProcessQuery features",
+        "ElevenLabs voice synthesis",
+        "Archetypal voice personality",
+        "MP3 audio response"
+      ]
+    },
+    "StreamInsights": {
+      "price_in_agix": "0.00005000",
+      "price_in_cogs": "5000000",
+      "description": "30-minute streaming insight session",
+      "estimated_duration": "30 minutes",
+      "includes": [
+        "Real-time consciousness insights",
+        "Multi-archetypal perspectives",
+        "Dynamic pattern tracking",
+        "Session recording"
+      ]
+    },
+    "SynthesizeVoice": {
+      "price_in_agix": "0.00001500",
+      "price_in_cogs": "1500000",
+      "description": "Standalone archetypal voice synthesis",
+      "estimated_response_time": "2-3 seconds",
+      "includes": [
+        "Text-to-speech conversion",
+        "Archetypal voice selection",
+        "Custom voice settings",
+        "MP3 audio output"
+      ]
+    }
+  },
+  "package_deals": [
+    {
+      "package_name": "consciousness_starter",
+      "package_description": "100 queries + 50 voice syntheses",
+      "price_in_agix": "0.00150000",
+      "price_in_cogs": "150000000",
+      "queries_included": 100,
+      "voice_syntheses_included": 50,
+      "valid_for_days": 30
+    },
+    {
+      "package_name": "oracle_practitioner",
+      "package_description": "500 queries + 250 voice syntheses + 10 streaming sessions",
+      "price_in_agix": "0.00750000",
+      "price_in_cogs": "750000000",
+      "queries_included": 500,
+      "voice_syntheses_included": 250,
+      "streaming_sessions_included": 10,
+      "valid_for_days": 90
+    },
+    {
+      "package_name": "consciousness_unlimited",
+      "package_description": "Unlimited queries and voice for 30 days",
+      "price_in_agix": "0.01000000",
+      "price_in_cogs": "1000000000",
+      "unlimited": true,
+      "valid_for_days": 30
+    }
+  ],
+  "free_calls": 10,
+  "free_call_description": "New users get 10 free consciousness queries to experience the Oracle"
+}

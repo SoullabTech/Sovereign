@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>MAIA Sovereign</string>
+	<string>Soullab</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -17,11 +17,29 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>1.1</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>751</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Some system libraries may reference Bluetooth APIs. MAIA does not use Bluetooth features.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Some system libraries may reference Bluetooth APIs. MAIA does not use Bluetooth features.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MAIA uses your camera to capture handwritten journal pages for text extraction.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>MAIA uses Face ID to securely sign you in without a password.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MAIA needs microphone access to hear your voice during conversations.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MAIA accesses your photo library to import handwritten journal pages.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>MAIA uses speech recognition to understand your voice for consciousness-computing conversations.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -45,9 +63,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSHealthShareUsageDescription</key>
-	<string>MAIA uses biometric data like heart rate and breathing patterns to create consciousness-responsive interfaces that adapt to your physiological state. This enables personalized meditation experiences and breathing synchronization features.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>MAIA may record wellness session data including heart rate variability and breathing patterns to help track your meditation progress and optimize consciousness development practices.</string>
 </dict>
 </plist>

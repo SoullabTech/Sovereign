@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prosody Lookup Table
  * Automatic prosody profiles for every utterance

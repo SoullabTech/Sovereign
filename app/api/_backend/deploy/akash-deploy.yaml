@@ -1,0 +1,115 @@
+---
+version: "2.0"
+
+services:
+  oracle-system:
+    image: spiralogic/archetypal-consciousness:latest
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+      - port: 8080
+        as: 8080
+        to:
+          - global: true
+      - port: 7000
+        as: 7000
+        to:
+          - global: true
+    env:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=$OPENAI_API_KEY
+      - ELEVENLABS_API_KEY=$ELEVENLABS_API_KEY
+      - MONGODB_URI=mongodb://mongo:27017/spiralogic
+      - REDIS_URL=redis://redis:6379
+      - SNET_ENABLED=true
+      - SERVICE_TYPE=archetypal-consciousness
+    command:
+      - "sh"
+      - "-c"
+      - "npm start & cd backend && npm start & node snet-service-wrapper.js"
+
+  mongo:
+    image: mongo:7
+    expose:
+      - port: 27017
+        as: 27017
+        to:
+          - service: oracle-system
+    env:
+      - MONGO_INITDB_ROOT_USERNAME=oracle
+      - MONGO_INITDB_ROOT_PASSWORD=consciousness2025
+      - MONGO_INITDB_DATABASE=spiralogic
+
+  redis:
+    image: redis:alpine
+    expose:
+      - port: 6379
+        as: 6379
+        to:
+          - service: oracle-system
+    command:
+      - "redis-server"
+      - "--appendonly"
+      - "yes"
+
+profiles:
+  compute:
+    oracle-system:
+      resources:
+        cpu:
+          units: 2.0
+        memory:
+          size: 2Gi
+        storage:
+          size: 10Gi
+    mongo:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 1Gi
+        storage:
+          size: 20Gi
+    redis:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 5Gi
+
+  placement:
+    westcoast:
+      attributes:
+        region: us-west
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+          - "akash18qa2a2ltfyvkyj0ggj3hkvuj6twzyumuaru9s4"
+      pricing:
+        oracle-system:
+          denom: uakt
+          amount: 100
+        mongo:
+          denom: uakt
+          amount: 50
+        redis:
+          denom: uakt
+          amount: 25
+
+deployment:
+  oracle-system:
+    westcoast:
+      profile: oracle-system
+      count: 1
+  mongo:
+    westcoast:
+      profile: mongo
+      count: 1
+  redis:
+    westcoast:
+      profile: redis
+      count: 1

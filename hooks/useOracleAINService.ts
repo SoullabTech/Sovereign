@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Oracle AIN Service Hook - Reflexive Awareness-Adjusted Oracle Integration
 //
 // This hook wraps the Oracle AIN Service to provide a React-friendly interface

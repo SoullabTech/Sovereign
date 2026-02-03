@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 🧭 NAVIGATOR LAB API
  *
@@ -6,7 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { getSessionUserId } from '@/lib/auth/session-utils';
+
+// Skip during static export (Capacitor builds)
 
 // Bridge to the beta consciousness computing server for Navigator Lab scenarios
 const BETA_SERVER_URL = process.env.BETA_SERVER_URL || 'http://localhost:3008';

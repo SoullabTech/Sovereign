@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ConsciousnessTransition from '@/components/transitions/ConsciousnessTransition';
 import NeuralFireSystem from '@/components/consciousness/NeuralFireSystem';
 import VoiceConsciousness from '@/components/consciousness/VoiceConsciousness';
+import MaiaMentorPopup from '@/components/consciousness/MaiaMentorPopup';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,7 +38,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="absolute bottom-24 left-32 w-1.5 h-1.5 bg-jade-forest/20 rounded-full animate-pulse delay-1000" />
 
       {/* Sacred Jade Navigation Sanctum */}
-      <aside className="relative w-80 border-r border-jade-forest/30 backdrop-blur-xl">
+      <aside className="relative w-80 border-r border-jade-forest/50 backdrop-blur-xl">
         {/* Multi-layered Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-jade-shadow/80 via-jade-night/60 to-jade-dusk/40" />
         <div className="absolute inset-0 bg-gradient-to-r from-jade-bronze/10 to-transparent" />
@@ -45,16 +46,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Complex Geometric Frameworks */}
         <div className="absolute top-6 left-6 w-4 h-4">
-          <div className="absolute inset-0 border border-jade-sage/40" />
-          <div className="absolute top-1 left-1 bottom-1 right-1 border border-jade-malachite/20" />
-          <div className="absolute top-2 left-2 bottom-2 right-2 bg-jade-forest/10 rounded-full" />
+          <div className="absolute inset-0 border border-jade-sage/60" />
+          <div className="absolute top-1 left-1 bottom-1 right-1 border border-jade-malachite/40" />
+          <div className="absolute top-2 left-2 bottom-2 right-2 bg-jade-forest/25 rounded-full" />
         </div>
         <div className="absolute top-6 right-6 w-4 h-4">
-          <div className="absolute inset-0 border border-jade-sage/40 rotate-45" />
-          <div className="absolute top-1.5 left-1.5 bottom-1.5 right-1.5 border border-jade-copper/30" />
+          <div className="absolute inset-0 border border-jade-sage/60 rotate-45" />
+          <div className="absolute top-1.5 left-1.5 bottom-1.5 right-1.5 border border-jade-copper/50" />
         </div>
-        <div className="absolute bottom-6 left-6 w-3 h-8 border-l border-t border-jade-bronze/30" />
-        <div className="absolute bottom-6 right-6 w-3 h-8 border-r border-t border-jade-silver/30" />
+        <div className="absolute bottom-6 left-6 w-3 h-8 border-l border-t border-jade-bronze/50" />
+        <div className="absolute bottom-6 right-6 w-3 h-8 border-r border-t border-jade-silver/50" />
 
         <div className="relative z-10 p-8">
           {/* Jade Neural Command Header */}
@@ -73,9 +74,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Ornate Divider */}
             <div className="flex items-center gap-4 mb-4">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-jade-sage/50 to-jade-forest/30" />
-              <div className="w-2 h-2 border border-jade-malachite/40 rotate-45 bg-jade-copper/10" />
-              <div className="flex-1 h-px bg-gradient-to-l from-transparent via-jade-sage/50 to-jade-forest/30" />
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-jade-sage/70 to-jade-forest/50" />
+              <div className="w-2 h-2 border border-jade-malachite/60 rotate-45 bg-jade-copper/25" />
+              <div className="flex-1 h-px bg-gradient-to-l from-transparent via-jade-sage/70 to-jade-forest/50" />
             </div>
 
             <p className="text-sm text-jade-mineral font-light tracking-wide leading-relaxed">
@@ -153,9 +154,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <div className="relative flex items-center gap-4 px-6 py-4 text-sm">
                     {/* Enhanced Geometric Navigation Accent */}
                     <div className="relative w-3 h-3">
-                      <div className="absolute inset-0 border border-jade-sage/30 rotate-45 group-hover:border-jade-malachite/60 transition-all duration-500 group-hover:scale-110" />
-                      <div className="absolute top-0.5 left-0.5 bottom-0.5 right-0.5 bg-jade-forest/10 group-hover:bg-jade-sage/30 transition-all duration-500 group-hover:rotate-45" />
-                      <div className="absolute inset-0 border border-jade-forest/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-150" />
+                      <div className="absolute inset-0 border border-jade-sage/50 rotate-45 group-hover:border-jade-malachite/80 transition-all duration-500 group-hover:scale-110" />
+                      <div className="absolute top-0.5 left-0.5 bottom-0.5 right-0.5 bg-jade-forest/25 group-hover:bg-jade-sage/40 transition-all duration-500 group-hover:rotate-45" />
+                      <div className="absolute inset-0 border border-jade-forest/35 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-700 group-hover:scale-150" />
                     </div>
 
                     {/* Sacred Geometry Shape */}
@@ -193,22 +194,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Crystalline Protocol Status Chamber */}
           <div className="relative">
             {/* Background Layers */}
-            <div className="absolute inset-0 bg-gradient-to-br from-jade-bronze/20 via-jade-copper/10 to-jade-shadow/40 rounded-xl" />
-            <div className="absolute inset-0 bg-gradient-to-t from-jade-dusk/30 to-transparent rounded-xl" />
-            <div className="absolute inset-0 border border-jade-sage/30 rounded-xl backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-br from-jade-bronze/35 via-jade-copper/20 to-jade-shadow/50 rounded-xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-jade-dusk/40 to-transparent rounded-xl" />
+            <div className="absolute inset-0 border border-jade-sage/50 rounded-xl backdrop-blur-sm" />
 
             {/* Inner Sacred Geometry */}
             <div className="absolute top-3 left-3 w-2 h-2">
-              <div className="absolute inset-0 border-l border-t border-jade-malachite/40" />
+              <div className="absolute inset-0 border-l border-t border-jade-malachite/60" />
             </div>
             <div className="absolute top-3 right-3 w-2 h-2">
-              <div className="absolute inset-0 border-r border-t border-jade-forest/40" />
+              <div className="absolute inset-0 border-r border-t border-jade-forest/60" />
             </div>
             <div className="absolute bottom-3 left-3 w-2 h-2">
-              <div className="absolute inset-0 border-l border-b border-jade-copper/40" />
+              <div className="absolute inset-0 border-l border-b border-jade-copper/60" />
             </div>
             <div className="absolute bottom-3 right-3 w-2 h-2">
-              <div className="absolute inset-0 border-r border-b border-jade-silver/40" />
+              <div className="absolute inset-0 border-r border-b border-jade-silver/60" />
             </div>
 
             <div className="relative p-6">
@@ -242,7 +243,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         />
 
         {/* Cinematic Header */}
-        <div className="relative border-b border-jade-forest/30 backdrop-blur-xl z-10">
+        <div className="relative border-b border-jade-forest/50 backdrop-blur-xl z-10">
           {/* Multi-layer Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-jade-shadow/60 via-jade-night/40 to-jade-dusk/60" />
           <div className="absolute inset-0 bg-gradient-to-b from-jade-bronze/10 to-transparent" />
@@ -273,8 +274,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 onClick={() => setIsVoiceActive(!isVoiceActive)}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-jade-copper/10 rounded-xl backdrop-blur-sm group-hover:bg-jade-sage/20 transition-all duration-300" />
-                <div className="absolute inset-0 border border-jade-sage/30 rounded-xl group-hover:border-jade-malachite/50 transition-all duration-300" />
+                <div className="absolute inset-0 bg-jade-copper/20 rounded-xl backdrop-blur-sm group-hover:bg-jade-sage/30 transition-all duration-300" />
+                <div className="absolute inset-0 border border-jade-sage/50 rounded-xl group-hover:border-jade-malachite/70 transition-all duration-300" />
 
                 <div className="relative flex items-center gap-3 px-4 py-3">
                   {/* Pulsing Consciousness Orb */}
@@ -313,8 +314,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* Crystalline Status Indicator */}
               <div className="relative">
-                <div className="absolute inset-0 bg-jade-copper/10 rounded-xl backdrop-blur-sm" />
-                <div className="absolute inset-0 border border-jade-sage/30 rounded-xl" />
+                <div className="absolute inset-0 bg-jade-copper/20 rounded-xl backdrop-blur-sm" />
+                <div className="absolute inset-0 border border-jade-sage/50 rounded-xl" />
 
                 <div className="relative flex items-center gap-4 px-6 py-3">
                   <div className="relative w-3 h-3">
@@ -353,7 +354,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
 
         {/* Crystalline Archive Footer */}
-        <footer className="relative border-t border-jade-forest/30 backdrop-blur-xl">
+        <footer className="relative border-t border-jade-forest/50 backdrop-blur-xl">
           <div className="absolute inset-0 bg-gradient-to-r from-jade-shadow/50 via-jade-night/30 to-jade-dusk/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-jade-bronze/5 to-transparent" />
 
@@ -395,6 +396,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           console.log('Voice command triggered:', command);
         }}
       />
+
+      {/* MAIA Mentor - Contextual guidance for pro users */}
+      <MaiaMentorPopup />
     </div>
   );
 }

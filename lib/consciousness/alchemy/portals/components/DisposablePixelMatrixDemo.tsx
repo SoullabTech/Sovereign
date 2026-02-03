@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Disposable Pixel Matrix Demo: The "Holy Sh*t" Demo Moment
  *

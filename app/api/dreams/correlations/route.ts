@@ -1,12 +1,24 @@
 // @ts-nocheck - Prototype file, not type-checked
+<<<<<<< HEAD
+=======
+export const dynamic = 'force-dynamic';
+>>>>>>> ecstatic-brown
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
+
+// Skip during static export (Capacitor builds)
 
 const prisma = new PrismaClient();
 
 // Dream Correlations API - Track patterns between dreams and consciousness states across time
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {

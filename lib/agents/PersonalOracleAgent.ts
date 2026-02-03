@@ -55,11 +55,11 @@ import {
   type RelationshipEssence
 } from '@/lib/consciousness/RelationshipAnamnesis';
 
-// Use direct database access to bypass REST API cache issues
+// Postgres-native storage for relationship essences
 import {
-  saveRelationshipEssenceDirect,
-  loadRelationshipEssenceDirect
-} from '@/lib/consciousness/RelationshipAnamnesis_Direct';
+  saveRelationshipEssence,
+  loadRelationshipEssence
+} from '@/lib/consciousness/RelationshipAnamnesisStorage';
 
 import {
   saveConversation,
@@ -871,7 +871,7 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
       let anamnesisPrompt = '';
 
       try {
-        existingEssence = await loadRelationshipEssenceDirect(soulSignature);
+        existingEssence = await loadRelationshipEssence(soulSignature);
 
         if (existingEssence) {
           anamnesisPrompt = anamnesis.generateAnamnesisPrompt(existingEssence);
@@ -2004,7 +2004,7 @@ This is the soul-level truth you're helping them see, not reference material to 
           existingEssence: existingEssence || undefined
         });
 
-        await saveRelationshipEssenceDirect(updatedEssence);
+        await saveRelationshipEssence(updatedEssence);
         console.log(`💾 [ANAMNESIS] Essence saved - encounter #${updatedEssence.encounterCount}`);
       } catch (error) {
         console.error('❌ [ANAMNESIS] Failed to save essence:', error);

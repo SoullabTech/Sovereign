@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 🧠🌀 SEVEN-LAYER ARCHITECTURE SNAPSHOT API
  *
@@ -6,7 +7,10 @@
  * for the current member across all platforms.
  */
 
+
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { headers } from 'next/headers';
 
 // Placeholder for actual implementation - in production this would
@@ -225,6 +229,10 @@ async function getArchitectureSnapshot(memberId: string) {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId') || 'default_member';

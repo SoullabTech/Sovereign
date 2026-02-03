@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <!-- The Headland Mark - Seal Only -->
+  <g transform="translate(40, 40)" fill="none" stroke="#FAFAF8">
+    <!-- Outer circle -->
+    <circle cx="0" cy="0" r="32" stroke-width="2"/>
+    <!-- Inner circle -->
+    <circle cx="0" cy="0" r="26" stroke-width="1"/>
+
+    <!-- H inside circle -->
+    <g stroke="none" fill="#FAFAF8">
+      <!-- Left vertical -->
+      <rect x="-10" y="-20" width="4" height="40"/>
+      <!-- Right vertical -->
+      <rect x="6" y="-20" width="4" height="40"/>
+      <!-- Crossbar -->
+      <rect x="-10" y="-2" width="20" height="4"/>
+    </g>
+
+    <!-- Horizon line extending beyond circle -->
+    <line x1="-38" y1="0" x2="38" y2="0" stroke-width="2"/>
+  </g>
+</svg>

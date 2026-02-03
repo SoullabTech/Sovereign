@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * SHADOW INTEGRATION API ROUTE
  *
@@ -11,6 +12,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   recordShadowInstance,
   createShadowPattern,
@@ -20,6 +23,8 @@ import {
   getShadowPatternHistory,
 } from '@/lib/features/ShadowIntegrationTracker';
 import { query } from '@/lib/db/postgres';
+
+// Skip during static export (Capacitor builds)
 
 /**
  * POST - Record a shadow instance
@@ -149,6 +154,10 @@ export async function POST(request: NextRequest) {
  * GET - Fetch shadow metrics and recent instances
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

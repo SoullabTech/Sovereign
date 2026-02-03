@@ -184,7 +184,6 @@ export const PHONEME_DICTIONARY: Record<string, PhonemeEntry> = {
   'hear': { phonemes: 'h-i-r', stress: [1, 0, 0], spectral: 'bright', energy: 'soft', elemental: 'air' },
   'understand': { phonemes: 'u-n-d-e-r-s-t-a-n-d', stress: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0], spectral: 'neutral', energy: 'medium', elemental: 'aether' },
 
-  'feel': { phonemes: 'f-i-l', stress: [1, 0, 0], spectral: 'bright', energy: 'soft', elemental: 'water' },
   'feeling': { phonemes: 'f-i-l-i-ng', stress: [1, 0, 0, 0, 0], spectral: 'bright', energy: 'soft', elemental: 'water' },
   'sense': { phonemes: 's-e-n-s', stress: [1, 0, 0, 0], spectral: 'neutral', energy: 'soft', elemental: 'air' },
   'experience': { phonemes: 'e-k-s-p-i-r-i-e-n-s', stress: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0], spectral: 'bright', energy: 'medium', elemental: 'aether' },

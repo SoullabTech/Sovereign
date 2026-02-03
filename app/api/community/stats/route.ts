@@ -1,92 +1,78 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db/postgres';
 
 export async function GET(request: NextRequest) {
   try {
-    // Generate realistic community statistics
     const now = new Date();
+
+    // Query REAL data from database
+    const [membersResult, breakthroughsResult, conversationsResult] = await Promise.all([
+      query('SELECT COUNT(*) as count FROM members'),
+      query('SELECT COUNT(*) as count FROM breakthrough_moments'),
+      query('SELECT COUNT(*) as count FROM conversation_turns'),
+    ]);
+
+    const totalMembers = parseInt(membersResult.rows[0]?.count || '0');
+    const breakthroughs = parseInt(breakthroughsResult.rows[0]?.count || '0');
+    const totalConversations = parseInt(conversationsResult.rows[0]?.count || '0');
+
+    // Get recent activity from real data
+    let recentActivity: any[] = [];
+    try {
+      const recentBreakthroughs = await query(`
+        SELECT
+          bm.id,
+          bm.title,
+          bm.created_at,
+          m.name as user_name,
+          m.username
+        FROM breakthrough_moments bm
+        LEFT JOIN members m ON bm.member_id = m.id
+        ORDER BY bm.created_at DESC
+        LIMIT 5
+      `);
+
+      recentActivity = recentBreakthroughs.rows.map(row => ({
+        type: 'breakthrough',
+        user: row.user_name || row.username || 'Member',
+        action: 'reported a breakthrough',
+        category: 'Breakthroughs',
+        time: getTimeAgo(new Date(row.created_at)),
+        title: row.title || 'Untitled breakthrough'
+      }));
+    } catch (e) {
+      // If query fails, return empty activity
+      console.log('[Community Stats] Could not fetch recent activity:', e);
+    }
+
     const stats = {
       community: {
-        totalMembers: 347 + Math.floor(Math.random() * 50), // Dynamic growth
-        onlineNow: 15 + Math.floor(Math.random() * 25), // 15-40 online
-        totalPosts: 1256 + Math.floor(Math.random() * 100),
-        totalComments: 3847 + Math.floor(Math.random() * 200),
-        breakthroughs: 189 + Math.floor(Math.random() * 20),
-        totalReactions: 1842 + Math.floor(Math.random() * 150)
+        totalMembers,
+        onlineNow: 1, // Would need session tracking for real "online now"
+        totalPosts: 0, // No community posts table yet
+        totalComments: totalConversations, // Use conversation turns as proxy
+        breakthroughs,
+        totalReactions: 0 // No reactions table yet
       },
       fieldState: {
-        // Dynamic field state based on time of day and community activity
-        earth: 0.15 + (Math.sin(now.getHours() / 24 * Math.PI * 2) + 1) * 0.1, // Stronger in evening
-        water: 0.20 + (Math.cos(now.getHours() / 24 * Math.PI * 2) + 1) * 0.15, // Stronger at night/dawn
-        air: 0.25 + (Math.sin((now.getHours() + 6) / 24 * Math.PI * 2) + 1) * 0.1, // Stronger in morning
-        fire: 0.20 + (Math.cos((now.getHours() + 12) / 24 * Math.PI * 2) + 1) * 0.1, // Stronger at midday
-        intensity: 0.50 + Math.random() * 0.3, // 0.5 - 0.8
-        depth: 0.60 + Math.random() * 0.25, // 0.6 - 0.85
-        coherence: 0.65 + Math.random() * 0.2 // 0.65 - 0.85
+        // Keep elemental field visualization (this is conceptual, not fake data)
+        earth: 0.15 + (Math.sin(now.getHours() / 24 * Math.PI * 2) + 1) * 0.1,
+        water: 0.20 + (Math.cos(now.getHours() / 24 * Math.PI * 2) + 1) * 0.15,
+        air: 0.25 + (Math.sin((now.getHours() + 6) / 24 * Math.PI * 2) + 1) * 0.1,
+        fire: 0.20 + (Math.cos((now.getHours() + 12) / 24 * Math.PI * 2) + 1) * 0.1,
+        intensity: 0.50,
+        depth: 0.60,
+        coherence: 0.65
       },
-      recentActivity: [
+      recentActivity: recentActivity.length > 0 ? recentActivity : [
         {
-          type: 'post' as const,
-          user: 'SacredSeeker',
-          action: 'shared a breakthrough in',
-          category: 'Breakthrough Gallery',
-          time: '3 min',
-          title: 'MAIA helped me see my shadow pattern around abundance'
-        },
-        {
-          type: 'comment' as const,
-          user: 'WisdomKeeper',
-          action: 'replied to',
-          category: 'Wisdom Traditions',
-          time: '8 min',
-          title: 'The Council speaks about integration phases'
-        },
-        {
-          type: 'post' as const,
-          user: 'FieldExplorer',
-          action: 'started discussion in',
-          category: 'Field System Reports',
-          time: '12 min',
-          title: 'PFI coherence spikes during group meditation'
-        },
-        {
-          type: 'breakthrough' as const,
-          user: 'ConsciousOne',
-          action: 'reported a breakthrough in',
-          category: 'Sacred Psychology',
-          time: '18 min',
-          title: 'Finally integrated my inner critic through elemental work'
-        },
-        {
-          type: 'comment' as const,
-          user: 'SpiralWalker',
-          action: 'commented on',
-          category: 'Spiralogic Integration',
-          time: '25 min',
-          title: 'Understanding regression as sacred preparation'
-        },
-        {
-          type: 'post' as const,
-          user: 'TechOracle',
-          action: 'shared update in',
-          category: 'Tech Oracle',
-          time: '34 min',
-          title: 'New voice synthesis features coming to MAIA'
-        },
-        {
-          type: 'comment' as const,
-          user: 'DeepSeeker',
-          action: 'replied to',
-          category: 'Sacred Psychology',
-          time: '41 min',
-          title: 'Shadow work through the water element'
-        },
-        {
-          type: 'post' as const,
-          user: 'ElderWisdom',
-          action: 'shared wisdom in',
-          category: 'Wisdom Traditions',
-          time: '47 min',
-          title: 'The Kabbalah tree and consciousness development'
+          type: 'info',
+          user: 'MAIA',
+          action: 'Community activity will appear here',
+          category: 'System',
+          time: 'now',
+          title: 'Start conversations to see real activity'
         }
       ],
       lastUpdated: now.toISOString()
@@ -96,27 +82,60 @@ export async function GET(request: NextRequest) {
       success: true,
       stats: stats,
       timestamp: now.toISOString(),
-      message: 'Community statistics retrieved successfully'
+      message: 'Real community statistics from database'
     });
 
   } catch (error) {
     console.error('❌ [Community Stats API] Error:', error);
 
+    // Return zeros instead of fake data on error
     return NextResponse.json({
-      success: false,
-      error: 'Failed to fetch community statistics',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+      success: true,
+      stats: {
+        community: {
+          totalMembers: 0,
+          onlineNow: 0,
+          totalPosts: 0,
+          totalComments: 0,
+          breakthroughs: 0,
+          totalReactions: 0
+        },
+        fieldState: {
+          earth: 0.2,
+          water: 0.2,
+          air: 0.2,
+          fire: 0.2,
+          intensity: 0.5,
+          depth: 0.5,
+          coherence: 0.5
+        },
+        recentActivity: [],
+        lastUpdated: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString(),
+      message: 'Database unavailable - showing zeros'
+    });
   }
+}
+
+// Helper to format time ago
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins} min`;
+  if (diffHours < 24) return `${diffHours} hr`;
+  return `${diffDays} day${diffDays > 1 ? 's' : ''}`;
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Endpoint for triggering stats recalculation
     const now = new Date();
-
-    // Here you would normally trigger a background job to recalculate stats
-    // For now, just return success
 
     return NextResponse.json({
       success: true,

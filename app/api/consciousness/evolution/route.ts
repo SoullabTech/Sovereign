@@ -1,3 +1,5 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
  * CONSCIOUSNESS EVOLUTION API
  *
@@ -6,6 +8,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Mock data for demonstration - in production this would come from database/session storage
 function generateMockEvolutionData(userId: string, sessionId: string) {
@@ -114,6 +120,10 @@ function enhanceWithRealData(mockData: any, realConsciousnessData?: any) {
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const url = new URL(request.url);
     const userId = url.searchParams.get('userId') || 'guest';

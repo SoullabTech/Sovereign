@@ -1,4 +1,7 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import SpiralogicEngine from '@/lib/spiralogic/core/spiralogic-engine';
 import { logServerError } from '@/lib/logger';
 
@@ -92,7 +95,6 @@ interface SpiralResponse {
 
 // Disable Vercel caching for real-time spiral data
 // Note: Commented out for PWA static build compatibility
-// export const dynamic = 'force-dynamic';
 // export const runtime = 'nodejs';
 
 /**
@@ -109,6 +111,10 @@ export async function OPTIONS(request: NextRequest) {
  * GET: Spiral system status and user state
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const startTime = Date.now();
   const url = new URL(request.url);
   const userId = url.searchParams.get('userId');

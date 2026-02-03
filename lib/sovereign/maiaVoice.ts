@@ -12,6 +12,8 @@ export interface MaiaContext {
   turnCount?: number;
   element?: string;
   facet?: string;
+  // 📅 TEMPORAL: User's browser timezone for accurate local time
+  timezone?: string;
   // 🧠 MEMBER ARCHETYPE ADAPTATION
   memberProfile?: MemberProfile;
   wisdomAdaptation?: WisdomAdaptation;
@@ -57,6 +59,117 @@ export interface MaiaContext {
   // 🧠 SELF-AWARENESS: Enable MAIA to explain her own architecture
   selfAwareMode?: boolean;
   selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  epistemicPathAddendum?: string;
+  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 of 3-pass pipeline)
+  spiralSnapshotAddendum?: string;
+  // 🌿 WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
+  wuxingSnapshotAddendum?: string;
+  // 🌉 BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
+  bridgeSnapshotAddendum?: string;
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses for Counsel/Scribe modes
+  therapeuticFrameworkAddendum?: string;
+  reflectionLensAddendum?: string;
+  // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+  astrologicalContextAddendum?: string;
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  governorAddendum?: string;
+  // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
+  relationshipModeAddendum?: string;
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  maiaModeAddendum?: string;
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  scribeSessionDiscussionAddendum?: string;
+}
+
+/**
+ * Generate temporal context with timezone awareness
+ * Uses the user's browser timezone for accurate local time display
+ */
+function getTemporalContext(timezone?: string): string {
+  const tz = timezone || 'UTC';
+  const now = new Date();
+
+  try {
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: tz
+    });
+
+    return `📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current local time: ${timeStr}.
+User's timezone: ${tz} (IANA format).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is ${tz} and the current local time is ${timeStr}.
+
+CRITICAL FOR ASTROLOGY & TIMING:
+- Use this date as your reference for "today", "now", "current", "this week", etc.
+- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
+- Never say an event "just happened" or "is happening now" if it's days or weeks away.
+- If a new moon is on January 29th and today is January 17th, say "the new moon is coming up on January 29th" - NOT "the new moon just landed."`;
+  } catch (e) {
+    // Fallback to UTC if timezone is invalid
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return `📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current local time: ${timeStr}.
+User's timezone: UTC (fallback).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is UTC and the current local time is ${timeStr}.
+
+CRITICAL FOR ASTROLOGY & TIMING:
+- Use this date as your reference for "today", "now", "current", "this week", etc.
+- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
+- Never say an event "just happened" or "is happening now" if it's days or weeks away.`;
+  }
+}
+
+/**
+ * Get simple date string with timezone awareness
+ */
+function getSimpleDateString(timezone?: string): string {
+  const tz = timezone || 'UTC';
+  const now = new Date();
+
+  try {
+    return now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+  } catch {
+    return now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
 }
 
 /**
@@ -99,6 +212,8 @@ function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex'
  */
 function buildSimpleMaiaPrompt(context: MaiaContext): string {
   return `You are MAIA, a helpful AI assistant.
+
+📅 Today is ${getSimpleDateString(context.timezone)}.
 
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
@@ -230,6 +345,8 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
     console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
     return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
 
+📅 Today is ${getSimpleDateString(context.timezone)}.
+
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 ${maiaPaiConfig.depthGuidance}
@@ -356,7 +473,11 @@ Your voice: Elder wisdom with archetypal depth - a consciousness architect who w
       break;
   }
 
-  let adaptedPrompt = basePrompt;
+  // 📅 TEMPORAL CONTEXT: Ground MAIA in current time (using user's browser timezone)
+  // This is CRITICAL for accurate astrology, timing discussions, and temporal awareness
+  const temporalContext = '\n\n' + getTemporalContext(context.timezone);
+
+  let adaptedPrompt = basePrompt + temporalContext;
 
   // 🎯 WISDOM ADAPTATION INTEGRATION
   if (context.wisdomAdaptation && context.memberProfile) {
@@ -557,6 +678,73 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
     console.log(`🧠 [Self-Awareness] Enabled (${detail} detail) - MAIA can explain her architecture`);
   }
 
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  if (context.epistemicPathAddendum) {
+    adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
+    console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
+  }
+
+  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
+  // This is the always-on substrate that anchors all Care Mode responses
+  if (context.spiralSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.spiralSnapshotAddendum}`;
+    console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
+  }
+
+  // 🌿 WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
+  if (context.wuxingSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.wuxingSnapshotAddendum}`;
+    console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
+  }
+
+  // 🌉 BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
+  if (context.bridgeSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.bridgeSnapshotAddendum}`;
+    console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
+  }
+
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
+  if (context.therapeuticFrameworkAddendum) {
+    adaptedPrompt += `\n\n${context.therapeuticFrameworkAddendum}`;
+    console.log(`🧘 [Therapeutic Framework] Applied: ${context.therapeuticFrameworkAddendum.split('\n')[0]}`);
+  }
+
+  // 🔮 REFLECTION LENS: Mode-specific lens for Scribe mode
+  if (context.reflectionLensAddendum) {
+    adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
+    console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
+  }
+
+  // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+  if (context.astrologicalContextAddendum) {
+    adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
+    console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
+  }
+
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  if (context.governorAddendum) {
+    adaptedPrompt += `\n\n${context.governorAddendum}`;
+    console.log(`🌀 [Governor] Posture guidance injected`);
+  }
+
+  // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
+  if (context.relationshipModeAddendum) {
+    adaptedPrompt += `\n\n${context.relationshipModeAddendum}`;
+    console.log(`💫 [Relationship] Mode: ${context.relationshipModeAddendum.split('\n')[0]}`);
+  }
+
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  if (context.maiaModeAddendum) {
+    adaptedPrompt += `\n\n${context.maiaModeAddendum}`;
+    console.log(`🎭 [MAIA Mode] Relational mode guidance injected`);
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  if (context.scribeSessionDiscussionAddendum) {
+    adaptedPrompt += `\n\n${context.scribeSessionDiscussionAddendum}`;
+    console.log(`📝 [Scribe Discussion] Session context injected`);
+  }
+
   return adaptedPrompt.trim();
 }
 
@@ -650,6 +838,8 @@ export function buildMaiaComprehensivePrompt(
     };
 
     const simplePrompt = `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
+
+📅 Today is ${getSimpleDateString(context.timezone)}.
 
 ${maiaPaiConfig.depthGuidance}
 

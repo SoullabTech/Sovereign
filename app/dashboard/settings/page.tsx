@@ -1,10 +1,61 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Bell, Shield, Palette, Volume2, Cog } from 'lucide-react';
+import { Settings, Bell, Shield, Palette, Volume2, Cog, ExternalLink, Eye, Crown, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { useSession } from '@/lib/hooks/useSession';
+
+interface Project {
+  id: string;
+  slug: string;
+  name: string;
+  publicUrl: string;
+  previewUrl: string;
+  status: string;
+}
 
 export default function SettingsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
+  const { tier, isPersonal, isPro } = useSession();
+
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        const memberData = localStorage.getItem('beta_user');
+        if (!memberData) {
+          setProjectsLoading(false);
+          return;
+        }
+
+        const member = JSON.parse(memberData);
+        const res = await fetch('/api/practitioner/projects', {
+          headers: { 'x-member-id': member.id }
+        });
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            // Not a practitioner, that's fine
+            setProjectsLoading(false);
+            return;
+          }
+          throw new Error('Failed to load projects');
+        }
+
+        const data = await res.json();
+        setProjects(data.projects || []);
+      } catch (err) {
+        setProjectsError(err instanceof Error ? err.message : 'Failed to load');
+      } finally {
+        setProjectsLoading(false);
+      }
+    }
+
+    loadProjects();
+  }, []);
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Cinematic Jade Environment */}
@@ -465,6 +516,167 @@ export default function SettingsPage() {
               </div>
             </motion.div>
           </div>
+
+          {/* Client Projects Portal Section - Only shown if practitioner has projects */}
+          {!projectsLoading && projects.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55 }}
+              className="relative"
+            >
+              {/* Multi-layered Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 via-amber-600/10 to-jade-shadow/20 rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-jade-night/30 to-transparent rounded-xl" />
+
+              <div className="relative p-8 border border-amber-500/30 rounded-xl backdrop-blur-xl">
+                {/* Sacred Geometric Corners */}
+                <div className="absolute top-4 left-4 w-4 h-4">
+                  <div className="absolute inset-0 border-l border-t border-amber-500/40" />
+                  <div className="absolute top-1 left-1 w-2 h-2 border-l border-t border-amber-400/20" />
+                </div>
+                <div className="absolute top-4 right-4 w-4 h-4">
+                  <div className="absolute inset-0 border-r border-t border-amber-500/40" />
+                  <div className="absolute top-1 right-1 w-2 h-2 border-r border-t border-amber-400/20" />
+                </div>
+                <div className="absolute bottom-4 left-4 w-4 h-4">
+                  <div className="absolute inset-0 border-l border-b border-amber-600/40" />
+                  <div className="absolute bottom-1 left-1 w-2 h-2 border-l border-b border-amber-500/20" />
+                </div>
+                <div className="absolute bottom-4 right-4 w-4 h-4">
+                  <div className="absolute inset-0 border-r border-b border-amber-600/40" />
+                  <div className="absolute bottom-1 right-1 w-2 h-2 border-r border-b border-amber-500/20" />
+                </div>
+
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="relative w-5 h-5">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border border-amber-500/40 rotate-45"
+                    />
+                    <div className="absolute top-1 left-1 bottom-1 right-1 bg-amber-500/30" />
+                  </div>
+                  <h3 className="text-lg font-extralight text-amber-100 tracking-[0.3em] uppercase">
+                    Client Portals
+                  </h3>
+                </div>
+                <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent mb-8" />
+
+                <p className="text-sm text-jade-mineral font-light tracking-wide mb-6">
+                  Quick access to your client-facing portal sites
+                </p>
+
+                <div className="space-y-4">
+                  {projects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between gap-4 p-4 rounded-lg
+                               bg-jade-shadow/30 border border-jade-sage/20"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-amber-100 truncate">
+                          {project.name}
+                        </div>
+                        <div className="text-xs text-jade-mineral truncate">
+                          {project.publicUrl}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a
+                          href={project.publicUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                   border border-jade-sage/30 text-sm text-jade-jade
+                                   hover:bg-jade-sage/10 transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Open</span>
+                        </a>
+
+                        <Link
+                          href={project.previewUrl}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                   bg-amber-500 text-black text-sm font-medium
+                                   hover:bg-amber-400 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Preview</span>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {projectsError && (
+                  <div className="mt-4 p-3 rounded-lg border border-red-900/40 bg-red-950/30 text-sm text-red-200">
+                    {projectsError}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Plan & Membership Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="relative lg:col-span-2"
+          >
+            {/* Multi-layered Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-jade-malachite/20 via-jade-sage/15 to-jade-shadow/25 rounded-xl" />
+
+            <div className="relative p-8 border border-jade-malachite/30 rounded-xl backdrop-blur-xl">
+              <div className="flex items-center gap-4 mb-8">
+                <Crown className="w-5 h-5 text-jade-malachite" />
+                <h3 className="text-lg font-extralight text-jade-jade tracking-[0.3em] uppercase">
+                  Membership
+                </h3>
+              </div>
+
+              {/* Current tier - clear label first, poetic subtitle after */}
+              <div className="mb-6">
+                <p className="text-sm text-jade-mineral mb-2">Current plan</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                              bg-jade-sage/20 border border-jade-sage/30">
+                  <span className="text-jade-jade font-light">
+                    {isPro ? 'Stewardship' : isPersonal ? 'Personal Mentor' : 'Member'}
+                  </span>
+                </div>
+                <p className="text-xs text-jade-mineral/70 mt-2 italic">
+                  {isPro
+                    ? 'Serve others with advanced tools'
+                    : isPersonal
+                    ? 'Ongoing guidance, memory, and daily support'
+                    : 'Begin tracking & reflection'}
+                </p>
+              </div>
+
+              {/* Upgrade invitation (only show if not pro) */}
+              {!isPro && (
+                <div className="space-y-4">
+                  <p className="text-sm text-jade-mineral">
+                    {isPersonal
+                      ? 'Deepen into Stewardship to serve others with advanced tools.'
+                      : 'Deepen your practice with Personal Mentor guidance.'}
+                  </p>
+
+                  <Link
+                    href="/membership"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg
+                             bg-jade-malachite/20 border border-jade-malachite/40
+                             text-jade-jade hover:bg-jade-malachite/30 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Explore membership options</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
           {/* Sacred Configuration Crystalline Activation */}
           <motion.div

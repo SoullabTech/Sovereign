@@ -1,10 +1,12 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare } from 'lucide-react';
+import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link, Hand } from 'lucide-react';
+import { GoogleConnectSection } from './settings/GoogleConnectSection';
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
+import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
 // import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 
 interface QuickSettingsSheetProps {
@@ -13,9 +15,11 @@ interface QuickSettingsSheetProps {
 }
 
 interface MaiaSettings {
+  sanctuary: boolean; // Session-level memory exclusion
   voice: {
     openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
+    prosodyRange: 0 | 1 | 2 | 3 | 4; // Range of Effect: scales prosody (0-4)
   };
   memory: {
     enabled: boolean;
@@ -26,6 +30,11 @@ interface MaiaSettings {
   };
   archetype: ArchetypeId;
   conversationMode: ConversationMode;
+  /** Voice barge-in interrupt settings */
+  interrupt: {
+    enabled: boolean;
+    sensitivity: 'low' | 'normal' | 'high'; // Maps to debounce timing
+  };
 }
 
 const VOICE_OPTIONS = [
@@ -47,9 +56,11 @@ const ARCHETYPE_OPTIONS = [
 ];
 
 const DEFAULT_SETTINGS: MaiaSettings = {
+  sanctuary: false, // Default: memory enabled (continuity mode)
   voice: {
     openaiVoice: 'shimmer',
     speed: 0.95,
+    prosodyRange: 1, // Subtle by default
   },
   memory: {
     enabled: true,
@@ -60,18 +71,65 @@ const DEFAULT_SETTINGS: MaiaSettings = {
   },
   archetype: 'AUTO' as ArchetypeId,
   conversationMode: 'her',
+  interrupt: {
+    enabled: true, // Default ON for voice-first users
+    sensitivity: 'normal', // 200ms debounce
+  },
 };
 
 export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
   // Removed: Supabase client (now using localStorage only for sovereign mode)
+
+  // Track streaming voice state reactively
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const read = () =>
+      setStreamingVoiceEnabled(localStorage.getItem('maia_streaming_voice') === 'true');
+
+    read(); // Initial read
+
+    // Listen for changes from this tab (custom event)
+    const onCustomEvent = () => read();
+    window.addEventListener('maia-streaming-voice-changed', onCustomEvent);
+
+    // Listen for changes from other tabs (storage event)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'maia_streaming_voice') read();
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('maia-streaming-voice-changed', onCustomEvent);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  // Get userId from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        try {
+          const parsed = JSON.parse(betaUser);
+          setUserId(parsed.email || parsed.id || parsed.username);
+        } catch {
+          // Fallback to raw value if not JSON
+          setUserId(betaUser);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const loadSettings = async () => {
       if (typeof window === 'undefined') return;
 
       // const conversationMode = ConversationStylePreference.get();
-      const conversationMode = 'voice'; // Default fallback
+      const conversationMode: ConversationMode = 'her'; // Default fallback
 
       try {
         // Load settings from localStorage (sovereign mode - no cloud storage)
@@ -83,10 +141,15 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
             conversationMode: conversationMode, // Always use latest from preference
           });
         } else {
-          setSettings({
+          // No session settings yet — initialize from account defaults
+          const defaults = getInitialSessionSettings();
+          const sessionSettings = {
             ...DEFAULT_SETTINGS,
+            ...defaults,
             conversationMode: conversationMode,
-          });
+          };
+          localStorage.setItem('maia_settings', JSON.stringify(sessionSettings));
+          setSettings(sessionSettings);
         }
       } catch (e) {
         console.error('Failed to load settings', e);
@@ -137,10 +200,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
           }));
         }
 
-        const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-        if (explorerId) {
-          saveToSupabase(explorerId, newSettings);
-        }
+        // Settings are saved to localStorage only (sovereign mode - no cloud storage)
       }
 
       return newSettings;
@@ -156,28 +216,8 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
     return acknowledgments[mode];
   };
 
-  const saveToSupabase = async (userId: string, settings: MaiaSettings) => {
-    try {
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          voice_speed: settings.voice.speed,
-          tone: Math.round(settings.personality.warmth * 100),
-          archetype: settings.archetype,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
-
-      console.log('✅ Settings saved to Supabase');
-    } catch (error) {
-      console.error('Failed to save settings to Supabase:', error);
-    }
-  };
-
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -275,6 +315,70 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, staggerChildren: 0.1 }}
               >
+                {/* Sanctuary Session Toggle - The Trust Lever */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="pb-4 border-b border-white/10"
+                >
+                  <motion.button
+                    onClick={() => updateSetting('sanctuary', !settings.sanctuary)}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      settings.sanctuary
+                        ? 'border-emerald-500/50 bg-emerald-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className={`p-2 rounded-lg ${
+                            settings.sanctuary
+                              ? 'bg-emerald-500/20 text-emerald-400'
+                              : 'bg-white/5 text-white/40'
+                          }`}
+                          animate={settings.sanctuary ? {
+                            scale: [1, 1.1, 1],
+                          } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Shield size={20} />
+                        </motion.div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            settings.sanctuary ? 'text-emerald-300' : 'text-white/80'
+                          }`}>
+                            Sanctuary Session
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            {settings.sanctuary
+                              ? "This session won't be saved to memory. Speak freely."
+                              : "MAIA may remember what's helpful for continuity."}
+                          </div>
+                          {settings.sanctuary && (
+                            <div className="text-[10px] text-emerald-400/60 mt-1">
+                              No patterns formed. This session leaves no memory behind.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Toggle Switch */}
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        settings.sanctuary ? 'bg-emerald-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: settings.sanctuary ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -347,6 +451,201 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                     <span>Faster</span>
                   </div>
                 </motion.div>
+
+                {/* Range of Effect - MAIA's prosody scaling */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32 }}
+                  className="mt-4"
+                >
+                  <label className="flex items-center justify-between text-sm font-medium text-amber-200/80 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} />
+                      Range of Effect
+                    </div>
+                    <span className="text-xs text-white/60">
+                      {settings.voice.prosodyRange === 0 && 'Neutral'}
+                      {settings.voice.prosodyRange === 1 && 'Subtle'}
+                      {settings.voice.prosodyRange === 2 && 'Expressive'}
+                      {settings.voice.prosodyRange === 3 && 'Deep'}
+                      {settings.voice.prosodyRange === 4 && 'Ceremonial'}
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="1"
+                    value={settings.voice.prosodyRange}
+                    onChange={(e) => updateSetting('voice.prosodyRange', parseInt(e.target.value) as 0|1|2|3|4)}
+                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                             [&::-webkit-slider-thumb]:appearance-none
+                             [&::-webkit-slider-thumb]:w-5
+                             [&::-webkit-slider-thumb]:h-5
+                             [&::-webkit-slider-thumb]:rounded-full
+                             [&::-webkit-slider-thumb]:bg-amber-500
+                             [&::-webkit-slider-thumb]:shadow-lg
+                             [&::-webkit-slider-thumb]:shadow-amber-500/40"
+                  />
+                  <div className="flex justify-between text-xs text-white/40 mt-2">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                  </div>
+                  <div className="text-xs text-white/50 mt-1 text-center">
+                    Scales how MAIA's voice lands — pacing, warmth, ceremony
+                  </div>
+                </motion.div>
+
+                {/* Streaming Voice Mode Toggle - Experimental */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32 }}
+                >
+                  <motion.button
+                    onClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(5);
+                      const newValue = !streamingVoiceEnabled;
+                      localStorage.setItem('maia_streaming_voice', String(newValue));
+                      window.dispatchEvent(new CustomEvent('maia-streaming-voice-changed', { detail: { enabled: newValue } }));
+                    }}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      streamingVoiceEnabled
+                        ? 'border-cyan-500/50 bg-cyan-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          streamingVoiceEnabled
+                            ? 'bg-cyan-500/20 text-cyan-400'
+                            : 'bg-white/5 text-white/40'
+                        }`}>
+                          <Sparkles size={20} />
+                        </div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            streamingVoiceEnabled ? 'text-cyan-300' : 'text-white/80'
+                          }`}>
+                            Streaming Voice (Beta)
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            Natural flow with sentence-by-sentence TTS
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        streamingVoiceEnabled ? 'bg-cyan-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: streamingVoiceEnabled ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+                </motion.div>
+
+                {/* Allow Interruption Toggle - Barge-in (only show when Streaming Voice is enabled) */}
+                {streamingVoiceEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.33 }}
+                >
+                  <motion.button
+                    onClick={() => updateSetting('interrupt.enabled', !settings.interrupt.enabled)}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      settings.interrupt.enabled
+                        ? 'border-orange-500/50 bg-orange-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className={`p-2 rounded-lg ${
+                            settings.interrupt.enabled
+                              ? 'bg-orange-500/20 text-orange-400'
+                              : 'bg-white/5 text-white/40'
+                          }`}
+                          animate={settings.interrupt.enabled ? {
+                            scale: [1, 1.1, 1],
+                          } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Hand size={20} />
+                        </motion.div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            settings.interrupt.enabled ? 'text-orange-300' : 'text-white/80'
+                          }`}>
+                            Allow Interruption
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            {settings.interrupt.enabled
+                              ? "Speak to interrupt MAIA while she's talking"
+                              : "MAIA will finish speaking before listening"}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Toggle Switch */}
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        settings.interrupt.enabled ? 'bg-orange-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: settings.interrupt.enabled ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Sensitivity selector - only show when enabled */}
+                  {settings.interrupt.enabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 px-2"
+                    >
+                      <div className="text-xs text-white/50 mb-2">Sensitivity</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['low', 'normal', 'high'] as const).map((level) => (
+                          <motion.button
+                            key={level}
+                            onClick={() => updateSetting('interrupt.sensitivity', level)}
+                            className={`py-2 px-3 rounded-lg border text-xs transition-all ${
+                              settings.interrupt.sensitivity === level
+                                ? 'border-orange-500/50 bg-orange-500/15 text-orange-400'
+                                : 'border-white/10 bg-black/20 text-white/60'
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <span className="capitalize">{level}</span>
+                            <div className="text-[10px] opacity-60 mt-0.5">
+                              {level === 'low' && '300ms'}
+                              {level === 'normal' && '200ms'}
+                              {level === 'high' && '150ms'}
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+                )}
 
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -471,6 +770,51 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   </div>
                 </motion.div>
 
+                {/* Connections Section - Google Calendar/Gmail */}
+                {userId && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.43 }}
+                  >
+                    <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+                      <Link size={16} />
+                      Connections
+                    </label>
+                    <div className="p-4 rounded-xl border border-white/10 bg-black/20">
+                      <GoogleConnectSection userId={userId} />
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* New Conversation Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.44 }}
+                >
+                  <motion.button
+                    onClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(15);
+                      // Dispatch event to clear conversation in OracleConversation
+                      window.dispatchEvent(new CustomEvent('maia-new-conversation'));
+                      onClose();
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-rose-500/20 to-orange-500/20
+                             border border-rose-500/30 rounded-xl text-rose-300 font-medium
+                             hover:from-rose-500/30 hover:to-orange-500/30 transition-all
+                             flex items-center justify-center gap-2"
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <Sparkles size={18} />
+                    <span>New Conversation</span>
+                  </motion.button>
+                  <p className="text-xs text-white/40 text-center mt-2">
+                    Clear history and start fresh with the welcome screen
+                  </p>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -479,7 +823,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 <motion.button
                   onClick={() => {
                     if ('vibrate' in navigator) navigator.vibrate(10);
-                    window.location.href = '/settings';
+                    window.location.href = '/account/settings';
                   }}
                   className="w-full py-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20
                            border border-purple-500/30 rounded-xl text-purple-300 font-medium
@@ -504,5 +848,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
         </>
       )}
     </AnimatePresence>
+    </>
   );
 }

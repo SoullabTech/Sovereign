@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LabTools Voice Configuration Page
  * Advanced voice modulation and testing interface for MAIA

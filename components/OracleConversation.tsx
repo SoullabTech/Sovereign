@@ -1,17 +1,37 @@
+// @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
+// 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2 } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
+import { VoiceHUD } from './voice/VoiceHUD';
+import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
+// TEMPORARILY DISABLED - causing ReferenceError crash
+// import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
+// RelationalTelemetryPanel removed - dev-only component
+import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
 import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import {
+  matchVoiceCommand,
+  applySettingsDelta,
+  getModeSystemPrompt,
+  detectCrisis,
+  DEFAULT_MODE_STATE,
+  DEFAULT_SCRIBE_SESSION,
+  type ModeState,
+  type VoiceCommandResult,
+  type CrisisOverride,
+  type ScribeSessionState,
+} from '@/lib/voice/voiceCommands';
 import { QuickModeToggle } from './ui/QuickModeToggle';
 // import MaiaChatInterface from './chat/MaiaChatInterface'; // File doesn't exist
 import { EmergencyChatInterface } from './ui/EmergencyChatInterface';
@@ -21,6 +41,11 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
+import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
+import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
+import { formatMessageText } from '@/lib/text/formatMessageText';
+import { HighlightedText } from './vocabulary/VocabularyTooltip';
+import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
@@ -30,7 +55,56 @@ import { MotionState, CoherenceShift } from './motion/MotionOrchestrator';
 import { OracleResponse, ConversationContext as OracleConversationContext } from '@/lib/oracle-response';
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
+import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+
+/**
+ * Detect Safari PWA environment for PWA-specific voice handling
+ * PWA needs different voice state machine than iOS native
+ */
+function isSafariPWA(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isSafari =
+    /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  const isStandalone =
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    (navigator as any).standalone === true;
+  return isSafari && isStandalone;
+}
+
+/**
+ * Safe base64 to ArrayBuffer decoder that handles large strings
+ * atob() can fail on large base64 strings in some environments
+ */
+function base64ToArrayBuffer(b64: string): ArrayBuffer {
+  // Remove whitespace/newlines (some implementations insert them)
+  const clean = b64.replace(/\s/g, '');
+
+  // Convert in slices to avoid atob() exploding on large strings
+  const sliceSize = 1024 * 1024; // 1MB base64 chunks (safe)
+  const byteArrays: Uint8Array[] = [];
+
+  for (let offset = 0; offset < clean.length; offset += sliceSize) {
+    const chunk = clean.slice(offset, offset + sliceSize);
+    const binaryString = atob(chunk);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+    byteArrays.push(bytes);
+  }
+
+  const totalLen = byteArrays.reduce((sum, a) => sum + a.length, 0);
+  const merged = new Uint8Array(totalLen);
+  let pos = 0;
+  for (const a of byteArrays) {
+    merged.set(a, pos);
+    pos += a.length;
+  }
+
+  return merged.buffer;
+}
+import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
+import { VoiceController } from '@/lib/voice/AudioSessionManager';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
@@ -39,25 +113,46 @@ import type { Element } from '@/lib/voice';
 // import { useMAIASDK } from '@/hooks/useMAIASDK-simple'; // Fallback option (if needed)
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
+import { getAccountSettings } from '@/lib/settings/accountSettings';
 import { getAgentConfig, AgentConfig } from '@/lib/agent-config';
 import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
-import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
-import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
+// REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
+// import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
+import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import PastSelfCard, { type PastSelfPayload } from './selflet/PastSelfCard';
 import { SelfletArchiveDrawer } from './selflet/SelfletArchiveDrawer';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
+<<<<<<< HEAD
+=======
+import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
+>>>>>>> ecstatic-brown
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
+import PromptPicker from './prompts/PromptPicker';
+import SessionSynthesis, { type SessionSynthesisData } from './session/SessionSynthesis';
+import { FloatingSessionIndicator } from './session/SessionArcIndicator';
+import { SessionRecap, type SessionRecapData } from './session/SessionRecap';
+import { DailyCheckin, type EmotionalState } from './checkin/DailyCheckin';
+import { ElementDiscovery } from './discovery/ElementDiscovery';
+import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
+import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
+import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
-import { useScribeMode } from '@/hooks/useScribeMode';
 import { BookPlus } from 'lucide-react';
+// Reflection Capsules - "Capture the Spirit"
+import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
+import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
+import { detectCaptureTrigger } from '@/lib/capsules/types';
+import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
@@ -144,6 +239,89 @@ function setCanonWrapEnabled(enabled: boolean) {
   window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
 }
 
+// Performance: Cap conversation history to prevent UI lag and API bloat
+const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
+const MAX_API_HISTORY = 30; // Send last 30 messages (15 exchanges) to API
+
+// Helper to cap messages array when adding new messages
+// Includes dedupe to prevent retry/resume double-inclusion
+type MsgWithId = { id?: string | null; role?: string; text?: string; content?: string };
+
+function appendMessageCapped<T extends MsgWithId>(
+  prev: T[],
+  newMsg: T,
+  maxMessages: number = MAX_DISPLAY_MESSAGES
+): T[] {
+  // Dedupe by id (prevents retry with same id)
+  if (newMsg?.id && prev.some(m => m?.id === newMsg.id)) {
+    return prev;
+  }
+
+  // Fallback: prevent immediate duplicate (same role + text/content)
+  const last = prev[prev.length - 1];
+  const newText = newMsg?.text || newMsg?.content;
+  const lastText = last?.text || last?.content;
+  if (last && last.role === newMsg?.role && lastText === newText && newText) {
+    return prev;
+  }
+
+  const updated = [...prev, newMsg];
+  return updated.length > maxMessages ? updated.slice(-maxMessages) : updated;
+}
+
+// Helper to truncate conversation history for API calls
+// Merges historical messages (from previous sessions) with current session messages
+function truncateHistoryForAPI(
+  currentMessages: ConversationMessage[],
+  historicalMessages: ConversationMessage[] = [],
+  maxMessages: number = MAX_API_HISTORY
+): Array<{ role: string; content: string }> {
+  // Merge historical context with current session, prioritizing recent messages
+  // Deduplicate by message ID to avoid repeating the same content
+  const seenIds = new Set<string>();
+  const allMessages: ConversationMessage[] = [];
+
+  // Add historical messages first
+  for (const msg of historicalMessages) {
+    if (msg.id && !seenIds.has(msg.id)) {
+      seenIds.add(msg.id);
+      allMessages.push(msg);
+    }
+  }
+
+  // Add current session messages (may override/update historical)
+  for (const msg of currentMessages) {
+    if (msg.id && !seenIds.has(msg.id)) {
+      seenIds.add(msg.id);
+      allMessages.push(msg);
+    } else if (!msg.id) {
+      // Messages without ID always added
+      allMessages.push(msg);
+    }
+  }
+
+  // Take most recent messages up to limit
+  const recent = allMessages.slice(-maxMessages);
+  return recent.map(msg => ({
+    role: msg.role === 'oracle' ? 'assistant' : 'user',
+    content: msg.text || msg.content || ''
+  }));
+}
+
+// Scribe session context for discussion mode
+interface ScribeSessionContext {
+  id: string;
+  title: string;
+  container: 'solo' | 'witness' | 'practitioner';
+  summary: {
+    short?: string;
+    long?: string;
+    themes?: string[];
+  } | null;
+  duration: number;
+  markerCount: number;
+}
+
 interface OracleConversationProps {
   userId?: string;
   userName?: string;
@@ -156,6 +334,8 @@ interface OracleConversationProps {
   showAnalytics?: boolean;
   voiceEnabled?: boolean;
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
+  voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
+  voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
   onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
@@ -166,6 +346,10 @@ interface OracleConversationProps {
   onSessionActiveChange?: (active: boolean) => void; // Notify parent of session active state
   onMessageAdded?: (message: ConversationMessage) => void;
   onSessionEnd?: (reason?: string) => void;
+  initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
+  // Scribe session discussion mode
+  scribeSessionId?: string; // ID of scribe session to discuss
+  scribeSessionContext?: ScribeSessionContext; // Context for scoped discussion
 }
 
 interface ConversationMessage {
@@ -191,6 +375,7 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+<<<<<<< HEAD
   pastSelf?: PastSelfPayload;
 }
 
@@ -221,27 +406,43 @@ function stripPastSelfPreface(
 
   // Strip whitespace/newlines after the preface
   return text.slice(cut).trimStart();
+=======
+  // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
+  integrity?: IntegrityResult;
+  lensSwitchOptions?: {
+    stay: string;
+    switch: string;
+    blend: string;
+    switchTo: string;
+  } | null;
+  // Pattern metadata for "Show why" drawer
+  metadata?: {
+    patterns?: Array<{
+      id: string;
+      key: string;
+      sig?: number;
+      seen?: number;
+    }>;
+    // Wisdom routing data for tool reveal
+    wisdomRouting?: {
+      activated: boolean;
+      tool?: { id: string; name: string; description: string; agentConnection: string } | null;
+      meta?: { agentName: string | null; patternType: string | null };
+    };
+  };
+>>>>>>> ecstatic-brown
 }
 
-// Component to clean messages by removing stage directions
-const FormattedMessage: React.FC<{ text: string | undefined }> = ({ text }) => {
-  // Handle undefined or null text
-  if (!text) {
-    return <span></span>;
+// Component to clean messages by removing stage directions while preserving emphasis
+// Optionally highlights vocabulary terms for newcomers
+const FormattedMessage: React.FC<{
+  text: string | undefined;
+  enableVocabularyTooltips?: boolean;
+}> = ({ text, enableVocabularyTooltips = false }) => {
+  const cleanedText = formatMessageText(text || '');
+  if (enableVocabularyTooltips) {
+    return <HighlightedText text={cleanedText} enableTooltips={true} />;
   }
-
-  // Remove ALL stage directions and tone markers
-  const cleanedText = text
-    .replace(/\*[^*]*\*/g, '') // Remove single asterisk content
-    .replace(/\*\*[^*]*\*\*/g, '') // Remove double asterisk content
-    .replace(/\*{1,}[^*]+\*{1,}/g, '') // Remove any asterisk-wrapped content
-    .replace(/\([^)]*\)/gi, '') // Remove ALL parenthetical content
-    .replace(/\[[^\]]*\]/g, '') // Remove bracketed content
-    .replace(/\{[^}]*\}/g, '') // Remove content in curly braces
-    .replace(/\s+/g, ' ') // Clean up extra spaces
-    .replace(/^\s*[,;.]\s*/, '') // Remove leading punctuation
-    .trim();
-
   return <span>{cleanedText}</span>;
 };
 
@@ -257,6 +458,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   showAnalytics = false,
   voiceEnabled = true,
   voice = 'alloy',
+  voiceSpeed = 0.95,
+  voiceModel = 'tts-1-hd',
   onVoiceChange,
   initialMode = 'normal',
   onModeChange,
@@ -266,8 +469,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onCloseSessionSelector,
   onSessionActiveChange,
   onMessageAdded,
-  onSessionEnd
+  onSessionEnd,
+  initialAction,
+  scribeSessionId,
+  scribeSessionContext,
 }) => {
+  // 🔖 BUILD STAMP - visible proof of which code is running
+  useEffect(() => {
+    console.log('🔖 MAIA BUILD STAMP: 2026-01-31_pwa_voice_v3');
+    console.log('🎙️ PWA Voice State Machine: ENABLED');
+    console.log('🔍 isSafariPWA():', isSafariPWA());
+    // TEMPORARY: Show alert to prove new code is running
+    if (typeof window !== 'undefined') {
+      const stamp = document.createElement('div');
+      stamp.id = 'build-stamp-v3';
+      stamp.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#10b981;color:white;padding:4px;text-align:center;font-size:12px;z-index:99999;font-family:monospace;';
+      stamp.textContent = `BUILD v3 | PWA: ${isSafariPWA()} | ${new Date().toLocaleTimeString()}`;
+      document.body.appendChild(stamp);
+      setTimeout(() => stamp.remove(), 10000); // Remove after 10 seconds
+    }
+  }, []);
+
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
   const [listeningMode, setListeningMode] = useState<ListeningMode>(initialMode);
@@ -312,19 +534,87 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [streamingText, setStreamingText] = useState<string>('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [draftMessage, setDraftMessage] = useState('');
   const [echoSuppressUntil, setEchoSuppressUntil] = useState<number>(0);
+
+  // 🌀 LENS CONSENT: Pending consent for next message (Stay/Switch/Blend ritual)
+  const [pendingLensConsent, setPendingLensConsent] = useState<{
+    consent: LensConsent;
+    switchTo?: string;
+  } | null>(null);
 
   // Voice/audio state
   const [isListening, setIsListening] = useState(false);
+  const [isActivating, setIsActivating] = useState(false); // True while waiting for mic to confirm
   const [isResponding, setIsResponding] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [isIOSAudioEnabled, setIsIOSAudioEnabled] = useState(false);
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
+
+  // 🎤 PWA VOICE STATE MACHINE: Separate, first-class voice loop for Safari PWA
+  // This provides confirmed transitions only - no "hopeful" state changes
+  // TEMPORARILY DISABLED to debug crash
+  const [isPwaVoice] = useState(false); // TEMP: was () => isSafariPWA()
+
+  // 🎤 PWA VOICE STUB - must be defined immediately after isPwaVoice
+  // to prevent minifier hoisting issues (ReferenceError crash)
+  const pwaVoice = {
+    state: 'IDLE' as const,
+    isListening: false,
+    isMuted: true,
+    isThinkingOrSpeaking: false,
+    isArming: false,
+    isMicWaking: false,
+    isHandoff: false,
+    isError: false,
+    isDisplayingText: false,
+    needsTapToEnableAudio: false,
+    audioPlayingConfirmed: () => {},
+    audioEnded: () => {},
+    ttsFailedOrSkipped: (_reason?: string) => {},
+    userWantsToStart: async () => {},
+    userWantsToStop: () => {},
+    clearAudioTimeout: () => {},
+    startHandoffTimer: () => {},
+    startDisplayTextTimer: () => {},
+    transition: () => {},
+    micConfirmed: () => {},
+    micStopped: () => {},
+  };
+
+  // Voice settings from account preferences (applies to TTS and MAIA behavior)
+  // Lazy initializer loads from localStorage immediately to avoid flash of default values
+  const [voiceSettings, setVoiceSettings] = useState(() => {
+    if (typeof window === 'undefined') {
+      return {
+        voice: 'alloy',
+        speed: 1.0,
+        model: 'tts-1' as const,
+        prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,
+        archetype: 'AUTO' as string,
+        conversationMode: 'her' as string,
+        memoryDepth: 'moderate' as 'minimal' | 'moderate' | 'deep',
+      };
+    }
+    const settings = getAccountSettings();
+    return {
+      voice: settings.voice.openaiVoice,
+      speed: settings.voice.speed,
+      model: settings.voice.model || 'tts-1' as const,
+      prosodyRange: (settings.voice.prosodyRange ?? 1) as 0 | 1 | 2 | 3 | 4,
+      archetype: settings.archetype || 'AUTO',
+      conversationMode: settings.conversationMode || 'her',
+      memoryDepth: settings.memory?.depth || 'moderate',
+    };
+  });
+
+  // Member's preferred name for MAIA (bonding affordance)
+  const assistantName = useAssistantName();
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -336,6 +626,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [showAudioSettings, setShowAudioSettings] = useState(false);
+
+  // Wisdom tool reveal state
+  const [activeWisdomTool, setActiveWisdomTool] = useState<{
+    tool: { id: string; name: string; description: string; agentConnection: string } | null;
+    agentName: string | null;
+    userMessage: string;
+  } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
   const [showSelfletArchive, setShowSelfletArchive] = useState(false); // Phase 2K-a
 
@@ -357,6 +654,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCaptions, setShowCaptions] = useState(true);
   const [showVoiceText, setShowVoiceText] = useState(true);
   const [showCustomizer, setShowCustomizer] = useState(false);
+
+  // Pattern drawer state (for "Show why" feature)
+  const [patternDrawerOpen, setPatternDrawerOpen] = useState(false);
+  const [activePattern, setActivePattern] = useState<PatternMeta | null>(null);
+
   const [enableVoiceInChat, setEnableVoiceInChat] = useState(() => {
     // Load saved preference from localStorage, default to true
     if (typeof window !== 'undefined') {
@@ -366,6 +668,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return true;
   });
   const [enableVoiceInput, setEnableVoiceInput] = useState(false); // Voice input mode toggle for chat interface
+
+  // 🌊 STREAMING VOICE MODE: Server-side sentence TTS for natural flow
+  // When enabled, uses Sesame/ElevenLabs streaming instead of OpenAI TTS
+  // TEMP: Force-enabled for testing relational stack
+  const [streamingVoiceMode, setStreamingVoiceMode] = useState(() => {
+    // Force true for testing - revert after validation
+    return true;
+    // Original:
+    // if (typeof window !== 'undefined') {
+    //   const saved = localStorage.getItem('maia_streaming_voice');
+    //   return saved === 'true';
+    // }
+    // return false;
+  });
+
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
   const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
@@ -378,6 +695,374 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
 
+  // ✨ CAPTURE THE SPIRIT: Reflection Capsules
+  const [showCapturePanel, setShowCapturePanel] = useState(false);
+  const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
+  const [captureSuggestionDismissed, setCaptureSuggestionDismissed] = useState(false);
+  const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+
+  // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
+  // This is separate from messages - history can be restored but greeting shows until activation
+  const [hasActivated, setHasActivated] = useState(false);
+
+  // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
+  const [composerDraft, setComposerDraft] = useState<string>('');
+
+  // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
+  // When true: no content retention, no patterns formed, just presence
+  const [isSanctuary, setIsSanctuary] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          return settings.sanctuary === true;
+        }
+      } catch (e) {
+        console.warn('[Sanctuary] Failed to load initial state:', e);
+      }
+    }
+    return false;
+  });
+
+  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior
+  const [interruptEnabled, setInterruptEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          return settings.interrupt?.enabled !== false; // Default true
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load initial state:', e);
+      }
+    }
+    return true; // Default ON
+  });
+
+  const [interruptDebounceMs, setInterruptDebounceMs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          const sensitivity = settings.interrupt?.sensitivity || 'normal';
+          return sensitivity === 'low' ? 300 : sensitivity === 'high' ? 150 : 200;
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load debounce:', e);
+      }
+    }
+    return 200; // Default 200ms (normal)
+  });
+
+  // Threshold multiplier: higher = less sensitive (requires louder speech to trigger)
+  const [interruptThresholdMultiplier, setInterruptThresholdMultiplier] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          const sensitivity = settings.interrupt?.sensitivity || 'normal';
+          return sensitivity === 'low' ? 1.35 : sensitivity === 'high' ? 1.1 : 1.2;
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load threshold multiplier:', e);
+      }
+    }
+    return 1.2; // Default 1.2x (normal)
+  });
+
+  // 🎭 MAIA MODE STATE: Talk/Care/Scribe relational modes with sub-modes
+  // This controls MAIA's relational stance, not just conversation style
+  const [maiaMode, setMaiaMode] = useState<ModeState>(DEFAULT_MODE_STATE);
+
+  // Track last voice command result for acknowledgment handling
+  const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);
+
+  // 🚨 CRISIS OVERRIDE: Safety boundary that interrupts any mode
+  // This takes precedence over all other voice commands and mode states
+  const crisisStateRef = useRef<CrisisOverride | null>(null);
+
+  // 📝 SCRIBE SESSION STATE: Track active scribe/witness sessions
+  const [scribeSession, setScribeSession] = useState<ScribeSessionState>(DEFAULT_SCRIBE_SESSION);
+
+  // Scribe API handlers
+  const startScribeSession = useCallback(async (container: 'solo' | 'witness' | 'practitioner') => {
+    try {
+      const res = await apiFetch('/api/scribe/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ container }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession({
+          isActive: true,
+          isPaused: false,
+          isAside: false,
+          container,
+          sessionId: data.session.id,
+          consentConfirmed: false,
+          transcriptEnabled: false,
+          sealed: true,
+        });
+        console.log(`📝 [SCRIBE] Session started: ${data.session.id} (${container})`);
+        return data;
+      }
+      console.error('[SCRIBE] Start failed:', data.error);
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Start error:', error);
+      return null;
+    }
+  }, []);
+
+  const confirmScribeConsent = useCallback(async (confirmed: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          confirmed,
+          method: 'voice',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({
+          ...prev,
+          consentConfirmed: confirmed,
+          isActive: confirmed, // If declined, session is no longer active
+        }));
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Consent error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  const pauseScribeSession = useCallback(async (pause: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/pause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          action: pause ? 'pause' : 'resume',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({ ...prev, isPaused: pause }));
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Pause error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  const markScribeMoment = useCallback(async (markerType?: string, note?: string) => {
+    if (!scribeSession.sessionId || !scribeSession.consentConfirmed) return null;
+    try {
+      const res = await apiFetch('/api/scribe/mark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          markerType,
+          note,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        console.log(`📌 [SCRIBE] Marked: ${markerType || 'moment'}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Mark error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId, scribeSession.consentConfirmed]);
+
+  const stopScribeSession = useCallback(async () => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: scribeSession.sessionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(DEFAULT_SCRIBE_SESSION);
+        console.log(`✅ [SCRIBE] Session stopped: ${scribeSession.sessionId}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Stop error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  // Toggle transcript enabled/disabled
+  const setTranscriptEnabled = useCallback(async (enabled: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch(`/api/scribe/sessions/${scribeSession.sessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcriptEnabled: enabled }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({ ...prev, transcriptEnabled: enabled }));
+        console.log(`📝 [SCRIBE] Transcript ${enabled ? 'enabled' : 'disabled'}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Transcript toggle error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  // Toggle aside mode (private consultation without recording)
+  const toggleScribeAside = useCallback((enterAside: boolean) => {
+    if (!scribeSession.isActive) return;
+    setScribeSession(prev => ({ ...prev, isAside: enterAside }));
+    console.log(`📝 [SCRIBE] Aside mode ${enterAside ? 'entered' : 'exited'} - ${enterAside ? 'NOT recording' : 'now recording'}`);
+  }, [scribeSession.isActive]);
+
+  // Append transcript entry (only when transcript enabled + consent confirmed + not in aside)
+  const appendTranscriptEntry = useCallback(async (content: string, speaker: 'self' | 'other' | 'maia' = 'self') => {
+    if (!scribeSession.sessionId) return;
+    if (!scribeSession.isActive || !scribeSession.consentConfirmed) return;
+    if (!scribeSession.transcriptEnabled) return;
+    if (scribeSession.isPaused) return;
+    if (scribeSession.isAside) return; // Skip recording during aside (private consultation)
+
+    const trimmed = (content || '').trim();
+    if (!trimmed || trimmed.length < 5) return; // Skip very short utterances
+
+    try {
+      await apiFetch('/api/scribe/transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          speaker,
+          content: trimmed,
+          spokenAt: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error('[SCRIBE] Append transcript error:', error);
+    }
+  }, [scribeSession.sessionId, scribeSession.isActive, scribeSession.consentConfirmed, scribeSession.transcriptEnabled, scribeSession.isPaused, scribeSession.isAside]);
+
+  // Listen for settings changes from QuickSettingsSheet (sanctuary + interrupt)
+  useEffect(() => {
+    const handleSettingsChange = (event: CustomEvent<{
+      sanctuary?: boolean;
+      interrupt?: { enabled?: boolean; sensitivity?: 'low' | 'normal' | 'high' };
+    }>) => {
+      // Handle sanctuary mode
+      if (typeof event.detail?.sanctuary === 'boolean') {
+        setIsSanctuary(event.detail.sanctuary);
+        console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
+      }
+
+      // Handle interrupt settings
+      if (event.detail?.interrupt) {
+        if (typeof event.detail.interrupt.enabled === 'boolean') {
+          setInterruptEnabled(event.detail.interrupt.enabled);
+          console.log(`🛑 [Interrupt] ${event.detail.interrupt.enabled ? 'ENABLED' : 'disabled'}`);
+        }
+        if (event.detail.interrupt.sensitivity) {
+          const sensitivity = event.detail.interrupt.sensitivity;
+          const debounce = sensitivity === 'low' ? 300 : sensitivity === 'high' ? 150 : 200;
+          const multiplier = sensitivity === 'low' ? 1.35 : sensitivity === 'high' ? 1.1 : 1.2;
+          setInterruptDebounceMs(debounce);
+          setInterruptThresholdMultiplier(multiplier);
+          console.log(`🛑 [Interrupt] Sensitivity: ${sensitivity} (${debounce}ms, ${multiplier}x threshold)`);
+        }
+      }
+    };
+
+    window.addEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, []);
+
+  // Listen for streaming voice mode changes from QuickSettingsSheet
+  useEffect(() => {
+    const handleStreamingVoiceChange = (event: CustomEvent<{ enabled: boolean }>) => {
+      setStreamingVoiceMode(event.detail.enabled);
+      console.log(`🌊 [StreamingVoice] Mode ${event.detail.enabled ? 'ENABLED' : 'disabled'}`);
+    };
+
+    window.addEventListener('maia-streaming-voice-changed', handleStreamingVoiceChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-streaming-voice-changed', handleStreamingVoiceChange as EventListener);
+    };
+  }, []);
+
+  // 🎯 DEBUG: Track greeting condition state
+  useEffect(() => {
+    // Greeting shows when: not activated AND not processing AND not responding
+    const shouldShowGreeting = !hasActivated && !isProcessing && !isResponding;
+
+    console.log('🎯 [GREETING DEBUG] Condition check:', {
+      hasActivated,
+      isProcessing,
+      isResponding,
+      shouldShowGreeting,
+      totalMessages: messages.length,
+    });
+  }, [hasActivated, messages, isProcessing, isResponding]);
+
+  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  useEffect(() => {
+    const handleNewConversation = () => {
+      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
+      // Clear messages (UI display)
+      setMessages([]);
+      // Clear historical messages (API context) - truly fresh start
+      historicalMessagesRef.current = [];
+      // Reset activation state to show welcome screen
+      setHasActivated(false);
+      // Clear localStorage for current session
+      if (typeof window !== 'undefined' && sessionId) {
+        const storageKey = `maia_conversation_${sessionId}`;
+        localStorage.removeItem(storageKey);
+        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
+      }
+    };
+
+    window.addEventListener('maia-new-conversation', handleNewConversation);
+    return () => {
+      window.removeEventListener('maia-new-conversation', handleNewConversation);
+    };
+  }, [sessionId]);
+
+  // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
+  // Now handled by lib/consciousness/therapeuticFrameworks.ts
+  // Framework selection is mode-specific and accessed via FrameworkSelector component
+
   // Session time container state
   const [sessionTimer, setSessionTimer] = useState<SessionTimer | null>(null);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
@@ -388,6 +1073,57 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showOpeningRitual, setShowOpeningRitual] = useState(false);
   const [showClosingRitual, setShowClosingRitual] = useState(false);
   const [pendingSessionDuration, setPendingSessionDuration] = useState<number | null>(null);
+
+  // Soul Prompts & Session Synthesis state
+  const [showPromptPicker, setShowPromptPicker] = useState(false);
+  const [showSessionSynthesis, setShowSessionSynthesis] = useState(false);
+  const [sessionSynthesisData, setSessionSynthesisData] = useState<SessionSynthesisData | null>(null);
+
+  // New member support features
+  const [showDailyCheckin, setShowDailyCheckin] = useState(false);
+  const [showElementDiscovery, setShowElementDiscovery] = useState(false);
+  const [showSessionRecap, setShowSessionRecap] = useState(false);
+  const [sessionRecapData, setSessionRecapData] = useState<SessionRecapData | null>(null);
+
+  // Return loop state - for "Return to Guide/Academy" after seeded sessions
+  const [returnPath, setReturnPathState] = useState<{ path: string; label?: string } | null>(() => {
+    if (typeof window !== 'undefined') {
+      return getReturnPath();
+    }
+    return null;
+  });
+  const [userCheckinState, setUserCheckinState] = useState<{ state: EmotionalState; intensity: number } | null>(null);
+  const [enableVocabularyTooltips, setEnableVocabularyTooltips] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('maia.vocabularyTooltips');
+      // Default to true for new users (null means never set)
+      // Existing users who explicitly turned it off will have 'false'
+      return stored === null ? true : stored === 'true';
+    }
+    return true;
+  });
+
+  // Wisdom Council state
+  const [showWisdomCouncil, setShowWisdomCouncil] = useState(false);
+  const [showCurrentTeaching, setShowCurrentTeaching] = useState(false);
+  const [activeTradition, setActiveTradition] = useState<WisdomTradition | null>(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('maia.activeTradition');
+      if (storedId) {
+        return ELDER_COUNCIL_TRADITIONS.find(t => t.id === storedId) || null;
+      }
+    }
+    return null;
+  });
+
+  // Handle initial action from URL (e.g., /maia?action=choose-guide)
+  useEffect(() => {
+    if (initialAction === 'choose-guide') {
+      setShowWisdomCouncil(true);
+    } else if (initialAction === 'show-current-elder') {
+      setShowCurrentTeaching(true);
+    }
+  }, [initialAction]);
 
   // Holoflower/visualization state - Mobile responsive
   const [holoflowerSize, setHoloflowerSize] = useState(() => {
@@ -428,18 +1164,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const streamingMessageTextRef = useRef<string>('');
   const lastMaiaResponseRef = useRef<string>('');
   const lastUserMessageRef = useRef<string>('');
+  // 💾 Historical messages for API context - separate from UI display
+  // UI stays clean on load, but MAIA has access to conversation history for context
+  const historicalMessagesRef = useRef<ConversationMessage[]>([]);
+  const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
-  const welcomeInputRef = useRef<HTMLTextAreaElement>(null); // Separate ref for welcome screen input
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const iosWarmedAudioRef = useRef<HTMLAudioElement | null>(null); // Pre-warmed audio element for iOS Safari
   const isProcessingRef = useRef(false);
   const isRespondingRef = useRef(false);
   const isAudioPlayingRef = useRef(false);
+  const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
+  const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
+  const handleCaptureSpiritRef = useRef<(() => void) | null>(null); // Ref for capture spirit handler (for event dispatch)
+  const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
+  const handleTextMessageRef = useRef<((text: string) => void) | null>(null); // Ref for seed prompt injection
+  const pendingSeedRef = useRef<ConsumedSeed | null>(null); // Store full seed until handler is ready
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -470,12 +1220,63 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // ==================== SEED PROMPT CONSUMER ====================
+  // One-shot consumption of seed prompts from Guide/Academy "Take to MAIA" buttons
+  // Uses ref guard to ensure we only process once, even with StrictMode double-mount
+  // Now supports rich payloads with source tracking for return-loop functionality
+  useEffect(() => {
+    if (didConsumeSeedRef.current) return;
+    didConsumeSeedRef.current = true;
+
+    const seed = consumeMaiaSeed();
+    if (seed) {
+      console.log('🌱 [SEED] Consumed seed from', seed.source || 'unknown source', ':', seed.prompt.slice(0, 50) + '...');
+
+      // If seed has return path, store it for the spiral return
+      if (seed.returnTo) {
+        setReturnPath(seed.returnTo, seed.sourceLabel);
+        setReturnPathState({ path: seed.returnTo, label: seed.sourceLabel });
+        console.log('🔄 [SEED] Return path set:', seed.returnTo, seed.sourceLabel ? `(${seed.sourceLabel})` : '');
+      }
+
+      // Store full seed in ref - will be processed by the effect below when handleTextMessage is ready
+      pendingSeedRef.current = seed;
+    }
+  }, []);
+
+  // Store handleTextMessage ref for seed injection (updated after handleTextMessage is defined)
+  // This effect is defined early but the actual ref assignment happens later via another effect
+
   // ==================== RECORDING STATE CALLBACK ====================
   // Sync isListening state from ContinuousConversation to parent
+  // This is the SOURCE OF TRUTH for whether mic is actually live
   const handleRecordingStateChange = useCallback((isRecording: boolean) => {
-    console.log('📡 Recording state changed:', isRecording);
+    console.log('📡 Recording state changed:', isRecording, '(this is mic truth)');
+    // Clear any pending activating timeout - mic has responded
+    if (activatingTimeoutRef.current) {
+      clearTimeout(activatingTimeoutRef.current);
+      activatingTimeoutRef.current = null;
+    }
+    setIsActivating(false); // Clear activating state - we now know the truth
     setIsListening(isRecording);
-  }, []);
+    if (isRecording) {
+      console.log('✅ Mic is LIVE - orange dot should be visible');
+      // 🎯 Mark as activated when user starts listening - hides welcome screen
+      setHasActivated(true);
+      setIsMuted(false); // Sync isMuted with actual mic state
+
+      // 🎤 PWA STATE MACHINE: Signal confirmed mic start
+      // This is the ONLY place we should transition to LISTENING state
+      if (isPwaVoice) {
+        pwaVoice.micConfirmed();
+      }
+    } else {
+      // Mic stopped - ensure muted state is synced
+      if (isPwaVoice) {
+        pwaVoice.micStopped();
+      }
+    }
+  }, [isPwaVoice, pwaVoice]);
 
   // ==================== AUDIO LEVEL CALLBACK (THROTTLED) ====================
   // Prevent infinite render loop by throttling setState calls
@@ -503,104 +1304,603 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, []);
 
+  // 🛑 BARGE-IN INTERRUPT HANDLER - Moved after useStreamingVoice hook (see ~line 1880)
+
   // ==================== VOICE SYNTHESIS (OpenAI Alloy TTS) ====================
   // MAIA speaks with clear, natural OpenAI Alloy voice
+  // Real-time audio amplitude analysis for voice visualization
+  const startAudioAnalysis = useCallback((audio: HTMLAudioElement) => {
+    try {
+      // Create or reuse AudioContext
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+
+      const ctx = audioContextRef.current;
+
+      // Resume if suspended or interrupted (iOS can be in either state)
+      if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
+        ctx.resume();
+      }
+
+      // Create analyser if not exists
+      if (!audioAnalyserRef.current) {
+        audioAnalyserRef.current = ctx.createAnalyser();
+        audioAnalyserRef.current.fftSize = 256;
+        audioAnalyserRef.current.smoothingTimeConstant = 0.8;
+      }
+
+      // Create new source for this audio element (only once per element)
+      if (currentAudioRef.current !== audio) {
+        // Disconnect old source if exists
+        if (audioSourceRef.current) {
+          try {
+            audioSourceRef.current.disconnect();
+          } catch (e) {
+            // Ignore disconnect errors
+          }
+        }
+
+        audioSourceRef.current = ctx.createMediaElementSource(audio);
+        audioSourceRef.current.connect(audioAnalyserRef.current);
+        audioAnalyserRef.current.connect(ctx.destination);
+        currentAudioRef.current = audio;
+      }
+
+      // Start amplitude reading loop
+      const dataArray = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+
+      const readAmplitude = () => {
+        if (!audioAnalyserRef.current) return;
+
+        audioAnalyserRef.current.getByteFrequencyData(dataArray);
+
+        // Calculate average amplitude (0-1 range)
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length / 255;
+
+        // Apply some scaling for better visual effect
+        const scaledAmplitude = Math.min(1, average * 2.5);
+        setVoiceAmplitude(scaledAmplitude);
+
+        // Continue loop while audio is playing
+        if (!audio.paused && !audio.ended) {
+          animationFrameRef.current = requestAnimationFrame(readAmplitude);
+        }
+      };
+
+      readAmplitude();
+      console.log('🎵 Audio analysis started');
+
+    } catch (err) {
+      console.warn('⚠️ Could not start audio analysis:', err);
+    }
+  }, []);
+
+  const stopAudioAnalysis = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setVoiceAmplitude(0);
+  }, []);
+
   const maiaSpeak = useCallback(async (text: string, elementHint?: Element) => {
     if (!text || typeof window === 'undefined') return;
 
+    // Check if we need to show audio permission prompt
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS && !audioContextRef.current) {
+      console.warn('📱 [iOS] AudioContext not initialized - creating now');
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        console.error('❌ Failed to create AudioContext:', e);
+      }
+    }
+
+    // Try to resume AudioContext if suspended or interrupted (iOS requires user gesture)
+    // iOS can have 'interrupted' state when another app took audio focus
+    const contextState = audioContextRef.current?.state;
+    if (contextState === 'suspended' || contextState === 'interrupted') {
+      console.log(`📱 [iOS] AudioContext ${contextState}, attempting resume...`);
+      try {
+        await audioContextRef.current.resume();
+        console.log('✅ [iOS] AudioContext resumed:', audioContextRef.current.state);
+      } catch (e) {
+        console.warn('⚠️ [iOS] Could not resume AudioContext - user interaction may be required:', e);
+      }
+    }
+
     try {
-      console.log('🎵 Speaking with OpenAI Alloy:', text.substring(0, 100));
+      console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, text.substring(0, 100));
 
       // 🌊 LIQUID AI - Track MAIA response for rhythm turn-taking latency
       rhythmTrackerRef.current?.onMAIAResponse();
 
       setIsResponding(true);
-      setIsAudioPlaying(true);
 
-      // Call OpenAI TTS with selected voice (defaults to 'alloy')
-      const response = await fetch('/api/voice/openai-tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          voice: voice || 'alloy',  // Use the voice prop from parent
-          speed: 0.95,
-          model: 'tts-1-hd'
-        })
-      });
+      // 🔥 iOS Safari Fix: Use Web Audio API decodeAudioData instead of HTMLAudioElement
+      // HTMLAudioElement.play() requires a user gesture for EACH element on iOS
+      // But AudioContext.decodeAudioData() works once the context is unlocked
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-      if (!response.ok) {
-        throw new Error('Failed to generate speech');
+      // Check if we're in Capacitor (CapacitorHttp doesn't handle binary blobs correctly)
+      const isCapacitor = typeof window !== 'undefined' &&
+                          (window as any).Capacitor?.isNativePlatform?.();
+
+      // 🔊 iOS Audio Session: Prepare for speaking (configures iOS audio session for playback)
+      // This is CRITICAL - without it, audio won't play through speakers on iOS
+      if (isCapacitor) {
+        console.log('📱 [iOS] Preparing audio session for speaking...');
+        const prepared = await VoiceController.prepareForSpeaking();
+        if (!prepared) {
+          console.error('❌ [iOS] Failed to prepare audio session for speaking');
+          await VoiceController.logDiagnostics();
+          // Continue anyway - might still work
+        } else {
+          console.log('✅ [iOS] Audio session ready for speaking');
+        }
       }
 
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
+      let audioBlob: Blob | null = null;
+      let arrayBuffer: ArrayBuffer | null = null;
 
-      const audio = new Audio(audioUrl);
+      // For Capacitor: Use native HTTP plugin directly to get binary data
+      // The fetch polyfill returns empty blobs for binary responses
+      if (isCapacitor) {
+        console.log('📱 [iOS] Using Capacitor native HTTP for TTS binary fetch');
+        const memberId = getValidMemberId();
+        const ttsUrl = apiUrl('/api/voice/openai-tts');
 
-      // Play audio with proper loading and error handling
-      await new Promise<void>((resolve, reject) => {
-        let hasStarted = false;
-        let timeoutId: NodeJS.Timeout | null = null;
-
-        // Safety timeout - if audio doesn't start within 5s, fail fast
-        timeoutId = setTimeout(() => {
-          if (!hasStarted) {
-            audio.pause();
-            URL.revokeObjectURL(audioUrl);
-            reject(new Error('Audio failed to start within 5s'));
-          }
-        }, 5000);
-
-        audio.onloadedmetadata = () => {
-          console.log('✅ Audio metadata loaded, duration:', audio.duration);
-        };
-
-        audio.oncanplaythrough = () => {
-          console.log('✅ Audio can play through');
-        };
-
-        audio.onplay = () => {
-          console.log('▶️ Audio started playing');
-          hasStarted = true;
-          if (timeoutId) clearTimeout(timeoutId);
-        };
-
-        audio.onended = () => {
-          console.log('🔇 MAIA finished speaking');
-          setIsResponding(false);
-          setIsAudioPlaying(false);
-          setVoiceAmplitude(0);
-          URL.revokeObjectURL(audioUrl);
-          if (timeoutId) clearTimeout(timeoutId);
-          resolve();
-        };
-
-        audio.onerror = (e) => {
-          console.error('❌ Audio playback error:', e);
-          setIsResponding(false);
-          setIsAudioPlaying(false);
-          setVoiceAmplitude(0);
-          URL.revokeObjectURL(audioUrl);
-          if (timeoutId) clearTimeout(timeoutId);
-          reject(new Error('Audio playback failed'));
-        };
-
-        // Start playback
-        audio.play().catch(err => {
-          console.error('❌ Audio.play() failed:', err);
-          if (timeoutId) clearTimeout(timeoutId);
-          reject(err);
+        // Dynamic import to avoid loading Capacitor on non-native platforms
+        const { CapacitorHttp } = await import('@capacitor/core');
+        const nativeResponse = await CapacitorHttp.post({
+          url: ttsUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(memberId ? { 'x-member-id': memberId } : {}),
+          },
+          data: {
+            text: text,
+            voice: voiceSettings.voice,
+            speed: voiceSettings.speed,
+            model: voiceSettings.model
+          },
+          responseType: 'arraybuffer',
         });
-      });
+
+        // Detailed logging to diagnose what we received
+        console.log('📱 [TTS] status:', nativeResponse.status);
+        console.log('📱 [TTS] headers:', JSON.stringify(nativeResponse.headers));
+
+        if (nativeResponse.status !== 200) {
+          console.error('📱 [TTS] Request failed with status:', nativeResponse.status);
+          throw new Error('Failed to generate speech');
+        }
+
+        // CapacitorHttp can return data in multiple formats depending on version/platform
+        const data: any = nativeResponse.data;
+        console.log('📱 [TTS] data typeof:', typeof data);
+        console.log('📱 [TTS] data isArray:', Array.isArray(data));
+
+        if (typeof data === 'string') {
+          console.log('📱 [TTS] base64 length:', data.length);
+          console.log('📱 [TTS] base64 head:', data.slice(0, 32));
+        }
+
+        // 1) Already an ArrayBuffer
+        if (data instanceof ArrayBuffer) {
+          arrayBuffer = data;
+          console.log('📱 [TTS] Data is ArrayBuffer, size:', arrayBuffer.byteLength);
+        }
+        // 2) Uint8Array
+        else if (data instanceof Uint8Array) {
+          arrayBuffer = data.buffer;
+          console.log('📱 [TTS] Data is Uint8Array, size:', arrayBuffer.byteLength);
+        }
+        // 3) Base64 string (most common on iOS) - use safe chunked decoder
+        else if (typeof data === 'string' && data.length > 0) {
+          console.log('📱 [TTS] Decoding base64 string with safe chunked decoder...');
+          try {
+            arrayBuffer = base64ToArrayBuffer(data);
+            console.log('📱 [TTS] Base64 decoded successfully, size:', arrayBuffer.byteLength);
+          } catch (decodeErr) {
+            console.error('📱 [TTS] Base64 decode failed:', decodeErr);
+            throw new Error('Failed to decode audio data');
+          }
+        }
+        // 4) Some platforms return { data: number[] }
+        else if (data && Array.isArray(data.data)) {
+          console.log('📱 [TTS] Data is { data: number[] }, length:', data.data.length);
+          arrayBuffer = new Uint8Array(data.data).buffer;
+        }
+        else {
+          console.error('📱 [TTS] Unexpected data shape:', typeof data, data);
+          throw new Error('Unexpected audio response format');
+        }
+
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('No audio data received from TTS');
+        }
+
+        // Validate it looks like audio data (MP3 starts with ID3 or 0xFF)
+        const head = new Uint8Array(arrayBuffer.slice(0, 16));
+        console.log('📱 [TTS] first bytes:', Array.from(head));
+        const isMP3 = (head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33) || head[0] === 0xff;
+        if (!isMP3) {
+          console.warn('📱 [TTS] Data does not look like MP3; first bytes might be JSON error');
+          // Try to decode as text to see if it's an error message
+          try {
+            const textDecoder = new TextDecoder();
+            const possibleError = textDecoder.decode(arrayBuffer.slice(0, 200));
+            console.warn('📱 [TTS] Possible error payload:', possibleError);
+          } catch {}
+        }
+        console.log(`📱 [TTS] ArrayBuffer ready, size: ${arrayBuffer.byteLength}, looksLikeMP3: ${isMP3}`);
+      } else {
+        // Non-Capacitor: Use standard fetch
+        const response = await apiFetch('/api/voice/openai-tts', {
+          method: 'POST',
+          body: JSON.stringify({
+            text: text,
+            voice: voiceSettings.voice,
+            speed: voiceSettings.speed,
+            model: voiceSettings.model
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate speech');
+        }
+
+        audioBlob = await response.blob();
+        console.log(`🎵 Audio blob received: type=${audioBlob.type}, size=${audioBlob.size}`);
+
+        // Validate we got audio data, not an error response
+        if (audioBlob.type.includes('json') || audioBlob.size < 1000) {
+          const errorText = await audioBlob.text();
+          console.error('❌ [TTS] Got error response instead of audio:', errorText.slice(0, 300));
+          toast.error('Voice generation failed');
+          throw new Error('TTS returned error: ' + errorText.slice(0, 100));
+        }
+      }
+
+      // Log which playback path we're taking
+      const isIOSSafari = isIOS && !isCapacitor;
+      console.log('🔍 [TTS] Playback path check:', { isIOS, isCapacitor, isIOSSafari, hasAudioContext: !!audioContextRef.current });
+
+      // iOS Safari (PWA/browser): Use Web Audio API directly - more reliable than HTMLAudioElement
+      if (isIOSSafari && audioBlob && audioContextRef.current) {
+        console.log('📱 [iOS Safari] Using Web Audio API (decodeAudioData) for playback');
+        console.log('📱 [iOS Safari] Blob type:', audioBlob.type, 'size:', audioBlob.size);
+
+        try {
+          // Ensure AudioContext is running (check both suspended and interrupted)
+          if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+            console.log(`📱 [iOS Safari] AudioContext ${audioContextRef.current.state}, resuming...`);
+            await audioContextRef.current.resume();
+            console.log('📱 [iOS Safari] AudioContext state:', audioContextRef.current.state);
+          }
+
+          // Convert blob to ArrayBuffer
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          console.log('📱 [iOS Safari] ArrayBuffer size:', arrayBuffer.byteLength);
+
+          // Decode the audio
+          const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer.slice(0));
+          console.log('📱 [iOS Safari] Decoded! Duration:', audioBuffer.duration, 'sampleRate:', audioBuffer.sampleRate);
+
+          // Create source
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = audioBuffer;
+
+          // Create gain node for volume
+          const gainNode = audioContextRef.current.createGain();
+          gainNode.gain.value = 1.0;
+
+          // Connect: source -> gain -> destination
+          source.connect(gainNode);
+          gainNode.connect(audioContextRef.current.destination);
+
+          console.log('📱 [iOS Safari] Audio graph ready, starting playback...');
+          setIsAudioPlaying(true);
+
+          // Play using Web Audio API
+          await new Promise<void>((resolve, reject) => {
+            const duration = audioBuffer.duration;
+            const playbackTimeout = setTimeout(() => {
+              console.error('❌ [iOS Safari] Playback timeout');
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              reject(new Error('Playback timeout'));
+            }, (duration + 30) * 1000);
+
+            source.onended = () => {
+              console.log('🔇 [iOS Safari] Web Audio playback complete');
+              clearTimeout(playbackTimeout);
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              resolve();
+            };
+
+            // Amplitude simulation
+            const amplitudeInterval = setInterval(() => {
+              setVoiceAmplitude(0.3 + Math.random() * 0.4);
+            }, 100);
+
+            // Start playback
+            source.start(0);
+            console.log('▶️ [iOS Safari] Web Audio playback started!');
+
+            // Clean up amplitude simulation when done
+            source.onended = () => {
+              clearInterval(amplitudeInterval);
+              clearTimeout(playbackTimeout);
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              console.log('🔇 [iOS Safari] Playback complete');
+              resolve();
+            };
+          });
+
+          setIsResponding(false);
+          return;
+
+        } catch (webAudioErr: any) {
+          console.error('❌ [iOS Safari] Web Audio API failed:', webAudioErr.message);
+          toast.error('Voice playback failed', { duration: 4000 });
+          // Fall through to generic Web Audio API path
+        }
+      }
+
+      // Web Audio API path (Capacitor native iOS or fallback)
+      if (isIOS && audioContextRef.current) {
+        console.log('📱 [iOS] Using Web Audio API for playback');
+
+        // Ensure AudioContext is running (handle both 'suspended' and 'interrupted' states)
+        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+          console.log(`📱 [iOS] AudioContext ${audioContextRef.current.state}, resuming...`);
+          await audioContextRef.current.resume();
+          console.log('📱 [iOS] AudioContext state after resume:', audioContextRef.current.state);
+        }
+
+        // Get ArrayBuffer if we don't have it yet (fallback from HTMLAudioElement failure)
+        if (!arrayBuffer && audioBlob) {
+          arrayBuffer = await audioBlob.arrayBuffer();
+        }
+
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('No audio data to decode');
+        }
+
+        console.log(`📱 [iOS] ArrayBuffer size: ${arrayBuffer.byteLength}`);
+
+        // Validate we have actual audio data (MP3 starts with 0xFF 0xFB or ID3)
+        const header = new Uint8Array(arrayBuffer.slice(0, 4));
+        const headerHex = Array.from(header).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        console.log(`📱 [iOS] Audio header bytes: ${headerHex}`);
+
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+
+        const duration = audioBuffer.duration;
+        console.log(`✅ [iOS] Audio decoded, duration: ${duration.toFixed(1)}s`);
+
+        // Create source and connect to analyser for visualization
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBuffer;
+
+        // Create GainNode for volume control (iOS sometimes needs explicit gain)
+        const gainNode = audioContextRef.current.createGain();
+        gainNode.gain.value = 1.0; // Full volume
+
+        // Create analyser for visualization
+        if (!audioAnalyserRef.current) {
+          audioAnalyserRef.current = audioContextRef.current.createAnalyser();
+          audioAnalyserRef.current.fftSize = 256;
+          audioAnalyserRef.current.smoothingTimeConstant = 0.8;
+        }
+
+        // Audio chain: source -> gain -> analyser -> destination
+        source.connect(gainNode);
+        gainNode.connect(audioAnalyserRef.current);
+        audioAnalyserRef.current.connect(audioContextRef.current.destination);
+
+        // iOS diagnostic logging
+        console.log('🔊 [iOS] Audio graph connected:', {
+          contextState: audioContextRef.current.state,
+          sampleRate: audioContextRef.current.sampleRate,
+          destination: audioContextRef.current.destination.numberOfInputs,
+          gainValue: gainNode.gain.value,
+        });
+
+        // Start amplitude reading loop
+        const dataArray = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+        let animationId: number | null = null;
+
+        const readAmplitude = () => {
+          if (!audioAnalyserRef.current) return;
+          audioAnalyserRef.current.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+          }
+          const average = sum / dataArray.length / 255;
+          const scaledAmplitude = Math.min(1, average * 2.5);
+          setVoiceAmplitude(scaledAmplitude);
+          animationId = requestAnimationFrame(readAmplitude);
+        };
+
+        // Play with promise
+        await new Promise<void>((resolve, reject) => {
+          const playbackTimeout = setTimeout(() => {
+            console.error(`❌ [iOS] Playback timeout after ${duration + 30}s`);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            reject(new Error('Audio playback timeout'));
+          }, (duration + 30) * 1000);
+
+          source.onended = () => {
+            console.log(`🔇 [iOS] MAIA finished speaking - ${duration.toFixed(1)}s`);
+            clearTimeout(playbackTimeout);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            resolve();
+          };
+
+          // Catch any errors during playback
+          source.onerror = (e) => {
+            console.error('❌ [iOS] Audio source error:', e);
+            clearTimeout(playbackTimeout);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            toast.error('Audio playback error - check mute switch', { duration: 4000 });
+            reject(new Error('Audio source error'));
+          };
+
+          // Start playback - ensure AudioContext is running
+          const startPlayback = () => {
+            console.log('🎵 [iOS] Starting playback, context state:', audioContextRef.current?.state);
+            setIsAudioPlaying(true);
+            readAmplitude();
+            source.start(0);
+            console.log('▶️ [iOS] Audio started playing via Web Audio API');
+            console.log('📱 [iOS] If no sound: check iPhone silent switch (left side of device)');
+          };
+
+          // iOS AudioContext can be 'suspended' OR 'interrupted' - both need resume()
+          const contextState = audioContextRef.current?.state;
+          if (contextState === 'suspended' || contextState === 'interrupted') {
+            console.warn(`⚠️ [iOS] AudioContext is ${contextState}, forcing resume...`);
+            audioContextRef.current.resume().then(() => {
+              console.log('✅ [iOS] AudioContext resumed, now state:', audioContextRef.current?.state);
+              startPlayback();
+            }).catch((e) => {
+              console.error('❌ [iOS] Failed to resume AudioContext:', e);
+              toast.error('Cannot play audio - tap screen first', { duration: 3000 });
+              startPlayback(); // Try anyway
+            });
+          } else {
+            startPlayback();
+          }
+
+          // After 2 seconds, check if audio is actually producing output
+          setTimeout(() => {
+            if (audioAnalyserRef.current && animationId) {
+              const checkData = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+              audioAnalyserRef.current.getByteFrequencyData(checkData);
+              const hasOutput = checkData.some(v => v > 0);
+              if (!hasOutput) {
+                console.warn('⚠️ [iOS] No audio output detected - check mute switch or volume');
+                toast('No audio output - check mute switch & volume', { icon: '🔇', duration: 4000 });
+              } else {
+                console.log('✅ [iOS] Audio output confirmed');
+              }
+            }
+          }, 2000);
+        });
+
+      } else {
+        // Non-iOS: Use HTMLAudioElement (works fine on desktop browsers)
+        if (!audioBlob) {
+          throw new Error('No audio blob available for playback');
+        }
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.crossOrigin = 'anonymous';
+
+        await new Promise<void>((resolve, reject) => {
+          let hasStarted = false;
+          let startTimeoutId: NodeJS.Timeout | null = null;
+          let playbackTimeoutId: NodeJS.Timeout | null = null;
+
+          startTimeoutId = setTimeout(() => {
+            if (!hasStarted) {
+              audio.pause();
+              stopAudioAnalysis();
+              URL.revokeObjectURL(audioUrl);
+              reject(new Error('Audio failed to start within 5s'));
+            }
+          }, 5000);
+
+          audio.onloadedmetadata = () => {
+            console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
+            const playbackTimeout = (audio.duration + 30) * 1000;
+            playbackTimeoutId = setTimeout(() => {
+              console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+              audio.pause();
+              stopAudioAnalysis();
+              URL.revokeObjectURL(audioUrl);
+              reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
+            }, playbackTimeout);
+          };
+
+          audio.onplay = () => {
+            console.log('▶️ Audio started playing');
+            hasStarted = true;
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            setIsAudioPlaying(true);
+            startAudioAnalysis(audio);
+          };
+
+          audio.onpause = () => {
+            if (!audio.ended) {
+              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            }
+          };
+
+          audio.onended = () => {
+            console.log(`🔇 MAIA finished speaking - ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            resolve();
+          };
+
+          audio.onerror = (e) => {
+            console.error('❌ Audio playback error:', e);
+            stopAudioAnalysis();
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+            setIsMicrophonePaused(false);
+            URL.revokeObjectURL(audioUrl);
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            reject(new Error('Audio playback failed'));
+          };
+
+          audio.play().catch(err => {
+            console.error('❌ Audio.play() failed:', err);
+            stopAudioAnalysis();
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            reject(err);
+          });
+        });
+      }
+
+      // 🔥 CRITICAL: Reset states after successful audio playback (both iOS and non-iOS paths)
+      // Without this, the app gets stuck thinking audio is playing and won't resume listening
+      console.log('✅ Audio playback completed successfully, resetting states');
+      setIsAudioPlaying(false);
+      setIsResponding(false);
 
     } catch (err) {
-      console.error('❌ OpenAI TTS error:', err);
+      console.error('❌ OpenAI TTS error (no fallback - OpenAI TTS only):', err);
+      stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
-      setVoiceAmplitude(0);
+      // Show user-visible error for debugging
+      toast.error('Voice playback failed - check iPhone mute switch & volume', { duration: 5000 });
     }
-  }, []);
+  }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings]);
 
   const maiaReady = true; // OpenAI TTS is always ready
 
@@ -617,18 +1917,346 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     captureThreshold: 5
   });
 
-  // Scribe Mode Integration - Passive recording with active consultation
+  // Scribe Mode - Derived aliases for compatibility with UI components
+  const isScribing = scribeSession.isActive;
+  const startScribing = useCallback(() => startScribeSession('witness'), [startScribeSession]);
+  const stopScribing = stopScribeSession;
+  const recordVoiceTranscript = useCallback((text: string) => appendTranscriptEntry(text, 'self'), [appendTranscriptEntry]);
+  const recordConsultation = useCallback((speaker: 'user' | 'oracle', text: string) => {
+    appendTranscriptEntry(text, speaker === 'oracle' ? 'maia' : 'self');
+  }, [appendTranscriptEntry]);
+  const generateSynopsis = useCallback(async () => null, []);
+  const downloadScribeTranscript = useCallback(() => {
+    console.log('[SCRIBE] Download not yet implemented - use Sessions Library');
+  }, []);
+  const getTranscriptForReview = useCallback((): string | null => {
+    if (!scribeSession.sessionId) return null;
+    return `[Transcript for session ${scribeSession.sessionId} - visit /sessions for full review]`;
+  }, [scribeSession.sessionId]);
+
+  // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
+  const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
+
+  // Load voice settings from account preferences on mount and listen for changes
+  useEffect(() => {
+    const loadVoiceSettings = () => {
+      const settings = getAccountSettings();
+      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
+      setVoiceSettings({
+        voice: settings.voice.openaiVoice,
+        speed: settings.voice.speed,
+        model: settings.voice.model || 'tts-1',
+        prosodyRange: settings.voice.prosodyRange ?? 1,
+        archetype: settings.archetype || 'AUTO',
+        conversationMode: settings.conversationMode || 'her',
+        memoryDepth: settings.memory?.depth || 'moderate',
+      });
+    };
+
+    loadVoiceSettings();
+
+    // Listen for settings changes (from MAIA Settings panel)
+    const handleSettingsChange = () => {
+      console.log('🔊 [VoiceSettings] Received settings change event');
+      loadVoiceSettings();
+    };
+    window.addEventListener('maia-account-settings-changed', handleSettingsChange);
+    window.addEventListener('maia-settings-changed', handleSettingsChange);
+
+    return () => {
+      window.removeEventListener('maia-account-settings-changed', handleSettingsChange);
+      window.removeEventListener('maia-settings-changed', handleSettingsChange);
+    };
+  }, []);
+
+  // PWA playback signal handler - routes audio events to PWA state machine
+  const handlePlaybackSignal = useCallback((signal: StreamingVoicePlaybackSignal) => {
+    if (!isPwaVoice) return;
+
+    if (signal.type === 'AUDIO_PLAYING_CONFIRMED') {
+      pwaVoice.audioPlayingConfirmed();
+    } else if (signal.type === 'AUDIO_ENDED') {
+      pwaVoice.audioEnded();
+    } else if (signal.type === 'AUDIO_BLOCKED' || signal.type === 'AUDIO_FAILED') {
+      pwaVoice.ttsFailedOrSkipped(signal.reason);
+    }
+  }, [isPwaVoice, pwaVoice]);
+
+  // 🎤 PWA EFFECTIVE FLAGS: Use PWA state machine values on Safari PWA, original values otherwise
+  // This allows UI components to use a single set of flags regardless of platform
+  const effectiveIsListening = isPwaVoice ? pwaVoice.isListening : isListening;
+  const effectiveIsResponding = isPwaVoice ? pwaVoice.isThinkingOrSpeaking : isResponding;
+  const effectiveIsMuted = isPwaVoice ? pwaVoice.isMuted : isMuted;
+
   const {
-    isScribing,
-    currentSession: scribeSession,
-    startScribing,
-    stopScribing,
-    recordVoiceTranscript,
-    recordConsultation,
-    generateSynopsis,
-    downloadTranscript: downloadScribeTranscript,
-    getTranscriptForReview
-  } = useScribeMode();
+    isStreaming: isStreamingVoice,
+    isPlaying: isStreamingPlaying,
+    currentText: streamingCurrentText,
+    fullResponse: streamingFullResponse,
+    sendMessage: sendStreamingMessage,
+    stop: stopStreamingVoice,
+    error: streamingVoiceError,
+    lastMoveOutcome,
+    unlockAudio: unlockStreamingAudio,
+  } = useStreamingVoice({
+    voice: voiceSettings.voice,
+    speed: voiceSettings.speed,
+    model: voiceSettings.model,
+    prosodyRange: voiceSettings.prosodyRange,
+    assistantName,  // Member's preferred name for MAIA
+    archetype: voiceSettings.archetype,
+    conversationMode: voiceSettings.conversationMode,
+    memoryDepth: voiceSettings.memoryDepth,
+    element: undefined, // Will be set dynamically per message
+    // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
+    onPlaybackSignal: handlePlaybackSignal,
+    onTextChunk: (text, index) => {
+      console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
+      setMaiaResponseText(text);
+    },
+    onComplete: (fullResponse, relational) => {
+      const audioChunks = relational?.audioChunksReceived ?? 0;
+      console.log(`✅ [StreamingVoice] Text stream complete (${audioChunks} audio chunks)`);
+
+      // 🚨 CRITICAL: TTS FAILURE RECOVERY
+      // If no audio chunks were received, TTS completely failed - don't wait for audio that won't come
+      if (audioChunks === 0) {
+        console.warn('⚠️ [StreamingVoice] TTS FAILED - no audio received. Resetting speaking state immediately.');
+        // Reset ALL processing/speaking states so mic isn't blocked forever
+        setIsProcessing(false);
+        isProcessingRef.current = false;
+        setIsResponding(false);
+        setIsAudioPlaying(false);
+        setIsMicrophonePaused(false);
+        isRespondingRef.current = false;
+        isAudioPlayingRef.current = false;
+        isMicrophonePausedRef.current = false;
+        // Still add message for text display
+        const oracleMessage: ConversationMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'oracle',
+          text: fullResponse,
+          timestamp: new Date(),
+          source: 'stream'
+        };
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
+        setMaiaResponseText('');
+        setStreamingResponseComplete(true);
+        // Resume mic after short delay
+        setTimeout(() => {
+          if (voiceMicRef.current?.startListening) {
+            console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
+            setIsMuted(false);
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
+        }, 500);
+        return;
+      }
+
+      // Normal path: audio chunks received, waiting for playback to finish
+      const oracleMessage: ConversationMessage = {
+        id: `msg-${Date.now()}`,
+        role: 'oracle',
+        text: fullResponse,
+        timestamp: new Date(),
+        source: 'stream'
+      };
+      setMessages(prev => appendMessageCapped(prev, oracleMessage));
+      setMaiaResponseText('');
+      // Mark that text stream is complete - mic will resume when audio finishes
+      setStreamingResponseComplete(true);
+    },
+    onError: (error) => {
+      // 🔥 FORCE RECOVERY: Called by useStreamingVoice when audio pipeline fails
+      // Must clear ALL speaking state including refs so mic can resume
+      console.error('❌ [StreamingVoice] Error - forcing full recovery:', error);
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      setStreamingResponseComplete(false);
+      // Clear refs too - these are what actually block the mic
+      isRespondingRef.current = false;
+      isAudioPlayingRef.current = false;
+      isMicrophonePausedRef.current = false;
+      // Resume mic after short delay
+      setTimeout(() => {
+        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
+          setIsMuted(false);
+          voiceMicRef.current.startListening({ forceOverride: true });
+        }
+      }, 500);
+    }
+  });
+
+  // 🌊 STREAMING VOICE: Resume mic when audio playback finishes
+  const prevStreamingPlayingRef = useRef(isStreamingPlaying);
+  const prevStreamingCompleteRef = useRef(streamingResponseComplete);
+  useEffect(() => {
+    console.log('🔍 [StreamingVoice] State check:', {
+      prevPlaying: prevStreamingPlayingRef.current,
+      nowPlaying: isStreamingPlaying,
+      responseComplete: streamingResponseComplete,
+      prevComplete: prevStreamingCompleteRef.current
+    });
+
+    // Helper to restart mic with retry pattern
+    const restartMicWithRetry = () => {
+      console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      setStreamingResponseComplete(false);
+
+      // 🎤 OPTIMISTIC LISTENING: Show "Listening" immediately when MAIA stops
+      // This masks the iOS audio handoff delay - user sees responsive UI
+      // Real mic state will be confirmed by handleRecordingStateChange
+      if (!showChatInterface && streamingVoiceMode) {
+        setIsListening(true);
+        setIsActivating(false); // Never show "Activating..." in voice mode
+        console.log('✨ [Optimistic] Showing Listening immediately');
+      }
+
+      const attemptMicRestart = (attempt: number) => {
+        if (attempt > 5) {
+          console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
+          setIsListening(false); // Clear optimistic state on failure
+          return;
+        }
+
+        console.log(`🎤 [StreamingVoice] Mic restart attempt ${attempt}...`);
+
+        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          setIsMuted(false);
+          // Optimistic listening already set above - don't show "Activating..."
+          // 🔥 FIX: Use forceOverride to bypass stale isSpeakingRef (React state is async)
+          voiceMicRef.current.startListening({ forceOverride: true });
+
+          setTimeout(() => {
+            if (voiceMicRef.current?.isListening) {
+              console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
+              // Optimistic listening already shown - handleRecordingStateChange confirms it
+            } else {
+              console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
+              // Keep optimistic listening, retry will handle it
+              setTimeout(() => attemptMicRestart(attempt + 1), 300);
+            }
+          }, 150);
+        } else {
+          console.log('⏸️ [StreamingVoice] Mic restart blocked - not in voice mode or ref unavailable');
+        }
+      };
+
+      setTimeout(() => attemptMicRestart(1), 300);
+    };
+
+    // Case 1: Audio was playing and just stopped, response is complete
+    if (prevStreamingPlayingRef.current && !isStreamingPlaying && streamingResponseComplete) {
+      restartMicWithRetry();
+    }
+    // Case 2: Response just completed and audio is already not playing (TTS was fast or failed)
+    else if (!prevStreamingCompleteRef.current && streamingResponseComplete && !isStreamingPlaying) {
+      console.log('🎤 [StreamingVoice] Response complete, audio already done - resuming mic');
+      // Small delay to ensure any pending audio state has settled
+      setTimeout(restartMicWithRetry, 500);
+    }
+
+    prevStreamingPlayingRef.current = isStreamingPlaying;
+    prevStreamingCompleteRef.current = streamingResponseComplete;
+  }, [isStreamingPlaying, streamingResponseComplete, showChatInterface, streamingVoiceMode]);
+
+  // 🛑 BARGE-IN INTERRUPT HANDLER - Called when user speaks while MAIA is speaking
+  // NOTE: Must be defined AFTER useStreamingVoice hook which provides stopStreamingVoice
+  // CRITICAL: Must reset ALL state flags that contribute to isSpeaking condition
+  const handleVoiceInterrupt = useCallback(() => {
+    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA immediately');
+
+    // Stop MAIA's voice stream and playback (hard cut)
+    stopStreamingVoice();
+
+    // 🔥 CRITICAL: Reset ALL state flags that could keep "speaking" true
+    // isSpeaking = {isAudioPlaying || isMicrophonePaused} - BOTH must be false
+    isAudioPlayingRef.current = false;
+    isRespondingRef.current = false;
+    isMicrophonePausedRef.current = false;
+
+    setIsResponding(false);
+    setIsAudioPlaying(false);
+    setIsMicrophonePaused(false);
+
+    // Flip to listening immediately (user is speaking)
+    setIsListening(true);
+    setIsActivating(false);
+
+    // Brief visual feedback
+    toast('✋ Interrupted', { duration: 1000 });
+  }, [stopStreamingVoice]);
+
+  // 🛡️ VOICE WATCHDOG - Automatic recovery from stuck states
+  // If we're in "speaking" state (isAudioPlaying || isMicrophonePaused) for too long
+  // without any audio progress, force reset to listening. Prevents "stuck speaking" forever.
+  const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAudioProgressRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    // Only run watchdog in voice mode
+    if (!streamingVoiceMode || showChatInterface) {
+      if (voiceWatchdogRef.current) {
+        clearInterval(voiceWatchdogRef.current);
+        voiceWatchdogRef.current = null;
+      }
+      return;
+    }
+
+    // Update last audio progress when audio is playing
+    if (isAudioPlaying) {
+      lastAudioProgressRef.current = Date.now();
+    }
+
+    // Check every 3 seconds if we're stuck
+    const WATCHDOG_TIMEOUT_MS = 15000; // 15 seconds max stuck in speaking
+    const WATCHDOG_CHECK_MS = 3000; // Check every 3 seconds
+
+    if (!voiceWatchdogRef.current) {
+      voiceWatchdogRef.current = setInterval(() => {
+        const isSpeakingStuck = isAudioPlayingRef.current || isMicrophonePausedRef.current;
+        const timeSinceProgress = Date.now() - lastAudioProgressRef.current;
+
+        if (isSpeakingStuck && timeSinceProgress > WATCHDOG_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Voice state stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+
+          // Force reset all voice state
+          isAudioPlayingRef.current = false;
+          isRespondingRef.current = false;
+          isMicrophonePausedRef.current = false;
+
+          setIsAudioPlaying(false);
+          setIsResponding(false);
+          setIsMicrophonePaused(false);
+          setIsListening(true);
+          setIsActivating(false);
+
+          // Reset the progress timer
+          lastAudioProgressRef.current = Date.now();
+
+          // 🔥 CRITICAL: Actually restart the mic - not just UI state!
+          if (voiceMicRef.current?.startListening) {
+            console.log('🐕 [WATCHDOG] Force-restarting microphone...');
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
+
+          toast('⚠️ Voice recovered', { duration: 2000 });
+        }
+      }, WATCHDOG_CHECK_MS);
+    }
+
+    return () => {
+      if (voiceWatchdogRef.current) {
+        clearInterval(voiceWatchdogRef.current);
+        voiceWatchdogRef.current = null;
+      }
+    };
+  }, [streamingVoiceMode, showChatInterface, isAudioPlaying]);
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
   // Listen for header lab drawer events
@@ -688,25 +2316,35 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 💾 HYBRID CONVERSATION PERSISTENCE: Restore from localStorage + Supabase
+  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Load history for MAIA context (but don't display)
+  // NOTE: We intentionally do NOT restore messages to the UI on page load.
+  // The UI should always start fresh with the greeting, giving the user a clean slate.
+  // MAIA still has access to conversation history through historicalMessagesRef for context.
+  // The persistence layer keeps localStorage in sync with PostgreSQL for continuity.
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
 
-    const restoreConversation = async () => {
+    const loadConversationHistory = async () => {
       const storageKey = `maia_conversation_${sessionId}`;
+      let loadedMessages: ConversationMessage[] = [];
 
-      // Step 1: Try localStorage first (instant restore for same device)
+      // Step 1: Try localStorage first (instant load for same device)
       const localStored = localStorage.getItem(storageKey);
       if (localStored) {
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+<<<<<<< HEAD
             // 🎯 Dedupe to prevent overlapping repeats
             const clean = dedupeMessages(parsedMessages);
             console.log(`💾 [localStorage] Restored ${clean.length} messages (deduped from ${parsedMessages.length})`);
             setMessages(clean);
             // 🎯 FIX: Hide welcome overlay when restoring existing conversation
             if (clean.length > 0) setHasActivated(true);
+=======
+            loadedMessages = parsedMessages;
+            console.log(`💾 [localStorage] Loaded ${loadedMessages.length} messages for MAIA context (UI starts fresh)`);
+>>>>>>> ecstatic-brown
           }
         } catch (error) {
           console.error('💾 [localStorage] Failed to parse stored messages:', error);
@@ -714,13 +2352,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       }
 
-      // Step 2: Check Supabase for cross-device sync (async, non-blocking)
-      // Skip if Supabase mock mode is enabled (prefer PostgreSQL)
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
-      if (!isMockMode) {
-        try {
-          const { success, messages: supabaseMessages } = await getMessagesBySession(sessionId, 100);
+      // Step 2: Check PostgreSQL for more recent/complete history
+      try {
+        const response = await apiFetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.messages && data.messages.length > 0) {
+            // Convert PostgreSQL format
+            const pgMessages: ConversationMessage[] = data.messages.map((m: any) => ({
+              id: m.id || `pg-${Date.now()}-${Math.random()}`,
+              role: m.role === 'assistant' ? 'oracle' : m.role,
+              text: m.content,
+              timestamp: new Date(m.createdAt),
+              source: 'restored'
+            }));
 
+<<<<<<< HEAD
           if (success && supabaseMessages.length > 0) {
             // 🎯 Dedupe to prevent overlapping repeats
             const clean = dedupeMessages(supabaseMessages);
@@ -735,20 +2382,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               localStorage.setItem(storageKey, JSON.stringify(clean.slice(-50)));
               // 🎯 FIX: Hide welcome overlay when restoring existing conversation
               if (clean.length > 0) setHasActivated(true);
+=======
+            // Use PostgreSQL if it has more messages
+            if (pgMessages.length > loadedMessages.length) {
+              loadedMessages = pgMessages;
+              console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
+              // Sync to localStorage for faster next load
+              localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
+>>>>>>> ecstatic-brown
             }
           }
-        } catch (error) {
-          console.error('💾 [Supabase] Failed to retrieve messages:', error);
-          // Don't block - localStorage restore already happened if available
         }
-      } else {
-        console.log('💾 [Storage] Using localStorage only (Supabase disabled, PostgreSQL preferred)');
+      } catch (error) {
+        console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
+
+      // Store in ref for MAIA API context (not displayed in UI)
+      historicalMessagesRef.current = loadedMessages;
+      console.log(`💾 [Context] MAIA has access to ${loadedMessages.length} historical messages`);
     };
 
-    restoreConversation();
+    loadConversationHistory();
   }, [sessionId, userId]);
 
+<<<<<<< HEAD
   // 🎯 BULLETPROOF: Sync hasActivated with reality — if messages exist, we're activated
   useEffect(() => {
     if (messages.length > 0 && !hasActivated) {
@@ -761,6 +2418,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [messages.length, hasActivated]);
 
   // 💾 HYBRID PERSISTENCE: Save to localStorage (instant) + Supabase (async sync)
+=======
+  // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
+  // Track last synced message count to avoid duplicate saves
+  const lastSyncedCountRef = useRef(0);
+
+>>>>>>> ecstatic-brown
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
 
@@ -793,28 +2456,46 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
 
-    // STEP 2: Save to Supabase asynchronously (for cross-device sync)
-    // Debounce: only save to Supabase every 5 messages or 10 seconds
+    // STEP 2: Save to PostgreSQL asynchronously (for sovereign cross-device sync)
+    // Save when we have new messages (check if count increased by at least 2 = one exchange)
     const messageCount = messages.length;
-    // Check if Supabase mock mode is enabled (prefer PostgreSQL)
-    const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
-    const shouldSyncToSupabase = !isMockMode && messageCount % 5 === 0; // Every 5 messages
+    const shouldSyncToPostgres = messageCount >= lastSyncedCountRef.current + 2;
 
-    if (shouldSyncToSupabase) {
-      // Use setTimeout to make this truly async (non-blocking)
-      const syncTimer = setTimeout(async () => {
-        try {
-          const { success, count } = await saveMessagesToSupabase(sessionId, userId, messagesToStore);
-          if (success) {
-            console.log(`💾 [Supabase] Synced ${count} messages (cross-device backup)`);
-          }
-        } catch (error) {
-          console.error('💾 [Supabase] Sync failed (non-blocking):', error);
-          // Don't block - localStorage save already succeeded
+    if (shouldSyncToPostgres) {
+      // Find the new messages since last sync
+      const newMessages = messages.slice(lastSyncedCountRef.current);
+
+      // Look for user-oracle pairs to save
+      for (let i = 0; i < newMessages.length - 1; i++) {
+        const msg = newMessages[i];
+        const nextMsg = newMessages[i + 1];
+
+        // Save user + oracle exchange pairs
+        if (msg.role === 'user' && (nextMsg.role === 'oracle' || nextMsg.role === 'assistant')) {
+          // Non-blocking async save
+          apiFetch('/api/conversation/turns', {
+            method: 'POST',
+            body: JSON.stringify({
+              userMessage: msg.text,
+              assistantMessage: nextMsg.text,
+              userId,
+              sessionId,
+              isSanctuary: false, // TODO: Check sanctuary mode
+            }),
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                console.log(`💾 [PostgreSQL] Synced exchange to sovereign database`);
+              }
+            })
+            .catch(err => console.error('💾 [PostgreSQL] Sync failed (non-blocking):', err));
+
+          i++; // Skip the oracle message we just paired
         }
-      }, 100); // Small delay to avoid blocking UI
+      }
 
-      return () => clearTimeout(syncTimer);
+      lastSyncedCountRef.current = messageCount;
     }
   }, [messages, sessionId, userId]);
 
@@ -834,6 +2515,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Client-side only check
   useEffect(() => {
     setIsMounted(true);
+
+    // 🎯 DEBUG: Log initial greeting state on mount
+    console.log('🎯 [GREETING DEBUG] Component MOUNTED - initial state:', {
+      messagesLength: 0, // Always starts empty before restoration
+      isProcessing: false,
+      isResponding: false,
+      note: 'Messages will be restored from localStorage next'
+    });
 
     // Initialize stable explorer ID for cross-session memory
     const stableId = getOrCreateExplorerId();
@@ -857,8 +2546,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const trackingUserName = userName || 'Anonymous User';
     userTracker.trackUserRegistration(trackingUserId, trackingUserName);
 
-    // Detect iOS for audio requirements
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // Detect iOS for audio requirements (includes iPads in desktop mode)
+    const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isIOSSafari = isIOS && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
     // Enhanced Safari detection for audio unlock
@@ -901,11 +2591,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('🔓 [OracleConversation] Safari audio unlock listeners added');
     }
 
-    // TEMPORARILY DISABLED - causing black screen overlay on desktop
-    // if (isIOS && !isIOSAudioEnabled) {
-    //   setNeedsIOSAudioPermission(true);
-    //   console.log('📱 iOS detected - audio permission needed', { isIOS, isIOSSafari });
-    // }
+    // iOS Audio Permission - Show on iOS devices only (not desktop Safari)
+    // This is required for TTS playback on iOS Safari/Chrome/PWA
+    if (isIOS && !isIOSAudioEnabled) {
+      setNeedsIOSAudioPermission(true);
+      console.log('📱 iOS detected - audio permission prompt shown', { isIOS, isIOSSafari });
+    }
 
     // Get oracle agent ID for memory persistence
     if (userId) {
@@ -992,20 +2683,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const shouldAskOnboarding = sessionStorage.getItem('maia_should_ask_onboarding') === 'true';
 
       let greetingData;
+      // 🎯 Use resolveDisplayName() to get actual name from localStorage
+      // This avoids race condition where userName prop hasn't been updated yet
+      const resolvedName = resolveDisplayName();
+      console.log('🎯 [GREETING] Resolved display name:', resolvedName);
+
       if (shouldAskOnboarding) {
         // Remove flag after checking
         sessionStorage.removeItem('maia_should_ask_onboarding');
 
         // Generate onboarding question greeting instead of standard greeting
         greetingData = await generateOnboardingGreeting({
-          userName: userName || 'friend',
+          userName: resolvedName,
           userId: userId,
           isFirstVisit,
           partnerContext: onboardingContext?.partnerContext || 'general'
         });
       } else {
         greetingData = await generateGreeting({
-          userName: userName || 'friend',
+          userName: resolvedName,
           userId: userId, // Pass userId for soul-level recognition
           isFirstVisit,
           daysSinceLastVisit,
@@ -1061,12 +2757,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const score = detectBreakthroughPotential(conversationMessages);
     setBreakthroughScore(score);
 
-    // Breakthrough detection PERMANENTLY DISABLED per user request
-    // if (score >= 70 && !showJournalSuggestion && !journalSuggestionDismissed && messages.length >= 6) {
-    //   console.log('📊 [Breakthrough] Score >=70, showing journal suggestion');
-    //   setShowJournalSuggestion(true);
-    // }
+    // Show breakthrough indicator when score is significant (lowered threshold for spiral-relative awareness)
+    if (score >= 50 && !showJournalSuggestion && !journalSuggestionDismissed && messages.length >= 4) {
+      console.log(`⭐ [Breakthrough] Score ${score} >= 50, showing journal suggestion`);
+      setShowJournalSuggestion(true);
+    }
   }, [messages, showJournalSuggestion, journalSuggestionDismissed]);
+
+  // Detect capture trigger for "Capture the Spirit" suggestion
+  useEffect(() => {
+    if (messages.length < 4) return; // Need some conversation depth
+    if (showCaptureSuggestion || captureSuggestionDismissed || showCapturePanel) return;
+
+    // Check last MAIA message for capture triggers
+    const lastMaiaMessage = [...messages].reverse().find(msg => msg.role === 'oracle');
+    if (lastMaiaMessage) {
+      const content = lastMaiaMessage.text || lastMaiaMessage.content || '';
+      if (detectCaptureTrigger(content)) {
+        console.log('✨ [Capsule] Capture trigger detected, showing suggestion');
+        setShowCaptureSuggestion(true);
+      }
+    }
+  }, [messages, showCaptureSuggestion, captureSuggestionDismissed, showCapturePanel]);
 
   // Agent configuration with persistence
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(() => {
@@ -1086,6 +2798,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const newConfig = getAgentConfig(savedVoice || undefined);
       setAgentConfig(newConfig);
       console.log('🎭 Conversation style updated:', newConfig.voice);
+
+      // Also reload voice settings from account settings (all MAIA preferences)
+      const settings = getAccountSettings();
+      setVoiceSettings({
+        voice: settings.voice.openaiVoice,
+        speed: settings.voice.speed,
+        model: settings.voice.model || 'tts-1',
+        prosodyRange: settings.voice.prosodyRange ?? 1,
+        archetype: settings.archetype || 'AUTO',
+        conversationMode: settings.conversationMode || 'her',
+        memoryDepth: settings.memory?.depth || 'moderate',
+      });
+      console.log('🔊 Voice settings reloaded:', settings.voice, settings.archetype, settings.conversationMode);
     };
 
     // Listen for storage events (from other tabs) and custom events (same tab)
@@ -1113,7 +2838,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         sender: 'maia'
       };
 
-      setMessages(prev => [...prev, acknowledgmentMessage]);
+      setMessages(prev => appendMessageCapped(prev, acknowledgmentMessage));
       onMessageAddedRef.current?.(acknowledgmentMessage);
 
       // Optionally speak the acknowledgment if voice is enabled
@@ -1144,38 +2869,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Initialize voice when in voice mode - AUTO-START ENABLED
-  useEffect(() => {
-    console.log('🔍 Voice auto-start check:', {
-      isMounted,
-      showChatInterface,
-      voiceEnabled,
-      isMuted,
-      audioEnabled,
-      isProcessing,
-      isResponding,
-      hasVoiceMicRef: !!voiceMicRef.current
-    });
-
-    if (isMounted && !showChatInterface && voiceEnabled && !isMuted && audioEnabled) {
-      // Delay to ensure component is ready
-      const timer = setTimeout(async () => {
-        if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
-          try {
-            await voiceMicRef.current.startListening();
-            console.log('✅ 🎤 Voice auto-started successfully');
-          } catch (err) {
-            console.error('❌ Voice auto-start failed:', err);
-          }
-        } else {
-          console.log('⏸️ Voice auto-start skipped - conditions not met');
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
-      console.log('⏸️ Voice auto-start blocked - checking all conditions...');
-    }
-  }, [isMounted, showChatInterface, voiceEnabled, isMuted, isProcessing, isResponding, audioEnabled]);
+  // 🚫 AUTO-START DISABLED - User must click holoflower to initiate voice
+  // This prevents the "blinking listening" issue and gives users control over when to speak
+  // Voice is started via handleHoloflowerClick() when user clicks the holoflower
 
   // Conversation context
   const contextRef = useRef<ConversationContext>({
@@ -1213,7 +2909,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     isProcessingRef.current = isProcessing;
     isRespondingRef.current = isResponding;
     isAudioPlayingRef.current = isAudioPlaying;
-  }, [isProcessing, isResponding, isAudioPlaying]);
+    isMicrophonePausedRef.current = isMicrophonePaused;
+  }, [isProcessing, isResponding, isAudioPlaying, isMicrophonePaused]);
 
   useEffect(() => {
     if (isProcessing || isResponding) {
@@ -1232,9 +2929,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         console.log(`⏰ [${sessionId}] Recovery timer fired after ${timeSinceActivation}ms - CURRENT states: isProcessing: ${currentIsProcessing}, isResponding: ${currentIsResponding}, isAudioPlaying: ${currentIsAudioPlaying}`);
 
-        // If audio is still playing, states SHOULD be active - not stuck
-        if (currentIsAudioPlaying) {
+        // 🔥 FIX: Hard timeout of 45s even if isAudioPlaying is true
+        // No MAIA response should take 45+ seconds. If isAudioPlaying is stuck true
+        // without actually playing audio, we need to force reset.
+        const isHardTimeout = timeSinceActivation >= 45000;
+
+        // If audio is still playing AND we haven't hit hard timeout, states SHOULD be active
+        if (currentIsAudioPlaying && !isHardTimeout) {
           console.log(`✅ [${sessionId}] Audio still playing - states are working correctly, no recovery needed`);
+          return;
+        }
+
+        // Hard timeout triggered - audio state is stuck
+        if (currentIsAudioPlaying && isHardTimeout) {
+          console.warn(`🚨 [${sessionId}] HARD TIMEOUT: isAudioPlaying stuck true for ${Math.round(timeSinceActivation/1000)}s - forcing reset!`);
+          resetAllStates();
           return;
         }
 
@@ -1252,7 +2961,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             motionState: 'idle',
             source: 'system'
           };
-          setMessages(prev => [...prev, errorMessage]);
+          setMessages(prev => appendMessageCapped(prev, errorMessage));
           onMessageAddedRef.current?.(errorMessage);
 
           resetAllStates();
@@ -1274,15 +2983,238 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // the handleTextMessage flow and MaiaVoiceSystem callbacks.
   // Note: Removed voice state logging useEffect to prevent infinite re-renders
 
-  // Auto-focus text input in chat mode after MAIA responds
+  // Auto-focus text input in chat mode - only when switching to chat mode or when processing ends
+  // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
+  // Also don't refocus if already focused (causes keyboard flicker on iOS)
   useEffect(() => {
     if (showChatInterface && !isProcessing && textInputRef.current) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 100);
+      // Check if already focused to prevent iOS keyboard issues
+      if (document.activeElement !== textInputRef.current) {
+        // Small delay to ensure DOM is ready
+        const timeoutId = setTimeout(() => {
+          textInputRef.current?.focus();
+        }, 100);
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [showChatInterface, isProcessing, messages.length]);
+  }, [showChatInterface, isProcessing]); // Removed messages.length - was causing iOS freeze
+
+  // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
+  useEffect(() => {
+    const handleJournalAskMaia = (e: Event) => {
+      const ce = e as CustomEvent<{
+        content: string;
+        type: 'dream' | 'day';
+        prompt: string;
+      }>;
+
+      const text = ce.detail?.prompt || ce.detail?.content || '';
+      if (!text) return;
+
+      console.log('📓 [Journal→MAIA] Received:', ce.detail?.type);
+
+      // 1) Fill the composer immediately (user sees it)
+      setComposerDraft(text);
+
+      // 2) Ensure chat UI is visible
+      setShowChatInterface(true);
+
+      // 3) Auto-send after a tiny tick so the UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft(''); // Clear after send
+      }, 150);
+    };
+
+    window.addEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
+    return () => window.removeEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
+  }, []);
+
+  // Listen for Lab Actions dispatched from page.tsx
+  useEffect(() => {
+    const handleLabAction = (e: Event) => {
+      const ce = e as CustomEvent<{ action: string }>;
+      const action = ce.detail?.action;
+      if (!action) return;
+
+      console.log('🔬 [LabAction] Received from page:', action);
+
+      // Route to appropriate handler
+      if (action === 'open-prompt-picker') {
+        console.log('🔬 [LabAction] Opening prompt picker');
+        setShowPromptPicker(true);
+        return;
+      }
+
+      if (action === 'show-session-arc') {
+        console.log('🔬 [LabAction] Show session arc - handled by FloatingSessionIndicator');
+        // Session arc is displayed via the FloatingSessionIndicator component
+        return;
+      }
+
+      if (action === 'show-session-synthesis') {
+        console.log('🔬 [LabAction] Generating session synthesis');
+        if (messages.length > 0) {
+          setSessionSynthesisData({
+            patterns: ['Pattern detection in progress...'],
+            invitation: 'Continue exploring what emerged in this conversation.',
+            savedToMemory: !isSanctuary,
+            durationMinutes: sessionTimer?.getElapsedMinutes?.() || undefined
+          });
+          setShowSessionSynthesis(true);
+        }
+        return;
+      }
+
+      if (action === 'session-recap') {
+        console.log('🔬 [LabAction] Generating session recap');
+        if (messages.length > 0) {
+          setSessionRecapData({
+            duration: sessionTimer?.getElapsedMinutes?.() || Math.floor(messages.length / 2),
+            messageCount: messages.length,
+            themes: ['Self-reflection', 'Growth'],
+            elements: {
+              fire: 0.3,
+              water: 0.5,
+              earth: 0.4,
+              air: 0.6,
+              aether: 0.2
+            },
+            invitation: 'Continue reflecting on what emerged today.'
+          });
+          setShowSessionRecap(true);
+        }
+        return;
+      }
+
+      if (action === 'daily-checkin') {
+        console.log('🔬 [LabAction] Opening daily check-in');
+        setShowDailyCheckin(true);
+        return;
+      }
+
+      if (action === 'element-discovery') {
+        console.log('🔬 [LabAction] Opening element discovery');
+        setShowElementDiscovery(true);
+        return;
+      }
+
+      if (action === 'toggle-vocabulary-tooltips') {
+        const newValue = !enableVocabularyTooltips;
+        setEnableVocabularyTooltips(newValue);
+        localStorage.setItem('maia.vocabularyTooltips', String(newValue));
+        console.log('🔬 [LabAction] Vocabulary tooltips:', newValue);
+        return;
+      }
+
+      if (action === 'choose-guide') {
+        console.log('🔬 [LabAction] Opening wisdom council');
+        setShowWisdomCouncil(true);
+        return;
+      }
+
+      if (action === 'capture-spirit') {
+        // Defer to allow state to settle after drawer close
+        setTimeout(() => {
+          if (handleCaptureSpiritRef.current) {
+            handleCaptureSpiritRef.current();
+          } else {
+            console.error('❌ [LabAction] handleCaptureSpirit not available');
+          }
+        }, 100);
+        return;
+      }
+
+      console.log('🔬 [LabAction] Unhandled action:', action);
+    };
+
+    window.addEventListener('labAction', handleLabAction as EventListener);
+    return () => window.removeEventListener('labAction', handleLabAction as EventListener);
+  }, [messages.length, isSanctuary, sessionTimer, enableVocabularyTooltips]);
+
+  // Listen for Inner Lands "Talk to MAIA" events
+  useEffect(() => {
+    const handleInnerLandsAskMaia = (e: Event) => {
+      const ce = e as CustomEvent<{ content: string }>;
+      const content = ce.detail?.content || '';
+      if (!content) return;
+
+      console.log('🗺️ [InnerLands→MAIA] Received:', content);
+
+      // Parse the structured context from Inner Lands
+      let text: string;
+      try {
+        const ctx = JSON.parse(content);
+        const { land, encounter } = ctx;
+
+        // Format as a rich primer that gives MAIA full context
+        text = `[Inner Lands: ${land.name}]
+
+I'm at "${encounter.title}" — ${land.tagline.toLowerCase()}.
+
+The setup: "${encounter.setup}"
+
+The question it asks: "${encounter.prompt}"
+
+---
+
+MAIA, you said about this place: "${land.maiaQuote}"
+
+I'm not sure what I'm noticing yet.`;
+      } catch {
+        // Fallback for old string format
+        text = `[Inner Lands] ${content}
+
+Not sure what I'm supposed to notice here.`;
+      }
+
+      // 1) Fill the composer immediately
+      setComposerDraft(text);
+
+      // 2) Show chat interface
+      setShowChatInterface(true);
+
+      // 3) Auto-send after UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft('');
+      }, 150);
+    };
+
+    window.addEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
+    return () => window.removeEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
+  }, []);
+
+  // Handle domain prompt MAIA contact events
+  useEffect(() => {
+    const handleDomainAskMaia = (event: CustomEvent<{ content: string }>) => {
+      const { content } = event.detail;
+
+      // Build the context message for MAIA
+      const text = `[Academy Domain]
+
+${content}
+
+---
+
+I'm not sure what I'm feeling yet.`;
+
+      // 1) Fill the composer immediately
+      setComposerDraft(text);
+
+      // 2) Show chat interface
+      setShowChatInterface(true);
+
+      // 3) Auto-send after UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft('');
+      }, 150);
+    };
+
+    window.addEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
+    return () => window.removeEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
+  }, []);
 
   // Listen for Lab Actions dispatched from page.tsx
   useEffect(() => {
@@ -1387,36 +3319,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [messages.length, isSanctuary, sessionTimer, enableVocabularyTooltips]);
 
   // Update motion state based on voice activity
+  // NOTE: isListening is controlled by handleRecordingStateChange (from ContinuousConversation)
+  // and the holoflower click handler. DO NOT set isListening here based on userVoiceState
+  // because that would hide the visualizer when the mic is listening but user hasn't spoken yet.
   useEffect(() => {
     if (userVoiceState?.isSpeaking) {
       setCurrentMotionState('listening');
-      setIsListening(true);
-    } else {
-      setIsListening(false);
     }
+    // Don't set isListening to false here - that's controlled by the recording state
   }, [userVoiceState]);
 
-  // Pulse voice amplitude when MAIA is speaking (only when no user voice input)
-  useEffect(() => {
-    if (isResponding || isAudioPlaying) {
-      // Pulse effect for MAIA speaking
-      const pulseInterval = setInterval(() => {
-        setVoiceAmplitude(prev => {
-          const target = 0.5 + Math.sin(Date.now() / 200) * 0.3;
-          return prev * 0.7 + target * 0.3; // Smooth lerp to pulsing target
-        });
-      }, 50);
-
-      return () => clearInterval(pulseInterval);
-    }
-  }, [isResponding, isAudioPlaying]);
+  // Note: Voice amplitude is now driven by real-time audio analysis in startAudioAnalysis()
 
   // iOS PWA: Resume AudioContext on visibility change and user interaction
+  // CRITICAL: Must check for BOTH 'suspended' AND 'interrupted' states!
+  // iOS puts AudioContext in 'interrupted' state when audio session is taken by another source
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
-          console.log('📱 App returned to foreground, resuming AudioContext...');
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          console.log(`📱 App returned to foreground, AudioContext ${state}, resuming...`);
           try {
             await audioContextRef.current.resume();
             console.log('✅ AudioContext resumed on visibility change');
@@ -1428,12 +3351,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
 
     const handleUserInteraction = async () => {
-      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-        try {
-          await audioContextRef.current.resume();
-          console.log('✅ AudioContext resumed on user interaction');
-        } catch (error) {
-          console.warn('Could not resume AudioContext:', error);
+      if (audioContextRef.current) {
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          try {
+            await audioContextRef.current.resume();
+            console.log(`✅ AudioContext resumed on user interaction (was ${state})`);
+          } catch (error) {
+            console.warn('Could not resume AudioContext:', error);
+          }
         }
       }
     };
@@ -1472,9 +3398,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('📱 AudioContext created:', audioContextRef.current.state);
       }
 
-      // Resume if suspended (critical for iOS)
+      // Resume if suspended OR interrupted (critical for iOS - interrupted state blocks speech recognition!)
       if (audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+          console.log(`🎵 Audio context ${audioContextRef.current.state}, resuming...`);
           await audioContextRef.current.resume();
           console.log('🎵 Audio context resumed, state:', audioContextRef.current.state);
         } else {
@@ -1483,18 +3410,43 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
 
       // iOS Safari needs a user gesture to unlock audio
-      // Use multiple approaches for maximum compatibility
+      // CRITICAL: Create and warm up a reusable Audio element that we'll use for TTS
       let audioUnlocked = false;
 
-      // Approach 1: Play longer silent MP3 (better iOS compatibility)
+      // Approach 1: Create a REUSABLE audio element for iOS (key fix!)
+      // iOS Safari requires using the SAME audio element that was "unlocked" via user gesture
       try {
-        const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA');
-        silentAudio.volume = 0.001;
-        // Set playsInline attribute for iOS compatibility
-        silentAudio.setAttribute('playsinline', '');
-        const playPromise = silentAudio.play();
-        if (playPromise) {
-          await playPromise;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+          console.log('📱 [iOS] Creating warmed audio element for later TTS use');
+
+          // Create the audio element we'll reuse for TTS
+          const warmedAudio = new Audio();
+          warmedAudio.setAttribute('playsinline', '');
+          warmedAudio.setAttribute('webkit-playsinline', '');
+          (warmedAudio as any).playsInline = true;
+          warmedAudio.preload = 'auto';
+          warmedAudio.volume = 1.0;
+
+          // Play a tiny silent sound to "unlock" this specific element
+          warmedAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+
+          await warmedAudio.play();
+          warmedAudio.pause();
+          warmedAudio.currentTime = 0;
+
+          // Store for later use in TTS playback
+          iosWarmedAudioRef.current = warmedAudio;
+          audioUnlocked = true;
+          console.log('✅ [iOS] Warmed audio element ready for TTS reuse');
+        } else {
+          // Non-iOS: just play silent audio normally
+          const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA');
+          silentAudio.volume = 0.001;
+          silentAudio.setAttribute('playsinline', '');
+          await silentAudio.play();
           audioUnlocked = true;
           console.log('✅ Silent MP3 audio played successfully');
         }
@@ -1523,8 +3475,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       setAudioEnabled(true);
       setIsIOSAudioEnabled(true);
+      setAudioUnlocked(true); // Critical for Safari TTS
       setNeedsIOSAudioPermission(false);
-      console.log('✅ Audio enabled successfully - permissions cleared');
+      console.log('✅ Audio enabled successfully - AudioContext state:', audioContextRef.current?.state);
 
       // Show success feedback
       toast.success('Audio enabled! MAIA is ready to speak.', {
@@ -1573,12 +3526,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (!userId) {
       toast.error('Please sign in to save journal entries');
       console.error('❌ [Journal] No userId provided');
+      setShowJournalSuggestion(false);
+      setJournalSuggestionDismissed(true);
       return;
     }
 
     if (messages.length < 2) {
       toast.error('Have a conversation first before journaling');
       console.error('❌ [Journal] Not enough messages:', messages.length);
+      setShowJournalSuggestion(false);
+      setJournalSuggestionDismissed(true);
       return;
     }
 
@@ -1598,9 +3555,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         sessionId
       });
 
-      const response = await fetch('/api/journal/save-conversation', {
+      const response = await apiFetch('/api/journal/save-conversation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: conversationMessages,
           userId,
@@ -1651,9 +3607,181 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, [userId, messages, sessionId]);
 
+  // ✨ Capture the Spirit - Create Reflection Capsule from conversation
+  const handleCaptureSpirit = useCallback(async () => {
+    console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
+
+    if (!userId) {
+      toast.error('Please sign in to capture reflections');
+      console.error('❌ [Capsule] No userId provided');
+      return;
+    }
+
+    if (messages.length < 2) {
+      toast.error('Have a conversation first before capturing');
+      console.error('❌ [Capsule] Not enough messages:', messages.length);
+      return;
+    }
+
+    setShowCapturePanel(true);
+    setIsCapturing(true);
+    setCaptureError(null);
+    setCapturedCapsule(null);
+
+    try {
+      // Convert messages to the format expected by the capsule API
+      const conversationMessages = messages.slice(-16).map(msg => ({
+        role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
+        content: msg.text || msg.content || '',
+        timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : msg.timestamp?.toISOString?.() || new Date().toISOString(),
+      }));
+
+      console.log('📤 [Capsule] Sending request to /api/capsules/from-chat-window', {
+        messageCount: conversationMessages.length,
+      });
+
+      const response = await apiFetch('/api/capsules/from-chat-window', {
+        method: 'POST',
+        body: JSON.stringify({
+          messages: conversationMessages,
+          windowSize: 16,
+          tags: [],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || errorData.details || 'Failed to capture spirit');
+      }
+
+      const data = await response.json();
+      console.log('✅ [Capsule] Successfully captured:', data);
+
+      setCapturedCapsule(data.capsule);
+
+      // Track the capture
+      trackEvent('spirit_captured', {
+        userId,
+        sessionId,
+        messageCount: messages.length,
+        capsuleId: data.capsule.id,
+        title: data.capsule.title,
+      });
+    } catch (error: any) {
+      console.error('❌ [Capsule] Error capturing spirit:', error);
+      setCaptureError(error.message || 'Failed to capture. Please try again.');
+    } finally {
+      setIsCapturing(false);
+      setShowCaptureSuggestion(false);
+      setCaptureSuggestionDismissed(true);
+    }
+  }, [userId, messages, sessionId]);
+
+  // Keep ref updated for event dispatch
+  useEffect(() => {
+    handleCaptureSpiritRef.current = handleCaptureSpirit;
+  }, [handleCaptureSpirit]);
+
+  // Update captured capsule (quick edits)
+  const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
+    if (!capturedCapsule) return;
+
+    try {
+      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save changes');
+      }
+
+      const data = await response.json();
+      setCapturedCapsule(data.capsule);
+      toast.success('Changes saved');
+    } catch (error: any) {
+      console.error('Failed to update capsule:', error);
+      toast.error('Failed to save changes');
+    }
+  }, [capturedCapsule]);
+
+  // Bring capsule into the lab (mark as non-draft)
+  const handleBringCapsuleIntoLab = useCallback(async () => {
+    if (!capturedCapsule) return;
+
+    try {
+      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ draft: false }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save');
+      }
+
+      const data = await response.json();
+      setCapturedCapsule(data.capsule);
+
+      toast.success(
+        <div>
+          <div className="font-semibold">Brought into the Lab</div>
+          <div className="text-sm text-white/70">View in Reflections anytime</div>
+        </div>,
+        { duration: 4000 }
+      );
+
+      setShowCapturePanel(false);
+    } catch (error: any) {
+      console.error('Failed to bring into lab:', error);
+      toast.error('Failed to save. Please try again.');
+    }
+  }, [capturedCapsule]);
+
+  // Handle conversation download
+  const handleDownloadConversation = useCallback(() => {
+    if (messages.length === 0) {
+      toast.error('No messages to download', {
+        duration: 2000,
+        position: 'bottom-center',
+      });
+      return;
+    }
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const content = messages.map(msg => {
+      const speaker = msg.role === 'user' ? (userName || 'You') : assistantName;
+      const text = (msg.text ?? msg.content ?? '').replace(/\*[^*]*\*/g, '').trim();
+      return `${speaker}:\n${text}\n`;
+    }).join('\n---\n\n');
+
+    const header = `${assistantName} Conversation - ${timestamp}\n${'='.repeat(40)}\n\n`;
+    const blob = new Blob([header + content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `maia-conversation-${timestamp}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success('Conversation downloaded!', {
+      duration: 2000,
+      position: 'bottom-center',
+      style: {
+        background: 'rgb(18, 24, 51)', // maia-navy-850
+        color: 'rgb(245, 158, 11)', // maia-spice-500
+        border: '1px solid rgba(245, 158, 11, 0.2)', // maia-spice-500/20
+      },
+    });
+  }, [messages, userName]);
+
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
+
+    // 🎯 Mark as activated when user sends a message - hides welcome screen
+    setHasActivated(true);
 
     // Check for journal command
     if (detectJournalCommand(text)) {
@@ -1746,7 +3874,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       timestamp: new Date(),
       source: 'user'
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => appendMessageCapped(prev, userMessage));
     onMessageAddedRef.current?.(userMessage);
 
     // Process message for Field Protocol if recording
@@ -1824,7 +3952,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           timestamp: new Date(),
           source: 'system'
         };
-        setMessages(prev => [...prev, blockingMessage]);
+        setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
         // Alert team about abuse
@@ -1956,31 +4084,109 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const isCareMode = realtimeMode === 'counsel';
       const allowCanonWrap = isCareMode && getCanonWrapEnabled();
 
-      // Guard: Ensure stable identity is available for memory persistence
-      if (!explorerId) {
-        console.warn('🧠 [Identity] No explorerId yet - waiting for initialization');
-        setIsProcessing(false);
-        setCurrentMotionState('idle');
+      // Ensure stable identity is available - generate on-the-fly if needed
+      let effectiveExplorerId = explorerId;
+      if (!effectiveExplorerId) {
+        // Generate synchronously rather than blocking
+        effectiveExplorerId = getOrCreateExplorerId();
+        setExplorerId(effectiveExplorerId);
+        console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
+      }
+
+      // Build local array that includes the new user message (state update is async)
+      const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+
+      // MAIA speaks through sovereign API - working consciousness system
+      // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
+      const fullApiUrl = apiUrl(apiEndpoint);
+
+      // [ios-debug] Hard truth logger - catch exactly what iOS is doing
+      console.log('[ios-debug] sending →', {
+        url: fullApiUrl,
+        endpoint: apiEndpoint,
+        isNative: typeof window !== 'undefined' ? (window as any).Capacitor?.isNativePlatform?.() : 'unknown',
+        origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
+      });
+
+      // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
+      if (!isProbablyOnline()) {
+        console.log('[OracleConversation] Offline detected - using presence fallback');
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        // Add the fallback response as an oracle message
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'offline' },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        // Speak the fallback if voice is enabled
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
+        }
         return;
       }
 
-      // MAIA speaks through sovereign API - working consciousness system
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let response: Response;
+      try {
+        // apiFetch() adds x-member-id header for Capacitor apps (cookies don't work cross-origin)
+        response = await apiFetch(apiEndpoint, {
+          method: 'POST',
+          body: JSON.stringify({
           message: cleanedText,
           userId: userId || 'anonymous',
-          userName: userName || 'Explorer',
+          userName: userName || 'Friend',
           sessionId,
+          localHour: new Date().getHours(), // Client's local time for correct greetings
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
 
           // Stable identity for cross-session memory persistence
+          // memoryMode: 'longterm' enables pattern formation + developmental memory
+          // Enable via: localStorage.setItem('maiaMemoryMode', 'longterm')
           meta: {
-            explorerId, // ✅ Stable identity across sessions
+            explorerId: effectiveExplorerId, // ✅ Stable identity across sessions
             sessionId,  // Current session (changes per session)
-            memoryMode: 'continuity', // Default: turns only, no long-term writeback
+            memoryMode: (typeof window !== 'undefined' && localStorage.getItem('maiaMemoryMode') === 'longterm') ? 'longterm' : 'continuity',
           },
+
+          // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
+          sanctuary: isSanctuary,
+
+          // 🎭 MAIA RELATIONAL MODE: Talk/Care/Scribe with sub-modes
+          // This shapes MAIA's system prompt for relational attunement
+          // 🚨 Crisis override takes precedence over all modes
+          maiaMode: crisisStateRef.current?.detected ? {
+            mode: 'care',
+            subMode: 'crisis',
+            crisisLevel: crisisStateRef.current.level,
+            systemPromptModifier: crisisStateRef.current.systemPrompt || getModeSystemPrompt(maiaMode),
+          } : maiaMode.mode !== 'talk' ? {
+            mode: maiaMode.mode,
+            subMode: maiaMode.mode === 'care' ? maiaMode.careSubMode : undefined,
+            reflectionLens: maiaMode.mode === 'scribe' ? maiaMode.scribeReflectionLens : undefined,
+            systemPromptModifier: getModeSystemPrompt(maiaMode),
+          } : undefined,
+
+          // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens
+          // If user consented to switch, use the new framework; otherwise use current
+          therapeuticFramework: pendingLensConsent?.consent === 'switch' && pendingLensConsent?.switchTo
+            ? pendingLensConsent.switchTo
+            : (realtimeMode === 'patient' ? getCounselFramework() : undefined),
+          reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
+
+          // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
+          lensConsent: pendingLensConsent?.consent || null,
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
@@ -1993,10 +4199,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             depth: 0.7,
             quality: 'present'
           },
-          conversationHistory: messages.map(msg => ({
-            role: msg.role === 'oracle' ? 'assistant' : 'user',
-            content: msg.text
-          })),
+          conversationHistory: truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current),
           sessionTimeContext: sessionTimer?.getTimeContext(), // ⏰ Temporal awareness for MAIA
           teenSupportContext: teenSystemPrompt ? {
             isTeenUser,
@@ -2008,19 +4211,96 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               isCrisis: lastSafetyCheck.isCrisis,
               isBurnout: lastSafetyCheck.isBurnout
             } : undefined
-          } : undefined
+          } : undefined,
+
+          // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+          birthData: (() => {
+            if (typeof window === 'undefined') return undefined;
+            try {
+              const stored = localStorage.getItem('beta_user');
+              if (!stored) return undefined;
+              const user = JSON.parse(stored);
+              return user.birthData || undefined;
+            } catch {
+              return undefined;
+            }
+          })(),
+
+          // 📝 SCRIBE SESSION DISCUSSION: Context for scoped session discussions
+          // When discussing a past Scribe/Witness session, MAIA has access to the summary and themes
+          scribeSessionDiscussion: scribeSessionId && scribeSessionContext ? {
+            sessionId: scribeSessionId,
+            title: scribeSessionContext.title,
+            container: scribeSessionContext.container,
+            summary: scribeSessionContext.summary,
+            duration: scribeSessionContext.duration,
+            markerCount: scribeSessionContext.markerCount,
+          } : undefined,
         }),
         signal: controller.signal
       });
+      } catch (fetchError) {
+        // Network-level errors (CORS, network unreachable, etc.)
+        // NETWORK ERROR FALLBACK: Use presence mode instead of failing
+        console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        // Add the fallback response as an oracle message
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'network_error' },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        // Speak the fallback if voice is enabled
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
+        }
+        return;
+      }
 
       clearTimeout(timeoutId);
 
-      console.log('📥 API response status:', response.status, response.statusText);
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        const errorText = await response.text().catch(() => '(no body)');
+        console.error('[fetch] non-OK response:', response.status, errorText);
+
+        // SERVER ERROR FALLBACK: Use presence mode instead of showing error
+        console.log('[OracleConversation] Server error - using presence fallback');
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'server_error', status: response.status },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
+        }
+        return;
       }
 
       // Check if streaming response (voice mode)
@@ -2035,7 +4315,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       let element = 'aether'; // Default element, will be updated from metadata if available
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
+<<<<<<< HEAD
       let pastSelf: PastSelfPayload | undefined = undefined; // Past-self message for temporal identity
+=======
+      // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
+      let integrity: IntegrityResult | undefined = undefined;
+      let lensSwitchOptions: ConversationMessage['lensSwitchOptions'] = null;
+>>>>>>> ecstatic-brown
 
       if (isStreaming) {
         // Handle streaming response (voice mode - fastest)
@@ -2054,25 +4340,121 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Initialize audio queue for voice mode
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
+        // ECHO SUPPRESSION: Define cooldown for streaming audio path
+        const streamingCooldownMs = 0; // Instant - demo mode with headphones
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
+          // Set audio playing TRUE at start - only goes false when COMPLETE
+          setIsAudioPlaying(true);
+          setIsMicrophonePaused(true);
+
+          // 🔓 iOS FIX: Dispatch voice start to trigger iOS audio keep-alive
+          // This ensures the AudioContext stays active across all response chunks
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('maya-voice-start'));
+            console.log('🔓 [STREAM] Dispatched maya-voice-start for iOS audio keep-alive');
+          }
+
           audioQueue = new StreamingAudioQueue({
             onPlayingChange: (isPlaying) => {
-              setIsAudioPlaying(isPlaying);
-              setIsMicrophonePaused(isPlaying); // Pause mic while speaking
+              // DON'T set isAudioPlaying here - causes false negatives between chunks
+              // Only log for debugging
+              console.log('🎵 [STREAM] Chunk playing state:', isPlaying);
             },
             onTextChange: (text) => {
               setMaiaResponseText(text); // Update display with current sentence
             },
             onComplete: () => {
-              console.log('✅ [STREAM] All audio chunks played');
+              console.log('✅ [STREAM] All audio chunks played - starting cooldown');
+              // 🔥 CRITICAL FIX: Reset isProcessing HERE, not just in retry loop
+              // Without this, the next transcript is ignored with "Already processing"
+              setIsProcessing(false);
+              isProcessingRef.current = false;
               setIsResponding(false);
+              // ✅ Set isAudioPlaying FALSE now - audio ended, visualizer shows user color
               setIsAudioPlaying(false);
-              // Resume mic after cooldown
+              // 🔥 isMicrophonePaused stays TRUE to block mic during cooldown
+              // (ContinuousConversation checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
+
+              // 🔓 iOS FIX: Dispatch voice end to allow keep-alive to manage context
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('maya-voice-end'));
+                console.log('🔓 [STREAM] Dispatched maya-voice-end');
+              }
+
+              // Resume mic after cooldown with auto-restart
+              console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
               setTimeout(() => {
                 setIsMicrophonePaused(false);
-              }, 2000);
+                console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
+
+                // 🔥 FIX: Force React to flush state updates before attempting mic restart
+                // Using requestAnimationFrame ensures we're after the React render cycle
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
+                    const attemptMicRestart = (attempt: number) => {
+                      if (attempt > 8) {
+                        console.log('⚠️ [STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                        // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                        setIsProcessing(false);
+                        setIsResponding(false);
+                        setIsAudioPlaying(false);
+                        setIsMicrophonePaused(false);
+                        isProcessingRef.current = false;
+                        isRespondingRef.current = false;
+                        isAudioPlayingRef.current = false;
+                        isMicrophonePausedRef.current = false;
+                        // Final attempt after forced reset
+                        setTimeout(() => {
+                          if (voiceMicRef.current?.startListening) {
+                            console.log('🎤 [STREAM] Final attempt after state reset...');
+                            setIsMuted(false);
+                            voiceMicRef.current.startListening({ forceOverride: true });
+                          }
+                        }, 500);
+                        return;
+                      }
+
+                      if (voiceMicRef.current?.startListening) {
+                        // Check ALL blocking conditions including mic pause state
+                        const canRestart = !isProcessingRef.current &&
+                                           !isRespondingRef.current &&
+                                           !isAudioPlayingRef.current &&
+                                           !isMicrophonePausedRef.current;
+
+                        console.log(`🔍 [STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                        if (canRestart) {
+                          setIsMuted(false);
+                          console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
+                          voiceMicRef.current.startListening({ forceOverride: true });
+                          // Verify mic actually started after a brief delay
+                          setTimeout(() => {
+                            if (voiceMicRef.current?.isListening) {
+                              console.log('✅ [STREAM] Microphone auto-resumed successfully');
+                            } else {
+                              console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                              if (attempt < 8) {
+                                setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                              }
+                            }
+                          }, 150);
+                        } else {
+                          console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                          setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                        }
+                      } else {
+                        console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
+                      }
+                    };
+
+                    // Start first attempt immediately after React render cycle
+                    attemptMicRestart(1);
+                  });
+                });
+              }, streamingCooldownMs);
             },
           });
 
@@ -2089,6 +4471,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           setIsResponding(true); // Start responding state immediately
         }
 
+        // 🔥 FIX: Track pending TTS requests to prevent premature onComplete
+        let pendingTTSCount = 0;
+        let streamEnded = false;
+        let finalizePromiseResolve: (() => void) | null = null;
+        const finalizePromise = new Promise<void>(resolve => {
+          finalizePromiseResolve = resolve;
+        });
+
+        // Helper to check if we can finalize
+        const checkFinalize = () => {
+          if (streamEnded && pendingTTSCount === 0 && audioQueue) {
+            console.log('✅ [STREAM] All TTS complete - NOW marking streaming complete');
+            audioQueue.markStreamingComplete();
+            finalizePromiseResolve?.();
+          } else if (streamEnded) {
+            console.log(`⏳ [STREAM] Stream ended but ${pendingTTSCount} TTS requests still pending...`);
+          }
+        };
+
         try {
           if (!reader) {
             throw new Error('No response body reader available');
@@ -2097,7 +4498,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
-              console.log('🏁 [STREAM] Stream complete');
+              console.log('🏁 [STREAM] Text stream complete');
 
               // Process any remaining partial sentence
               if (partialSentence.trim() && audioQueue) {
@@ -2116,6 +4517,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   console.error('❌ [STREAM] Failed to generate audio for final sentence:', err);
                 }
               }
+
+              // 🔥 FIX: Mark stream as ended, but DON'T call markStreamingComplete yet!
+              // Wait for all pending TTS requests to complete first
+              streamEnded = true;
+              console.log(`🏁 [STREAM] Stream ended with ${pendingTTSCount} TTS requests still in flight`);
+              checkFinalize();
               break;
             }
 
@@ -2160,18 +4567,48 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           if (sentence) {
                             console.log('🎤 [STREAM] Complete sentence, generating audio:', sentence.substring(0, 50));
 
+                            // 🔥 FIX: Track this pending TTS request
+                            pendingTTSCount++;
+                            console.log(`📤 [STREAM] TTS request started (pending: ${pendingTTSCount})`);
+
+                            // 🔥 FIX: Generate audio with retry logic for transient failures
+                            const generateWithRetry = async (text: string, retries: number = 2): Promise<HTMLAudioElement | null> => {
+                              for (let attempt = 1; attempt <= retries; attempt++) {
+                                try {
+                                  return await generateAudioChunk(text, {
+                                    agentVoice: 'maya',
+                                    element,
+                                  });
+                                } catch (err) {
+                                  console.warn(`⚠️ [STREAM] TTS attempt ${attempt}/${retries} failed:`, err);
+                                  if (attempt < retries) {
+                                    await new Promise(r => setTimeout(r, 300 * attempt)); // Exponential backoff
+                                  }
+                                }
+                              }
+                              return null;
+                            };
+
                             // Generate and queue audio asynchronously (don't await - let it run in background)
-                            generateAudioChunk(sentence, {
-                              agentVoice: 'maya',
-                              element,
-                            }).then(audio => {
-                              audioQueue!.enqueue({
-                                audio,
-                                text: sentence,
-                                element,
-                              });
+                            generateWithRetry(sentence).then(audio => {
+                              if (audio) {
+                                audioQueue!.enqueue({
+                                  audio,
+                                  text: sentence,
+                                  element,
+                                });
+                                console.log(`📥 [STREAM] TTS request completed (pending: ${pendingTTSCount - 1})`);
+                              } else {
+                                console.error(`❌ [STREAM] TTS failed after all retries for: "${sentence.substring(0, 30)}..."`);
+                              }
+                              // 🔥 FIX: TTS completed (success or permanent failure)
+                              pendingTTSCount--;
+                              checkFinalize();
                             }).catch(err => {
-                              console.error('❌ [STREAM] Failed to generate audio:', err);
+                              // This shouldn't happen as generateWithRetry catches errors, but just in case
+                              console.error('❌ [STREAM] Unexpected TTS error:', err);
+                              pendingTTSCount--;
+                              checkFinalize();
                             });
                           }
                         }
@@ -2211,7 +4648,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
-        responseText = cleanMessage(responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+        // Use normalized response for consistent field access
+        const normalized = normalizeAIResponse(responseData);
+        responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
 
         // Extract opusAxioms and turnId for Gold Seal feature
         opusAxioms = responseData.opusAxioms;
@@ -2220,10 +4659,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.log(`🜔 Opus Axioms received: ${opusAxioms.isGold ? 'GOLD' : 'Standard'} | ${opusAxioms.passed}/8 passed`);
         }
 
+<<<<<<< HEAD
         // 🌀 SELFLET PHASE 2H: Extract past-self message for UI card
         if (responseData.pastSelf?.id && responseData.pastSelf?.content) {
           pastSelf = responseData.pastSelf as PastSelfPayload;
           console.log(`⏳ Past-Self message surfaced: "${pastSelf.title || 'untitled'}"`);
+=======
+        // 🌀 INTEGRITY CHECK: Extract Pass 3 result for lens switching UI
+        integrity = responseData.integrity as IntegrityResult | undefined;
+        lensSwitchOptions = responseData.lensSwitchOptions as ConversationMessage['lensSwitchOptions'];
+        if (integrity?.decision === 'offer_switch') {
+          console.log(`🌀 [INTEGRITY] Lens switch offered: ${JSON.stringify(lensSwitchOptions)}`);
+>>>>>>> ecstatic-brown
         }
       }
 
@@ -2303,6 +4750,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       //   }
       // }
 
+      // Extract wisdom routing data if present
+      const wisdomRouting = responseData.metadata?.wisdomRouting;
+
       // Create oracle message with source tag
       const oracleMessage: ConversationMessage = {
         id: `msg-${Date.now()}-oracle`,
@@ -2315,8 +4765,31 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         source: 'maia',
         opusAxioms,
         turnId,
+<<<<<<< HEAD
         pastSelf  // 🌀 SELFLET: Past-self message for UI card
+=======
+        // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
+        integrity,
+        lensSwitchOptions,
+        metadata: {
+          wisdomRouting: wisdomRouting ? {
+            activated: wisdomRouting.activated,
+            tool: wisdomRouting.tool,
+            meta: wisdomRouting.meta
+          } : undefined
+        }
+>>>>>>> ecstatic-brown
       };
+
+      // Trigger wisdom tool reveal if activated
+      if (wisdomRouting?.activated && wisdomRouting.tool) {
+        console.log('🌟 [WisdomTool] Revealing tool:', wisdomRouting.tool.name);
+        setActiveWisdomTool({
+          tool: wisdomRouting.tool,
+          agentName: wisdomRouting.meta?.agentName || null,
+          userMessage: cleanedText
+        });
+      }
 
       // Store MAIA's response for echo detection
       lastMaiaResponseRef.current = responseText;
@@ -2327,7 +4800,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       if (!isInVoiceMode) {
         // Chat mode - show text immediately
-        setMessages(prev => [...prev, oracleMessage]);
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
 
         // Process Oracle message for Field Protocol if recording
@@ -2373,7 +4846,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // If we used streaming audio, add message to history now (will show if "Show Text" is enabled)
       if (usedStreamingAudio && isInVoiceMode) {
-        setMessages(prev => [...prev, oracleMessage]);
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
         console.log('📝 [STREAM] Added message to history (voice mode with streaming audio)');
       }
@@ -2394,7 +4867,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         trackEvent.ttsSpoken(userId || 'anonymous', responseText, 0);
         // Set speaking state for visual feedback
         setIsResponding(true);
-        setIsAudioPlaying(true);
+        // 🔥 DON'T set isAudioPlaying here - it's set in maiaSpeak's audio.onplay callback
+        // so teal visualizer only appears when audio ACTUALLY starts playing
         setIsMicrophonePaused(true); // 🔇 PAUSE MIC WHILE MAIA SPEAKS
         setMaiaResponseText(responseText); // Update display text
 
@@ -2403,29 +4877,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
-        const cooldownMs = 2000; // 2 second cooldown (reduced from 3.5s for faster mic restart)
+        const cooldownMs = 0; // Instant - demo mode with headphones
 
         try {
           // Start speaking immediately
-
           const startSpeakTime = Date.now();
           console.log('⏱️ Starting speech at:', startSpeakTime);
 
-          // Speak the cleaned response with timeout protection
+          // Speak the cleaned response
           // Pass element hint to select appropriate elemental voice
-          const speakPromise = maiaSpeak(cleanVoiceText, element as Element);
-
-          // Dynamic timeout based on text length (~150 words per minute reading pace)
-          // Minimum 15s, add 1s per 20 characters, max 45s
-          const estimatedDuration = Math.min(Math.max(15000, cleanVoiceText.length * 50), 45000);
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error(`Speech timeout after ${estimatedDuration/1000}s`)), estimatedDuration);
-          });
-
-          await Promise.race([speakPromise, timeoutPromise]);
+          // 🔥 FIX: No character-based timeout here! maiaSpeak now uses
+          // the ACTUAL audio duration from metadata for its timeout,
+          // which is much more reliable than estimating from text length.
+          await maiaSpeak(cleanVoiceText, element as Element);
 
           const speakDuration = Date.now() - startSpeakTime;
-          console.log(`🔇 Maia finished speaking after ${speakDuration}ms`);
+          console.log(`🔇 Maia finished speaking after ${speakDuration}ms (${cleanVoiceText.length} chars)`);
 
           // ECHO SUPPRESSION: Extended cooldown to prevent audio tail from being recorded
           setEchoSuppressUntil(Date.now() + cooldownMs);
@@ -2433,7 +4900,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // In Voice mode, show text after speaking completes
           if (isInVoiceMode && showVoiceText) {
-            setMessages(prev => [...prev, oracleMessage]);
+            setMessages(prev => appendMessageCapped(prev, oracleMessage));
             onMessageAddedRef.current?.(oracleMessage);
 
             // Save voice response to long-term memory (dual-save to memories + Akashic Records)
@@ -2457,26 +4924,94 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.error('❌ Speech error or timeout:', error);
           // Show text even if speech fails in Voice mode
           if (isInVoiceMode) {
-            setMessages(prev => [...prev, oracleMessage]);
+            setMessages(prev => appendMessageCapped(prev, oracleMessage));
             onMessageAddedRef.current?.(oracleMessage);
           }
         } finally {
-          // Always reset states to prevent getting stuck
-          console.log('🧹 Voice response complete - resetting all states');
+          // Non-streaming path: Audio ended, update states appropriately
+          console.log('🧹 Voice response (non-streaming) complete - scheduling cooldown...');
           setIsResponding(false);
+          // ✅ Set isAudioPlaying FALSE now - audio has ended, visualizer should show user color
           setIsAudioPlaying(false);
-          setIsMicrophonePaused(false); // 🎤 RESUME MIC AFTER MAIA FINISHES
-          console.log('🎤 Microphone unpaused - ready for next input');
+          // 🔥 But KEEP isMicrophonePaused TRUE during cooldown to block mic restart
+          // (ContinuousConversation now checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
+          // isMicrophonePaused was already set to true when MAIA started speaking
 
-          // CRITICAL: Resume listening after cooldown to prevent echo
-          if (isInVoiceMode && !isMuted && voiceMicRef.current?.startListening) {
-            setTimeout(() => {
-              if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
-                voiceMicRef.current.startListening();
-                console.log('🎤 Microphone resumed after Maia finished speaking');
-              }
-            }, cooldownMs); // Wait for echo suppression cooldown
-          }
+          // CRITICAL: Resume listening AFTER cooldown to prevent echo/feedback loop
+          console.log(`⏳ [NON-STREAM] Starting ${cooldownMs}ms cooldown (mic paused)...`);
+          setTimeout(() => {
+            console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
+
+            // NOW unpause mic - this allows ContinuousConversation to restart
+            setIsMicrophonePaused(false);
+            setIsMuted(false); // Ensure mic is unmuted
+            console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
+
+            // 🔥 FIX: Force React to flush state updates before attempting mic restart
+            // Using requestAnimationFrame ensures we're after the React render cycle
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
+                const attemptMicRestart = (attempt: number) => {
+                  if (attempt > 8) {
+                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                    setIsProcessing(false);
+                    setIsResponding(false);
+                    setIsAudioPlaying(false);
+                    setIsMicrophonePaused(false);
+                    isProcessingRef.current = false;
+                    isRespondingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    isMicrophonePausedRef.current = false;
+                    // Final attempt after forced reset
+                    setTimeout(() => {
+                      if (voiceMicRef.current?.startListening) {
+                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
+                        setIsMuted(false);
+                        voiceMicRef.current.startListening({ forceOverride: true });
+                      }
+                    }, 500);
+                    return;
+                  }
+
+                  if (voiceMicRef.current?.startListening) {
+                    // Check ALL blocking conditions including mic pause and audio states
+                    const canRestart = !isProcessingRef.current &&
+                                       !isRespondingRef.current &&
+                                       !isAudioPlayingRef.current &&
+                                       !isMicrophonePausedRef.current;
+
+                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                    if (canRestart) {
+                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
+                      voiceMicRef.current.startListening({ forceOverride: true });
+                      // Verify mic actually started after a brief delay
+                      setTimeout(() => {
+                        if (voiceMicRef.current?.isListening) {
+                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                        } else {
+                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                          if (attempt < 8) {
+                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                          }
+                        }
+                      }, 150);
+                    } else {
+                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                    }
+                  } else {
+                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
+                  }
+                };
+
+                // Start first attempt immediately after React render cycle
+                attemptMicRestart(1);
+              });
+            });
+          }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
         console.log('⚠️ Not speaking because:', {
@@ -2496,6 +5031,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.error('Text chat API error:', error);
       trackEvent.error(userId || 'anonymous', 'api_error', String(error));
 
+      // 🔥 CRITICAL: Reset voice state on error - no audio will play, so unblock mic immediately
+      // Without this, voice mode stays stuck in "responding" state forever after 401/errors
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      console.log('🔇 [ERROR RECOVERY] Reset voice state after API error');
+
       // Provide specific error messages based on error type
       let errorText = 'I apologize, I\'m having trouble connecting right now. Could you say that again?';
       if (error.name === 'AbortError') {
@@ -2504,6 +5046,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       } else if (error.message?.includes('fetch')) {
         console.error('🚨 Network error - cannot reach server');
         errorText = 'I can\'t connect right now. Check your internet connection and try again.';
+      } else if (error.message?.includes('401')) {
+        console.error('🚨 Authentication required - user not signed in');
+        errorText = 'You need to sign in to continue our conversation.';
       }
 
       const errorMessage: ConversationMessage = {
@@ -2514,16 +5059,70 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         motionState: 'idle',
         source: 'system'
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
     } finally {
-      // Always reset processing state for text chat
-      console.log('🧹 Text processing complete - resetting all states (isProcessing: false, isResponding: false)');
+      // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
+      // For VOICE mode, isResponding is managed by StreamingAudioQueue.onComplete
+      // Setting it here would cause teal visualizer to cut out mid-speech!
+      const isVoiceStreaming = !showChatInterface && voiceEnabled;
+
+      console.log('🧹 Message processing complete', {
+        isVoiceStreaming,
+        isAudioPlaying: isAudioPlayingRef.current,
+        willResetResponding: !isVoiceStreaming
+      });
+
       setIsProcessing(false);
-      setIsResponding(false);
+
+      // 🌀 LENS CONSENT: Clear pending consent after message is processed
+      // The consent was applied to this request, so reset for next message
+      if (pendingLensConsent) {
+        setPendingLensConsent(null);
+        console.log('🌀 [LENS CONSENT] Cleared pending consent after processing');
+      }
+
+      // Only reset isResponding for text mode - voice mode handles this in onComplete
+      if (!isVoiceStreaming) {
+        setIsResponding(false);
+        console.log('🔇 [TEXT MODE] Reset isResponding=false');
+      } else {
+        console.log('🔊 [VOICE MODE] Keeping isResponding - audio queue will reset when complete');
+      }
+
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
+
+  // ==================== SEED PROMPT PROCESSOR ====================
+  // Process pending seed prompt once handleTextMessage is available
+  // This runs after handleTextMessage is defined and sends any pending seed
+  useEffect(() => {
+    // Store ref for potential future use
+    handleTextMessageRef.current = handleTextMessage;
+
+    // Process any pending seed (from Guide/Academy "Take to MAIA" buttons)
+    if (pendingSeedRef.current) {
+      const seed = pendingSeedRef.current;
+      pendingSeedRef.current = null; // Clear to prevent re-processing
+      console.log('🌱 [SEED] Sending seed to handleTextMessage:', seed.prompt.slice(0, 50) + '...');
+
+      // Clear previous conversation for fresh start with seeded prompt
+      setMessages([]);
+      historicalMessagesRef.current = []; // Clear API context too
+      if (typeof window !== 'undefined' && sessionId) {
+        const storageKey = `maia_conversation_${sessionId}`;
+        localStorage.removeItem(storageKey);
+        console.log('🌱 [SEED] Cleared conversation for fresh start');
+      }
+      setHasActivated(true); // Skip welcome screen
+
+      // Small delay to ensure component is fully mounted and ready
+      setTimeout(() => {
+        handleTextMessage(seed.prompt);
+      }, 100);
+    }
+  }, [handleTextMessage, sessionId]);
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
@@ -2534,9 +5133,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       return;
     }
 
+    // 🎤 PWA STATE MACHINE: Signal transcript received → transition to THINKING
+    if (isPwaVoice) {
+      pwaVoice.transcriptReceived(t);
+    }
+
     // 🔇 CRITICAL: Reject ALL transcripts when MAIA is speaking or processing
-    if (isAudioPlaying || isResponding || isMicrophonePaused) {
-      console.warn('🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking:', t);
+    // USE REFS for real-time values (state values can be stale in callbacks!)
+    if (isAudioPlayingRef.current || isRespondingRef.current || isMicrophonePausedRef.current) {
+      console.warn('🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking:', t, {
+        isAudioPlaying: isAudioPlayingRef.current,
+        isResponding: isRespondingRef.current,
+        isMicrophonePaused: isMicrophonePausedRef.current
+      });
       return;
     }
 
@@ -2559,7 +5168,350 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
 
-    // 🎤 VOICE COMMAND DETECTION - Check for mode switching commands
+    // 🚨 CRISIS DETECTION - Safety override that takes precedence over ALL modes
+    // This runs FIRST before any voice command matching
+    const crisisCheck = detectCrisis(t);
+    if (crisisCheck.detected) {
+      console.log(`🚨 [CRISIS] Level ${crisisCheck.level} detected:`, crisisCheck.trigger);
+      crisisStateRef.current = crisisCheck;
+
+      // Stop any ongoing MAIA speech immediately
+      stopStreamingVoice();
+      isAudioPlayingRef.current = false;
+      setIsAudioPlaying(false);
+
+      // Override mode to care (crisis is a hard override)
+      setMaiaMode(prev => ({
+        ...prev,
+        mode: 'care',
+        careSubMode: 'presence', // Crisis uses presence as base
+      }));
+
+      // Speak the crisis response script line by line
+      if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
+        for (const line of crisisCheck.responseScript) {
+          await maiaSpeak(line);
+          // Small pause between lines for pacing
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+
+      // The conversation will continue with crisis system prompt active
+      // Don't return - let the message go through with crisis context
+      // This allows MAIA to continue the safety conversation
+    }
+
+    // 🎭 COMPREHENSIVE VOICE COMMAND DETECTION (Talk/Care/Scribe modes, settings, actions)
+    const voiceCmd = matchVoiceCommand(t);
+    if (voiceCmd.matched) {
+      console.log(`🎙️ [VoiceCommand] Matched: ${voiceCmd.command}`);
+      lastVoiceCommandRef.current = voiceCmd;
+
+      // Apply mode changes (Talk/Care/Scribe)
+      if (voiceCmd.modeChange) {
+        setMaiaMode(prev => ({
+          ...prev,
+          ...voiceCmd.modeChange,
+        }));
+        console.log(`🎭 [Mode] Switching to:`, voiceCmd.modeChange);
+      }
+
+      // Apply settings delta (speed, prosody, sanctuary, etc.)
+      if (voiceCmd.settingsDelta) {
+        try {
+          const saved = localStorage.getItem('maia_settings');
+          const currentSettings = saved ? JSON.parse(saved) : {};
+          const newSettings = applySettingsDelta(currentSettings, voiceCmd.settingsDelta);
+          localStorage.setItem('maia_settings', JSON.stringify(newSettings));
+          window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: newSettings }));
+          console.log(`⚙️ [Settings] Applied delta:`, voiceCmd.settingsDelta);
+
+          // Update local voice settings state if speed/prosody changed
+          if (voiceCmd.settingsDelta.speed !== undefined || voiceCmd.settingsDelta.speedDelta !== undefined) {
+            setVoiceSettings(prev => ({
+              ...prev,
+              speed: newSettings.voice?.speed ?? prev.speed,
+            }));
+          }
+          if (voiceCmd.settingsDelta.prosodyRange !== undefined || voiceCmd.settingsDelta.prosodyDelta !== undefined) {
+            setVoiceSettings(prev => ({
+              ...prev,
+              prosodyRange: newSettings.voice?.prosodyRange ?? prev.prosodyRange,
+            }));
+          }
+
+          // Handle sanctuary toggle
+          if (voiceCmd.settingsDelta.sanctuary !== undefined) {
+            setIsSanctuary(voiceCmd.settingsDelta.sanctuary);
+          }
+
+          // Handle interrupt settings
+          if (voiceCmd.settingsDelta.interruptEnabled !== undefined) {
+            setInterruptEnabled(voiceCmd.settingsDelta.interruptEnabled);
+          }
+        } catch (e) {
+          console.error('[VoiceCommand] Failed to apply settings delta:', e);
+        }
+      }
+
+      // Handle actions
+      if (voiceCmd.action === 'pause') {
+        // Stop any ongoing speech
+        stopStreamingVoice();
+        isAudioPlayingRef.current = false;
+        setIsAudioPlaying(false);
+      } else if (voiceCmd.action === 'capture') {
+        // Trigger capture panel
+        setShowCapturePanel(true);
+      }
+
+      // 📝 Handle Scribe actions
+      if (voiceCmd.scribeAction) {
+        const { type, container, markerType, markerNote } = voiceCmd.scribeAction;
+
+        if (type === 'start' && container) {
+          const result = await startScribeSession(container);
+          if (result) {
+            // Acknowledgment will be spoken by the normal handler below
+            console.log(`📝 [SCRIBE] Started ${container} session, awaiting consent`);
+          }
+        } else if (type === 'pause') {
+          await pauseScribeSession(true);
+        } else if (type === 'resume') {
+          await pauseScribeSession(false);
+        } else if (type === 'stop') {
+          const result = await stopScribeSession();
+          if (result) {
+            console.log(`📝 [SCRIBE] Session saved with ${result.session?.markerCount || 0} markers`);
+          }
+        } else if (type === 'mark') {
+          await markScribeMoment(markerType, markerNote);
+        } else if (type === 'aside') {
+          // Toggle aside mode for private consultation without recording
+          if (scribeSession.isActive && scribeSession.consentConfirmed) {
+            toggleScribeAside(!scribeSession.isAside);
+            console.log(`📝 [SCRIBE] Aside ${!scribeSession.isAside ? 'entered' : 'exited'}`);
+          }
+        } else if (type === 'consent-yes') {
+          // Confirm consent for witness/couples mode
+          if (scribeSession.isActive && !scribeSession.consentConfirmed) {
+            await confirmScribeConsent(true);
+            console.log(`📝 [SCRIBE] Consent confirmed, now witnessing`);
+          }
+        } else if (type === 'consent-no') {
+          // Decline consent - mark declined in API and reset state
+          if (scribeSession.isActive) {
+            await confirmScribeConsent(false); // Mark as declined in DB
+            setScribeSession(DEFAULT_SCRIBE_SESSION); // Reset local state
+            console.log(`📝 [SCRIBE] Consent declined, session cancelled`);
+          }
+        } else if (type === 'transcript-on') {
+          // Enable full transcript
+          if (scribeSession.isActive) {
+            await setTranscriptEnabled(true);
+          }
+        } else if (type === 'transcript-off') {
+          // Disable transcript (summary only)
+          if (scribeSession.isActive) {
+            await setTranscriptEnabled(false);
+          }
+        }
+      }
+
+      // 📓 Handle Journal actions
+      if (voiceCmd.journalAction) {
+        const { type, title } = voiceCmd.journalAction;
+        if (type === 'save') {
+          // Save recent conversation to journal
+          const recentMessages = messages.slice(-5); // Last 5 messages
+          const content = recentMessages.map(m => `${m.role === 'user' ? 'You' : 'MAIA'}: ${m.text}`).join('\n\n');
+          try {
+            await apiFetch('/api/journal/quick', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content,
+                type: 'reflection',
+                source: 'voice_command',
+              }),
+            });
+            toast.success('Saved to journal');
+          } catch (err) {
+            console.error('[Journal] Save error:', err);
+            toast.error('Failed to save to journal');
+          }
+        } else if (type === 'dream') {
+          // Save to dream journal
+          const recentMessages = messages.slice(-5);
+          const content = recentMessages.map(m => `${m.role === 'user' ? 'You' : 'MAIA'}: ${m.text}`).join('\n\n');
+          try {
+            await apiFetch('/api/journal/quick', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content,
+                type: 'dream',
+                source: 'voice_command',
+              }),
+            });
+            toast.success('Saved to dream journal');
+          } catch (err) {
+            console.error('[Journal] Dream save error:', err);
+            toast.error('Failed to save to dream journal');
+          }
+        } else if (type === 'title' && title) {
+          // Update most recent journal entry title
+          console.log(`[Journal] Would update title to: ${title}`);
+          toast.success(`Title: "${title}"`);
+        }
+      }
+
+      // 🌟 Handle Astrology actions
+      if (voiceCmd.astrologyAction) {
+        const { type } = voiceCmd.astrologyAction;
+        if (type === 'transits') {
+          // Fetch today's transits and speak them
+          try {
+            const res = await apiFetch('/api/astrology/transits/today');
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Astrology] Transits error:', err);
+            if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I couldn't fetch the transits right now. Let's try again later.");
+            }
+          }
+        } else if (type === 'personal') {
+          // Fetch personal transits based on birth chart
+          try {
+            const res = await apiFetch('/api/astrology/transits/personal');
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Astrology] Personal transits error:', err);
+            if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I need your birth chart data to share personal transits. Have you set that up?");
+            }
+          }
+        }
+      }
+
+      // 📝 Handle Enhanced Scribe actions (partial summary, action items)
+      if (voiceCmd.scribePartialAction) {
+        const { type, minutes } = voiceCmd.scribePartialAction;
+        if (type === 'summarize' && scribeSession.isActive && scribeSession.sessionId) {
+          try {
+            const res = await apiFetch('/api/scribe/partial-summary', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: scribeSession.sessionId,
+                minutes: minutes || 5,
+              }),
+            });
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Scribe] Partial summary error:', err);
+            toast.error('Failed to generate summary');
+          }
+        } else if (type === 'action-capture' && scribeSession.isActive && scribeSession.sessionId) {
+          try {
+            const res = await apiFetch('/api/scribe/action-items', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: scribeSession.sessionId,
+              }),
+            });
+            const data = await res.json();
+            if (data.actionItems?.length > 0 && maiaSpeak && maiaReady) {
+              const itemsText = data.actionItems.map((item: string, i: number) => `${i + 1}. ${item}`).join('. ');
+              await maiaSpeak(`Here are the action items: ${itemsText}`);
+            } else if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I didn't find any clear action items in this session.");
+            }
+          } catch (err) {
+            console.error('[Scribe] Action items error:', err);
+            toast.error('Failed to extract action items');
+          }
+        }
+      }
+
+      // 🔇 Handle Voice Control (pause/resume MAIA speech)
+      if (voiceCmd.action === 'voice-pause') {
+        // Stop any ongoing speech and save for potential resume
+        pausedResponseRef.current = lastMaiaResponseRef.current;
+        stopStreamingVoice();
+        isAudioPlayingRef.current = false;
+        setIsAudioPlaying(false);
+        console.log('🔇 [VoiceControl] MAIA speech paused');
+      } else if (voiceCmd.action === 'voice-resume') {
+        // Resume paused speech if available
+        if (pausedResponseRef.current && maiaSpeak && maiaReady) {
+          console.log('🔊 [VoiceControl] Resuming MAIA speech');
+          await maiaSpeak(pausedResponseRef.current);
+          pausedResponseRef.current = null;
+        }
+      }
+
+      // Handle Presence Bell and Repair for Third Chair
+      if (voiceCmd.action === 'presence-bell') {
+        // Mark as softening moment
+        if (scribeSession.isActive && scribeSession.consentConfirmed) {
+          await markScribeMoment('softening', 'Presence bell invoked');
+        }
+      } else if (voiceCmd.action === 'repair') {
+        // Mark as repair attempt
+        if (scribeSession.isActive && scribeSession.consentConfirmed) {
+          await markScribeMoment('repair', 'Repair prompt invoked');
+        }
+      }
+
+      // Handle acknowledgment
+      if (voiceCmd.acknowledgment !== 'silent' && voiceCmd.acknowledgmentText) {
+        if (voiceCmd.acknowledgment === 'brief' || voiceCmd.acknowledgment === 'conversational') {
+          // Speak the acknowledgment
+          if (maiaReady && maiaSpeak && !isMuted) {
+            await maiaSpeak(voiceCmd.acknowledgmentText);
+          }
+          toast.success(voiceCmd.acknowledgmentText, { duration: 2000 });
+        } else if (voiceCmd.acknowledgment === 'chime') {
+          // Just show toast (could add audio chime later)
+          toast(voiceCmd.acknowledgmentText || 'Acknowledged', { duration: 1500 });
+        }
+
+        // If this was a pure command (no additional content), return
+        // Check if transcript was just the command by seeing if it matched fully
+        const isStandaloneCommand = t.length < 50; // Simple heuristic - commands are short
+        if (isStandaloneCommand && !voiceCmd.action?.includes('reflect')) {
+          return;
+        }
+      }
+    }
+
+    // 📝 TRANSCRIPT CAPTURE: Append user speech to transcript if scribe session is active
+    // Skip control commands (scribe-*, voice-*, journal-*, astrology-*, presence-bell, repair, reflect)
+    const isControlCommand = voiceCmd.matched && (
+      voiceCmd.action?.startsWith('scribe-') ||
+      voiceCmd.action?.startsWith('voice-') ||
+      voiceCmd.action?.startsWith('journal-') ||
+      voiceCmd.action?.startsWith('astrology-') ||
+      voiceCmd.action === 'presence-bell' ||
+      voiceCmd.action === 'repair' ||
+      voiceCmd.action === 'reflect'
+    );
+    if (!isControlCommand) {
+      await appendTranscriptEntry(t, 'self');
+    }
+
+    // 🎤 CONVERSATION STYLE COMMANDS (classic/walking/adaptive) - legacy system
     const commandResult = detectVoiceCommand(t);
     if (commandResult.detected && commandResult.mode) {
       console.log(`🔄 Voice command detected: switching to ${commandResult.mode} mode`);
@@ -2716,15 +5668,66 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }).catch(err => console.error('Failed to save voice user message:', err));
     }
 
-    // 📝 SCRIBE MODE: Record passively without MAIA response
-    if (isScribing) {
+    // 📝 SCRIBE MODE: Record passively without MAIA response (unless in aside mode)
+    if (isScribing && !scribeSession.isAside) {
       console.log('📝 [Scribe Mode] Recording voice transcript passively:', cleanedText.substring(0, 50) + '...');
       recordVoiceTranscript(cleanedText);
+<<<<<<< HEAD
       return; // Don't trigger MAIA response
+=======
+      return; // Don't trigger MAIA response when witnessing
+    }
+
+    // 💬 ASIDE MODE: Private consultation with MAIA (not recorded)
+    if (isScribing && scribeSession.isAside) {
+      console.log('💬 [Aside Mode] Private consultation (not recorded):', cleanedText.substring(0, 50) + '...');
+      // Continue to process and get MAIA response, but don't record
+>>>>>>> ecstatic-brown
     }
 
     try {
-      // ✅ CORRECT FLOW: Browser STT → /api/between/chat → Browser TTS
+      // 🌊 STREAMING VOICE MODE: Use server-side sentence TTS for natural flow
+      if (streamingVoiceMode && !showChatInterface) {
+        console.log('🌊 [StreamingVoice] Using streaming voice flow...');
+
+        // Reset streaming state for new message
+        setStreamingResponseComplete(false);
+
+        // Add user message to UI
+        const userMessage: ConversationMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'user',
+          text: cleanedText,
+          timestamp: new Date(),
+          source: 'voice'
+        };
+        // Build once, use for both UI state and API payload (avoids stale closure)
+        const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+        setMessages(nextMessagesForApi);
+
+        // Set processing states
+        setIsProcessing(true);
+        setIsResponding(true);
+        setIsAudioPlaying(true);
+        setIsMuted(true); // Mute while MAIA speaks
+
+        // Stop mic while processing
+        if (voiceMicRef.current?.stopListening) {
+          voiceMicRef.current.stopListening();
+        }
+
+        // Send via streaming voice system (includes historical context)
+        const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
+        await sendStreamingMessage(cleanedText, conversationHistory);
+
+        setIsProcessing(false);
+        const duration = Date.now() - voiceStartTime;
+        trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
+        console.log('✅ [StreamingVoice] Streaming voice flow completed');
+        return;
+      }
+
+      // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
       console.log('🌀 Routing voice through THE BETWEEN...');
       await handleTextMessage(cleanedText);
 
@@ -2744,14 +5747,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         motionState: 'idle',
         source: 'system'
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
 
       // Reset states on error
       setIsProcessing(false);
       setIsResponding(false);
     }
-  }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded]);
+  }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded, maiaSpeak, stopStreamingVoice, startScribeSession, pauseScribeSession, stopScribeSession, markScribeMoment, confirmScribeConsent, setTranscriptEnabled, appendTranscriptEntry, scribeSession]);
 
   // Clear all check-ins
   const clearCheckIns = useCallback(() => {
@@ -2779,9 +5782,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const fullContent = header + date + sessionInfo + separator + transcript;
 
       // Save to Obsidian vault
-      const response = await fetch('/api/obsidian/save-conversation', {
+      const response = await apiFetch('/api/obsidian/save-conversation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript: fullContent,
           agentName: agentConfig.name,
@@ -2838,17 +5840,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Clean text for voice
       const cleanText = cleanMessageForVoice(text);
 
-      console.log('🎵 Speaking with OpenAI Alloy:', cleanText.substring(0, 100));
+      console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, cleanText.substring(0, 100));
 
-      // Call OpenAI TTS with Alloy voice
-      const response = await fetch('/api/voice/openai-tts', {
+      // Call OpenAI TTS with voice settings from account preferences
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: cleanText,
-          voice: agentConfig.voice || 'alloy',
-          speed: 0.95,
-          model: 'tts-1-hd'
+          voice: voiceSettings.voice,
+          speed: voiceSettings.speed,
+          model: voiceSettings.model
         })
       });
 
@@ -2871,8 +5872,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       await audio.play();
     } catch (error) {
-      console.error('Error speaking message:', error);
-      toast.error('Failed to speak message');
+      console.error('❌ OpenAI TTS error (no fallback - OpenAI TTS only):', error);
+      // NO browser TTS fallback - we only use OpenAI TTS
+      // If OpenAI fails, stay silent rather than use robotic browser voice
+      toast.error('Voice unavailable');
       setCurrentlySpeakingId(undefined);
       setIsResponding(false);
       setIsAudioPlaying(false);
@@ -2906,10 +5909,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       audioRef.current = null;
     }
 
-    // Mute the microphone
+    // Mute the microphone - user emergency stop
     setIsMuted(true);
     if (voiceMicRef.current?.stopListening) {
-      voiceMicRef.current.stopListening();
+      voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated emergency stop
     }
 
     // Reset all states
@@ -2918,12 +5921,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setIsMicrophonePaused(true);
     setCurrentlySpeakingId(undefined);
 
-    console.log('🛑 All MAIA systems stopped');
+    console.log('🛑 All MAIA systems stopped (emergency stop)');
   }, []);
 
   // ⏰ Session Timer Handlers
   const handleStartSession = useCallback((durationMinutes: number) => {
     console.log(`⏰ Starting ${durationMinutes}-minute session with temporal container`);
+
+    // 🧹 Clear previous conversation when starting a new session
+    console.log('🧹 Clearing previous conversation for fresh session start');
+    setMessages([]);
+    historicalMessagesRef.current = []; // Clear API context too
+    setHasActivated(false); // Reset to show welcome/greeting
+    // Clear localStorage for previous conversation
+    if (typeof window !== 'undefined' && sessionId) {
+      const storageKey = `maia_conversation_${sessionId}`;
+      localStorage.removeItem(storageKey);
+      console.log(`🧹 Cleared localStorage: ${storageKey}`);
+    }
 
     const timer = new SessionTimer({
       durationMinutes,
@@ -2959,7 +5974,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       startTime: timer.getStartTime().toISOString(),
       durationMinutes: timer.getDurationMinutes(),
       userId: userId || 'anonymous',
-      userName: userName || 'Explorer',
+      userName: userName || 'Friend',
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: false,
@@ -3021,7 +6036,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       startTime: timer.getStartTime().toISOString(),
       durationMinutes: timer.getDurationMinutes(),
       userId: userId || 'anonymous',
-      userName: userName || 'Explorer',
+      userName: userName || 'Friend',
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: savedSessionData.wasExtended,
@@ -3037,8 +6052,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     clearSession();
     setShowResumePrompt(false);
     setSavedSessionData(null);
+    // 🧹 Clear previous conversation messages
+    setMessages([]);
+    historicalMessagesRef.current = []; // Clear API context too
+    setHasActivated(false);
+    if (typeof window !== 'undefined' && sessionId) {
+      const storageKey = `maia_conversation_${sessionId}`;
+      localStorage.removeItem(storageKey);
+    }
     // Note: User will click header button to open session selector
-  }, []);
+  }, [sessionId]);
 
   // 🕯️ Ritual Handlers
   const handleDurationSelected = useCallback((durationMinutes: number) => {
@@ -3120,8 +6143,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   return (
     <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
-      {/* iOS Audio Enable Button - DISABLED - causing black screen */}
-      {false && needsIOSAudioPermission && (
+      {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
+      {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
           <div className="max-w-md p-8 text-center">
             <button
@@ -3159,17 +6182,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
+<<<<<<< HEAD
       {/* Claude-like Welcome Greeting - Shows only when no messages exist (bulletproof gate) */}
       <AnimatePresence>
         {messages.length === 0 && !hasActivated && !isProcessing && !isResponding && (
+=======
+      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
+      <AnimatePresence>
+        {!hasActivated && !isProcessing && !isResponding && (
+>>>>>>> ecstatic-brown
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-0 z-40 flex flex-col items-center justify-center"
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none"
           >
-            <div className="flex flex-col items-center gap-8 px-4 w-full max-w-2xl">
+            <div className="flex flex-col items-center gap-5 px-4 w-full max-w-2xl pointer-events-auto">
               {/* Holoflower Icon + Greeting */}
               <div className="flex items-center gap-4">
                 <motion.div
@@ -3183,24 +6212,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   }}
                 >
                   <img
-                    src="/holoflower-amber.png"
+                    src="/logo_flower 2.png"
                     alt="MAIA"
-                    className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-[0_0_20px_rgba(251,146,60,0.5)]"
-                    style={{
-                      filter: 'brightness(1.2)',
-                    }}
+                    className="w-14 h-14 md:w-16 md:h-16 object-contain"
                   />
                 </motion.div>
 
-                {/* Greeting Text - Inline with icon */}
+                {/* Greeting Text - Quieter confidence, not hero announcement */}
                 <motion.h1
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-3xl sm:text-4xl md:text-5xl font-light"
+                  className="text-3xl sm:text-4xl md:text-5xl font-light text-maia-spice-500"
                   style={{
                     fontFamily: 'Spectral, Georgia, serif',
-                    color: '#C9956C',
                     textShadow: '0 2px 20px rgba(0,0,0,0.5)',
                     letterSpacing: '-0.02em',
                   }}
@@ -3209,72 +6234,26 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 </motion.h1>
               </div>
 
-              {/* Welcome Input Field - Claude-like centered input */}
+              {/* Welcome Invitation - atmospheric text, not interactive */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="w-full"
+                className="w-full text-center"
               >
-                <div className="flex items-end gap-3 bg-[#2a2a3e]/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl px-4 py-3">
-                  <textarea
-                    ref={welcomeInputRef}
-                    placeholder="How can I help you today?"
-                    className="flex-1 bg-transparent text-[#E8D5B7] placeholder-white/40
-                             resize-none outline-none text-base md:text-lg"
-                    style={{
-                      fontFamily: 'Spectral, Georgia, serif',
-                      minHeight: '40px',
-                      maxHeight: '200px',
-                    }}
-                    rows={1}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        const text = (e.target as HTMLTextAreaElement).value.trim();
-                        if (text) {
-                          setShowChatInterface(true); // Switch to chat mode after first message
-                          handleTextMessage(text);
-                          (e.target as HTMLTextAreaElement).value = '';
-                        }
-                      }
-                    }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = 'auto';
-                      target.style.height = Math.min(target.scrollHeight, 200) + 'px';
-                    }}
-                  />
-                  {/* Send button - right side */}
-                  <button
-                    onClick={() => {
-                      const textarea = welcomeInputRef.current;
-                      if (textarea) {
-                        const text = textarea.value.trim();
-                        if (text) {
-                          setShowChatInterface(true); // Switch to chat mode after first message
-                          handleTextMessage(text);
-                          textarea.value = '';
-                          textarea.style.height = 'auto';
-                        }
-                      }
-                    }}
-                    className="flex-shrink-0 p-2.5 rounded-xl bg-amber-600/90 hover:bg-amber-500
-                             transition-all active:scale-95 shadow-lg shadow-amber-600/30"
-                    title="Send message"
-                  >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                  </button>
-                </div>
+                <p
+                  className="text-maia-ink-60 text-lg md:text-xl"
+                  style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                >
+                  I'm here when you're ready
+                </p>
               </motion.div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Scribe Mode Recording Indicator */}
+      {/* Scribe Mode Recording Indicator - Red when witnessing, Blue when aside */}
       <AnimatePresence>
         {isScribing && (
           <motion.div
@@ -3283,28 +6262,115 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-8 left-1/2 transform -translate-x-1/2 z-below-nav"
           >
-            <div className="bg-gradient-to-r from-jade-shadow/90 to-jade-night/90 backdrop-blur-xl rounded-full px-6 py-3 border border-jade-sage/50 shadow-2xl">
+            <div className={`backdrop-blur-xl rounded-2xl px-4 py-3 border shadow-2xl transition-colors duration-300 ${
+              scribeSession.isAside
+                ? 'bg-gradient-to-r from-blue-900/90 to-indigo-900/90 border-blue-400/50'
+                : scribeSession.isPaused
+                  ? 'bg-gradient-to-r from-amber-900/90 to-yellow-900/90 border-amber-400/50'
+                  : 'bg-gradient-to-r from-red-900/90 to-rose-900/90 border-red-400/50'
+            }`}>
               <div className="flex items-center gap-3">
+                {/* Recording indicator light */}
                 <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5]
+                  animate={scribeSession.isPaused || scribeSession.isAside ? {} : {
+                    scale: [1, 1.3, 1],
+                    opacity: [0.6, 1, 0.6]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 1.2,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  className="w-3 h-3 bg-jade-jade rounded-full shadow-[0_0_12px_rgba(168,203,180,0.8)]"
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                    scribeSession.isAside
+                      ? 'bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.8)]'
+                      : scribeSession.isPaused
+                        ? 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+                        : 'bg-red-500 shadow-[0_0_16px_rgba(239,68,68,0.9)]'
+                  }`}
                 />
+<<<<<<< HEAD
                 <div>
                   <div className="text-jade-jade text-sm font-medium">📝 Scribe Mode Active</div>
                   <div className="text-jade-mineral/70 text-xs">
                     Recording session •
                     {scribeSession?.voiceTranscripts?.length || 0} voice +
                     {scribeSession?.consultationMessages?.length || 0} consultations
+=======
+
+                {/* Status text */}
+                <div className="flex-1">
+                  <div className={`text-sm font-medium ${
+                    scribeSession.isAside ? 'text-blue-300' : scribeSession.isPaused ? 'text-amber-300' : 'text-red-300'
+                  }`}>
+                    {scribeSession.isAside
+                      ? '💬 Aside Mode'
+                      : scribeSession.isPaused
+                        ? '⏸️ Paused'
+                        : scribeSession.container === 'solo'
+                          ? '🧘 1st Chair • Solo'
+                          : scribeSession.container === 'witness'
+                            ? '👁️ 2nd Chair • Witness'
+                            : '📋 3rd Chair • Practitioner'}
+                  </div>
+                  <div className={`text-xs ${
+                    scribeSession.isAside ? 'text-blue-400/70' : scribeSession.isPaused ? 'text-amber-400/70' : 'text-red-400/70'
+                  }`}>
+                    {scribeSession.isAside
+                      ? 'Private consultation • Not recording'
+                      : scribeSession.isPaused
+                        ? 'Session paused • Say "resume scribe"'
+                        : scribeSession.container === 'solo'
+                          ? 'Self-study • journaling'
+                          : scribeSession.container === 'witness'
+                            ? 'Observing • not responding'
+                            : 'Session notes • skill tracking'}
+>>>>>>> ecstatic-brown
                   </div>
                 </div>
+
+                {/* Aside toggle button */}
+                <button
+                  onClick={() => toggleScribeAside(!scribeSession.isAside)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    scribeSession.isAside
+                      ? 'bg-blue-500/30 hover:bg-blue-500/50 text-blue-200'
+                      : 'bg-white/10 hover:bg-white/20 text-white/70'
+                  }`}
+                  title={scribeSession.isAside ? 'Return to witnessing' : 'Enter aside mode (private consultation)'}
+                >
+                  {scribeSession.isAside ? <Eye className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🛡️ SANCTUARY MODE INDICATOR - Visual proof of memory exclusion */}
+      <AnimatePresence>
+        {isSanctuary && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-8 right-4 z-below-nav"
+          >
+            <div className="bg-gradient-to-r from-emerald-900/90 to-emerald-800/90 backdrop-blur-xl rounded-full px-4 py-2 border border-emerald-500/50 shadow-2xl">
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    opacity: [0.7, 1, 0.7]
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                />
+                <span className="text-emerald-300 text-xs font-medium">Sanctuary</span>
               </div>
             </div>
           </motion.div>
@@ -3362,7 +6428,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }}
           userSilenceDuration={0} // TODO: Track actual silence duration
           userSpeechTempo={120} // TODO: Track actual speech tempo
-          isListening={false}
+          isListening={isListening}
           isSpeaking={isResponding}
           biometricEnabled={true} // ⌚ APPLE WATCH INTEGRATION ENABLED
         >
@@ -3377,6 +6443,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
+<<<<<<< HEAD
               console.log('🌸 Holoflower clicked!');
 
               // Enable audio context first
@@ -3406,10 +6473,178 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   setIsMuted(true);
                   voiceMicRef.current.stopListening();
                   console.log('✅ Voice stopped successfully');
+=======
+              console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
+
+              // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
+              // PWA uses isMuted as source of truth (user intent), not isListening (technical state)
+              if (isPwaVoice) {
+                if (pwaVoice.isMuted) {
+                  // User wants to start speaking
+                  await pwaVoice.userWantsToStart();
+                } else {
+                  // User wants to stop
+                  pwaVoice.userWantsToStop();
+                  setIsMuted(true);
+                  setIsListening(false);
+                }
+                return; // PWA flow handled entirely by state machine
+              }
+
+              // === NON-PWA PATH (iOS native / other browsers) ===
+
+              // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY before any await
+              // iOS Safari requires audio element creation + play in the SAME synchronous event handler
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              if (isIOS && !iosWarmedAudioRef.current) {
+                console.log('📱 [iOS] SYNC warming audio element on click');
+                try {
+                  const audio = new Audio();
+                  audio.setAttribute('playsinline', '');
+                  audio.setAttribute('webkit-playsinline', '');
+                  (audio as any).playsInline = true;
+                  audio.volume = 1.0;
+                  audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+                  // MUST call play() synchronously in the click handler
+                  audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log('✅ [iOS] Audio element warmed and ready');
+                  }).catch(err => {
+                    console.warn('⚠️ [iOS] Warm play failed:', err);
+                  });
+                  iosWarmedAudioRef.current = audio;
+                } catch (err) {
+                  console.warn('⚠️ [iOS] Failed to create warmed audio:', err);
+>>>>>>> ecstatic-brown
                 }
               } else {
                 console.warn('⚠️ Voice ref not available');
               }
+<<<<<<< HEAD
+=======
+
+              // Enable audio context (can be async now that audio element is warmed)
+              await enableAudio();
+
+              // 🔥 iOS Safari: Unlock the streaming voice audio element
+              // This MUST be called from user gesture for TTS to work on iOS
+              try {
+                await unlockStreamingAudio();
+                console.log('✅ [iOS] Streaming audio unlocked');
+              } catch (err) {
+                console.warn('⚠️ [iOS] Streaming audio unlock failed:', err);
+              }
+
+              // 🔥 FIX: Use isMuted as source of truth for toggle - isListening can desync on iOS
+              // isMuted=true means user wants to be muted → tap means START listening
+              // isMuted=false means user is actively listening → tap means STOP listening
+              if (voiceMicRef.current) {
+                if (isMuted) {
+                  // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
+                  let isInterrupt = false;
+                  if (isAudioPlayingRef.current || isRespondingRef.current) {
+                    console.log('🛑 [INTERRUPT] User tapped while MAIA speaking - stopping playback');
+                    isInterrupt = true;
+
+                    // Stop MAIA's voice stream and playback
+                    stopStreamingVoice();
+
+                    // Reset state flags immediately
+                    isAudioPlayingRef.current = false;
+                    isRespondingRef.current = false;
+                    setIsResponding(false);
+                    setIsAudioPlaying(false);
+
+                    // Brief visual feedback
+                    toast('✋ Interrupted', { duration: 1000 });
+
+                    // Small delay to let audio cleanup complete before starting mic
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                  }
+                  // Start listening
+                  console.log('[voice] startListening called', {
+                    isMuted,
+                    isListening,
+                    showChatInterface,
+                    hasVoiceMicRef: !!voiceMicRef.current,
+                    hasStartListening: !!voiceMicRef.current?.startListening,
+                    isInterrupt,
+                  });
+                  toast('🎤 Activating voice...', { duration: 2000 });
+                  setIsMuted(false);
+                  setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
+                  // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
+
+                  // 🛡️ SAFETY TIMEOUT: Clear activating state if mic doesn't confirm within 5 seconds
+                  if (activatingTimeoutRef.current) {
+                    clearTimeout(activatingTimeoutRef.current);
+                  }
+                  activatingTimeoutRef.current = setTimeout(() => {
+                    console.warn('⚠️ [voice] Mic activation timeout - clearing stuck state');
+                    setIsActivating(false);
+                    setIsMuted(true);
+                    activatingTimeoutRef.current = null;
+                    toast.error('🎤 Mic failed to start. Tap again to retry.', { duration: 3000 });
+                  }, 5000);
+
+                  // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
+                  // 🔥 FIX: Pass forceOverride when interrupting to bypass speaking check
+                  try {
+                    await voiceMicRef.current.startListening(isInterrupt ? { forceOverride: true } : undefined);
+                    console.log('[voice] startListening resolved OK');
+                    // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
+                  } catch (error: any) {
+                    // Clear safety timeout since we're handling the error
+                    if (activatingTimeoutRef.current) {
+                      clearTimeout(activatingTimeoutRef.current);
+                      activatingTimeoutRef.current = null;
+                    }
+                    const name = error?.name || 'UnknownError';
+                    const msg = error?.message || String(error);
+                    console.error('[voice] startListening FAILED', name, msg, error);
+
+                    // IMPORTANT: do NOT switch to text automatically.
+                    // Keep the user in voice mode and show what to do.
+                    setIsActivating(false);
+                    setIsListening(false);
+                    setIsMuted(true);
+
+                    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+                      toast.error('🎤 Microphone blocked. Click lock icon → Site settings → Microphone: Allow, then refresh.', { duration: 8000 });
+                      return;
+                    }
+
+                    if (name === 'NotFoundError') {
+                      toast.error('🎤 No mic detected. Chrome may be set to a disconnected device. Check chrome://settings/content/microphone', { duration: 8000 });
+                      return;
+                    }
+
+                    if (msg === 'VOICE_UNAVAILABLE') {
+                      toast.error('🎤 Voice unavailable. Check browser compatibility (Chrome/Safari recommended).', { duration: 5000 });
+                      return;
+                    }
+
+                    if (msg === 'MICROPHONE_UNAVAILABLE') {
+                      toast.error('🎤 No mic devices found. Check macOS System Settings → Privacy → Microphone → Chrome ON', { duration: 8000 });
+                      return;
+                    }
+
+                    toast.error(`🎤 Voice failed: ${name} - ${msg}`, { duration: 5000 });
+                  }
+                } else {
+                  // Stop listening - user explicitly exiting voice mode
+                  console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
+                  setIsMuted(true);
+                  voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
+                  console.log('✅ Voice stopped successfully (user exit mode)');
+                }
+              } else {
+                console.warn('⚠️ Voice ref not available');
+                toast.error('⚠️ Voice component not mounted!');
+              }
+>>>>>>> ecstatic-brown
             }}
           >
         {/* Holoflower container - smaller, upper-left, visible but not dominating */}
@@ -3428,7 +6663,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             interactive={false}
             showLabels={false}
             motionState={currentMotionState}
+<<<<<<< HEAD
             isListening={voiceMicRef.current?.isListening || false}
+=======
+            isListening={isListening}
+>>>>>>> ecstatic-brown
             isProcessing={isProcessing}
             isResponding={isResponding}
             showBreakthrough={showBreakthrough}
@@ -3466,19 +6705,166 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               />
             </motion.div>
 
-            {/* Holoflower Image - Amber radiance */}
+            {/* Holoflower Image - Two layers with golden ratio */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              {/* Outer layer - 90% */}
               <img
-                src="/holoflower-amber.png"
-                alt="Holoflower"
-                className="object-contain opacity-80 drop-shadow-[0_0_15px_rgba(251,146,60,0.7)]"
+                src="/holoflower.png"
+                alt="Holoflower outer layer"
+                className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.85}px`,
-                  height: `${holoflowerSize * 0.85}px`,
-                  filter: 'brightness(1.3)',
+                  width: `${holoflowerSize * 0.90}px`,
+                  height: `${holoflowerSize * 0.90}px`,
+                  opacity: 0.4,
+                }}
+              />
+              {/* Inner layer - 90% / φ ≈ 55.6% */}
+              <img
+                src="/holoflower.png"
+                alt="Holoflower inner layer"
+                className="object-contain absolute"
+                style={{
+                  width: `${holoflowerSize * 0.556}px`,
+                  height: `${holoflowerSize * 0.556}px`,
+                  opacity: 0.7,
+                }}
+              />
+              {/* White center dot - covers dark center */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: `${holoflowerSize * 0.12}px`,
+                  height: `${holoflowerSize * 0.12}px`,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 60%, transparent 100%)',
                 }}
               />
             </div>
+
+            {/* 💜 ULTRAVIOLET GLOW - When ready/listening (responds to user voice amplitude) */}
+            <AnimatePresence>
+              {!isResponding && !isAudioPlaying && !isProcessing && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Outermost diffuse ultraviolet field - ambient glow */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '500px',
+                      height: '500px',
+                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(124, 58, 237, 0.3) 30%, rgba(139, 92, 246, 0.15) 60%, transparent 100%)',
+                      filter: 'blur(40px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
+                      opacity: 0.7 + voiceAmplitude * 0.3,
+                      transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.05, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.7, 0.85, 0.7],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Outer ultraviolet ring - voice reactive */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '380px',
+                      height: '380px',
+                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.7) 0%, rgba(139, 92, 246, 0.5) 40%, rgba(167, 139, 250, 0.25) 70%, transparent 100%)',
+                      filter: 'blur(25px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.4})`,
+                      opacity: 0.75 + voiceAmplitude * 0.25,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.08, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.75, 0.95, 0.75],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Inner ultraviolet glow - more reactive to voice */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '240px',
+                      height: '240px',
+                      background: 'radial-gradient(circle, rgba(167, 139, 250, 0.85) 0%, rgba(139, 92, 246, 0.5) 50%, transparent 70%)',
+                      filter: 'blur(18px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                      opacity: 0.8 + voiceAmplitude * 0.2,
+                      transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.12, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.8, 1, 0.8],
+                    }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 🩵 AETHEREAL TEAL GLOW - When MAIA is speaking */}
+            <AnimatePresence>
+              {(isResponding || isAudioPlaying) && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Outer aethereal ring */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '320px',
+                      height: '320px',
+                      background: 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(94, 234, 212, 0.25) 40%, rgba(45, 212, 191, 0.1) 70%, transparent 100%)',
+                      filter: 'blur(20px)',
+                    }}
+                    animate={{
+                      scale: [1, 1.06, 1],
+                      opacity: [0.5, 0.8, 0.5],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Inner aethereal glow - reactive to voice amplitude */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '200px',
+                      height: '200px',
+                      background: 'radial-gradient(circle, rgba(94, 234, 212, 0.6) 0%, rgba(20, 184, 166, 0.35) 50%, transparent 70%)',
+                      filter: 'blur(15px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
+                      opacity: 0.6 + voiceAmplitude * 0.4,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Mode-colored persistent light field - always visible with mode colors */}
             {true && (
@@ -3622,46 +7008,76 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             </div>
             )}
 
-            {/* Voice Visualizer - User's voice (amber plasma field with radial gradients) */}
-            {isMounted && !showChatInterface && voiceEnabled && voiceMicRef.current?.isListening && (
+            {/* Voice Visualizer - ULTRAVIOLET AURA - Solid glow spreading behind holoflower */}
+            {isMounted && !showChatInterface && voiceEnabled && isListening && (
               <motion.div
                 className="absolute inset-0 pointer-events-none flex items-center justify-center"
+                style={{ zIndex: -1 }} // Behind holoflower
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Multiple amber plasma field layers - ENHANCED VISIBILITY */}
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={`voice-field-${i}`}
-                    className="absolute rounded-full"
-                    style={{
-                      width: `${300 + i * 150}px`,
-                      height: `${300 + i * 150}px`,
-                      background: i === 0
-                        ? 'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, rgba(251, 191, 36, 0.25) 50%, transparent 100%)'
-                        : i === 1
-                        ? 'radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(245, 158, 11, 0.15) 50%, transparent 100%)'
-                        : 'radial-gradient(circle, rgba(217, 119, 6, 0.3) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 100%)',
-                      filter: `blur(${12 + i * 6}px)`,
-                    }}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.85 - i * 0.15, 0.6, 0.85 - i * 0.15],
-                    }}
-                    transition={{
-                      duration: 5 + i * 2,
-                      repeat: Infinity,
-                      delay: i * 0.8,
-                      ease: [0.42, 0, 0.58, 1]
-                    }}
-                  />
-                ))}
+                {/* Core ultraviolet glow - solid spreading from center */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    // Solid gradient from center, spreading outward
+                    background: 'radial-gradient(circle, rgba(138, 43, 226, 0.35) 0%, rgba(148, 0, 211, 0.25) 30%, rgba(106, 27, 154, 0.15) 55%, rgba(94, 53, 177, 0.08) 75%, transparent 100%)',
+                    filter: 'blur(20px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                    opacity: 0.5 + voiceAmplitude * 0.5,
+                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                  }}
+                />
+
+                {/* Secondary spreading wave */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '500px',
+                    height: '500px',
+                    background: 'radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, rgba(123, 31, 162, 0.12) 40%, rgba(94, 53, 177, 0.06) 65%, transparent 100%)',
+                    filter: 'blur(30px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
+                    opacity: 0.4 + voiceAmplitude * 0.4,
+                    transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                  }}
+                />
+
+                {/* Outer diffuse field - spreads far into background */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '650px',
+                    height: '650px',
+                    background: 'radial-gradient(circle, rgba(126, 87, 194, 0.12) 0%, rgba(149, 117, 205, 0.08) 35%, rgba(103, 58, 183, 0.04) 60%, transparent 100%)',
+                    filter: 'blur(40px)',
+                    transform: `scale(${1 + voiceAmplitude * 1.0})`,
+                    opacity: 0.35 + voiceAmplitude * 0.35,
+                    transition: 'transform 0.07s ease-out, opacity 0.07s ease-out',
+                  }}
+                />
+
+                {/* Brightest inner core - most reactive */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '250px',
+                    height: '250px',
+                    background: 'radial-gradient(circle, rgba(186, 85, 211, 0.4) 0%, rgba(138, 43, 226, 0.3) 40%, rgba(148, 0, 211, 0.15) 70%, transparent 100%)',
+                    filter: 'blur(12px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
+                    opacity: 0.6 + voiceAmplitude * 0.4,
+                    transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                  }}
+                />
 
               </motion.div>
             )}
 
-            {/* Voice Visualizer - MAIA's voice - ENHANCED VISIBILITY */}
+            {/* Voice Visualizer - MAIA's voice - TEAL/TURQUOISE - Reactive to Audio */}
             {(isResponding || isAudioPlaying) && (
               <motion.div
                 className="absolute inset-0 pointer-events-none flex items-center justify-center"
@@ -3669,59 +7085,61 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Golden pulsing glow layers - MUCH MORE VISIBLE */}
+                {/* MAIA teal glow rings - reactive to audio amplitude */}
                 {[...Array(3)].map((_, i) => (
                   <motion.div
-                    key={`maya-glow-${i}`}
+                    key={`maia-voice-glow-${i}`}
                     className="absolute rounded-full"
                     style={{
                       width: `${280 + i * 120}px`,
                       height: `${280 + i * 120}px`,
                       background: i === 0
-                        ? 'radial-gradient(circle, rgba(212, 184, 150, 0.55) 0%, rgba(212, 184, 150, 0.2) 60%, transparent 100%)'
+                        ? 'radial-gradient(circle, rgba(45, 212, 191, 0.55) 0%, rgba(20, 184, 166, 0.2) 60%, transparent 100%)'
                         : i === 1
-                        ? 'radial-gradient(circle, rgba(196, 168, 134, 0.4) 0%, rgba(196, 168, 134, 0.12) 60%, transparent 100%)'
-                        : 'radial-gradient(circle, rgba(180, 152, 118, 0.25) 0%, rgba(180, 152, 118, 0.06) 60%, transparent 100%)',
+                        ? 'radial-gradient(circle, rgba(34, 197, 178, 0.4) 0%, rgba(45, 212, 191, 0.12) 60%, transparent 100%)'
+                        : 'radial-gradient(circle, rgba(94, 234, 212, 0.3) 0%, rgba(20, 184, 166, 0.08) 60%, transparent 100%)',
                       filter: `blur(${18 + i * 8}px)`,
-                    }}
-                    animate={{
-                      scale: [1, 1.15, 1],
-                      opacity: [0.4, 0.2, 0.4],
-                    }}
-                    transition={{
-                      duration: 2.5 + i * 0.5,
-                      repeat: Infinity,
-                      delay: i * 0.4,
-                      ease: "easeInOut"
+                      // Dynamic scale based on voice amplitude
+                      transform: `scale(${1 + voiceAmplitude * (0.3 + i * 0.15)})`,
+                      opacity: 0.3 + voiceAmplitude * 0.5,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                     }}
                   />
                 ))}
 
-                {/* Subtle inner glow */}
+                {/* Inner teal glow - reactive to MAIA voice */}
                 <motion.div
                   className="absolute rounded-full"
                   style={{
                     width: '200px',
                     height: '200px',
-                    background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, transparent 60%)',
-                    filter: 'blur(30px)',
+                    background: 'radial-gradient(circle, rgba(45, 212, 191, 0.35) 0%, rgba(20, 184, 166, 0.15) 50%, transparent 70%)',
+                    filter: 'blur(25px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
+                    opacity: 0.4 + voiceAmplitude * 0.6,
+                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                   }}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
+                />
+
+                {/* Bright center pulse - most reactive (bright teal) */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    background: 'radial-gradient(circle, rgba(94, 234, 212, 0.5) 0%, rgba(45, 212, 191, 0.3) 40%, rgba(20, 184, 166, 0.15) 70%, transparent 100%)',
+                    filter: 'blur(15px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
+                    opacity: 0.5 + voiceAmplitude * 0.5,
+                    transition: 'transform 0.03s ease-out, opacity 0.03s ease-out',
                   }}
                 />
               </motion.div>
             )}
 
-            {/* Status text below holoflower */}
+            {/* Status text below holoflower - always show listening indicator */}
             {isMounted && !showChatInterface && voiceEnabled && (
-              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center">
+              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
                 {/* Elemental Mode Indicator - TEMPORARILY DISABLED
                 {voiceMicRef.current?.elementalMode && (
                   <motion.div
@@ -3776,7 +7194,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                        '💫 Speaking...'}
                     </motion.div>
                   )}
-                  {voiceMicRef.current?.isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Activating state - waiting for mic confirmation */}
+                  {isActivating && !isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{
+                        opacity: [0.6, 0.9, 0.6],
+                        y: 0
+                      }}
+                      transition={{
+                        opacity: { duration: 1.0, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="text-amber-300/90 text-sm font-medium drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                    >
+                      🎤 Activating...
+                    </motion.div>
+                  )}
+                  {/* Listening state - mic is CONFIRMED live (orange dot should be visible) */}
+                  {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
                     <div className="flex flex-col items-center gap-2">
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -3812,14 +7248,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       )}
                     </div>
                   )}
-                  {!voiceMicRef.current?.isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
+                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/95 text-sm font-medium drop-shadow-[0_0_8px_rgba(252,211,77,0.5)]"
+                      transition={{
+                        opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      className="text-violet-300/80 text-sm font-light drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]"
                     >
-                      Click to activate
+                      Tap holoflower to speak
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -3832,6 +7272,35 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       </motion.div>
         </TransformationalPresence>
       </div>
+
+      {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
+      {isPwaVoice && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            left: 8,
+            fontSize: 10,
+            zIndex: 99999,
+            padding: '4px 8px',
+            background: 'rgba(0,0,0,0.7)',
+            color: '#10b981',
+            borderRadius: 6,
+            fontFamily: 'monospace',
+            maxWidth: '180px'
+          }}
+        >
+          <div>PWA ✅ v2</div>
+          <div>State: {pwaVoice.state}</div>
+          <div style={{ fontSize: 9, color: '#6b7280' }}>
+            {pwaVoice.isListening && '🎤 '}
+            {pwaVoice.isThinkingOrSpeaking && '💭 '}
+            {pwaVoice.isMuted && '🔇 '}
+            {pwaVoice.isError && '❌ '}
+            {pwaVoice.needsTapToEnableAudio && '👆 TAP'}
+          </div>
+        </div>
+      )}
 
       {/* Shadow petal overlay */}
       {shadowPetals.length > 0 && (
@@ -3853,9 +7322,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* REMOVED: Separate white circle button - holoflower itself is now clickable */}
 
       {/* Text Scrim - Warm volcanic veil when messages appear (absorbs light, doesn't just dim) */}
+      {/* pointer-events-none so holoflower clicks pass through */}
       {(showChatInterface || (!showChatInterface && showVoiceText)) && messages.length > 0 && (
         <div
-          className="fixed inset-0 z-20 transition-opacity duration-700"
+          className="fixed inset-0 z-20 transition-opacity duration-700 pointer-events-none"
           style={{
             background: 'linear-gradient(135deg, rgba(26, 21, 19, 0.75) 0%, rgba(28, 22, 20, 0.65) 50%, rgba(26, 21, 19, 0.75) 100%)',
             backdropFilter: 'blur(1.5px) saturate(0.85) brightness(0.75)',
@@ -3891,9 +7361,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             <AnimatePresence>
               {messages.length > 0 && (
                 <div className="space-y-3 pb-52 md:pb-32">
-                {/* Show all messages with proper scrolling */}
+                {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
+                  .filter(m => !m.id?.startsWith('greeting-'))
                   .map((message, index) => {
+<<<<<<< HEAD
                     const handleCopyMessage = () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
                       navigator.clipboard.writeText(textToCopy);
@@ -3906,11 +7378,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           border: '1px solid rgba(212, 184, 150, 0.2)',
                         },
                       });
+=======
+                    const handleCopyMessage = async () => {
+                      const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
+                      try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        toast.success('Message copied!', {
+                          duration: 2000,
+                          position: 'bottom-center',
+                          style: {
+                            background: 'rgb(18, 24, 51)', // maia-navy-850
+                            color: 'rgb(245, 158, 11)', // maia-spice-500
+                            border: '1px solid rgba(245, 158, 11, 0.2)', // maia-spice-500/20
+                          },
+                        });
+                      } catch {
+                        toast.error('Failed to copy', {
+                          duration: 2000,
+                          position: 'bottom-center',
+                        });
+                      }
+>>>>>>> ecstatic-brown
                     };
 
                     return (
                     <motion.div
-                      key={message.id}
+                      key={message.id?.trim() || `msg-${message.role}-${typeof message.timestamp === 'string' ? message.timestamp : (message.timestamp?.toISOString?.() ?? 'no-ts')}-${index}`}
                       initial={{ opacity: 0, y: 0 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 0 }}
@@ -3923,17 +7416,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs" style={{ color: '#D4A574', opacity: 0.8, fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                          {message.role === 'user' ? (userName || 'You') : 'MAIA'}
+                        <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                          {message.role === 'user' ? (userName || 'You') : assistantName}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-amber-400
-                                      opacity-100 sm:opacity-0 sm:group-hover:opacity-100
+                        <div className="flex items-center gap-1 text-xs text-maia-spice-400
+                                      opacity-0 group-hover:opacity-100 group-active:opacity-100
                                       touch-manipulation transition-opacity">
-                          <Copy className="w-3 h-3 text-amber-400" />
-                          <span className="hidden sm:inline text-amber-400">Click to copy</span>
-                          <span className="sm:hidden text-amber-400">Tap to copy</span>
+                          <Copy className="w-3 h-3 text-maia-spice-400" />
+                          <span className="text-maia-spice-400">Copy</span>
                         </div>
                       </div>
+<<<<<<< HEAD
 
                       {/* 🌀 SELFLET: Past-Self Card - shown above MAIA's response */}
                       {message.role === 'oracle' && message.pastSelf && (
@@ -3947,6 +7440,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage text={stripPastSelfPreface(message.text, message.pastSelf)} />
+=======
+                      <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                        {message.role === 'oracle' ? (
+                          <FormattedMessage
+                            text={message.text}
+                            enableVocabularyTooltips={enableVocabularyTooltips}
+                          />
+>>>>>>> ecstatic-brown
                         ) : (
                           message.text
                         )}
@@ -3960,6 +7461,59 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                             opusAxioms={message.opusAxioms}
                             compact={false}
                           />
+                        </div>
+                      )}
+
+                      {/* Pattern Chips - show detected patterns for MAIA responses */}
+                      {message.role === 'oracle' && message.metadata?.patterns && message.metadata.patterns.length > 0 && (
+                        <PatternChips
+                          patterns={message.metadata.patterns}
+                          onOpen={(p) => {
+                            setActivePattern(p);
+                            setPatternDrawerOpen(true);
+                          }}
+                        />
+                      )}
+
+                      {/* 🌀 LENS SWITCH RITUAL: Stay/Switch/Blend buttons when integrity triggers offer_switch */}
+                      {message.role === 'oracle' && message.integrity?.decision === 'offer_switch' && message.lensSwitchOptions && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({ consent: 'stay' });
+                              console.log('🌀 [LENS CONSENT] User chose: Stay');
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-dune-sand/20 text-dune-amber
+                                     hover:bg-dune-sand/30 transition-colors border border-dune-amber/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.stay}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({
+                                consent: 'switch',
+                                switchTo: message.lensSwitchOptions?.switchTo
+                              });
+                              console.log('🌀 [LENS CONSENT] User chose: Switch to', message.lensSwitchOptions?.switchTo);
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-maia-spice-400/20 text-maia-spice-300
+                                     hover:bg-maia-spice-400/30 transition-colors border border-maia-spice-400/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.switch}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({ consent: 'blend' });
+                              console.log('🌀 [LENS CONSENT] User chose: Blend');
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-soul-textSecondary/10 text-soul-textSecondary
+                                     hover:bg-soul-textSecondary/20 transition-colors border border-soul-textSecondary/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.blend}
+                          </button>
                         </div>
                       )}
                     </motion.div>
@@ -3979,9 +7533,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         <>
           {/* Old Mode Toggle removed - Now using ModeSwitcher at top-left */}
 
-          {/* Text Display Toggle for Voice Mode */}
+          {/* Text Display Toggle for Voice Mode - uses safe-area for iOS notch/Dynamic Island */}
           {!showChatInterface && (
-            <div className="fixed top-20 md:top-20 right-4 md:right-8 z-below-nav">
+            <div
+              className="fixed right-4 md:right-8 z-50"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
+            >
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
                 className="px-3 py-1.5 rounded-full text-xs font-medium bg-black/20 backdrop-blur-md
@@ -4009,22 +7566,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   }}
                 >
                   <div className="w-20 h-20 relative">
-                    {/* Glow effect when speaking */}
+                    {/* Turquoise glow effect when MAIA is speaking - reactive to audio */}
                     {(isResponding || isAudioPlaying) && (
                       <motion.div
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: 'radial-gradient(circle, rgba(212, 184, 150, 0.6) 0%, transparent 70%)',
+                          background: 'radial-gradient(circle, rgba(64, 224, 208, 0.7) 0%, transparent 70%)',
                           filter: 'blur(20px)',
-                        }}
-                        animate={{
-                          scale: [1, 1.4, 1],
-                          opacity: [0.6, 0.3, 0.6],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
+                          transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                          opacity: 0.4 + voiceAmplitude * 0.6,
+                          transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                         }}
                       />
                     )}
@@ -4064,10 +7615,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   <ModernTextInput
                     ref={textInputRef}
+                    value={draftMessage}
+                    onChange={setDraftMessage}
+                    externalValue={composerDraft}
                     disabled={isProcessing}
                     isProcessing={isProcessing}
                     enableVoiceInChat={enableVoiceInChat}
-                    onSubmit={handleTextMessage}
+                    onSubmit={(msg, files) => {
+                      handleTextMessage(msg, files);
+                      setDraftMessage(''); // Clear draft after sending
+                    }}
                     onVoiceResponseToggle={() => {
                       const newValue = !enableVoiceInChat;
                       setEnableVoiceInChat(newValue);
@@ -4078,7 +7635,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       const fileNames = files.map(f => f.name).join(', ');
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);
                     }}
-                    autoFocus={false}
+                    onDownloadConversation={handleDownloadConversation}
+                    onOpenPromptPicker={() => setShowPromptPicker(true)}
+                    autoFocus={true}
                     hasMemory={messages.length > 0 || !isReturningUser}
                     lastConnectionTime={
                       typeof window !== 'undefined'
@@ -4091,6 +7650,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       messages.length > 20 ? 'deep' :
                       messages.length > 5 ? 'developing' : 'new'
                     }
+                    mode={listeningMode}
                   />
                 </div>
               </div>
@@ -4098,33 +7658,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             </>
           ) : null}
 
-          {/* Mic Hint Message - Bottom placement above menu bar */}
-          {!showChatInterface && isMuted && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed left-1/2 transform -translate-x-1/2 z-below-nav"
-              style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
-            >
-              <div className="bg-soul-surface/90 backdrop-blur-md rounded-lg px-4 py-2 border border-soul-border/40">
-                <p className="text-soul-textSecondary text-sm">Click the holoflower to activate voice</p>
-              </div>
-            </motion.div>
-          )}
 
-          {/* Journal Suggestion - Appears when breakthrough is detected */}
+          {/* Journal Suggestion - Appears when breakthrough is detected (only after activation) */}
           <AnimatePresence mode="wait">
-            {showJournalSuggestion && (
-              <motion.div
-                key="journal-suggestion"
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="fixed top-24 left-1/2 transform -translate-x-1/2 z-below-nav max-w-sm"
+            {showJournalSuggestion && hasActivated && (
+              <div
+                key="journal-suggestion-wrapper"
+                className="fixed inset-x-0 z-50 flex justify-center px-4"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
               >
-                <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
+                <motion.div
+                  key="journal-suggestion"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full max-w-sm"
+                >
+                  <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-amber-400/20 rounded-full flex items-center justify-center">
                       <BookOpen className="w-5 h-5 text-amber-300" />
@@ -4162,12 +7713,39 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   </div>
                 </div>
               </motion.div>
+            </div>
             )}
           </AnimatePresence>
+
+          {/* ✨ Capture the Spirit Suggestion - only show after activation, and not when journal suggestion is showing */}
+          <CaptureSuggestionChip
+            isVisible={showCaptureSuggestion && !showCapturePanel && hasActivated && !showJournalSuggestion}
+            onCapture={handleCaptureSpirit}
+            onDismiss={() => {
+              setShowCaptureSuggestion(false);
+              setCaptureSuggestionDismissed(true);
+              console.log('✨ [Capsule] User dismissed capture suggestion');
+            }}
+          />
         </>
       )}
 
-
+      {/* ✨ Capture the Spirit Panel */}
+      <CaptureSpiritPanel
+        isOpen={showCapturePanel}
+        onClose={() => setShowCapturePanel(false)}
+        capsule={capturedCapsule}
+        isLoading={isCapturing}
+        error={captureError}
+        onSave={handleUpdateCapsule}
+        onBringIntoLab={handleBringCapsuleIntoLab}
+        onViewInLab={() => {
+          setShowCapturePanel(false);
+          if (capturedCapsule) {
+            window.location.href = `/labtools/reflections/${capturedCapsule.id}`;
+          }
+        }}
+      />
 
       {/* Analytics toggle */}
       {showAnalytics && (
@@ -4213,15 +7791,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-[#1a1a2e]/98 to-[#16213e]/98 backdrop-blur-xl border border-[#D4B896]/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-maia-navy-850/98 to-maia-navy-900/98 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
           >
             <div className="p-4">
-              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#D4B896]/20">
-                <svg className="w-5 h-5 text-[#D4B896]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-maia-spice-500/20">
+                <svg className="w-5 h-5 text-maia-spice-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <h3 className="text-base font-semibold text-[#D4B896]">Choose MAIA's Voice</h3>
+                <h3 className="text-base font-semibold text-maia-spice-500">Choose MAIA's Voice</h3>
               </div>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                 {[
@@ -4242,8 +7820,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       voice === voiceOption.id
-                        ? 'bg-[#D4B896]/20 border border-[#D4B896]/50 text-[#D4B896]'
-                        : 'bg-black/20 border border-white/5 text-white/70 hover:bg-[#D4B896]/10 hover:border-[#D4B896]/30'
+                        ? 'bg-maia-spice-500/20 border border-maia-spice-500/50 text-maia-spice-500'
+                        : 'bg-maia-navy-800/50 border border-maia-navy-700/30 text-maia-ink-80 hover:bg-maia-spice-500/10 hover:border-maia-spice-500/30'
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -4257,7 +7835,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="w-2.5 h-2.5 rounded-full bg-[#D4B896] shadow-lg shadow-[#D4B896]/50"
+                        className="w-2.5 h-2.5 rounded-full bg-maia-spice-500 shadow-maia-spice-glow"
                       />
                     )}
                   </motion.button>
@@ -4273,6 +7851,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         isOpen={showAudioSettings}
         onClose={() => setShowAudioSettings(false)}
       />
+
+      {/* Voice HUD - DISABLED - Removed per user request
+      <VoiceHUD
+        isVisible={streamingVoiceMode && !showChatInterface && hasActivated}
+        onInterrupt={handleVoiceInterrupt}
+        isMaiaSpeaking={isAudioPlaying || isResponding}
+      />
+      */}
+
+      {/* 🧭 Therapeutic Framework Selector - Mode-specific (Counsel/Scribe)
+          Now handled by FrameworkSelector component, accessed contextually */}
 
       {/* Floating Quick Settings Button */}
       {/* QuickSettingsButton removed - now in bottom nav bar */}
@@ -4290,14 +7879,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             onTranscript={handleVoiceTranscript}
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
+            onInterrupt={handleVoiceInterrupt}
+            interruptEnabled={interruptEnabled}
+            interruptDebounceMs={interruptDebounceMs}
+            interruptThresholdMultiplier={interruptThresholdMultiplier}
             isProcessing={isResponding}
-            isSpeaking={isAudioPlaying}
+            isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
             silenceThreshold={
-              listeningMode === 'session' ? 999999 : // Session mode: never auto-send (effectively infinite)
-              listeningMode === 'patient' ? 10000 :   // Patient mode: 10 seconds (increased for full thoughts)
-              6000                                     // Normal mode: 6 seconds (increased from 3.5s to prevent mid-sentence cutoff)
+              listeningMode === 'session' ? 999999 : // Scribe mode: never auto-send (stay open to record)
+              listeningMode === 'patient' ? 8000 :   // Care mode: 8 seconds (patience for emotional processing)
+              2000                                    // Talk mode: 2 seconds (natural conversation pace)
             }
+            persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
           />
         </div>
       )}
@@ -4435,20 +8029,49 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }
           if (action === 'toggle-microphone') {
             if (!isMuted) {
-              // Turn mic OFF
+              // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
               if (voiceMicRef.current?.stopListening) {
-                voiceMicRef.current.stopListening();
-                console.log('🔇 Microphone OFF');
+                voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated exit
+                console.log('🔇 Microphone OFF (user toggle)');
               }
             } else {
-              // Turn mic ON
+              // Turn mic ON - but only if MAIA isn't speaking
+              if (isAudioPlayingRef.current) {
+                console.log('⏸️ Cannot turn mic ON - MAIA is speaking');
+                return;
+              }
+
+              // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              if (isIOS && !iosWarmedAudioRef.current) {
+                console.log('📱 [iOS] SYNC warming audio on toggle-microphone');
+                try {
+                  const audio = new Audio();
+                  audio.setAttribute('playsinline', '');
+                  audio.volume = 1.0;
+                  audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+                  audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log('✅ [iOS] Audio warmed via toggle-microphone');
+                  }).catch(() => {});
+                  iosWarmedAudioRef.current = audio;
+                } catch (err) {
+                  console.warn('⚠️ [iOS] Warm failed:', err);
+                }
+              }
+
               setShowChatInterface(false);
               setIsMuted(false);
               enableAudio().then(() => {
                 setTimeout(async () => {
-                  if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
-                    await voiceMicRef.current.startListening();
+                  if (voiceMicRef.current?.startListening &&
+                      !isProcessingRef.current &&
+                      !isRespondingRef.current &&
+                      !isAudioPlayingRef.current) {
+                    await voiceMicRef.current.startListening({ forceOverride: true });
                     console.log('🎤 Microphone ON');
                   }
                 }, 100);
@@ -4484,12 +8107,41 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               downloadScribeTranscript?.();
               setShowLabDrawer(false);
             } else {
+<<<<<<< HEAD
               // Start scribing
               startScribing?.();
               toast.success('Scribe Mode activated - Recording session passively');
               setShowLabDrawer(false);
             }
             return;
+=======
+              // Start scribing (default to witness for backwards compatibility)
+              startScribeSession?.('witness');
+              toast.success('Scribe Mode activated - 2nd Chair Witness');
+              setShowLabDrawer(false);
+            }
+            return;
+          }
+
+          // 📝 SCRIBE MODE: Start with specific chair perspective
+          if (action === 'scribe-solo') {
+            startScribeSession?.('solo');
+            toast.success('🧘 1st Chair Solo - Self-study & journaling');
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'scribe-witness') {
+            startScribeSession?.('witness');
+            toast.success('👁️ 2nd Chair Witness - Observing session');
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'scribe-practitioner') {
+            startScribeSession?.('practitioner');
+            toast.success('📋 3rd Chair Practitioner - Session notes');
+            setShowLabDrawer(false);
+            return;
+>>>>>>> ecstatic-brown
           }
 
           // 📝 SCRIBE MODE: Review session with MAIA for supervision
@@ -4510,11 +8162,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         isFieldRecording={isFieldRecording}
         isScribing={isScribing}
         hasScribeSession={!!scribeSession}
+        scribeChair={scribeSession.container}
         isMuted={isMuted}
         isResponding={isResponding}
         isAudioPlaying={isAudioPlaying}
         showChatInterface={showChatInterface}
         voice={voice}
+        sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
+        sessionMinutesRemaining={sessionTimer?.getRemainingMinutes?.()}
       />
 
       {/* 🌀 SELFLET: Archive Drawer - Phase 2K-a */}
@@ -4603,6 +8258,197 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       <ConsciousnessComputingPrompt
         messageCount={messages.length}
       />
+
+      {/* 🔍 Pattern Drawer - "Show why" for detected patterns */}
+      <PatternDrawer
+        open={patternDrawerOpen}
+        onClose={() => {
+          setPatternDrawerOpen(false);
+          setActivePattern(null);
+        }}
+        pattern={activePattern}
+        userId={userId}
+      />
+
+      {/* 🌟 Wisdom Tool Reveal - Ganesha Focus Garden, etc */}
+      {activeWisdomTool && (
+        <ToolRevealSheet
+          tool={activeWisdomTool.tool}
+          agentName={activeWisdomTool.agentName}
+          userMessage={activeWisdomTool.userMessage}
+          onDismiss={() => setActiveWisdomTool(null)}
+          onToolComplete={(toolId, result) => {
+            console.log('🌟 [WisdomTool] Completed:', toolId, result);
+            setActiveWisdomTool(null);
+          }}
+        />
+      )}
+
+      {/* Soul Prompt Picker Modal */}
+      <PromptPicker
+        isOpen={showPromptPicker}
+        onClose={() => setShowPromptPicker(false)}
+        onSelectPrompt={(promptText) => {
+          // Clear previous conversation for fresh start with new prompt
+          setMessages([]);
+          historicalMessagesRef.current = []; // Clear API context too
+          if (typeof window !== 'undefined' && sessionId) {
+            const storageKey = `maia_conversation_${sessionId}`;
+            localStorage.removeItem(storageKey);
+            console.log('🌟 [SoulPrompt] Cleared conversation for fresh start');
+          }
+
+          // Frame as a reflection invitation so MAIA guides the user through it
+          const framedPrompt = `I'd like to sit with this question: ${promptText}`;
+          setDraftMessage(framedPrompt);
+          setComposerDraft(framedPrompt);
+          setShowPromptPicker(false);
+          setHasActivated(true); // Skip welcome screen
+
+          // Focus the text input
+          setTimeout(() => {
+            textInputRef.current?.focus?.();
+          }, 100);
+        }}
+        consciousnessLevel={3} // TODO: Get from user profile
+        sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
+        useV1Set={false}
+        showDepthToggle={true}
+      />
+
+      {/* Session Synthesis Modal */}
+      {showSessionSynthesis && sessionSynthesisData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="max-w-lg w-full">
+            <SessionSynthesis
+              synthesis={sessionSynthesisData}
+              onContinue={() => setShowSessionSynthesis(false)}
+              onJournal={() => {
+                // TODO: Navigate to journal with synthesis data
+                setShowSessionSynthesis(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Daily Check-in Modal */}
+      <DailyCheckin
+        isOpen={showDailyCheckin}
+        onClose={() => setShowDailyCheckin(false)}
+        onComplete={(checkin) => {
+          setUserCheckinState({ state: checkin.state, intensity: checkin.intensity });
+          setShowDailyCheckin(false);
+          // Optionally start conversation with the check-in context
+          const contextMessage = `I'm arriving today feeling ${checkin.state.label.toLowerCase()} (${checkin.state.description.toLowerCase()}).${checkin.note ? ` ${checkin.note}` : ''}`;
+          setDraftMessage(contextMessage);
+          setComposerDraft(contextMessage);
+          setTimeout(() => textInputRef.current?.focus?.(), 100);
+        }}
+      />
+
+      {/* Element Discovery Modal */}
+      <ElementDiscovery
+        isOpen={showElementDiscovery}
+        onClose={() => setShowElementDiscovery(false)}
+        onComplete={(result) => {
+          setShowElementDiscovery(false);
+          // Start conversation with element discovery result
+          const contextMessage = `I just discovered my dominant element is ${result.dominant} with ${result.secondary} as secondary. Help me understand what this means for my journey.`;
+          setDraftMessage(contextMessage);
+          setComposerDraft(contextMessage);
+          setTimeout(() => textInputRef.current?.focus?.(), 100);
+        }}
+      />
+
+      {/* Session Recap Modal */}
+      {sessionRecapData && (
+        <SessionRecap
+          isOpen={showSessionRecap}
+          onClose={() => {
+            setShowSessionRecap(false);
+            setSessionRecapData(null);
+          }}
+          data={sessionRecapData}
+          onSaveToJournal={() => {
+            // TODO: Save to journal
+            toast.success('Saved to journal');
+            setShowSessionRecap(false);
+          }}
+          onDownload={() => {
+            downloadTranscript();
+            setShowSessionRecap(false);
+          }}
+        />
+      )}
+
+      {/* Wisdom Council Picker Modal */}
+      <WisdomCouncilPicker
+        isOpen={showWisdomCouncil}
+        onClose={() => setShowWisdomCouncil(false)}
+        currentTraditionId={activeTradition?.id}
+        onSelect={(tradition) => {
+          setActiveTradition(tradition);
+          localStorage.setItem('maia.activeTradition', tradition.id);
+          setShowWisdomCouncil(false);
+          toast.success(`Now guided by ${tradition.name.split('(')[0].trim()}`);
+        }}
+      />
+
+      {/* Current Teaching Modal */}
+      <CurrentTeachingModal
+        isOpen={showCurrentTeaching}
+        onClose={() => setShowCurrentTeaching(false)}
+        tradition={activeTradition}
+        onChangeGuide={() => {
+          setShowCurrentTeaching(false);
+          setShowWisdomCouncil(true);
+        }}
+      />
+
+      {/* Return Path Pill - shows when user came from Guide/Academy via seed prompt */}
+      {returnPath && !showLabDrawer && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-24 left-4 z-50 flex items-center gap-1 px-3 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-100 text-[13px] font-medium backdrop-blur-sm shadow-lg"
+        >
+          <button
+            onClick={() => {
+              clearReturnPath();
+              setReturnPathState(null);
+              window.location.href = returnPath.path;
+            }}
+            className="flex items-center gap-2 px-1.5 py-0.5 hover:opacity-90 transition-opacity"
+          >
+            <CornerUpLeft className="w-4 h-4" />
+            <span>Return to {returnPath.label || 'Guide'}</span>
+          </button>
+
+          <button
+            aria-label="Dismiss return"
+            onClick={() => {
+              // Clear both state and storage - user chose not to return
+              clearReturnPath();
+              setReturnPathState(null);
+            }}
+            className="ml-1 p-1 rounded-full text-amber-100/60 hover:text-amber-100 hover:bg-amber-500/20 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Floating Session Indicator - shows when session is active */}
+      {sessionTimer && sessionTimer.isActive?.() && !showLabDrawer && (
+        <FloatingSessionIndicator
+          phase={sessionTimer.getCurrentPhase?.() as any || 'exploration'}
+          elapsedMinutes={sessionTimer.getElapsedMinutes?.() || 0}
+          totalMinutes={sessionTimer.getDurationMinutes?.() || 60}
+          onClick={() => setShowLabDrawer(true)}
+        />
+      )}
 
     </div>
   );

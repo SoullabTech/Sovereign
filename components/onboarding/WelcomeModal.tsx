@@ -34,7 +34,8 @@ export function WelcomeModal({ isOpen, onClose, onComplete }: WelcomeModalProps)
     if (betaUser) {
       try {
         const userData = JSON.parse(betaUser);
-        const userName = userData.username || userData.name || userData.displayName;
+        // FIXED: Prefer name over username (name is display name, username is for login)
+        const userName = userData.name || userData.displayName || userData.username;
         if (userName) setName(userName);
       } catch (e) {
         console.error('Error parsing beta_user:', e);

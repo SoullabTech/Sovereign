@@ -1,5 +1,10 @@
+export const dynamic = 'force-dynamic';
 // backend: app/api/ready/route.ts
+export const revalidate = false;
 import { NextResponse } from 'next/server';
+import { checkSchemaCompatibility } from '@/lib/db/schemaGate';
+
+// Skip during static export (Capacitor builds)
 
 /**
  * Readiness Check - Are critical dependencies available?
@@ -92,6 +97,33 @@ export async function GET() {
 
   if (memoryProvider === 'session-only') {
     ready.warnings.push('Memory is session-only (not persistent)');
+  }
+
+  // Database Schema - Check required migrations are applied
+  try {
+    const schemaCheck = await checkSchemaCompatibility();
+    if (schemaCheck.compatible) {
+      ready.dependencies.dbSchema = {
+        status: 'ready',
+        migrationsOk: true,
+      };
+    } else {
+      ready.dependencies.dbSchema = {
+        status: 'behind',
+        migrationsOk: false,
+        missing: schemaCheck.missing,
+        error: schemaCheck.error,
+      };
+      ready.warnings.push(`DB schema behind: missing ${schemaCheck.missing.length} migration(s)`);
+      // Not marking ready=false since app may still function partially
+    }
+  } catch (err) {
+    ready.dependencies.dbSchema = {
+      status: 'error',
+      migrationsOk: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+    ready.warnings.push('Could not verify DB schema status');
   }
 
   return NextResponse.json(ready, {

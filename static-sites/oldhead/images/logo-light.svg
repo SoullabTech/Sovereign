@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 60">
+  <!-- Light version for dark backgrounds - cream/ivory color -->
+  <defs>
+    <style>
+      .logo-text { font-family: 'Georgia', 'Times New Roman', serif; }
+    </style>
+  </defs>
+
+  <!-- OH Monogram -->
+  <g fill="#FAFAF8">
+    <!-- O outer -->
+    <ellipse cx="28" cy="30" rx="24" ry="26" fill="none" stroke="#FAFAF8" stroke-width="4"/>
+    <!-- H left vertical -->
+    <rect x="18" y="8" width="5" height="44"/>
+    <!-- H right vertical -->
+    <rect x="33" y="8" width="5" height="44"/>
+    <!-- H crossbar -->
+    <rect x="18" y="26" width="20" height="5"/>
+    <!-- Swoosh/trowel accent -->
+    <path d="M4 28 Q28 18 52 28 L50 32 Q28 24 6 32 Z" opacity="0.9"/>
+  </g>
+
+  <!-- OLD HEAD text -->
+  <text x="68" y="28" fill="#FAFAF8" class="logo-text" font-size="26" font-weight="700" letter-spacing="4" font-style="italic">OLD HEAD</text>
+
+  <!-- Decorative lines -->
+  <line x1="68" y1="40" x2="108" y2="40" stroke="#FAFAF8" stroke-width="1.5" opacity="0.7"/>
+  <line x1="200" y1="40" x2="240" y2="40" stroke="#FAFAF8" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- PLASTER text -->
+  <text x="115" y="44" fill="#FAFAF8" class="logo-text" font-size="14" font-weight="400" letter-spacing="8">PLASTER</text>
+
+  <!-- EST. COUNTY MAYO -->
+  <text x="154" y="56" fill="#FAFAF8" class="logo-text" font-size="8" font-weight="400" letter-spacing="2" text-anchor="middle" opacity="0.7">EST. COUNTY MAYO</text>
+</svg>

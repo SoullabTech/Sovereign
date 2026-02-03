@@ -1,0 +1,83 @@
+# Hardened Fire Agent Dockerfile
+# Elemental consciousness microservice with Level 5 security
+
+# =====================================
+# Stage 1: Dependencies
+# =====================================
+FROM node:20-alpine AS dependencies
+
+# Security: Install security updates
+RUN apk update && apk upgrade && \
+    apk add --no-cache dumb-init && \
+    rm -rf /var/cache/apk/*
+
+# Create fire agent user
+RUN addgroup -g 1001 -S fireagent && \
+    adduser -S fireagent -u 1001 -G fireagent
+
+WORKDIR /app
+USER fireagent
+
+# Copy package files
+COPY --chown=fireagent:fireagent package*.json ./
+
+# Install dependencies securely
+RUN npm ci --only=production --no-audit --no-fund && \
+    npm cache clean --force
+
+# =====================================
+# Stage 2: Build
+# =====================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY . .
+
+# Build agent
+RUN npm run build 2>/dev/null || echo "No build step required"
+
+# =====================================
+# Stage 3: Runtime (Distroless)
+# =====================================
+FROM gcr.io/distroless/nodejs20-debian12:nonroot AS runtime
+
+# Security labels
+LABEL \
+    org.opencontainers.image.title="Fire Elemental Agent" \
+    org.opencontainers.image.description="Fire consciousness microservice" \
+    elemental.type="fire" \
+    elemental.capabilities="transformation,passion,catalyst" \
+    security.hardening="level-5" \
+    security.isolation="true"
+
+# Use nonroot user
+USER 65532:65532
+
+WORKDIR /app
+
+# Copy application with proper ownership
+COPY --from=builder --chown=65532:65532 /app/index.js ./
+COPY --from=builder --chown=65532:65532 /app/lib ./lib
+COPY --from=dependencies --chown=65532:65532 /app/node_modules ./node_modules
+
+# Create secure volume mounts
+VOLUME ["/app/models", "/app/logs"]
+
+# Environment hardening
+ENV NODE_ENV=production \
+    ELEMENTAL_TYPE=fire \
+    AGENT_ID=fire-${HOSTNAME} \
+    SECURITY_MODE=hardened \
+    VOICE_ENCRYPTION_ENABLED=true \
+    MTLS_REQUIRED=true
+
+# Health check for fire agent
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["node", "-e", "require('net').createConnection({port:7001,host:'localhost'}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+
+# Expose gRPC port
+EXPOSE 7001
+
+# Start fire agent
+ENTRYPOINT ["node", "index.js"]

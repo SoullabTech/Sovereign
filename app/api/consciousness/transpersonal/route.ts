@@ -1,4 +1,8 @@
 // @ts-nocheck - Prototype file, not type-checked
+<<<<<<< HEAD
+=======
+export const dynamic = 'force-dynamic';
+>>>>>>> ecstatic-brown
 /**
  * TRANSPERSONAL CONSCIOUSNESS API
  *
@@ -10,6 +14,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   TranspersonalSessionManager,
   DevelopmentalStage,
@@ -21,6 +27,8 @@ import {
   EmergencyContact
 } from '@/lib/consciousness/transpersonal/TranspersonalSessionManager';
 import AetherConsciousnessInterface from '@/lib/consciousness/aether/AetherConsciousnessInterface';
+
+// Skip during static export (Capacitor builds)
 
 // Initialize transpersonal session management
 let managerInitialized = false;

@@ -1,3 +1,5 @@
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 /**
  * RESONANCE RECALL API
  *
@@ -34,9 +36,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { lattice } from '@/lib/memory/ConsciousnessMemoryLattice';
 
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

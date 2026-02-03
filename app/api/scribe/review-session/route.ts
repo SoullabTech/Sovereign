@@ -1,9 +1,14 @@
+export const dynamic = 'force-dynamic';
 // app/api/scribe/review-session/route.ts
 // API endpoint for conversational interrogation of completed sessions
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import Anthropic from '@anthropic-ai/sdk';
 import { buildSessionReviewPrompt } from '@/lib/scribe/sessionReviewMode';
+
+// Skip during static export (Capacitor builds)
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Allow up to 60 seconds for complex queries
@@ -79,6 +84,10 @@ export async function POST(req: NextRequest) {
 
 // Allow GET to retrieve completed session info for review
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');

@@ -1,11 +1,28 @@
+export const dynamic = 'force-dynamic';
 // API Route: GET /api/neuropod/biometric-validation
 // Returns Bloom biometric validation data for a user
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
+
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
   try {
-    const { searchParams } = new URL(request.url);
+    searchParams = new URL(request.url).searchParams;
+  } catch {
+    // During static export, return empty data
+    return NextResponse.json([]);
+  }
+
+  try {
     const userId = searchParams.get('userId');
 
     if (!userId) {

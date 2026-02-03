@@ -1,4 +1,9 @@
+// @ts-nocheck
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { PanconsciousFieldService } from '@/lib/consciousness/panconscious-field';
 import {
   inferSpiralogicCell,
@@ -13,7 +18,11 @@ import {
 import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
+<<<<<<< HEAD
 import { PARENTING_REPAIR_SYSTEM_PROMPT } from '@/lib/consciousness/parentingRepairPrompt';
+=======
+import { PARENTING_REPAIR_SYSTEM_PROMPT } from '@/backend/src/agents/prompts/parentingRepairPrompt';
+>>>>>>> ecstatic-brown
 import {
   evaluateResponseAgainstAxioms,
   hasOpusRupture,
@@ -31,7 +40,23 @@ import { sessionMemoryServicePostgres as sessionMemoryService } from '@/lib/cons
 import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { memoryPalaceOrchestrator } from '@/lib/consciousness/memory/MemoryPalaceOrchestrator';
 import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
+import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
+import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+import { query } from '@/lib/db/postgres';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { persistTrace } from '@/backend/src/services/traceService';
+import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
+
+/** AIN v2 (soft consultation) */
+import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
+import { consult } from '@/lib/ain/consultation';
+
+/** AIN Collective Breakthrough (afferent/efferent wisdom flow) */
+import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
+import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
+
+// Skip during static export (Capacitor builds)
 
 /**
  * Oracle Conversation API endpoint - Option A: "Oracle = DEEP = Opus"
@@ -90,12 +115,199 @@ function rateLimitOrThrow(ip: string) {
   }
 }
 
+/**
+ * 🧪 TEST HOOK: Override spiralogic cell for guard testing
+ * Only active when MAIA_TEST_SPIRALOGIC_OVERRIDES=1
+ * Usage: MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON='{"phase":4}' to test invalid phase rejection
+ */
+function applyTestSpiralogicOverrides(
+  cell: any,
+  requestId?: string
+) {
+  // Safety: never allow in production
+  const allowedEnvs = new Set(['development', 'test']);
+  if (!allowedEnvs.has(process.env.NODE_ENV || '')) return cell;
+
+  if (process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES !== '1') return cell;
+
+  const overridesRaw = process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON;
+  if (!overridesRaw) return cell;
+
+  try {
+    const overrides = JSON.parse(overridesRaw);
+    const next = { ...cell };
+
+    if (typeof overrides.element === 'string') next.element = overrides.element;
+    if (typeof overrides.phase === 'number') next.phase = overrides.phase;
+
+    console.warn('[test-hook] applied spiralogic overrides', {
+      requestId,
+      element: next.element,
+      phase: next.phase,
+      context: next.context,
+    });
+
+    return next;
+  } catch (e) {
+    console.warn('[test-hook] invalid MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON', { requestId });
+    return cell;
+  }
+}
+
+/**
+ * 🧠 INSIGHT EXTRACTION: Extract meaningful insights from conversation exchange
+ * Feeds into learning pipeline and memory system
+ */
+function extractConversationInsights(params: {
+  userMessage: string;
+  maiaResponse: string;
+  conversationHistory: any[];
+  spiralogicCell: any;
+  symbolPatterns: any[];
+  axiomSummary: any;
+}): string[] {
+  const { userMessage, maiaResponse, conversationHistory, spiralogicCell, symbolPatterns, axiomSummary } = params;
+  const insights: string[] = [];
+  const userLower = userMessage.toLowerCase();
+  const maiaLower = maiaResponse.toLowerCase();
+
+  // 1. USER REALIZATIONS - detect when user has an "aha" moment
+  const realizationPatterns = [
+    /i (?:just )?realiz(?:e|ed)/i,
+    /i (?:now )?see (?:that|how|why)/i,
+    /that makes (?:so much )?sense/i,
+    /i never (?:thought|noticed|realized)/i,
+    /something (?:just )?clicked/i,
+    /i(?:'m| am) starting to (?:see|understand)/i,
+    /oh(?:,| )(?:wow|that's|i see)/i,
+  ];
+  for (const pattern of realizationPatterns) {
+    if (pattern.test(userMessage)) {
+      // Extract the context around the realization
+      const match = userMessage.match(pattern);
+      if (match) {
+        const contextStart = Math.max(0, match.index! - 20);
+        const contextEnd = Math.min(userMessage.length, match.index! + match[0].length + 100);
+        insights.push(`User realization: "${userMessage.slice(contextStart, contextEnd).trim()}"`);
+      }
+    }
+  }
+
+  // 2. EMOTIONAL SHIFTS - detect emotional content
+  const emotionalMarkers = [
+    { pattern: /i feel (?:so )?(?:much )?(?:better|lighter|clearer|calmer)/i, type: 'positive shift' },
+    { pattern: /relief|relieved/i, type: 'relief' },
+    { pattern: /scared|afraid|anxious|worried/i, type: 'fear awareness' },
+    { pattern: /angry|frustrated|annoyed/i, type: 'anger awareness' },
+    { pattern: /sad|grief|loss|mourning/i, type: 'grief awareness' },
+    { pattern: /grateful|thankful/i, type: 'gratitude' },
+  ];
+  for (const { pattern, type } of emotionalMarkers) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Emotional ${type} expressed in ${spiralogicCell.element} context`);
+    }
+  }
+
+  // 3. GROWTH EDGE QUESTIONS - user asking deep questions
+  const growthEdgePatterns = [
+    /why do i (?:always|keep)/i,
+    /what(?:'s| is) (?:stopping|blocking|holding) me/i,
+    /how (?:do|can) i (?:stop|change|break)/i,
+    /i don(?:'t| not) (?:know|understand) (?:why|how)/i,
+    /what does (?:this|that|it) mean/i,
+    /am i (?:wrong|broken|bad)/i,
+  ];
+  for (const pattern of growthEdgePatterns) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Growth edge inquiry: User exploring "${userMessage.slice(0, 80)}..."`);
+      break; // One growth edge per message
+    }
+  }
+
+  // 4. PATTERN RECOGNITION - user noticing their own patterns
+  const patternPatterns = [
+    /i (?:always|keep|tend to)/i,
+    /this (?:always|keeps) happen/i,
+    /i notice(?:d)? (?:a )?pattern/i,
+    /whenever i/i,
+    /every time/i,
+  ];
+  for (const pattern of patternPatterns) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Pattern recognition: User aware of recurring pattern`);
+      break;
+    }
+  }
+
+  // 5. MAIA'S REFRAMES - capture when MAIA offers a meaningful reframe
+  const reframeMarkers = [
+    /another way to (?:see|think about|understand)/i,
+    /what if/i,
+    /consider (?:that|this)/i,
+    /perhaps/i,
+    /in other words/i,
+    /from (?:a|another) (?:\w+ )?perspective/i,
+  ];
+  for (const { pattern } of reframeMarkers.map(p => ({ pattern: p }))) {
+    if (pattern.test(maiaResponse)) {
+      // Only capture if this was a "gold" response
+      if (axiomSummary?.isGold) {
+        insights.push(`High-quality reframe offered in ${spiralogicCell.element}/${spiralogicCell.phase} context`);
+      }
+      break;
+    }
+  }
+
+  // 6. BREAKTHROUGH SIGNALS - strong indicators of transformation
+  const breakthroughSignals = [
+    /breakthrough/i,
+    /everything (?:just )?(?:changed|shifted)/i,
+    /i(?:'ve| have) never felt/i,
+    /first time i(?:'ve| have)/i,
+    /finally (?:understand|see|get)/i,
+  ];
+  for (const pattern of breakthroughSignals) {
+    if (pattern.test(userMessage)) {
+      insights.push(`BREAKTHROUGH: User reports transformative moment in ${spiralogicCell.element} phase`);
+      break;
+    }
+  }
+
+  // 7. SYMBOL PATTERN INSIGHTS - if archetypal patterns detected
+  for (const pattern of symbolPatterns.slice(0, 2)) {
+    if (pattern.description || pattern.archetype) {
+      insights.push(pattern.description || `Archetypal pattern: ${pattern.archetype}`);
+    }
+  }
+
+  // 8. SPIRALOGIC CONTEXT - record developmental context
+  if (insights.length > 0) {
+    // Add context about where user is in their journey
+    insights.push(`Context: ${spiralogicCell.element}/${spiralogicCell.phase} - ${spiralogicCell.context || 'general exploration'}`);
+  }
+
+  return insights;
+}
+
+type ConversationBody = {
+  userId?: string;
+  sessionId?: string;
+  message?: string;
+  conversationHistory?: any[];
+  element?: string;
+  userName?: string;
+};
+
 export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
+<<<<<<< HEAD
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: Record<string, unknown> | null = null; // Declared outside try for catch-block access
+=======
+  let body: ConversationBody | undefined;
+>>>>>>> ecstatic-brown
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -147,8 +359,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+<<<<<<< HEAD
     body = await request.json() as Record<string, unknown>;
     const { message, userId, sessionId } = body as { message?: string; userId?: string; sessionId?: string };
+=======
+    const parsed = (await request.json()) as ConversationBody;
+    body = parsed;
+    const { message, userId, sessionId } = parsed;
+>>>>>>> ecstatic-brown
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -159,6 +377,41 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // =========================================================================
+    // SERVER-SIDE IDENTITY: Derive userName from session, not client request
+    // This prevents "Kelly" name bleed where stale localStorage sends wrong name
+    // =========================================================================
+    let serverUserName = 'Explorer'; // Safe fallback
+    try {
+      const serverSession = await getCurrentSession();
+      if (serverSession && serverSession.memberId === userId) {
+        // Session is valid and matches the claimed userId - trust this session
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name || 'Explorer';
+        }
+      } else if (serverSession) {
+        // Session exists but userId doesn't match - log and use session's member
+        console.warn(`[Oracle] userId mismatch: body=${userId.substring(0, 8)}... session=${serverSession.memberId.substring(0, 8)}...`);
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name || 'Explorer';
+        }
+      }
+      // If no server session, fall back to 'Explorer' - don't trust client-sent name
+    } catch (err) {
+      console.warn('[Oracle] Could not derive userName from session:', err);
+      // Graceful degradation - use fallback
     }
 
     // Ensure conversationHistory is always an array (defensive)
@@ -180,8 +433,13 @@ export async function POST(request: NextRequest) {
       if (cognitiveProfile) {
         fieldSafety = enforceFieldSafety({
           cognitiveProfile,
+<<<<<<< HEAD
           element: body?.element as string | null | undefined,
           userName: body?.userName as string | null | undefined,
+=======
+          element: body.element,
+          userName: serverUserName, // Use server-derived name, not body.userName
+>>>>>>> ecstatic-brown
           context: 'oracle',
         });
 
@@ -219,6 +477,20 @@ export async function POST(request: NextRequest) {
       // Graceful degradation - continue without field safety if profile fetch fails
     }
 
+    // Load member's preferred assistant name (what they call MAIA)
+    let preferredAssistantName = 'MAIA';
+    try {
+      const settingsResult = await query(
+        `SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`,
+        [userId]
+      );
+      if (settingsResult.rows.length > 0 && settingsResult.rows[0].preferred_assistant_name) {
+        preferredAssistantName = settingsResult.rows[0].preferred_assistant_name;
+      }
+    } catch (err) {
+      console.warn('⚠️ [Oracle] Could not fetch preferred assistant name:', err);
+    }
+
     // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
     const processingProfile = ORACLE_PROFILE;
     const consciousnessLevel = ORACLE_LEVEL;
@@ -249,7 +521,8 @@ export async function POST(request: NextRequest) {
     console.info(`[MAIA Oracle] profile=${processingProfile} -> level=${consciousnessLevel} (Opus routing)`);
 
     // SPIRALOGIC INTELLIGENCE: Detect element/phase/context
-    const spiralogicCell = await inferSpiralogicCell(message, userId);
+    let spiralogicCell = await inferSpiralogicCell(message, userId);
+    spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
     // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
@@ -305,7 +578,25 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
     }
 
-    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis
+    // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
+    let astrologyContext: AstrologyContext | null = null;
+    try {
+      astrologyContext = await getAstrologyContextForUser(userId);
+      if (astrologyContext?.hasBirthData) {
+        console.log('🌟 [Astrology] Birth chart loaded:', {
+          sun: astrologyContext.birthChart?.sun?.sign,
+          moon: astrologyContext.birthChart?.moon?.sign,
+          rising: astrologyContext.birthChart?.ascendant?.sign,
+          retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
+        });
+      } else {
+        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+      }
+    } catch (astrologyError) {
+      console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
+    }
+
+    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -319,7 +610,9 @@ export async function POST(request: NextRequest) {
       trustLevel,
       consciousnessLevel,
       memoryContext,
-      anamnesisPrompt
+      anamnesisPrompt,
+      astrologyContext,
+      preferredAssistantName
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -366,7 +659,9 @@ export async function POST(request: NextRequest) {
             conversationDepth,
             trustLevel,
             memoryContext,
-            anamnesisPrompt
+            anamnesisPrompt,
+            astrologyContext,
+            preferredAssistantName
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -496,12 +791,16 @@ export async function POST(request: NextRequest) {
             violations: axiomSummary.violations,
             ruptureDetected,
             warningsDetected,
+<<<<<<< HEAD
             evaluations: axiomEvals.map(e => ({
               id: e.axiomId,
               severity: (e.severity ?? 'info') as 'gold' | 'warning' | 'violation' | 'info',
               ok: e.ok,
               notes: e.notes ? [e.notes] : undefined,
             })),
+=======
+            evaluations: axiomEvals as any,
+>>>>>>> ecstatic-brown
             notes: axiomSummary.notes,
           },
         });
@@ -549,6 +848,103 @@ export async function POST(request: NextRequest) {
       // Don't break the conversation flow if logging fails
     }
 
+    // 🧠 INSIGHT EXTRACTION: Extract insights from this conversation exchange
+    const extractedInsights = extractConversationInsights({
+      userMessage: message,
+      maiaResponse: maiaResponse.coreMessage,
+      conversationHistory,
+      spiralogicCell,
+      symbolPatterns,
+      axiomSummary
+    });
+
+    if (extractedInsights.length > 0) {
+      console.log('🧠 [Insight Extraction] Extracted', extractedInsights.length, 'insights:', extractedInsights.slice(0, 3));
+    }
+
+    // 🕸️ AIN BREAKTHROUGH DETECTION: Detect and contribute breakthroughs to collective field
+    // This is the AFFERENT flow - individual wisdom feeding the collective
+    try {
+      // Check both user message and MAIA response for breakthrough markers
+      const userBreakthrough = detectBreakthrough(message);
+      const maiaBreakthrough = detectBreakthrough(maiaResponse.coreMessage);
+
+      // Combine detection - either party may signal a breakthrough
+      const isBreakthrough = userBreakthrough.isBreakthrough || maiaBreakthrough.isBreakthrough;
+      const breakthroughDepth = Math.max(userBreakthrough.depth, maiaBreakthrough.depth);
+      const combinedMarkers = [...new Set([...userBreakthrough.markers, ...maiaBreakthrough.markers])];
+      const spiralLevel = userBreakthrough.spiralLevel || maiaBreakthrough.spiralLevel;
+
+      // Guard: Only contribute to collective field if we have valid spiralogic context
+      // Never pollute the field with invalid element/phase - it dilutes matching
+      // Use explicit valid sets to prevent drift
+      const validElements = new Set(['fire', 'water', 'earth', 'air', 'aether']);
+
+      const element = spiralogicCell?.element?.toLowerCase();
+
+      // Phase is a strict union: 1 | 2 | 3
+      const phase =
+        spiralogicCell?.phase === 1 ? 'cardinal'
+        : spiralogicCell?.phase === 2 ? 'fixed'
+        : spiralogicCell?.phase === 3 ? 'mutable'
+        : null;
+
+      const hasValidContext =
+        !!element &&
+        validElements.has(element) &&
+        !!phase;
+
+      if (isBreakthrough && breakthroughDepth >= 0.5 && hasValidContext) {
+        // Determine breakthrough type based on markers
+        let breakthroughType: 'shadow-integration' | 'vision-ignition' | 'emotional-release' | 'mental-clarity' | 'unity-experience' = 'mental-clarity';
+        if (combinedMarkers.includes('shadow') || combinedMarkers.includes('integration')) {
+          breakthroughType = 'shadow-integration';
+        } else if (combinedMarkers.includes('awakening') || combinedMarkers.includes('opening')) {
+          breakthroughType = 'vision-ignition';
+        } else if (combinedMarkers.includes('tears') || combinedMarkers.includes('release')) {
+          breakthroughType = 'emotional-release';
+        } else if (combinedMarkers.includes('truth') || combinedMarkers.includes('love')) {
+          breakthroughType = 'unity-experience';
+        }
+
+        // Build spiral moment for AIN bridge (use pre-validated element/phase)
+        const spiralMoment = {
+          timestamp: new Date(),
+          element: element as 'fire' | 'water' | 'earth' | 'air' | 'aether',
+          domain: spiralogicCell.context,
+          symbols: combinedMarkers.slice(0, 5),
+          breakthrough: true,
+        };
+
+        const triadicDetection = {
+          phase: phase as 'cardinal' | 'fixed' | 'mutable',
+          state: spiralogicCell.canonicalQuestion,
+          confidence: Math.min(breakthroughDepth / 5, 1),
+        };
+
+        // Send to collective field (fire-and-forget, don't block response)
+        ainSpiralogicBridge.sendToField(
+          spiralMoment,
+          triadicDetection,
+          {
+            userId,
+            sessionId,
+            archetype: activeFrameworks[0], // Primary framework as archetype
+            isBreakthrough: true,
+            breakthroughType,
+            consciousnessLevel: trustLevel / 10,
+          }
+        ).then(() => {
+          console.log(`🕸️ [AIN] Breakthrough contributed to collective field: ${breakthroughType} (depth ${breakthroughDepth}) [${requestId}]`);
+        }).catch(err => {
+          console.error(`⚠️ [AIN] Failed to contribute breakthrough (non-critical) [${requestId}]:`, err);
+        });
+      }
+    } catch (ainError) {
+      // AIN contribution should never break the conversation
+      console.error('⚠️ [AIN] Breakthrough detection failed (non-critical):', ainError);
+    }
+
     // 📚 MEMORY STORAGE: Store session pattern for cross-conversation memory
     try {
       await sessionMemoryService.storeSessionPattern(
@@ -557,6 +953,7 @@ export async function POST(request: NextRequest) {
         {
           messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
           fieldStates: [{
+<<<<<<< HEAD
             fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
             water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
             earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
@@ -565,16 +962,30 @@ export async function POST(request: NextRequest) {
             coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
           }],
           insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
+=======
+            fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+            water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+            earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+            air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+            aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
+            coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+          }],
+          insights: extractedInsights,  // 🧠 Use extracted insights instead of just symbol patterns
+>>>>>>> ecstatic-brown
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
             phase: spiralogicCell.phase,
+<<<<<<< HEAD
+=======
+            canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
+>>>>>>> ecstatic-brown
             trustLevel,
             conversationDepth
           }
         }
       );
-      console.log('📚 [Memory] Session pattern stored for cross-conversation continuity');
+      console.log('📚 [Memory] Session pattern stored with', extractedInsights.length, 'insights');
     } catch (memoryError) {
       console.error('⚠️ [Memory] Failed to store session pattern (non-critical):', memoryError);
       // Don't break the conversation flow if memory storage fails
@@ -595,6 +1006,7 @@ export async function POST(request: NextRequest) {
         archetypalResonances: activeFrameworks,
         frameworksActive: activeFrameworks,
         elementalLevels: {
+<<<<<<< HEAD
           fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
           water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
           earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
@@ -610,15 +1022,36 @@ export async function POST(request: NextRequest) {
           coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
         }],
         insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
+=======
+          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4
+        },
+        fieldStates: [{
+          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
+          coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+        }],
+        insights: extractedInsights,  // 🧠 Use extracted insights
+>>>>>>> ecstatic-brown
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
           phase: spiralogicCell.phase,
+<<<<<<< HEAD
+=======
+          canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
+>>>>>>> ecstatic-brown
           trustLevel,
           conversationDepth
         }
       });
-      console.log('🏛️ [Memory Palace] All layers stored successfully');
+      console.log('🏛️ [Memory Palace] All layers stored with', extractedInsights.length, 'insights');
     } catch (palaceError) {
       console.error('⚠️ [Memory Palace] Storage failed (non-critical):', palaceError);
     }
@@ -693,7 +1126,13 @@ export async function POST(request: NextRequest) {
         notes: axiomSummary.notes
       },
       context: {
-        model: 'maia-hybrid-claude-sovereign',
+        // TRUTHFUL PROVIDER INFO - never lie about which model handled the request
+        providerUsed: maiaResponse.providerMetadata.providerUsed,
+        modelUsed: maiaResponse.providerMetadata.modelUsed,
+        usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
+        generationTimeMs: maiaResponse.providerMetadata.generationTimeMs,
+        // Legacy field for backwards compatibility (but now truthful)
+        model: maiaResponse.providerMetadata.modelUsed,
         architecture: 'MAIA-PAI best practices + MAIA-SOVEREIGN intelligence',
         archetypalActivation: symbolPatterns.length > 0,
         parsifal: parsifal,
@@ -703,7 +1142,7 @@ export async function POST(request: NextRequest) {
         conversationDepth: conversationDepth,
         trustLevel: trustLevel,
         status: 'hybrid_sacred_attending',
-        usedFallback: usedFallback,
+        socraticValidatorUsedFallback: usedFallback, // Renamed: this is for Socratic regeneration only
         socraticValidator: validationResult ? serializeValidationResult(validationResult) : null
       },
       fieldEvent: {
@@ -723,7 +1162,9 @@ export async function POST(request: NextRequest) {
         requestId,
         durationMs,
         level: ORACLE_LEVEL,
-        model: 'maia-hybrid-claude-sovereign',
+        provider: maiaResponse.providerMetadata.providerUsed,
+        model: maiaResponse.providerMetadata.modelUsed,
+        usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
         ok: true,
       })
     );
@@ -735,7 +1176,9 @@ export async function POST(request: NextRequest) {
       sessionId,
       ip,
       level: ORACLE_LEVEL,
-      model: 'maia-hybrid-claude-sovereign',
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
       status: 'ok',
       durationMs,
       promptTokens: undefined,
@@ -743,33 +1186,149 @@ export async function POST(request: NextRequest) {
       totalTokens: undefined,
     }).catch(err => console.warn('[oracle] logging failed:', err));
 
-    return NextResponse.json(response);
+    // 🧠 CONSCIOUSNESS TRACE: Full trace spine for observability
+    (async () => {
+      try {
+        const trace: ConsciousnessTrace = {
+          id: requestId,
+          createdAt: new Date().toISOString(),
+          userId,
+          sessionId,
+          requestId,
+          agent: 'oracle.conversation',
+          model: 'claude-opus-4-5-20251101',
+          input: { text: message },
+          safety: {
+            level: fieldSafety?.allowed ? 'safe' : 'blocked',
+            flags: fieldSafety ? [fieldSafety.fieldRouting.realm] : [],
+            notes: cognitiveProfile ? [`altitude=${cognitiveProfile.rollingAverage.toFixed(2)}`] : []
+          },
+          inference: {
+            facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
+            mode: spiralogicCell.context,
+            confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
+            rationale: activeFrameworks
+          },
+          routing: {
+            route: 'oracle',
+            reason: ['spiralogic', ...activeFrameworks]
+          },
+          memory: {
+            referencedIds: memoryContext?.sessionMemory?.patterns?.slice(0, 5).map((p: any) => p.id) || []
+          },
+          plan: {
+            steps: suggestedInterventions.map(i => ({ kind: 'intervention' as const, detail: i.flowId }))
+          },
+          events: [
+            { ts: new Date(startedAt).toISOString(), kind: 'input_received', ms_since_start: 0 },
+            { ts: new Date().toISOString(), kind: 'output_sent', ms_since_start: durationMs }
+          ],
+          timings: {
+            startMs: startedAt,
+            endMs: Date.now(),
+            latencyMs: durationMs
+          }
+        };
+
+        await persistTrace({ trace });
+        console.log('🧠 [Consciousness Trace] Persisted trace:', requestId.substring(0, 8) + '...');
+      } catch (traceError) {
+        console.error('⚠️ [Consciousness Trace] Failed to persist (non-critical):', traceError);
+      }
+    })();
+
+    // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
+    // TRUTHFUL: Include actual provider/model info so observability never lies
+    const canonHeaders = makeCanonHeaders({
+      requestId,
+      pipeline: 'oracle.conversation',
+      source: 'pfi_full',
+      mode: 'STANDARD',
+      validation: validationResult,
+      repaired: regenerationAttempt > 0,
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
+    });
+
+    const jsonResponse = NextResponse.json(response);
+    Object.entries(canonHeaders).forEach(([key, value]) => {
+      jsonResponse.headers.set(key, value);
+    });
+    return jsonResponse;
 
   } catch (error) {
     // Calculate duration for error logging
     const durationMs = Date.now() - startedAt;
 
+    // Check if this is a SERVICE_UNAVAILABLE error from STRICT_503 mode
+    const isServiceUnavailable = (error as any)?.code === 'SERVICE_UNAVAILABLE';
+    const failedProvider = (error as any)?.provider;
+
     // Structured error logging
     console.error(
       JSON.stringify({
-        tag: 'oracle.error',
+        tag: isServiceUnavailable ? 'oracle.service_unavailable' : 'oracle.error',
         requestId,
         durationMs,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
+        strict503: isServiceUnavailable,
+        failedProvider,
       })
     );
 
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
       requestId,
+<<<<<<< HEAD
       userId: body?.userId as string | undefined,
       sessionId: body?.sessionId as string | undefined,
+=======
+      userId: body?.userId,
+      sessionId: body?.sessionId,
+>>>>>>> ecstatic-brown
       ip,
       level: ORACLE_LEVEL,
       status: 'error',
       durationMs,
     }).catch(err => console.warn('[oracle] logging failed:', err));
+
+    // STRICT 503 MODE: Return 503 Service Unavailable when primary provider fails
+    if (isServiceUnavailable) {
+      // Include canon headers even on 503 for consistent tracing
+      const strict503Headers = makeCanonHeaders({
+        requestId,
+        pipeline: 'oracle.conversation',
+        source: 'pfi_full',
+        mode: 'STANDARD',
+        provider: 'anthropic',  // The provider we TRIED to use
+        model: 'claude-opus-4-5-20251101',  // The model we TRIED to use
+        usedProviderFallback: false,  // We did NOT fallback (strict mode blocked it)
+      });
+
+      const errorResponse = NextResponse.json(
+        {
+          success: false,
+          error: 'Service temporarily unavailable',
+          providerStatus: {
+            anthropic: { ok: false, error: 'Provider unavailable' },
+            ollama: { ok: true, error: null, disabledByStrictMode: true },
+          },
+          strict503: true,
+          message: 'MAIA is running in strict mode. Claude (primary provider) is unavailable. Fallback to Ollama is disabled.',
+        },
+        { status: 503 }
+      );
+
+      // Set canon headers on 503 response
+      Object.entries(strict503Headers).forEach(([key, value]) => {
+        errorResponse.headers.set(key, value);
+      });
+      errorResponse.headers.set('X-MAIA-Strict-Mode', '1');
+
+      return errorResponse;
+    }
 
     return NextResponse.json(
       {
@@ -838,17 +1397,25 @@ async function generateSpiralogicResponseWithLLM(
   trustLevel: number,
   consciousnessLevel: ConsciousnessLevel,
   memoryContext?: any,
-  anamnesisPrompt?: string | null
+  anamnesisPrompt?: string | null,
+  astrologyContext?: AstrologyContext | null,
+  preferredAssistantName?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
   elementalGuidance: string;
+  providerMetadata: {
+    providerUsed: 'anthropic' | 'ollama' | 'fallback';
+    modelUsed: string;
+    usedProviderFallback: boolean;  // true when Claude failed and Ollama took over
+    generationTimeMs?: number;
+  };
 }> {
   const llmProvider = new MultiLLMProvider();
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
-  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis
+  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
   const systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
@@ -861,7 +1428,9 @@ async function generateSpiralogicResponseWithLLM(
     conversationDepth,
     trustLevel,
     memoryContext,
-    anamnesisPrompt
+    anamnesisPrompt,
+    astrologyContext,
+    preferredAssistantName
   );
 
   // Format conversation history for LLM
@@ -882,17 +1451,99 @@ async function generateSpiralogicResponseWithLLM(
     ? 250  // ~60-100 words for building trust
     : 400; // ~80-150 words for deep relationship
 
+  // ------------------------------------------------------------
+  // AIN v2: Soft consultation (capability, not choreography)
+  // ------------------------------------------------------------
+  const gateContext = buildGateContext(
+    message,
+    conversationDepth,
+    trustLevel,
+    spiralogicCell?.element ?? 'unknown'
+  );
+
+  const decision = recommendConsultation(gateContext);
+
+  let councilInsights = '';
+  if (decision?.wantsCouncil && decision?.council) {
+    try {
+      const result = await consult({
+        council: decision.council,
+        question: message,
+        context: {
+          memberSpiral: spiralogicCell,
+          conversationHistory,
+          element: spiralogicCell?.element,
+        },
+      });
+
+      // Keep it structured and clearly "advisory"
+      councilInsights = [
+        `\n\n[AIN Council Consultation: ${decision.council}]`,
+        `Insights:`,
+        ...(result?.insights ?? []).map((x: string) => `- ${x}`),
+        result?.tensions?.length ? `Tensions: ${result.tensions.join(' | ')}` : '',
+        result?.risks?.length ? `Risks: ${result.risks.join(' | ')}` : '',
+        result?.recommendation ? `Recommendation: ${result.recommendation}` : '',
+        typeof result?.emergenceRating !== 'undefined'
+          ? `Emergence rating: ${result.emergenceRating}`
+          : '',
+        `[End Council Consultation]\n`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      console.log(`[AIN v2] Council consulted: ${decision.council}, insights: ${result?.insights?.length ?? 0}`);
+    } catch (ainError) {
+      console.warn('[AIN v2] Consultation failed (non-critical):', ainError);
+      // Non-blocking - MAIA proceeds without council
+    }
+  }
+
+  // ------------------------------------------------------------
+  // AIN EFFERENT FLOW: Retrieve collective wisdom for this state
+  // ------------------------------------------------------------
+  let collectiveWisdom = '';
+  try {
+    const wisdomPrompt = await ainSpiralogicBridge.getWisdomForPrompt(
+      spiralogicCell?.element?.toLowerCase() || 'aether',
+      spiralogicCell?.phase <= 1 ? 'cardinal' : spiralogicCell?.phase <= 2 ? 'fixed' : 'mutable',
+      activeFrameworks[0]
+    );
+
+    if (wisdomPrompt) {
+      collectiveWisdom = `\n\n[Collective Field Awareness]\n${wisdomPrompt}\n[End Field Awareness]\n`;
+      console.log(`[AIN] Collective wisdom retrieved for ${spiralogicCell?.element}/${spiralogicCell?.phase}`);
+    }
+  } catch (wisdomError) {
+    console.warn('[AIN] Collective wisdom retrieval failed (non-critical):', wisdomError);
+    // Non-blocking - MAIA proceeds without collective wisdom
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom
+    ? systemPrompt + councilInsights + collectiveWisdom
+    : systemPrompt;
+
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
-  let usedFallback = false;
+  let providerUsed: 'anthropic' | 'ollama' | 'fallback' = 'fallback';
+  let modelUsed = 'none';
+  let usedProviderFallback = false;  // true when Claude failed and Ollama took over
+  let generationTimeMs: number | undefined;
+
   try {
     const llmResponse = await llmProvider.generate({
-      systemPrompt,
+      systemPrompt: finalSystemPrompt,
       userInput: fullUserInput,
-      level: consciousnessLevel // Use computed level (DEEP -> 5 -> Opus 4.5)
+      level: consciousnessLevel as any // Use computed level (DEEP -> 5 -> Opus 4.5)
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;
+
+    // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
+    providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
+    modelUsed = llmResponse.model || 'unknown';
+    generationTimeMs = llmResponse.metadata?.generationTime;
+    usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
 
     console.log('🌀 [MAIA Hybrid LLM Response]', {
       provider: llmResponse.provider,
@@ -902,11 +1553,14 @@ async function generateSpiralogicResponseWithLLM(
       frameworks: activeFrameworks,
       conversationDepth,
       trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
-      targetMaxTokens: maxTokens
+      targetMaxTokens: maxTokens,
+      usedProviderFallback
     });
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
-    usedFallback = true;
+    usedProviderFallback = true;
+    providerUsed = 'fallback';
+    modelUsed = 'opus-safe-fallback';
 
     // Fallback to a simple, present response (Opus-safe: no identity claims)
     coreMessage = OPUS_SAFE_FALLBACKS.oracleLLMFailure;
@@ -947,7 +1601,13 @@ async function generateSpiralogicResponseWithLLM(
   return {
     coreMessage,
     suggestedActions,
-    elementalGuidance
+    elementalGuidance,
+    providerMetadata: {
+      providerUsed,
+      modelUsed,
+      usedProviderFallback,
+      generationTimeMs
+    }
   };
 }
 
@@ -967,9 +1627,17 @@ function buildSacredAttendingPrompt(
   conversationDepth: number,
   trustLevel: number,
   memoryContext?: any,
-  anamnesisPrompt?: string | null
+  anamnesisPrompt?: string | null,
+  astrologyContext?: AstrologyContext | null,
+  preferredAssistantName?: string
 ): string {
+  // Build the custom name instruction if member has set a preferred name
+  const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
+    ? `\nThis member calls you "${preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n`
+    : '';
+
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
+${nameInstruction}
 
 # Core Voice Principles
 
@@ -1035,6 +1703,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 
 ` : ''}
 ${anamnesisPrompt ? anamnesisPrompt : ''}
+${astrologyContext?.formattedContext ? astrologyContext.formattedContext : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}

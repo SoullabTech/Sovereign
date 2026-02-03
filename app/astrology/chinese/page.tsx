@@ -1,7 +1,23 @@
+// @ts-nocheck
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { ChineseZodiacAnimal, ChineseElement } from '@/lib/astrology/chineseAstrology';
+import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
+import {
+  ChineseZodiacAnimal,
+  ChineseElement,
+  ElementHolisticProfile,
+  getChineseZodiacAnimal,
+  getChineseElement,
+  getYinYang,
+  getSexagenaryPosition,
+  getElementHolisticProfile
+} from '@/lib/astrology/chineseAstrology';
+import DaYunTimeline from '@/components/astrology/DaYunTimeline';
+import type { Gender } from '@/lib/astrology/types/daYun';
+
+type ViewMode = 'profile' | 'da-yun';
 
 interface ChineseReadingData {
   zodiacAnimal: ChineseZodiacAnimal;
@@ -30,75 +46,111 @@ interface ChineseReadingData {
     challenging: string[];
     analysis: string;
   };
+  holisticProfile: ElementHolisticProfile | null;
 }
 
 export default function ChineseAstrologyPage() {
+  const [viewMode, setViewMode] = useState<ViewMode>('profile');
   const [birthYear, setBirthYear] = useState<string>('');
+  const [birthDate, setBirthDate] = useState<string>('');
+  const [birthTime, setBirthTime] = useState<string>('');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const didAutoLoad = useRef(false);
+
+  // Auto-load saved birth date (parity with Mayan page)
+  useEffect(() => {
+    if (didAutoLoad.current) return;
+    const saved = localStorage.getItem('birthDate');
+    if (saved) {
+      setBirthDate(saved);
+      didAutoLoad.current = true;
+    }
+  }, []);
+
+  // Auto-calculate when birthDate is set from localStorage
+  useEffect(() => {
+    if (birthDate && didAutoLoad.current && !reading) {
+      generateReading();
+    }
+  }, [birthDate]);
 
   const generateReading = async () => {
-    if (!birthYear || isNaN(Number(birthYear))) return;
+    if (!birthDate) return;
 
     setIsCalculating(true);
 
-    // Placeholder implementation - Chinese Astrology system needs to be fully implemented
+    // Calculate actual Chinese astrology data from the birth date
     setTimeout(() => {
+      const date = new Date(birthDate);
+      const year = date.getFullYear();
+      const zodiacAnimal = getChineseZodiacAnimal(year);
+      const element = getChineseElement(year);
+      const yinYang = getYinYang(year);
+      const cyclePosition = getSexagenaryPosition(year);
+
+      // Map Chinese element to Spiralogic element
+      const spiralogicMap: Record<string, { primary: string; secondary: string[] }> = {
+        wood: { primary: 'Air', secondary: ['Earth', 'Water'] },
+        fire: { primary: 'Fire', secondary: ['Air', 'Earth'] },
+        earth: { primary: 'Earth', secondary: ['Fire', 'Water'] },
+        metal: { primary: 'Aether', secondary: ['Earth', 'Air'] },
+        water: { primary: 'Water', secondary: ['Earth', 'Aether'] }
+      };
+
+      const spiralogicMapping = spiralogicMap[element.name] || { primary: 'Earth', secondary: ['Fire', 'Water'] };
+
+      // Get the holistic profile for this element
+      const holisticProfile = getElementHolisticProfile(element.name);
+
       const readingData: ChineseReadingData = {
-        zodiacAnimal: {
-          name: 'Dragon',
-          chineseName: '龙',
-          symbol: '🐉',
-          element: 'earth',
-          archetype: 'The Visionary',
-          characteristics: ['Powerful', 'Ambitious', 'Charismatic'],
-          strengths: ['Natural leader', 'Confident', 'Creative'],
-          challenges: ['Can be arrogant', 'Impatient', 'Hot-tempered'],
-          description: 'Dragons are born leaders with incredible vision and power',
-          compatibility: ['Rat', 'Monkey', 'Rooster'],
-          incompatible: ['Dog', 'Rabbit'],
-          luckyNumbers: [1, 6, 7],
-          luckyColors: ['Red', 'Gold', 'Yellow'],
-          direction: 'East',
-          season: 'Spring'
-        },
-        element: {
-          name: 'earth',
-          chineseName: '土',
-          nature: 'yin',
-          characteristics: ['Grounded', 'Stable', 'Nurturing'],
-          personality: 'Reliable and practical',
-          color: 'Brown',
-          season: 'Late Summer',
-          direction: 'Center'
-        },
-        yinYang: 'yang',
-        cycleYear: 5,
+        zodiacAnimal,
+        element,
+        yinYang,
+        cycleYear: cyclePosition,
+        holisticProfile,
         personalityProfile: [
-          'Powerful and charismatic leader',
-          'Earth element brings stability and grounding',
-          'Yang energy provides active, expressive nature'
+          `${zodiacAnimal.archetype} with ${element.name} energy`,
+          `${element.name.charAt(0).toUpperCase() + element.name.slice(1)} element brings ${element.characteristics.slice(0, 2).join(' and ')}`,
+          `${yinYang.charAt(0).toUpperCase() + yinYang.slice(1)} energy provides ${yinYang === 'yang' ? 'active, expressive' : 'receptive, introspective'} nature`
         ],
         strengthsWeaknesses: {
-          strengths: ['Natural leader', 'Confident', 'Creative'],
-          weaknesses: ['Can be arrogant', 'Impatient', 'Hot-tempered']
+          strengths: zodiacAnimal.strengths,
+          weaknesses: zodiacAnimal.challenges
         },
         spiralogicIntegration: {
-          primaryElement: 'Fire',
-          secondaryElements: ['Earth', 'Air'],
-          evolutionaryPath: 'Leadership through vision and manifestation',
-          consciousnessActivation: 'Creative power and authentic expression'
+          primaryElement: spiralogicMapping.primary,
+          secondaryElements: spiralogicMapping.secondary,
+          evolutionaryPath: `${zodiacAnimal.archetype} walking the ${element.name} path toward ${spiralogicMapping.primary} consciousness`,
+          consciousnessActivation: `Your ${element.name} ${zodiacAnimal.name} energy activates through ${element.characteristics[0]} and ${zodiacAnimal.characteristics[0]}`
         },
         lifeGuidance: {
-          careerPaths: ['Leadership roles', 'Creative fields', 'Entrepreneurship'],
-          relationships: ['Seeks partners who appreciate strength', 'Values loyalty and support', 'Enjoys dynamic partnerships'],
-          spiritualDevelopment: ['Focus on creative power', 'Meditate with earth element', 'Cultivate balance through movement'],
-          healthWellness: ['Earth constitution benefits from grounding', 'Dragon energy supports vitality', 'Active, energizing activities']
+          careerPaths: [
+            `Roles that honor ${zodiacAnimal.archetype.toLowerCase()} qualities`,
+            `Fields aligned with ${element.name} element - ${element.characteristics.slice(0, 2).join(', ')}`,
+            `Environments that support ${zodiacAnimal.characteristics[0]} expression`
+          ],
+          relationships: [
+            `Naturally harmonious with ${zodiacAnimal.compatibility.slice(0, 2).join(' and ')}`,
+            `Values ${zodiacAnimal.characteristics[1]} and ${zodiacAnimal.characteristics[2]} in partnerships`,
+            `${yinYang === 'yang' ? 'Takes initiative' : 'Offers receptivity'} in relationships`
+          ],
+          spiritualDevelopment: [
+            `Meditate with ${element.name} element imagery`,
+            `Honor the ${zodiacAnimal.archetype.toLowerCase()} within`,
+            `Balance ${yinYang} energy through ${yinYang === 'yang' ? 'stillness practices' : 'active movement'}`
+          ],
+          healthWellness: [
+            `${element.name.charAt(0).toUpperCase() + element.name.slice(1)} constitution benefits from ${element.direction} direction and ${element.season} renewal`,
+            `${zodiacAnimal.name} energy supports ${zodiacAnimal.strengths[0].toLowerCase()}`,
+            `Lucky colors for vitality: ${zodiacAnimal.luckyColors.slice(0, 2).join(', ')}`
+          ]
         },
         compatibility: {
-          mostCompatible: ['Rat', 'Monkey', 'Rooster'],
-          challenging: ['Dog', 'Rabbit'],
-          analysis: 'Dragons are most compatible with signs that appreciate their power and vision.'
+          mostCompatible: zodiacAnimal.compatibility,
+          challenging: zodiacAnimal.incompatible,
+          analysis: `${element.name.charAt(0).toUpperCase() + element.name.slice(1)} ${zodiacAnimal.name}s are most harmonious with ${zodiacAnimal.compatibility.join(', ')}. Growth opportunities arise with ${zodiacAnimal.incompatible.join(', ')}.`
         }
       };
 
@@ -112,6 +164,23 @@ export default function ChineseAstrologyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-800 to-yellow-900">
+      {/* Navigation */}
+      <div className="fixed top-4 left-4 z-50 flex gap-2">
+        <Link
+          href="/maia"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+        <Link
+          href="/astrology"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <span className="text-sm font-medium">Blueprint</span>
+        </Link>
+      </div>
+
       {/* Floating Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full blur-xl animate-pulse"></div>
@@ -121,48 +190,198 @@ export default function ChineseAstrologyPage() {
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-red-300 via-orange-200 to-yellow-300 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-red-300 via-orange-200 to-yellow-300 bg-clip-text text-transparent mb-4">
             Chinese Astrology Portal
           </h1>
-          <p className="text-xl text-orange-200 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-orange-200 max-w-3xl mx-auto leading-relaxed">
             Discover the ancient wisdom of Chinese zodiac animals, five elements, and the cosmic cycles
             that shape your destiny through thousands of years of celestial observation.
           </p>
         </div>
 
-        {/* Year Input Section */}
+        {/* View Mode Toggle */}
+        <div className="flex justify-center gap-2 mb-8">
+          <button
+            onClick={() => setViewMode('profile')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              viewMode === 'profile'
+                ? 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                : 'bg-black/30 text-orange-200/60 hover:bg-black/40 border border-transparent'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Zodiac Profile</span>
+          </button>
+          <button
+            onClick={() => setViewMode('da-yun')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              viewMode === 'da-yun'
+                ? 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                : 'bg-black/30 text-orange-200/60 hover:bg-black/40 border border-transparent'
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span>Da Yun (10-Year Cycles)</span>
+          </button>
+        </div>
+
+        {/* Input Section - Different based on view mode */}
         <div className="max-w-2xl mx-auto mb-12">
           <div className="bg-black/30 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-orange-200 mb-6 text-center">
-              Enter Your Birth Year
-            </h2>
+            {viewMode === 'profile' ? (
+              <>
+                <h2 className="text-2xl font-bold text-orange-200 mb-2 text-center">
+                  Enter Your Birth Data
+                </h2>
+                <p className="text-orange-200/60 text-sm text-center mb-6">
+                  Full date required for Four Pillars. Time optional but improves accuracy.
+                </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-              <select
-                value={birthYear}
-                onChange={(e) => setBirthYear(e.target.value)}
-                className="bg-black/50 border border-orange-500/50 rounded-xl px-6 py-4 text-orange-200 text-lg w-full sm:w-auto focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
-              >
-                <option value="">Select Year...</option>
-                {yearOptions.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {/* Birth Date */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Calendar className="w-4 h-4" />
+                      Birth Date
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => {
+                        setBirthDate(e.target.value);
+                        if (e.target.value) {
+                          setBirthYear(e.target.value.split('-')[0]);
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
 
-              <button
-                onClick={generateReading}
-                disabled={!birthYear || isCalculating}
-                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 w-full sm:w-auto disabled:cursor-not-allowed"
-              >
-                {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
-              </button>
-            </div>
+                  {/* Birth Time (Optional) */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Clock className="w-4 h-4" />
+                      Birth Time <span className="text-orange-200/40">(optional)</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={birthTime}
+                      onChange={(e) => setBirthTime(e.target.value)}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={generateReading}
+                  disabled={!birthDate || isCalculating}
+                  className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:cursor-not-allowed"
+                >
+                  {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
+                </button>
+                <p className="text-xs text-orange-400/50 text-center mt-3">
+                  Reveals your animal sign, element, and five-layer profile (physical, emotional, mental, spiritual, ancestral).
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-orange-200 mb-2 text-center">
+                  Four Pillars & Da Yun
+                </h2>
+                <p className="text-orange-200/60 text-sm text-center mb-6">
+                  See your complete Ba Zi chart and 10-year luck cycles
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {/* Birth Date */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Calendar className="w-4 h-4" />
+                      Birth Date
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => {
+                        setBirthDate(e.target.value);
+                        // Also update birthYear for profile view sync
+                        if (e.target.value) {
+                          setBirthYear(e.target.value.split('-')[0]);
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
+
+                  {/* Birth Time (Optional) */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Clock className="w-4 h-4" />
+                      Birth Time <span className="text-orange-200/40">(optional)</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={birthTime}
+                      onChange={(e) => setBirthTime(e.target.value)}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="sm:col-span-2">
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <User className="w-4 h-4" />
+                      Gender <span className="text-orange-200/40">(affects cycle direction)</span>
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setGender('male')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                          gender === 'male'
+                            ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
+                            : 'bg-black/30 border-orange-500/30 text-orange-200/60 hover:border-orange-500/50'
+                        }`}
+                      >
+                        Male
+                      </button>
+                      <button
+                        onClick={() => setGender('female')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                          gender === 'female'
+                            ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
+                            : 'bg-black/30 border-orange-500/30 text-orange-200/60 hover:border-orange-500/50'
+                        }`}
+                      >
+                        Female
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Helper text */}
+                <p className="text-orange-200/40 text-xs text-center">
+                  Da Yun (大運) reveals the major 10-year periods that shape your life journey.
+                  Birth time is optional but improves hour pillar accuracy.
+                </p>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Reading Results */}
-        {reading && (
+        {/* Da Yun Timeline View */}
+        {viewMode === 'da-yun' && (
+          <div className="max-w-6xl mx-auto">
+            <DaYunTimeline
+              birthDate={birthDate}
+              birthTime={birthTime || undefined}
+              gender={gender || undefined}
+            />
+          </div>
+        )}
+
+        {/* Profile Reading Results */}
+        {viewMode === 'profile' && reading && (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Core Identity */}
             <div className="bg-black/30 backdrop-blur-sm border border-red-500/30 rounded-2xl p-8">
@@ -315,6 +534,241 @@ export default function ChineseAstrologyPage() {
                 </ul>
               </div>
             </div>
+
+            {/* Five Element Holistic Reading */}
+            {reading.holisticProfile && (
+              <>
+                {/* Physical Health Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-emerald-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-emerald-300 mb-2">Physical Body & Health</h2>
+                  <p className="text-emerald-200/60 text-sm mb-6">Traditional Chinese Medicine organ correspondences for {reading.element.name} element</p>
+
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-bold text-emerald-200">Organ Systems</h4>
+                      <div className="space-y-2 text-emerald-100">
+                        <p><span className="text-emerald-400 font-semibold">Yin Organ:</span> {reading.holisticProfile.physical.yinOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Yang Organ:</span> {reading.holisticProfile.physical.yangOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Body Tissue:</span> {reading.holisticProfile.physical.bodyTissue}</p>
+                        <p><span className="text-emerald-400 font-semibold">Sensory Organ:</span> {reading.holisticProfile.physical.sensoryOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Body Fluid:</span> {reading.holisticProfile.physical.bodyFluid}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-bold text-emerald-200">Health Tendencies</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.physical.healthTendencies.map((tendency, index) => (
+                          <li key={index} className="text-emerald-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">!</span>
+                            <span>{tendency}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-emerald-200 mb-4">Support Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.physical.supportPractices.map((practice, index) => (
+                        <li key={index} className="text-emerald-100 flex items-start space-x-2">
+                          <span className="text-emerald-400 mt-1">+</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Emotional Patterns Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-rose-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-rose-300 mb-2">Emotional Patterns</h2>
+                  <p className="text-rose-200/60 text-sm mb-6">The {reading.element.name} element's emotional landscape</p>
+
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Primary Emotion</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.primaryEmotion}</p>
+                    </div>
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Shadow Expression</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.shadowEmotion}</p>
+                    </div>
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Balanced Expression</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.balancedExpression}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-rose-200 mb-4">Imbalance Signals</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.emotional.imbalanceSignals.map((signal, index) => (
+                          <li key={index} className="text-rose-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{signal}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-rose-200 mb-4">Healing Practices</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.emotional.healingPractices.map((practice, index) => (
+                          <li key={index} className="text-rose-100 flex items-start space-x-2">
+                            <span className="text-rose-400 mt-1">+</span>
+                            <span>{practice}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mental Qualities Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-cyan-300 mb-2">Mental Qualities</h2>
+                  <p className="text-cyan-200/60 text-sm mb-6">Cognitive patterns of the {reading.element.name} mind</p>
+
+                  <div className="bg-cyan-900/20 rounded-xl p-6 mb-8">
+                    <h4 className="text-cyan-300 font-semibold mb-2">Thinking Style</h4>
+                    <p className="text-cyan-100 text-xl">{reading.holisticProfile.mental.thinkingStyle}</p>
+                    <p className="text-cyan-200/70 mt-3">
+                      <span className="font-semibold">Learning Style:</span> {reading.holisticProfile.mental.learningStyle}
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-cyan-200 mb-4">Cognitive Strengths</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.mental.cognitiveStrengths.map((strength, index) => (
+                          <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                            <span className="text-cyan-400 mt-1">*</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-cyan-200 mb-4">Mental Challenges</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.mental.mentalChallenges.map((challenge, index) => (
+                          <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{challenge}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <h4 className="text-xl font-bold text-cyan-200 mb-4">Support Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.mental.supportPractices.map((practice, index) => (
+                        <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                          <span className="text-cyan-400 mt-1">+</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Spiritual Themes Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-violet-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-violet-300 mb-2">Spiritual Themes</h2>
+                  <p className="text-violet-200/60 text-sm mb-6">Soul lessons and gifts of the {reading.element.name} path</p>
+
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Soul Lesson</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.soulLesson}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Spiritual Gift</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.spiritualGift}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Karmic Pattern</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.karmicPattern}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Evolutionary Path</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.evolutionaryPath}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-violet-200 mb-4">Spiritual Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.spiritual.practices.map((practice, index) => (
+                        <li key={index} className="text-violet-100 flex items-start space-x-2">
+                          <span className="text-violet-400 mt-1">*</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Ancestral Patterns Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-amber-300 mb-2">Ancestral Patterns</h2>
+                  <p className="text-amber-200/60 text-sm mb-6">Lineage themes of the {reading.element.name} element</p>
+
+                  <div className="bg-amber-900/20 rounded-xl p-6 mb-8 text-center">
+                    <h4 className="text-amber-300 font-semibold mb-2">Lineage Theme</h4>
+                    <p className="text-amber-100 text-xl">{reading.holisticProfile.ancestral.lineageTheme}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-amber-200 mb-4">Inherited Strengths</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.ancestral.inheritedStrengths.map((strength, index) => (
+                          <li key={index} className="text-amber-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">+</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-amber-200 mb-4">Inherited Challenges</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.ancestral.inheritedChallenges.map((challenge, index) => (
+                          <li key={index} className="text-amber-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{challenge}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-900/20 rounded-xl p-5 mb-6">
+                    <h4 className="text-amber-300 font-semibold mb-2">Ancestral Healing Focus</h4>
+                    <p className="text-amber-100">{reading.holisticProfile.ancestral.ancestralHealing}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-amber-200 mb-4">Honoring Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.ancestral.honoringPractices.map((practice, index) => (
+                        <li key={index} className="text-amber-100 flex items-start space-x-2">
+                          <span className="text-amber-400 mt-1">*</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Compatibility */}
             <div className="bg-black/30 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-8">

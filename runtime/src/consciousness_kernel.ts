@@ -10,7 +10,7 @@
 
 import type { ExtractionResult } from '../../lib/intelligence/SymbolExtractionEngine';
 import type { IPersonalOracleAgent } from '../../lib/oracle/PersonalOracleAgent';
-import type { AgentResponse } from '../../app/api/backend/src/types/agentResponse';
+import type { AgentResponse } from '../../app/api/_backend/src/types/agentResponse';
 
 /**
  * Consciousness Kernel State

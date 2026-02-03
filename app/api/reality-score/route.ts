@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Reality Hygiene API - Save Assessment Endpoint
  *
@@ -13,6 +14,8 @@ import {
   computeRealityTotal,
   type RealityScores,
 } from "@/lib/reality/realityTypes";
+
+export const revalidate = false;
 
 const ScoresSchema = z.record(z.number().int().min(1).max(5));
 
@@ -94,6 +97,10 @@ export async function POST(req: Request) {
  * GET: Retrieve user's reality assessments
  */
 export async function GET(req: Request) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // TODO: Add authentication when auth system is in place
 
   try {

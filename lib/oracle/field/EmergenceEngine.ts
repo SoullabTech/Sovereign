@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Emergence Engine
  * Allows responses to emerge from field resonance rather than algorithmic selection

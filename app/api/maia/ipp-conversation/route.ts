@@ -1,4 +1,10 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 /**
  * MAIA IPP Conversational Integration

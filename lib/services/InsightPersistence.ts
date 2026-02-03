@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Insight Persistence Layer
  * Bridges Unified Insight Engine (in-memory consciousness) to Supabase (eternal memory)

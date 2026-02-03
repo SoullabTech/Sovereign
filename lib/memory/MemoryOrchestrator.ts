@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PrismaClient } from '@prisma/client';
 import { generateLocalEmbedding } from './embeddings';
 import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';

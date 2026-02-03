@@ -855,7 +855,13 @@ export class ConsciousnessOrchestrator {
             phaseStatus: streams.nestedObservation?.phaseStatus || null,
             nextPhaseReadiness: streams.nestedObservation?.nextPhaseReadiness || null
           }
-        }
+        },
+        // 🧠 Corpus Callosum trace data for parallel processing auditing
+        corpusCallosumTrace: streams.elemental?.traceData ? {
+          elementalAgents: streams.elemental.traceData.elementalAgents,
+          elementalSynthesis: streams.elemental.traceData.synthesis,
+          totalLatencyMs: streams.elemental.traceData.totalLatencyMs,
+        } : null
       }
     };
   }

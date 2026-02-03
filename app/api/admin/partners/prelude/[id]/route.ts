@@ -1,11 +1,28 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/postgres";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Required for static export
+export function generateStaticParams() {
+  return [{ id: 'default' }];
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
   const preludeId = params.id;
+
+  // Return empty data for static generation placeholder
+  // Real requests will have actual prelude IDs
+  if (preludeId === 'default') {
+    return NextResponse.json({
+      response: null,
+      invites: [],
+    });
+  }
 
   const responseRes = await query(
     `SELECT *

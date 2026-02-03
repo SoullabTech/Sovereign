@@ -37,7 +37,7 @@ export default function AINEvolutionDemo() {
   const [currentPhase, setCurrentPhase] = useState(1);
   const [isActive, setIsActive] = useState(false);
   const [evolutionLog, setEvolutionLog] = useState<string[]>([]);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   const addLogEntry = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -340,12 +340,11 @@ export default function AINEvolutionDemo() {
           <div className="flex justify-center">
             <div className="w-64 h-64">
               <Holoflower
-                elements={{
+                elementalBalance={{
                   fire: metrics.phaseReadiness,
                   water: metrics.averageAwareness,
                   earth: Math.min(1.0, metrics.recursionDepth / 5),
-                  air: Math.min(1.0, metrics.emergenceEvents / 10),
-                  aether: Math.min(1.0, metrics.totalObservers / 10)
+                  air: Math.min(1.0, metrics.emergenceEvents / 10)
                 }}
               />
             </div>

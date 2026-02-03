@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package archetypal_consciousness;
+
+// Service definition for Archetypal Consciousness Oracle
+service ArchetypalConsciousnessService {
+  // Process a consciousness query with archetypal analysis
+  rpc ProcessQuery (ConsciousnessQuery) returns (ConsciousnessResponse) {}
+  
+  // Stream consciousness insights in real-time
+  rpc StreamInsights (stream InsightRequest) returns (stream InsightResponse) {}
+  
+  // Get archetypal voice synthesis
+  rpc SynthesizeVoice (VoiceRequest) returns (VoiceResponse) {}
+}
+
+// Query message
+message ConsciousnessQuery {
+  string user_id = 1;
+  string query_text = 2;
+  repeated string context_history = 3;
+  ConsciousnessState current_state = 4;
+  bool include_voice = 5;
+  string preferred_archetype = 6;
+}
+
+// Consciousness state tracking
+message ConsciousnessState {
+  map<string, float> elemental_balance = 1;
+  string dominant_archetype = 2;
+  float coherence_level = 3;
+  repeated string active_patterns = 4;
+}
+
+// Response message
+message ConsciousnessResponse {
+  string response_id = 1;
+  string oracle_response = 2;
+  ArchetypalAnalysis analysis = 3;
+  VoiceData voice_data = 4;
+  ConsciousnessState updated_state = 5;
+  float confidence_score = 6;
+}
+
+// Archetypal analysis breakdown
+message ArchetypalAnalysis {
+  string primary_archetype = 1;
+  string secondary_archetype = 2;
+  map<string, float> elemental_contributions = 3;
+  repeated Pattern detected_patterns = 4;
+  string energy_signature = 5;
+}
+
+// Pattern recognition
+message Pattern {
+  string pattern_id = 1;
+  string pattern_name = 2;
+  float strength = 3;
+  string description = 4;
+}
+
+// Voice synthesis request
+message VoiceRequest {
+  string text = 1;
+  string archetype = 2;
+  VoiceSettings settings = 3;
+}
+
+// Voice settings
+message VoiceSettings {
+  float stability = 1;
+  float similarity_boost = 2;
+  float style = 3;
+  bool use_speaker_boost = 4;
+}
+
+// Voice response
+message VoiceResponse {
+  bytes audio_data = 1;
+  string audio_format = 2;
+  int32 duration_ms = 3;
+  string voice_id = 4;
+}
+
+// Streaming insight request
+message InsightRequest {
+  string session_id = 1;
+  string insight_type = 2;
+  ConsciousnessState current_state = 3;
+}
+
+// Streaming insight response
+message InsightResponse {
+  string insight_id = 1;
+  string insight_text = 2;
+  string archetype_source = 3;
+  float relevance_score = 4;
+  int64 timestamp = 5;
+}
+
+// Voice data for audio synthesis
+message VoiceData {
+  bytes audio_content = 1;
+  string mime_type = 2;
+  int32 duration_ms = 3;
+  string voice_profile = 4;
+}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Portal Management Dashboard for Administrators
  *

@@ -108,7 +108,10 @@ export function getCareModeVoiceInstructions(
 ): string {
   // Only use name if it's a real name (not Guest/Explorer/anonymous)
   const nameGuidance = userName && userName !== 'Guest' && userName !== 'Explorer' && userName !== 'anonymous'
-    ? `\n**User's name:** ${userName}\nUse their actual name (${userName}) warmly and naturally to strengthen the therapeutic alliance. Do NOT call them "Guest" or generic terms.`
+    ? `\n**User's name:** ${userName}
+Use their name SPARINGLY - perhaps at the start of a session or during a moment of genuine connection.
+DO NOT start every response with their name. That feels clinical and distancing.
+Most responses should NOT include their name. Let the connection be felt, not named.`
     : `\n**User's name:** Unknown - do NOT call them "Guest" or invent a name. Use "you" or address them directly without a name.`;
 
   const contextGuidance = context

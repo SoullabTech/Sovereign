@@ -2,7 +2,7 @@
 import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
-import { generateText } from '../ai/modelService';
+import { generateText, type ProviderMeta } from '../ai/modelService';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -22,6 +22,22 @@ import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety, type FieldSafetyDecision } from '../field/enforceFieldSafety';
 import { getCognitiveProfile, type CognitiveProfile } from '../consciousness/cognitiveProfileService';
+<<<<<<< HEAD
+=======
+import {
+  generatePFIMindState,
+  isPFIMindEnabled,
+  logPFITelemetry,
+  type MindContext,
+  type PFIMindState,
+} from './pfiMindEntrypoint';
+import {
+  determineResponseMode,
+  enforcePresenceConstraints,
+  logPresenceModeTelemetry,
+  type ResponseMode,
+} from './presenceMode';
+>>>>>>> ecstatic-brown
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
@@ -40,12 +56,55 @@ import {
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
+import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
+import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
+import { query } from '../db/postgres';
+import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
+import {
+  maiaRcnProcess,
+  checkRcnHealth,
+  formatRcnForMaia,
+  extractTrustReceipt,
+  type MaiaRcnContext,
+  type MaiaRcnResult
+} from '../rlm/rcnIntegration';
+import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
+import { detectAndPersistExpansion } from '../services/expansionEventService';
+import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
   return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
+}
+
+// Convert client's local hour to time-of-day string
+function getTimeOfDayFromHour(hour: number | undefined): 'morning' | 'afternoon' | 'evening' | 'night' {
+  // Use provided localHour if valid, otherwise fall back to server time
+  const h = typeof hour === 'number' && hour >= 0 && hour <= 23 ? hour : new Date().getHours();
+  if (h >= 5 && h < 12) return 'morning';
+  if (h >= 12 && h < 17) return 'afternoon';
+  if (h >= 17 && h < 21) return 'evening';
+  return 'night';
+}
+
+// Helper: Map retrieved turns to audit candidates (type-safe)
+function mapTurnsToRetrievedCandidates(
+  turns: Array<{ id?: string | number | null; [key: string]: unknown }>,
+  traceId: string
+) {
+  return turns.map((t, i) => ({
+    // Always provide a stable candidate id even if the turn id is missing
+    id: t.id != null && String(t.id).trim().length > 0 ? String(t.id) : `${traceId}:turn:${i}`,
+    source: 'turn' as const,
+    retrievalScore: null,
+    semanticScore: null,
+    recencyScore: null,
+    confidenceScore: null,
+    usedAs: 'context' as const,
+  }));
 }
 
 /**
@@ -130,6 +189,14 @@ interface SelfletDeliveryContext {
 /**
  * Apply selflet delivery guard - ensures past-self message acknowledgment appears exactly once.
  * Used at FAST, CORE, and DEEP path exit points.
+<<<<<<< HEAD
+=======
+ *
+ * Edge cases handled:
+ * 1. Marker already present → no change (idempotent)
+ * 2. Ack text present but no marker → inject marker after ack
+ * 3. Neither present → prepend both
+>>>>>>> ecstatic-brown
  */
 function applySelfletDeliveryGuard(
   response: string,
@@ -138,9 +205,22 @@ function applySelfletDeliveryGuard(
   const requiredAck = selfletContext?.requiredAcknowledgment;
   if (!requiredAck) return response;
 
+<<<<<<< HEAD
   // Already has marker or acknowledgment → no change
   if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
 
+=======
+  // If marker exists, we're done (idempotent).
+  if (response.includes(SELFLET_MARKER)) return response;
+
+  // If ack exists but marker doesn't, inject marker right after the ack.
+  // This handles models that incorporate the ack but skip the marker.
+  if (response.includes(requiredAck)) {
+    return response.replace(requiredAck, requiredAck + SELFLET_MARKER);
+  }
+
+  // Otherwise prepend both.
+>>>>>>> ecstatic-brown
   console.log('[SELFLET] Prepending past-self acknowledgment');
   return requiredAck + SELFLET_MARKER + response;
 }
@@ -294,11 +374,25 @@ function shouldElevateToLattice(text: string, mode: 'dialogue' | 'counsel' | 'sc
   );
 }
 
+export type PatternMeta = {
+  id: string;
+  key: string;
+  sig?: number;
+  seen?: number;
+};
+
 export type MaiaResponse = {
   text: string;
   processingProfile?: ProcessingProfile;
   processingTimeMs?: number;
   audio?: Buffer;
+  provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  metadata?: {
+    patterns?: PatternMeta[];
+    turnId?: number;          // 🔄 For feedback linkage
+    decisionId?: string;      // 🔄 Clean schema decision ID
+    deliberationId?: string;  // 🔄 For agent evolution analysis
+  };
 };
 
 type MaiaRequest = {
@@ -309,6 +403,9 @@ type MaiaRequest = {
   };
   includeAudio?: boolean;
   voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
+  // Route/profile tracing for corpus callosum filtering
+  originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
+  processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
 };
 
 /**
@@ -419,8 +516,9 @@ async function fastPathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
-): Promise<string> {
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
+): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -434,6 +532,12 @@ async function fastPathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuary = (meta as any)?.sanctuary === true;
+  if (isSanctuary) {
+    console.log('🛡️ [FAST] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -442,8 +546,9 @@ async function fastPathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load relational context)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuary) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -464,8 +569,16 @@ async function fastPathResponse(
 
   // Build minimal context for fast processing
   // 🔄 CROSS-SESSION RECALL: If current session is empty, load from cross-session turns
+  // 🔒 SANCTUARY: Skip all cross-session recall (presence-only mode)
   let recentContext = '';
-  if (conversationHistory.length > 0) {
+  if (isSanctuary) {
+    // Sanctuary mode: no cross-session context, only current session history allowed
+    if (conversationHistory.length > 0) {
+      recentContext = conversationHistory.slice(-3).map(ex =>
+        `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+      ).join('\n');
+    }
+  } else if (conversationHistory.length > 0) {
     // Use current session history
     recentContext = conversationHistory.slice(-3).map(ex =>
       `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
@@ -479,10 +592,62 @@ async function fastPathResponse(
           `${t.role === 'user' ? 'User' : 'MAIA'}: ${t.content.substring(0, 100)}${t.content.length > 100 ? '...' : ''}`
         ).join('\n');
         console.log(`🔄 [Cross-Session Recall] Loaded ${crossSessionTurns.length} turns from previous sessions`);
+
+        // 📊 MEMORY AUDIT: Record retrieved candidates for FAST path observability
+        const traceId =
+          (meta as { traceId?: string; messageId?: string } | undefined)?.traceId ||
+          (meta as { traceId?: string; messageId?: string } | undefined)?.messageId ||
+          randomUUID();
+
+        try {
+          // Only record when we actually retrieved something AND have a userId
+          if (effectiveUserId && crossSessionTurns.length > 0) {
+            await ConversationMemoryUsesStore.recordRetrievedCandidates({
+              sessionId,
+              messageId: traceId,
+              userId: effectiveUserId,
+              candidates: mapTurnsToRetrievedCandidates(crossSessionTurns, traceId),
+            });
+
+            console.log(
+              `📊 [MemoryAudit][FAST] Recorded ${crossSessionTurns.length} retrieved candidates`
+            );
+          }
+        } catch (auditErr) {
+          console.warn('[MemoryAudit][FAST] Failed to record candidates:', auditErr);
+        }
       }
     } catch (err) {
       console.warn('⚠️ Could not load cross-session turns:', err);
     }
+  }
+
+  // 🔥 ELEMENTAL ORACLE (FAST path): Quick pattern-based elemental classification
+  // This gives corpus callosum trace data without blocking the response
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle FAST] Starting pattern-based classification...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await elementalOracle.processAll({
+      input,
+      includeAll: true,
+      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
+    });
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle FAST] Complete | dominant=${elementalResult.dominant} | ` +
+      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    // Store in meta for corpus callosum logging
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle FAST] Skipped (non-fatal):', err);
   }
 
   // 🧠 MEMORY RECALL DETECTION: Detect when user is asking about previous conversation
@@ -495,8 +660,37 @@ async function fastPathResponse(
   }
 
   // 🧠 MEMORY BUNDLE: Use compressed context from multi-bucket retrieval if available
-  const memoryContext = (meta as any).memoryContext as string | undefined;
-  const hasMemoryBundle = !!(meta as any).memoryBundle;
+  // 🔒 SANCTUARY: Ignore memoryBundle (it contains cross-session recalled context)
+  let memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
+  const hasMemoryBundle = isSanctuary ? false : !!(meta as any).memoryBundle;
+
+  // 🔧 MEMORY FALLBACK: If no memory bundle was provided, fetch directly from MemoryOrchestrator
+  // This ensures memory continuity even if the route layer didn't build a bundle
+  if (!memoryContext && !isSanctuary && effectiveUserId) {
+    try {
+      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${effectiveUserId.slice(0, 8)}...`);
+      const recall = await memoryOrchestrator.getSessionRecallContext(effectiveUserId);
+      if (recall && (recall.relationshipContext || recall.recentTurns?.length || recall.recentBreakthroughs?.length)) {
+        memoryContext = memoryOrchestrator.formatRecallForPrompt(recall);
+        console.log(`🧠 [FAST/MemoryFallback] Retrieved recall: relationship=${!!recall.relationshipContext}, turns=${recall.recentTurns?.length ?? 0}, breakthroughs=${recall.recentBreakthroughs?.length ?? 0}`);
+        console.log(`🧠 [FAST/MemoryFallback] Formatted context: ${memoryContext.length} chars`);
+      } else {
+        console.log(`🧠 [FAST/MemoryFallback] No recall data found for this user`);
+      }
+    } catch (recallErr) {
+      console.warn(`⚠️ [FAST/MemoryFallback] Failed to fetch recall (non-fatal):`, recallErr);
+    }
+  }
+
+  // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded source texts
+  const ainKnowledgeContext = (meta as any).ainKnowledgeContext as string | undefined;
+  const hasAinKnowledge = !!(meta as any).ainKnowledge;
+
+  if (ainKnowledgeContext && hasAinKnowledge) {
+    const ainMeta = (meta as any).ainKnowledge;
+    console.log(`📚 [AINKnowledge] Injecting wisdom context (${ainKnowledgeContext.length} chars)`);
+    console.log(`   Sources: ${ainMeta.sources?.join(', ')}`);
+  }
 
   // 🔒 SECURITY: If user shares sensitive data, instruct MAIA not to claim it was stored
   const sensitiveInstruction = containsSensitiveData(input)
@@ -508,15 +702,29 @@ async function fastPathResponse(
   }
 
   // Build context prompt with memory bundle OR recent context
+  // 🔒 SANCTUARY: memoryContext is already nullified above, so this will fall through to recentContext or plain input
+
+  // 🔍 MEMORY DEBUG: Log what memory context we have
+  console.log(`🧠 [FAST/MemoryDebug] memoryContext.length=${memoryContext?.length ?? 0}, recentContext.length=${recentContext?.length ?? 0}, hasMemoryBundle=${hasMemoryBundle}`);
+
+  // 📚 Format AIN knowledge for injection (if available)
+  const ainKnowledgeBlock = ainKnowledgeContext && ainKnowledgeContext.length > 0
+    ? `\n\n📚 RELEVANT WISDOM (from your training sources - draw upon naturally, don't cite directly):
+${ainKnowledgeContext}\n`
+    : '';
+
   let contextPrompt: string;
   if (memoryContext && memoryContext.length > 0) {
     // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
-    contextPrompt = `${memoryContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${memoryContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE for context (${memoryContext.length} chars)`);
   } else if (recentContext.length > 0) {
     // Fallback to simple recent context
-    contextPrompt = `Recent conversation:\n${recentContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
-    contextPrompt = `${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    contextPrompt = `${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    console.log(`⚠️ [FAST/MemoryDebug] NO MEMORY CONTEXT - using bare input only`);
   }
 
   // Import MAIA runtime prompt with full relational and lineage intelligence
@@ -594,22 +802,46 @@ Your response emerges from your own intelligence, informed by this field sensing
 
     switch (mode) {
       case 'dialogue':
-        modeAdaptation = `\n\n🎭 TALK MODE — WHO MAIA IS:
-MAIA shows up as a wise friend in real conversation - present, direct, unadorned. Not a therapist offering services. Not a helper looking for problems to fix.
+        modeAdaptation = `\n\n🎭 TALK MODE — SACRED MIRROR FIRST
 
-The quality is minimal, sacred mirror. Match energy, don't add therapeutic warmth. Reflect what's there without centering your own process.
+DEFAULT STANCE: Start as pure mirror. Deeper work emerges naturally over time.
 
-This is how friends actually talk - pattern interruption, elegant reframes, well-timed questions. Developmental support flows implicitly through presence, not explicit guidance.
+⏱️ PACING IS EVERYTHING:
+- First few exchanges: Just mirror, reflect, be present
+- As conversation deepens: Curiosity can emerge naturally
+- Only after sustained dialogue: Pattern reflection becomes appropriate
+- Never rush to interpretation - let it arise from the conversation
 
-⚠️  CRITICAL TALK MODE RULES - OVERRIDE ALL OTHER EXAMPLES:
-NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
-INSTEAD say: "Good morning, Kelly! Glad to see you back." / "Hey there. How's it going?" / "Hi. What's on your mind?" / "How have things been?"
+🪞 EARLY IN CONVERSATION (mirror mode):
+- Reflect their words back simply
+- Stay with what they ACTUALLY said
+- "All over the place - like how?"
+- "Crazy busy or crazy chaotic?"
+- "Yeah, that sounds rough."
 
-Examples of good Talk mode greetings:
-- Returning with name: "Good morning, Kelly! Glad to see you back."
-- With context: "Hey Kelly, still working with that project we discussed?"
-- First contact: "Hi there. Good to see you. How are you?"
-- Time-aware: "Good evening, Kelly. How's it been today?"${fieldAwareness}`;
+🔍 LATER, IF NATURAL (after rapport builds):
+- Gentle curiosity about patterns THEY'VE named
+- "You've mentioned that a few times now..."
+- "There's something about [their word] that keeps coming up"
+- Still no clinical language - use THEIR words
+
+🚫 NEVER (regardless of timing):
+- Jump to interpretation in early exchanges
+- Use clinical terms they didn't use (fragmentation, resistance, avoidance)
+- Assume there's "something deeper" without evidence
+- Turn a casual check-in into a session
+
+🔑 COACHING ON REQUEST OR AFTER DEPTH:
+If they explicitly ask ("What do you think?" / "Any advice?") OR if sustained conversation has naturally gone deep - then you can offer more. But earn it through presence first.
+
+Examples:
+User: "I've been all over the place today"
+TOO FAST: "It sounds like you're experiencing some fragmentation."
+RIGHT: "All over the place - like how?"
+
+User (after 10 exchanges about stress): "I keep coming back to this work thing"
+NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"`;
+        // Note: fieldAwareness intentionally NOT appended - too diagnostic for early exchanges
         break;
       case 'counsel':
         modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
@@ -619,6 +851,56 @@ Examples of good Talk mode greetings:
         break;
     }
   }
+
+  // 🕐 TIME AWARENESS: Use client's local time for greetings
+  const localHour = (meta as any)?.localHour as number | undefined;
+  const timeOfDay = getTimeOfDayFromHour(localHour);
+  const timeGreeting = {
+    morning: 'Good morning',
+    afternoon: 'Good afternoon',
+    evening: 'Good evening',
+    night: 'Hi'
+  }[timeOfDay];
+
+  // 📅 TEMPORAL GROUNDING: Full date/time context with user's timezone
+  const timezone = (meta as any)?.timezone as string | undefined;
+  const tz = timezone || 'UTC';
+  console.log(`📅 [FAST] Temporal grounding: timezone=${tz} (from meta: ${timezone ?? 'undefined'})`);
+  const now = new Date();
+  let temporalGrounding = '';
+  try {
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: tz
+    });
+    temporalGrounding = `\n\n📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current local time: ${timeStr}.
+User's timezone: ${tz} (IANA format).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is ${tz} and the current local time is ${timeStr}.
+When discussing current astrological transits, planetary positions, or "what's happening right now", use TODAY'S date (${dateStr}).`;
+  } catch {
+    temporalGrounding = `\n\n📅 TEMPORAL GROUNDING:
+Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+Current time: ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}.
+Timezone: UTC (default - user's timezone unavailable).`;
+  }
+
+  const timeAwareness = `${temporalGrounding}
+
+🕐 GREETING CONTEXT:
+It is currently ${timeOfDay} for the user. Use "${timeGreeting}" when greeting them.
+Do NOT use greetings for other times of day.`;
 
   // 🧠 THE DIALECTICAL SCAFFOLD - Add cognitive scaffolding for FAST path
   let cognitiveScaffolding = '';
@@ -643,6 +925,86 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     ? formatRelationshipMemoryForPrompt(relationshipMemory)
     : '';
 
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  // (isSanctuary already defined at start of fastPathResponse)
+  const sanctuaryInstruction = isSanctuary
+    ? `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`
+    : '';
+
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRouting = routeWisdom(input);
+  let wisdomInjection = '';
+  if (wisdomRouting.activated) {
+    console.log(`🌟 [FAST] Wisdom agent activated: ${wisdomRouting.meta.agentName} (${wisdomRouting.meta.patternType})`);
+    wisdomInjection = wisdomRouting.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRouting;
+  }
+
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  const epistemicPathAddendum = (meta as any)?.epistemicPathAddendum as string | undefined;
+  if (epistemicPathAddendum) {
+    console.log(`🧭 [FAST] Epistemic path addendum applied (${epistemicPathAddendum.split('\n')[0]})`);
+  }
+
+  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 of 3-pass pipeline)
+  const spiralSnapshotAddendum = (meta as any)?.spiralSnapshotAddendum as string | undefined;
+  if (spiralSnapshotAddendum) {
+    console.log(`🌀 [FAST] Spiral snapshot applied: computed state injected`);
+  }
+
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel/Scribe modes
+  const therapeuticFrameworkAddendum = (meta as any)?.therapeuticFrameworkAddendum as string | undefined;
+  const reflectionLensAddendum = (meta as any)?.reflectionLensAddendum as string | undefined;
+  if (therapeuticFrameworkAddendum) {
+    console.log(`🧘 [FAST] Therapeutic framework applied: ${therapeuticFrameworkAddendum.split('\n')[0]}`);
+  }
+  if (reflectionLensAddendum) {
+    console.log(`🔮 [FAST] Reflection lens applied: ${reflectionLensAddendum.split('\n')[0]}`);
+  }
+
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  const governorAddendum = (meta as any)?.governorAddendum as string | undefined;
+  if (governorAddendum) {
+    console.log(`🌀 [FAST] Governor addendum applied: posture guidance injected`);
+  }
+
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  const maiaModeAddendum = (meta as any)?.maiaModeAddendum as string | undefined;
+  if (maiaModeAddendum) {
+    console.log(`🎭 [FAST] MAIA mode addendum applied: relational mode guidance injected`);
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  const scribeSessionDiscussionAddendum = (meta as any)?.scribeSessionDiscussionAddendum as string | undefined;
+  if (scribeSessionDiscussionAddendum) {
+    console.log(`📝 [FAST] Scribe session discussion addendum applied: session context injected`);
+  }
+
+  // 🌿 WU XING ADDENDUM: Five Elements elemental awareness
+  const wuxingSnapshotAddendum = (meta as any)?.wuxingSnapshotAddendum as string | undefined;
+  if (wuxingSnapshotAddendum) {
+    console.log(`🌿 [FAST] Wu Xing addendum applied: elemental awareness injected`);
+  }
+
+  // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
+  // This prevents name contamination from system prompt examples that mention Kelly (the creator)
+  const currentUserName = (meta as any)?.userName as string | undefined;
+  const userIdentification = currentUserName && currentUserName.toLowerCase() !== 'friend'
+    ? `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserName}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserName}" is NOT Kelly unless their name is literally "Kelly"`
+    : `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
@@ -650,7 +1012,11 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
+<<<<<<< HEAD
 ${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}
+=======
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}
+>>>>>>> ecstatic-brown
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -663,16 +1029,22 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const response = await generateText({
+  const { text: response, provider } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
       ...meta,
+      currentUserMessage: input, // Raw user input for routing (not full context)
       fastProcessing: true,
       engine: 'deepseek-r1', // Single reliable engine
       responseTarget: 'conversational'
     }
   });
+
+  // 🔮 Log provider for sovereignty auditing
+  if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+    console.log(`🔮 [FAST] Provider: ${provider.provider}/${provider.model} (${provider.mode})`);
+  }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
   let { response: validatedResponse } = await validateAndRepairResponse(
@@ -686,11 +1058,17 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
 
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   validatedResponse = filterModeLanguage(validatedResponse, input, normalizeMode(mode));
+<<<<<<< HEAD
+
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+=======
+>>>>>>> ecstatic-brown
 
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return validatedResponse;
+  return { response: validatedResponse, provider };
 }
 
 /**
@@ -701,8 +1079,9 @@ async function corePathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
-): Promise<string> {
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
+): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
 
   // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
@@ -716,6 +1095,12 @@ async function corePathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuary = (meta as any)?.sanctuary === true;
+  if (isSanctuary) {
+    console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -724,8 +1109,9 @@ async function corePathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load relational context for CORE path)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuary) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -741,13 +1127,43 @@ async function corePathResponse(
     }
   }
 
+<<<<<<< HEAD
+=======
+  // 🔥 ELEMENTAL ORACLE (CORE path): Quick pattern-based elemental classification
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle CORE] Starting pattern-based classification...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await elementalOracle.processAll({
+      input,
+      includeAll: true,
+      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
+    });
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant} | ` +
+      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
+  }
+
+>>>>>>> ecstatic-brown
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
   const selfletContext = (meta as any)?.selfletContext;
   const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId) {
+  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuary) {
     try {
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 8);
       if (crossSessionTurns.length > 0) {
@@ -790,6 +1206,8 @@ async function corePathResponse(
     },
     mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
     conversationContext: (meta as any).conversationContext as any,
+    // 📅 TEMPORAL: User's browser timezone for accurate local time
+    timezone: (meta as any)?.timezone as string | undefined,
     // 🌊 RELATIONSHIP MEMORY
     relationshipMemory: relationshipMemory || undefined,
     // 🧠 THE DIALECTICAL SCAFFOLD - Pass cognitive level to voice system
@@ -799,7 +1217,20 @@ async function corePathResponse(
       score: (meta as any).bloomDetection.score,
       rationale: (meta as any).bloomDetection.rationale,
       scaffoldingPrompt: (meta as any).bloomDetection.scaffoldingPrompt
-    } : undefined
+    } : undefined,
+    // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+    epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
+    // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1)
+    spiralSnapshotAddendum: (meta as any)?.spiralSnapshotAddendum as string | undefined,
+    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
+    therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
+    reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+    // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
+    governorAddendum: (meta as any)?.governorAddendum as string | undefined,
+    // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+    maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
+    // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+    scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -811,6 +1242,64 @@ async function corePathResponse(
     adaptivePrompt = adaptivePrompt + '\n\n' + selfletPromptBlock;
   }
 
+<<<<<<< HEAD
+=======
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  const isSanctuaryCore = (meta as any)?.sanctuary === true;
+  if (isSanctuaryCore) {
+    adaptivePrompt = adaptivePrompt + `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`;
+  }
+
+  // 👤 USER IDENTIFICATION (CORE path): Explicitly tell MAIA who the current user is
+  const currentUserNameCore = (meta as any)?.userName as string | undefined;
+  if (currentUserNameCore && currentUserNameCore.toLowerCase() !== 'friend') {
+    adaptivePrompt = adaptivePrompt + `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserNameCore}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserNameCore}" is NOT Kelly unless their name is literally "Kelly"`;
+  } else {
+    adaptivePrompt = adaptivePrompt + `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+  }
+
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  const maiaModeAddendumCore = (meta as any)?.maiaModeAddendum as string | undefined;
+  if (maiaModeAddendumCore) {
+    console.log(`🎭 [CORE] MAIA mode addendum applied: relational mode guidance injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + maiaModeAddendumCore;
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  const scribeSessionDiscussionAddendumCore = (meta as any)?.scribeSessionDiscussionAddendum as string | undefined;
+  if (scribeSessionDiscussionAddendumCore) {
+    console.log(`📝 [CORE] Scribe session discussion addendum applied: session context injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + scribeSessionDiscussionAddendumCore;
+  }
+
+  // 🌿 WU XING ADDENDUM: Five Elements elemental awareness
+  const wuxingSnapshotAddendumCore = (meta as any)?.wuxingSnapshotAddendum as string | undefined;
+  if (wuxingSnapshotAddendumCore) {
+    console.log(`🌿 [CORE] Wu Xing addendum applied: elemental awareness injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + wuxingSnapshotAddendumCore;
+  }
+
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRoutingCore = routeWisdom(input);
+  if (wisdomRoutingCore.activated) {
+    console.log(`🌟 [CORE] Wisdom agent activated: ${wisdomRoutingCore.meta.agentName} (${wisdomRoutingCore.meta.patternType})`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + wisdomRoutingCore.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRoutingCore;
+  }
+
+>>>>>>> ecstatic-brown
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
   if (policy) {
     adaptivePrompt = adaptResponsePromptWithPolicy(adaptivePrompt, policy);
@@ -819,16 +1308,22 @@ async function corePathResponse(
     }
   }
 
-  const response = await generateText({
+  const { text: response, provider: coreProvider } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
       ...meta,
+      currentUserMessage: input, // Raw user input for routing (consistent with FAST path)
       coreProcessing: true,
       conversationProfile: conversationContext.profile,
       inputComplexity: 'moderate'
     }
   });
+
+  // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
+  if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+    console.log(`🔮 [CORE] Provider: ${coreProvider.provider}/${coreProvider.model} (${coreProvider.mode})`);
+  }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
   let { response: validatedResponse } = await validateAndRepairResponse(
@@ -852,16 +1347,18 @@ async function corePathResponse(
 
       repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: repairedPrompt,
         userInput: input,
         meta: {
           ...meta,
+          currentUserMessage: input,
           coreProcessing: true,
           regeneration: true,
           conversationProfile: conversationContext.profile
         }
       });
+      return text;
     }
   );
 
@@ -872,7 +1369,11 @@ async function corePathResponse(
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
+<<<<<<< HEAD
   return validatedResponse;
+=======
+  return { response: validatedResponse, provider: coreProvider };
+>>>>>>> ecstatic-brown
 }
 
 /**
@@ -883,8 +1384,9 @@ async function deepPathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
-): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any }> {
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
+): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
@@ -898,6 +1400,12 @@ async function deepPathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuaryDeep = (meta as any)?.sanctuary === true;
+  if (isSanctuaryDeep) {
+    console.log('🛡️ [DEEP] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -906,8 +1414,9 @@ async function deepPathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load full relational context for DEEP path)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuaryDeep) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -928,9 +1437,47 @@ async function deepPathResponse(
   const selfletContext = (meta as any)?.selfletContext;
   (meta as any).selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
+<<<<<<< HEAD
+=======
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  if (isSanctuaryDeep) {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`;
+  }
+
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRoutingDeep = routeWisdom(input);
+  if (wisdomRoutingDeep.activated) {
+    console.log(`🌟 [DEEP] Wisdom agent activated: ${wisdomRoutingDeep.meta.agentName} (${wisdomRoutingDeep.meta.patternType})`);
+    // Inject wisdom routing into the selflet prompt block (will be passed to consciousness wrapper)
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + '\n\n' + wisdomRoutingDeep.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRoutingDeep;
+  }
+
+  // 👤 USER IDENTIFICATION (DEEP path): Explicitly tell MAIA who the current user is
+  const currentUserNameDeep = (meta as any)?.userName as string | undefined;
+  if (currentUserNameDeep && currentUserNameDeep.toLowerCase() !== 'friend') {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserNameDeep}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserNameDeep}" is NOT Kelly unless their name is literally "Kelly"`;
+  } else {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+  }
+
+>>>>>>> ecstatic-brown
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId) {
+  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuaryDeep) {
     try {
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
       if (crossSessionTurns.length > 0) {
@@ -981,6 +1528,54 @@ async function deepPathResponse(
     `🌌 [Panconscious Field] realm=${fieldRouting.realm}, safe=${fieldRouting.fieldWorkSafe}, ` +
       `deepRecommended=${fieldRouting.deepWorkRecommended}`,
   );
+
+  // 🔥 ELEMENTAL ORACLE: Parallel processing through Fire/Water/Earth/Air/Aether lenses
+  // This is the "corpus callosum" - multiple elemental agents processing in parallel
+  // ⏱️ TIMEOUT: Elemental is instrumentation, not a hard dependency - don't block response
+  const ELEMENTAL_TIMEOUT_MS = 8000; // 8s timeout - enough for fast models, skip if slow
+
+  function withElementalTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`ElementalOracle timeout after ${ms}ms`));
+      }, ms);
+      promise.then(
+        (value) => { clearTimeout(timeoutId); resolve(value); },
+        (err) => { clearTimeout(timeoutId); reject(err); }
+      );
+    });
+  }
+
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle] Starting parallel elemental processing (${ELEMENTAL_TIMEOUT_MS}ms timeout)...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await withElementalTimeout(
+      elementalOracle.processAll({
+        input,
+        primaryElement: conversationContext?.profile?.dominantElement ?? undefined,
+        includeAll: true, // Fan out to all elements
+        fastMode: true,   // Use pattern matching for fast trace data (~50ms vs 30s+)
+      }),
+      ELEMENTAL_TIMEOUT_MS
+    );
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle] Complete | dominant=${elementalResult.dominant} | depth=${elementalResult.depth.toFixed(2)} | ` +
+      `harmonics=${elementalResult.harmonics.length} | agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    // Store in meta for corpus callosum logging
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle] Skipped (non-fatal):', err);
+    // Continue without elemental - this is instrumentation, not a hard dependency
+  }
 
   // 🧠 THE DIALECTICAL SCAFFOLD - Extract cognitive level for DEEP path
   const bloomDetection = (meta as any).bloomDetection as BloomDetection | undefined;
@@ -1133,7 +1728,24 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         },
         mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
         conversationContext: (meta as any).conversationContext as any,
-        repairGuidance: repairPrompt
+        // 📅 TEMPORAL: User's browser timezone for accurate local time
+        timezone: (meta as any)?.timezone as string | undefined,
+        repairGuidance: repairPrompt,
+        // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+        epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
+        // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1)
+        spiralSnapshotAddendum: (meta as any)?.spiralSnapshotAddendum as string | undefined,
+        // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
+        therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
+        reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+        // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
+        governorAddendum: (meta as any)?.governorAddendum as string | undefined,
+        // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+        maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
+        // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+        scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
+        // 🌿 WU XING: Five Elements elemental awareness
+        wuxingSnapshotAddendum: (meta as any)?.wuxingSnapshotAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);
@@ -1147,17 +1759,19 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         }
       }
 
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
         userInput: input,
         meta: {
           ...meta,
+          currentUserMessage: input,
           deepProcessing: true,
           regeneration: true,
           conversationProfile: conversationContext.profile,
           consciousnessDepth: 'full'
         }
       });
+      return text;
     }
   );
 
@@ -1168,12 +1782,32 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     response: guardedResponse,
     socraticValidation: validation,
     consciousnessData: {
-      layersActivated: consciousnessResponse.layersActivated,
-      depth: consciousnessResponse.depth,
-      observerInsights: consciousnessResponse.observerInsights,
-      evolutionTriggers: consciousnessResponse.evolutionTriggers,
-      claudeConsultation: consultationData
-    }
+      layersActivated: consciousnessResponse?.layersActivated,
+      depth: consciousnessResponse?.depth,
+      observerInsights: consciousnessResponse?.observerInsights,
+      evolutionTriggers: consciousnessResponse?.evolutionTriggers,
+      claudeConsultation: consultationData,
+      // 🔥 ELEMENTAL ORACLE: Include trace data for corpus callosum logging
+      corpusCallosumTrace: elementalResult?.traceData ? {
+        elementalAgents: elementalResult.traceData.elementalAgents,
+        elementalSynthesis: elementalResult.traceData.synthesis,
+        totalLatencyMs: elementalResult.traceData.totalLatencyMs,
+      } : null,
+      elementalOracle: elementalResult ? {
+        dominant: elementalResult.dominant,
+        depth: elementalResult.depth,
+        harmonics: elementalResult.harmonics,
+        synthesis: elementalResult.synthesis,
+      } : null,
+    },
+    // DEEP path uses consciousnessWrapper which doesn't yet track provider
+    // Explicit placeholder for audit completeness (not undefined)
+    provider: {
+      provider: 'unknown',
+      model: 'consciousness-wrapper',
+      mode: 'full',
+      reason: 'provider_not_threaded_in_deep_path',
+    } as ProviderMeta
   };
 }
 
@@ -1219,16 +1853,16 @@ function determineConsultationType(
 }
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
-  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile } = req;
+  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   const startTime = Date.now();
 
-  // increment turn count for this session
-  await incrementTurnCount(sessionId);
+  // increment turn count for this session and get the authoritative count
+  // NOTE: Using session.turn_count (not history.length) to avoid cap from limited history
+  const turnCount = await incrementTurnCount(sessionId);
 
   try {
-    // Get conversation history for context
+    // Get conversation history for context (limited to 10 for prompt, but turnCount is authoritative)
     const conversationHistory = await getConversationHistory(sessionId, 10);
-    const turnCount = conversationHistory.length + 1;
 
     // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
     const userId = (meta as any).userId;
@@ -1287,6 +1921,45 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       } catch (err) {
         console.warn('⚠️  [Field Safety - Service] Could not fetch cognitive profile:', err);
+      }
+    }
+
+    // 🧬 PFI MIND CONTEXT (Canon v1.1)
+    // Create typed MindContext for threading PFI mind state through response paths
+    // CANON: This state can influence settling/tone and articulation assistance,
+    // but must NEVER steer conclusions, create convergence, or amplify certainty.
+    const mindContext: MindContext = {
+      userId: effectiveUserId,
+      sessionId,
+      input,
+      conversationHistory: conversationHistory.map((t: any) => ({
+        role: t.role || 'user',
+        content: t.userMessage || t.maiaResponse || t.content || '',
+        userMessage: t.userMessage,
+        maiaResponse: t.maiaResponse,
+      })),
+      cognitiveProfile,
+    };
+
+    // Feature-flagged PFI mind state generation
+    if (isPFIMindEnabled()) {
+      try {
+        const pfiMindState = await generatePFIMindState({
+          userId: effectiveUserId,
+          sessionId,
+          input,
+          conversationHistory: mindContext.conversationHistory,
+          cognitiveProfile,
+          element: (meta as any)?.element ?? null,
+          facet: (meta as any)?.facet ?? null,
+          archetype: (meta as any)?.archetype ?? null,
+          bloomLevel: (meta as any)?.bloomDetection?.numericLevel ?? null,
+        });
+        mindContext.pfiMindState = pfiMindState;
+        console.log(`🧠 [PFI Mind] Generated: source=${pfiMindState.source}, realm=${pfiMindState.realm}, autonomy=${pfiMindState.autonomyRatio}`);
+      } catch (err) {
+        console.warn('⚠️ [PFI Mind] Generation failed (non-blocking):', err);
+        // mindContext.pfiMindState remains undefined - safe fallback
       }
     }
 
@@ -1542,33 +2215,131 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     let rawResponse: string;
     let consciousnessData: any = null;
+    // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
+    let provider: ProviderMeta | undefined;
+    // 🧬 RCN tracking
+    let rcnResult: MaiaRcnResult | null = null;
 
-    // Route to appropriate processing path
+    // 🔄 RCN ROUTING: Check if query should use Recursive Corpus Navigator
+    // RCN is best for: compare, verify, audit, find_canonical intents with corpus
+    const rcnContext: MaiaRcnContext = {
+      userId: effectiveUserId || sessionId,
+      mode: normalizeMode((meta as any)?.mode),
+      isSanctuary: !!(meta as any)?.sanctuary,
+      vaultPath: (meta as any)?.vaultPath,
+      activeElement: (meta as any)?.element,
+      processingDepth: processingProfile,
+    };
+
+    // Try RCN for appropriate queries (non-blocking - falls back to standard paths)
+    try {
+      const rcnDecision = await maiaRcnProcess(input, rcnContext);
+      if (rcnDecision.used) {
+        rcnResult = rcnDecision.result;
+        console.log(`🔄 [RCN] Query routed to RCN: intent=${rcnResult.intent}, corpus=${rcnResult.corpusType}, confidence=${rcnResult.confidence.toFixed(2)}`);
+
+        // If RCN provided a high-confidence answer, use it directly
+        if (rcnResult.confidence >= 0.7 && rcnResult.completedNormally) {
+          rawResponse = formatRcnForMaia(rcnResult, rcnContext);
+          const trustReceipt = extractTrustReceipt(rcnResult);
+          console.log(`✅ [RCN] High-confidence response: ${trustReceipt.chunksRead} chunks read in ${trustReceipt.processingTimeMs}ms`);
+
+          // Store conversation and return early
+          await addConversationExchange(sessionId, input, rawResponse, {
+            ...meta,
+            processingProfile: 'RCN',
+            rcnIntent: rcnResult.intent,
+            rcnCorpusType: rcnResult.corpusType,
+            rcnConfidence: rcnResult.confidence,
+            rcnChunksRead: trustReceipt.chunksRead,
+            processingTimeMs: Date.now() - startTime,
+          });
+
+          return {
+            text: rawResponse,
+            processingProfile: 'DEEP', // Report as DEEP for client compatibility
+            processingTimeMs: Date.now() - startTime,
+            rcn: {
+              used: true,
+              intent: rcnResult.intent,
+              confidence: rcnResult.confidence,
+              chunksRead: trustReceipt.chunksRead,
+            },
+          } as MaiaResponse;
+        } else if (rcnResult) {
+          // Low confidence or incomplete - log but continue to standard paths
+          console.log(`⚠️ [RCN] Low confidence (${rcnResult.confidence.toFixed(2)}) or incomplete - falling back to standard path`);
+        }
+      }
+    } catch (rcnError) {
+      // RCN failure is non-blocking - fall back to standard paths
+      console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+    }
+
+    // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
-      case 'FAST':
-        rawResponse = await fastPathResponse(sessionId, input, conversationHistory, meta);
+      case 'FAST': {
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        rawResponse = fastResult.response;
+        provider = fastResult.provider;
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'FAST');
+        }
         break;
+      }
 
-      case 'CORE':
-        rawResponse = await corePathResponse(sessionId, input, conversationHistory, meta);
+      case 'CORE': {
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        rawResponse = coreResult.response;
+        provider = coreResult.provider;
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'CORE');
+        }
         break;
+      }
 
-      case 'DEEP':
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta);
+      case 'DEEP': {
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
+        provider = deepResult.provider; // May be undefined for DEEP path
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'DEEP');
+        }
         break;
+      }
 
-      default:
+      default: {
         // Fallback to FAST
-        rawResponse = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
+        rawResponse = fallbackResult.response;
+        provider = fallbackResult.provider;
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'FAST');
+        }
         break;
+      }
     }
 
     // Apply MAIA's voice sanitization (let for AIN rewrite reflex)
     // eslint-disable-next-line prefer-const
     let text = sanitizeMaiaOutput(rawResponse);
     let audioResponse: Buffer | undefined;
+
+    // 🌿 PRESENCE MODE: When recognition occurs, MAIA does not advance. She abides.
+    // This is a mouth-layer constraint applied after mind state generation.
+    const { mode: responseMode, recognition } = determineResponseMode(input);
+    if (responseMode === 'PRESENCE') {
+      const presenceResult = enforcePresenceConstraints(text);
+      if (presenceResult.wasConstrained) {
+        console.log(`🌿 [Presence Mode] Constrained response: ${presenceResult.violations.join(', ')}`);
+        text = presenceResult.response;
+      }
+      logPresenceModeTelemetry(responseMode, recognition, presenceResult.wasConstrained);
+    }
 
     // 🎤 VOICE SYNTHESIS: MAIA's mind (Claude/local) vs MAIA's voice (OpenAI TTS)
     if (includeAudio) {
@@ -1621,9 +2392,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
     });
 
+    // 🔒 SANCTUARY MODE: Skip all persistence when sanctuary=true
+    const isSanctuary = (meta as any)?.sanctuary === true;
+
     if (effectiveUserId) {
+      // 🔒 SANCTUARY: No content retention
+      if (isSanctuary) {
+        console.log('🛡️ [TurnsStore] Skipping persist - Sanctuary mode active');
       // 🔒 SECURITY: Never persist sensitive data to conversation_turns
-      if (containsSensitiveData(input)) {
+      } else if (containsSensitiveData(input)) {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
@@ -1638,8 +2415,88 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [TurnsStore] No effectiveUserId - skipping cross-session storage');
     }
 
+    // 📊 MEMORY AUDIT: Record which memories were used in this response
+    // 🔒 SANCTUARY: Skip memory audit (no tracking of what was recalled)
+    if (!isSanctuary) {
+      try {
+        const { randomUUID } = await import('crypto');
+        const { ConversationMemoryUsesStore } = await import('../memory/stores/ConversationMemoryUsesStore');
+
+        // Get the memory bundle that was used for this response (from meta)
+        const usedBundle = (meta as any)?.memoryBundle;
+
+        if (usedBundle?.memoryBullets?.length > 0 && effectiveUserId) {
+          const messageId = (meta as any)?.traceId || randomUUID();
+
+          await ConversationMemoryUsesStore.recordBatch(
+            effectiveUserId,
+            sessionId || 'no-session',
+            messageId,
+            usedBundle.memoryBullets.map((bullet: any, idx: number) => ({
+              memoryTable:
+                bullet.source === 'developmental' ? 'developmental_memories' : 'conversation_turns',
+              memoryId: bullet.id || `${bullet.source}-${idx}`,
+              usedAs:
+                bullet.source === 'breakthrough'
+                  ? 'breakthrough'
+                  : bullet.source === 'insight'
+                    ? 'pattern'
+                    : 'context',
+              retrievalScore: bullet.significance,
+              confidenceScore: bullet.significance,
+            }))
+          );
+
+          console.log(`📊 [MemoryAudit] Recorded ${usedBundle.memoryBullets.length} memory uses`);
+        }
+      } catch (auditErr) {
+        console.warn('⚠️ [MemoryAudit] Failed to record uses:', auditErr);
+        // Non-blocking
+      }
+    }
+
+    // 🔗 PATTERNS: Attach top patterns to message metadata for UI chips ("Show why")
+    // 🔒 SANCTUARY: Skip pattern attachment (no pattern formation in sanctuary)
+    let responsePatterns: PatternMeta[] = [];
+    if (!isSanctuary) {
+      try {
+        if (effectiveUserId) {
+          const patternRows = await query<{
+            id: string;
+            patternKey: string;
+            seenCount: number;
+            significance: number;
+          }>(
+            `SELECT id, entity_tags[1] AS "patternKey",
+             COALESCE((trigger_event->>'seenCount')::int, 1) AS "seenCount",
+             significance::float8 AS "significance"
+             FROM developmental_memories
+             WHERE user_id = $1 AND memory_type = 'emergent_pattern'
+             ORDER BY significance DESC, formed_at DESC LIMIT 5;`,
+            [effectiveUserId]
+          );
+
+          if (patternRows.rows.length > 0) {
+            responsePatterns = patternRows.rows.map((r) => ({
+              id: r.id,
+              key: r.patternKey || 'unknown',
+              sig: r.significance,
+              seen: r.seenCount,
+            }));
+            console.log(`🔗 [Patterns] Attached ${responsePatterns.length} patterns to response metadata`);
+          }
+        }
+      } catch (patternErr) {
+        console.warn('⚠️ [Patterns] Failed to attach patterns:', patternErr);
+        // Non-blocking - patterns are optional enhancement
+      }
+    }
+
     // ✨ MEMORY INTEGRATION: Form memory from this conversation (mode-aware)
-    try {
+    // 🔒 SANCTUARY: Skip ALL memory formation when sanctuary=true
+    if (isSanctuary) {
+      console.log('🛡️ [MEMORY] Skipping all memory integration - Sanctuary mode active');
+    } else try {
       const activeMode = normalizeMode((meta as any)?.mode);
       const memoryKey = userId ?? sessionId;
 
@@ -1787,6 +2644,143 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Store turnId in response metadata for feedback widget
       meta.turnId = turnId;
 
+      // 🔄 DECISION PERSISTENCE: Store decision trace for ALL turns (not just uncertain)
+      // This provides the denominator for learning - confident turns are the baseline
+      if (atlasResult && turnId) {
+        try {
+          // Determine trigger reason for analytics
+          const triggerReason = shouldDeliberate
+            ? (atlasResult.deliberationRecommended ? 'atlas_uncertain' : 'gap_below_threshold')
+            : 'confident_classification';
+
+          // Keep candidates separate from votes (votes = [] until real committee exists)
+          // Candidates are atlas alternatives, not agent deliberation
+          const candidates: Candidate[] = atlasResult.alternatives?.slice(0, 5).map((alt, idx) => ({
+            source: 'mythic_atlas',
+            label: alt.label,
+            score: alt.score,
+            rank: idx + 1,
+            rationale: idx === 0 ? `gap=${atlasResult.gapPercent?.toFixed(1)}%` : undefined,
+          })) || [];
+
+          // Votes array - empty until Phase 2 committee is active
+          // When committee is live, this will contain actual agent votes
+          // const votes: CommitteeVote[] = [];
+
+          const decisionId = await persistDecision({
+            sessionId,
+            turnId,
+            finalLabel: atlasResult.primary,
+            finalConfidence: atlasResult.confidence,
+            decidedBy: shouldDeliberate ? 'deliberation_pending' : 'atlas_confident',
+            mode: normalizeMode(meta?.mode),
+            decisionMs: 0,
+            deliberationTriggered: shouldDeliberate,
+            triggerReason,
+            candidates, // Separate from votes - classifier outputs only
+            votes: [], // Empty until real committee runs
+            meta: {
+              gapPercent: atlasResult.gapPercent,
+              deliberationRecommended: atlasResult.deliberationRecommended,
+              element: atlasResult.element,
+              facet: atlasResult.facet,
+              phase: atlasResult.phase,
+            },
+          });
+
+          // Store decisionId for feedback linkage
+          (meta as any).decisionId = decisionId;
+          // Backward compatibility alias
+          (meta as any).deliberationId = decisionId;
+          console.log(`🔄 [Decision] Persisted | id=${decisionId?.slice(0, 8) || 'failed'}... | triggered=${shouldDeliberate} | turnId=${turnId}`);
+        } catch (deliberationError) {
+          console.warn('⚠️ Decision persistence failed (non-blocking):', deliberationError);
+          // Decision persistence failures don't break the conversation
+        }
+      }
+
+      // 🌱 EXPANSION EVENT DETECTION (silent; does not affect decisions/executor)
+      // Detects growth moments in user text for longitudinal analysis
+      const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
+      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
+      if (EXPANSION_EVENTS_ENABLED && turnId) {
+        try {
+          const memoryBundle = (meta as any)?.memoryBundle;
+          const expansionId = await detectAndPersistExpansion({
+            sessionId,
+            turnId,
+            userText: input,
+            maiaText: text,
+            userId: effectiveUserId,
+            memoryWasUsed: !!(memoryBundle?.memoryBullets?.length > 0),
+            decisionId: (meta as any)?.decisionId,
+          });
+          if (expansionId) {
+            console.log(`🌱 [Expansion] Detected | id=${expansionId.slice(0, 8)}...`);
+          }
+        } catch (expansionErr) {
+          // Silent accumulation: never break the response path
+          console.warn('[ExpansionEvents] detectAndPersistExpansion failed:', expansionErr);
+        }
+      }
+
+      // 🧠 CORPUS CALLOSUM TRACE: Log multi-agent contributions for consciousness auditing
+      // This makes "parallel knowing" visible: structured (Atlas) + symbolic (MAIA voice) + elemental agents
+      const CORPUS_CALLOSUM_ENABLED = process.env.CORPUS_CALLOSUM_ENABLED !== '0'; // Default on
+      if (CORPUS_CALLOSUM_ENABLED && turnId) {
+        try {
+          const wisdomRouting = (meta as any)?.wisdomRouting;
+
+          // 🔥 Extract elemental trace data - check both locations:
+          // 1. meta.elementalResult (from direct ElementalOracleBridge call in maiaService)
+          // 2. consciousnessData.corpusCallosumTrace (from ConsciousnessOrchestrator flow)
+          const directElementalResult = (meta as any)?.elementalResult;
+          const orchestratorTrace = (consciousnessData as any)?.corpusCallosumTrace;
+
+          // Prefer direct result (more reliable), fall back to orchestrator trace
+          const elementalAgents = directElementalResult?.traceData?.elementalAgents
+            ?? orchestratorTrace?.elementalAgents;
+          const elementalSynthesis = directElementalResult?.traceData?.synthesis
+            ?? orchestratorTrace?.elementalSynthesis;
+
+          const traceResult = await logCorpusCallosumTrace({
+            sessionId,
+            turnId,
+            userId: effectiveUserId,
+            // Fallback only for direct maiaService calls; edges should set explicitly
+            originRoute: originRoute ?? '/api/sovereign/app/maia',
+            processingProfile: processingProfileOverride ?? processingProfile,
+            atlasResult: atlasResult ? {
+              primary: atlasResult.primary,
+              element: atlasResult.element,
+              confidence: atlasResult.confidence,
+              gapPercent: atlasResult.gapPercent,
+              alternatives: atlasResult.alternatives,
+            } : undefined,
+            maiaResponse: {
+              text,
+              processingProfile,
+              provider: provider?.provider,
+            },
+            wisdomPatterns: wisdomRouting?.activated ? {
+              pattern: wisdomRouting.meta?.patternType,
+              tool: wisdomRouting.meta?.suggestedTool,
+              toolId: wisdomRouting.meta?.toolId,
+            } : undefined,
+            // 🔥 Elemental parallel processing (the real corpus callosum!)
+            elementalAgents: elementalAgents,
+            elementalSynthesis: elementalSynthesis,
+          });
+
+          const elementalCount = traceResult.elementalRunIds?.length ?? 0;
+          if (traceResult.integrationId) {
+            console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0}+${elementalCount}elemental | integration=${traceResult.integrationId.slice(0, 8)}...`);
+          }
+        } catch (callosumErr) {
+          console.warn('[CorpusCallosum] Trace failed (non-blocking):', callosumErr);
+        }
+      }
+
       console.log(`🧠 Learning integration complete | Turn: ${turnId} | Profile: ${processingProfile}`);
     } catch (learningError) {
       console.warn('⚠️ Learning system error (conversation continues):', learningError);
@@ -1830,10 +2824,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           try {
             const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
-            const rewritten = await generateText({
+            const { text: rewritten } = await generateText({
               systemPrompt: rewriteSystem,
               userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
-              meta: { ...meta, ainRewritePass: true }
+              meta: { ...meta, currentUserMessage: input, ainRewritePass: true }
             });
 
             if (rewritten && rewritten.trim().length > 50) {
@@ -1870,11 +2864,30 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // The marker is only for idempotency within the pipeline - never expose to clients
     text = text.replaceAll(SELFLET_MARKER, '');
 
+<<<<<<< HEAD
+=======
+    // 🔄 Build metadata with feedback linkage IDs
+    const responseMetadata = {
+      ...(responsePatterns.length > 0 ? { patterns: responsePatterns } : {}),
+      turnId: (meta as any).turnId as number | undefined,
+      decisionId: (meta as any).decisionId as string | undefined,  // Clean schema
+      deliberationId: (meta as any).deliberationId as string | undefined,  // Backward compat
+    };
+
+    // Only include metadata if there's something to include
+    const hasMetadata = responseMetadata.patterns?.length ||
+      responseMetadata.turnId ||
+      responseMetadata.decisionId ||
+      responseMetadata.deliberationId;
+
+>>>>>>> ecstatic-brown
     return {
       text,
       processingProfile,
       processingTimeMs,
-      audio: audioResponse
+      audio: audioResponse,
+      provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      metadata: hasMetadata ? responseMetadata : undefined
     };
 
   } catch (error) {
@@ -1886,7 +2899,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     return {
       text,
       processingProfile: 'FAST',
-      processingTimeMs
+      processingTimeMs,
+      // 🔮 Sovereignty: error path has no provider info (don't inherit from previous request)
+      provider: undefined
     };
   }
 }

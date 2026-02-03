@@ -2,13 +2,32 @@
 set -euo pipefail
 
 echo "🔒 Sovereignty pre-commit check..."
-npm run check:no-supabase
 
-if [ $? -eq 0 ]; then
+# 1. No Supabase
+npm run check:no-supabase
+SUPABASE_EXIT=$?
+
+# 2. No PHI encryption columns in responses
+npm run check:no-phi-enc
+PHI_EXIT=$?
+
+# 3. PHI columns inventory check
+npm run check:phi-inventory
+INVENTORY_EXIT=$?
+
+if [ $SUPABASE_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
   echo "❌ Sovereignty check failed - commit blocked"
-  echo "Fix violations or run 'npm run check:no-supabase' for details"
+  if [ $SUPABASE_EXIT -ne 0 ]; then
+    echo "   - Supabase violations found"
+  fi
+  if [ $PHI_EXIT -ne 0 ]; then
+    echo "   - PHI encryption leak risks found"
+  fi
+  if [ $INVENTORY_EXIT -ne 0 ]; then
+    echo "   - PHI inventory inconsistent"
+  fi
   exit 1
 fi

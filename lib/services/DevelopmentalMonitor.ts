@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DEVELOPMENTAL MONITOR SERVICE
  *

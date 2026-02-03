@@ -4,15 +4,13 @@
 <dict>
     <key>method</key>
     <string>app-store-connect</string>
+    <key>destination</key>
+    <string>upload</string>
     <key>teamID</key>
-    <string>DTKWA8YF9U</string>
-    <key>uploadBitcode</key>
-    <false/>
+    <string>ZVK2X646Z2</string>
     <key>uploadSymbols</key>
     <true/>
-    <key>compileBitcode</key>
-    <false/>
-    <key>destination</key>
-    <string>export</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
 </dict>
 </plist>

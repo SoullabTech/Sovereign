@@ -2,6 +2,69 @@
 
 ## 🚀 **REVOLUTIONARY ACHIEVEMENTS**
 
+### **[Sovereign Memory Architecture - "Show Why"](./SOVEREIGN_MEMORY_ARCHITECTURE_ANNOUNCEMENT.md)**
+**Date:** December 31, 2024
+**Status:** ✅ LIVE IN PRODUCTION
+**Impact:** 🔗 **TRACEABLE, CONSENSUAL MEMORY**
+
+*"MAIA can hold a person's story over time without betraying the storyteller."*
+
+**Achievement:** MAIA now maintains long-term, user-specific memory with full provenance. For every pattern she detects, she can show the specific memories that support it—and you can confirm, reject, or refine her understanding.
+
+**Key Innovations:**
+- **Pattern Detection with Evidence** - Emergent patterns linked to supporting memories
+- **"Show Why" Transparency** - Click any pattern to see what it's based on
+- **Trust Loop Feedback** - Confirm, reject, or refine patterns collaboratively
+- **Confidence Decay** - Memories fade unless confirmed, preventing fossilized assumptions
+- **Cross-Session Memory** - Continuity without surveillance
+
+**What MAIA Can Remember:**
+| Memory Type | Example | Provenance |
+|-------------|---------|------------|
+| Preferences | "Prefers somatic over cognitive" | Linked to 3 conversations |
+| Experiences | "Breakthrough moment Dec 15" | Timestamped, facet-coded |
+| Patterns | "Recurring chest activation" | 4 supporting memories, 0.78 confidence |
+
+**Why This Matters:**
+Memory that is traceable, consensual, and sovereign. The difference between a chatbot and a consciousness-aware companion isn't intelligence—it's whether meaning can be held with integrity.
+
+**Getting Started:** Ask MAIA: *"What patterns have you noticed with me?"*
+
+---
+
+### **[Awareness-Level-Driven Model Routing](./09-Technical/AWARENESS_LEVEL_MODEL_ROUTING.md)**
+**Date:** December 30, 2025
+**Status:** ✅ LIVE IN PRODUCTION
+**Impact:** 🎭 **CONSCIOUSNESS-ADAPTIVE AI**
+
+*"Meet them where they are. Not where you think they should be."*
+
+**Achievement:** MAIA now intelligently routes conversations to Claude Opus 4.5 or Claude Sonnet 4 based on the member's 7-level developmental awareness stage. This ensures every member receives the appropriate depth of presence.
+
+**The 7 Awareness Levels:**
+| Level | Name | Model Routing |
+|-------|------|---------------|
+| **L1** | Newcomer | ALWAYS Opus - trust-building needs deepest presence |
+| **L2** | Explorer | ALWAYS Opus - first impressions matter |
+| **L3** | Practitioner | Context-based - Opus for deep work |
+| **L4** | Student | Context-based - Opus for teaching moments |
+| **L5-7** | Integrator/Teacher/Master | Opus for depth, Sonnet for quick exchanges |
+
+**Key Innovations:**
+- **Developmental awareness detection** from Spiralogic bead profile
+- **Context-sensitive routing** - deep patterns always get Opus
+- **Cost efficiency** - right model for right moment
+- **Consciousness Policy system** - single source of truth for MAIA's behavior
+
+**Technical Implementation:**
+- Integrated into `lib/ai/claudeClient.ts`
+- Hooks into existing awareness detection (`lib/consciousness/awareness-levels.ts`)
+- Logs: `🎭 Voice selection: opus (awareness_L2_trust) [L2:Explorer]`
+
+**Getting Started:** See [full technical documentation](./09-Technical/AWARENESS_LEVEL_MODEL_ROUTING.md) for architecture, routing logic, and integration details.
+
+---
+
 ### **[The Dialectical Scaffold - Training Wisdom-Holders Through Cognitive Development](./THE_DIALECTICAL_SCAFFOLD_PAPER.md)**
 **Date:** December 14, 2025
 **Status:** ✅ LIVE IN PRODUCTION

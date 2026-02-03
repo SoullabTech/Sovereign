@@ -15,6 +15,68 @@ import type {
   EntryType
 } from '@/lib/types/oracle';
 
+// =============================================================================
+// AI Response Normalization (kills TS2339/TS2322 cascades across consumers)
+// =============================================================================
+
+export type NormalizedAIResponse = {
+  text: string;
+  agent?: string;
+  element?: string;
+  suggestions: Array<{ label: string; value: string }>;
+  metadata: Record<string, any>;
+  raw: any;
+};
+
+export function normalizeAIResponse(raw: any): NormalizedAIResponse | null {
+  if (!raw) return null;
+
+  // handle common wrappers: { response }, { data }, etc.
+  const r = raw?.response ?? raw?.data ?? raw;
+
+  const text =
+    r?.text ??
+    r?.message ??
+    r?.content ??
+    r?.answer ??
+    r?.reply ??
+    (typeof r === "string" ? r : "") ??
+    "";
+
+  const agent =
+    r?.agent ??
+    r?.agentId ??
+    r?.route?.agent ??
+    r?.route?.agentId ??
+    r?.meta?.agent ??
+    r?.metadata?.agent;
+
+  const element =
+    r?.element ??
+    r?.meta?.element ??
+    r?.metadata?.element ??
+    r?.facet?.element;
+
+  const rawSuggestions = r?.suggestions ?? r?.actions ?? r?.followUps ?? r?.follow_ups ?? [];
+  const suggestions = Array.isArray(rawSuggestions)
+    ? rawSuggestions
+        .map((s: any) => {
+          if (typeof s === "string") return { label: s, value: s };
+          const label = s?.label ?? s?.title ?? s?.text ?? s?.value ?? "";
+          const value = s?.value ?? s?.text ?? s?.label ?? s?.title ?? "";
+          return { label, value };
+        })
+        .filter((x) => x.label || x.value)
+    : [];
+
+  const metadata = (r?.metadata ?? r?.meta ?? {}) as Record<string, any>;
+
+  return { text, agent, element, suggestions, metadata, raw: r };
+}
+
+// Placeholder for supabase - these hooks are deprecated until postgres migration
+const supabase: any = null;
+
 // Hook for managing Oracle profile
 export function useOracleProfile(userId?: string) {
   const [profile, setProfile] = useState<OracleProfile | null>(null);

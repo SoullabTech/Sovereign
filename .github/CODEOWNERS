@@ -1,0 +1,56 @@
+# MAIA Mentor Covenant — CODEOWNERS
+# See docs/GOVERNANCE_MENTOR_COVENANT.md for full governance rules
+#
+# Format: <pattern> <owner(s)>
+# Owners are GitHub usernames or team names prefixed with @
+
+# ═══════════════════════════════════════════════════════════════
+# CLASS A — SACRED BOUNDARIES (Founder-Steward required)
+# ═══════════════════════════════════════════════════════════════
+
+# Safety system — any change requires Founder + Council review
+/lib/safety/                    @kelly-nezat
+
+# Memory and consciousness — member sovereignty
+/lib/memory/                    @kelly-nezat
+/lib/consciousness/             @kelly-nezat
+
+# Privacy, consent, retention policies
+/docs/policy/                   @kelly-nezat
+/docs/GOVERNANCE*.md            @kelly-nezat
+
+# Database migrations — structural risk with rollback implications
+/database/migrations/           @kelly-nezat
+
+# ═══════════════════════════════════════════════════════════════
+# CLASS B — STRUCTURAL RISK (Founder OR Release Steward + Mentor)
+# ═══════════════════════════════════════════════════════════════
+
+# Authentication and authorization
+/lib/auth/                      @kelly-nezat
+/app/api/auth/                  @kelly-nezat
+
+# Core AI service configuration
+/lib/ai/                        @kelly-nezat
+/lib/sovereign/                 @kelly-nezat
+
+# Infrastructure and deployment
+/.github/workflows/             @kelly-nezat
+/scripts/deploy*.sh             @kelly-nezat
+
+# ═══════════════════════════════════════════════════════════════
+# DOCTRINE LOCK — Non-Negotiables
+# ═══════════════════════════════════════════════════════════════
+
+# The covenant itself
+/docs/GOVERNANCE_MENTOR_COVENANT.md   @kelly-nezat
+
+# Project invariants
+/CLAUDE.md                      @kelly-nezat
+
+# ═══════════════════════════════════════════════════════════════
+# DEFAULT — All other files (Class C, 1 Mentor sufficient)
+# ═══════════════════════════════════════════════════════════════
+
+# Uncomment and add mentor GitHub usernames when ready:
+# *                             @mentor-1 @mentor-2

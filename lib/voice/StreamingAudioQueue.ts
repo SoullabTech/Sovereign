@@ -10,6 +10,7 @@
  */
 
 import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
+import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -28,6 +29,11 @@ export class StreamingAudioQueue {
   private feedbackPrevention: VoiceFeedbackPrevention;
   private audioContext: AudioContext | null = null;
   private audioUnlocked: boolean = false;
+  // Track whether all sentences have been enqueued (streaming complete)
+  private streamingComplete: boolean = false;
+  // 🔥 FIX: Track audio chunks through pipeline
+  private chunksEnqueued: number = 0;
+  private chunksPlayed: number = 0;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -52,12 +58,91 @@ export class StreamingAudioQueue {
    * Add audio chunk to queue and start playing if not already playing
    */
   enqueue(item: AudioQueueItem): void {
-    console.log('🎵 [StreamingQueue] Enqueuing audio chunk:', item.text.length, 'chars'); // Never log content
+    this.chunksEnqueued++;
+    console.log(`🎵 [StreamingQueue] Enqueuing audio chunk #${this.chunksEnqueued}:`, item.text.length, 'chars'); // Never log content
     this.queue.push(item);
 
     if (!this.isPlaying) {
+      console.log(`▶️ [StreamingQueue] Starting playback (queue was idle)`);
       this.playNext();
     }
+  }
+
+  /**
+   * Ensure AudioContext is ready before EVERY playback
+   *
+   * iOS rule: Resume AudioContext before EVERY play, not just first.
+   * iOS does not care about your assumptions.
+   */
+  private async ensureAudioContextReady(): Promise<void> {
+    // Log status BEFORE attempting playback (debugging iOS silent failures)
+    const statusBefore = getAudioStatus();
+    console.log('[iOS Audio] Before playback:', statusBefore);
+
+    // Use centralized iOS audio session manager
+    // This handles: resume, recreation, and keep-alive
+    this.audioContext = await ensureAudioReady();
+
+    // Log status AFTER to confirm we're running
+    const statusAfter = getAudioStatus();
+    console.log('[iOS Audio] After ensureAudioReady:', statusAfter);
+
+    if (statusAfter.state !== 'running') {
+      console.error('[iOS Audio] WARNING: AudioContext still not running after ensureAudioReady!');
+    }
+  }
+
+  /**
+   * Attempt to play audio with retry logic for iOS unlock issues
+   *
+   * Key: ensureAudioReady() is called before EVERY attempt, not just first.
+   */
+  private async attemptPlay(audio: HTMLAudioElement, retries = 3): Promise<boolean> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        // CRITICAL: Resume AudioContext before EVERY play attempt
+        // iOS does not care about your assumptions
+        await this.ensureAudioContextReady();
+
+        // Set playsinline for iOS
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+
+        await audio.play();
+        console.log(`✅ [StreamingQueue] Play succeeded on attempt ${attempt}`);
+        return true;
+      } catch (error: any) {
+        const status = getAudioStatus();
+        console.warn(`⚠️ [StreamingQueue] Play attempt ${attempt}/${retries} failed:`, {
+          errorName: error.name,
+          errorMessage: error.message,
+          audioContextState: status.state,
+          unlocked: status.unlocked,
+          keepAlive: status.keepAliveActive,
+        });
+
+        if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
+          if (attempt < retries) {
+            // Wait with exponential backoff before retry
+            const delay = Math.min(100 * Math.pow(2, attempt - 1), 500);
+            console.log(`🔄 [StreamingQueue] Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            // ensureAudioContextReady will be called again at top of loop
+          } else {
+            // Final attempt failed
+            console.error(`❌ [StreamingQueue] All ${retries} play attempts failed`);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
+            }
+          }
+        } else {
+          // Non-recoverable error - don't retry
+          console.error(`❌ [StreamingQueue] Non-recoverable error:`, error.name);
+          break;
+        }
+      }
+    }
+    return false;
   }
 
   /**
@@ -65,11 +150,24 @@ export class StreamingAudioQueue {
    */
   private async playNext(): Promise<void> {
     if (this.queue.length === 0) {
-      console.log('✅ [StreamingQueue] Queue empty - playback complete');
-      this.isPlaying = false;
-      this.currentAudio = null;
-      this.onPlayingChange?.(false);
-      this.onComplete?.();
+      // Only call onComplete if streaming is done (all sentences enqueued)
+      // 🔥 FIX: Also verify all enqueued chunks have been played
+      const allChunksPlayed = this.chunksPlayed >= this.chunksEnqueued;
+
+      if (this.streamingComplete && allChunksPlayed) {
+        console.log(`✅ [StreamingQueue] Queue empty AND streaming complete - truly done (played ${this.chunksPlayed}/${this.chunksEnqueued} chunks)`);
+        this.isPlaying = false;
+        this.currentAudio = null;
+        this.onPlayingChange?.(false);
+        this.onComplete?.();
+      } else if (this.streamingComplete) {
+        console.log(`⏳ [StreamingQueue] Queue empty, streaming complete, but only played ${this.chunksPlayed}/${this.chunksEnqueued} chunks - waiting...`);
+        this.isPlaying = false;
+      } else {
+        console.log(`⏳ [StreamingQueue] Queue empty but streaming not complete - waiting for more sentences (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
+        this.isPlaying = false;
+        // DON'T call onComplete - more sentences may be coming
+      }
       return;
     }
 
@@ -81,43 +179,74 @@ export class StreamingAudioQueue {
     console.log('🔊 [StreamingQueue] Playing chunk:', item.text.length, 'chars'); // Never log content
     this.onTextChange?.(item.text);
 
-    // Register audio with feedback prevention to pause microphone
-    this.feedbackPrevention.registerAudioElement(item.audio);
+    // ⚠️ DO NOT register with VoiceFeedbackPrevention for streaming chunks!
+    // VoiceFeedbackPrevention detects chunk endings and sets isMayaSpeaking=false
+    // between chunks, which triggers mic restart mid-response.
+    // We control isAudioPlaying state directly via onComplete callback instead.
+    // this.feedbackPrevention.registerAudioElement(item.audio);
 
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      // 🔍 DEBUG: Track playback progress to detect unexpected cutoffs
+      let playbackStarted = false;
+      let expectedDuration = 0;
+
+      item.audio.onloadedmetadata = () => {
+        expectedDuration = item.audio.duration;
+        console.log(`⏱️ [StreamingQueue] Chunk metadata loaded: ${expectedDuration.toFixed(1)}s duration`);
+      };
+
+      item.audio.onplay = () => {
+        playbackStarted = true;
+        console.log(`▶️ [StreamingQueue] Chunk playback started`);
+      };
+
+      // 🔍 DEBUG: Detect unexpected pause (before audio ends naturally)
+      item.audio.onpause = () => {
+        if (!item.audio.ended) {
+          const playedTime = item.audio.currentTime;
+          console.warn(`⚠️ [StreamingQueue] UNEXPECTED PAUSE at ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s - audio stopped before completing!`);
+          console.warn(`⚠️ [StreamingQueue] Text chunk that was cut off: "${item.text.substring(0, 50)}..."`);
+        }
+      };
+
       item.audio.onended = () => {
-        console.log('✅ [StreamingQueue] Chunk finished');
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+        const playedTime = item.audio.currentTime;
+        const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
+        // 🔥 FIX: Track successfully played chunks
+        this.chunksPlayed++;
+        if (completionRatio < 0.9) {
+          console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
+        } else {
+          console.log(`✅ [StreamingQueue] Chunk #${this.chunksPlayed}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
+        }
+        // DON'T unregister - we never registered it
+        // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();
         this.playNext(); // Play next chunk
       };
 
       item.audio.onerror = (error) => {
-        console.error('❌ [StreamingQueue] Audio error:', error);
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+        // 🔥 FIX: Still count failed chunks so we don't wait forever
+        this.chunksPlayed++;
+        console.error(`❌ [StreamingQueue] Audio error on chunk #${this.chunksPlayed}:`, error);
+        console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`);
+        // DON'T unregister - we never registered it
+        // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();
         this.playNext(); // Continue to next chunk even on error
       };
 
-      // Start playback with Safari unlock check
-      item.audio.play().catch(async (error) => {
-        console.error('❌ [StreamingQueue] Play failed:', error);
+      // Start playback with retry logic for iOS audio unlock issues
+      const playSucceeded = await this.attemptPlay(item.audio);
 
-        // Check if this is a Safari NotAllowedError that requires audio unlock
-        if (error.name === 'NotAllowedError' && !this.audioUnlocked) {
-          console.log('🔓 [StreamingQueue] Detected NotAllowedError - Safari unlock may be needed');
-          console.log('🔓 [StreamingQueue] Audio unlock status:', this.audioUnlocked);
-
-          // Dispatch event to show unlock UI
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
-          }
-        }
-
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+      if (!playSucceeded) {
+        // All retries failed - count as failed and move on
+        this.chunksPlayed++;
+        console.error(`❌ [StreamingQueue] All play attempts failed for chunk #${this.chunksPlayed}`);
         resolve();
         this.playNext();
-      });
+      }
+      // If playback started, the onended/onerror handlers will call resolve() and playNext()
     });
   }
 
@@ -125,20 +254,60 @@ export class StreamingAudioQueue {
    * Stop playback and clear queue (for interruptions)
    */
   stop(): void {
-    console.log('🛑 [StreamingQueue] Stopping playback and clearing queue');
+    console.log(`🛑 [StreamingQueue] Stopping playback and clearing queue (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
 
-    // Stop current audio and unregister from feedback prevention
+    // Stop current audio (no feedback prevention registration for streaming)
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
-      this.feedbackPrevention.unregisterAudioElement(this.currentAudio);
+      // DON'T unregister from feedbackPrevention - we never registered streaming chunks
+      // this.feedbackPrevention.unregisterAudioElement(this.currentAudio);
       this.currentAudio = null;
     }
 
-    // Clear queue
+    // Clear queue and reset counters
     this.queue = [];
     this.isPlaying = false;
+    this.streamingComplete = false; // Reset for next use
+    this.chunksEnqueued = 0;
+    this.chunksPlayed = 0;
     this.onPlayingChange?.(false);
+  }
+
+  /**
+   * Mark streaming as complete - no more sentences will be enqueued
+   * Call this when the text stream ends and all sentences have been sent to TTS
+   */
+  markStreamingComplete(): void {
+    console.log(`🏁 [StreamingQueue] Streaming marked complete - ${this.chunksEnqueued} chunks enqueued, ${this.chunksPlayed} played`);
+    this.streamingComplete = true;
+
+    // 🔥 FIX: Only trigger completion if ALL enqueued chunks have been played
+    const allChunksPlayed = this.chunksPlayed >= this.chunksEnqueued;
+
+    // If queue is already empty, not playing, AND all chunks have been played
+    if (this.queue.length === 0 && !this.isPlaying && allChunksPlayed) {
+      console.log(`✅ [StreamingQueue] Queue already empty and all ${this.chunksPlayed} chunks played - triggering completion`);
+      this.onPlayingChange?.(false);
+      this.onComplete?.();
+    } else if (this.queue.length === 0 && !this.isPlaying) {
+      console.log(`⏳ [StreamingQueue] Queue empty but only ${this.chunksPlayed}/${this.chunksEnqueued} chunks played - waiting`);
+    }
+    // Otherwise, playNext() will handle completion when queue empties
+  }
+
+  /**
+   * Reset for new streaming session
+   */
+  reset(): void {
+    console.log('🔄 [StreamingQueue] Resetting for new session');
+    this.streamingComplete = false;
+    this.queue = [];
+    this.isPlaying = false;
+    this.currentAudio = null;
+    // 🔥 FIX: Reset counters
+    this.chunksEnqueued = 0;
+    this.chunksPlayed = 0;
   }
 
   /**

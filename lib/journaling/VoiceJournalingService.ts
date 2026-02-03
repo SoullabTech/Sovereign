@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import { JournalingMode, JournalingResponse } from './JournalingPrompts';

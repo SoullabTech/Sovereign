@@ -1,4 +1,10 @@
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Session status endpoint for transformational experience
 // Provides session information for pathway detection

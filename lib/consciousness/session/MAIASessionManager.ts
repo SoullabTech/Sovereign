@@ -5,6 +5,24 @@
  * Provides session-based conversation tracking to prevent repetitive responses.
  */
 
+import {
+  createSmootherState,
+  type ActivationSmootherState,
+} from '@/lib/voice/relationalStack/loadConfig'
+import type { MaiaMode } from '@/lib/voice/relationalStack/types'
+
+/**
+ * Relational stack state for prosodic governance.
+ * Session-scoped to prevent cross-user state leakage.
+ */
+export interface RelationalStackState {
+  currentMode: MaiaMode
+  smoother: ActivationSmootherState
+  silenceCount: number
+  totalSilenceDurationMs: number
+  modeDwellTimeMs: Record<MaiaMode, number>
+}
+
 export interface ConversationEntry {
   id: string;
   role: 'user' | 'assistant';
@@ -32,6 +50,12 @@ export interface SessionContext {
   };
   totalMessages: number;
   activeSession: boolean;
+
+  /**
+   * Relational stack for prosodic governance (voice + text timing/restraint).
+   * Initialized per-session to ensure no cross-user state leakage.
+   */
+  relationalStack: RelationalStackState;
 }
 
 /**
@@ -75,7 +99,21 @@ export class MAIASessionManager {
         contextualMemory: {}
       },
       totalMessages: 0,
-      activeSession: true
+      activeSession: true,
+
+      // Relational stack: session-scoped prosodic governance
+      // Always start in REGULATOR mode (canon: stabilize before strategize)
+      relationalStack: {
+        currentMode: 'REGULATOR',
+        smoother: createSmootherState(),
+        silenceCount: 0,
+        totalSilenceDurationMs: 0,
+        modeDwellTimeMs: {
+          REGULATOR: 0,
+          NAVIGATOR: 0,
+          MYTHOPOET: 0,
+        },
+      },
     };
 
     this.sessions.set(sessionId, newSession);

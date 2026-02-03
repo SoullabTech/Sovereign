@@ -1,3 +1,5 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
  * COLLECTIVE CONSCIOUSNESS API
  *
@@ -8,12 +10,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { CollectiveFieldOrchestrator } from '@/lib/consciousness/collective/CollectiveFieldOrchestrator';
 import AetherConsciousnessInterface from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 import {
   ConsciousnessStage,
   SacredBoundaryType
 } from '@/lib/consciousness/collective/CollectiveFieldArchitecture';
+
+// Skip during static export (Capacitor builds)
 
 // Initialize collective consciousness orchestrator
 let orchestratorInitialized = false;

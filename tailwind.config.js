@@ -4,73 +4,112 @@ module.exports = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
+    '!**/node_modules/**', // exclude nested node_modules (e.g. app/api/_backend/)
   ],
   theme: {
     extend: {
       colors: {
-        // Desert Sand Tones (flat for backward compatibility)
+        // ══════════════════════════════════════════════════════════════════════
+        // MAIA CORE BRAND TOKENS
+        // The unified design system. Use these for all new UI.
+        // ══════════════════════════════════════════════════════════════════════
+        maia: {
+          // Primary surfaces ("night sky temple")
+          navy: {
+            950: '#0b0f1c',  // deepest backdrop
+            900: '#0f1328',  // app background
+            850: '#121833',  // panels/cards
+            800: '#161d3a',  // hover/raised
+            700: '#243054',  // borders/dividers
+          },
+
+          // Typography / neutrals
+          ink: {
+            100: '#f8fafc',  // primary text
+            80: '#e2e8f0',   // secondary text
+            60: '#94a3b8',   // muted text
+            40: '#64748b',   // tertiary (icons, chevrons)
+            20: '#475569',   // subtle hints
+          },
+
+          // Soul accent ("spice" - warmth, sacred signal)
+          spice: {
+            400: '#fbbf24',  // icon highlight
+            500: '#f59e0b',  // primary accent
+            600: '#d97706',  // hover/pressed
+            700: '#b45309',  // deep accent
+          },
+
+          // Secondary wellness accent ("sage" - onboarding, calm, safety)
+          sage: {
+            400: '#5eead4',
+            500: '#14b8a6',
+            600: '#0d9488',
+            700: '#0f766e',
+            bg: '#A0C4C7',   // onboarding background
+          },
+
+          // Semantic
+          danger: '#ef4444',
+          success: '#22c55e',
+          warning: '#f59e0b',
+        },
+
+        // ══════════════════════════════════════════════════════════════════════
+        // WORLD PALETTES (for special modes / thematic pages)
+        // Keep but use sparingly - default to maia.* tokens
+        // ══════════════════════════════════════════════════════════════════════
+
+        // Dune world palette
+        dune: {
+          sand: '#D4A574',
+          deep: '#8B6F47',
+          amber: '#E6B887',
+          sienna: '#A0522D',
+          orange: '#FF8C42',
+          glow: '#FFA85C',
+          dark: '#2A1F1A',
+          white: '#FFF8F0',
+        },
+
+        // Fremen world palette
+        fremen: {
+          ibad: '#1E3A5F',
+          azure: '#2E5A8A',
+          spice: '#4A7BA7',
+        },
+
+        // Caladan world palette
+        caladan: {
+          teal: '#2C7873',
+          deep: '#1A4D4A',
+          mist: '#5FA8A3',
+        },
+
+        // ══════════════════════════════════════════════════════════════════════
+        // LEGACY FLAT TOKENS (backward compatibility - migrate away over time)
+        // ══════════════════════════════════════════════════════════════════════
         'spice-sand': '#D4A574',
         'deep-sand': '#8B6F47',
         'dune-amber': '#E6B887',
         'sienna-rock': '#A0522D',
-
-        // Spice Orange (The Melange)
         'spice-orange': '#FF8C42',
         'spice-glow': '#FFA85C',
         'spice-deep': '#CC6F35',
-
-        // Fremen Blue (Eyes of Ibad)
         'ibad-blue': '#1E3A5F',
         'fremen-azure': '#2E5A8A',
         'spice-blue': '#4A7BA7',
-
-        // Caladan Water (Memory of Home)
         'caladan-teal': '#2C7873',
         'water-deep': '#1A4D4A',
         'ocean-mist': '#5FA8A3',
-
-        // Semantic Colors
         'bene-gesserit-gold': '#B8860B',
         'navigator-purple': '#6A4C93',
         'atreides-green': '#4A7C59',
         'harkonnen-crimson': '#8B0000',
         'guild-silver': '#C0C0C0',
-
-        // Base Colors
         'desert-light': '#F5E6D3',
         'desert-dark': '#2A1F1A',
         'sand-white': '#FFF8F0',
-
-        // 🏜️ DUNE AESTHETIC PALETTE - Nested namespace for dune-* classes
-        dune: {
-          // Desert Sand Tones
-          'spice-sand': '#D4A574',
-          'deep-sand': '#8B6F47',
-          'dune-amber': '#E6B887',
-          'sienna-rock': '#A0522D',
-
-          // Spice Orange (The Melange)
-          'spice-orange': '#FF8C42',
-          'spice-glow': '#FFA85C',
-          'spice-deep': '#CC6F35',
-
-          // Fremen Blue (Eyes of Ibad)
-          'ibad-blue': '#1E3A5F',
-          'fremen-azure': '#2E5A8A',
-          'spice-blue': '#4A7BA7',
-
-          // Caladan Water (Memory of Home)
-          'caladan-teal': '#2C7873',
-          'water-deep': '#1A4D4A',
-          'ocean-mist': '#5FA8A3',
-
-          // Semantic Colors
-          'bene-gesserit-gold': '#B8860B',
-          'navigator-purple': '#6A4C93',
-          'atreides-green': '#4A7C59',
-          'harkonnen-crimson': '#8B0000',
-          'guild-silver': '#C0C0C0',
-        },
       },
       fontFamily: {
         'cinzel': ['Cinzel', 'Palatino', 'Georgia', 'serif'],
@@ -96,6 +135,13 @@ module.exports = {
         '4xl': ['2.25rem', { lineHeight: '2.5rem' }],  // Imperial decrees
       },
       boxShadow: {
+        // MAIA Core Shadows
+        'maia-panel': '0 10px 30px rgba(0, 0, 0, 0.45)',
+        'maia-panel-hover': '0 18px 45px rgba(0, 0, 0, 0.55)',
+        'maia-spice-glow': '0 0 18px rgba(245, 158, 11, 0.25)',
+        'maia-spice-glow-lg': '0 0 25px rgba(245, 158, 11, 0.35)',
+
+        // Legacy world shadows (keep for thematic pages)
         'spice': '0 4px 12px rgba(255, 140, 66, 0.2), 0 2px 4px rgba(139, 111, 71, 0.3)',
         'spice-lg': '0 10px 30px rgba(255, 140, 66, 0.3), 0 4px 10px rgba(139, 111, 71, 0.4)',
         'fremen': '0 4px 12px rgba(46, 90, 138, 0.2), 0 2px 4px rgba(30, 58, 95, 0.3)',

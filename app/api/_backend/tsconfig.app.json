@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": false,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@lib/*": ["src/lib/*"],
+      "@utils/*": ["src/utils/*"],
+      "@core/*": ["src/core/*"]
+    },
+    "types": ["node"],
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src/agents/personal_oracle/**/*",
+    "src/api/**/*",
+    "src/services/astrologyService.ts",
+    "src/services/journalingService.ts",
+    "src/services/assessmentService.ts",
+    "src/services/memoryService.ts",
+    "src/core/factories/**/*",
+    "src/core/agents/oracleAgent.ts",
+    "src/utils/**/*",
+    "src/middleware/**/*",
+    "src/server.ts",
+    "src/app.ts",
+    "src/lib/ritualEngine.ts",
+    "src/lib/spiralLogic.ts",
+    "src/types/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/**/*.spec.ts"]
+}

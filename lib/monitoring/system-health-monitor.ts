@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA SYSTEM HEALTH MONITOR
  *

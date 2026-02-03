@@ -4,57 +4,15 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [previousTheme, setPreviousTheme] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-    setPreviousTheme(theme || 'system');
   }, []);
-
-  // Log theme changes to Supabase
-  const logThemeChange = async (newTheme: string) => {
-    try {
-      // Get current user session if available
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Log to event_logs table
-      await supabase.from('event_logs').insert({
-        event_name: 'theme_changed',
-        user_id: session?.user?.id || null,
-        metadata: {
-          theme: newTheme,
-          previous: previousTheme,
-          timestamp: new Date().toISOString(),
-        },
-        payload: {
-          new: newTheme,
-          previous: previousTheme,
-          session_id: session?.access_token?.substring(0, 8) || null,
-        }
-      });
-
-      // Update user profile if logged in
-      if (session?.user?.id) {
-        await supabase
-          .from('profiles')
-          .update({ theme_preference: newTheme })
-          .eq('id', session.user.id);
-      }
-    } catch (error) {
-      console.warn('Failed to log theme change:', error);
-    }
-  };
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    logThemeChange(newTheme);
-    setPreviousTheme(newTheme);
-  };
 
   if (!mounted) return null;
 
@@ -62,7 +20,7 @@ export default function ThemeToggle() {
     <div className="flex items-center gap-1">
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => handleThemeChange('light')}
+        onClick={() => setTheme('light')}
         className={`p-2 rounded-full border transition-all duration-200
                    ${theme === 'light'
                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30'
@@ -78,7 +36,7 @@ export default function ThemeToggle() {
 
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => handleThemeChange('dark')}
+        onClick={() => setTheme('dark')}
         className={`p-2 rounded-full border transition-all duration-200
                    ${theme === 'dark'
                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30'
@@ -94,7 +52,7 @@ export default function ThemeToggle() {
 
       <motion.button
         whileTap={{ scale: 0.9 }}
-        onClick={() => handleThemeChange('system')}
+        onClick={() => setTheme('system')}
         className={`p-2 rounded-full border transition-all duration-200
                    ${theme === 'system'
                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30'

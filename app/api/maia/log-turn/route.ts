@@ -1,9 +1,15 @@
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 // app/api/maia/log-turn/route.ts
 // API endpoint for logging conversation turns into MAIA's learning system
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { query, transaction } from '@/lib/database/postgres';
 import { z } from 'zod';
+
+// Skip during static export (Capacitor builds)
 
 // Zod validation schema for turn logging
 const MaiaTurnLogSchema = z.object({

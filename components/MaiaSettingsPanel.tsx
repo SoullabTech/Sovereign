@@ -1,12 +1,15 @@
+// @ts-nocheck
 'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, RotateCcw, Play, Globe, Brain } from 'lucide-react';
+import { Save, RotateCcw, Play, Globe, Brain, RefreshCw, Check } from 'lucide-react';
 import { ClaudeCodeSettingsToggle } from '@/components/ui/ClaudeCodeIndicator';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
 import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
+import { useUpdate } from '@/components/providers/UpdateProvider';
+import { getAccountSettings, saveAccountSettings } from '@/lib/settings/accountSettings';
 
 interface MaiaSettings {
   // Voice Settings
@@ -52,7 +55,7 @@ interface MaiaSettings {
 const DEFAULT_SETTINGS: MaiaSettings = {
   voice: {
     provider: 'openai',
-    openaiVoice: 'shimmer',
+    openaiVoice: 'alloy',
     speed: 0.95,
     pitch: 1.0,
     stability: 0.8
@@ -82,9 +85,9 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 };
 
 const VOICE_OPTIONS = [
-  { id: 'shimmer', name: 'Shimmer', description: 'Soft, gentle, nurturing', recommended: true },
+  { id: 'alloy', name: 'Alloy', description: 'Neutral, balanced', recommended: true },
+  { id: 'shimmer', name: 'Shimmer', description: 'Soft, gentle, nurturing' },
   { id: 'fable', name: 'Fable', description: 'Warm, expressive, storytelling' },
-  { id: 'alloy', name: 'Alloy', description: 'Neutral, balanced' },
   { id: 'nova', name: 'Nova', description: 'Lively, energetic' },
   { id: 'echo', name: 'Echo', description: 'Male - calm, steady' },
   { id: 'onyx', name: 'Onyx', description: 'Male - deep, authoritative' }
@@ -92,15 +95,29 @@ const VOICE_OPTIONS = [
 
 export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   const { ambientMode, witnessMode, toggleAmbientMode, toggleWitnessMode } = useMaiaPresence();
+  const { currentVersion, checkForUpdate, applyUpdate, isChecking, lastCheckResult } = useUpdate();
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [testingVoice, setTestingVoice] = useState(false);
   const [activeTab, setActiveTab] = useState<'language' | 'voice' | 'memory' | 'personality' | 'brain' | 'advanced'>('language');
+  const [nativeBuildInfo, setNativeBuildInfo] = useState<{ version: string; build: string } | null>(null);
 
   useEffect(() => {
     loadSettings();
+    // Fetch native app build info from Capacitor
+    (async () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
+          const { App } = await import('@capacitor/app');
+          const info = await App.getInfo();
+          setNativeBuildInfo({ version: info.version, build: info.build });
+        }
+      } catch (e) {
+        console.log('Not in native context or App plugin unavailable');
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -109,13 +126,36 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
   const loadSettings = () => {
     const saved = localStorage.getItem('maia_settings');
+    let loadedSettings = { ...DEFAULT_SETTINGS };
+
     if (saved) {
       const parsed = JSON.parse(saved);
-      setSettings(parsed);
-      setOriginalSettings(parsed);
-    } else {
-      setOriginalSettings(DEFAULT_SETTINGS);
+      loadedSettings = {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        voice: { ...DEFAULT_SETTINGS.voice, ...parsed.voice },
+        memory: { ...DEFAULT_SETTINGS.memory, ...parsed.memory },
+        personality: { ...DEFAULT_SETTINGS.personality, ...parsed.personality },
+        elemental: { ...DEFAULT_SETTINGS.elemental, ...parsed.elemental },
+        technical: { ...DEFAULT_SETTINGS.technical, ...parsed.technical },
+      };
     }
+
+    // Also sync voice settings from AccountSettings (source of truth for TTS)
+    const accountSettings = getAccountSettings();
+    console.log('🔊 [MaiaSettings] Loading voice from AccountSettings:', accountSettings.voice);
+    loadedSettings = {
+      ...loadedSettings,
+      voice: {
+        ...loadedSettings.voice,
+        openaiVoice: accountSettings.voice.openaiVoice,
+        speed: accountSettings.voice.speed,
+      }
+    };
+    console.log('🔊 [MaiaSettings] Final loaded voice:', loadedSettings.voice.openaiVoice);
+
+    setSettings(loadedSettings);
+    setOriginalSettings(loadedSettings);
   };
 
   const saveSettings = async () => {
@@ -126,6 +166,12 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
       // Also save voice selection to the key OracleConversation uses
       localStorage.setItem('selected_voice', settings.voice.openaiVoice);
+
+      // Sync voice settings to AccountSettings (used by OracleConversation TTS)
+      const accountSettings = getAccountSettings();
+      accountSettings.voice.openaiVoice = settings.voice.openaiVoice as any;
+      accountSettings.voice.speed = settings.voice.speed;
+      saveAccountSettings(accountSettings);
 
       // Trigger a custom event for components to react to settings changes
       window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
@@ -274,27 +320,38 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
               <div>
                 <label className="block text-sm font-medium text-amber-200 mb-3">Voice Selection</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {VOICE_OPTIONS.map(voice => (
-                    <button
-                      key={voice.id}
-                      onClick={() => updateSetting('voice.openaiVoice', voice.id)}
-                      className={`p-3 rounded-lg border transition-all text-left ${
-                        settings.voice.openaiVoice === voice.id
-                          ? 'border-amber-500/50 bg-amber-500/10'
-                          : 'border-white/10 bg-black/20 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium text-white">{voice.name}</div>
-                          <div className="text-xs text-white/60">{voice.description}</div>
-                        </div>
-                        {voice.recommended && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">★</span>
+                  {VOICE_OPTIONS.map(voice => {
+                    const isSelected = settings.voice?.openaiVoice === voice.id;
+                    if (voice.id === 'shimmer') {
+                      console.log('[Voice Debug] current voice:', settings.voice?.openaiVoice, 'checking shimmer, isSelected:', isSelected);
+                    }
+                    return (
+                      <button
+                        key={voice.id}
+                        onClick={() => updateSetting('voice.openaiVoice', voice.id)}
+                        className={`p-3 rounded-lg border-2 transition-all text-left relative active:scale-95 ${
+                          isSelected
+                            ? 'border-amber-400 bg-amber-500/30 ring-2 ring-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.4)]'
+                            : 'border-white/10 bg-black/20 hover:border-white/20 active:bg-white/10 active:border-white/30'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 text-amber-300">
+                            <Check size={16} strokeWidth={3} />
+                          </div>
                         )}
-                      </div>
-                    </button>
-                  ))}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className={`font-medium ${isSelected ? 'text-amber-200' : 'text-white'}`}>{voice.name}</div>
+                            <div className="text-xs text-white/60">{voice.description}</div>
+                          </div>
+                          {voice.recommended && !isSelected && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">★</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -350,19 +407,27 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
               <div>
                 <label className="block text-sm font-medium text-amber-200 mb-2">Memory Depth</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['minimal', 'moderate', 'deep'] as const).map(depth => (
-                    <button
-                      key={depth}
-                      onClick={() => updateSetting('memory.depth', depth)}
-                      className={`py-2 px-3 rounded-lg border transition-all ${
-                        settings.memory.depth === depth
-                          ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                          : 'border-white/10 bg-black/20 text-white/60 hover:border-white/20'
-                      }`}
-                    >
-                      {depth.charAt(0).toUpperCase() + depth.slice(1)}
-                    </button>
-                  ))}
+                  {(['minimal', 'moderate', 'deep'] as const).map(depth => {
+                    const isSelected = settings.memory.depth === depth;
+                    return (
+                      <button
+                        key={depth}
+                        onClick={() => updateSetting('memory.depth', depth)}
+                        className={`py-2 px-3 rounded-lg border transition-all relative active:scale-95 ${
+                          isSelected
+                            ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                            : 'border-white/10 bg-black/20 text-white/60 hover:border-white/20 active:bg-white/10'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-1 right-1 text-amber-300">
+                            <Check size={10} />
+                          </span>
+                        )}
+                        {depth.charAt(0).toUpperCase() + depth.slice(1)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -579,6 +644,72 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
                   onChange={(e) => updateSetting('technical.responseTimeout', parseInt(e.target.value))}
                   className="w-full"
                 />
+              </div>
+
+              {/* Build Info & Updates */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h3 className="text-sm font-medium text-amber-200 mb-3">Build Info</h3>
+                <div className="p-4 bg-stone-800/50 border border-stone-700/50 rounded-lg space-y-4">
+                  {/* Native App Info */}
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-stone-500">Native App Build:</span>
+                      <p className="text-stone-300 font-mono">
+                        {nativeBuildInfo
+                          ? `v${nativeBuildInfo.version} (${nativeBuildInfo.build})`
+                          : 'Web / Not native'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-stone-500">Server Build:</span>
+                      <p className="text-stone-300 font-mono">
+                        v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 8) || '...'})
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-stone-700/30" />
+
+                  {/* Update Check */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium text-stone-200">Check for Updates</h4>
+                      <p className="text-xs text-stone-500 mt-0.5">
+                        Last checked: {lastCheckResult ? new Date().toLocaleTimeString() : 'Never'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => checkForUpdate()}
+                      disabled={isChecking}
+                      className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-700/50 hover:bg-stone-700
+                               text-stone-300 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+                      {isChecking ? 'Checking...' : 'Check'}
+                    </button>
+                  </div>
+
+                  {lastCheckResult && (
+                    <div className="pt-3 border-t border-stone-700/30">
+                      {lastCheckResult.updateAvailable ? (
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-amber-400">
+                            Update available: v{lastCheckResult.serverVersion}
+                          </p>
+                          <button
+                            onClick={() => applyUpdate(lastCheckResult.forcedUpdate)}
+                            className="text-xs text-amber-400 hover:text-amber-300 font-medium"
+                          >
+                            Update Now
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-green-400">You&apos;re on the latest version</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

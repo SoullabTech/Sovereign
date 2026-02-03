@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 🧘 Maya Presence Mode API Route
  * Updates Maya's consciousness presence based on real-time biometric feedback
@@ -5,6 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Presence mode interface matching AppleWatchService
 interface PresenceModeUpdate {

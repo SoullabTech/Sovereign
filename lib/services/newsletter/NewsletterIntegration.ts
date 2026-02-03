@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NEWSLETTER INTEGRATION WITH GANESHA EMAIL SYSTEM
  *

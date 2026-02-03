@@ -28,6 +28,11 @@ export interface JournalingResponse {
     shadowElement?: string;
     guidanceDirection?: string;
   };
+  transformationScore?: number;
+  /**
+   * Allow forward-compatible extra properties while we refactor response schemas
+   */
+  [key: string]: any;
 }
 
 export const JOURNALING_PROMPTS = {

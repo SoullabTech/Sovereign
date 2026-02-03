@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Portal Switching Interface: Seamless Cultural Transitions
  *

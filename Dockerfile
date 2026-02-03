@@ -16,8 +16,11 @@ RUN npm ci --ignore-scripts --legacy-peer-deps
 
 # --- builder: prisma generate + next build (creates .next/standalone) ---
 FROM base AS builder
+ARG GIT_COMMIT=unknown
+ARG SKIP_AETHERIC_CHECK=0
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
+ENV SKIP_AETHERIC_CHECK=${SKIP_AETHERIC_CHECK}
 # Build-time placeholders for Next.js static generation
 ENV OPENAI_API_KEY=dummy-build-key
 ENV ANTHROPIC_API_KEY=dummy-build-key
@@ -39,10 +42,22 @@ RUN npm run build
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
+# Re-declare ARGs in runner stage (ARGs don't cross stages)
+ARG GIT_COMMIT=unknown
+ARG APP_VERSION=1.0.0
+ARG BUILD_DATE=unknown
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV APP_VERSION=${APP_VERSION}
+ENV BUILD_DATE=${BUILD_DATE}
+
+# Install psql for migrations + curl for worker preflight health checks
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
+  && rm -rf /var/lib/apt/lists/*
 
 # Install psql for Render preDeployCommand (migrations run in runtime container)
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
@@ -62,10 +77,26 @@ COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@
 COPY --from=builder --chown=node:node /app/database ./database
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 
+<<<<<<< HEAD
+=======
+# Scripts + tsx for embedding worker
+COPY --from=builder --chown=node:node /app/scripts ./scripts
+RUN chmod +x ./scripts/entrypoint.sh ./scripts/ensure-migrations.sh
+COPY --from=builder --chown=node:node /app/node_modules/.bin ./node_modules/.bin
+COPY --from=builder --chown=node:node /app/node_modules/tsx ./node_modules/tsx
+COPY --from=builder --chown=node:node /app/node_modules/esbuild ./node_modules/esbuild
+COPY --from=builder --chown=node:node /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
+COPY --from=builder --chown=node:node /app/node_modules/resolve-pkg-maps ./node_modules/resolve-pkg-maps
+
+# Lib dependencies for worker scripts
+COPY --from=builder --chown=node:node /app/lib ./lib
+COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
+
+>>>>>>> ecstatic-brown
 USER node
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+# NOTE: No HEALTHCHECK in Dockerfile - use service-specific healthchecks in docker-compose.yml
+# This prevents confusion when the same image is used for web (maia) vs worker (maia-embed-worker)
 
 CMD ["node", "server.js"]

@@ -1,6 +1,9 @@
 # Multi-stage production build for MAIA Consciousness Interface
 FROM node:18-alpine AS builder
 
+# Build args for version tracking
+ARG GIT_COMMIT=unknown
+
 # Set working directory
 WORKDIR /app
 
@@ -34,10 +37,14 @@ COPY --from=builder --chown=maia:consciousness /app/.next/standalone ./
 COPY --from=builder --chown=maia:consciousness /app/.next/static ./.next/static
 COPY --from=builder --chown=maia:consciousness /app/public ./public
 
+# Build args for version tracking (must re-declare in each stage)
+ARG GIT_COMMIT=unknown
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3005
 ENV HOSTNAME="0.0.0.0"
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Switch to non-root user
 USER maia

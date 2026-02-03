@@ -1,4 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Interface definitions for meditation system
 interface MeditationSessionRequest {
@@ -194,6 +199,10 @@ export async function POST(request: NextRequest) {
 
 // GET - Get session status or list sessions
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');

@@ -1,4 +1,8 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { logAuthEvent, hashCredential, redactPasscode } from '@/lib/security/authAudit';
+
+// Note: No dynamic export needed - Capacitor apps call remote API server
 
 // Beta passcode validation endpoint
 // Validates invitation codes for the transformational experience
@@ -78,7 +82,9 @@ const VALID_PASSCODES = [
   'SOULLAB-YVONNE',
   'SOULLAB-ANNA',
   'SOULLAB-RISAKO',
-  'SOULLAB-WHITEY'
+  'SOULLAB-WHITEY',
+  'SOULLAB-LAUREN',
+  'SOULLAB-NADIA'
 ];
 
 export async function POST(request: NextRequest) {
@@ -98,11 +104,17 @@ export async function POST(request: NextRequest) {
     const isValid = VALID_PASSCODES.includes(passcode);
 
     if (isValid) {
-      // Log successful validation (for analytics)
-      console.log('✨ Valid passcode used:', passcode, {
-        timestamp: new Date().toISOString(),
-        userAgent: request.headers.get('user-agent')
-      });
+      // Audit trail for successful beta access (writes to audit_logs table)
+      // SECURITY: Hash passcode, don't store plaintext
+      await logAuthEvent({
+        action: 'passcode_valid',
+        resourceType: 'beta_passcode',
+        result: 'success',
+        metadata: {
+          passcode_hash: hashCredential(passcode),
+          passcode_hint: redactPasscode(passcode),
+        },
+      }, request);
 
       return NextResponse.json({
         valid: true,
@@ -110,12 +122,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log invalid attempts (for monitoring)
-    console.log('⚠️  Invalid passcode attempt:', passcode, {
-      timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || 'unknown'
-    });
+    // Audit trail for failed beta access (writes to audit_logs table)
+    // SECURITY: Hash passcode, don't store plaintext
+    await logAuthEvent({
+      action: 'passcode_invalid',
+      resourceType: 'beta_passcode',
+      result: 'failure',
+      errorMessage: 'invalid_passcode',
+      metadata: {
+        passcode_hash: hashCredential(passcode || 'missing'),
+        passcode_hint: redactPasscode(passcode || ''),
+      },
+    }, request);
 
     return NextResponse.json(
       { valid: false, message: 'Invalid invitation code' },

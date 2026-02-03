@@ -5,31 +5,122 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Volume2, 
-  VolumeX, 
-  Pause, 
-  Play, 
-  Square, 
-  Settings, 
-  Mic, 
+import {
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  Square,
+  Settings,
+  Mic,
   Sparkles,
   CheckCircle,
   AlertCircle,
   Info
 } from 'lucide-react';
-import { useMayaVoice, useVoiceCapabilities } from '@/hooks/useMayaVoice';
-import { FullVoiceEngineStatus } from './VoiceEngineStatus';
+import { useMayaVoice } from '@/hooks/useMayaVoice';
+import { VoiceEngineStatus } from './VoiceEngineStatus';
+
+// Compatibility shim for VoiceControls until interface is refactored
+type VoiceState = {
+  isPlaying: boolean;
+  isPaused: boolean;
+};
+
+type VoiceCapabilities = {
+  webSpeechSupported: boolean;
+  voicesLoaded: boolean;
+  hasEnglishVoices: boolean;
+  hasFemaleVoices: boolean;
+  voiceCount: number;
+};
+
+function useVoiceCapabilities(): VoiceCapabilities {
+  const [caps, setCaps] = useState<VoiceCapabilities>({
+    webSpeechSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+    voicesLoaded: false,
+    hasEnglishVoices: false,
+    hasFemaleVoices: false,
+    voiceCount: 0
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const updateVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+      const femaleVoices = voices.filter(v => v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('samantha'));
+      setCaps({
+        webSpeechSupported: true,
+        voicesLoaded: voices.length > 0,
+        hasEnglishVoices: englishVoices.length > 0,
+        hasFemaleVoices: femaleVoices.length > 0,
+        voiceCount: voices.length
+      });
+    };
+    updateVoices();
+    window.speechSynthesis.onvoiceschanged = updateVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  return caps;
+}
+
+// Shim for voice controls that adapts new interface to old usage
+function useVoiceControlsShim() {
+  const [voiceState, setVoiceState] = useState<VoiceState>({ isPlaying: false, isPaused: false });
+  const isSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const speak = async (text: string) => {
+    if (!isSupported) return;
+    setVoiceState({ isPlaying: true, isPaused: false });
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setVoiceState({ isPlaying: false, isPaused: false });
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stop = () => {
+    if (isSupported) window.speechSynthesis.cancel();
+    setVoiceState({ isPlaying: false, isPaused: false });
+  };
+
+  const pause = () => {
+    if (isSupported) window.speechSynthesis.pause();
+    setVoiceState(s => ({ ...s, isPaused: true }));
+  };
+
+  const resume = () => {
+    if (isSupported) window.speechSynthesis.resume();
+    setVoiceState(s => ({ ...s, isPaused: false }));
+  };
+
+  const playGreeting = () => speak("I am Maya, your personal oracle. Welcome.");
+
+  const getAvailableVoices = () => {
+    if (!isSupported) return [];
+    return window.speechSynthesis.getVoices();
+  };
+
+  return { speak, voiceState, isSupported, playGreeting, stop, pause, resume, getAvailableVoices };
+}
 
 interface VoiceControlsProps {
   className?: string;
 }
 
 export function VoiceControls({ className }: VoiceControlsProps) {
-  const { speak, voiceState, isSupported, playGreeting, stop, pause, resume, getAvailableVoices } = useMayaVoice();
+  const { speak, voiceState, isSupported, playGreeting, stop, pause, resume, getAvailableVoices } = useVoiceControlsShim();
   const capabilities = useVoiceCapabilities();
   const [selectedVoice, setSelectedVoice] = useState<string>('');
   const [showDetails, setShowDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
+
+  const handleAutoSpeakChange = (enabled: boolean) => {
+    setAutoSpeak(enabled);
+  };
 
   const testVoice = async () => {
     try {
@@ -96,25 +187,7 @@ export function VoiceControls({ className }: VoiceControlsProps) {
         </div>
 
         {/* Voice Engine Status */}
-        <FullVoiceEngineStatus className="mt-4" />
-
-        {/* Error Display */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-red-500/10 border border-red-500/20 rounded-lg p-3"
-            >
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-red-400" />
-                <span className="text-sm text-red-300">Voice Error</span>
-              </div>
-              <p className="text-xs text-red-200 mt-1">{error}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <VoiceEngineStatus className="mt-4" />
 
         {/* Main Controls */}
         <div className="flex items-center space-x-2">
@@ -269,7 +342,7 @@ export function VoiceControls({ className }: VoiceControlsProps) {
  * Compact voice controls for embedding in other components
  */
 export function CompactVoiceControls({ onAutoSpeakChange }: { onAutoSpeakChange?: (enabled: boolean) => void }) {
-  const { voiceState, isSupported, playGreeting, stop } = useMayaVoice();
+  const { voiceState, isSupported, playGreeting, stop } = useVoiceControlsShim();
   const [autoSpeak, setAutoSpeak] = useState(false);
 
   const handleAutoSpeakChange = (enabled: boolean) => {

@@ -328,6 +328,38 @@ export default function CommunityBBSPage() {
                 </p>
               </div>
 
+              {/* Featured Paper Highlight */}
+              <Link
+                href="/community/library"
+                className="block bg-gradient-to-r from-slate-900 via-amber-950/30 to-slate-900 border border-amber-500/40 rounded-xl p-6 hover:border-amber-400/60 transition-all group"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-amber-500/20 border border-amber-500/40 rounded-lg">
+                    <Star className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-xs font-medium rounded">NEW PAPER</span>
+                      <h3 className="text-lg font-bold text-amber-100 group-hover:text-amber-300 transition-colors">
+                        Presence Continuity and Personal Sovereignty
+                      </h3>
+                    </div>
+                    <p className="text-amber-300/70 text-sm mb-3">
+                      Why AI systems must remain relationally present even when infrastructure fails.
+                      Introduces the sovereignty ladder: Presence → Cognition → Memory → Network Optionality.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-amber-400/60">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" />
+                        Foundational Paper
+                      </span>
+                      <span>January 2026</span>
+                      <span className="text-amber-400 group-hover:underline">Read in Library →</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+
               {/* Forum Categories Grid */}
               <div className="space-y-4">
                 <h2 className="text-xl font-bold text-amber-100 mb-6 flex items-center gap-2">

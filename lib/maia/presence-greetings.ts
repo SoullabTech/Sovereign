@@ -9,12 +9,10 @@
 export const SimplePresence = [
   "Hey.",
   "You're here.",
-  "Morning.", // Any time of day
+  "Hi there.",
   "Yeah, hi.",
-  "It's you.",
   "Oh, hey.",
-  "'Lo.",
-  "Mm-hmm."
+  "Hey there."
 ];
 
 /**
@@ -91,16 +89,14 @@ export const ReturnGreetings = [
 ];
 
 /**
- * Barely anything
+ * Minimal but still personable
  */
 export const MinimalGreetings = [
-  "Mm.",
-  "...",
-  "", // Actual silence
-  "*nod*",
-  "Yeah.",
-  "Yep.",
-  "K."
+  "Hey.",
+  "Hi.",
+  "Here.",
+  "With you.",
+  "Present."
 ];
 
 /**

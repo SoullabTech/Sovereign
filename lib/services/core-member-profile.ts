@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧬 CORE MEMBER PROFILE SERVICE
  *

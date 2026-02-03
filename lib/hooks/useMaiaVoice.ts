@@ -13,11 +13,17 @@ export interface VoiceMessage {
 
 export interface UseMaiaVoiceOptions {
   userId?: string;
+  sessionId?: string; // Session ID for persistence
   element?: string;
   conversationStyle?: 'natural' | 'consciousness' | 'adaptive';
   voice?: 'alloy' | 'echo' | 'shimmer' | 'ash' | 'ballad' | 'coral' | 'sage' | 'verse';
   systemPrompt?: string;
   autoConnect?: boolean;
+  autoReconnect?: boolean; // Auto-reconnect on disconnection (default: true)
+  maxReconnectAttempts?: number; // Max reconnection attempts (default: 3)
+  isSanctuary?: boolean; // Skip persistence for sanctuary mode
+  onTranscript?: (text: string, isUser: boolean) => void;
+  onExchangePersisted?: (userMessage: string, assistantMessage: string) => void;
 }
 
 export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
@@ -26,10 +32,95 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<VoiceMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   const clientRef = useRef<MaiaRealtimeWebRTC | null>(null);
   const userTranscriptBuffer = useRef<string>('');
   const assistantTranscriptBuffer = useRef<string>('');
+  const lastUserMessageRef = useRef<string>(''); // Hold user message for persistence
+  const reconnectAttemptsRef = useRef(0);
+  const wasConnectedRef = useRef(false); // Track if we were successfully connected
+  const intentionalDisconnectRef = useRef(false); // Track if disconnect was intentional
+
+  const autoReconnect = options.autoReconnect ?? true;
+  const maxReconnectAttempts = options.maxReconnectAttempts ?? 3;
+
+  // Self-discover session and user IDs from localStorage if not provided
+  const getSessionId = useCallback(() => {
+    if (options.sessionId) return options.sessionId;
+    if (typeof window === 'undefined') return undefined;
+
+    // Try to get session ID from localStorage
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (userData.sessionId) return userData.sessionId;
+        if (userData.id) return userData.id; // Use user ID as session fallback
+      } catch (e) { /* ignore */ }
+    }
+
+    const explorerId = localStorage.getItem('explorerId');
+    if (explorerId) return explorerId;
+
+    return undefined;
+  }, [options.sessionId]);
+
+  const getUserId = useCallback(() => {
+    if (options.userId && options.userId !== 'anonymous') return options.userId;
+    if (typeof window === 'undefined') return 'anonymous';
+
+    const explorerId = localStorage.getItem('explorerId');
+    if (explorerId) return explorerId;
+
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (userData.id) return userData.id;
+      } catch (e) { /* ignore */ }
+    }
+
+    return 'anonymous';
+  }, [options.userId]);
+
+  // Persist voice exchange to database
+  const persistExchange = useCallback(async (userMessage: string, assistantMessage: string) => {
+    if (options.isSanctuary) {
+      console.log('[VoicePersist] Sanctuary mode - skipping persistence');
+      return;
+    }
+
+    if (!userMessage.trim() || !assistantMessage.trim()) {
+      return; // Don't persist empty exchanges
+    }
+
+    const sessionId = getSessionId();
+    const userId = getUserId();
+
+    try {
+      const response = await fetch('/api/voice/persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMessage.trim(),
+          assistantMessage: assistantMessage.trim(),
+          userId,
+          sessionId,
+          isSanctuary: options.isSanctuary,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('[VoicePersist] Voice exchange saved successfully');
+        options.onExchangePersisted?.(userMessage.trim(), assistantMessage.trim());
+      } else {
+        console.error('[VoicePersist] Failed to save voice exchange:', await response.text());
+      }
+    } catch (error) {
+      console.error('[VoicePersist] Error saving voice exchange:', error);
+    }
+  }, [options.isSanctuary, options.onExchangePersisted, getSessionId, getUserId]);
 
   const addMessage = useCallback((text: string, isUser: boolean) => {
     const message: VoiceMessage = {
@@ -41,7 +132,41 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
     setMessages(prev => [...prev, message]);
   }, []);
 
-  const connect = useCallback(async () => {
+  const attemptReconnect = useCallback(async () => {
+    if (!autoReconnect) return;
+    if (intentionalDisconnectRef.current) return;
+    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+      console.log(`❌ Max reconnection attempts (${maxReconnectAttempts}) reached`);
+      setIsReconnecting(false);
+      setError('Connection lost. Please tap to reconnect.');
+      return;
+    }
+
+    reconnectAttemptsRef.current += 1;
+    const attempt = reconnectAttemptsRef.current;
+    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff, max 5s
+
+    console.log(`🔄 Reconnecting (attempt ${attempt}/${maxReconnectAttempts}) in ${delay}ms...`);
+    setIsReconnecting(true);
+
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    // Don't reconnect if user intentionally disconnected during wait
+    if (intentionalDisconnectRef.current) {
+      setIsReconnecting(false);
+      return;
+    }
+
+    // Try to reconnect (this will call connect which handles the rest)
+    try {
+      await connectInternal();
+    } catch (err) {
+      console.error('Reconnection failed:', err);
+      // attemptReconnect will be called again from onDisconnected if needed
+    }
+  }, [autoReconnect, maxReconnectAttempts]);
+
+  const connectInternal = useCallback(async () => {
     // Guard against multiple simultaneous connection attempts
     if (clientRef.current?.isConnected()) {
       console.log('✅ Already connected');
@@ -57,6 +182,7 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
 
     try {
       console.log('🚀 Starting voice connection...');
+      intentionalDisconnectRef.current = false;
 
       // Generate MAIA's personality prompt if not provided
       const systemPrompt = options.systemPrompt || getMaiaSystemPrompt({
@@ -76,21 +202,33 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
           } else {
             assistantTranscriptBuffer.current += text;
           }
+          // Call external callback if provided
+          options.onTranscript?.(text, isUser);
         },
         onAudioStart: () => {
           setIsSpeaking(true);
           // Save user transcript when Maia starts responding
           if (userTranscriptBuffer.current.trim()) {
-            addMessage(userTranscriptBuffer.current.trim(), true);
+            const userMsg = userTranscriptBuffer.current.trim();
+            lastUserMessageRef.current = userMsg; // Store for persistence
+            addMessage(userMsg, true);
             userTranscriptBuffer.current = '';
           }
         },
         onAudioEnd: () => {
           setIsSpeaking(false);
           setIsListening(true);
-          // Save assistant transcript
+          // Save assistant transcript and persist the exchange
           if (assistantTranscriptBuffer.current.trim()) {
-            addMessage(assistantTranscriptBuffer.current.trim(), false);
+            const assistantMsg = assistantTranscriptBuffer.current.trim();
+            addMessage(assistantMsg, false);
+
+            // Persist the complete exchange (user + assistant)
+            if (lastUserMessageRef.current) {
+              persistExchange(lastUserMessageRef.current, assistantMsg);
+              lastUserMessageRef.current = ''; // Clear after persistence
+            }
+
             assistantTranscriptBuffer.current = '';
           }
         },
@@ -101,7 +239,10 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
         onConnected: () => {
           setIsConnected(true);
           setIsListening(true);
+          setIsReconnecting(false);
           setError(null);
+          wasConnectedRef.current = true;
+          reconnectAttemptsRef.current = 0; // Reset on successful connection
           console.log('✅ Connected to Maia');
         },
         onDisconnected: () => {
@@ -109,20 +250,35 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
           setIsSpeaking(false);
           setIsListening(false);
           console.log('❌ Disconnected from Maia');
+
+          // Auto-reconnect if we were connected and disconnect wasn't intentional
+          if (wasConnectedRef.current && !intentionalDisconnectRef.current && autoReconnect) {
+            attemptReconnect();
+          }
         },
       };
 
-      const client = new MaiaRealtimeWebRTC(config);
-      await client.connect();
-      clientRef.current = client;
+      const newClient = new MaiaRealtimeWebRTC(config);
+      await newClient.connect();
+      clientRef.current = newClient;
 
     } catch (err) {
       setError((err as Error).message);
+      setIsReconnecting(false);
       console.error('Failed to connect:', err);
+      throw err; // Re-throw for reconnection logic
     }
-  }, [options, addMessage]);
+  }, [options, addMessage, persistExchange, autoReconnect, attemptReconnect]);
+
+  const connect = useCallback(async () => {
+    reconnectAttemptsRef.current = 0;
+    intentionalDisconnectRef.current = false;
+    await connectInternal();
+  }, [connectInternal]);
 
   const disconnect = useCallback(async () => {
+    intentionalDisconnectRef.current = true; // Mark as intentional to prevent auto-reconnect
+    setIsReconnecting(false);
     if (clientRef.current) {
       await clientRef.current.disconnect();
       clientRef.current = null;
@@ -130,6 +286,8 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
     setIsConnected(false);
     setIsSpeaking(false);
     setIsListening(false);
+    wasConnectedRef.current = false;
+    reconnectAttemptsRef.current = 0;
   }, []);
 
   const sendText = useCallback((text: string) => {
@@ -155,6 +313,8 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
       connect();
     }
     return () => {
+      // Mark as intentional disconnect on cleanup to prevent reconnection attempts
+      intentionalDisconnectRef.current = true;
       if (clientRef.current) {
         clientRef.current.disconnect();
       }
@@ -166,6 +326,7 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
     isConnected,
     isSpeaking,
     isListening,
+    isReconnecting,
     messages,
     error,
 

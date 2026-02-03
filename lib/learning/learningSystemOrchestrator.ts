@@ -7,6 +7,7 @@ import InteractionFeedbackService from './interactionFeedbackService';
 import GoldResponseService from './goldResponseService';
 import EngineComparisonService from './engineComparisonService';
 import MisattunementTrackingService from './misattunementTrackingService';
+import { ImprovementHypothesisGenerator, ImprovementHypothesis } from './ImprovementHypothesisGenerator';
 import { GoldResponseService as GRS } from './goldResponseService';
 import {
   getUserCognitiveProgression,
@@ -53,6 +54,7 @@ export interface DreamtimeOperationResult {
   turnsProcessed: number;
   goldResponsesCreated: number;
   comparisonsReviewed: number;
+  hypothesesGenerated: number;
   patternsIdentified: string[];
   recommendations: string[];
   duration: number;
@@ -288,6 +290,7 @@ export class LearningSystemOrchestrator {
     let turnsProcessed = 0;
     let goldResponsesCreated = 0;
     let comparisonsReviewed = 0;
+    let hypothesesGenerated = 0;
     const patternsIdentified: string[] = [];
     const recommendations: string[] = [];
     const errors: string[] = [];
@@ -334,7 +337,29 @@ export class LearningSystemOrchestrator {
       patternsIdentified.push(...learningInsights.criticalPatterns);
       recommendations.push(...learningInsights.recommendations);
 
-      // 5. Generate learning recommendations
+      // 5. SELF-IMPROVEMENT LOOP: Generate improvement hypotheses
+      // "MAIA proposes; Mentors approve; Production is human-signed."
+      try {
+        const hypothesisGenerator = new ImprovementHypothesisGenerator();
+        const hypotheses = await hypothesisGenerator.generateHypotheses();
+        hypothesesGenerated = hypotheses.length;
+
+        if (hypotheses.length > 0) {
+          console.log(`🧠 Loop E (Self-Improvement): Generated ${hypotheses.length} improvement hypotheses`);
+          recommendations.push(`${hypotheses.length} improvement hypotheses generated - awaiting mentor review`);
+
+          // Add critical hypotheses to patterns
+          const criticalHypotheses = hypotheses.filter(h => h.priority === 'critical');
+          for (const h of criticalHypotheses) {
+            patternsIdentified.push(`CRITICAL: ${h.modification.target} - ${h.modification.rationale}`);
+          }
+        }
+      } catch (error) {
+        errors.push(`Hypothesis generation failed: ${error}`);
+        console.error('❌ Failed to generate hypotheses:', error);
+      }
+
+      // 6. Generate learning recommendations
       const analytics = await this.getLearningAnalytics();
 
       if (analytics.loopD.needsAttention > 0) {
@@ -352,13 +377,14 @@ export class LearningSystemOrchestrator {
       turnsProcessed = candidates.length;
       const duration = Date.now() - startTime;
 
-      console.log(`🌙 DREAMTIME PROCESSING COMPLETE | Duration: ${duration}ms | Turns: ${turnsProcessed} | Gold: ${goldResponsesCreated} | Comparisons: ${comparisonsReviewed} | Patterns: ${patternsIdentified.length}`);
+      console.log(`🌙 DREAMTIME PROCESSING COMPLETE | Duration: ${duration}ms | Turns: ${turnsProcessed} | Gold: ${goldResponsesCreated} | Comparisons: ${comparisonsReviewed} | Hypotheses: ${hypothesesGenerated} | Patterns: ${patternsIdentified.length}`);
 
       return {
         operationId,
         turnsProcessed,
         goldResponsesCreated,
         comparisonsReviewed,
+        hypothesesGenerated,
         patternsIdentified,
         recommendations,
         duration,
@@ -375,6 +401,7 @@ export class LearningSystemOrchestrator {
         turnsProcessed,
         goldResponsesCreated,
         comparisonsReviewed,
+        hypothesesGenerated,
         patternsIdentified,
         recommendations,
         duration,

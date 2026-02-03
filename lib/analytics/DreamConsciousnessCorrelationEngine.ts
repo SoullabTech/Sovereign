@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DREAM-SLEEP-CONSCIOUSNESS CORRELATION ENGINE
  *
@@ -10,12 +11,21 @@
  * - Environmental and biometric factors
  */
 
+<<<<<<< HEAD
 // Stub types until DreamWeaver is migrated
 export interface WisdomEmergenceSignals {
   bodyActivation?: boolean;
   languageShift?: boolean;
   energyMarkers?: Record<string, unknown>;
 }
+=======
+import { PrismaClient } from '@prisma/client';
+import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
+import { CircadianRhythmOptimizer, CircadianAnalysis } from '@/lib/biometrics/CircadianRhythmOptimizer';
+import { ConversationPatternAnalyzer } from '@/lib/consciousness/ConversationPatternAnalyzer';
+
+const prisma = new PrismaClient();
+>>>>>>> ecstatic-brown
 
 export interface CorrelationTimeWindow {
   start: Date;

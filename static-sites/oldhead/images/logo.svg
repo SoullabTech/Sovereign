@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80">
+  <!-- OH Monogram - charcoal #2D2A26 -->
+  <g transform="translate(0, 5)" fill="#2D2A26">
+    <!-- O shape -->
+    <path d="M8 35c0-16.5 11-30 28-30s28 13.5 28 30-11 30-28 30S8 51.5 8 35zm10 0c0 11 7.5 20 18 20s18-9 18-20-7.5-20-18-20-18 9-18 20z"/>
+    <!-- H vertical strokes -->
+    <path d="M30 5h8v60h-8z"/>
+    <path d="M52 5h8v60h-8z"/>
+    <!-- H horizontal bar -->
+    <path d="M30 31h30v8H30z"/>
+    <!-- Swoosh/trowel accent -->
+    <path d="M15 32c15-8 35-8 50 0l-2 4c-13-6-32-6-46 0z" opacity="0.7"/>
+  </g>
+
+  <!-- OLD HEAD text -->
+  <text x="78" y="32" fill="#2D2A26" font-family="Georgia, 'Times New Roman', serif" font-size="28" font-weight="700" letter-spacing="3">OLD HEAD</text>
+
+  <!-- Decorative lines and PLASTER -->
+  <line x1="78" y1="48" x2="118" y2="48" stroke="#2D2A26" stroke-width="1.5"/>
+  <text x="125" y="52" fill="#2D2A26" font-family="Georgia, 'Times New Roman', serif" font-size="14" font-weight="400" letter-spacing="6">PLASTER</text>
+  <line x1="218" y1="48" x2="258" y2="48" stroke="#2D2A26" stroke-width="1.5"/>
+
+  <!-- EST. COUNTY MAYO -->
+  <text x="168" y="70" fill="#2D2A26" font-family="Georgia, 'Times New Roman', serif" font-size="9" font-weight="400" letter-spacing="2" text-anchor="middle" opacity="0.7">EST. COUNTY MAYO</text>
+</svg>

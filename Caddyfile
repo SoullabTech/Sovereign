@@ -5,9 +5,171 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
-{$DOMAIN:localhost} {
-    # Reverse proxy to MAIA container
-    reverse_proxy maia:3000 {
+# Local development - no TLS
+:80 {
+    @streaming {
+        path /api/voice/stream-conversation
+        path /api/*/stream*
+    }
+    handle @streaming {
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            flush_interval -1
+        }
+    }
+
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign"
+    }
+
+    encode gzip zstd
+}
+
+# Redirect www to apex (prevents WebAuthn ORIGIN_MISMATCH)
+www.soullab.life {
+    redir https://soullab.life{uri} permanent
+}
+
+# Redirect maia subdomain to apex
+maia.soullab.life {
+    redir https://soullab.life{uri} permanent
+}
+
+soullab.life {
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CORS for API requests (iOS/Capacitor app support)
+    # Allows requests from capacitor://localhost, ionic://localhost, etc.
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # CORS: Capacitor/iOS origins
+    @capacitor_origin {
+        header Origin capacitor://localhost
+    }
+    @ionic_origin {
+        header Origin ionic://localhost
+    }
+    @localhost_origin {
+        header Origin http://localhost*
+    }
+
+    # Handle CORS preflight (OPTIONS) requests for API
+    @cors_preflight {
+        method OPTIONS
+        path /api/*
+    }
+    handle @cors_preflight {
+        # Capacitor origin
+        @preflight_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @preflight_capacitor {
+            Access-Control-Allow-Origin "capacitor://localhost"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
+            Access-Control-Max-Age "86400"
+        }
+        # Ionic origin
+        @preflight_ionic {
+            header Origin ionic://localhost
+        }
+        header @preflight_ionic {
+            Access-Control-Allow-Origin "ionic://localhost"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
+            Access-Control-Max-Age "86400"
+        }
+        # Localhost origin (dev)
+        @preflight_localhost {
+            header_regexp Origin ^http://localhost
+        }
+        header @preflight_localhost {
+            Access-Control-Allow-Origin "{header.Origin}"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
+            Access-Control-Max-Age "86400"
+        }
+        # Null origin (WebKit edge case - some Capacitor/WKWebView contexts)
+        @preflight_null {
+            header Origin null
+        }
+        header @preflight_null {
+            Access-Control-Allow-Origin "null"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
+            Access-Control-Max-Age "86400"
+        }
+        respond "" 204
+    }
+
+    # SSE/Streaming endpoints - disable compression and buffering
+    # NOTE: CORS headers are handled by Next.js API routes
+    @streaming {
+        path /api/voice/stream-conversation
+        path /api/*/stream*
+    }
+    handle @streaming {
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            # Disable buffering for streaming responses
+            flush_interval -1
+        }
+    }
+
+    # API requests (non-streaming)
+    # Add CORS headers for Capacitor/mobile app responses
+    @api {
+        path /api/*
+    }
+    handle @api {
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+        # Add CORS headers to responses for mobile origins
+        @api_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @api_capacitor {
+            Access-Control-Allow-Origin "capacitor://localhost"
+            Access-Control-Allow-Credentials "true"
+        }
+        @api_ionic {
+            header Origin ionic://localhost
+        }
+        header @api_ionic {
+            Access-Control-Allow-Origin "ionic://localhost"
+            Access-Control-Allow-Credentials "true"
+        }
+        @api_null {
+            header Origin null
+        }
+        header @api_null {
+            Access-Control-Allow-Origin "null"
+            Access-Control-Allow-Credentials "true"
+        }
+    }
+
+    # Regular reverse proxy for non-API requests
+    reverse_proxy maia-sovereign:3000 {
         # Health checks
         health_uri /api/consciousness/health
         health_interval 30s
@@ -20,8 +182,10 @@
         header_up X-Forwarded-Proto {scheme}
     }
 
-    # Security headers
+    # Security headers + origin marker
     header {
+        # Origin marker (proves request came from sovereign origin)
+        X-MAIA-Origin "caddy-sovereign"
         # HSTS
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         # Prevent clickjacking
@@ -33,12 +197,248 @@
         -Server
     }
 
-    # Compression
+    # Compression (exclude SSE which is handled above)
     encode gzip zstd
 
     # Logging
     log {
         output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Old Head Plaster - Astro SSR with Virtual Daragh
+# ═══════════════════════════════════════════════════════════════════════════════
+oldhead.soullab.life {
+    # Reverse proxy to OldHead Astro container
+    reverse_proxy oldhead:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/oldhead-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Chart Subdomain - Birth Chart Calculator Funnel
+# ═══════════════════════════════════════════════════════════════════════════════
+chart.soullab.life {
+    # Rewrite root to /chart page
+    rewrite / /chart
+
+    # Reverse proxy to MAIA container
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-chart"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/chart-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Elemental Alchemy Audiobook
+# ═══════════════════════════════════════════════════════════════════════════════
+elementalalchemy.soullab.life {
+    # Rewrite root to audiobook page
+    rewrite / /labtools/elemental-alchemy
+
+    # Reverse proxy to MAIA container
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-audiobook"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/audiobook-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Loralee Starweaver - Stellium Astrology Portal
+# ═══════════════════════════════════════════════════════════════════════════════
+loralee.soullab.life {
+    # Handle root path - rewrite to portal without trailing slash
+    handle / {
+        rewrite * /portal/loralee
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Handle /portal/* paths directly (already correct path)
+    handle /portal/* {
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Handle all other page paths - rewrite to portal namespace
+    # loralee.soullab.life/admin → /portal/loralee/admin
+    # loralee.soullab.life/services → /portal/loralee/services
+    @pages {
+        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+    }
+    handle @pages {
+        rewrite * /portal/loralee{uri}
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Fallback for static assets and API routes - pass through unchanged
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-portal"
+        X-Stellium-Portal "loralee"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/loralee-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Demo Plaster - White-Label Demo Site
+# ═══════════════════════════════════════════════════════════════════════════════
+demo.soullab.life {
+    # Reverse proxy to Demo Plaster container
+    reverse_proxy demo:4322 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/demo-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA API Service - Multi-tenant Backend
+# ═══════════════════════════════════════════════════════════════════════════════
+# All API requests from frontends route here.
+# MAIA API is the backbone for all Soullab products.
+api.soullab.life {
+    # Reverse proxy to MAIA API container
+    reverse_proxy maia-api:3001 {
+        # Health checks
+        health_uri /v1/health
+        health_interval 30s
+        health_timeout 5s
+
+        # Headers
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # CORS headers handled by API, but add security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-api"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/api-access.log {
             roll_size 10mb
             roll_keep 5
         }

@@ -56,17 +56,17 @@ export function ConsciousnessPreparation({ userName = "Explorer", onComplete }: 
                 <Compass className="w-5 h-5 text-amber-400" />
                 <h2 className="text-xl font-light text-amber-50">Understanding Your Perspective</h2>
               </div>
-              <p className="text-amber-200/50 text-sm">
+              <p className="text-amber-100/90 text-sm">
                 Help us understand how you think, {userName}. These preferences guide the initial conversation style.
               </p>
             </div>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-sm text-amber-200/70 mb-3">
+                <label className="block text-sm text-amber-100 mb-3">
                   Which approaches resonate with you? (optional)
                 </label>
-                <p className="text-xs text-amber-200/40 mb-4">
+                <p className="text-xs text-amber-200/80 mb-4">
                   Select the perspectives that interest you. This helps tailor the initial conversation style.
                 </p>
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
@@ -98,22 +98,22 @@ export function ConsciousnessPreparation({ userName = "Explorer", onComplete }: 
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-base">{facet.emoji}</span>
-                          <span className="text-sm text-amber-200/70 group-hover:text-amber-200/90 transition-colors font-medium">
+                          <span className="text-sm text-amber-100 group-hover:text-amber-50 transition-colors font-medium">
                             {facet.label}
                           </span>
                         </div>
-                        <p className="text-xs text-amber-200/40 mt-0.5">{facet.desc}</p>
+                        <p className="text-xs text-amber-200/80 mt-0.5">{facet.desc}</p>
                       </div>
                     </label>
                   ))}
                 </div>
-                <p className="text-xs text-amber-200/30 mt-3">
+                <p className="text-xs text-amber-200/70 mt-3">
                   Don't worry - you can explore all perspectives over time.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm text-amber-200/70 mb-3">
+                <label className="block text-sm text-amber-100 mb-3">
                   What brings you here? (optional)
                 </label>
                 <div className="space-y-2">
@@ -140,7 +140,7 @@ export function ConsciousnessPreparation({ userName = "Explorer", onComplete }: 
                         }}
                         className="mr-3 rounded border-amber-500/30 bg-black/30 text-amber-500 focus:ring-amber-500/50"
                       />
-                      <span className="text-sm text-amber-200/60 group-hover:text-amber-200/80 transition-colors">
+                      <span className="text-sm text-amber-100 group-hover:text-amber-50 transition-colors">
                         {area}
                       </span>
                     </label>
@@ -149,7 +149,7 @@ export function ConsciousnessPreparation({ userName = "Explorer", onComplete }: 
               </div>
 
               <div>
-                <label className="block text-sm text-amber-200/70 mb-3">
+                <label className="block text-sm text-amber-100 mb-3">
                   Share what's relevant about your current situation (optional)
                 </label>
                 <textarea
@@ -157,9 +157,9 @@ export function ConsciousnessPreparation({ userName = "Explorer", onComplete }: 
                   onChange={(e) => setExplorationIntent(e.target.value)}
                   placeholder="Your work, interests, what you're exploring, what brought you here..."
                   rows={4}
-                  className="w-full px-4 py-3 bg-black/30 border border-amber-500/20 rounded-lg text-amber-50 placeholder-amber-200/30 focus:outline-none focus:border-amber-500/40 resize-none"
+                  className="w-full px-4 py-3 bg-black/30 border border-amber-500/20 rounded-lg text-amber-50 placeholder-amber-200/60 focus:outline-none focus:border-amber-500/40 resize-none"
                 />
-                <p className="text-xs text-amber-200/30 mt-2">
+                <p className="text-xs text-amber-200/70 mt-2">
                   This helps Maia understand your context and provide more relevant insights.
                 </p>
               </div>

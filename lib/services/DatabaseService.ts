@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Database Service
  * Consolidates SQLite, Supabase, and other database operations

@@ -1,0 +1,134 @@
+name: "MAIA TestFlight Bug Report"
+description: "Report a bug found while testing MAIA via TestFlight"
+title: "[TestFlight Bug]: "
+labels: ["testflight", "bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing MAIA. Please fill this out so we can reproduce and fix quickly.
+
+  - type: input
+    id: build
+    attributes:
+      label: MAIA Build Number (TestFlight)
+      description: "TestFlight → MAIA → Build (e.g., 1.2.3 (45))"
+      placeholder: "e.g., 1.2.3 (45)"
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: "iPhone model"
+      placeholder: "e.g., iPhone 14 Pro"
+    validations:
+      required: true
+
+  - type: input
+    id: ios
+    attributes:
+      label: iOS Version
+      description: "Settings → General → About"
+      placeholder: "e.g., iOS 17.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 - Crash / voice unusable
+        - P1 - Voice flaky but usable
+        - P2 - UI / minor UX issue
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bluetooth
+    attributes:
+      label: Bluetooth / AirPods / Car audio?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mic_permission
+    attributes:
+      label: Microphone permission enabled?
+      description: "Settings → Privacy & Security → Microphone → MAIA"
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: speech_permission
+    attributes:
+      label: Speech Recognition permission enabled?
+      description: "Settings → Privacy & Security → Speech Recognition → MAIA"
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected to happen
+      placeholder: "e.g., Talk transcribes every time; after MAIA speaks, Talk works again."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+      placeholder: "e.g., It shows 'Listening…' but no transcript appears."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce (1–5)
+      placeholder: |
+        1.
+        2.
+        3.
+        4.
+        5.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - Every time
+        - Often
+        - Sometimes
+        - Once
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments
+      description: "Add screenshots / screen recordings (best), plus any relevant notes."
+      placeholder: "Drag and drop screen recording here, or paste any notes."
+    validations:
+      required: false

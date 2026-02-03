@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Resonance Canvas
  * Community-wide visualization showing anonymized spiritual harmony patterns

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * MAIA FIELD-DRIVEN RESPONSE API (TEMPORARILY DISABLED)
  *
@@ -6,6 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Simple response generator without consciousness integration
 function generateBasicResponse(): any {
@@ -166,6 +171,10 @@ export async function PUT(request: NextRequest) {
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || 'status';

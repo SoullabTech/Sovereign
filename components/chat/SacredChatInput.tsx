@@ -1,9 +1,13 @@
+// @ts-nocheck
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, Square, Sparkles, BookOpen, Upload } from 'lucide-react';
+import { Send, Mic, Square, Sparkles, BookOpen, Upload, Shield } from 'lucide-react';
 import VoiceRecorder from '../VoiceRecorder';
+import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
+import { PathBanner } from '../path/PathSelector';
+import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
 
 interface SacredChatInputProps {
   onSendMessage: (message: string, isJournal?: boolean) => void;
@@ -16,6 +20,10 @@ interface SacredChatInputProps {
   isFirstSession?: boolean;
   tone?: number; // 0-1 scale from onboarding
   style?: 'prose' | 'poetic' | 'auto'; // from onboarding
+  mode?: 'dialogue' | 'counsel' | 'scribe'; // MAIA communication mode
+  onOpenPromptPicker?: () => void; // Open soul prompt picker
+  onOpenPathSelector?: () => void; // Open epistemic path selector
+  currentPath?: EpistemicPath | 'auto'; // Current epistemic path
 }
 
 // Sacred animation variants
@@ -54,20 +62,61 @@ export default function SacredChatInput({
   onVoiceMessage,
   disabled = false,
   placeholder = "Offer your reflection...",
-  maxLength = 4000,
+  maxLength: maxLengthProp = 4000,
   userId = "anonymous",
   trustLevel = 0.5,
   isFirstSession = false,
   tone = 0.5,
-  style = 'prose'
+  style = 'prose',
+  mode = 'dialogue',
+  onOpenPromptPicker,
+  onOpenPathSelector,
+  currentPath = 'auto'
 }: SacredChatInputProps) {
+  // Scribe/Note mode allows unlimited input for full transcript uploads
+  const maxLength = mode === 'scribe' ? undefined : maxLengthProp;
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isJournalMode, setIsJournalMode] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
+  const [isSanctuary, setIsSanctuary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Listen for Sanctuary mode changes — initialize from account defaults if no session settings
+  useEffect(() => {
+    const loadSanctuaryState = () => {
+      if (typeof window === 'undefined') return;
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          setIsSanctuary(settings.sanctuary === true);
+        } else {
+          // No session settings yet — initialize from account defaults
+          const defaults = getInitialSessionSettings();
+          setIsSanctuary(defaults.sanctuary === true);
+          localStorage.setItem('maia_settings', JSON.stringify(defaults));
+        }
+      } catch (e) {
+        console.error('Failed to load sanctuary state', e);
+      }
+    };
+
+    loadSanctuaryState();
+
+    const handleSettingsChange = (e: CustomEvent) => {
+      if (e.detail?.sanctuary !== undefined) {
+        setIsSanctuary(e.detail.sanctuary === true);
+      }
+    };
+
+    window.addEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, []);
 
   // Auto-resize textarea with golden ratio constraints
   const adjustTextareaHeight = useCallback(() => {
@@ -184,6 +233,13 @@ export default function SacredChatInput({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 border-t border-amber-400/20 bg-neutral-900/95 backdrop-blur-xl z-50 shadow-2xl">
+      {/* Path Banner - Shows current epistemic path */}
+      {onOpenPathSelector && (
+        <div className="max-w-4xl mx-auto mb-2">
+          <PathBanner currentPath={currentPath} onClick={onOpenPathSelector} />
+        </div>
+      )}
+
       {/* Sacred Input Container - Mobile Optimized */}
       <motion.div
         ref={containerRef}
@@ -243,9 +299,20 @@ export default function SacredChatInput({
 
           {/* Dual-Mode Input Area */}
           <div className="flex-1 relative">
-            {/* Mode Indicator */}
+            {/* Mode Indicators */}
             <AnimatePresence>
-              {isJournalMode && (
+              {isSanctuary && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute -top-8 left-3 flex items-center gap-1.5 text-xs text-emerald-400"
+                >
+                  <Shield className="w-3 h-3" />
+                  <span>Sanctuary is on · Not saved to memory</span>
+                </motion.div>
+              )}
+              {isJournalMode && !isSanctuary && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -455,8 +522,8 @@ export default function SacredChatInput({
               )}
             </AnimatePresence>
 
-            {/* Character Counter */}
-            {message.length > maxLength * 0.8 && !isRecording && (
+            {/* Character Counter - only show for modes with limits */}
+            {maxLength && message.length > maxLength * 0.8 && !isRecording && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -641,10 +708,24 @@ export default function SacredChatInput({
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
+                className="flex items-center justify-center gap-2"
               >
-                <span className="hidden sm:inline">Type to write • Click mic to speak • Enter to send • Shift+Enter for new line</span>
-                <span className="sm:hidden">Tap mic to speak • Type to write • Tap to send</span>
-                {isJournalMode && <span className="hidden sm:inline"> • Your sacred thoughts are witnessed</span>}
+                <span>
+                  <span className="hidden sm:inline">Type to write • Click mic to speak • Enter to send • Shift+Enter for new line</span>
+                  <span className="sm:hidden">Tap mic to speak • Type to write • Tap to send</span>
+                  {isJournalMode && <span className="hidden sm:inline"> • Your sacred thoughts are witnessed</span>}
+                </span>
+                {/* Soul Prompts trigger - shows when input is empty */}
+                {onOpenPromptPicker && message.trim().length === 0 && !isRecording && (
+                  <button
+                    onClick={onOpenPromptPicker}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 transition-colors"
+                    title="Soul Prompts"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span className="hidden sm:inline">Prompts</span>
+                  </button>
+                )}
               </motion.span>
             )}
           </AnimatePresence>

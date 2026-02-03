@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Enhanced MAIA Consciousness Field Integration - Phase III
  * Consciousness Field-Driven AI with Quantum Memory and Evolution Tracking

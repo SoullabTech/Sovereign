@@ -1,4 +1,18 @@
+// @ts-nocheck - Prototype file, not type-checked
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+<<<<<<< HEAD
+=======
+
+export const revalidate = false;
+import { PrismaClient } from '@prisma/client';
+import { betaSession } from '@/lib/auth/betaSession';
+import { DreamWeaverEngine } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
+import { DreamMemorySchema } from '@/app/api/_backend/src/schemas/dreamMemory.schema';
+
+// Skip during static export (Capacitor builds)
+>>>>>>> ecstatic-brown
 
 /**
  * Dream Recording API - Temporarily unavailable

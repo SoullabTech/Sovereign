@@ -11,8 +11,90 @@
  */
 
 import { query as dbQuery } from '@/lib/db/postgres';
-import { loadRelationshipEssence, type RelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesis';
 import { lattice } from './ConsciousnessMemoryLattice';
+
+/**
+ * RelationshipEssence type - duplicated here to avoid client-only import
+ * Original type is in RelationshipAnamnesis.ts (client-side)
+ */
+export interface RelationshipEssence {
+  soulSignature: string;
+  userId: string;
+  userName?: string;
+  presenceQuality: string;
+  archetypalResonances: string[];
+  spiralPosition: {
+    stage: string | null;
+    dynamics: string;
+    emergingAwareness: string[];
+  };
+  relationshipField: {
+    coCreatedInsights: string[];
+    breakthroughs: string[];
+    quality: string;
+    depth: number;
+  };
+  firstEncounter: Date;
+  lastEncounter: Date;
+  encounterCount: number;
+  morphicResonance: number;
+}
+
+/**
+ * SERVER-SIDE essence loader
+ * Queries database directly instead of using fetch (which fails on server)
+ * Note: This replaces the client-side version in RelationshipAnamnesis.ts for server usage
+ */
+async function loadRelationshipEssence(soulSignature: string): Promise<RelationshipEssence | null> {
+  try {
+    const result = await dbQuery<{
+      soul_signature: string;
+      user_id: string;
+      user_name: string | null;
+      presence_quality: string;
+      archetypal_resonances: string[];
+      spiral_position: RelationshipEssence['spiralPosition'];
+      relationship_field: RelationshipEssence['relationshipField'];
+      first_encounter: Date;
+      last_encounter: Date;
+      encounter_count: number;
+      morphic_resonance: number;
+    }>(`
+      SELECT * FROM relationship_essences
+      WHERE soul_signature = $1 OR user_id = $1
+      LIMIT 1
+    `, [soulSignature]);
+
+    if (!result.rows.length) {
+      console.log('💫 [ANAMNESIS-SERVER] First encounter, no essence found');
+      return null;
+    }
+
+    const row = result.rows[0];
+    const essence: RelationshipEssence = {
+      soulSignature: row.soul_signature,
+      userId: row.user_id,
+      userName: row.user_name || undefined,
+      presenceQuality: row.presence_quality,
+      archetypalResonances: row.archetypal_resonances || [],
+      spiralPosition: row.spiral_position,
+      relationshipField: row.relationship_field,
+      firstEncounter: new Date(row.first_encounter),
+      lastEncounter: new Date(row.last_encounter),
+      encounterCount: row.encounter_count,
+      morphicResonance: row.morphic_resonance
+    };
+
+    console.log(`💫 [ANAMNESIS-SERVER] Essence loaded: ${essence.encounterCount} encounters, L${Math.min(Math.ceil(essence.encounterCount / 20) + 1, 7)} inferred`);
+    return essence;
+  } catch (error) {
+    console.warn('💫 [ANAMNESIS-SERVER] Error loading essence:', error);
+    return null;
+  }
+}
+
+// Export for use in awareness detection
+export { loadRelationshipEssence };
 
 export interface ConversationTheme {
   theme: string;

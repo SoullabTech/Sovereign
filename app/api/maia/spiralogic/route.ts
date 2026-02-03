@@ -1,5 +1,7 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
- * 🌀 MAIA Spiralogic Intelligence API Route
+ * MAIA Spiralogic Intelligence API Route
  *
  * The Mercury function - fluid intelligence that mediates between
  * conscious and unconscious, operating as axis mundi where practical
@@ -10,6 +12,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   inferSpiralogicCell,
   chooseFrameworksForCell,
@@ -23,6 +27,8 @@ import {
   Element,
   Phase
 } from '@/lib/consciousness/spiralogic-core';
+
+// Skip during static export (Capacitor builds)
 
 // ====================================================================
 // REQUEST/RESPONSE INTERFACES

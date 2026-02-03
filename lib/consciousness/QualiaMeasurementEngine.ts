@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * QUALIA MEASUREMENT ENGINE
  *

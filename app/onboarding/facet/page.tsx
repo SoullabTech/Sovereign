@@ -8,6 +8,8 @@ function FacetRouterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  if (!searchParams) return null;
+
   // Get partner context from URL params
   const institution = searchParams.get('institution');
   const context = searchParams.get('context');

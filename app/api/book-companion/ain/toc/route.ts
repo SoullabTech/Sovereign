@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * AIN TOC API ROUTE
  *
@@ -11,6 +12,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+
+export const revalidate = false;
 
 type TocItem = {
   id: string;

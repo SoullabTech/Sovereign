@@ -25,11 +25,11 @@ import {
 
 class ConsciousnessServiceClass {
   private baseUrls: string[] = [
-    'http://127.0.0.1:3008',        // iOS Simulator compatible basic server
-    'http://127.0.0.1:3001',        // iOS Simulator compatible full API server
-    'http://localhost:3008',         // Basic consciousness computing server
-    'http://localhost:3001',         // Full API server with beta chat
-    'http://soullab.life',           // Primary universal HTTP access
+    'https://soullab.life',          // Production - primary for release builds
+    'http://127.0.0.1:3001',         // iOS Simulator dev
+    'http://127.0.0.1:3008',         // iOS Simulator dev (basic)
+    'http://localhost:3001',         // Local dev
+    'http://localhost:3008',         // Local dev (basic)
   ];
   private baseUrl: string = this.baseUrls[0]; // Start with universal access
   private apiKey: string | null = null;

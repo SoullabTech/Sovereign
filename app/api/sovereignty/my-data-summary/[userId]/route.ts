@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 📊 USER DATA SUMMARY API - Mobile PWA Version
  *
@@ -7,7 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-static';
+export const revalidate = false;
+
+
 
 // Required for static export - generate static params for known user IDs
 export async function generateStaticParams() {

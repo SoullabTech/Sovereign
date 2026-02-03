@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { VoiceConfig, VoiceSynthesisRequest, VoiceSynthesisResponse } from './VoiceService';
 

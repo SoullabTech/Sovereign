@@ -258,12 +258,9 @@ button {
 }
 */
 
-/* Force ALL buttons to have GOLDEN AMBER TEXT with strong overrides */
-button {
-  background: rgba(255, 255, 255, 0.1) !important; /* Subtle background */
-  color: #fbbf24 !important; /* GOLDEN AMBER TEXT - less orange */
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
+/* REMOVED: Global amber button override was breaking auth pages
+   Original rule forced all buttons to amber #fbbf24 with !important
+   Now buttons use their component-specific styling */
 
 /* Voice and Dialogue buttons - amber styling */
 /* Using attribute-based selectors instead of invalid :contains() */

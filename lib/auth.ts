@@ -1,20 +1,13 @@
-/**
- * NextAuth configuration
- * TODO: Move from apps/web/lib/auth.ts or configure properly
- */
-
+// backend: lib/auth.ts
 import { NextAuthOptions } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
-  providers: [
-    // TODO: Add providers
-  ],
+  providers: [],
+  session: { strategy: 'jwt' },
   callbacks: {
-    session: async ({ session, token }) => {
-      return session;
-    },
-    jwt: async ({ token, user }) => {
-      return token;
-    },
+    async jwt({ token }) { return token; },
+    async session({ session }) { return session; },
   },
 };
+
+export default authOptions;

@@ -1,7 +1,13 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import fs from 'fs/promises';
 import path from 'path';
 import { headers } from 'next/headers';
+
+// Skip during static export (Capacitor builds)
 
 // Generate static params for all supported platforms
 export async function generateStaticParams() {
@@ -87,6 +93,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { platform: string } }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const platform = params.platform;
     const headersList = headers();

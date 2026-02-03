@@ -1,4 +1,8 @@
 // @ts-nocheck - Prototype file, not type-checked
+<<<<<<< HEAD
+=======
+export const dynamic = 'force-dynamic';
+>>>>>>> ecstatic-brown
 /**
  * 🧠🔥 CONSCIOUSNESS ANALYSIS API - LISP ENGINE INTEGRATION
  *
@@ -8,8 +12,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { consciousnessEngine, analyzeConsciousnessWithEngine } from '@/lib/services/consciousness-engine-bridge';
 import type { SevenLayerSnapshot } from '@/lib/architecture/seven-layer-interface';
+
+// Skip during static export (Capacitor builds)
 
 interface AnalysisRequest {
   snapshot: SevenLayerSnapshot;
@@ -318,6 +326,10 @@ function calculateOverallConfidence(analysis: any) {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url);
   const healthCheck = searchParams.get('health');
 

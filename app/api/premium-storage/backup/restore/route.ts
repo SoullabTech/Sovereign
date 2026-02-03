@@ -1,5 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { CloudBackupService } from '@/lib/services/cloud-backup';
+
+// Skip during static export (Capacitor builds)
 
 export async function POST(request: NextRequest) {
   try {

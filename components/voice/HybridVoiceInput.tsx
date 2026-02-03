@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, MicOff, Sparkles, Play, Pause } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 interface HybridVoiceInputProps {
   onSendMessage: (message: string) => void;
@@ -101,11 +102,31 @@ export default function HybridVoiceInput({
     }
 
     const initAudioAnalyser = async () => {
+      // Skip web audio on native iOS/Android - getUserMedia not available in WKWebView
+      if (Capacitor.isNativePlatform()) {
+        // Use a simple pulsing animation instead of real audio levels
+        const pulseAnimation = () => {
+          if (!isListening) return;
+          // Simulate audio level with gentle pulse
+          setAudioLevel(0.3 + Math.sin(Date.now() / 200) * 0.2);
+          animationRef.current = requestAnimationFrame(pulseAnimation);
+        };
+        pulseAnimation();
+        return;
+      }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
 
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const audioContext = new AudioContextClass();
+
+        // iOS requires explicit resume after user interaction
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
         audioContextRef.current = audioContext;
 
         const source = audioContext.createMediaStreamSource(stream);
@@ -217,6 +238,11 @@ export default function HybridVoiceInput({
         clearTimeout(silenceTimer);
         setSilenceTimer(null);
       }
+    } else {
+      // Start voice mode
+      setMode('voice');
+      setSpeechStarted(true);
+      onStartVoice();
     }
   };
 

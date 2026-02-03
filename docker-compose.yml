@@ -41,12 +41,12 @@ services:
     # Environment Configuration
     # ═══════════════════════════════════════════════════════════════════════════
     # CRITICAL: All secrets (DATABASE_URL, POSTGRES_PASSWORD, API keys) come from
-    # .env.production, NOT from interpolation here. This avoids the footgun where
-    # ${VAR:-default} silently uses 'default' when .env.production exists but
+    # .env.docker, NOT from interpolation here. This avoids the footgun where
+    # ${VAR:-default} silently uses 'default' when .env.docker exists but
     # compose doesn't read it for interpolation.
     # ═══════════════════════════════════════════════════════════════════════════
     env_file:
-      - .env.production
+      - .env.docker
 
     environment:
       # Application runtime settings (non-secret)
@@ -54,8 +54,10 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
+      # Embedding mode: queue jobs for async processing by embed-worker
+      MAIA_EMBEDDINGS_MODE: queue
 
-      # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.production
+      # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.docker
       # DO NOT add them here - let env_file provide them
 
     restart: unless-stopped
@@ -75,18 +77,36 @@ services:
   # ═════════════════════════════════════════════════════════════════════════════
   # Fully container-internal, persistent volume, health-checked
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: maia-postgres
 
-    # Read POSTGRES_PASSWORD from .env.production
+    # Read POSTGRES_PASSWORD from .env.docker
     env_file:
-      - .env.production
+      - .env.docker
 
     environment:
       # Database name and user (non-secret)
       POSTGRES_DB: maia_consciousness
       POSTGRES_USER: soullab
       # DO NOT set POSTGRES_PASSWORD here - comes from env_file
+
+    # Performance tuning for pgvector workloads
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - work_mem=32MB
+      - -c
+      - max_parallel_workers_per_gather=2
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -113,9 +133,9 @@ services:
       dockerfile: Dockerfile
       target: builder  # Uses builder stage with Prisma CLI
 
-    # Read DATABASE_URL from .env.production
+    # Read DATABASE_URL from .env.docker
     env_file:
-      - .env.production
+      - .env.docker
 
     depends_on:
       postgres:
@@ -153,7 +173,7 @@ services:
   #   networks:
   #     - maia-network
   #
-  # Then change MAIA environment in .env.production to:
+  # Then change MAIA environment in .env.docker to:
   #   OLLAMA_BASE_URL=http://ollama:11434
 
 # ═══════════════════════════════════════════════════════════════════════════════

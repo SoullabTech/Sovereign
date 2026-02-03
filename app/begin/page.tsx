@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
@@ -7,7 +8,16 @@ import { Holoflower } from '@/components/ui/Holoflower';
 export default function BeginPage() {
   const router = useRouter();
 
+  // Log when /begin page loads for debugging redirect loops
+  useEffect(() => {
+    console.log('[BEGIN PAGE] ===== LOADED =====');
+    console.log('[BEGIN PAGE] location:', window.location.href);
+    console.log('[BEGIN PAGE] referrer:', document.referrer);
+    console.log('[BEGIN PAGE] sessionStorage bootKey:', sessionStorage.getItem('maia_root_redirect_done'));
+  }, []);
+
   const handleBeginJourney = () => {
+    console.log('[BEGIN PAGE] → Navigating to /test-elemental');
     router.push('/test-elemental');
   };
 
@@ -47,23 +57,11 @@ export default function BeginPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.6 }}
-        whileHover={{
-          scale: 1.05,
-          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.2)"
-        }}
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="relative px-12 py-4 rounded-xl text-white font-medium text-lg tracking-wide"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(110, 231, 183, 0.1), rgba(255, 255, 255, 0.1))',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 15px 35px rgba(14, 116, 144, 0.3), 0 5px 15px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
-        }}
+        className="inline-flex items-center justify-center rounded-xl px-10 py-4 bg-white/85 hover:bg-white text-teal-950 font-semibold text-lg shadow-[0_18px_38px_rgba(0,0,0,0.18)] backdrop-blur-md transition focus:outline-none focus:ring-2 focus:ring-teal-500/40"
       >
-        <span className="relative z-10">Begin Journey</span>
-
-        {/* Glass reflection effect */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50" />
+        Begin Journey
       </motion.button>
 
       {/* Subtle tagline */}

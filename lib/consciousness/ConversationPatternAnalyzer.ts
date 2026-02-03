@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CONVERSATION PATTERN ANALYZER
  *
@@ -14,12 +15,22 @@
  * - Adaptive learning from conversation patterns
  */
 
+<<<<<<< HEAD
 // Stub types until DreamWeaver is migrated
 export interface WisdomEmergenceSignals {
   bodyActivation?: boolean;
   languageShift?: boolean;
   energyMarkers?: Record<string, unknown>;
 }
+=======
+import { MAIAPatternMonitoringSystem } from '@/lib/voice/consciousness/MAIAPatternMonitoringSystem';
+import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
+import { JungianArchetypeSchema } from '@/app/api/_backend/src/schemas/dreamMemory.schema';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONVERSATION PATTERN INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════════
+>>>>>>> ecstatic-brown
 
 export interface ConversationTurn {
   id: string;

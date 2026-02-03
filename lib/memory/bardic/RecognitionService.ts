@@ -7,19 +7,20 @@
  * - Cue matching (place, scent, people)
  * - Graph expansion (connected episodes)
  * - Affect resonance
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via RecognitionRepo
+ * - Uses EmbeddingService for vector operations
  */
 
 import type {
   RecognitionInput,
   EpisodeCandidate,
   Episode,
-  EpisodeCue,
-  Cue
 } from './types';
+import { RecognitionRepo, type EpisodeRow, type LinkedEpisodeRow } from './storage/RecognitionRepo';
 
 export class RecognitionService {
-  private supabase = createClientComponentClient();
-
   /**
    * Recognize familiar scenes
    *
@@ -67,21 +68,16 @@ export class RecognitionService {
         return [];
       }
 
-      // Fetch episode details
+      // Fetch episode details via RecognitionRepo
       const episodeIds = similar.map(s => s.episodeId);
-      const { data, error } = await this.supabase
-        .from('episodes')
-        .select('*')
-        .eq('user_id', input.userId)
-        .in('id', episodeIds);
+      const episodes = await RecognitionRepo.getEpisodesByIds(input.userId, episodeIds);
 
-      if (error || !data) {
-        console.error('[RecognitionService] Error fetching episodes:', error);
+      if (episodes.length === 0) {
         return [];
       }
 
       // Map to candidates with similarity scores
-      return data.map(ep => {
+      return episodes.map(ep => {
         const match = similar.find(s => s.episodeId === ep.id);
         const similarity = match?.similarity || 0.7;
 
@@ -106,24 +102,20 @@ export class RecognitionService {
       return [];
     }
 
-    // Search episodes that have matching cues
-    const { data, error } = await this.supabase
-      .from('episodes')
-      .select('*')
-      .eq('user_id', input.userId)
-      .eq('sacred_flag', false)
-      .overlaps('sense_cues', input.softCues);
+    try {
+      // Search episodes that have matching cues via RecognitionRepo
+      const episodes = await RecognitionRepo.getEpisodesByCues(input.userId, input.softCues);
 
-    if (error || !data) {
+      return episodes.map(ep => ({
+        episodeId: ep.id,
+        score: 0.8, // Cue matches are strong signals
+        why: `Shares cues: ${input.softCues!.join(', ')}`,
+        episode: this.parseEpisode(ep)
+      }));
+    } catch (error) {
+      console.error('[RecognitionService] Cue search error:', error);
       return [];
     }
-
-    return data.map(ep => ({
-      episodeId: ep.id,
-      score: 0.8, // Cue matches are strong signals
-      why: `Shares cues: ${input.softCues.join(', ')}`,
-      episode: this.parseEpisode(ep)
-    }));
   }
 
   /**
@@ -132,26 +124,22 @@ export class RecognitionService {
   private async graphExpand(candidates: EpisodeCandidate[]): Promise<EpisodeCandidate[]> {
     if (candidates.length === 0) return [];
 
-    const episodeIds = candidates.map(c => c.episodeId);
+    try {
+      const episodeIds = candidates.map(c => c.episodeId);
 
-    // Find episodes linked to these candidates
-    const { data, error } = await this.supabase
-      .from('episode_links')
-      .select('dst_episode_id, relation, weight, episodes(*)')
-      .in('src_episode_id', episodeIds)
-      .order('weight', { ascending: false })
-      .limit(10);
+      // Find episodes linked to these candidates via RecognitionRepo
+      const linkedEpisodes = await RecognitionRepo.getLinkedEpisodes(episodeIds, 10);
 
-    if (error || !data) {
+      return linkedEpisodes.map(link => ({
+        episodeId: link.id,
+        score: link.link_weight,
+        why: `${this.relationToText(link.link_relation)} another familiar scene`,
+        episode: this.parseEpisode(link)
+      }));
+    } catch (error) {
+      console.error('[RecognitionService] Graph expand error:', error);
       return [];
     }
-
-    return data.map(link => ({
-      episodeId: link.dst_episode_id,
-      score: link.weight,
-      why: `${this.relationToText(link.relation)} another familiar scene`,
-      episode: this.parseEpisode(link.episodes)
-    }));
   }
 
   /**
@@ -209,27 +197,27 @@ export class RecognitionService {
   /**
    * Parse database row to Episode type
    */
-  private parseEpisode(row: any): Episode {
+  private parseEpisode(row: EpisodeRow | LinkedEpisodeRow): Episode {
     return {
       id: row.id,
       user_id: row.user_id,
       occurred_at: new Date(row.occurred_at),
-      place_cue: row.place_cue,
-      sense_cues: row.sense_cues,
-      people: row.people,
-      affect_valence: row.affect_valence,
-      affect_arousal: row.affect_arousal,
-      elemental_state: row.elemental_state || {
+      place_cue: row.place_cue ?? undefined,
+      sense_cues: row.sense_cues as string[] | undefined,
+      people: row.people as string[] | undefined,
+      affect_valence: row.affect_valence ?? undefined,
+      affect_arousal: row.affect_arousal ?? undefined,
+      elemental_state: (row.elemental_state as Episode['elemental_state']) || {
         fire: 0.5,
         air: 0.5,
         water: 0.5,
         earth: 0.5,
         aether: 0.5
       },
-      scene_stanza: row.scene_stanza,
-      sacred_flag: row.sacred_flag,
+      scene_stanza: row.scene_stanza ?? undefined,
+      sacred_flag: row.sacred_flag ?? false,
       created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      updated_at: row.updated_at ? new Date(row.updated_at) : new Date(row.created_at)
     };
   }
 

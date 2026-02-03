@@ -14,6 +14,31 @@ Anthropic just announced "Agent Skills" — a paradigm shift from building more 
 
 While Anthropic treats skills as "procedural knowledge for tasks," we treat them as **initiatory moves in consciousness.**
 
+---
+
+## The Presence Principle (Foundational Design Filter)
+
+> **AIN operates from what IS, not what ISN'T. It reflects capacities, not deficits. Emergence, not correction.**
+
+Every skill in MAIA passes through this filter:
+
+**"Does this skill help the user see and operationalize what's present and emerging? Or does it create another thing they're supposed to fix?"**
+
+This principle shapes every design decision:
+
+| Design Choice | Presence-Based Implementation |
+|---|---|
+| State-gating | "You're ready for this" not "You're lacking this" |
+| Earned skills | Emergence through progression, not correction of deficits |
+| Eligibility checks | What IS present (stability, integration, readiness) |
+| Feedback prompts | "Did this help you see?" not "What's still wrong?" |
+| Success metrics | "I feel empowered" > "I feel dependent" |
+| Mythic boundaries | "Your current phase is too important to skip" |
+
+**Philosophical lineage:** Aligned with Mark Manson's insight that the relentless focus on fixing what's wrong IS itself the problem. Also: Appreciative Inquiry, Stoic acceptance, Buddhist presence.
+
+See: `Community-Commons/THE_PRESENCE_PRINCIPLE.md` for full articulation.
+
 ### What Makes MAIA Skills Different
 
 | Anthropic's Skills | MAIA's Skills |

@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import AudioUnlockDashboard from '@/components/dashboard/AudioUnlockDashboard';
 
 // Skip static generation for this page
-export const dynamic = 'force-dynamic';
 
 export default function AudioAnalyticsDashboard() {
   return (

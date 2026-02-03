@@ -1,5 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesis';
+
+// Skip during static export (Capacitor builds)
 interface LiveEngagementMetrics {
   // Current session tracking
   currentUser: {
@@ -37,6 +42,10 @@ interface LiveEngagementMetrics {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'guest';

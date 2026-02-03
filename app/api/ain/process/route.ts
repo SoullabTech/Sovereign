@@ -1,10 +1,15 @@
+export const dynamic = 'force-dynamic';
 /**
  * AIN CONSCIOUSNESS PATTERN PROCESSING ENDPOINT
  * Processes consciousness patterns through the nested observer system
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { GlobalAINActivator } from '@/lib/ain/AINEvolutionActivator';
+
+// Skip during static export (Capacitor builds)
 
 interface ConsciousnessPatternRequest {
   userId: string;

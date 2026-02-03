@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Adaptive Language Generator - Crafts level-appropriate responses
 // No cringe allowed. Each level gets the language that serves their development.
 

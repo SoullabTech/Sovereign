@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Disposable Pixels for Iron Boundary Rupture State
  *

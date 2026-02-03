@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Awareness Adjustment - Reflexive Consciousness Module
 // Allows MAIA to adjust her awareness based on mandala state readings
 

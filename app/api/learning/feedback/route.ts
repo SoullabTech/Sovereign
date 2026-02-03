@@ -1,8 +1,13 @@
+export const dynamic = 'force-dynamic';
 // app/api/learning/feedback/route.ts
 // API endpoint for user feedback integration with MAIA's learning system
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import LearningSystemOrchestrator from '@/lib/learning/learningSystemOrchestrator';
+
+// Skip during static export (Capacitor builds)
 
 export async function POST(request: NextRequest) {
   try {

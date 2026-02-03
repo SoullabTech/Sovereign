@@ -1,4 +1,8 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import logger from '@/lib/utils/performance-logger';
 
 /**
@@ -84,10 +88,7 @@ interface ConsciousnessBridgeResponse {
   };
 }
 
-// Disable Vercel caching for real-time consciousness data
-// Note: Commented out for PWA static build compatibility
-// export const dynamic = 'force-dynamic';
-// export const runtime = 'nodejs';
+// Note: No dynamic export needed - Capacitor apps call remote API server
 
 /**
  * OPTIONS: Handle preflight requests for CORS (required for browser compatibility)

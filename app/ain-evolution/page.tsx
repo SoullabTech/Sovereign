@@ -386,12 +386,11 @@ export default function AINEvolutionDashboard() {
         <div className="mt-12 flex justify-center">
           <div className="w-64 h-64">
             <Holoflower
-              elements={evolutionStatus ? {
+              elementalBalance={evolutionStatus ? {
                 fire: evolutionStatus.evolutionMetrics.emergenceRate,
                 water: evolutionStatus.evolutionMetrics.fieldCoherence,
                 earth: evolutionStatus.evolutionMetrics.stabilityScore,
-                air: evolutionStatus.evolutionMetrics.systemAwareness,
-                aether: evolutionStatus.evolutionMetrics.recursionDepth / 10
+                air: evolutionStatus.evolutionMetrics.systemAwareness
               } : undefined}
             />
           </div>

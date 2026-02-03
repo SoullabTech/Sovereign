@@ -85,6 +85,7 @@ export interface ExtractionResult {
   cftState?: import('./CFTEngine').CFTState;
   schemaTherapyState?: import('./SchemaTherapyEngine').SchemaTherapyState;
   narmState?: import('./NARMEngine').NARMState;
+  tcmState?: import('../consciousness/tcm/TCMStateExtractor').TCMExtractionResult;
 }
 
 export class SymbolExtractionEngine {

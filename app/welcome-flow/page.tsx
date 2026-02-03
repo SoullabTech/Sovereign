@@ -15,7 +15,7 @@ export default function WelcomeFlowPage() {
   return (
     <div className="w-full h-screen">
       <CompleteWelcomeFlow
-        userName="Kelly"
+        userName="Explorer"
         onComplete={handleComplete}
       />
     </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Search, BookOpen, Menu, X, MessageSquare, Send } from 'lucide-react';
+import { handleNameChangeResponse } from '@/lib/services/greetingService';
 
 type TocItem = {
   id: string;
@@ -147,7 +148,7 @@ export default function AINCompanionPage() {
           ? `Current section: "${currentSection.title}"\n\n${currentSection.content.slice(0, 1000)}...`
           : 'Asking across the full AIN corpus';
 
-      const res = await fetch('/api/sovereign/app/maia', {
+      const res = await fetch('/api/sovereign/app/maia/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,6 +163,10 @@ export default function AINCompanionPage() {
       });
 
       const data = await res.json();
+
+      // Handle name change if user said "call me X"
+      handleNameChangeResponse(data.metadata);
+
       setCompanionResponse(data.message || 'No response received');
 
       // Save to localStorage

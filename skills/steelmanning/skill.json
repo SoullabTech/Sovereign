@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "id": "steelmanning",
+    "name": "Steelmanning",
+    "version": "0.1.0",
+    "description": "Present the strongest possible version of an opposing view before dismissing it.",
+    "tier": "CORE",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["critical-thinking", "perspectives", "fairness", "discernment", "disagreement"],
+    "triggers": ["they're wrong", "I disagree", "that's stupid", "how could anyone", "obviously"],
+    "elements": ["air", "water"],
+    "realms": ["MIDDLEWORLD"],
+    "mission": ["organize"]
+  },
+  "eligibility": {
+    "minCognitiveLevel": 4,
+    "maxBypassingScore": 0.5,
+    "allowedNervousSystemStates": ["window"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal", "sympathetic"],
+    "whenNotToUse": ["User too activated to consider other views", "Safety-critical situation requiring clear stance"],
+    "hardRefusalMessageKey": "REGULATION_BEFORE_PERSPECTIVE"
+  },
+  "procedure": [
+    {
+      "id": "name_opposition",
+      "title": "Name the Opposing View",
+      "instruction": "Ask: 'What's the view you disagree with? Help me understand what they believe.'"
+    },
+    {
+      "id": "steelman_it",
+      "title": "Build the Steelman",
+      "instruction": "Ask: 'What's the STRONGEST version of that view? Why might a thoughtful, intelligent person hold it?'"
+    },
+    {
+      "id": "find_truth",
+      "title": "Find the Partial Truth",
+      "instruction": "Ask: 'What's the grain of truth in that view? What are they seeing that you might be missing?'"
+    },
+    {
+      "id": "hold_both",
+      "title": "Hold Both",
+      "instruction": "Invite: 'Now that you've seen their best case — does your position change? What do you still disagree with, and what do you understand better?'"
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Presents strongest version of opposing view",
+    "Finds grain of truth in opposition",
+    "User reports increased understanding (even if disagreement remains)"
+  ],
+  "nextSkillHints": ["dialectical-scaffold", "assumption-examination"]
+}

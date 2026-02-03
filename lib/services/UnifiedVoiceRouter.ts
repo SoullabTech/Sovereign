@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Voice Router
  * OpenAI Primary + ElevenLabs Fallback

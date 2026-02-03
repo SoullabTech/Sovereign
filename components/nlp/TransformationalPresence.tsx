@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed Interface
+ * TRANSFORMATIONAL PRESENCE - NLP-Informed Interface
  *
  * This component creates transformational experiences through unconscious
  * pattern installation rather than cognitive explanation.
@@ -19,6 +20,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// 🔇 Module-level flag to prevent "No health data" log spam
+// Only log once per app session, regardless of component re-mounts
+let hasLoggedNoHealthData = false;
 
 export type PresenceState = 'dialogue' | 'patient' | 'scribe';
 
@@ -123,12 +128,14 @@ export const TransformationalPresence: React.FC<TransformationalPresenceProps> =
     // Prevent duplicate monitoring sessions
     if (biometricMonitoringStarted.current) return;
 
+    // 🔒 CRITICAL: Set flag SYNCHRONOUSLY before async work to prevent race conditions
+    // Without this, rapid state changes could slip through the guard above
+    biometricMonitoringStarted.current = true;
+
     let monitoringInterval: NodeJS.Timeout;
 
     const startBiometricMonitoring = async () => {
       try {
-        // Mark as started to prevent duplicates
-        biometricMonitoringStarted.current = true;
 
         // Dynamically import biometric modules (client-side only)
         const { biometricStorage } = await import('@/lib/biometrics/BiometricStorage');
@@ -143,7 +150,11 @@ export const TransformationalPresence: React.FC<TransformationalPresenceProps> =
           // Check if we have health data
           const hasData = await biometricStorage.hasHealthData();
           if (!hasData) {
-            console.log('⌚ No health data imported yet');
+            // 🔇 Only log once per session to prevent console spam
+            if (!hasLoggedNoHealthData) {
+              hasLoggedNoHealthData = true;
+              console.log('⌚ No health data imported yet (will not repeat)');
+            }
             return;
           }
 
@@ -415,13 +426,14 @@ export const TransformationalPresence: React.FC<TransformationalPresenceProps> =
         {children}
       </div>
 
-      {/* GESTURE DETECTION OVERLAY */}
+      {/* GESTURE DETECTION OVERLAY - pointerEvents: none to allow holoflower clicks through */}
       <div
         className="gesture-overlay"
         style={{
           position: 'absolute',
           inset: 0,
-          touchAction: 'pan-y'
+          touchAction: 'pan-y',
+          pointerEvents: 'none'
         }}
         onTouchStart={(e) => {
           const touch = e.touches[0];

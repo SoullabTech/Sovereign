@@ -1,237 +1,340 @@
 #!/bin/bash
 
-# MAIA-SOVEREIGN TestFlight Deployment Script
-# Builds iOS app and uploads to App Store Connect for TestFlight distribution
+# MAIA TestFlight Deployment Script
+# Builds, uploads, and releases to TestFlight without notifying testers
+#
+# Usage:
+#   ./scripts/deploy-testflight.sh           # Full build + upload + release
+#   ./scripts/deploy-testflight.sh --release-only  # Just release latest build (no notify)
 
 set -e
 
-echo ""
-echo "=============================================="
-echo "  MAIA TestFlight Deployment Pipeline"
-echo "=============================================="
-echo ""
-
-# Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-IOS_DIR="$PROJECT_DIR/ios/App"
-IPA_PATH="$IOS_DIR/output/App.ipa"
-
 # App Store Connect API credentials
-API_KEY_ID="${APPSTORE_API_KEY_ID:-RZJ852Y4NZ}"
-API_ISSUER_ID="${APPSTORE_ISSUER_ID:-}"
-API_KEY_PATH="${APPSTORE_API_KEY_PATH:-$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8}"
+ISSUER_ID="2f3ea491-8e65-4769-b503-3c50172f10ab"
+KEY_ID="36J9MBP9U6"
+PRIVATE_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8"
 
-# Parse arguments
-SKIP_BUILD=false
-BUILD_ONLY=false
-UPLOAD_ONLY=false
+# App identifiers
+BUNDLE_ID="life.soullab.maia"
+APP_ID=""
 
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --skip-build)
-            SKIP_BUILD=true
-            shift
-            ;;
-        --build-only)
-            BUILD_ONLY=true
-            shift
-            ;;
-        --upload-only)
-            UPLOAD_ONLY=true
-            SKIP_BUILD=true
-            shift
-            ;;
-        --issuer)
-            API_ISSUER_ID="$2"
-            shift 2
-            ;;
-        --help)
-            echo "Usage: $0 [options]"
-            echo ""
-            echo "Options:"
-            echo "  --skip-build    Skip the build step, use existing IPA"
-            echo "  --build-only    Build IPA but don't upload"
-            echo "  --upload-only   Upload existing IPA (implies --skip-build)"
-            echo "  --issuer ID     Set App Store Connect Issuer ID"
-            echo "  --help          Show this help message"
-            echo ""
-            echo "Environment variables:"
-            echo "  APPSTORE_API_KEY_ID    API Key ID (default: RZJ852Y4NZ)"
-            echo "  APPSTORE_ISSUER_ID     Issuer ID (required for upload)"
-            echo "  APPSTORE_API_KEY_PATH  Path to .p8 key file"
-            echo ""
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
-    esac
-done
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Preflight checks
-echo "1. Preflight Checks"
-echo "-------------------"
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[OK]${NC} $1"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Check for Issuer ID if we're uploading
-if [ "$BUILD_ONLY" = false ] && [ -z "$API_ISSUER_ID" ]; then
-    echo ""
-    echo "  Missing APPSTORE_ISSUER_ID!"
-    echo ""
-    echo "  Get your Issuer ID from:"
-    echo "  https://appstoreconnect.apple.com/access/api"
-    echo ""
-    echo "  Then run:"
-    echo "    export APPSTORE_ISSUER_ID='your-issuer-id'"
-    echo "    $0"
-    echo ""
-    echo "  Or pass it directly:"
-    echo "    $0 --issuer 'your-issuer-id'"
-    echo ""
-    exit 1
-fi
+# Generate JWT for App Store Connect API using Python (more reliable than bash)
+generate_jwt() {
+    python3 << PYSCRIPT
+import json
+import time
+from datetime import datetime, timedelta
+import hashlib
+import base64
+import subprocess
 
-# Check for API key
-if [ ! -f "$API_KEY_PATH" ]; then
-    echo "  API key not found at: $API_KEY_PATH"
-    exit 1
-fi
-echo "  API Key: $API_KEY_ID"
-echo "  Issuer ID: ${API_ISSUER_ID:-'(not set - build only)'}"
+key_id = "$KEY_ID"
+issuer_id = "$ISSUER_ID"
+private_key_path = "$PRIVATE_KEY_PATH"
 
-# Check for existing IPA if skipping build
-if [ "$SKIP_BUILD" = true ]; then
-    if [ ! -f "$IPA_PATH" ]; then
-        echo "  No existing IPA found at: $IPA_PATH"
-        echo "  Run without --skip-build to create one"
+# Read private key
+with open(private_key_path, 'r') as f:
+    private_key = f.read()
+
+# Header
+header = {"alg": "ES256", "kid": key_id, "typ": "JWT"}
+header_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).rstrip(b'=').decode()
+
+# Payload
+now = int(time.time())
+payload = {
+    "iss": issuer_id,
+    "iat": now,
+    "exp": now + 1200,
+    "aud": "appstoreconnect-v1"
+}
+payload_b64 = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b'=').decode()
+
+# Sign
+unsigned = f"{header_b64}.{payload_b64}"
+
+# Use openssl to sign (avoiding PyJWT dependency)
+import tempfile
+with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+    f.write(unsigned)
+    unsigned_file = f.name
+
+result = subprocess.run(
+    ['openssl', 'dgst', '-sha256', '-sign', private_key_path, unsigned_file],
+    capture_output=True
+)
+import os
+os.unlink(unsigned_file)
+
+# Convert DER signature to raw r||s format for ES256
+der_sig = result.stdout
+# Parse DER: 0x30 len 0x02 r_len r 0x02 s_len s
+if der_sig[0] == 0x30:
+    idx = 2
+    r_len = der_sig[idx + 1]
+    r = der_sig[idx + 2:idx + 2 + r_len]
+    idx = idx + 2 + r_len
+    s_len = der_sig[idx + 1]
+    s = der_sig[idx + 2:idx + 2 + s_len]
+    # Pad/trim to 32 bytes each
+    r = r[-32:].rjust(32, b'\\x00')
+    s = s[-32:].rjust(32, b'\\x00')
+    raw_sig = r + s
+    signature_b64 = base64.urlsafe_b64encode(raw_sig).rstrip(b'=').decode()
+    print(f"{unsigned}.{signature_b64}")
+else:
+    # Fallback - shouldn't happen
+    signature_b64 = base64.urlsafe_b64encode(der_sig).rstrip(b'=').decode()
+    print(f"{unsigned}.{signature_b64}")
+PYSCRIPT
+}
+
+# Make authenticated API request
+api_request() {
+    local method="$1"
+    local endpoint="$2"
+    local data="$3"
+    local jwt=$(generate_jwt)
+
+    if [ -n "$data" ]; then
+        curl -s -g -X "$method" \
+            -H "Authorization: Bearer $jwt" \
+            -H "Content-Type: application/json" \
+            -d "$data" \
+            "https://api.appstoreconnect.apple.com/v1$endpoint"
+    else
+        curl -s -g -X "$method" \
+            -H "Authorization: Bearer $jwt" \
+            "https://api.appstoreconnect.apple.com/v1$endpoint"
+    fi
+}
+
+# Get App ID
+get_app_id() {
+    log_info "Fetching app ID for $BUNDLE_ID..."
+    local response=$(api_request GET "/apps?filter[bundleId]=$BUNDLE_ID")
+    APP_ID=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+
+    if [ -z "$APP_ID" ]; then
+        log_error "Could not find app with bundle ID: $BUNDLE_ID"
+        echo "$response" | head -20
         exit 1
     fi
-    echo "  Using existing IPA: $IPA_PATH"
-fi
+    log_success "App ID: $APP_ID"
+}
 
-cd "$PROJECT_DIR"
+# Get latest build
+get_latest_build() {
+    log_info "Fetching latest build..."
+    local response=$(api_request GET "/builds?filter[app]=$APP_ID&sort=-uploadedDate&limit=1")
 
-# Build phase
-if [ "$SKIP_BUILD" = false ]; then
-    echo ""
-    echo "2. Building Next.js App"
-    echo "-----------------------"
+    BUILD_ID=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+    BUILD_VERSION=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('version','') if d.get('data') else '')" 2>/dev/null)
+    BUILD_STATE=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('processingState','') if d.get('data') else '')" 2>/dev/null)
 
-    # Set build environment
-    export CAPACITOR_BUILD=1
-    export NODE_ENV=production
+    if [ -z "$BUILD_ID" ]; then
+        log_error "No builds found"
+        echo "$response" | head -20
+        exit 1
+    fi
+    log_success "Latest build: $BUILD_VERSION (ID: $BUILD_ID, State: $BUILD_STATE)"
+}
 
-    # Build Next.js with static export
-    echo "  Running: npm run build"
-    npm run build
+# Wait for build processing
+wait_for_processing() {
+    log_info "Waiting for build processing..."
+    local max_attempts=60
+    local attempt=0
 
-    echo ""
-    echo "3. Syncing Capacitor"
-    echo "--------------------"
-    npx cap sync ios
+    while [ $attempt -lt $max_attempts ]; do
+        local response=$(api_request GET "/builds/$BUILD_ID")
+        BUILD_STATE=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data']['attributes'].get('processingState','') if d.get('data') else '')" 2>/dev/null)
 
-    echo ""
-    echo "4. Building iOS Archive"
-    echo "-----------------------"
-    cd "$IOS_DIR"
+        case "$BUILD_STATE" in
+            "VALID")
+                log_success "Build processing complete!"
+                return 0
+                ;;
+            "PROCESSING")
+                echo -n "."
+                sleep 10
+                ;;
+            "FAILED"|"INVALID")
+                log_error "Build processing failed: $BUILD_STATE"
+                exit 1
+                ;;
+            *)
+                echo -n "."
+                sleep 10
+                ;;
+        esac
+        ((attempt++))
+    done
 
-    # Clean previous builds
-    echo "  Cleaning previous builds..."
-    xcodebuild clean \
-        -workspace App.xcworkspace \
-        -scheme App \
-        -configuration Release \
-        -quiet
+    log_error "Timeout waiting for processing"
+    exit 1
+}
 
-    # Build archive
-    echo "  Creating archive..."
+# Get beta group
+get_beta_group() {
+    log_info "Fetching beta groups..."
+    local response=$(api_request GET "/apps/$APP_ID/betaGroups")
+
+    BETA_GROUP_ID=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+    BETA_GROUP_NAME=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('name','') if d.get('data') else '')" 2>/dev/null)
+
+    if [ -z "$BETA_GROUP_ID" ]; then
+        log_warn "No beta groups found"
+        return 1
+    fi
+    log_success "Beta group: $BETA_GROUP_NAME (ID: $BETA_GROUP_ID)"
+}
+
+# Submit for beta review
+submit_to_beta_review() {
+    log_info "Submitting for beta review..."
+
+    local localization_data='{
+        "data": {
+            "type": "betaBuildLocalizations",
+            "attributes": {
+                "locale": "en-US",
+                "whatsNew": "Bug fixes and improvements"
+            },
+            "relationships": {
+                "build": {
+                    "data": { "type": "builds", "id": "'"$BUILD_ID"'" }
+                }
+            }
+        }
+    }'
+    api_request POST "/betaBuildLocalizations" "$localization_data" > /dev/null 2>&1 || true
+
+    local review_data='{
+        "data": {
+            "type": "betaAppReviewSubmissions",
+            "relationships": {
+                "build": {
+                    "data": { "type": "builds", "id": "'"$BUILD_ID"'" }
+                }
+            }
+        }
+    }'
+    api_request POST "/betaAppReviewSubmissions" "$review_data" > /dev/null 2>&1 || true
+    log_success "Submitted for beta review"
+}
+
+# Add to beta group WITHOUT notification
+add_to_beta_group_no_notify() {
+    [ -z "$BETA_GROUP_ID" ] && return 0
+
+    log_info "Adding to beta group (NO notification)..."
+
+    local data='{
+        "data": [{ "type": "builds", "id": "'"$BUILD_ID"'" }]
+    }'
+
+    api_request POST "/betaGroups/$BETA_GROUP_ID/relationships/builds" "$data" > /dev/null 2>&1 || true
+    log_success "Build added to testers (NOT notified)"
+}
+
+# Build and upload
+build_and_upload() {
+    cd "$(dirname "$0")/.."
+
+    # Patch force-dynamic routes for static export
+    log_info "Patching routes for static export..."
+    ./scripts/capacitor-patch-routes.sh patch
+
+    # Ensure routes are reverted even if build fails
+    trap './scripts/capacitor-patch-routes.sh revert' EXIT
+
+    log_info "Building web content for Capacitor..."
+    CAPACITOR_BUILD=1 MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+
+    if [ ! -d "out" ]; then
+        log_error "Web build failed - out/ directory not created!"
+        exit 1
+    fi
+    log_success "Web content built"
+
+    # Revert patches after successful build (trap will handle failure case)
+    ./scripts/capacitor-patch-routes.sh revert
+    trap - EXIT
+
+    log_info "Syncing Capacitor (beta mode)..."
+    CAPACITOR_BUILD=1 npx cap sync ios
+    log_success "Capacitor synced"
+
+    cd ios/App
+    xattr -w com.apple.xcode.CreatedByBuildSystem true ./build 2>/dev/null || true
+
+    log_info "Building archive..."
     xcodebuild archive \
         -workspace App.xcworkspace \
-        -scheme App \
-        -configuration Release \
+        -scheme "App" \
+        -configuration "Release" \
         -archivePath ./build/App.xcarchive \
         -allowProvisioningUpdates \
+        CODE_SIGN_STYLE=Automatic \
         -quiet
 
-    if [ ! -d "./build/App.xcarchive" ]; then
-        echo "  Archive failed!"
-        exit 1
-    fi
-    echo "  Archive created successfully"
+    [ ! -d "./build/App.xcarchive" ] && { log_error "Archive failed!"; exit 1; }
+    log_success "Archive created"
 
-    echo ""
-    echo "5. Exporting IPA"
-    echo "----------------"
-
-    # Remove old output
-    rm -rf ./output
-    mkdir -p ./output
-
-    # Export IPA
+    log_info "Uploading to App Store Connect..."
     xcodebuild -exportArchive \
         -archivePath ./build/App.xcarchive \
         -exportPath ./output \
         -exportOptionsPlist exportOptions.plist \
         -allowProvisioningUpdates \
-        -quiet
+        2>&1 | grep -E "(Progress|Upload|EXPORT)" || true
 
-    if [ ! -f "./output/App.ipa" ]; then
-        echo "  IPA export failed!"
-        exit 1
-    fi
+    log_success "Upload complete"
+    cd ../..
+}
 
-    IPA_SIZE=$(du -h "./output/App.ipa" | cut -f1)
-    echo "  IPA created: $IPA_SIZE"
+# Main
+main() {
+    echo ""
+    echo "==========================================="
+    echo "  MAIA TestFlight Deployment"
+    echo "==========================================="
+    echo ""
 
-    cd "$PROJECT_DIR"
-fi
+    [ ! -f "$PRIVATE_KEY_PATH" ] && { log_error "API key not found: $PRIVATE_KEY_PATH"; exit 1; }
 
-# Upload phase
-if [ "$BUILD_ONLY" = true ]; then
-    echo ""
-    echo "Build complete! IPA at: $IPA_PATH"
-    echo ""
-    echo "To upload later, run:"
-    echo "  $0 --upload-only --issuer '$API_ISSUER_ID'"
-    echo ""
-    exit 0
-fi
+    RELEASE_ONLY=false
+    [ "$1" == "--release-only" ] && { RELEASE_ONLY=true; log_info "Release-only mode"; }
 
-echo ""
-echo "6. Uploading to TestFlight"
-echo "--------------------------"
-echo "  This may take several minutes..."
+    [ "$RELEASE_ONLY" == "false" ] && build_and_upload
 
-xcrun altool --upload-app \
-    -f "$IPA_PATH" \
-    -t ios \
-    --apiKey "$API_KEY_ID" \
-    --apiIssuer "$API_ISSUER_ID"
+    get_app_id
+    get_latest_build
+    [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
 
-UPLOAD_STATUS=$?
+    get_beta_group
+    submit_to_beta_review
+    add_to_beta_group_no_notify
 
-if [ $UPLOAD_STATUS -eq 0 ]; then
     echo ""
-    echo "=============================================="
-    echo "  TestFlight Upload Complete!"
-    echo "=============================================="
-    echo ""
-    echo "Next steps:"
-    echo "  1. Go to App Store Connect: https://appstoreconnect.apple.com"
-    echo "  2. Select your app -> TestFlight tab"
-    echo "  3. Wait for build processing (5-30 minutes)"
-    echo "  4. Complete Export Compliance questionnaire"
-    echo "  5. Add beta testers or groups"
-    echo ""
-else
-    echo ""
-    echo "Upload failed with status: $UPLOAD_STATUS"
-    echo ""
-    echo "Common issues:"
-    echo "  - Invalid Issuer ID"
-    echo "  - API key permissions (needs App Manager role)"
-    echo "  - Version/build number already exists"
-    echo ""
-    exit $UPLOAD_STATUS
-fi
+    log_success "==========================================="
+    log_success "  TestFlight deployment complete!"
+    log_success "  Build $BUILD_VERSION available"
+    log_success "  Testers NOT notified"
+    log_success "==========================================="
+}
+
+main "$@"

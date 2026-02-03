@@ -18,7 +18,11 @@ export type MaiaSession = {
 };
 
 export async function ensureSession(sessionId?: string): Promise<MaiaSession> {
-  const id = sessionId ?? randomUUID();
+  // Normalize: treat empty string as missing (generates new UUID)
+  if (sessionId !== undefined && !sessionId.trim()) {
+    console.warn('[Session] Normalized empty sessionId → new UUID', { source: 'ensureSession' });
+  }
+  const id = (sessionId && sessionId.trim()) || randomUUID();
 
   // Single upsert instead of SELECT + UPDATE/INSERT
   const result = await query<MaiaSession>(
@@ -35,13 +39,15 @@ export async function ensureSession(sessionId?: string): Promise<MaiaSession> {
   return result.rows[0];
 }
 
-export async function incrementTurnCount(sessionId: string): Promise<void> {
-  await query(
+export async function incrementTurnCount(sessionId: string): Promise<number> {
+  const result = await query<{ turn_count: number }>(
     `UPDATE maia_sessions
      SET turn_count = turn_count + 1, updated_at = NOW()
-     WHERE id = $1`,
+     WHERE id = $1
+     RETURNING turn_count`,
     [sessionId]
   );
+  return result.rows[0]?.turn_count ?? 1;
 }
 
 export async function addConversationExchange(
@@ -77,15 +83,49 @@ export async function getSessionWithHistory(sessionId: string): Promise<MaiaSess
   return result.rows[0] || null;
 }
 
+/**
+ * Get conversation history from conversation_turns table.
+ *
+ * IMPORTANT: This reads from conversation_turns (where TurnsStore writes),
+ * NOT from maia_sessions.conversation_history (which is not populated).
+ *
+ * Transforms individual turns back into paired ConversationExchange format.
+ */
 export async function getConversationHistory(sessionId: string, limit = 10): Promise<ConversationExchange[]> {
-  const session = await getSessionWithHistory(sessionId);
+  // Query conversation_turns for this session's messages
+  const result = await query<{ role: 'user' | 'assistant'; content: string; created_at: string }>(
+    `SELECT role, content, created_at
+     FROM conversation_turns
+     WHERE session_id = $1
+     ORDER BY created_at ASC`,
+    [sessionId]
+  );
 
-  if (!session?.conversation_history || !Array.isArray(session.conversation_history)) {
+  const turns = result.rows ?? [];
+
+  if (turns.length === 0) {
     return [];
   }
 
+  // Transform individual turns into paired ConversationExchange format
+  const exchanges: ConversationExchange[] = [];
+
+  for (let i = 0; i < turns.length - 1; i += 2) {
+    const userTurn = turns[i];
+    const assistantTurn = turns[i + 1];
+
+    // Only create exchange if we have a valid user→assistant pair
+    if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+      exchanges.push({
+        timestamp: userTurn.created_at,
+        userMessage: userTurn.content,
+        maiaResponse: assistantTurn.content
+      });
+    }
+  }
+
   // Return the most recent exchanges, up to the limit
-  return session.conversation_history.slice(-limit);
+  return exchanges.slice(-limit);
 }
 
 // Initialize the session table (create if not exists)

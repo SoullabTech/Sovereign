@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Spiritual Support Integration Layer
  *

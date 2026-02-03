@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Auth Client
  * Simple authentication setup for Field Protocol

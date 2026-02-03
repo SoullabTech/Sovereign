@@ -14,7 +14,7 @@ interface VoiceEngineStatus {
   lastCheck: Date
 }
 
-export function VoiceEngineStatus() {
+export function VoiceEngineStatus({ className }: { className?: string }) {
   const [status, setStatus] = useState<VoiceEngineStatus>({
     engine: 'unknown',
     mode: 'disabled',

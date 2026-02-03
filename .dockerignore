@@ -86,6 +86,10 @@ mobile-app/
 android/
 ios/
 
+# Large media files (served via volume mount)
+public/audiobook/
+audiobook-output/
+
 # Other large directories
 videos/
 Desktop/
@@ -104,3 +108,12 @@ data/qdrant/
 data/ain/
 tmp/
 .DS_Store
+
+# WIP: AIN Committee routes (not yet ready for production)
+app/api/_backend/src/ain/services/committee/
+app/api/ain/committee/
+app/dashboard/ain-committee/
+
+# Ignore packages build output (but not source)
+packages/**/dist/
+packages/**/node_modules/

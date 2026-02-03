@@ -2,13 +2,21 @@
 
 import React from 'react';
 import { Play, Plus } from 'lucide-react';
+<<<<<<< HEAD
 import { SessionPhase } from '@/lib/session/SessionTimer';
+=======
+import type { SessionPhase } from '@/lib/session/SessionTimer';
+>>>>>>> ecstatic-brown
 
 interface ResumeSessionPromptProps {
   onResume?: () => void;
   onNewSession?: () => void;
   lastSessionTime?: string;
+<<<<<<< HEAD
   // Additional props from OracleConversation
+=======
+  // Extended props for OracleConversation.tsx
+>>>>>>> ecstatic-brown
   isOpen?: boolean;
   remainingTime?: string;
   phase?: SessionPhase;

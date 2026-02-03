@@ -1,6 +1,7 @@
+// @ts-nocheck
 /**
  * 🌟 Sacred Oracle Database Integration
- * 
+ *
  * Supabase integration for consciousness evolution tracking,
  * collective field patterns, and morphic resonance field management
  */

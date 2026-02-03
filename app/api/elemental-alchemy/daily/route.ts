@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * DAILY ALCHEMY API ROUTE
  *
@@ -8,6 +9,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   getTodaysAlchemy,
   getDailyAlchemy,
@@ -17,10 +20,16 @@ import {
 import { query } from '@/lib/db/postgres';
 import { Element } from '@/lib/consciousness/spiralogic-core';
 
+// Skip during static export (Capacitor builds)
+
 /**
  * GET - Fetch daily teachings
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

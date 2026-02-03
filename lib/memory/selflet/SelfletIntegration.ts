@@ -116,6 +116,7 @@ export interface SelfletLoadResult {
   surfacedMessagePrompt?: string;
   // Phase 2E fallback: If model doesn't naturally include acknowledgment, prepend this
   requiredAcknowledgment?: string;
+<<<<<<< HEAD
 }
 
 /**
@@ -128,6 +129,8 @@ export interface SelfletLoadOptions {
   turnNumber?: number;
   emotionalIntensity?: number;
   contextMode?: string;
+=======
+>>>>>>> ecstatic-brown
 }
 
 /**
@@ -136,14 +139,18 @@ export interface SelfletLoadOptions {
  *
  * Uses granular try/catch so failures in one area don't block others.
  * surfacedMessageId is ALWAYS returned (null if no message).
+<<<<<<< HEAD
  *
  * Phase 2I: Now includes surfacing gating (cooldowns, limits, intensity checks)
+=======
+>>>>>>> ecstatic-brown
  */
 export async function loadSelfletContext(
   userId: string,
   currentThemesOrOptions?: string[] | SelfletLoadOptions,
   userMessage?: string
 ): Promise<SelfletLoadResult> {
+<<<<<<< HEAD
   // Normalize arguments (backward compatible)
   const opts: SelfletLoadOptions = Array.isArray(currentThemesOrOptions)
     ? { currentThemes: currentThemesOrOptions, userMessage }
@@ -160,6 +167,18 @@ export async function loadSelfletContext(
   let surfacedMessagePrompt: string | undefined;
   let requiredAcknowledgment: string | undefined;
 
+=======
+  // Initialize with safe defaults
+  let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
+  let promptInjection = '';
+  let pendingReflection: ReflectionPrompt | null = null;
+  let shouldSurfaceReflection = false;
+  let surfacedMessageId: string | undefined;
+  let surfacedDeliveryContext: Record<string, unknown> | undefined;
+  let surfacedMessagePrompt: string | undefined;
+  let requiredAcknowledgment: string | undefined;
+
+>>>>>>> ecstatic-brown
   // 1) Build base context (should not prevent pending-message surfacing)
   try {
     context = await selfletChain.buildContext(userId);
@@ -189,6 +208,7 @@ export async function loadSelfletContext(
     } catch (err) {
       console.error('[SELFLET] shouldSurfaceReflection failed:', err);
     }
+<<<<<<< HEAD
   }
 
   // 3) Fetch pending message for context (CRITICAL for delivery marking)
@@ -289,6 +309,35 @@ export async function loadSelfletContext(
     console.error('[SELFLET] getPendingMessageForContext failed:', err);
   }
 
+=======
+  }
+
+  // 3) Fetch pending message for context (CRITICAL for delivery marking)
+  try {
+    const pendingMsg = await selfletChain.getPendingMessageForContext({
+      userId,
+      currentThemes: currentThemes ?? [],
+      limit: 1,
+    });
+    if (pendingMsg) {
+      surfacedMessageId = pendingMsg.id;
+      surfacedDeliveryContext = {
+        messageTitle: pendingMsg.title,
+        messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
+        messageType: pendingMsg.messageType,
+        fromSelfletId: pendingMsg.fromSelfletId,
+        relevanceThemes: pendingMsg.relevanceThemes,
+        surfacedAt: new Date().toISOString(),
+      };
+      surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
+      requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
+      console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
+    }
+  } catch (err) {
+    console.error('[SELFLET] getPendingMessageForContext failed:', err);
+  }
+
+>>>>>>> ecstatic-brown
   return {
     context,
     promptInjection,
@@ -437,20 +486,30 @@ export async function processSelfletAfterResponse(
 
     // Phase 2C: Mark surfaced message as delivered (BEFORE boundary detection)
     // This ensures messages are marked delivered once surfaced, regardless of boundary
+<<<<<<< HEAD
     // Phase 2I: Include session/turn for cooldown gating
+=======
+>>>>>>> ecstatic-brown
     if (input.surfacedSelfletMessageId) {
       try {
         await selfletChain.markMessageDeliveredById({
           messageId: input.surfacedSelfletMessageId,
+<<<<<<< HEAD
           deliveredSessionId: input.sessionId,
           deliveredTurnId: input.turnNumber,
+=======
+>>>>>>> ecstatic-brown
           deliveryContext: {
             ...(input.surfacedDeliveryContext || {}),
             deliveredAt: new Date().toISOString(),
             assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
           },
         });
+<<<<<<< HEAD
         console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered (session=${input.sessionId}, turn=${input.turnNumber})`);
+=======
+        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
+>>>>>>> ecstatic-brown
       } catch (deliveryErr) {
         console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
       }

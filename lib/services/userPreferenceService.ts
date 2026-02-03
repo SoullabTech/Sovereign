@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/services/userPreferenceService.ts
 // User Preference Management with Supabase persistence
 

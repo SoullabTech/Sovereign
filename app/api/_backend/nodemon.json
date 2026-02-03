@@ -1,0 +1,19 @@
+{
+  "watch": ["src"],
+  "ext": "ts,js,json",
+  "exec": "ts-node --transpile-only src/server.ts",
+  "ignore": [
+    ".git",
+    "node_modules",
+    "dist/**",
+    "*.log",
+    ".env",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "env": {
+    "NODE_ENV": "development",
+    "NODE_OPTIONS": "--enable-source-maps"
+  },
+  "delay": "1000"
+}

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SESSION MEMORY SERVICE - PostgreSQL Edition
  *

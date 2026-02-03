@@ -230,7 +230,7 @@ export default function EventsPage() {
 
   const getPhaseColor = (phase: string) => {
     const colors = {
-      nigredo: 'bg-stone-700/30 text-stone-300 border-stone-500/30',
+      nigredo: 'bg-stone-700/30 dark:text-stone-300 text-stone-600 border-stone-500/30',
       albedo: 'bg-slate-500/20 text-slate-300 border-slate-400/30',
       citrinitas: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
       rubedo: 'bg-red-500/20 text-red-300 border-red-500/30',

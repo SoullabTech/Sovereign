@@ -21,7 +21,7 @@ export type ConnectionStatusListener = (status: ConnectionStatus) => void;
 
 class WebSocketServiceClass {
   private ws: WebSocket | null = null;
-  private wsUrl: string = 'ws://localhost:8080'; // Ritual WebSocket server (currently disabled for iOS Simulator compatibility)
+  private wsUrl: string = 'wss://soullab.life/ws'; // Production WebSocket (falls back gracefully if unavailable)
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;

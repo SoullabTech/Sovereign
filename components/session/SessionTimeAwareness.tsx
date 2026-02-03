@@ -8,8 +8,13 @@ interface SessionTimeAwarenessProps {
   sessionDuration?: number;
   elapsedTime?: number;
   onTimeUpdate?: (elapsed: number) => void;
+<<<<<<< HEAD
   // Additional props from OracleConversation
   timer?: SessionTimer;
+=======
+  // Extended props for OracleConversation.tsx
+  timer?: any;
+>>>>>>> ecstatic-brown
   onExtend?: (additionalMinutes: number) => void;
 }
 

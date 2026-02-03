@@ -1,10 +1,15 @@
+export const dynamic = 'force-dynamic';
 /**
  * AIN EVOLUTION EMERGENCY CONTROL ENDPOINT
  * Provides emergency stabilization and system shutdown capabilities
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { GlobalAINActivator } from '@/lib/ain/AINEvolutionActivator';
+
+// Skip during static export (Capacitor builds)
 
 interface ControlRequest {
   action: 'emergency_stabilization' | 'shutdown' | 'status';

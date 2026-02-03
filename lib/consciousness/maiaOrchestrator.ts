@@ -15,6 +15,7 @@
  * that return null on error instead of throwing.
  */
 
+import { randomUUID } from 'crypto';
 import { safeGebserAnalysis } from '@/lib/consciousness/safe-gebser';
 import { safeElementalFieldState, safeElementalFieldSummary } from '@/lib/consciousness/safe-elemental-field';
 import { ConversationalElementalIntelligence } from '@/lib/consciousness/conversational-elemental-intelligence';
@@ -25,6 +26,10 @@ import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundl
 import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
+import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
+import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ain/knowledge/RetrievalService';
+import { computeFacetDecision, type FacetDecisionPacket } from '@/lib/consciousness/FacetDecisionLoop';
+import { logAgentRun, logIntegrationPass } from '@/lib/services/corpusCallosumService';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -102,6 +107,9 @@ export interface MaiaConsciousnessInput {
   conversationHistory?: any[];
   meta?: { explorerId?: string; userId?: string; sessionId?: string; [key: string]: any };
   context?: any;
+  // Route/profile tracing for corpus callosum filtering
+  originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
+  processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
 }
 
 export interface ConsciousnessAnalysis {
@@ -233,7 +241,10 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 }
 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
-  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {} } = input;
+  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {}, originRoute, processingProfileOverride } = input;
+
+  // 📊 Generate traceId for memory audit trail (use existing if provided, else create new)
+  const traceId = (meta as any).traceId || randomUUID();
 
   // 🧠 MAIA-PAI CONVERSATIONAL KERNEL: Initialize conversation context
   const conversationContext = getConversationContext(sessionId);
@@ -267,6 +278,29 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   performanceProfile.stages.complexityAnalysis = Date.now() - complexityStartTime;
   console.log(`🎯 Message complexity: ${complexityAnalysis.level} | Required layers: ${complexityAnalysis.requiredLayers.join(', ')}`);
   console.log(`💭 Reasoning: ${complexityAnalysis.reasoning}`);
+
+  // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+  // Determines active facet, integrity risks, and response posture
+  let facetDecision: FacetDecisionPacket | null = null;
+  try {
+    facetDecision = computeFacetDecision(
+      message,
+      conversationHistory.map(h => ({ role: h.role || 'user', content: h.content || '' })),
+      undefined // previousFacet - could be tracked in session
+    );
+    console.log(`🌀 Facet Decision: ${facetDecision.activeFacet} | Posture: ${facetDecision.posture}`);
+    if (facetDecision.integrityFlags.water_rush_risk) {
+      console.log(`⚠️ INTEGRITY: Water rush risk detected`);
+    }
+    if (facetDecision.integrityFlags.threshold_collapse_risk) {
+      console.log(`⚠️ INTEGRITY: Threshold collapse risk detected`);
+    }
+    if (facetDecision.handoff) {
+      console.log(`🔄 Handoff ready: ${facetDecision.handoff.from} → ${facetDecision.handoff.to}`);
+    }
+  } catch (error) {
+    console.warn('Facet decision computation failed (continuing without):', error);
+  }
 
   // 🚀 CLAUDE DEVELOPMENT MODE: Initialize development analysis context
   const devModeContext: DevModeContext = {
@@ -332,16 +366,23 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
 
   logMemoryGateDenial('Orchestrator', userId, modeResolution);
 
+  // 🔒 SANCTUARY MODE: Skip all memory recall (presence-only)
+  const isSanctuary = (meta as any)?.sanctuary === true;
+
   let memoryBundle: MemoryBundle | null = null;
   let memoryContext = '';
 
-  if (memoryMode !== 'ephemeral') {
+  // 🔒 SANCTUARY: Skip memoryBundle build entirely (no cross-session recall)
+  if (isSanctuary) {
+    console.log('🛡️ [MemoryBundle] Skipped - Sanctuary mode (no cross-session recall)');
+  } else if (memoryMode !== 'ephemeral') {
     try {
       const memoryBundleStartTime = Date.now();
       memoryBundle = await MemoryBundleService.build({
         userId,
         currentInput: message,
         sessionId,
+        traceId,  // For memory usage audit trail
         scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
         maxBullets: 5,
       });
@@ -362,6 +403,68 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     console.log('📦 [MemoryBundle] Skipped - ephemeral mode');
   }
 
+  // 🌐 MCP CONTEXT: Gather real-time context from external data sources
+  let mcpEnrichment: OracleContextEnrichment | null = null;
+  try {
+    const mcpStartTime = Date.now();
+    const mcpIntegration = getMCPConsciousnessIntegration();
+    mcpEnrichment = await mcpIntegration.generateOracleEnrichment(userId, message);
+    layerTimings['mcp-context'] = Date.now() - mcpStartTime;
+
+    if (mcpEnrichment.contextBlock) {
+      console.log(`🌐 [MCPContext] Enrichment gathered: ${mcpEnrichment.contextBlock.length} chars`);
+      if (mcpEnrichment.biometricCorrelation) {
+        console.log(`   Health: ${mcpEnrichment.biometricCorrelation.energyState} energy, ${mcpEnrichment.biometricCorrelation.sleepQuality} sleep`);
+      }
+      if (mcpEnrichment.timingGuidance) {
+        console.log(`   Schedule: ${mcpEnrichment.timingGuidance.suggestedPace} pace suggested`);
+      }
+      if (mcpEnrichment.taskContext) {
+        console.log(`   Tasks: ${mcpEnrichment.taskContext.workloadLevel} workload, ${mcpEnrichment.taskContext.highPriorityCount} urgent`);
+      }
+      layersSuccessful.push('mcp-context');
+    } else {
+      console.log('🌐 [MCPContext] No external sources available');
+    }
+  } catch (error) {
+    console.warn('[MCPContext] Context gathering failed (continuing without):', error);
+    layersFailed.push('mcp-context');
+  }
+
+  // 📚 AIN KNOWLEDGE: Retrieve mode-aware wisdom from embedded source texts
+  // Maps mode to domain filters: care→therapeutic, talk→jungian/philosophy, divination→astrology/enneagram
+  let ainKnowledgeContext = '';
+  let ainKnowledgeChunks: RetrievalResult[] = [];
+  const sessionMode = (context as any)?.mode || (meta as any)?.mode || 'talk';
+
+  try {
+    const ainStartTime = Date.now();
+
+    // Retrieve relevant knowledge based on conversation mode
+    ainKnowledgeChunks = await retrieveForMode(message, sessionMode, {
+      limit: 3,
+      minSimilarity: 0.35,
+      userId,
+    });
+
+    if (ainKnowledgeChunks.length > 0) {
+      // Format for prompt injection
+      ainKnowledgeContext = formatForPrompt(ainKnowledgeChunks, 1500);
+
+      console.log(`📚 [AINKnowledge] Retrieved ${ainKnowledgeChunks.length} chunks for ${sessionMode} mode`);
+      console.log(`   Sources: ${ainKnowledgeChunks.map(c => c.sourceTitle).join(', ')}`);
+      console.log(`   Similarity: ${ainKnowledgeChunks.map(c => (c.similarity * 100).toFixed(1) + '%').join(', ')}`);
+
+      layerTimings['ain-knowledge'] = Date.now() - ainStartTime;
+      layersSuccessful.push('ain-knowledge');
+    } else {
+      console.log(`📚 [AINKnowledge] No relevant chunks found for "${message.substring(0, 50)}..."`);
+    }
+  } catch (error) {
+    console.warn('[AINKnowledge] Retrieval failed (continuing without):', error);
+    layersFailed.push('ain-knowledge');
+  }
+
   // 1️⃣ ALWAYS: Get base MAIA response first (core functionality) with conversation context
   let maiaResult;
   try {
@@ -373,13 +476,32 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         ...meta,     // ✅ Include explorerId/userId from normalized meta
         ...context,
         userId,      // 🔑 Explicitly include userId for TurnsStore cross-session persistence
+        traceId,     // 📊 For memory usage audit trail (consistent across orchestrator + service)
         memoryMode,  // 🧠 Permission gate for memory operations
         // 🧠 MEMORY BUNDLE: Inject compressed context from multi-bucket retrieval
         memoryContext: memoryContext || undefined,
         memoryBundle: memoryBundle ? {
           bulletCount: memoryBundle.memoryBullets.length,
+          memoryBullets: memoryBundle.memoryBullets,  // 📊 Full array for memory usage logging
+          relationshipSnapshot: memoryBundle.relationshipSnapshot,  // 📊 For context tracking
           encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
           breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
+        } : undefined,
+        // 🌐 MCP CONTEXT: External data source enrichment
+        mcpContext: mcpEnrichment?.contextBlock || undefined,
+        mcpEnrichment: mcpEnrichment ? {
+          biometricCorrelation: mcpEnrichment.biometricCorrelation,
+          timingGuidance: mcpEnrichment.timingGuidance,
+          taskContext: mcpEnrichment.taskContext,
+          consciousnessMarkers: mcpEnrichment.consciousnessMarkers,
+        } : undefined,
+        // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded sources
+        ainKnowledgeContext: ainKnowledgeContext || undefined,
+        ainKnowledge: ainKnowledgeChunks.length > 0 ? {
+          chunksRetrieved: ainKnowledgeChunks.length,
+          sources: ainKnowledgeChunks.map(c => c.sourceTitle),
+          domains: [...new Set(ainKnowledgeChunks.map(c => c.domain))],
+          avgSimilarity: ainKnowledgeChunks.reduce((sum, c) => sum + c.similarity, 0) / ainKnowledgeChunks.length,
         } : undefined,
         // MAIA-PAI conversational kernel context
         conversationContext: {
@@ -390,8 +512,20 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           messageCount: conversationContext.getSpine().messageCount,
           depthConfig: depthConfig,
           contextPrompt: contextPrompt
-        }
+        },
+        // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+        facetDecision: facetDecision ? {
+          activeFacet: facetDecision.activeFacet,
+          posture: facetDecision.posture,
+          integrityFlags: facetDecision.integrityFlags,
+          languageHints: facetDecision.languageHints,
+          handoff: facetDecision.handoff,
+          regulation: facetDecision.regulation,
+        } : undefined,
       },
+      // Route/profile tracing for corpus callosum filtering
+      originRoute,
+      processingProfileOverride,
     });
     const maiaCoreTime = Date.now() - maiaPaiStartTime;
     layerTimings['maia-core'] = maiaCoreTime;
@@ -411,8 +545,13 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     layersFailed.push('maia-core');
   }
 
+  // 🧠 CORPUS CALLOSUM: Extract turnId for agent_runs logging
+  const turnId = (maiaResult as any)?.metadata?.turnId as number | undefined;
+  const turnIndex = (maiaResult as any)?.metadata?.turnIndex as number | undefined;
+  const corpusCallosumRunIds: string[] = [];
+
   // 2️⃣ CONSCIOUSNESS LAYER 1: Gebser Structure Analysis (ADAPTIVE)
-  let gebserStructure = null;
+  let gebserStructure: any = null;
   if (complexityAnalysis.requiredLayers.includes('gebser-analysis')) {
     const gebserStartTime = Date.now();
     try {
@@ -437,12 +576,32 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.gebserAnalysis = gebserTime;
       layersFailed.push('gebser-analysis');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log gebser-analysis agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'gebser-analysis',
+        element: 'air',
+        epistemicMode: 'structured',
+        outputJson: gebserStructure ?? {},
+        latencyMs: layerTimings['gebser-analysis'],
+        status: gebserStructure ? 'ok' : 'error',
+        confidence: gebserStructure?.confidence ?? null,
+        originRoute: originRoute ?? '/api/between/chat',
+        processingProfile: processingProfileOverride ?? 'BETWEEN',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping Gebser analysis - not needed for this complexity level');
   }
 
   // 3️⃣ CONSCIOUSNESS LAYER 2: Elemental Field Analysis (ADAPTIVE)
-  let elementalField = null;
+  let elementalField: any = null;
   if (complexityAnalysis.requiredLayers.includes('elemental-field')) {
     const elementalStartTime = Date.now();
     try {
@@ -467,12 +626,32 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.elementalField = elementalTime;
       layersFailed.push('elemental-field');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log elemental-field agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'elemental-field',
+        element: elementalField?.dominantElement ?? null,
+        epistemicMode: 'symbolic',
+        outputJson: elementalField ?? {},
+        latencyMs: layerTimings['elemental-field'],
+        status: elementalField ? 'ok' : 'error',
+        confidence: elementalField?.confidence ?? null,
+        originRoute: originRoute ?? '/api/between/chat',
+        processingProfile: processingProfileOverride ?? 'BETWEEN',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping elemental field analysis - not needed for this complexity level');
   }
 
   // 4️⃣ CONSCIOUSNESS LAYER 3: Elemental Field Summary (ADAPTIVE)
-  let elementalFieldSummary = null;
+  let elementalFieldSummary: any = null;
   if (complexityAnalysis.requiredLayers.includes('elemental-field-summary')) {
     const summaryStartTime = Date.now();
     try {
@@ -492,12 +671,31 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.elementalSummary = summaryTime;
       layersFailed.push('elemental-field-summary');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log elemental-field-summary agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'elemental-field-summary',
+        element: 'aether',
+        epistemicMode: 'meta',
+        outputJson: elementalFieldSummary ?? {},
+        latencyMs: layerTimings['elemental-field-summary'],
+        status: elementalFieldSummary ? 'ok' : 'error',
+        originRoute: originRoute ?? '/api/between/chat',
+        processingProfile: processingProfileOverride ?? 'BETWEEN',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping elemental field summary - not needed for this complexity level');
   }
 
   // 5️⃣ CONSCIOUSNESS LAYER 4: Conversational Elemental Intelligence (ADAPTIVE)
-  let conversationalElemental = null;
+  let conversationalElemental: any = null;
   if (complexityAnalysis.requiredLayers.includes('conversational-elemental')) {
     const conversationalStartTime = Date.now();
     try {
@@ -524,6 +722,25 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.conversationalElemental = conversationalTime;
       layersFailed.push('conversational-elemental');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log conversational-elemental agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'conversational-elemental',
+        element: conversationalElemental?.context?.dominantElement ?? null,
+        epistemicMode: 'relational',
+        outputJson: conversationalElemental ?? {},
+        latencyMs: layerTimings['conversational-elemental'],
+        status: conversationalElemental ? 'ok' : 'error',
+        originRoute: originRoute ?? '/api/between/chat',
+        processingProfile: processingProfileOverride ?? 'BETWEEN',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping conversational elemental intelligence - not needed for this complexity level');
   }
@@ -543,6 +760,34 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     }
   };
 
+  // 🧠 CORPUS CALLOSUM: Log integration pass if multiple agents ran
+  if (turnId && corpusCallosumRunIds.length >= 2) {
+    await logIntegrationPass({
+      turnId,
+      sessionId,
+      userId,
+      bridgeAgent: 'maiaOrchestrator',
+      agentRunIds: corpusCallosumRunIds,
+      inputs: corpusCallosumRunIds.map((id, i) => ({
+        agentName: layersSuccessful[i] ?? `layer-${i}`,
+        summary: `Agent run ${id}`,
+      })),
+      integrationMethod: 'narrative_synthesis',
+      finalText: maiaResult.text,
+      coherenceScore: Math.min(1, consciousnessAnalysis.analysisMetadata.successRate),
+      depthScore: conversationContext.getSpine().trustLevel,
+      elementalMode: (elementalField?.dominantElement as 'fire' | 'water' | 'earth' | 'air' | 'aether') ?? undefined,
+      meta: {
+        consciousnessAnalysis,
+        layersSuccessful,
+        layersFailed,
+      },
+      originRoute: originRoute ?? '/api/between/chat',
+      processingProfile: processingProfileOverride ?? 'BETWEEN',
+    });
+    console.log(`🧠 [CorpusCallosum] Integration pass logged | agents=${corpusCallosumRunIds.length} | turnId=${turnId}`);
+  }
+
   // 🌀 MAIA-PAI CONVERSATIONAL KERNEL: Track this interaction
   const significance = layersFailed.length === 0 ? 'connection' :
                       throughline.includes('purpose') || throughline.includes('meaning') ? 'insight' :
@@ -552,8 +797,12 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`💫 Conversation moment tracked: ${significance} | Spine updated`);
 
   // 🧠 MEMORY WRITEBACK: Promote to long-term memory if conditions met
+  // 🛡️ SANCTUARY: Absolute boundary - nothing can be saved, extracted, or converted to memory
   let writebackResult: { wrote: boolean; memoryId?: string; reason?: string } = { wrote: false, reason: 'skipped' };
-  if (memoryMode === 'longterm') {
+  if (isSanctuary) {
+    console.log('🛡️ [MemoryWriteback] Skipped - Sanctuary mode (absolute boundary)');
+    writebackResult = { wrote: false, reason: 'sanctuary' };
+  } else if (memoryMode === 'longterm') {
     try {
       const writebackStartTime = Date.now();
       // Extract elemental info (cast to any to avoid strict type issues with null assignments)
@@ -607,6 +856,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     },
     metadata: {
       ...maiaResult.metadata,
+      // 🔮 Sovereignty auditing: which provider served this response
+      provider: maiaResult.provider,
       consciousnessLayers: {
         successful: layersSuccessful,
         failed: layersFailed,
@@ -625,6 +876,15 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
+      // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+      facetDecision: facetDecision ? {
+        activeFacet: facetDecision.activeFacet,
+        posture: facetDecision.posture,
+        integrityFlags: facetDecision.integrityFlags,
+        languageHints: facetDecision.languageHints,
+        handoffReady: !!facetDecision.handoff,
+        regulationNeeded: !!facetDecision.regulation,
+      } : null,
       // 🔒 SECURITY: Signal to UI when input contained sensitive data (not stored)
       sensitiveInput: containsSensitiveData(message),
       // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
@@ -761,9 +1021,10 @@ export async function generateSimpleMaiaResponse(
     return {
       message: maiaResult.text,
       metadata: {
-        ...maiaResult.metadata,
         mode: 'simple-response',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        processingTimeMs: maiaResult.processingTimeMs,
+        provider: maiaResult.provider,
       }
     };
   } catch (error) {
@@ -790,7 +1051,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   const layersFailed: string[] = [];
 
   // Gebser analysis
-  let gebserStructure = null;
+  let gebserStructure: any = null;
   try {
     gebserStructure = await safeGebserAnalysis({
       message,
@@ -804,7 +1065,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Elemental field analysis
-  let elementalField = null;
+  let elementalField: any = null;
   try {
     elementalField = await safeElementalFieldState({
       message,
@@ -817,7 +1078,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Elemental field summary
-  let elementalFieldSummary = null;
+  let elementalFieldSummary: any = null;
   try {
     elementalFieldSummary = await safeElementalFieldSummary(userId);
     elementalFieldSummary ? layersSuccessful.push('elemental-field-summary') : layersFailed.push('elemental-field-summary');
@@ -826,7 +1087,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Conversational elemental intelligence
-  let conversationalElemental = null;
+  let conversationalElemental: any = null;
   try {
     const cei = getConversationalElementalIntelligence();
     const elementalContext = await cei.getConversationalElementalContext(

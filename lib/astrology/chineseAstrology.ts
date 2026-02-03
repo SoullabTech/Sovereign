@@ -257,6 +257,461 @@ const ZODIAC_ANIMALS: ChineseZodiacAnimal[] = [
   }
 ];
 
+// ==================== FIVE ELEMENT HOLISTIC SYSTEM ====================
+
+/**
+ * Complete Five Element mappings covering body, mind, emotions, spirit, and ancestry
+ * Based on Traditional Chinese Medicine and classical astrology texts
+ */
+export interface ElementHolisticProfile {
+  element: 'wood' | 'fire' | 'earth' | 'metal' | 'water';
+
+  // Physical body correlations
+  physical: {
+    yinOrgan: string;
+    yangOrgan: string;
+    bodyTissue: string;
+    sensoryOrgan: string;
+    bodyFluid: string;
+    healthTendencies: string[];
+    supportPractices: string[];
+  };
+
+  // Emotional patterns
+  emotional: {
+    primaryEmotion: string;
+    shadowEmotion: string;
+    balancedExpression: string;
+    imbalanceSignals: string[];
+    healingPractices: string[];
+  };
+
+  // Mental qualities
+  mental: {
+    thinkingStyle: string;
+    cognitiveStrengths: string[];
+    mentalChallenges: string[];
+    learningStyle: string;
+    supportPractices: string[];
+  };
+
+  // Spiritual themes
+  spiritual: {
+    soulLesson: string;
+    spiritualGift: string;
+    karmicPattern: string;
+    evolutionaryPath: string;
+    practices: string[];
+  };
+
+  // Ancestral/lineage patterns
+  ancestral: {
+    lineageTheme: string;
+    inheritedStrengths: string[];
+    inheritedChallenges: string[];
+    ancestralHealing: string;
+    honoringPractices: string[];
+  };
+}
+
+const ELEMENT_HOLISTIC_PROFILES: Record<string, ElementHolisticProfile> = {
+  wood: {
+    element: 'wood',
+    physical: {
+      yinOrgan: 'Liver',
+      yangOrgan: 'Gallbladder',
+      bodyTissue: 'Tendons and ligaments',
+      sensoryOrgan: 'Eyes',
+      bodyFluid: 'Tears',
+      healthTendencies: [
+        'Tension headaches and migraines',
+        'Eye strain and vision issues',
+        'Muscle tightness and tendon problems',
+        'Digestive issues related to anger',
+        'Menstrual irregularities (women)'
+      ],
+      supportPractices: [
+        'Gentle stretching and yoga',
+        'Walking in nature, especially forests',
+        'Sour foods (lemon, vinegar) in moderation',
+        'Green leafy vegetables',
+        'Avoiding excessive alcohol'
+      ]
+    },
+    emotional: {
+      primaryEmotion: 'Anger / Assertion',
+      shadowEmotion: 'Frustration, resentment, rage',
+      balancedExpression: 'Healthy boundaries, creative drive, benevolent leadership',
+      imbalanceSignals: [
+        'Irritability and short temper',
+        'Feeling stuck or blocked',
+        'Resentment building over time',
+        'Difficulty making decisions',
+        'Depression from suppressed anger'
+      ],
+      healingPractices: [
+        'Physical exercise to move stagnant energy',
+        'Creative expression (art, music, writing)',
+        'Journaling about frustrations',
+        'Setting and honoring boundaries',
+        'Forgiveness practices'
+      ]
+    },
+    mental: {
+      thinkingStyle: 'Visionary and strategic planning',
+      cognitiveStrengths: ['Big-picture thinking', 'Problem-solving', 'Innovation', 'Strategic planning'],
+      mentalChallenges: ['Rigidity when stressed', 'Impatience with details', 'Overthinking obstacles'],
+      learningStyle: 'Visual and conceptual - learns best through seeing the whole picture first',
+      supportPractices: [
+        'Mind mapping and visual planning',
+        'Morning planning rituals',
+        'Breaking big visions into steps',
+        'Collaborating with detail-oriented people'
+      ]
+    },
+    spiritual: {
+      soulLesson: 'Learning to channel creative force without domination',
+      spiritualGift: 'Vision, leadership, and the ability to initiate new beginnings',
+      karmicPattern: 'Past life themes around power, leadership, and the use of will',
+      evolutionaryPath: 'From forceful pushing to benevolent guidance',
+      practices: [
+        'Spring equinox ceremonies',
+        'Planting seeds with intention',
+        'Working with tree spirits',
+        'Dawn meditation facing east'
+      ]
+    },
+    ancestral: {
+      lineageTheme: 'Pioneers, leaders, and those who forged new paths',
+      inheritedStrengths: ['Courage', 'Resilience', 'Vision', 'Determination'],
+      inheritedChallenges: ['Unresolved anger', 'Authority conflicts', 'Unexpressed creativity'],
+      ancestralHealing: 'Honoring ancestors who faced obstacles, releasing inherited frustration',
+      honoringPractices: [
+        'Planting trees or gardens in their memory',
+        'Completing projects they started',
+        'Channeling their vision constructively',
+        'Releasing family patterns of resentment'
+      ]
+    }
+  },
+  fire: {
+    element: 'fire',
+    physical: {
+      yinOrgan: 'Heart',
+      yangOrgan: 'Small Intestine',
+      bodyTissue: 'Blood vessels',
+      sensoryOrgan: 'Tongue',
+      bodyFluid: 'Sweat',
+      healthTendencies: [
+        'Heart palpitations and circulation issues',
+        'Anxiety and restlessness',
+        'Sleep disturbances and insomnia',
+        'Speech problems when stressed',
+        'Hot flashes and excessive sweating'
+      ],
+      supportPractices: [
+        'Calming meditation and breathwork',
+        'Bitter foods (dark leafy greens, coffee in moderation)',
+        'Red and orange foods for heart health',
+        'Avoiding overstimulation',
+        'Regular sleep schedule'
+      ]
+    },
+    emotional: {
+      primaryEmotion: 'Joy / Love',
+      shadowEmotion: 'Anxiety, mania, scattered energy',
+      balancedExpression: 'Genuine warmth, appropriate intimacy, inspired enthusiasm',
+      imbalanceSignals: [
+        'Excessive excitement or manic energy',
+        'Anxiety and panic attacks',
+        'Difficulty with emotional intimacy',
+        'Scattered attention and restlessness',
+        'Emotional burnout'
+      ],
+      healingPractices: [
+        'Heart-centered meditation',
+        'Cultivating meaningful connections',
+        'Laughter and play in moderation',
+        'Grounding practices to balance fire',
+        'Setting boundaries around energy output'
+      ]
+    },
+    mental: {
+      thinkingStyle: 'Intuitive and inspired insight',
+      cognitiveStrengths: ['Quick perception', 'Charismatic communication', 'Inspiration', 'Synthesis'],
+      mentalChallenges: ['Scattered focus', 'Difficulty with routine', 'Burnout from mental excitement'],
+      learningStyle: 'Experiential and social - learns best through engagement and enthusiasm',
+      supportPractices: [
+        'Study with others or teach material',
+        'Take breaks to prevent burnout',
+        'Connect learning to passion',
+        'Use excitement strategically'
+      ]
+    },
+    spiritual: {
+      soulLesson: 'Learning to love unconditionally without losing oneself',
+      spiritualGift: 'Radiance, inspiration, and the ability to illuminate truth',
+      karmicPattern: 'Past life themes around love, recognition, and spiritual leadership',
+      evolutionaryPath: 'From seeking external validation to radiating inner light',
+      practices: [
+        'Summer solstice ceremonies',
+        'Candle meditation',
+        'Heart-opening yoga',
+        'Noon meditation facing south'
+      ]
+    },
+    ancestral: {
+      lineageTheme: 'Performers, healers, spiritual leaders, and those who inspired others',
+      inheritedStrengths: ['Charisma', 'Healing presence', 'Joy', 'Spiritual connection'],
+      inheritedChallenges: ['Anxiety patterns', 'Heart conditions', 'Burnout tendencies'],
+      ancestralHealing: 'Honoring ancestors who brought light, healing inherited anxiety',
+      honoringPractices: [
+        'Lighting candles in their memory',
+        'Sharing their stories and joy',
+        'Healing heart-related family patterns',
+        'Carrying forward their inspiration'
+      ]
+    }
+  },
+  earth: {
+    element: 'earth',
+    physical: {
+      yinOrgan: 'Spleen',
+      yangOrgan: 'Stomach',
+      bodyTissue: 'Muscles and flesh',
+      sensoryOrgan: 'Mouth',
+      bodyFluid: 'Saliva',
+      healthTendencies: [
+        'Digestive issues and bloating',
+        'Blood sugar imbalances',
+        'Fatigue and heaviness',
+        'Muscle weakness',
+        'Weight fluctuations'
+      ],
+      supportPractices: [
+        'Regular, moderate meals',
+        'Yellow and orange root vegetables',
+        'Sweet foods in moderation (natural sweetness)',
+        'Avoiding cold and raw foods',
+        'Gentle movement after eating'
+      ]
+    },
+    emotional: {
+      primaryEmotion: 'Pensiveness / Sympathy',
+      shadowEmotion: 'Worry, overthinking, neediness',
+      balancedExpression: 'Nurturing care, stable support, healthy boundaries in giving',
+      imbalanceSignals: [
+        'Excessive worry and rumination',
+        'Codependent caretaking',
+        'Feeling ungrounded or scattered',
+        'Difficulty receiving from others',
+        'Emotional eating patterns'
+      ],
+      healingPractices: [
+        'Grounding and centering practices',
+        'Learning to receive as well as give',
+        'Physical connection to earth',
+        'Structured worry time (then release)',
+        'Nourishing self-care routines'
+      ]
+    },
+    mental: {
+      thinkingStyle: 'Methodical and integrative processing',
+      cognitiveStrengths: ['Memory', 'Synthesis', 'Practical application', 'Nurturing ideas'],
+      mentalChallenges: ['Overthinking', 'Mental loops', 'Difficulty with abstraction'],
+      learningStyle: 'Hands-on and repetitive - learns best through practice and integration',
+      supportPractices: [
+        'Study in comfortable environments',
+        'Connect learning to practical use',
+        'Review and repetition',
+        'Teach others to solidify knowledge'
+      ]
+    },
+    spiritual: {
+      soulLesson: 'Learning to nurture without depleting, to give from abundance',
+      spiritualGift: 'Grounding presence, the ability to create sacred space and stability',
+      karmicPattern: 'Past life themes around service, mothering, and sustenance',
+      evolutionaryPath: 'From compulsive giving to embodied abundance',
+      practices: [
+        'Earth-touching meditation',
+        'Creating altars and sacred space',
+        'Harvest ceremonies',
+        'Working with crystals and stones'
+      ]
+    },
+    ancestral: {
+      lineageTheme: 'Farmers, mothers, healers, and those who sustained community',
+      inheritedStrengths: ['Nurturing capacity', 'Stability', 'Practical wisdom', 'Endurance'],
+      inheritedChallenges: ['Worry patterns', 'Digestive issues', 'Difficulty with boundaries'],
+      ancestralHealing: 'Honoring ancestors who fed and sustained, releasing inherited worry',
+      honoringPractices: [
+        'Cooking ancestral recipes',
+        'Tending the land or gardens',
+        'Creating family gatherings',
+        'Releasing patterns of excessive giving'
+      ]
+    }
+  },
+  metal: {
+    element: 'metal',
+    physical: {
+      yinOrgan: 'Lungs',
+      yangOrgan: 'Large Intestine',
+      bodyTissue: 'Skin and body hair',
+      sensoryOrgan: 'Nose',
+      bodyFluid: 'Mucus',
+      healthTendencies: [
+        'Respiratory issues and allergies',
+        'Skin conditions (dryness, eczema)',
+        'Constipation or bowel irregularity',
+        'Grief held in the body',
+        'Immune system vulnerabilities'
+      ],
+      supportPractices: [
+        'Deep breathing exercises',
+        'Pungent foods (ginger, garlic, onion)',
+        'White foods (rice, radish, pear)',
+        'Skin brushing and care',
+        'Regular bowel routine'
+      ]
+    },
+    emotional: {
+      primaryEmotion: 'Grief / Letting Go',
+      shadowEmotion: 'Prolonged grief, coldness, rigidity',
+      balancedExpression: 'Healthy processing of loss, discernment, appropriate boundaries',
+      imbalanceSignals: [
+        'Inability to let go of the past',
+        'Emotional coldness or aloofness',
+        'Perfectionism and harsh self-criticism',
+        'Difficulty with intimacy',
+        'Holding onto possessions or people'
+      ],
+      healingPractices: [
+        'Conscious grieving rituals',
+        'Decluttering and releasing possessions',
+        'Breathwork for emotional release',
+        'Practicing imperfection',
+        'Softening rigid boundaries appropriately'
+      ]
+    },
+    mental: {
+      thinkingStyle: 'Analytical and discriminating',
+      cognitiveStrengths: ['Precision', 'Analysis', 'Quality assessment', 'Structure'],
+      mentalChallenges: ['Perfectionism', 'Overly critical thinking', 'Difficulty seeing nuance'],
+      learningStyle: 'Structured and sequential - learns best through clear organization',
+      supportPractices: [
+        'Organized study environments',
+        'Clear outlines and structures',
+        'Quality over quantity focus',
+        'Allow for "good enough"'
+      ]
+    },
+    spiritual: {
+      soulLesson: 'Learning to release what no longer serves while honoring its value',
+      spiritualGift: 'Discernment, purity of intention, and connection to the divine',
+      karmicPattern: 'Past life themes around loss, perfectionism, and spiritual discipline',
+      evolutionaryPath: 'From rigid perfectionism to graceful refinement',
+      practices: [
+        'Autumn equinox ceremonies',
+        'Releasing rituals',
+        'Breathwork meditation',
+        'Sunset meditation facing west'
+      ]
+    },
+    ancestral: {
+      lineageTheme: 'Craftspeople, priests, judges, and those who upheld standards',
+      inheritedStrengths: ['Integrity', 'Craftsmanship', 'Discernment', 'Spiritual discipline'],
+      inheritedChallenges: ['Unprocessed grief', 'Rigidity', 'Harsh judgment'],
+      ancestralHealing: 'Honoring ancestors who held standards, releasing inherited grief',
+      honoringPractices: [
+        'Completing their unfinished work with quality',
+        'Grieving losses they could not process',
+        'Honoring their crafts and skills',
+        'Releasing perfectionistic family patterns'
+      ]
+    }
+  },
+  water: {
+    element: 'water',
+    physical: {
+      yinOrgan: 'Kidneys',
+      yangOrgan: 'Bladder',
+      bodyTissue: 'Bones and marrow',
+      sensoryOrgan: 'Ears',
+      bodyFluid: 'Urine',
+      healthTendencies: [
+        'Lower back pain and knee issues',
+        'Urinary and reproductive issues',
+        'Hearing problems',
+        'Bone density concerns',
+        'Adrenal fatigue'
+      ],
+      supportPractices: [
+        'Rest and deep restoration',
+        'Salty foods in moderation (sea vegetables)',
+        'Black and dark blue foods (black beans, blueberries)',
+        'Keeping lower back and feet warm',
+        'Conserving energy, avoiding overwork'
+      ]
+    },
+    emotional: {
+      primaryEmotion: 'Fear / Wisdom',
+      shadowEmotion: 'Chronic fear, paranoia, isolation',
+      balancedExpression: 'Healthy caution, deep wisdom, appropriate trust',
+      imbalanceSignals: [
+        'Chronic anxiety or paranoia',
+        'Withdrawal and isolation',
+        'Fear of the unknown',
+        'Difficulty trusting life',
+        'Recklessness (shadow of suppressed fear)'
+      ],
+      healingPractices: [
+        'Building safety and trust gradually',
+        'Water meditation and baths',
+        'Facing fears in small steps',
+        'Deep rest and restoration',
+        'Cultivating faith and trust'
+      ]
+    },
+    mental: {
+      thinkingStyle: 'Deep and reflective contemplation',
+      cognitiveStrengths: ['Depth of thought', 'Wisdom', 'Memory', 'Philosophical insight'],
+      mentalChallenges: ['Overthinking fears', 'Difficulty with action', 'Analysis paralysis'],
+      learningStyle: 'Contemplative and immersive - learns best through deep study and reflection',
+      supportPractices: [
+        'Quiet study environments',
+        'Time for deep reflection',
+        'Connect learning to meaning',
+        'Journaling and contemplation'
+      ]
+    },
+    spiritual: {
+      soulLesson: 'Learning to trust the flow of life while honoring appropriate caution',
+      spiritualGift: 'Deep wisdom, intuition, and connection to ancestral knowledge',
+      karmicPattern: 'Past life themes around survival, secrets, and hidden knowledge',
+      evolutionaryPath: 'From fear-based survival to wisdom-guided flow',
+      practices: [
+        'Winter solstice ceremonies',
+        'Water offerings and rituals',
+        'Ancestor veneration',
+        'Midnight meditation facing north'
+      ]
+    },
+    ancestral: {
+      lineageTheme: 'Sages, survivors, keepers of secrets and wisdom',
+      inheritedStrengths: ['Resilience', 'Wisdom', 'Intuition', 'Depth'],
+      inheritedChallenges: ['Fear patterns', 'Survival trauma', 'Trust issues'],
+      ancestralHealing: 'Honoring ancestors who survived, releasing inherited fear',
+      honoringPractices: [
+        'Learning and preserving family history',
+        'Healing survival trauma in the lineage',
+        'Honoring their wisdom and resilience',
+        'Releasing fear-based family patterns'
+      ]
+    }
+  }
+};
+
 // Chinese Elements (5-element cycle)
 const CHINESE_ELEMENTS: ChineseElement[] = [
   {
@@ -310,6 +765,13 @@ const CHINESE_ELEMENTS: ChineseElement[] = [
     direction: 'north'
   }
 ];
+
+/**
+ * Get the complete holistic profile for an element
+ */
+export function getElementHolisticProfile(elementName: string): ElementHolisticProfile | null {
+  return ELEMENT_HOLISTIC_PROFILES[elementName] || null;
+}
 
 /**
  * Calculate Chinese zodiac animal based on year

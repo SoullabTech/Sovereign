@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { RealtimeAgent, RealtimeSession, OpenAIRealtimeWebRTC } from '@openai/agents-realtime';

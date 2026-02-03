@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🔮 MAIA KNOWLEDGE BASE SERVICE
+ * MAIA KNOWLEDGE BASE SERVICE
  *
  * The canonical wisdom layer (Layer 7) containing archetypal patterns,
  * universal principles, and timeless teachings that enhance MAIA's

@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sacred Switzerland Retreat - Onboarding</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #e8e8e8;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        max-width: 600px;
+        width: 90%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #a0a0a0;
+        margin-bottom: 40px;
+      }
+
+      .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        position: relative;
+      }
+
+      .step {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .step.active {
+        background: #4ecdc4;
+        border-color: #4ecdc4;
+        color: #1a1a2e;
+        font-weight: bold;
+      }
+
+      .step.completed {
+        background: #52c41a;
+        border-color: #52c41a;
+        color: white;
+      }
+
+      .step-line {
+        position: absolute;
+        top: 15px;
+        left: 30px;
+        right: 30px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #e0e0e0;
+        font-weight: 500;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: #e8e8e8;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #4ecdc4;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .btn {
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 30px auto 0;
+        min-width: 200px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(78, 205, 196, 0.4);
+      }
+
+      .message {
+        background: rgba(78, 205, 196, 0.1);
+        border: 1px solid rgba(78, 205, 196, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+      }
+
+      .oracle-card {
+        background: linear-gradient(
+          135deg,
+          rgba(138, 43, 226, 0.1),
+          rgba(78, 205, 196, 0.1)
+        );
+        border: 1px solid rgba(138, 43, 226, 0.3);
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+        text-align: center;
+      }
+
+      .oracle-element {
+        font-size: 48px;
+        margin-bottom: 15px;
+      }
+
+      .oracle-name {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #e0b0ff;
+      }
+
+      .oracle-archetype {
+        color: #a0a0a0;
+        font-style: italic;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #4ecdc4;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .element-icons {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+
+      .element-icon {
+        font-size: 30px;
+        opacity: 0.5;
+        transition: all 0.3s ease;
+      }
+
+      .element-icon.active {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌀 Sacred Switzerland Retreat</h1>
+      <p class="subtitle">Your Journey of Elemental Integration Begins</p>
+
+      <div class="step-indicator">
+        <div class="step-line"></div>
+        <div class="step active">1</div>
+        <div class="step">2</div>
+        <div class="step">3</div>
+        <div class="step">4</div>
+        <div class="step">5</div>
+      </div>
+
+      <div id="onboarding-content">
+        <!-- Step 1: Registration -->
+        <div id="step-registration" class="step-content">
+          <h2>Welcome, Sacred Traveler</h2>
+          <p style="margin-bottom: 30px">
+            Begin your journey to the Swiss Alps where transformation awaits.
+          </p>
+
+          <form id="registration-form">
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                required
+                placeholder="your@email.com"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="firstName">First Name</label>
+              <input
+                type="text"
+                id="firstName"
+                required
+                placeholder="Your first name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name</label>
+              <input
+                type="text"
+                id="lastName"
+                required
+                placeholder="Your last name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="preferredName">Preferred Name (Optional)</label>
+              <input
+                type="text"
+                id="preferredName"
+                placeholder="What shall we call you?"
+              />
+            </div>
+
+            <button type="submit" class="btn">Begin Sacred Journey</button>
+          </form>
+        </div>
+
+        <!-- Step 2: Current State -->
+        <div id="step-current-state" class="step-content" style="display: none">
+          <h2>Where Are You Now?</h2>
+          <p style="margin-bottom: 30px">
+            Share your current inner landscape so we can meet you exactly where
+            you are.
+          </p>
+
+          <form id="state-form">
+            <div class="form-group">
+              <label for="emotionalTone"
+                >How would you describe your current emotional tone?</label
+              >
+              <textarea
+                id="emotionalTone"
+                rows="3"
+                required
+                placeholder="I feel..."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="energyLevel">Your energy level (1-10)</label>
+              <input type="range" id="energyLevel" min="1" max="10" value="5" />
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  margin-top: 5px;
+                "
+              >
+                <span>Depleted</span>
+                <span id="energy-value">5</span>
+                <span>Vibrant</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="primaryChallenge"
+                >What's your primary challenge right now? (Optional)</label
+              >
+              <textarea
+                id="primaryChallenge"
+                rows="3"
+                placeholder="I'm struggling with..."
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn">Continue Journey</button>
+          </form>
+        </div>
+
+        <!-- Step 3: Intentions -->
+        <div id="step-intentions" class="step-content" style="display: none">
+          <h2>Set Your Sacred Intentions</h2>
+          <p style="margin-bottom: 30px">
+            What is your soul calling forth through this retreat?
+          </p>
+
+          <form id="intentions-form">
+            <div class="form-group">
+              <label for="primaryIntention"
+                >Your primary intention for this retreat</label
+              >
+              <textarea
+                id="primaryIntention"
+                rows="4"
+                required
+                placeholder="I am here to..."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="desiredOutcomes"
+                >What would you love to experience? (One per line)</label
+              >
+              <textarea
+                id="desiredOutcomes"
+                rows="4"
+                required
+                placeholder="Deep healing&#10;Clear vision&#10;Soul connection"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="openToExploring"
+                >What are you open to exploring? (Optional)</label
+              >
+              <textarea
+                id="openToExploring"
+                rows="3"
+                placeholder="Shadow work&#10;Sacred ceremony&#10;New perspectives"
+              ></textarea>
+            </div>
+
+            <button type="submit" class="btn">Seal Intentions</button>
+          </form>
+        </div>
+
+        <!-- Step 4: Oracle Assignment -->
+        <div id="step-oracle" class="step-content" style="display: none">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px">
+              Your Personal Oracle is being called forth...
+            </p>
+            <div class="element-icons">
+              <span class="element-icon">🔥</span>
+              <span class="element-icon">💧</span>
+              <span class="element-icon">🌍</span>
+              <span class="element-icon">💨</span>
+              <span class="element-icon">✨</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Completion -->
+        <div id="step-complete" class="step-content" style="display: none">
+          <h2>🎉 Your Sacred Container is Set</h2>
+
+          <div class="message">
+            <p>
+              Dear one, your preparation is complete. The mountains are calling,
+              and we cannot wait to meet you in person.
+            </p>
+            <p style="margin-top: 15px">
+              Your Personal Oracle is now available to support you in the days
+              leading up to our gathering.
+            </p>
+          </div>
+
+          <div class="oracle-card" id="oracle-info">
+            <!-- Oracle info will be inserted here -->
+          </div>
+
+          <button class="btn" onclick="window.location.href='/oracle'">
+            Meet Your Oracle
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Simulated participant data
+      let participantId = null;
+      let currentStep = 1;
+
+      // Step management
+      function showStep(stepNumber) {
+        document
+          .querySelectorAll(".step-content")
+          .forEach((el) => (el.style.display = "none"));
+        document.querySelectorAll(".step").forEach((el, i) => {
+          if (i < stepNumber - 1) el.classList.add("completed");
+          else el.classList.remove("completed");
+
+          if (i === stepNumber - 1) el.classList.add("active");
+          else el.classList.remove("active");
+        });
+
+        const stepMap = {
+          1: "step-registration",
+          2: "step-current-state",
+          3: "step-intentions",
+          4: "step-oracle",
+          5: "step-complete",
+        };
+
+        document.getElementById(stepMap[stepNumber]).style.display = "block";
+        currentStep = stepNumber;
+      }
+
+      // Energy level slider
+      document.getElementById("energyLevel")?.addEventListener("input", (e) => {
+        document.getElementById("energy-value").textContent = e.target.value;
+      });
+
+      // Registration form
+      document
+        .getElementById("registration-form")
+        ?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const data = {
+            email: document.getElementById("email").value,
+            firstName: document.getElementById("firstName").value,
+            lastName: document.getElementById("lastName").value,
+            preferredName: document.getElementById("preferredName").value,
+            retreatId: "switzerland-2024-spring", // Would be dynamic
+            arrivalDate: "2024-05-15T14:00:00Z",
+            departureDate: "2024-05-20T11:00:00Z",
+          };
+
+          // Simulate API call
+          console.log("Registering:", data);
+          participantId = "participant-" + Date.now(); // Simulated ID
+
+          // Show welcome message
+          alert(
+            `Welcome ${data.firstName}! Check your messages for a personal welcome from Kelly.`,
+          );
+
+          showStep(2);
+        });
+
+      // Current state form
+      document
+        .getElementById("state-form")
+        ?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const data = {
+            emotionalTone: document.getElementById("emotionalTone").value,
+            energyLevel: parseInt(document.getElementById("energyLevel").value),
+            primaryChallenge: document.getElementById("primaryChallenge").value,
+          };
+
+          console.log("Current state:", data);
+          showStep(3);
+        });
+
+      // Intentions form
+      document
+        .getElementById("intentions-form")
+        ?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const data = {
+            primaryIntention: document.getElementById("primaryIntention").value,
+            desiredOutcomes: document
+              .getElementById("desiredOutcomes")
+              .value.split("\n")
+              .filter((x) => x),
+            openToExploring: document
+              .getElementById("openToExploring")
+              .value.split("\n")
+              .filter((x) => x),
+          };
+
+          console.log("Intentions:", data);
+
+          // Show oracle assignment
+          showStep(4);
+
+          // Simulate oracle assignment
+          setTimeout(() => {
+            const elements = ["fire", "water", "earth", "air", "aether"];
+            const element =
+              elements[Math.floor(Math.random() * elements.length)];
+            const archetypes = {
+              fire: "Visionary Pioneer",
+              water: "Emotional Alchemist",
+              earth: "Sacred Builder",
+              air: "Wisdom Weaver",
+              aether: "Unity Catalyst",
+            };
+            const icons = {
+              fire: "🔥",
+              water: "💧",
+              earth: "🌍",
+              air: "💨",
+              aether: "✨",
+            };
+
+            // Update oracle card
+            document.getElementById("oracle-info").innerHTML = `
+                    <div class="oracle-element">${icons[element]}</div>
+                    <div class="oracle-name">Your ${element.charAt(0).toUpperCase() + element.slice(1)} Oracle</div>
+                    <div class="oracle-archetype">${archetypes[element]}</div>
+                `;
+
+            showStep(5);
+          }, 3000);
+        });
+
+      // Initialize
+      showStep(1);
+    </script>
+  </body>
+</html>

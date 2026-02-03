@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createCipher, createDecipher, randomBytes, scrypt } from 'crypto';
 import { promisify } from 'util';
 

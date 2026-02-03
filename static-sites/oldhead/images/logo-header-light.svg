@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 60">
+  <!-- Old Head Plaster - Horizontal Logo (matching reference exactly) -->
+  <defs>
+    <style>
+      .brand { font-family: Georgia, 'Times New Roman', serif; }
+    </style>
+  </defs>
+
+  <g fill="#FAFAF8">
+    <!-- O - the oval shape, open on right where H integrates -->
+    <path d="
+      M28 5
+      C12 5, 2 18, 2 30
+      C2 42, 12 55, 28 55
+      C36 55, 42 50, 46 44
+      L42 40
+      C39 45, 34 49, 28 49
+      C16 49, 8 40, 8 30
+      C8 20, 16 11, 28 11
+      C34 11, 39 15, 42 20
+      L46 16
+      C42 10, 36 5, 28 5
+      Z
+    "/>
+
+    <!-- H - left vertical integrated with O -->
+    <rect x="42" y="5" width="6" height="50"/>
+    <!-- H - right vertical -->
+    <rect x="60" y="5" width="6" height="50"/>
+    <!-- H - crossbar -->
+    <rect x="42" y="25" width="24" height="6"/>
+
+    <!-- Swoosh - diagonal curve cutting through the monogram -->
+    <path d="
+      M0 48
+      Q20 38, 40 30
+      Q55 24, 75 18
+      L74 14
+      Q54 20, 38 27
+      Q18 35, 0 44
+      Z
+    "/>
+  </g>
+
+  <!-- OLD HEAD -->
+  <text x="90" y="35" class="brand" font-size="28" font-weight="700" font-style="italic" fill="#FAFAF8" letter-spacing="3">OLD HEAD</text>
+
+  <!-- Line before PLASTER -->
+  <line x1="90" y1="48" x2="125" y2="48" stroke="#FAFAF8" stroke-width="1"/>
+
+  <!-- PLASTER -->
+  <text x="132" y="52" class="brand" font-size="13" fill="#FAFAF8" letter-spacing="7">PLASTER</text>
+
+  <!-- Line after PLASTER -->
+  <line x1="232" y1="48" x2="267" y2="48" stroke="#FAFAF8" stroke-width="1"/>
+</svg>

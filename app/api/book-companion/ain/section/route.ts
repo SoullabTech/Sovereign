@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * AIN SECTION API ROUTE
  *
@@ -9,8 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import fs from 'node:fs/promises';
 import path from 'node:path';
+
+// Skip during static export (Capacitor builds)
 
 type TocItem = {
   id: string;
@@ -62,9 +67,23 @@ async function loadCorpus(): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
+  // Handle static generation gracefully
+  let id: string | null = null;
   try {
-    const id = req.nextUrl.searchParams.get('id');
+    id = req.nextUrl.searchParams.get('id');
+  } catch {
+    // During static export, return placeholder response
+    return NextResponse.json({
+      success: false,
+      error: 'Static export mode'
+    }, { status: 503 });
+  }
 
+  try {
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Missing id parameter' },

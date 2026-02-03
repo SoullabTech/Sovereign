@@ -73,25 +73,59 @@ export async function checkMicrophoneAccess(): Promise<boolean> {
 }
 
 /**
+ * Check if Web Speech API is available (without testing mic access)
+ */
+export function hasSpeechRecognitionAPI(): boolean {
+  if (typeof window === 'undefined') return false;
+  return !!(
+    (window as any).SpeechRecognition ||
+    (window as any).webkitSpeechRecognition
+  );
+}
+
+/**
  * Get comprehensive platform information
+ * NOTE: For web, we check if Speech API exists, NOT if mic permission is granted.
+ * Mic permission will be requested when user actually clicks to start voice.
  */
 export async function getPlatformInfo(): Promise<PlatformInfo> {
   const platform = Capacitor.getPlatform() as 'web' | 'ios' | 'android';
   const isNative = Capacitor.isNativePlatform();
   const isSimulator = isIOSSimulator() || isAndroidEmulator();
 
-  // Simulators don't have microphone access
-  const hasMicrophoneAccess = isSimulator ? false : await checkMicrophoneAccess();
+  // Native platforms use native speech plugin (doesn't need web mic access check)
+  // Simulators may work with native speech but with limited functionality
+  if (isNative) {
+    return {
+      platform,
+      isNative,
+      isSimulator,
+      hasVoiceSupport: true, // Native speech plugin handles this
+      hasMicrophoneAccess: true // Will be checked at runtime by native plugin
+    };
+  }
 
-  // Voice support requires microphone and non-simulator environment
-  const hasVoiceSupport = hasMicrophoneAccess && !isSimulator;
+  // Web: Check if Speech Recognition API exists (don't pre-test mic - it needs user gesture)
+  // We're permissive here - actual mic access will be checked when user clicks to start voice
+  const hasSpeechAPI = hasSpeechRecognitionAPI();
+  const hasMicDevice = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
+
+  // Voice support = Speech API exists AND mediaDevices API exists
+  // Don't call getUserMedia here - it needs a user gesture and will fail if called too early
+  const hasVoiceSupport = hasSpeechAPI && hasMicDevice;
+
+  console.log('[platformDetection] Web voice check:', {
+    hasSpeechAPI,
+    hasMicDevice,
+    hasVoiceSupport
+  });
 
   return {
     platform,
     isNative,
     isSimulator,
     hasVoiceSupport,
-    hasMicrophoneAccess
+    hasMicrophoneAccess: hasMicDevice // Actual access will be requested at runtime
   };
 }
 

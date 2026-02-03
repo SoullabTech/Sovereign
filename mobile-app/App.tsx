@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -43,7 +43,7 @@ import { FieldProvider } from './src/contexts/FieldContext';
 import { TabIcon } from './src/components/common/TabIcon';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 // Tab navigator for main app flow
 function MainTabNavigator() {
@@ -245,7 +245,7 @@ export default function App(): JSX.Element {
   );
 }
 
-// Dark theme configuration for navigation
+// Dark theme configuration for navigation (React Navigation v7)
 const darkTheme = {
   dark: true,
   colors: {
@@ -255,6 +255,24 @@ const darkTheme = {
     text: '#F3F4F6',
     border: '#374151',
     notification: '#10B981',
+  },
+  fonts: {
+    regular: {
+      fontFamily: 'System',
+      fontWeight: '400' as const,
+    },
+    medium: {
+      fontFamily: 'System',
+      fontWeight: '500' as const,
+    },
+    bold: {
+      fontFamily: 'System',
+      fontWeight: '700' as const,
+    },
+    heavy: {
+      fontFamily: 'System',
+      fontWeight: '900' as const,
+    },
   },
 };
 

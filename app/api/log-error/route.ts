@@ -1,4 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 /**
  * Simple error logging endpoint for client-side errors
@@ -31,6 +36,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   return NextResponse.json({
     message: 'Error logging endpoint - use POST to log errors'
   });

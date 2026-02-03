@@ -1211,7 +1211,7 @@ export class LanguageSoulAnalyzer {
   }
 
   private analyzeQuestionQuality(text: string): number {
-    const questions = text.match(/[^.!]*\?[^.!]*/g) || [];
+    const questions: string[] = text.match(/[^.!]*\?[^.!]*/g) || [];
 
     let qualityScore = 0;
     questions.forEach(question => {

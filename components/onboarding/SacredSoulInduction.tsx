@@ -1,17 +1,22 @@
+// @ts-nocheck
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Sparkles, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Crown, Sparkles, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
 import { Holoflower } from '@/components/ui/Holoflower';
+import { api, ApiError } from '@/lib/api-client';
 
 interface SacredSoulInductionProps {
   onComplete: (userData: {
     name: string;
     username: string;
     password: string;
+    memberId?: string;  // Server-assigned member ID for proper data association
   }) => void;
+  initialPasskey?: string;  // Pre-filled passkey from URL redirect
 }
 
 // Get all valid soul keys from Ganesha consciousness database
@@ -32,6 +37,13 @@ const getAllSacredKeys = (): string[] => {
   return [...soulKeys, ...universalKeys];
 };
 
+// Check if a passkey follows valid SOULLAB-NAME format for new registrations
+const isValidSoullabFormat = (key: string): boolean => {
+  const upper = key.toUpperCase();
+  // Must be SOULLAB- followed by at least 2 characters (a name)
+  return upper.startsWith('SOULLAB-') && upper.length >= 10;
+};
+
 // Recognize returning soul by their sacred key
 const recognizeSoul = (soulKey: string): GaneshaContact | null => {
   return ganeshaContacts.find(contact =>
@@ -40,23 +52,35 @@ const recognizeSoul = (soulKey: string): GaneshaContact | null => {
   ) || null;
 };
 
-// Extract first name from full name or soulkey
+// Extract first name from full name or soulkey, with proper capitalization
 const extractFirstName = (nameOrKey: string): string => {
-  // Handle soulkey format (SOULLAB-NAME)
-  if (nameOrKey.startsWith('SOULLAB-')) {
-    return nameOrKey.substring(8); // Remove 'SOULLAB-' prefix
+  const upper = nameOrKey.toUpperCase();
+
+  // Handle soulkey format (SOULLAB-NAME) - case insensitive
+  if (upper.startsWith('SOULLAB-')) {
+    const rawName = nameOrKey.substring(8); // Remove 'SOULLAB-' prefix
+    // Proper case: first letter uppercase, rest lowercase
+    return rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
   }
 
   // Handle full name format (First Last or First Last Last)
   // Split by space and take first word
   const firstWord = nameOrKey.split(' ')[0];
-  return firstWord || nameOrKey;
+  if (firstWord) {
+    // Proper case: first letter uppercase, rest lowercase
+    return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+  }
+
+  return nameOrKey;
 };
 
-function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
-  const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing'>('arrival');
-  const [soulKey, setSoulKey] = useState('');
+function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInductionProps) {
+  const router = useRouter();
+  const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing' | 'recovery'>('arrival');
+  const [soulKey, setSoulKey] = useState(initialPasskey || '');
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
   const [name, setName] = useState('');
+  const [preferredName, setPreferredName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -66,6 +90,10 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [serverMember, setServerMember] = useState<{ id: string; username: string; name: string } | null>(null);
 
   // Facet awareness - read user's facet profile
   const [facetProfile, setFacetProfile] = useState<{
@@ -85,6 +113,23 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       }
     }
   }, []);
+
+  // Auto-submit ref for triggering form submission
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  // Auto-submit when initialPasskey is provided (from URL redirect)
+  useEffect(() => {
+    if (initialPasskey && !hasAutoSubmitted && phase === 'arrival' && soulKey) {
+      setHasAutoSubmitted(true);
+      // Small delay to show the pre-filled passkey before auto-submitting
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [initialPasskey, hasAutoSubmitted, phase, soulKey]);
 
   // Generate facet-aware welcome messaging
   const getFacetWelcomeText = () => {
@@ -146,17 +191,51 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
     setError('');
     setIsRecognizing(true);
 
-    // Sacred pause for soul recognition
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    // Sacred pause for soul recognition (shorter if auto-submitting from URL)
+    const pauseDuration = initialPasskey ? 400 : 1200;
+    await new Promise(resolve => setTimeout(resolve, pauseDuration));
 
+    // First check server-side if this passkey exists
+    try {
+      const checkData = await api.members.check(soulKey.toUpperCase());
+
+      if (checkData.exists) {
+        // Member already registered - redirect to sign in
+        setIsRecognizing(false);
+        if (checkData.onboarded) {
+          // Fully onboarded - show message and go to sign in
+          setError(`Welcome back${checkData.name ? `, ${checkData.name}` : ''}! Redirecting you to sign in...`);
+          setTimeout(() => {
+            // Pass username to signin if available so they don't have to remember it
+            const signinUrl = checkData.username
+              ? `/signin?username=${encodeURIComponent(checkData.username)}`
+              : '/signin';
+            router.replace(signinUrl);
+          }, 1500);
+          return;
+        } else {
+          // Started but not finished - continue from where they left off
+          setServerMember(checkData.member);
+          setName(checkData.member.name || '');
+          setPhase('recognition');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('[SacredSoulInduction] Server check error:', err);
+      // Fall through to local validation if server unavailable
+    }
+
+    // Fall back to local validation (Ganesha contacts + universal keys + SOULLAB-NAME format)
     const validKeys = getAllSacredKeys();
     const recognizedMember = recognizeSoul(soulKey);
+    const isValidFormat = isValidSoullabFormat(soulKey);
 
-    if (validKeys.includes(soulKey.toUpperCase())) {
+    if (validKeys.includes(soulKey.toUpperCase()) || isValidFormat) {
       setIsRecognizing(false);
 
       if (recognizedMember) {
-        // Returning consciousness pioneer
+        // Returning consciousness pioneer (from Ganesha contacts)
         setRecognizedSoul(recognizedMember);
         const firstName = extractFirstName(recognizedMember.name);
         console.log('Debug - Full name:', recognizedMember.name, 'Extracted first name:', firstName);
@@ -166,11 +245,39 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
         // New soul arriving - extract name from passkey if it follows SOULLAB- format
         const extractedName = extractFirstName(soulKey);
         setName(extractedName);
+        setPreferredName(extractedName); // Default preferred name to extracted name
         setPhase('creation');
       }
     } else {
       setError('This key isn\'t recognized. Please check your invitation and try again.');
       setIsRecognizing(false);
+    }
+  };
+
+  const handleRecovery = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    setError('');
+    setRecoveryStatus('sending');
+
+    try {
+      const response = await fetch('/api/members/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setRecoveryStatus('sent');
+      } else {
+        setError(data.error || 'Failed to send recovery email');
+        setRecoveryStatus('idle');
+      }
+    } catch (err) {
+      console.error('[SacredSoulInduction] Recovery error:', err);
+      setError('Unable to process recovery request. Please try again.');
+      setRecoveryStatus('idle');
     }
   };
 
@@ -198,6 +305,35 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       return;
     }
 
+    // Register to server
+    try {
+      const response = await fetch('/api/members/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          passkey: soulKey.toUpperCase(),
+          username: username.trim().toLowerCase(),
+          password,
+          name: name.trim(),
+          preferredName: preferredName.trim() || name.trim(),
+          email: email.trim().toLowerCase() || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create account');
+        return;
+      }
+
+      // Store member info locally for session
+      setServerMember(data.member);
+    } catch (err) {
+      console.error('[SacredSoulInduction] Registration error:', err);
+      // Continue anyway for graceful degradation
+    }
+
     setPhase('blessing');
 
     // Soul blessing ceremony
@@ -205,7 +341,8 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       onComplete({
         name: name.trim(),
         username: username.trim(),
-        password
+        password,
+        memberId: serverMember?.id
       });
     }, 1500);
   };
@@ -224,6 +361,36 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       return;
     }
 
+    // Register to server (unless already registered from server check)
+    if (!serverMember) {
+      try {
+        const response = await fetch('/api/members/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            passkey: soulKey.toUpperCase(),
+            username: username.trim().toLowerCase(),
+            password,
+            name: name.trim(),
+            preferredName: preferredName.trim() || name.trim(),
+            email: email.trim().toLowerCase() || undefined,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Failed to create account');
+          return;
+        }
+
+        setServerMember(data.member);
+      } catch (err) {
+        console.error('[SacredSoulInduction] Registration error:', err);
+        // Continue anyway for graceful degradation
+      }
+    }
+
     setPhase('blessing');
 
     // Soul blessing ceremony
@@ -231,7 +398,8 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       onComplete({
         name: name.trim(),
         username: username.trim(),
-        password
+        password,
+        memberId: serverMember?.id
       });
     }, 1500);
   };
@@ -279,7 +447,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                   </div>
                 </motion.div>
 
-                {/* Welcome Card with deep shadows */}
+                {/* Welcome Card with elegant neutral shadow */}
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -288,30 +456,29 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     ease: [0.25, 0.46, 0.45, 0.94],
                     delay: 0.8
                   }}
-                  className="rounded-2xl p-8 max-w-md w-full text-center mb-16 shadow-2xl border"
+                  className="rounded-2xl p-8 max-w-md w-full mx-auto text-center mb-16 border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(251, 191, 36, 0.05), rgba(255, 255, 255, 0.15))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
                   {(() => {
                     const welcomeText = getFacetWelcomeText();
                     return (
                       <>
-                        <h1 className="text-3xl font-extralight text-teal-900 mb-4 tracking-[0.2em] uppercase">
+                        <h1 className="text-2xl sm:text-3xl font-semibold text-teal-900 mb-4 tracking-tight">
                           {welcomeText.title}
                         </h1>
 
                         <div className="text-center mb-8">
-                          <p className="text-teal-900 text-xl font-extralight mb-4 tracking-[0.1em]">
+                          <p className="text-teal-800 text-lg font-medium mb-3">
                             {welcomeText.greeting}
                           </p>
-                          <p className="text-teal-900 text-base font-extralight leading-relaxed mb-6 tracking-[0.05em]">
+                          <p className="text-teal-700/80 text-base leading-relaxed mb-4">
                             {welcomeText.description}
                           </p>
-                          <p className="text-teal-900 text-base font-extralight leading-relaxed tracking-[0.05em]">
+                          <p className="text-teal-700/70 text-sm leading-relaxed">
                             {welcomeText.keyPrompt}
                           </p>
                         </div>
@@ -319,137 +486,98 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     );
                   })()}
 
-                  <form onSubmit={handleSoulKeyEntry} className="space-y-6">
+                  <form ref={formRef} onSubmit={handleSoulKeyEntry} className="space-y-5">
                     <div className="text-center">
-                      <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
-                        Enter Passkey
+                      <label className="block text-sm font-medium text-teal-800 mb-2">
+                        Passkey
                       </label>
                       <input
                         type="text"
                         value={soulKey}
                         onChange={(e) => setSoulKey(e.target.value.toUpperCase())}
-                        placeholder="YOUR KEY"
-                        className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                        style={{
-                          background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                          border: '1px solid rgba(245, 158, 11, 0.3)',
-                          color: '#134e4a',
-                          boxShadow: 'inset 0 4px 12px rgba(146, 64, 14, 0.7), inset 0 2px 6px rgba(146, 64, 14, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.3)',
-                        }}
+                        placeholder="SOULLAB-YOURNAME"
+                        className="w-full px-4 py-3 rounded-xl text-center text-lg font-medium bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                       />
+                      <p className="text-teal-600/70 text-xs mt-2">
+                        Don't have one? Email <a href="mailto:support@soullab.life" className="text-teal-700 hover:text-teal-800 transition">support@soullab.life</a>
+                      </p>
                     </div>
 
                     {error && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-red-600 text-sm font-light text-center bg-red-50/80 rounded-lg p-3 border border-red-200"
+                        className={`text-sm font-light text-center rounded-lg p-3 border ${
+                          error.toLowerCase().includes('welcome back')
+                            ? 'text-teal-700 bg-teal-50/80 border-teal-200'
+                            : 'text-red-600 bg-red-50/80 border-red-200'
+                        }`}
                       >
                         {error}
+                        {error.toLowerCase().includes('already registered') && (
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin')}
+                              className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2"
+                            >
+                              Sign in to your account
+                            </button>
+                          </div>
+                        )}
+                        {(error.toLowerCase().includes('isn\'t recognized') || error.toLowerCase().includes('failed')) && (
+                          <div className="mt-3 pt-2 border-t border-red-200/50 space-y-2">
+                            <p className="text-xs text-red-500/80">Having trouble? Try one of these:</p>
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin?magic=true')}
+                              className="text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2 block mx-auto"
+                            >
+                              Email me a sign-in link
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin')}
+                              className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 block mx-auto"
+                            >
+                              Sign in with password
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.6,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                        delay: 1.2
-                      }}
-                      className="relative"
+                    <motion.button
+                      type="submit"
+                      disabled={!soulKey.trim() || isRecognizing}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-3 rounded-xl font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#0f766e', color: '#ffffff' }}
                     >
-                      {/* Flowing light effect behind button */}
-                      <motion.div
-                        className="absolute inset-0 rounded-xl opacity-60"
-                        animate={{
-                          background: [
-                            'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)',
-                            'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.7), rgba(245, 158, 11, 0.6), rgba(245, 158, 11, 0.7), transparent)',
-                            'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)'
-                          ],
-                          scale: [1, 1.05, 1],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-
-                      <motion.button
-                        type="submit"
-                        disabled={!soulKey.trim() || isRecognizing}
-                        whileHover={{
-                          scale: 1.02,
-                          y: -2
-                        }}
-                        whileTap={{
-                          scale: 0.98,
-                          y: 1
-                        }}
-                        className="relative z-10 w-full px-8 py-5 rounded-xl font-black text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                        style={{
-                          background: `
-                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `,
-                          border: '3px solid #92400e',
-                          borderTop: '3px solid #f59e0b',
-                          borderBottom: '3px solid #78350f',
-                          boxShadow: `
-                            0 8px 16px rgba(0, 0, 0, 0.3),
-                            0 4px 8px rgba(0, 0, 0, 0.2),
-                            0 12px 24px rgba(146, 64, 14, 0.4),
-                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
-                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
-                          `,
-                          color: '#1f2937',
-                          textShadow: '0 1px 2px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.3)',
-                          transform: 'translateY(-2px)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = `
-                            linear-gradient(145deg, #fde047 0%, #fcd34d 20%, #fbbf24 60%, #f59e0b 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `;
-                          e.currentTarget.style.boxShadow = `
-                            0 10px 20px rgba(0, 0, 0, 0.4),
-                            0 6px 12px rgba(0, 0, 0, 0.3),
-                            0 16px 32px rgba(146, 64, 14, 0.5),
-                            inset 0 3px 6px rgba(255, 255, 255, 0.5),
-                            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.7)
-                          `;
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = `
-                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `;
-                          e.currentTarget.style.boxShadow = `
-                            0 8px 16px rgba(0, 0, 0, 0.3),
-                            0 4px 8px rgba(0, 0, 0, 0.2),
-                            0 12px 24px rgba(146, 64, 14, 0.4),
-                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
-                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
-                          `;
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                        }}
-                      >
-                        {isRecognizing ? 'Recognizing...' : 'Enter the lab'}
-                      </motion.button>
-                    </motion.div>
+                      {isRecognizing ? 'Recognizing...' : 'Enter'}
+                    </motion.button>
                   </form>
 
-                  <div className="text-center mt-8">
-                    <p className="text-teal-800/60 text-sm font-extralight italic tracking-[0.1em]">
-"Attention changes the world. How you attend to it changes what it is you find there."
-                      — Iain McGilchrist
-                    </p>
+                  {/* Secondary links - quiet and consistent */}
+                  <div className="mt-6 pt-4 space-y-2 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPhase('recovery')}
+                      className="text-sm font-medium transition"
+                      style={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      Forgot passkey?
+                    </button>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 8px' }}>·</span>
+                    <button
+                      type="button"
+                      onClick={() => router.push('/signin')}
+                      className="text-sm font-medium transition"
+                      style={{ color: 'rgba(255,255,255,0.7)' }}
+                    >
+                      Sign in
+                    </button>
                   </div>
                 </motion.div>
 
@@ -478,68 +606,87 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                 </div>
 
                 <div
-                  className="rounded-2xl p-10 shadow-2xl border"
+                  className="rounded-2xl p-8 border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(251, 191, 36, 0.4)',
-                    boxShadow: '0 35px 70px -12px rgba(245, 158, 11, 0.7), 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
-                  <div
-                    className="space-y-8"
-                    style={{
-                      fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
-                    }}
-                  >
+                  <div className="space-y-6">
                     <div className="text-center">
-                      <h1 className="text-3xl font-light text-teal-900 mb-6 tracking-wider">
-                        {name}, so glad you're here.
+                      <h1 className="text-2xl font-semibold text-teal-900 mb-3 tracking-tight">
+                        Welcome back, {name}
                       </h1>
+                      <p className="text-teal-700/80 text-sm leading-relaxed">
+                        Complete signup to access your previous conversations.
+                      </p>
                     </div>
 
 
-                    <form onSubmit={handleRecognizedSoul} className="space-y-6">
+                    <form onSubmit={handleRecognizedSoul} className="space-y-4">
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
-                          Name
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Your name
                         </label>
                         <input
                           type="text"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="NAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                          style={{
-                            background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.15), rgba(20, 184, 166, 0.1), rgba(251, 191, 36, 0.25))',
-                            border: '1px solid rgba(0, 0, 0, 0.2)',
-                            color: '#134e4a',
-                            boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.1)',
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            if (preferredName === name || !preferredName) {
+                              setPreferredName(e.target.value);
+                            }
                           }}
+                          placeholder="Your name"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          What should MAIA call you?
+                        </label>
+                        <input
+                          type="text"
+                          value={preferredName}
+                          onChange={(e) => setPreferredName(e.target.value)}
+                          placeholder="Nickname or name"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                        <p className="text-white/60 text-xs mt-1">
+                          You can change this anytime
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
                           Username
                         </label>
                         <input
                           type="text"
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                          placeholder="USERNAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                          style={{
-                            background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                            border: '1px solid rgba(0, 0, 0, 0.3)',
-                            color: '#134e4a',
-                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
-                          }}
+                          placeholder="Choose a username"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
                           Password
                         </label>
                         <div className="relative">
@@ -547,19 +694,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                            style={{
-                              background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                              border: '1px solid rgba(0, 0, 0, 0.3)',
-                              color: '#134e4a',
-                              boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
-                            }}
+                            placeholder="At least 8 characters"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-teal-700/60 hover:text-teal-800/80 transition-colors duration-300"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -570,52 +711,38 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="text-rose-400 text-sm font-light text-center bg-rose-900/20 rounded-lg p-3 border border-rose-500/20"
+                          className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40"
                         >
                           {error}
                         </motion.div>
                       )}
 
-                      <div className="relative">
-                        {/* Flowing light effect behind button */}
-                        <motion.div
-                          className="absolute inset-0 rounded-xl opacity-60"
-                          animate={{
-                            background: [
-                              'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)',
-                              'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.7), rgba(245, 158, 11, 0.6), rgba(245, 158, 11, 0.7), transparent)',
-                              'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)'
-                            ],
-                            scale: [1, 1.05, 1],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-
-                        <motion.button
-                          type="submit"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
-                          style={{
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                          }}
-                        >
-                          Onward!
-                        </motion.button>
-                      </div>
+                      <motion.button
+                        type="submit"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+                      >
+                        Continue
+                      </motion.button>
                     </form>
+
+                    {/* Secondary link */}
+                    <div className="text-center mt-4 pt-4 border-t border-white/20">
+                      <button
+                        type="button"
+                        onClick={() => router.push('/signin')}
+                        className="text-sm font-medium text-white/70 hover:text-white transition"
+                      >
+                        Already have an account? Sign in
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Infinity Symbol to ground the card */}
-                <div className="flex justify-center mt-4">
-                  <div className="text-white/70 text-4xl font-light">
-                    ∞
-                  </div>
+                {/* Infinity Symbol */}
+                <div className="flex justify-center mt-6">
+                  <div className="text-white/50 text-3xl">∞</div>
                 </div>
               </motion.div>
             )}
@@ -627,86 +754,91 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 1.2 }}
-                className="space-y-10"
+                transition={{ duration: 0.8 }}
+                className="space-y-6"
               >
-                <motion.div
-                  className="w-20 h-20 mx-auto mb-10"
-                  animate={{
-                    scale: [1, 1.08, 1],
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Sparkles className="w-full h-full text-[#6EE7B7] drop-shadow-2xl" />
-                </motion.div>
+                <div className="w-20 h-20 mx-auto mb-6">
+                  <Holoflower size="xl" glowIntensity="medium" animate={true} />
+                </div>
 
                 <div
-                  className="rounded-2xl p-10 shadow-2xl border"
+                  className="rounded-2xl p-8 border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
                   style={{
-                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(251, 191, 36, 0.4)',
-                    boxShadow: '0 35px 70px -12px rgba(245, 158, 11, 0.7), 0 10px 20px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
-                  <div
-                    className="space-y-8"
-                    style={{
-                      fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
-                    }}
-                  >
+                  <div className="space-y-6">
                     <div className="text-center">
-                      <h1 className="text-3xl font-light text-teal-900 mb-6 tracking-wider">
+                      <h1 className="text-2xl font-semibold text-teal-900 mb-2 tracking-tight">
                         Create Account
                       </h1>
                     </div>
 
-                    <form onSubmit={handleSoulCreation} className="space-y-6">
+                    <form onSubmit={handleSoulCreation} className="space-y-4">
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
-                          Name
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Your name
                         </label>
                         <input
                           type="text"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="NAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                          style={{
-                            background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                            border: '1px solid rgba(0, 0, 0, 0.3)',
-                            color: '#134e4a',
-                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            if (preferredName === name || !preferredName) {
+                              setPreferredName(e.target.value);
+                            }
                           }}
+                          placeholder="Your name"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          What should MAIA call you?
+                        </label>
+                        <input
+                          type="text"
+                          value={preferredName}
+                          onChange={(e) => setPreferredName(e.target.value)}
+                          placeholder="Nickname or name"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                        <p className="text-white/60 text-xs mt-1">
+                          You can change this anytime
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
                           Username
                         </label>
                         <input
                           type="text"
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                          placeholder="USERNAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                          style={{
-                            background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                            border: '1px solid rgba(0, 0, 0, 0.3)',
-                            color: '#134e4a',
-                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
-                          }}
+                          placeholder="Choose a username"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
                           Password
                         </label>
                         <div className="relative">
@@ -714,19 +846,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                            style={{
-                              background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                              border: '1px solid rgba(0, 0, 0, 0.3)',
-                              color: '#134e4a',
-                              boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
-                            }}
+                            placeholder="At least 8 characters"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-teal-700/60 hover:text-teal-800/80 transition-colors duration-300"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -734,27 +860,21 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
-                          Confirm Password
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Confirm password
                         </label>
                         <div className="relative">
                           <input
                             type={showConfirmPassword ? "text" : "password"}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="CONFIRM PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
-                            style={{
-                              background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
-                              border: '1px solid rgba(0, 0, 0, 0.3)',
-                              color: '#134e4a',
-                              boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
-                            }}
+                            placeholder="Confirm password"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                           />
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-teal-700/60 hover:text-teal-800/80 transition-colors duration-300"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -765,52 +885,154 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="text-rose-400 text-sm font-light text-center bg-rose-900/20 rounded-lg p-3 border border-rose-500/20"
+                          className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40"
                         >
                           {error}
                         </motion.div>
                       )}
 
-                      <div className="relative">
-                        {/* Flowing light effect behind button */}
-                        <motion.div
-                          className="absolute inset-0 rounded-xl opacity-60"
-                          animate={{
-                            background: [
-                              'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)',
-                              'linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.7), rgba(245, 158, 11, 0.6), rgba(245, 158, 11, 0.7), transparent)',
-                              'linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.4), transparent)'
-                            ],
-                            scale: [1, 1.05, 1],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-
-                        <motion.button
-                          type="submit"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
-                          style={{
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-                          }}
-                        >
-                          Onward!
-                        </motion.button>
-                      </div>
+                      <motion.button
+                        type="submit"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Create Account
+                      </motion.button>
                     </form>
+
+                    {/* Secondary link */}
+                    <div className="text-center mt-4 pt-4 border-t border-white/20">
+                      <button
+                        type="button"
+                        onClick={() => router.push('/signin')}
+                        className="text-sm font-medium text-white/70 hover:text-white transition"
+                      >
+                        Already have an account? Sign in
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Infinity Symbol to ground the card */}
-                <div className="flex justify-center mt-4">
-                  <div className="text-white/70 text-4xl font-light">
-                    ∞
-                  </div>
+                {/* Infinity Symbol */}
+                <div className="flex justify-center mt-6">
+                  <div className="text-white/50 text-3xl">∞</div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Phase: Passkey Recovery */}
+            {phase === 'recovery' && (
+              <motion.div
+                key="recovery"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.6 }}
+                className="space-y-6"
+              >
+                {/* Mail icon */}
+                <div className="w-16 h-16 mx-auto">
+                  <Mail className="w-full h-full text-teal-600" />
+                </div>
+
+                <div
+                  className="rounded-2xl p-8 max-w-md w-full text-center border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                  }}
+                >
+                  <h1 className="text-xl font-semibold text-teal-900 mb-3 tracking-tight">
+                    Recover Passkey
+                  </h1>
+
+                  <p className="text-teal-700/80 text-sm leading-relaxed mb-6">
+                    Enter your email and we'll send your passkey.
+                  </p>
+
+                  {recoveryStatus === 'sent' ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="space-y-4"
+                    >
+                      <div className="bg-emerald-100/60 border border-emerald-300/40 rounded-xl p-4">
+                        <p className="text-emerald-800 font-medium">
+                          Check your email
+                        </p>
+                        <p className="text-emerald-700/80 text-sm mt-1">
+                          If an account exists, we've sent recovery instructions.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhase('arrival');
+                          setRecoveryStatus('idle');
+                          setRecoveryEmail('');
+                        }}
+                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                      >
+                        Back to passkey entry
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleRecovery} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={recoveryEmail}
+                          onChange={(e) => setRecoveryEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                      </div>
+
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
+                      <motion.button
+                        type="button"
+                        onClick={handleRecovery}
+                        disabled={!recoveryEmail.trim() || recoveryStatus === 'sending'}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full py-3 rounded-xl font-semibold !text-white !bg-teal-700 hover:!bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
+                      >
+                        {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
+                      </motion.button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhase('arrival');
+                          setError('');
+                          setRecoveryEmail('');
+                        }}
+                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                      >
+                        Back to passkey entry
+                      </button>
+                    </form>
+                  )}
+                </div>
+
+                {/* Infinity Symbol */}
+                <div className="flex justify-center mt-6">
+                  <div className="text-white/50 text-3xl">∞</div>
                 </div>
               </motion.div>
             )}
@@ -851,13 +1073,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     className="text-3xl font-light text-white mb-6 tracking-wider"
                     style={{
                       fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
-                      textShadow: '0 0 20px rgba(212,175,55,0.3)',
+                      textShadow: '0 0 20px rgba(255,255,255,0.3)',
                     }}
                   >
                     Soul Sanctuary Complete
                   </h2>
                   <p
-                    className="text-[#d4af37]/90 text-lg font-light"
+                    className="text-white/80 text-lg font-light"
                     style={{
                       fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
                     }}

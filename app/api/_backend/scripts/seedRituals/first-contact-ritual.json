@@ -1,0 +1,31 @@
+// Location: /oracle-backend/scripts/seedRituals/first-contact-ritual.json
+// Build: Backend
+
+{
+  "ritual_id": "first-contact-initiation",
+  "element": "Aether",
+  "phase": "Initiation",
+  "archetype": "Oracle",
+  "title": "First Contact with Your Oracle",
+  "prompt": "Before we begin, take a breath. Feel your feet. Touch something real. What is stirring in you right now that has no words yet?",
+  "practice": "Sit in stillness. Listen. Write one truth that wants to speak through you.",
+  "agent_support": {
+    "check_in": "What is present for you in this moment of arrival?",
+    "follow_up": "What inner guidance feels most alive in your body now?"
+  },
+  "shadow_trigger": "doubt",
+  "bio_state_match": ["undefined"],
+  "time_signature": "first_login",
+  "cycle_context": {
+    "season": "Threshold",
+    "spiral_phase": "Aether 1",
+    "coherence_level": "invocation"
+  },
+  "completion_action": {
+    "log_journal": true,
+    "suggest_next_ritual": true,
+    "elemental_feedback": false
+  },
+  "tone_profile": "soft-sage",
+  "tags": ["initiation", "oracle", "first-contact"]
+}

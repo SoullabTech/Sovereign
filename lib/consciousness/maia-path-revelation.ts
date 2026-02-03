@@ -225,6 +225,36 @@ export const MEMBER_REQUEST_PATTERNS: RequestPattern[] = [
     toolToReveal: 'focus-ritual'
   },
 
+  // Capture/Remember/Organize Requests (Inbox Triage)
+  {
+    keywords: ['remember', 'forget', 'capture', 'write down', 'note', 'idea', 'thought', 'organize'],
+    phrases: ['don\'t want to forget', 'need to remember', 'have an idea', 'just thought of', 'before I forget', 'so many things'],
+    emotionalSignature: 'Mental load seeking relief',
+    likelyNeed: 'Quick capture to reduce cognitive load',
+    agentToSummon: 'ganesha',
+    toolToReveal: 'inbox-triage'
+  },
+
+  // Start/Procrastination Requests (Next Step Builder)
+  {
+    keywords: ['start', 'procrastinating', 'begin', 'first step', 'where to begin', 'too big', 'daunting'],
+    phrases: ['can\'t start', 'don\'t know where to begin', 'keep putting off', 'too overwhelming to start', 'been meaning to', 'need to do'],
+    emotionalSignature: 'Paralysis before starting',
+    likelyNeed: 'Break task into smallest next action',
+    agentToSummon: 'ganesha',
+    toolToReveal: 'next-step'
+  },
+
+  // Avoidance/Message Requests (Avoidance Breaker)
+  {
+    keywords: ['avoid', 'text', 'email', 'reply', 'respond', 'message', 'call back', 'get back to'],
+    phrases: ['need to text', 'should email', 'been avoiding', 'haven\'t replied', 'dreading this message', 'putting off responding', 'need to tell them'],
+    emotionalSignature: 'Communication avoidance seeking resolution',
+    likelyNeed: 'Help drafting difficult message + follow-up',
+    agentToSummon: 'ganesha',
+    toolToReveal: 'avoidance-breaker'
+  },
+
   // Shadow Work Requests
   {
     keywords: ['shadow', 'dark', 'hidden', 'avoid', 'resist', 'pattern', 'repeat', 'sabotage'],
@@ -434,6 +464,37 @@ export const REVEALABLE_TOOLS: Record<string, RevealedTool> = {
     description: 'Deliberate practice toward mastery',
     agentConnection: 'mentor',
     visualElement: 'Progress tracking with practice rituals',
+    userPermission: true
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SOULLAB FOCUS TOOLS (ADHD Support Layer)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  'inbox-triage': {
+    id: 'inbox-triage',
+    name: 'Quick Capture',
+    description: 'Capture and classify anything quickly: task, event, or thought',
+    agentConnection: 'ganesha',
+    visualElement: 'Simple capture → classify → done flow',
+    userPermission: true
+  },
+
+  'next-step': {
+    id: 'next-step',
+    name: 'Next Step Builder',
+    description: 'Break any task into its smallest next physical action',
+    agentConnection: 'ganesha',
+    visualElement: 'Task → next step → schedule or start',
+    userPermission: true
+  },
+
+  'avoidance-breaker': {
+    id: 'avoidance-breaker',
+    name: 'Avoidance Breaker',
+    description: 'Draft the message you\'ve been avoiding + schedule follow-up',
+    agentConnection: 'ganesha',
+    visualElement: 'Draft message → copy → schedule follow-up',
     userPermission: true
   }
 };

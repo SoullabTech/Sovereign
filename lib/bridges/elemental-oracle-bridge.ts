@@ -27,6 +27,9 @@ export interface ElementalQuery {
   knowledge?: any;
   includeAll?: boolean;
   primaryElement?: string;
+  // Fast mode: Use pattern matching instead of LLM calls for trace-only classification
+  // Useful for corpus callosum tracing without blocking the main response
+  fastMode?: boolean;
 }
 
 export interface ElementalResponse {
@@ -35,6 +38,34 @@ export interface ElementalResponse {
   depth: number;
   harmonics: ElementalHarmonic[];
   dominant: string;
+  // Corpus Callosum trace data for parallel processing auditing
+  traceData?: {
+    elementalAgents: Array<{
+      element: 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow';
+      agentName: string;
+      wisdom: string;
+      intensity: number;
+      archetype?: string;
+      cognitiveSystem?: string;
+      symbols?: string[];
+      latencyMs: number;
+      status: 'ok' | 'error' | 'skipped';
+      error?: string;
+    }>;
+    synthesis: {
+      synthesis: string;
+      dominant: string;
+      depth: number;
+      harmonics?: Array<{
+        elements: string[];
+        resonance: number;
+        pattern: string;
+      }>;
+      integrationMethod: 'harmonic_weaving' | 'dominant_voice' | 'parallel_blend' | 'fast_pattern_match';
+      latencyMs: number;
+    };
+    totalLatencyMs: number;
+  };
 }
 
 export interface ElementalWisdom {
@@ -178,23 +209,51 @@ export class ElementalOracleBridge {
 
     console.log('🌀 Processing through elemental archetypal lenses...');
 
+    // 🚀 FAST MODE: Pattern matching without LLM calls for quick trace data
+    // Use this for corpus callosum tracing without blocking the response
+    if (query.fastMode) {
+      return this.processAllFast(query);
+    }
+
     const elements: ElementalWisdom = {};
     const enabledElements = query.includeAll
       ? this.config.enabledElements
       : this.selectRelevantElements(query);
 
     // 🚀 PARALLEL PROCESSING OPTIMIZATION - Process all elements concurrently
+    // WITH TIMING for corpus callosum tracing
     console.log(`⚡ Processing ${enabledElements.length} elements in parallel...`);
     const startTime = Date.now();
 
-    const elementPromises = enabledElements.map(element =>
-      this.processElement(element, query)
-    );
+    // Track per-element timing for corpus callosum trace
+    const elementTimings: Map<string, { startTime: number; latencyMs: number; error?: string }> = new Map();
+
+    const elementPromises = enabledElements.map(async (element) => {
+      const elemStart = Date.now();
+      try {
+        const result = await this.processElement(element, query);
+        elementTimings.set(element, {
+          startTime: elemStart,
+          latencyMs: Date.now() - elemStart,
+        });
+        return { element, result, error: null };
+      } catch (err) {
+        elementTimings.set(element, {
+          startTime: elemStart,
+          latencyMs: Date.now() - elemStart,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return { element, result: null, error: err };
+      }
+    });
+
     const elementResults = await Promise.all(elementPromises);
 
     // Map results back to elements object
-    enabledElements.forEach((element, index) => {
-      elements[element] = elementResults[index];
+    elementResults.forEach(({ element, result }) => {
+      if (result) {
+        elements[element] = result;
+      }
     });
 
     const parallelTime = Date.now() - startTime;
@@ -205,7 +264,9 @@ export class ElementalOracleBridge {
     const harmonics = this.findHarmonics(elements);
 
     // Synthesize all elemental wisdom
+    const synthesisStart = Date.now();
     const synthesis = await this.synthesizeElements(elements, harmonics, query);
+    const synthesisLatency = Date.now() - synthesisStart;
 
     // Determine dominant element
     const dominant = this.findDominantElement(elements);
@@ -213,12 +274,186 @@ export class ElementalOracleBridge {
     // Calculate depth of elemental processing
     const depth = this.calculateElementalDepth(elements, harmonics);
 
+    // 🧠 BUILD CORPUS CALLOSUM TRACE DATA
+    const traceData: ElementalResponse['traceData'] = {
+      elementalAgents: elementResults
+        .filter(({ result }) => result !== null)
+        .map(({ element, result, error }) => {
+          const timing = elementTimings.get(element);
+          const cognitive = this.cognitiveMapping[element];
+          return {
+            element: element as 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow',
+            agentName: `${element.charAt(0).toUpperCase() + element.slice(1)}Agent`,
+            wisdom: result!.wisdom,
+            intensity: result!.intensity,
+            archetype: result!.archetype,
+            cognitiveSystem: cognitive?.system,
+            symbols: result!.symbols,
+            latencyMs: timing?.latencyMs ?? 0,
+            status: (error ? 'error' : 'ok') as 'ok' | 'error' | 'skipped',
+            error: error ? (error instanceof Error ? error.message : String(error)) : undefined,
+          };
+        }),
+      synthesis: {
+        synthesis,
+        dominant,
+        depth,
+        harmonics: harmonics.map(h => ({
+          elements: h.elements,
+          resonance: h.resonance,
+          pattern: h.pattern,
+        })),
+        integrationMethod: this.config.harmonicWeaving ? 'harmonic_weaving' : 'parallel_blend',
+        latencyMs: synthesisLatency,
+      },
+      totalLatencyMs: Date.now() - startTime,
+    };
+
+    console.log(`🧠 [CorpusCallosum] Trace data ready: ${traceData.elementalAgents.length} agents, ${traceData.synthesis.harmonics?.length ?? 0} harmonics`);
+
     return {
       elements,
       synthesis,
       depth,
       harmonics,
-      dominant
+      dominant,
+      traceData,
+    };
+  }
+
+  /**
+   * 🚀 FAST MODE: Pattern-based elemental classification without LLM calls
+   * Used for corpus callosum tracing - provides quick trace data (~50ms vs 30s+)
+   */
+  private async processAllFast(query: ElementalQuery): Promise<ElementalResponse> {
+    const startTime = Date.now();
+    console.log(`⚡ [FastMode] Pattern-based elemental classification...`);
+
+    // Elemental keyword patterns for fast classification
+    const elementPatterns: Record<string, { keywords: RegExp; archetype: string }> = {
+      fire: {
+        keywords: /\b(anger|rage|fury|passion|drive|ambition|transform|burn|ignite|courage|fierce|bold)\b/gi,
+        archetype: 'Warrior/Transformer'
+      },
+      water: {
+        keywords: /\b(grief|sad|loss|emotion|feel|flow|tears|mourn|heart|love|compassion|empathy|deep)\b/gi,
+        archetype: 'Healer/Empath'
+      },
+      earth: {
+        keywords: /\b(ground|plan|practical|stable|secure|body|physical|root|solid|structure|tomorrow|routine)\b/gi,
+        archetype: 'Builder/Sustainer'
+      },
+      air: {
+        keywords: /\b(think|thought|mind|idea|clarity|perspective|understand|reason|logic|analyze|racing|spiral)\b/gi,
+        archetype: 'Thinker/Communicator'
+      },
+      aether: {
+        keywords: /\b(spirit|soul|transcend|meaning|purpose|sacred|divine|connect|unity|whole|integrate)\b/gi,
+        archetype: 'Mystic/Seer'
+      },
+      shadow: {
+        keywords: /\b(fear|shame|hide|dark|unknown|avoid|deny|repress|unconscious|project)\b/gi,
+        archetype: 'Shadow/Integrator'
+      }
+    };
+
+    const input = query.input.toLowerCase();
+    const elements: ElementalWisdom = {};
+    const traceAgents: Array<{
+      element: 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow';
+      agentName: string;
+      wisdom: string;
+      intensity: number;
+      archetype?: string;
+      cognitiveSystem?: string;
+      latencyMs: number;
+      status: 'ok' | 'error' | 'skipped';
+    }> = [];
+
+    // Score each element based on keyword matches
+    const elementScores: Record<string, number> = {};
+    let maxScore = 0;
+    let dominantElement = 'earth'; // Default
+
+    for (const [element, pattern] of Object.entries(elementPatterns)) {
+      const matches = input.match(pattern.keywords) || [];
+      const score = matches.length;
+      elementScores[element] = score;
+
+      if (score > maxScore) {
+        maxScore = score;
+        dominantElement = element;
+      }
+
+      // Calculate intensity (0-1) based on match density
+      const intensity = Math.min(1, score / 5); // Cap at 5 matches = 1.0
+
+      const elemStart = Date.now();
+      const cognitive = this.cognitiveMapping[element];
+
+      if (score > 0 || query.includeAll) {
+        elements[element] = {
+          wisdom: `[Fast] ${element.charAt(0).toUpperCase() + element.slice(1)} resonance detected (${matches.length} signals)`,
+          intensity,
+          archetype: pattern.archetype,
+          symbols: matches.slice(0, 3), // First 3 matched keywords as symbols
+        };
+
+        traceAgents.push({
+          element: element as 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow',
+          agentName: `${element.charAt(0).toUpperCase() + element.slice(1)}Agent`,
+          wisdom: elements[element].wisdom,
+          intensity,
+          archetype: pattern.archetype,
+          cognitiveSystem: cognitive?.system,
+          latencyMs: Date.now() - elemStart,
+          status: 'ok',
+        });
+      }
+    }
+
+    // Find harmonics (elements that co-occur)
+    const activeElements = Object.entries(elementScores)
+      .filter(([_, score]) => score > 0)
+      .map(([el]) => el);
+
+    const harmonics: ElementalHarmonic[] = [];
+    if (activeElements.length >= 2) {
+      harmonics.push({
+        elements: activeElements.slice(0, 2),
+        resonance: 0.7,
+        pattern: `${activeElements[0]}-${activeElements[1]} harmonic`
+      });
+    }
+
+    // Calculate depth based on element diversity
+    const depth = Math.min(1, activeElements.length / 4);
+
+    // Build synthesis summary
+    const synthesis = `[Fast] Dominant: ${dominantElement} (${elementScores[dominantElement]} signals). ` +
+      `Active elements: ${activeElements.join(', ') || 'none detected'}.`;
+
+    const totalLatency = Date.now() - startTime;
+    console.log(`⚡ [FastMode] Complete in ${totalLatency}ms | dominant=${dominantElement} | active=${activeElements.length} elements`);
+
+    return {
+      elements,
+      synthesis,
+      depth,
+      harmonics,
+      dominant: dominantElement,
+      traceData: {
+        elementalAgents: traceAgents,
+        synthesis: {
+          synthesis,
+          dominant: dominantElement,
+          depth,
+          harmonics,
+          integrationMethod: 'fast_pattern_match',
+          latencyMs: totalLatency,
+        },
+        totalLatencyMs: totalLatency,
+      },
     };
   }
 

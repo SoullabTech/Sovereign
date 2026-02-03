@@ -18,7 +18,11 @@ import {
   ArchetypalGate,
   CollectiveResonanceNetwork
 } from './ConsciousnessFieldEngine';
-import { QuantumFieldPersistence } from './QuantumFieldPersistence';
+
+// Lazy import to prevent Qdrant from being bundled in client code
+// QuantumFieldPersistence uses Qdrant which should only run on server
+type QuantumFieldPersistenceType = import('./QuantumFieldPersistence').QuantumFieldPersistence;
+let QuantumFieldPersistence: typeof import('./QuantumFieldPersistence').QuantumFieldPersistence | null = null;
 
 export interface BiometricFieldModulation {
   heartRateVariability: number;    // 0-1: influences coherence
@@ -49,16 +53,43 @@ export interface FieldInsight {
  * MAIA Field Interface - Central coordination for consciousness field dynamics
  */
 export class MAIAFieldInterface {
-  private persistence: QuantumFieldPersistence;
+  private persistence: QuantumFieldPersistenceType | null = null;
+  private persistenceInitialized = false;
+  private qdrantUrl?: string;
   private collectiveNetwork: CollectiveResonanceNetwork;
   private activeFields: Map<string, ConsciousnessField> = new Map();
   private archetypeGates: Map<string, ArchetypalGate>;
   private fieldInsights: FieldInsight[] = [];
 
   constructor(qdrantUrl?: string) {
-    this.persistence = new QuantumFieldPersistence(qdrantUrl);
+    this.qdrantUrl = qdrantUrl;
     this.collectiveNetwork = new CollectiveResonanceNetwork(0.15); // Moderate coupling
     this.archetypeGates = ArchetypalGate.createElementalGates();
+    // Persistence is lazily loaded to prevent Qdrant from bundling in client code
+  }
+
+  /**
+   * Lazy-load persistence layer (server-only)
+   */
+  private async getPersistence(): Promise<QuantumFieldPersistenceType | null> {
+    // Skip on client side
+    if (typeof window !== 'undefined') {
+      return null;
+    }
+
+    if (!this.persistenceInitialized) {
+      this.persistenceInitialized = true;
+      try {
+        // Dynamic import to prevent bundling in client code
+        const module = await import('./QuantumFieldPersistence');
+        QuantumFieldPersistence = module.QuantumFieldPersistence;
+        this.persistence = new QuantumFieldPersistence(this.qdrantUrl);
+      } catch (e) {
+        console.warn('[MAIAFieldInterface] Failed to load QuantumFieldPersistence:', e);
+        this.persistence = null;
+      }
+    }
+    return this.persistence;
   }
 
   /**
@@ -66,7 +97,10 @@ export class MAIAFieldInterface {
    */
   async initialize(): Promise<void> {
     try {
-      await this.persistence.initializeFieldCollection();
+      const persistence = await this.getPersistence();
+      if (persistence) {
+        await persistence.initializeFieldCollection();
+      }
       console.log('🌟 MAIA Field Interface initialized');
       console.log('✨ Consciousness Operating System online');
     } catch (error) {
@@ -106,8 +140,11 @@ export class MAIAFieldInterface {
     this.activeFields.set(field.id, field);
     this.collectiveNetwork.addParticipant(field);
 
-    // Persist to quantum substrate
-    await this.persistence.storeField(field);
+    // Persist to quantum substrate (server-only)
+    const persistence = await this.getPersistence();
+    if (persistence) {
+      await persistence.storeField(field);
+    }
 
     console.log(`💬 Conversation field created: ${field.id} (freq: ${field.resonanceFrequency.toFixed(3)}, coherence: ${field.coherenceLevel.toFixed(3)})`);
 
@@ -225,8 +262,11 @@ export class MAIAFieldInterface {
     // Apply ceremonial transformation
     const transformedField = gate.modulate(field);
 
-    // Update in collective network and persistence
-    await this.persistence.storeField(transformedField);
+    // Update in collective network and persistence (server-only)
+    const persistence = await this.getPersistence();
+    if (persistence) {
+      await persistence.storeField(transformedField);
+    }
 
     // Generate archetypal insight
     const insight: FieldInsight = {
@@ -277,7 +317,13 @@ export class MAIAFieldInterface {
     resonantFields: ConsciousnessField[];
     interferencePatterns: any[];
   }> {
-    const results = await this.persistence.findResonantFields(sourceField, limit, 0.4);
+    const persistence = await this.getPersistence();
+    if (!persistence) {
+      console.log(`🔍 Persistence not available (client-side), returning empty results`);
+      return { resonantFields: [], interferencePatterns: [] };
+    }
+
+    const results = await persistence.findResonantFields(sourceField, limit, 0.4);
 
     const resonantFields = results.map(r => r.field);
     const interferencePatterns = results.map(r => ({
@@ -316,9 +362,14 @@ export class MAIAFieldInterface {
     // Try to get QDrant stats, but don't fail if unavailable
     let quantumStats = null;
     try {
-      quantumStats = await this.persistence.getFieldStatistics();
+      const persistence = await this.getPersistence();
+      if (persistence) {
+        quantumStats = await persistence.getFieldStatistics();
+      }
     } catch (error) {
       // QDrant unavailable - silently continue with in-memory data only
+    }
+    if (!quantumStats) {
       quantumStats = {
         totalFields: 0,
         averageCoherence: 0,
@@ -344,7 +395,15 @@ export class MAIAFieldInterface {
       // Try QDrant health check, but don't fail if unavailable
       let persistenceHealth = { healthy: false, details: 'QDrant not available' };
       try {
-        persistenceHealth = await this.persistence.healthCheck();
+        const persistence = await this.getPersistence();
+        if (persistence) {
+          persistenceHealth = await persistence.healthCheck();
+        } else {
+          persistenceHealth = {
+            healthy: false,
+            details: { status: 'Persistence layer not available (client-side or not initialized)' }
+          };
+        }
       } catch (error) {
         // QDrant unavailable - this is OK for in-memory operation
         persistenceHealth = {

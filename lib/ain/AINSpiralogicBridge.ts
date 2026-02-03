@@ -21,6 +21,8 @@
 
 import { TriadicDetection } from '../spiralogic/TriadicPhaseDetector';
 import { SpiralMoment, CrossSpiralPattern } from '../spiralogic/CrossSpiralPatternRecognizer';
+import { collectiveBreakthroughService } from '../services/collectiveBreakthroughService';
+import { query } from '../db/postgres';
 
 /**
  * AFFERENT STREAM - Individual patterns flowing into collective field
@@ -243,6 +245,9 @@ export class AINSpiralogicBridge {
     // Get current collective field state
     const fieldState = await this.getCollectiveFieldState();
 
+    // Get active patterns from collective (async)
+    const activePatterns = await this.getActivePatterns(fieldState, currentPhase);
+
     // Build efferent wisdom
     const efferentWisdom: EfferentWisdom = {
       personalPhase: currentPhase,
@@ -254,7 +259,7 @@ export class AINSpiralogicBridge {
         breakthroughPotential: fieldState.breakthroughPotential
       },
 
-      activePatterns: this.getActivePatterns(fieldState, currentPhase),
+      activePatterns,
 
       archetypeField: this.getArchetypeField(fieldState, currentPhase.archetype),
 
@@ -269,6 +274,7 @@ export class AINSpiralogicBridge {
 
   /**
    * Process afferent stream - anonymize and send to collective
+   * Now persists to PostgreSQL via collectiveBreakthroughService
    */
   private async processAfferentStream(pattern: AfferentPattern): Promise<void> {
     // Anonymize pattern (remove userId, fuzzy timestamp)
@@ -284,21 +290,111 @@ export class AINSpiralogicBridge {
       timestamp: this.fuzzyTimestamp(pattern.timestamp) // Month-level only
     };
 
-    // TODO: Send to AIN backend collective intelligence
-    // For now, update local field state
+    // Persist to collective field via PostgreSQL
+    if (pattern.breakthroughIndicators.isBreakthrough) {
+      try {
+        await collectiveBreakthroughService.contributeBreakthrough(pattern.userId, {
+          catalyst_type: this.mapBreakthroughToCatalyst(pattern.breakthroughIndicators.breakthroughType),
+          archetype_from: undefined,
+          archetype_to: pattern.archetypeActivation?.name,
+          elemental_phase_from: undefined,
+          elemental_phase_to: pattern.element,
+          transformation_type: this.mapIntensityToTransformation(pattern.breakthroughIndicators.intensity),
+          emotional_shift: pattern.state,
+          body_involved: false,
+          resonance_strength: pattern.resonanceStrength,
+          spiralogic_phase: pattern.phase,
+          dominant_element: pattern.element,
+        });
+        console.log(`🕸️ [AIN Bridge] Afferent breakthrough persisted to collective field`);
+      } catch (error) {
+        console.error('❌ [AIN Bridge] Failed to persist afferent pattern:', error);
+      }
+    }
+
+    // Also update local field state for immediate responsiveness
     this.updateLocalFieldState(anonymized);
   }
 
   /**
+   * Map breakthrough type to catalyst type
+   */
+  private mapBreakthroughToCatalyst(breakthroughType?: string): 'question' | 'reflection' | 'practice' | 'archetypal_shift' | 'elemental_transition' {
+    switch (breakthroughType) {
+      case 'shadow-integration': return 'reflection';
+      case 'vision-ignition': return 'archetypal_shift';
+      case 'emotional-release': return 'practice';
+      case 'mental-clarity': return 'question';
+      case 'unity-experience': return 'elemental_transition';
+      default: return 'reflection';
+    }
+  }
+
+  /**
+   * Map intensity to transformation type
+   */
+  private mapIntensityToTransformation(intensity: number): 'insight' | 'embodiment' | 'integration' | 'release' | 'awakening' {
+    if (intensity >= 0.9) return 'awakening';
+    if (intensity >= 0.7) return 'integration';
+    if (intensity >= 0.5) return 'release';
+    if (intensity >= 0.3) return 'embodiment';
+    return 'insight';
+  }
+
+  /**
    * Get current collective field state
+   * Now fetches from PostgreSQL field_state_snapshots and collective_breakthroughs
    */
   private async getCollectiveFieldState(): Promise<CollectiveFieldState> {
-    // TODO: Fetch from AIN backend
-    // For now, return local estimate
-    if (!this.collectiveField) {
-      this.collectiveField = this.initializeFieldState();
+    try {
+      // Get latest field snapshot
+      const snapshotResult = await query(
+        `SELECT * FROM field_state_snapshots ORDER BY snapshot_at DESC LIMIT 1`
+      );
+
+      // Get recent breakthrough stats
+      const stats = await collectiveBreakthroughService.getFieldStats();
+
+      if (snapshotResult.rows.length > 0) {
+        const snapshot = snapshotResult.rows[0];
+        return {
+          timestamp: new Date(snapshot.snapshot_at),
+          activeUsers: snapshot.active_participants || 0,
+          totalParticipants: stats.totalBreakthroughs,
+          collectiveElementalBalance: snapshot.collective_elemental_balance || {
+            fire: 0.2, water: 0.2, earth: 0.2, air: 0.2, aether: 0.2
+          },
+          averageConsciousness: 0.5,
+          fieldCoherence: snapshot.field_coherence || 0.6,
+          emergentComplexity: 0.5,
+          healingCapacity: 0.5,
+          dominantArchetypes: snapshot.dominant_archetypes || [],
+          emergentPatterns: stats.activeMovements.map((m: string) => ({
+            type: 'elemental-wave' as const,
+            strength: 0.5,
+            description: m,
+            participants: stats.last30Days
+          })),
+          collectiveGrowthRate: snapshot.collective_growth_rate || 0.1,
+          breakthroughPotential: snapshot.breakthrough_potential || 0.3,
+          integrationNeed: snapshot.integration_need || 0.5
+        };
+      }
+
+      // Fall back to local estimate if no snapshot exists
+      if (!this.collectiveField) {
+        this.collectiveField = this.initializeFieldState();
+      }
+      return this.collectiveField;
+
+    } catch (error) {
+      console.error('❌ [AIN Bridge] Error fetching collective field state:', error);
+      // Fall back to local
+      if (!this.collectiveField) {
+        this.collectiveField = this.initializeFieldState();
+      }
+      return this.collectiveField;
     }
-    return this.collectiveField;
   }
 
   /**
@@ -377,18 +473,62 @@ export class AINSpiralogicBridge {
 
   /**
    * Get active patterns matching personal phase
+   * Now queries PostgreSQL via collectiveBreakthroughService
    */
-  private getActivePatterns(field: CollectiveFieldState, personalPhase: any): any[] {
-    // TODO: Query AIN pattern database
-    // For now, return sample patterns
-    return [
-      {
-        pattern: `${personalPhase.element}-${personalPhase.phase}`,
-        prevalence: 0.3,
-        timing: 'peak' as const,
-        supportAvailable: ['Others navigating this found presence helpful', 'Common to feel intensity here']
+  private async getActivePatterns(field: CollectiveFieldState, personalPhase: any): Promise<any[]> {
+    try {
+      // Get collective wisdom for this person's current state
+      const wisdom = await collectiveBreakthroughService.getCollectiveWisdom(
+        personalPhase.phase,
+        personalPhase.element,
+        personalPhase.archetype
+      );
+
+      if (wisdom && wisdom.relevant_patterns.length > 0) {
+        return wisdom.relevant_patterns.map(p => ({
+          pattern: `${p.field_conditions?.spiralogic_phase || 'unknown'}-${p.signature?.transformation_type || 'insight'}`,
+          prevalence: p.outcome?.resonance_strength || 0.3,
+          timing: this.determinePatternTiming(p.outcome?.integration_level),
+          supportAvailable: [
+            wisdom.suggested_reflection,
+            ...wisdom.active_movements
+          ].filter(Boolean)
+        }));
       }
-    ];
+
+      // Fall back to field-based patterns
+      return [
+        {
+          pattern: `${personalPhase.element}-${personalPhase.phase}`,
+          prevalence: 0.3,
+          timing: 'peak' as const,
+          supportAvailable: ['Others navigating this found presence helpful', 'Common to feel intensity here']
+        }
+      ];
+
+    } catch (error) {
+      console.error('❌ [AIN Bridge] Error getting active patterns:', error);
+      return [
+        {
+          pattern: `${personalPhase.element}-${personalPhase.phase}`,
+          prevalence: 0.3,
+          timing: 'peak' as const,
+          supportAvailable: ['Others navigating this found presence helpful']
+        }
+      ];
+    }
+  }
+
+  /**
+   * Determine pattern timing based on integration level
+   */
+  private determinePatternTiming(integrationLevel?: string): 'emerging' | 'peak' | 'integrating' | 'completing' {
+    switch (integrationLevel) {
+      case 'emerging': return 'emerging';
+      case 'stabilizing': return 'peak';
+      case 'embodied': return 'completing';
+      default: return 'integrating';
+    }
   }
 
   /**
@@ -477,4 +617,85 @@ export class AINSpiralogicBridge {
   private fuzzyTimestamp(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   }
+
+  /**
+   * Save current field state snapshot to PostgreSQL
+   * Called periodically to persist collective field state
+   */
+  async saveFieldSnapshot(): Promise<void> {
+    try {
+      const fieldState = this.collectiveField || this.initializeFieldState();
+
+      await query(
+        `INSERT INTO field_state_snapshots (
+          field_coherence,
+          field_resonance,
+          active_participants,
+          collective_elemental_balance,
+          dominant_archetypes,
+          emerging_archetypes,
+          breakthrough_potential,
+          integration_need,
+          collective_growth_rate,
+          field_weather,
+          active_movements
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          fieldState.fieldCoherence,
+          fieldState.emergentComplexity,
+          fieldState.activeUsers,
+          JSON.stringify(fieldState.collectiveElementalBalance),
+          JSON.stringify(fieldState.dominantArchetypes),
+          JSON.stringify([]),
+          fieldState.breakthroughPotential,
+          fieldState.integrationNeed,
+          fieldState.collectiveGrowthRate,
+          this.determineFieldPhase(fieldState),
+          fieldState.emergentPatterns.map(p => p.description),
+        ]
+      );
+
+      console.log(`🕸️ [AIN Bridge] Field state snapshot saved`);
+    } catch (error) {
+      console.error('❌ [AIN Bridge] Failed to save field snapshot:', error);
+    }
+  }
+
+  /**
+   * Get collective wisdom summary for MAIA's system prompt
+   * Returns a concise wisdom string for enriching MAIA responses
+   */
+  async getWisdomForPrompt(
+    element: string,
+    phase: string,
+    archetype?: string
+  ): Promise<string | null> {
+    try {
+      const wisdom = await collectiveBreakthroughService.getCollectiveWisdom(phase, element, archetype);
+
+      if (!wisdom) {
+        return null;
+      }
+
+      let prompt = '';
+
+      // Add synchronicity awareness
+      if (wisdom.synchronicity_detected && wisdom.active_movements.length > 0) {
+        prompt += `[Collective Field: ${wisdom.active_movements[0]}] `;
+      }
+
+      // Add suggested reflection
+      if (wisdom.suggested_reflection) {
+        prompt += wisdom.suggested_reflection;
+      }
+
+      return prompt.trim() || null;
+    } catch (error) {
+      console.error('❌ [AIN Bridge] Error getting wisdom for prompt:', error);
+      return null;
+    }
+  }
 }
+
+// Singleton export for use across the application
+export const ainSpiralogicBridge = new AINSpiralogicBridge();

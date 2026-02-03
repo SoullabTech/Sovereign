@@ -30,11 +30,19 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
-import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
+import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
 import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
+import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { AlchemicalSymbol } from './AlchemicalSymbols';
 import { Mission, MissionLayerSettings } from '@/lib/story/types';
 import { MissionDot, MissionPopup } from './MissionDot';
+import {
+  detectAllPatterns,
+  type AspectPattern,
+  type Aspect as PatternAspect,
+  type Planet as PatternPlanet,
+} from '@/lib/astrology/aspectPatternDetector';
+import HouseDeepDiveSheet from './HouseDeepDiveSheet';
 
 interface Planet {
   name: string;
@@ -50,33 +58,74 @@ interface Aspect {
   orb: number;
 }
 
+// Transit planet position for current sky layer
+interface Transit {
+  planet: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+  house?: number; // Transit's house in natal chart
+}
+
+// Transit-to-natal aspect
+interface TransitAspect {
+  transitPlanet: string;
+  natalPlanet: string;
+  aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
+  orb: number;
+  applying: boolean; // Is aspect getting tighter?
+}
+
 interface SacredHouseWheelProps {
   planets?: Planet[];
   aspects?: Aspect[];
   isDayMode?: boolean;
   showAspects?: boolean;
   className?: string;
+  // CHART LAYOUT - Traditional western vs Spiralogic elemental
+  layoutMode?: 'traditional' | 'spiralogic';
   // MISSION TRACKING - Pulsing dots for creative manifestations
   missions?: Mission[];
   missionLayerSettings?: MissionLayerSettings;
+  // CURRENT TRANSITS - Live planetary positions
+  transits?: Transit[];
+  transitAspects?: TransitAspect[];
 }
 
-// Spiralogic Spiral Order - Clockwise from top
-// Fire (1-3) → Water (4-6) → Earth (7-9) → Air (10-12)
-// Houses maintain their traditional numbers but flow in elemental spiral
+// Spiralogic Spiral Order - House 1 at 12 o'clock (top of wheel)
+// Clockwise from 12:00: Fire → Water → Earth → Air
+// Elemental quadrants: Fire (12-3), Water (3-6), Earth (6-9), Air (9-12)
 const spiralogicOrder = [
-  1,   // Fire 1 - Identity/Self
-  5,   // Fire 2 - Creativity/Joy
-  9,   // Fire 3 - Philosophy/Expansion
-  4,   // Water 1 - Home/Roots
-  8,   // Water 2 - Transformation/Intimacy
-  12,  // Water 3 - Spirituality/Dissolution
-  10,  // Earth 1 - Career/Legacy
-  2,   // Earth 2 - Resources/Values
-  6,   // Earth 3 - Service/Health
-  7,   // Air 1 - Relationships/Other
-  11,  // Air 2 - Community/Vision
-  3,   // Air 3 - Communication/Learning
+  1,   // Position 0 (12:00) - Fire 1 - Identity/Self (Experience)
+  5,   // Position 1 (1:00) - Fire 2 - Creativity/Joy (Expression)
+  9,   // Position 2 (2:00) - Fire 3 - Philosophy/Expansion
+  4,   // Position 3 (3:00) - Water 1 - Home/Roots (Heart)
+  8,   // Position 4 (4:00) - Water 2 - Transformation/Intimacy (Healing)
+  12,  // Position 5 (5:00) - Water 3 - Spirituality/Dissolution (Holiness)
+  10,  // Position 6 (6:00) - Earth 1 - Career/Legacy (Mission)
+  2,   // Position 7 (7:00) - Earth 2 - Resources/Values (Means)
+  6,   // Position 8 (8:00) - Earth 3 - Service/Health (Medicine)
+  7,   // Position 9 (9:00) - Air 1 - Relationships/Other (Connection)
+  11,  // Position 10 (10:00) - Air 2 - Community/Vision (Community)
+  3,   // Position 11 (11:00) - Air 3 - Communication/Learning (Consciousness)
+];
+
+// Traditional Western Chart Order - Counterclockwise from Ascendant (8 o'clock)
+// Rotated counter-clockwise by 1 house so H1/Ascendant spans 8:00-9:00 sector
+// Position index maps clockwise from 12 o'clock, houses go counterclockwise
+const traditionalOrder = [
+  9,   // Position 0 (12:00)
+  8,   // Position 1 (1:00)
+  7,   // Position 2 (2:00)
+  6,   // Position 3 (3:00)
+  5,   // Position 4 (4:00)
+  4,   // Position 5 (5:00)
+  3,   // Position 6 (6:00)
+  2,   // Position 7 (7:00)
+  1,   // Position 8 (8:00) - ASC / Ascendant (Experience)
+  12,  // Position 9 (9:00)
+  11,  // Position 10 (10:00)
+  10,  // Position 11 (11:00) - MC / Midheaven
 ];
 
 // House-element mapping (Spiralogic system)
@@ -238,6 +287,7 @@ export function SacredHouseWheel({
   isDayMode = true,
   showAspects = false,
   className = '',
+  layoutMode = 'spiralogic',
   missions = [],
   missionLayerSettings = {
     showEmerging: true,
@@ -247,22 +297,56 @@ export function SacredHouseWheel({
     showArchetypal: true,
     showTransits: false,
   },
+  transits = [],
+  transitAspects = [],
 }: SacredHouseWheelProps) {
+  // Select house order based on layout mode
+  const houseOrder = layoutMode === 'traditional' ? traditionalOrder : spiralogicOrder;
   const [hoveredHouse, setHoveredHouse] = useState<number | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<Planet | null>(null);
   const [clickedPlanet, setClickedPlanet] = useState<Planet | null>(null);
   const [clickedHouse, setClickedHouse] = useState<number | null>(null);
+  const [deepDiveHouse, setDeepDiveHouse] = useState<number | null>(null);
   const [clickedMission, setClickedMission] = useState<Mission | null>(null);
+  const [hoveredTransit, setHoveredTransit] = useState<Transit | null>(null);
+  const [clickedTransit, setClickedTransit] = useState<Transit | null>(null);
   const [revealedAspects, setRevealedAspects] = useState(false);
   const [showSacredGeometry, setShowSacredGeometry] = useState(true); // Fremen alchemist mode
+  const [showNodalAxisPanel, setShowNodalAxisPanel] = useState(false); // Destiny Path insight
+  const [showPatternsPanel, setShowPatternsPanel] = useState(false); // Aspect Patterns insight
+  const [selectedPattern, setSelectedPattern] = useState<AspectPattern | null>(null);
+
+  // Detect aspect patterns from natal chart
+  const detectedPatterns = (() => {
+    if (!planets || planets.length === 0 || !aspects || aspects.length === 0) return [];
+
+    // Convert to pattern detector types (add longitude if not present)
+    const patternPlanets: PatternPlanet[] = planets.map(p => ({
+      name: p.name,
+      sign: p.sign,
+      house: p.house,
+      degree: p.degree,
+      longitude: p.degree + (spiralogicOrder.indexOf(p.house) * 30), // Approximate longitude
+    }));
+
+    // Add quincunx support if not in aspects (pattern detector needs it)
+    const patternAspects: PatternAspect[] = aspects.map(a => ({
+      planet1: a.planet1,
+      planet2: a.planet2,
+      type: a.type as PatternAspect['type'],
+      orb: a.orb,
+    }));
+
+    return detectAllPatterns(patternAspects, patternPlanets);
+  })();
 
   // Wheel is fixed - no rotation (consciousness states are stable)
 
   // Calculate position on wheel for a given house (1-12)
-  // Uses Spiralogic spiral order for positioning
+  // Uses selected layout order for positioning
   const getHousePosition = (house: number) => {
-    // Find position in spiral order
-    const spiralIndex = spiralogicOrder.indexOf(house);
+    // Find position in house order
+    const spiralIndex = houseOrder.indexOf(house);
     // Start at top (12 o'clock) and go clockwise
     const angle = (spiralIndex * 30 - 90) * (Math.PI / 180);
     const radius = 140;
@@ -281,8 +365,8 @@ export function SacredHouseWheel({
     const positions: { [key: string]: { x: number; y: number; adjustedAngle: number } } = {};
     const sortedPlanets = [...planetsArray].sort((a, b) => {
       // Sort by house first, then by degree within house
-      const aSpiral = spiralogicOrder.indexOf(a.house);
-      const bSpiral = spiralogicOrder.indexOf(b.house);
+      const aSpiral = houseOrder.indexOf(a.house);
+      const bSpiral = houseOrder.indexOf(b.house);
       if (aSpiral !== bSpiral) return aSpiral - bSpiral;
       return (a.degree % 30) - (b.degree % 30);
     });
@@ -290,8 +374,8 @@ export function SacredHouseWheel({
     const occupiedAngles: number[] = [];
 
     sortedPlanets.forEach((planet) => {
-      // Find house position in spiral order
-      const spiralIndex = spiralogicOrder.indexOf(planet.house);
+      // Find house position in selected layout order
+      const spiralIndex = houseOrder.indexOf(planet.house);
       const houseStartAngle = spiralIndex * 30;
       const idealAngle = (houseStartAngle + (planet.degree % 30)) - 90;
 
@@ -362,6 +446,43 @@ export function SacredHouseWheel({
   // Calculate all planet positions with collision detection for optimal performance
   const planetPositions = getPlanetPositions(planets);
 
+  // Calculate transit positions on outer ring (radius 145)
+  // Uses direct ecliptic longitude (not spiralogic house order)
+  const getTransitPositions = (transitsArray: Transit[]) => {
+    const positions: { [key: string]: { x: number; y: number; angle: number } } = {};
+    const occupiedAngles: number[] = [];
+    const transitRadius = 145; // Outer ring beyond natal planets (120)
+
+    transitsArray.forEach((transit) => {
+      // Convert ecliptic longitude to wheel angle
+      // 0° Aries = top of wheel, proceeding counterclockwise
+      let angle = (transit.longitude - 90); // Adjust so 0° is at top
+      angle = ((angle % 360) + 360) % 360; // Normalize to 0-360
+
+      // Simple collision detection for transits
+      let finalAngle = angle;
+      const minSpacing = 12;
+      for (const occupied of occupiedAngles) {
+        const diff = Math.abs(finalAngle - occupied);
+        if (diff < minSpacing || diff > (360 - minSpacing)) {
+          finalAngle = (finalAngle + minSpacing) % 360;
+        }
+      }
+      occupiedAngles.push(finalAngle);
+
+      const angleRad = finalAngle * (Math.PI / 180);
+      positions[transit.planet] = {
+        x: 200 + transitRadius * Math.cos(angleRad),
+        y: 200 + transitRadius * Math.sin(angleRad),
+        angle: finalAngle,
+      };
+    });
+
+    return positions;
+  };
+
+  const transitPositions = getTransitPositions(transits);
+
   // FIELD DYNAMICS 4: Draw aspect as field current through Aether center
   // All currents converge on the unmoved witness (nothing orbits, everything passes through)
   const drawAspectLine = (planet1: Planet, planet2: Planet, aspect: Aspect) => {
@@ -393,10 +514,10 @@ export function SacredHouseWheel({
 
   return (
     <div className={`relative ${className}`} style={{ minHeight: '1280px' }}>
-      {/* Central holoflower overlay - Multicolor elemental sacred geometry */}
+      {/* Central holoflower overlay - Sacred geometry */}
       <img
-        src="/elementalHoloflower.svg"
-        alt="Elemental Holoflower"
+        src="/holoflower.svg"
+        alt="Holoflower"
         style={{
           position: 'absolute',
           top: '50%',
@@ -404,7 +525,7 @@ export function SacredHouseWheel({
           transform: 'translate(-50%, -50%)',
           width: '400px',
           height: '400px',
-          opacity: 0.2,
+          opacity: 0.15,
           pointerEvents: 'none',
           mixBlendMode: 'lighten',
           zIndex: 5
@@ -416,6 +537,7 @@ export function SacredHouseWheel({
         height="1280"
         viewBox="-80 -80 560 560"
         className="w-full h-full"
+        style={{ pointerEvents: 'auto' }}
         onMouseEnter={() => setRevealedAspects(true)}
         onMouseLeave={() => setRevealedAspects(false)}
       >
@@ -1117,9 +1239,9 @@ export function SacredHouseWheel({
             />
 
             {/* Metatron's Cube - Connecting all 12 house centers */}
-            {spiralogicOrder.map((house1, i) => {
+            {houseOrder.map((house1, i) => {
               const pos1 = getHousePosition(house1);
-              return spiralogicOrder.slice(i + 1).map((house2, j) => {
+              return houseOrder.slice(i + 1).map((house2, j) => {
                 const pos2 = getHousePosition(house2);
                 return (
                   <line
@@ -1241,9 +1363,9 @@ export function SacredHouseWheel({
           </g>
         )}
 
-        {/* 12 House segments - Spiralogic spiral order, clockwise */}
+        {/* 12 House segments - Layout-dependent order, clockwise from top */}
         <g>
-          {spiralogicOrder.map((house, i) => {
+          {houseOrder.map((house, i) => {
             const element = houseElements[house as keyof typeof houseElements] as keyof typeof elementalColors;
             const elementColor = elementalColors[element];
             const color = isDayMode ? elementColor.day : elementColor.night;
@@ -1505,8 +1627,8 @@ export function SacredHouseWheel({
           })}
         </g>
 
-        {/* Aspect lines - sacred geometry revealed on hover */}
-        {revealedAspects && aspects.length > 0 && (
+        {/* Aspect lines - sacred geometry revealed on hover or when showAspects is true */}
+        {(showAspects || revealedAspects) && aspects.length > 0 && (
           <g opacity="0.6">
             {aspects.map((aspect) => {
               const planet1 = planets.find(p => p.name === aspect.planet1);
@@ -1518,6 +1640,267 @@ export function SacredHouseWheel({
             })}
           </g>
         )}
+
+        {/* ASPECT PATTERNS - Sacred Geometry Configurations */}
+        {detectedPatterns.length > 0 && (showAspects || revealedAspects) && (
+          <g className="aspect-patterns-layer">
+            {detectedPatterns.slice(0, 3).map((pattern, idx) => {
+              // Get positions for pattern planets
+              const patternPositions = pattern.planets
+                .map(name => planetPositions[name])
+                .filter(Boolean);
+
+              if (patternPositions.length < 3) return null;
+
+              // Pattern-specific colors
+              const patternColors: Record<string, string> = {
+                'grand-trine': isDayMode ? '#10B981' : '#34D399', // Green - flow
+                't-square': isDayMode ? '#EF4444' : '#F87171', // Red - tension
+                'grand-cross': isDayMode ? '#DC2626' : '#EF4444', // Deep red - challenge
+                'yod': isDayMode ? '#8B5CF6' : '#A78BFA', // Purple - fate
+                'stellium': isDayMode ? '#F59E0B' : '#FBBF24', // Amber - concentration
+                'mystic-rectangle': isDayMode ? '#3B82F6' : '#60A5FA', // Blue - harmony
+              };
+
+              const color = patternColors[pattern.type] || (isDayMode ? '#6B7280' : '#9CA3AF');
+
+              // Draw pattern shape
+              const points = patternPositions.map(p => `${p.x},${p.y}`).join(' ');
+
+              return (
+                <g
+                  key={`pattern-${idx}`}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelectedPattern(pattern);
+                    setShowPatternsPanel(true);
+                  }}
+                >
+                  {/* Pattern fill */}
+                  <motion.polygon
+                    points={points}
+                    fill={color}
+                    fillOpacity={0.05 + (pattern.strength * 0.1)}
+                    stroke={color}
+                    strokeWidth="1"
+                    strokeOpacity={0.3}
+                    strokeDasharray={pattern.type === 'yod' ? '4,2' : undefined}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: [0.3, 0.5, 0.3],
+                      fillOpacity: [0.05, 0.15, 0.05],
+                    }}
+                    transition={{
+                      duration: 3 + idx,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+
+                  {/* Pattern center indicator */}
+                  {(() => {
+                    const centerX = patternPositions.reduce((sum, p) => sum + p.x, 0) / patternPositions.length;
+                    const centerY = patternPositions.reduce((sum, p) => sum + p.y, 0) / patternPositions.length;
+                    return (
+                      <motion.circle
+                        cx={centerX}
+                        cy={centerY}
+                        r="4"
+                        fill={color}
+                        fillOpacity="0.6"
+                        animate={{
+                          r: [4, 6, 4],
+                          fillOpacity: [0.6, 0.9, 0.6],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                    );
+                  })()}
+                </g>
+              );
+            })}
+          </g>
+        )}
+
+        {/* Patterns indicator badge (shows count when aspects revealed) */}
+        {detectedPatterns.length > 0 && (showAspects || revealedAspects) && (
+          <g
+            className="cursor-pointer"
+            onClick={() => setShowPatternsPanel(true)}
+            style={{ pointerEvents: 'auto' }}
+          >
+            <motion.circle
+              cx="360"
+              cy="40"
+              r="16"
+              fill={isDayMode ? '#FBBF24' : '#F59E0B'}
+              fillOpacity="0.9"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring' }}
+            />
+            <text
+              x="360"
+              y="44"
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="bold"
+              fill={isDayMode ? '#000' : '#000'}
+            >
+              {detectedPatterns.length}
+            </text>
+            <text
+              x="360"
+              y="60"
+              textAnchor="middle"
+              fontSize="8"
+              fill={isDayMode ? '#78716C' : '#A8A29E'}
+            >
+              Patterns
+            </text>
+          </g>
+        )}
+
+        {/* NODAL AXIS - Destiny Path Layer (soul's evolutionary trajectory) */}
+        {(() => {
+          const northNode = planets.find(p => p.name === 'North Node');
+          const southNode = planets.find(p => p.name === 'South Node');
+          if (!northNode || !southNode) return null;
+
+          const nnPos = planetPositions['North Node'] || { x: 200, y: 200 };
+          const snPos = planetPositions['South Node'] || { x: 200, y: 200 };
+          const center = { x: 200, y: 200 };
+
+          // Nodal axis colors
+          const northColor = isDayMode ? '#D97706' : '#F59E0B'; // Gold/amber (future)
+          const southColor = isDayMode ? '#6B7280' : '#9CA3AF'; // Silver/gray (past)
+
+          // Calculate axis angle for gradient
+          const angle = Math.atan2(nnPos.y - snPos.y, nnPos.x - snPos.x) * 180 / Math.PI;
+          const gradientId = `nodal-axis-gradient-${isDayMode ? 'day' : 'night'}`;
+
+          return (
+            <g
+              className="nodal-axis-layer cursor-pointer"
+              onClick={() => setShowNodalAxisPanel(true)}
+              style={{ pointerEvents: 'auto' }}
+            >
+              {/* Gradient definition */}
+              <defs>
+                <linearGradient id={gradientId} gradientTransform={`rotate(${angle}, 0.5, 0.5)`}>
+                  <stop offset="0%" stopColor={southColor} stopOpacity="0.6" />
+                  <stop offset="40%" stopColor={southColor} stopOpacity="0.2" />
+                  <stop offset="60%" stopColor={northColor} stopOpacity="0.2" />
+                  <stop offset="100%" stopColor={northColor} stopOpacity="0.6" />
+                </linearGradient>
+                {/* Animated pulse filter */}
+                <filter id="nodal-glow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Outer glow line */}
+              <motion.line
+                x1={snPos.x}
+                y1={snPos.y}
+                x2={nnPos.x}
+                y2={nnPos.y}
+                stroke={`url(#${gradientId})`}
+                strokeWidth="6"
+                strokeOpacity="0.15"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 1,
+                  opacity: [0.1, 0.2, 0.1]
+                }}
+                transition={{
+                  pathLength: { duration: 1.5, ease: 'easeOut' },
+                  opacity: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+                }}
+              />
+
+              {/* Core axis line */}
+              <motion.line
+                x1={snPos.x}
+                y1={snPos.y}
+                x2={nnPos.x}
+                y2={nnPos.y}
+                stroke={`url(#${gradientId})`}
+                strokeWidth="1.5"
+                strokeOpacity="0.5"
+                strokeLinecap="round"
+                strokeDasharray="8,4"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+                filter="url(#nodal-glow)"
+              />
+
+              {/* Direction indicator (small arrow toward North Node) */}
+              {(() => {
+                // Calculate midpoint slightly toward North Node
+                const midX = center.x + (nnPos.x - center.x) * 0.3;
+                const midY = center.y + (nnPos.y - center.y) * 0.3;
+                const arrowAngle = Math.atan2(nnPos.y - snPos.y, nnPos.x - snPos.x);
+                const arrowSize = 6;
+
+                return (
+                  <motion.polygon
+                    points={`
+                      ${midX + Math.cos(arrowAngle) * arrowSize},${midY + Math.sin(arrowAngle) * arrowSize}
+                      ${midX + Math.cos(arrowAngle + 2.5) * arrowSize * 0.6},${midY + Math.sin(arrowAngle + 2.5) * arrowSize * 0.6}
+                      ${midX + Math.cos(arrowAngle - 2.5) * arrowSize * 0.6},${midY + Math.sin(arrowAngle - 2.5) * arrowSize * 0.6}
+                    `}
+                    fill={northColor}
+                    fillOpacity="0.6"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{
+                      opacity: [0.4, 0.7, 0.4],
+                      scale: [0.9, 1.1, 0.9]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: 1.5
+                    }}
+                  />
+                );
+              })()}
+
+              {/* Center crossing marker (Aether point) */}
+              <motion.circle
+                cx={center.x}
+                cy={center.y}
+                r="3"
+                fill="none"
+                stroke={isDayMode ? '#9B8FAA' : '#818CF8'}
+                strokeWidth="1"
+                strokeOpacity="0.4"
+                initial={{ scale: 0 }}
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.5, 0.3]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: 2
+                }}
+              />
+            </g>
+          );
+        })()}
 
         {/* Planets as constellation points - static (not rotating) */}
         {planets.map((planet) => {
@@ -1531,16 +1914,21 @@ export function SacredHouseWheel({
               key={planet.name}
               onMouseEnter={() => setHoveredPlanet(planet)}
               onMouseLeave={() => setHoveredPlanet(null)}
-              onClick={() => setClickedPlanet(clickedPlanet?.name === planet.name ? null : planet)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setClickedPlanet(clickedPlanet?.name === planet.name ? null : planet);
+              }}
               className="cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
             >
-              {/* Invisible larger hover target */}
+              {/* Invisible larger click/hover target - increased size for better touch targets */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
-                r={16}
-                fill="transparent"
+                r={20}
+                fill="rgba(0,0,0,0.001)"
                 className="cursor-pointer"
+                style={{ pointerEvents: 'auto' }}
               />
               {/* Planet glow */}
               <motion.circle
@@ -1605,10 +1993,162 @@ export function SacredHouseWheel({
                 {planet.name === 'Chiron' && '⚷'}
                 {planet.name === 'North Node' && '☊'}
                 {planet.name === 'South Node' && '☋'}
+                {/* Asteroids - Feminine Archetypes */}
+                {planet.name === 'Lilith' && '⚸'}
+                {planet.name === 'Ceres' && '⚳'}
+                {planet.name === 'Pallas' && '⚴'}
+                {planet.name === 'Juno' && '⚵'}
+                {planet.name === 'Vesta' && '⚶'}
               </motion.text>
             </g>
           );
         })}
+
+        {/* CURRENT TRANSITS LAYER - Live planetary positions */}
+        {missionLayerSettings.showTransits && transits.length > 0 && (
+          <g className="transit-layer">
+            {/* Outer transit ring boundary - dashed to differentiate */}
+            <circle
+              cx="200"
+              cy="200"
+              r="155"
+              fill="none"
+              stroke={isDayMode ? '#a8a29e' : '#57534e'}
+              strokeWidth="0.5"
+              strokeOpacity="0.2"
+              strokeDasharray="4,8"
+            />
+
+            {/* Transit planets on outer ring */}
+            {transits.map((transit) => {
+              const pos = transitPositions[transit.planet];
+              if (!pos) return null;
+
+              const isHovered = hoveredTransit?.planet === transit.planet;
+              const isClicked = clickedTransit?.planet === transit.planet;
+              const element = ['Fire', 'Earth', 'Air', 'Water'][
+                ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+                  .indexOf(transit.sign) % 4
+              ] as 'fire' | 'earth' | 'air' | 'water';
+              const elementalColorMap = isDayMode ? elementalColors[element]?.day : elementalColors[element]?.night;
+              const color = elementalColorMap || (isDayMode ? '#78716c' : '#a8a29e');
+
+              // Check if this transit is aspecting a natal planet
+              const activeAspect = transitAspects.find(a => a.transitPlanet === transit.planet);
+              const isAspecting = !!activeAspect;
+
+              return (
+                <g
+                  key={`transit-${transit.planet}`}
+                  onMouseEnter={() => setHoveredTransit(transit)}
+                  onMouseLeave={() => setHoveredTransit(null)}
+                  onClick={() => setClickedTransit(isClicked ? null : transit)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Transit aspect line to natal planet */}
+                  {isAspecting && activeAspect && planetPositions[activeAspect.natalPlanet] && (
+                    <motion.line
+                      x1={pos.x}
+                      y1={pos.y}
+                      x2={planetPositions[activeAspect.natalPlanet].x}
+                      y2={planetPositions[activeAspect.natalPlanet].y}
+                      stroke={aspectColors[activeAspect.aspectType as keyof typeof aspectColors] || '#8B5CF6'}
+                      strokeWidth={activeAspect.orb < 2 ? 1.5 : 1}
+                      strokeOpacity={isHovered ? 0.6 : 0.25}
+                      strokeDasharray="3,3"
+                      initial={{ pathLength: 0 }}
+                      animate={{
+                        pathLength: 1,
+                        opacity: isHovered ? [0.4, 0.8, 0.4] : 0.25
+                      }}
+                      transition={{
+                        pathLength: { duration: 0.5 },
+                        opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                      }}
+                    />
+                  )}
+
+                  {/* Transit planet glow (outer) - pulsing when aspecting */}
+                  <motion.circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={isHovered ? 10 : 7}
+                    fill={color}
+                    fillOpacity={isHovered ? 0.35 : 0.15}
+                    initial={{ scale: 0.8 }}
+                    animate={{
+                      scale: isAspecting ? [0.9, 1.1, 0.9] : (isHovered ? 1.1 : 1),
+                      opacity: isAspecting ? [0.15, 0.35, 0.15] : (isHovered ? 0.35 : 0.15)
+                    }}
+                    transition={{
+                      duration: isAspecting ? 2 : (isHovered ? 0.3 : 3),
+                      repeat: isAspecting ? Infinity : 0,
+                      ease: 'easeInOut'
+                    }}
+                    style={{
+                      filter: isHovered || isAspecting ? `drop-shadow(0 0 6px ${color})` : 'none',
+                    }}
+                    className="pointer-events-none"
+                  />
+
+                  {/* Transit planet circle - dashed border to differentiate from natal */}
+                  <motion.circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={isHovered ? 9 : 7}
+                    fill="transparent"
+                    stroke={color}
+                    strokeWidth={isHovered ? 1.5 : 1}
+                    strokeOpacity={isHovered ? 0.8 : 0.5}
+                    strokeDasharray="2,2"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: isHovered ? 1.05 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="pointer-events-auto"
+                  />
+
+                  {/* Transit planet symbol */}
+                  <motion.text
+                    x={pos.x}
+                    y={pos.y}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    className="text-xs pointer-events-none select-none"
+                    fill={color}
+                    fontSize={isHovered ? '12' : '10'}
+                    fillOpacity={isHovered ? 0.95 : 0.7}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: isHovered ? 1.1 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      filter: isHovered ? `drop-shadow(0 0 3px ${color})` : 'none',
+                      fontFamily: 'serif'
+                    }}
+                  >
+                    {transit.planet === 'Sun' && '☉'}
+                    {transit.planet === 'Moon' && '☽'}
+                    {transit.planet === 'Mercury' && '☿'}
+                    {transit.planet === 'Venus' && '♀'}
+                    {transit.planet === 'Mars' && '♂'}
+                    {transit.planet === 'Jupiter' && '♃'}
+                    {transit.planet === 'Saturn' && '♄'}
+                    {transit.planet === 'Uranus' && '♅'}
+                    {transit.planet === 'Neptune' && '♆'}
+                    {transit.planet === 'Pluto' && '♇'}
+                    {transit.planet === 'Chiron' && '⚷'}
+                    {transit.planet === 'North Node' && '☊'}
+                    {/* Asteroids - if included in transit data */}
+                    {transit.planet === 'Lilith' && '⚸'}
+                    {transit.planet === 'Ceres' && '⚳'}
+                    {transit.planet === 'Pallas' && '⚴'}
+                    {transit.planet === 'Juno' && '⚵'}
+                    {transit.planet === 'Vesta' && '⚶'}
+                  </motion.text>
+                </g>
+              );
+            })}
+          </g>
+        )}
 
         {/* Horizon line (Ascendant-Descendant) */}
         <line
@@ -1662,7 +2202,7 @@ export function SacredHouseWheel({
       </svg>
 
       {/* Legend - appears on aspect reveal */}
-      {revealedAspects && aspects.length > 0 && (
+      {(showAspects || revealedAspects) && aspects.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1881,34 +2421,31 @@ export function SacredHouseWheel({
           );
         })()}
 
-        {/* Planetary Insight Overlay - Shows planet/sign/archetype/aspects */}
-        {(clickedPlanet !== null || hoveredPlanet !== null) && (
+        {/* Planetary Insight Overlay - Shows planet/sign/archetype/aspects (click only) */}
+        {clickedPlanet !== null && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute left-1/2 top-1/2 mx-auto max-w-2xl z-50"
-            style={{
-              pointerEvents: clickedPlanet ? 'auto' : 'none',
-              transform: 'translate(-50%, -50%)'
-            }}
-            onClick={() => clickedPlanet && setClickedPlanet(null)}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => setClickedPlanet(null)}
           >
             <div
-              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden ${
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full ${
                 isDayMode
                   ? 'bg-white/95 border-stone-200/60'
-                  : 'bg-black/85 border-stone-700/60'
+                  : 'bg-black/95 border-stone-700/60'
               }`}
               style={{
                 boxShadow: isDayMode
                   ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
                   : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139, 92, 246, 0.15)',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               {(() => {
-                const activePlanet = clickedPlanet || hoveredPlanet;
+                const activePlanet = clickedPlanet;
                 if (!activePlanet) return null;
                 const element = houseElements[activePlanet.house as keyof typeof houseElements] as keyof typeof elementalColors;
                 const elementColor = elementalColors[element];
@@ -1952,6 +2489,12 @@ export function SacredHouseWheel({
                             {activePlanet.name === 'Chiron' && '⚷'}
                             {activePlanet.name === 'North Node' && '☊'}
                             {activePlanet.name === 'South Node' && '☋'}
+                            {/* Asteroids - Feminine Archetypes */}
+                            {activePlanet.name === 'Lilith' && '⚸'}
+                            {activePlanet.name === 'Ceres' && '⚳'}
+                            {activePlanet.name === 'Pallas' && '⚴'}
+                            {activePlanet.name === 'Juno' && '⚵'}
+                            {activePlanet.name === 'Vesta' && '⚶'}
                           </div>
                           <div>
                             <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
@@ -1962,8 +2505,20 @@ export function SacredHouseWheel({
                             </p>
                           </div>
                         </div>
-                        <div className={`text-xs uppercase tracking-wider font-medium ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                          {element.toUpperCase()}
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                            style={{ background: `${color}25`, color }}
+                          >
+                            {element}
+                          </span>
+                          {zodiacArchetype?.modality && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs uppercase tracking-wide ${
+                              isDayMode ? 'bg-stone-200 text-stone-600' : 'bg-white/10 text-white/70'
+                            }`}>
+                              {zodiacArchetype.modality}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1986,12 +2541,39 @@ export function SacredHouseWheel({
 
                         <div>
                           <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
-                            Sign Expression
+                            Sign Expression — {zodiacArchetype?.facetName || activePlanet.sign}
                           </h4>
-                          <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                            {zodiacArchetype?.facetName || `${activePlanet.name} expresses through ${activePlanet.sign} energy`}
-                          </p>
+                          {/* Jungian Archetypes */}
+                          {zodiacArchetype?.archetypes?.jungian && zodiacArchetype.archetypes.jungian.length > 0 && (
+                            <p className={`text-xs leading-relaxed mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                              <span className="opacity-70">Archetypes:</span>{' '}
+                              <span className="font-medium">{zodiacArchetype.archetypes.jungian.slice(0, 2).join(', ')}</span>
+                            </p>
+                          )}
+                          {/* Mythological Figures */}
+                          {zodiacArchetype?.archetypes?.mythological && zodiacArchetype.archetypes.mythological.length > 0 && (
+                            <p className={`text-xs leading-relaxed mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                              <span className="opacity-70">Mythology:</span>{' '}
+                              <span className="italic">{zodiacArchetype.archetypes.mythological.slice(0, 2).join(', ')}</span>
+                            </p>
+                          )}
+                          {/* Cultural Heroes */}
+                          {zodiacArchetype?.archetypes?.cultural && zodiacArchetype.archetypes.cultural.length > 0 && (
+                            <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                              <span className="opacity-70">Heroes:</span>{' '}
+                              {zodiacArchetype.archetypes.cultural.slice(0, 2).join(', ')}
+                            </p>
+                          )}
                         </div>
+
+                        {/* Personalized Synthesis */}
+                        {generateArchetypalDescription(activePlanet.name, activePlanet.sign, activePlanet.house) && (
+                          <div className={`mt-3 p-3 rounded-lg ${isDayMode ? 'bg-amber-50/50' : 'bg-amber-900/20'}`}>
+                            <p className={`text-xs italic leading-relaxed ${isDayMode ? 'text-amber-800' : 'text-amber-200/80'}`}>
+                              {generateArchetypalDescription(activePlanet.name, activePlanet.sign, activePlanet.house)}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Right Column - House Placement & Aspects */}
@@ -2013,21 +2595,34 @@ export function SacredHouseWheel({
                             <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
                               Aspects ({planetAspects.length})
                             </h4>
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {planetAspects.slice(0, 3).map((aspect, idx) => {
                                 const otherPlanet = aspect.planet1 === activePlanet.name ? aspect.planet2 : aspect.planet1;
+                                // Get archetypal interpretation for this aspect
+                                const aspectSynthesis = synthesizeAspect(
+                                  activePlanet.name,
+                                  otherPlanet,
+                                  aspect.type as AspectType
+                                );
                                 return (
                                   <div
                                     key={idx}
-                                    className={`px-2 py-1 rounded text-xs ${isDayMode ? 'bg-stone-100/60' : 'bg-stone-800/40'}`}
+                                    className={`px-2 py-2 rounded ${isDayMode ? 'bg-stone-100/60' : 'bg-stone-800/40'}`}
                                   >
-                                    <span className={isDayMode ? 'text-stone-900' : 'text-stone-100'}>
-                                      {aspect.type}
-                                    </span>
-                                    {' '}
-                                    <span className={isDayMode ? 'text-stone-600' : 'text-stone-400'}>
-                                      with {otherPlanet} ({aspect.orb.toFixed(1)}°)
-                                    </span>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className={`text-xs font-medium ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                                        {aspect.type}
+                                      </span>
+                                      <span className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                        with {otherPlanet} ({aspect.orb.toFixed(1)}°)
+                                      </span>
+                                    </div>
+                                    {/* Aspect interpretation from synthesizeAspect */}
+                                    {aspectSynthesis && (
+                                      <p className={`text-xs italic leading-relaxed mt-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                        {aspectSynthesis.coreQuestion}
+                                      </p>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -2053,7 +2648,7 @@ export function SacredHouseWheel({
                       </div>
                     </div>
 
-                    {/* Footer - Elemental Integration */}
+                    {/* Footer - Deeper Exploration */}
                     <div
                       className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
                       style={{
@@ -2061,10 +2656,160 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                        <span className="opacity-60">Current Transits:</span>{' '}
-                        <span className="font-medium italic">
-                          Live transit data coming soon
-                        </span>
+                        <span className="opacity-80">✨ Ask MAIA about current transits to this placement</span>
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Transit Planet Insight Popup */}
+        {clickedTransit !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => setClickedTransit(null)}
+          >
+            <div
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-md w-full ${
+                isDayMode
+                  ? 'bg-white/95 border-stone-200/60'
+                  : 'bg-black/95 border-indigo-700/60'
+              }`}
+              style={{
+                boxShadow: isDayMode
+                  ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                  : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(99, 102, 241, 0.2)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const transit = clickedTransit;
+                if (!transit) return null;
+
+                // Get relevant transit aspects for this planet
+                const relevantAspects = transitAspects.filter(a => a.transitPlanet === transit.planet);
+
+                // Planet symbol mapping
+                const symbols: { [key: string]: string } = {
+                  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂',
+                  Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
+                };
+
+                return (
+                  <>
+                    {/* Header */}
+                    <div
+                      className="px-6 py-4 border-b"
+                      style={{
+                        background: isDayMode
+                          ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))'
+                          : 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05))',
+                        borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl border-2 border-dashed"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1))',
+                            borderColor: 'rgba(99, 102, 241, 0.5)',
+                            color: isDayMode ? '#4F46E5' : '#818CF8',
+                          }}
+                        >
+                          {symbols[transit.planet] || transit.planet[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                              {transit.planet} Transit
+                            </h3>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-500/20 text-indigo-300">
+                              LIVE
+                            </span>
+                          </div>
+                          <p className={`text-sm ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                            {transit.degree.toFixed(1)}° {transit.sign}
+                            {transit.house && ` · House ${transit.house}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-6 py-4 space-y-4">
+                      {/* Transit-to-Natal Aspects */}
+                      {relevantAspects.length > 0 && (
+                        <div>
+                          <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                            Active Natal Aspects
+                          </h4>
+                          <div className="space-y-2">
+                            {relevantAspects.slice(0, 4).map((aspect, idx) => (
+                              <div
+                                key={idx}
+                                className={`p-2 rounded-lg border ${isDayMode ? 'bg-stone-50 border-stone-200' : 'bg-stone-800/50 border-stone-700/50'}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-sm font-medium ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
+                                    {aspect.aspectType.charAt(0).toUpperCase() + aspect.aspectType.slice(1)} natal {aspect.natalPlanet}
+                                  </span>
+                                  <span className={`text-xs ${aspect.applying ? 'text-green-400' : 'text-amber-400'}`}>
+                                    {aspect.applying ? '→ applying' : '← separating'} ({aspect.orb.toFixed(1)}°)
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {relevantAspects.length === 0 && (
+                        <div>
+                          <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                            Natal Aspects
+                          </h4>
+                          <p className={`text-sm ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                            No major aspects to your natal planets at this time.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* General transit meaning */}
+                      <div>
+                        <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                          Current Weather
+                        </h4>
+                        <p className={`text-sm italic ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                          {transit.planet === 'Moon' && 'The Moon moves quickly through emotional tides — its influence is brief but potent.'}
+                          {transit.planet === 'Sun' && 'Solar energy illuminates where attention flows — consciousness seeks expression.'}
+                          {transit.planet === 'Mercury' && 'Mercury brings mental activity and communication — thoughts seek articulation.'}
+                          {transit.planet === 'Venus' && 'Venus draws in beauty and connection — the heart seeks harmony.'}
+                          {transit.planet === 'Mars' && 'Mars energizes action and desire — the will seeks direction.'}
+                          {transit.planet === 'Jupiter' && 'Jupiter expands horizons and meaning — growth seeks opportunity.'}
+                          {transit.planet === 'Saturn' && 'Saturn structures and tests — discipline meets responsibility.'}
+                          {transit.planet === 'Uranus' && 'Uranus disrupts and liberates — awakening seeks authenticity.'}
+                          {transit.planet === 'Neptune' && 'Neptune dissolves and inspires — the soul seeks transcendence.'}
+                          {transit.planet === 'Pluto' && 'Pluto transforms and empowers — depth seeks truth.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div
+                      className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                      style={{
+                        borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                        ✨ Ask MAIA for deeper transit insights
                       </p>
                     </div>
                   </>
@@ -2210,9 +2955,9 @@ export function SacredHouseWheel({
                       </div>
                     </div>
 
-                    {/* Footer */}
+                    {/* Footer with Deep Dive button */}
                     <div
-                      className={`px-8 py-4 text-center ${
+                      className={`px-8 py-4 flex items-center justify-between ${
                         isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'
                       }`}
                       style={{
@@ -2220,13 +2965,463 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs italic ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                        Click outside to close · Click any house to explore its alchemical process
+                        Click outside to close
                       </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeepDiveHouse(clickedHouse);
+                          setClickedHouse(null);
+                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          isDayMode
+                            ? 'bg-stone-800 text-white hover:bg-stone-700'
+                            : 'bg-amber-100 text-stone-900 hover:bg-amber-200'
+                        }`}
+                      >
+                        Deep Dive →
+                      </button>
                     </div>
                   </>
                 );
               })()}
             </motion.div>
+          </motion.div>
+        )}
+
+        {/* Nodal Axis Destiny Path Panel - Soul's evolutionary trajectory */}
+        {showNodalAxisPanel && (() => {
+          const northNode = planets.find(p => p.name === 'North Node');
+          const southNode = planets.find(p => p.name === 'South Node');
+          if (!northNode || !southNode) return null;
+
+          const nnElement = houseElements[northNode.house as keyof typeof houseElements] as keyof typeof elementalColors;
+          const snElement = houseElements[southNode.house as keyof typeof houseElements] as keyof typeof elementalColors;
+          const nnColor = isDayMode ? elementalColors[nnElement].day : elementalColors[nnElement].night;
+          const snColor = isDayMode ? elementalColors[snElement].day : elementalColors[snElement].night;
+          const nnHouseData = getSpiralogicHouseData(northNode.house);
+          const snHouseData = getSpiralogicHouseData(southNode.house);
+
+          // House meanings for destiny interpretation
+          const houseMeanings: Record<number, { destiny: string; gifts: string }> = {
+            1: { destiny: 'developing authentic identity and self-expression', gifts: 'strong partnership skills and consideration for others' },
+            2: { destiny: 'building material security and self-worth', gifts: 'psychological depth and ability to transform through crisis' },
+            3: { destiny: 'communication, learning, and connecting with community', gifts: 'philosophical wisdom and understanding of bigger picture' },
+            4: { destiny: 'creating emotional foundation and family roots', gifts: 'career achievement and public recognition' },
+            5: { destiny: 'creative self-expression, joy, and following your heart', gifts: 'humanitarian vision and community thinking' },
+            6: { destiny: 'service, health practices, and daily devotion', gifts: 'spiritual connection and transcendence' },
+            7: { destiny: 'partnership, collaboration, and relating to others', gifts: 'strong sense of self and independent initiative' },
+            8: { destiny: 'deep transformation, shared resources, and psychological depth', gifts: 'material stability and practical values' },
+            9: { destiny: 'expanding horizons, philosophy, and higher meaning', gifts: 'intellectual versatility and local connections' },
+            10: { destiny: 'public contribution, career, and legacy', gifts: 'emotional intelligence and family bonds' },
+            11: { destiny: 'community leadership, vision, and collective impact', gifts: 'creative talent and personal magnetism' },
+            12: { destiny: 'spiritual surrender, transcendence, and universal compassion', gifts: 'practical skills and attention to detail' },
+          };
+
+          const nnMeaning = houseMeanings[northNode.house] || { destiny: 'evolutionary growth', gifts: 'past mastery' };
+          const snMeaning = houseMeanings[southNode.house] || { destiny: 'evolutionary growth', gifts: 'past mastery' };
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+              onClick={() => setShowNodalAxisPanel(false)}
+            >
+              <div
+                className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full ${
+                  isDayMode
+                    ? 'bg-white/95 border-stone-200/60'
+                    : 'bg-black/95 border-stone-700/60'
+                }`}
+                style={{
+                  boxShadow: isDayMode
+                    ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                    : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(245, 158, 11, 0.15)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header with gradient showing axis */}
+                <div
+                  className="px-6 py-4 border-b"
+                  style={{
+                    background: `linear-gradient(90deg, ${snColor}15 0%, transparent 50%, ${nnColor}15 100%)`,
+                    borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                          style={{
+                            background: `linear-gradient(135deg, ${snColor}30, transparent)`,
+                            color: snColor,
+                          }}
+                        >
+                          ☋
+                        </div>
+                        <div className={`text-lg ${isDayMode ? 'text-stone-400' : 'text-stone-500'}`}>→</div>
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                          style={{
+                            background: `linear-gradient(135deg, ${nnColor}30, ${nnColor}10)`,
+                            boxShadow: `0 0 20px ${nnColor}40`,
+                            color: nnColor,
+                          }}
+                        >
+                          ☊
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                          Destiny Path
+                        </h3>
+                        <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                          Soul&apos;s Evolutionary Trajectory
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                      style={{ background: `${nnColor}25`, color: nnColor }}
+                    >
+                      Nodal Axis
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-6 grid grid-cols-2 gap-6">
+                  {/* Left Column - South Node (Past) */}
+                  <div className="space-y-4">
+                    <div
+                      className={`p-4 rounded-xl ${isDayMode ? 'bg-stone-100' : 'bg-stone-800/50'}`}
+                      style={{ borderLeft: `3px solid ${snColor}` }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg" style={{ color: snColor }}>☋</span>
+                        <h4 className={`text-sm uppercase tracking-wider font-semibold ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                          South Node · Past Mastery
+                        </h4>
+                      </div>
+                      <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                        {southNode.sign} · House {southNode.house}
+                      </p>
+                      <p className={`text-xs mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        {southNode.degree.toFixed(1)}° · {snHouseData?.facet || 'Unknown Facet'}
+                      </p>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        <strong>Gifts you bring:</strong> {snMeaning.gifts}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                        Comfort Zone to Transcend
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        The South Node represents skills and patterns you&apos;ve already mastered — perhaps over many lifetimes.
+                        While these come naturally, over-reliance keeps you from growing.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column - North Node (Future) */}
+                  <div className="space-y-4">
+                    <div
+                      className={`p-4 rounded-xl ${isDayMode ? 'bg-amber-50' : 'bg-amber-900/20'}`}
+                      style={{ borderLeft: `3px solid ${nnColor}` }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg" style={{ color: nnColor }}>☊</span>
+                        <h4 className={`text-sm uppercase tracking-wider font-semibold ${isDayMode ? 'text-amber-700' : 'text-amber-400'}`}>
+                          North Node · Soul Purpose
+                        </h4>
+                      </div>
+                      <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                        {northNode.sign} · House {northNode.house}
+                      </p>
+                      <p className={`text-xs mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        {northNode.degree.toFixed(1)}° · {nnHouseData?.facet || 'Unknown Facet'}
+                      </p>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-amber-800' : 'text-amber-200'}`}>
+                        <strong>Your evolutionary edge:</strong> {nnMeaning.destiny}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                        Growth Direction
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        The North Node points toward unfamiliar territory — qualities and experiences
+                        that feel uncomfortable but lead to fulfillment. Lean into this edge.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Synthesis */}
+                <div
+                  className={`mx-6 mb-4 p-4 rounded-xl ${isDayMode ? 'bg-gradient-to-r from-stone-50 to-amber-50' : 'bg-gradient-to-r from-stone-800/30 to-amber-900/20'}`}
+                >
+                  <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                    ✨ Your Destiny Path Synthesis
+                  </h4>
+                  <p className={`text-sm italic leading-relaxed ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
+                    You&apos;re moving from {southNode.sign} energy (House {southNode.house}: {snMeaning.gifts.split(' ').slice(0, 3).join(' ')}...)
+                    toward {northNode.sign} expression (House {northNode.house}: {nnMeaning.destiny.split(' ').slice(0, 3).join(' ')}...).
+                    Use your natural gifts as a foundation, but keep reaching toward the North Node&apos;s call.
+                  </p>
+                </div>
+
+                {/* Footer */}
+                <div
+                  className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                  style={{
+                    borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                    ☊ Ask MAIA about your nodal axis for deeper destiny insights
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
+
+        {/* Aspect Patterns Panel - Sacred Geometry Configurations */}
+        {showPatternsPanel && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => {
+              setShowPatternsPanel(false);
+              setSelectedPattern(null);
+            }}
+          >
+            <div
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] overflow-y-auto ${
+                isDayMode
+                  ? 'bg-white/95 border-stone-200/60'
+                  : 'bg-black/95 border-stone-700/60'
+              }`}
+              style={{
+                boxShadow: isDayMode
+                  ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                  : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139, 92, 246, 0.15)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div
+                className={`px-6 py-4 border-b ${isDayMode ? 'bg-gradient-to-r from-violet-50 to-amber-50' : 'bg-gradient-to-r from-violet-900/20 to-amber-900/20'}`}
+                style={{
+                  borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                      style={{
+                        background: isDayMode ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.2)',
+                        color: isDayMode ? '#8B5CF6' : '#A78BFA',
+                      }}
+                    >
+                      ⬡
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                        Aspect Patterns
+                      </h3>
+                      <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        Sacred Geometry in Your Chart
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      background: isDayMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.25)',
+                      color: isDayMode ? '#7C3AED' : '#A78BFA',
+                    }}
+                  >
+                    {detectedPatterns.length} Found
+                  </span>
+                </div>
+              </div>
+
+              {/* Patterns List */}
+              <div className="p-4 space-y-3">
+                {detectedPatterns.length === 0 ? (
+                  <div className={`text-center py-8 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                    <p className="text-sm">No major aspect patterns detected in your chart.</p>
+                    <p className="text-xs mt-2">This is rare — most charts have at least one configuration.</p>
+                  </div>
+                ) : (
+                  detectedPatterns.map((pattern, idx) => {
+                    const isSelected = selectedPattern?.type === pattern.type &&
+                      JSON.stringify(selectedPattern?.planets) === JSON.stringify(pattern.planets);
+
+                    // Pattern icons and colors
+                    const patternMeta: Record<string, { icon: string; color: string; meaning: string }> = {
+                      'grand-trine': {
+                        icon: '△',
+                        color: '#10B981',
+                        meaning: 'Natural talents and flowing gifts',
+                      },
+                      't-square': {
+                        icon: '⊤',
+                        color: '#EF4444',
+                        meaning: 'Dynamic tension driving growth',
+                      },
+                      'grand-cross': {
+                        icon: '✚',
+                        color: '#DC2626',
+                        meaning: 'Crucible of transformation',
+                      },
+                      'yod': {
+                        icon: '☉',
+                        color: '#8B5CF6',
+                        meaning: 'Finger of fate pointing to destiny',
+                      },
+                      'stellium': {
+                        icon: '⚝',
+                        color: '#F59E0B',
+                        meaning: 'Concentrated energy and focus',
+                      },
+                      'mystic-rectangle': {
+                        icon: '▭',
+                        color: '#3B82F6',
+                        meaning: 'Harmonious integration of opposites',
+                      },
+                    };
+
+                    const meta = patternMeta[pattern.type] || { icon: '◇', color: '#6B7280', meaning: 'Complex configuration' };
+                    const strengthPercent = Math.round(pattern.strength * 100);
+
+                    return (
+                      <div
+                        key={`pattern-card-${idx}`}
+                        className={`rounded-xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? isDayMode ? 'bg-violet-50 border-violet-200' : 'bg-violet-900/20 border-violet-700'
+                            : isDayMode ? 'bg-stone-50 border-stone-200 hover:bg-stone-100' : 'bg-stone-800/30 border-stone-700 hover:bg-stone-800/50'
+                        }`}
+                        onClick={() => setSelectedPattern(isSelected ? null : pattern)}
+                      >
+                        <div className="p-4">
+                          {/* Pattern Header */}
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold"
+                                style={{
+                                  background: `${meta.color}15`,
+                                  color: meta.color,
+                                }}
+                              >
+                                {meta.icon}
+                              </div>
+                              <div>
+                                <h4 className={`text-sm font-semibold capitalize ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                                  {pattern.type.replace('-', ' ')}
+                                </h4>
+                                <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                                  {pattern.planets.join(' · ')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-xs font-medium ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                Strength
+                              </div>
+                              <div
+                                className="text-sm font-bold"
+                                style={{ color: meta.color }}
+                              >
+                                {strengthPercent}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Element/Modality Badge */}
+                          {(pattern.element || pattern.modality || pattern.sign) && (
+                            <div className="flex gap-2 mb-2">
+                              {pattern.element && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs capitalize ${isDayMode ? 'bg-stone-200' : 'bg-stone-700'}`}
+                                >
+                                  {pattern.element}
+                                </span>
+                              )}
+                              {pattern.modality && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs capitalize ${isDayMode ? 'bg-stone-200' : 'bg-stone-700'}`}
+                                >
+                                  {pattern.modality}
+                                </span>
+                              )}
+                              {pattern.sign && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs ${isDayMode ? 'bg-amber-100 text-amber-800' : 'bg-amber-900/30 text-amber-300'}`}
+                                >
+                                  {pattern.sign}
+                                </span>
+                              )}
+                              {pattern.focalPlanet && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs ${isDayMode ? 'bg-red-100 text-red-800' : 'bg-red-900/30 text-red-300'}`}
+                                >
+                                  Focal: {pattern.focalPlanet}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Interpretation (expanded when selected) */}
+                          {isSelected && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className={`mt-3 pt-3 border-t ${isDayMode ? 'border-stone-200' : 'border-stone-600'}`}
+                            >
+                              <p className={`text-xs font-medium mb-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                {meta.meaning}
+                              </p>
+                              <p className={`text-sm leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                                {pattern.interpretation}
+                              </p>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div
+                className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                style={{
+                  borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                }}
+              >
+                <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                  ⬡ Ask MAIA about your aspect patterns for deeper configuration insights
+                </p>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -2240,6 +3435,26 @@ export function SacredHouseWheel({
           />
         )}
       </AnimatePresence>
+
+      {/* House Deep Dive Sheet - Comprehensive house exploration */}
+      <HouseDeepDiveSheet
+        house={deepDiveHouse || 1}
+        isOpen={deepDiveHouse !== null}
+        onClose={() => setDeepDiveHouse(null)}
+        planetsInHouse={planets?.filter(p => p.house === deepDiveHouse) || []}
+        rulerPlanet={(() => {
+          if (!deepDiveHouse || !planets) return undefined;
+          const HOUSE_RULERS: Record<number, string> = {
+            1: 'Mars', 2: 'Venus', 3: 'Mercury', 4: 'Moon',
+            5: 'Sun', 6: 'Mercury', 7: 'Venus', 8: 'Pluto',
+            9: 'Jupiter', 10: 'Saturn', 11: 'Uranus', 12: 'Neptune',
+          };
+          const rulerName = HOUSE_RULERS[deepDiveHouse];
+          const ruler = planets.find(p => p.name === rulerName);
+          return ruler ? { name: ruler.name, sign: ruler.sign, house: ruler.house } : undefined;
+        })()}
+        isDayMode={isDayMode}
+      />
     </div>
   );
 }

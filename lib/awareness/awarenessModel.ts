@@ -1,6 +1,28 @@
+/**
+ * @deprecated LEGACY 4-LEVEL SYSTEM
+ *
+ * This file is DEPRECATED. Use the canonical 7-level system instead:
+ *
+ *   import { AwarenessLevel, to4Level } from '@/lib/consciousness/awareness-levels';
+ *
+ * Migration:
+ * - AwarenessLevel type → import from awareness-levels.ts (7-level)
+ * - To get 4-level values, use: to4Level(sevenLevelValue)
+ * - inferAwarenessFromText() → use detectAwarenessLevel() from awareness-detection.ts
+ *
+ * This file remains for backwards compatibility but will be removed in a future version.
+ *
+ * Mapping: 7-level → 4-level
+ *   1-2 → 1 (Newcomer)
+ *   3-4 → 2 (Practitioner-in-Process)
+ *   5-6 → 3 (Adept)
+ *   7   → 4 (Steward)
+ */
+
 // MAIA's Depth-Sense: Awareness Model
 // Tracks how deeply/complexity someone wants MAIA to engage
 
+/** @deprecated Use AwarenessLevel from @/lib/consciousness/awareness-levels instead */
 export type AwarenessLevel = 1 | 2 | 3 | 4;
 
 // The four levels of depth/complexity

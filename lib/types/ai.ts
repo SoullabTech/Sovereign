@@ -11,6 +11,10 @@ export interface AIResponse {
     tokens?: number;
     timestamp?: Date;
   };
+  /**
+   * Allow forward-compatible extra properties while we refactor response schemas
+   */
+  [key: string]: any;
 }
 
 export interface AIContext {

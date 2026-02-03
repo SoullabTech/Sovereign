@@ -1,7 +1,96 @@
-import React from 'react';
-import { Download, FileText, Calendar, Shield } from 'lucide-react';
+'use client';
 
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Download, FileText, Calendar, Shield, Lock, Loader2 } from 'lucide-react';
+
+/**
+ * Export page - Public preview with auth-gated action
+ *
+ * Unauthenticated users see an explanation of why export requires sign-in.
+ * Authenticated users see the full export interface.
+ */
 export default function ExportPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check auth on mount by calling API
+    fetch('/api/auth/check')
+      .then(res => res.json())
+      .then(data => setIsAuthenticated(!!data.authenticated))
+      .catch(() => setIsAuthenticated(false));
+  }, []);
+
+  // Loading state
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+      </div>
+    );
+  }
+
+  // Blocked state for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-6">
+          {/* Icon */}
+          <div className="mx-auto w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <Lock className="w-8 h-8 text-neutral-400" />
+          </div>
+
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+            Export your data
+          </h1>
+
+          {/* Explanation */}
+          <div className="space-y-3 text-neutral-600 dark:text-neutral-400">
+            <p>
+              Your data is yours. Export is available once you're signed in,
+              because it packages your private records into open files (JSON, Markdown, CSV).
+            </p>
+            <p className="text-sm">
+              Exports include your saved entries, reflections, and session records.
+            </p>
+            <p className="text-sm italic">
+              If Soullab ever <strong>winds down</strong>, exports remain available
+              during a <strong>90-day notice window</strong>.
+            </p>
+          </div>
+
+          {/* Primary CTA */}
+          <Link
+            href="/signin?next=/dashboard/export"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3
+                     bg-blue-600 hover:bg-blue-700 text-white rounded-lg
+                     font-medium transition-colors duration-200"
+          >
+            Sign in to export
+          </Link>
+
+          {/* Trust links */}
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <Link
+              href="/maia/stewardship"
+              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+            >
+              Why support matters
+            </Link>
+            <Link
+              href="/maia/privacy"
+              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+            >
+              Privacy
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full export interface for authenticated users
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -11,6 +100,10 @@ export default function ExportPage() {
         </h1>
         <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Download your Soullab data in various formats
+        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-3 italic">
+          Exports are open formats (JSON, Markdown, CSV). If Soullab ever winds down,
+          export remains available during a 90-day notice window.
         </p>
       </div>
 
@@ -127,10 +220,10 @@ export default function ExportPage() {
               Data Privacy & Security
             </h4>
             <div className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-              <p>• All exported data is encrypted and anonymous</p>
-              <p>• Personal identifiers are removed or hashed</p>
-              <p>• Exports are available for 24 hours after generation</p>
-              <p>• Downloaded files are automatically deleted from our servers</p>
+              <p>All exported data is encrypted and anonymous</p>
+              <p>Personal identifiers are removed or hashed</p>
+              <p>Exports are available for 24 hours after generation</p>
+              <p>Downloaded files are automatically deleted from our servers</p>
             </div>
           </div>
         </div>

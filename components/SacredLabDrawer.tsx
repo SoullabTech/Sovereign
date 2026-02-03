@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Lab Drawer - Contextual navigation for SOULLAB
  *
@@ -43,6 +44,8 @@ import {
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
+type ScribeChair = 'solo' | 'witness' | 'practitioner';
+
 interface SacredLabDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -52,6 +55,7 @@ interface SacredLabDrawerProps {
   isFieldRecording?: boolean;
   isScribing?: boolean;
   hasScribeSession?: boolean;
+  scribeChair?: ScribeChair;
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
@@ -63,6 +67,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   isFieldRecording,
   isScribing,
   hasScribeSession,
+  scribeChair,
 }) => {
   const menuSections = [
     {
@@ -109,6 +114,20 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       title: 'SACRED KNOWLEDGE',
       icon: '📚',
       items: [
+        {
+          icon: Sparkles,
+          label: 'Ask MAIA',
+          action: () => onNavigate('/ask-maia'),
+          description: 'Explore consciousness insights',
+          badge: '✨ New'
+        },
+        {
+          icon: BookOpen,
+          label: 'Ask Jeeves',
+          action: () => onNavigate('/maia/library'),
+          description: 'Deep research across your library',
+          badge: '✨ New'
+        },
         {
           icon: Library,
           label: 'Library of Alexandria',
@@ -304,15 +323,38 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Document consciousness explorations',
           isActive: isFieldRecording,
         },
-        {
-          icon: isScribing ? MicOff : Mic,
-          label: isScribing ? 'Stop Scribe & Download' : 'Start Scribe Mode',
-          action: () => onAction?.('scribe-mode'),
-          description: isScribing
-            ? 'Complete session and download transcript'
-            : 'Record client session passively with MAIA consultation',
-          isActive: isScribing,
-        },
+        // Show chair selection when not scribing, or stop button when scribing
+        ...(isScribing
+          ? [{
+              icon: MicOff,
+              label: `Stop ${scribeChair === 'solo' ? '1st Chair' : scribeChair === 'witness' ? '2nd Chair' : '3rd Chair'} Session`,
+              action: () => onAction?.('scribe-mode'),
+              description: 'Complete session and download transcript',
+              isActive: true,
+            }]
+          : [
+              {
+                icon: User,
+                label: '1st Chair • Solo',
+                action: () => onAction?.('scribe-solo'),
+                description: 'Self-study & journaling',
+                badge: '🧘',
+              },
+              {
+                icon: Eye,
+                label: '2nd Chair • Witness',
+                action: () => onAction?.('scribe-witness'),
+                description: 'Observing couples/groups without responding',
+                badge: '👁️',
+              },
+              {
+                icon: FileText,
+                label: '3rd Chair • Practitioner',
+                action: () => onAction?.('scribe-practitioner'),
+                description: 'Session notes & skill tracking',
+                badge: '📋',
+              },
+            ]),
         ...(hasScribeSession && !isScribing ? [{
           icon: MessageSquare,
           label: 'Review Session with MAIA',

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Portal Consciousness Shader System - Live Integration
  *

@@ -283,7 +283,7 @@ export default function CommonsPostForm() {
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="text-stone-400 hover:text-stone-600"
+                      className="text-stone-500 hover:text-stone-600"
                       disabled={submitting}
                     >
                       ×

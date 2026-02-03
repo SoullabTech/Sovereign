@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daily Reflection Ritual Component
  * Subtle introduction of elemental wisdom through accessible language

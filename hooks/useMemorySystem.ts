@@ -55,7 +55,7 @@ export function useMemorySystem({
   // Fetch journal entries
   const fetchJournals = useCallback(async () => {
     try {
-      const response = await fetch(`/api/journal?userId=${userId}`);
+      const response = await fetch(`/api/journal/list?userId=${userId}`);
       if (!response.ok) throw new Error('Failed to fetch journals');
       
       const data = await response.json();
@@ -173,7 +173,7 @@ export function useMemorySystem({
 
       switch (type) {
         case 'journal':
-          endpoint = '/api/journal';
+          endpoint = '/api/journal/list';
           body = {
             ...body,
             title: metadata?.mood ? `${metadata.mood} reflection` : 'Journal Entry',
@@ -218,7 +218,7 @@ export function useMemorySystem({
       
       switch (type) {
         case 'journal':
-          endpoint = `/api/journal?id=${memoryId}&userId=${userId}`;
+          endpoint = `/api/journal/list?id=${memoryId}&userId=${userId}`;
           break;
         case 'upload':
           endpoint = `/api/upload?id=${memoryId}&userId=${userId}`;

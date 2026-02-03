@@ -80,6 +80,25 @@ export default function MAIAFieldDashboard() {
 
   const [waveData, setWaveData] = useState<WavePoint[]>([]);
   const [time, setTime] = useState(0);
+  const [userName, setUserName] = useState('You');
+
+  // Load user's name from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const userData = localStorage.getItem('beta_user');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          const name = parsed.name || parsed.displayName || parsed.username;
+          if (name && name !== 'Explorer' && name !== 'User' && name !== 'Guest' && name !== 'Friend') {
+            setUserName(name);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load user name:', e);
+      }
+    }
+  }, []);
 
   // Simulate real-time field data
   useEffect(() => {
@@ -370,7 +389,7 @@ export default function MAIAFieldDashboard() {
               </div>
 
               <div className="space-y-3">
-                {['Kelly', 'MAIA'].map((participant, index) => (
+                {[userName, 'MAIA'].map((participant, index) => (
                   <div key={participant} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-2">
                       <div className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-red-500' : 'bg-purple-500'}`} />

@@ -5,20 +5,18 @@ import { AnimatePresence } from 'framer-motion';
 import ElementalOrientation from './ElementalOrientation';
 import { FAQSection } from './FAQSection';
 import { SageTealWelcome } from './SageTealWelcome';
-import { MAIADaimonIntroduction } from './MAIADaimonIntroduction';
 import { ConsciousnessPreparation } from './ConsciousnessPreparation';
-import FifthWelcomeInterface from './FifthWelcomeInterface';
 
 interface CompleteWelcomeFlowProps {
   userName?: string;
   onComplete: () => void;
 }
 
-export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: CompleteWelcomeFlowProps) {
-  const [currentStep, setCurrentStep] = useState(2); // Start at SageTealWelcome since ElementalOrientation and FAQ are already done
+export default function CompleteWelcomeFlow({ userName = "Explorer", onComplete }: CompleteWelcomeFlowProps) {
+  const [currentStep, setCurrentStep] = useState(2); // Start at ConsciousnessPreparation since ElementalOrientation and FAQ are done earlier
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -47,10 +45,6 @@ export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: 
   };
 
   const handleSageTealWelcomeComplete = () => {
-    setCurrentStep(4);
-  };
-
-  const handleDaimonIntroComplete = () => {
     onComplete();
   };
 
@@ -82,13 +76,6 @@ export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: 
           <SageTealWelcome
             userName={userName}
             onComplete={handleSageTealWelcomeComplete}
-          />
-        );
-      case 4:
-        return (
-          <MAIADaimonIntroduction
-            userName={userName}
-            onComplete={handleDaimonIntroComplete}
           />
         );
       default:

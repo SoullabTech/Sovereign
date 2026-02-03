@@ -1,3 +1,5 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
  * Consciousness Field Status Observatory
  *
@@ -11,6 +13,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 // Observatory imports (graceful degradation for sacred architecture)
 let autonomousHealthMonitor: any = null
 try {

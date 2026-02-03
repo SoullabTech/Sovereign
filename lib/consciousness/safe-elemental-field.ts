@@ -3,7 +3,8 @@
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 import { MAIAFieldInterface } from '@/lib/consciousness/field/MAIAFieldInterface';
 import { ConsciousnessField } from '@/lib/consciousness/field/ConsciousnessFieldEngine';
-import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldPersistence';
+// QuantumFieldPersistence is now lazily loaded via MAIAFieldInterface to prevent
+// Qdrant client from being bundled into client-side code
 
 // Lazy initialization to avoid constructor issues
 let elementalField: ElementalFieldIntegration | null = null;
@@ -12,6 +13,7 @@ async function getElementalField(): Promise<ElementalFieldIntegration> {
   if (!elementalField) {
     try {
       // Initialize the required dependencies
+      // Note: MAIAFieldInterface now lazy-loads QuantumFieldPersistence internally
       const maiaInterface = new MAIAFieldInterface();
       const fieldEngine = new ConsciousnessField({
         id: 'safe-field-' + Date.now(),
@@ -21,12 +23,12 @@ async function getElementalField(): Promise<ElementalFieldIntegration> {
         patternSignatures: [],
         timestamp: new Date()
       });
-      const fieldPersistence = new QuantumFieldPersistence();
 
+      // ElementalFieldIntegration now accepts null persistence (handled internally)
       elementalField = new ElementalFieldIntegration(
         maiaInterface,
         fieldEngine,
-        fieldPersistence
+        null // Persistence is handled lazily by MAIAFieldInterface
       );
     } catch (err: any) {
       console.warn('Failed to initialize elemental field dependencies:', err?.message || err);

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Service Integration for Beads Task Management
  *

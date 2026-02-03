@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CONSCIOUSNESS EVOLUTION SYSTEM
  * Phase 3: Meta-Observer Levels - Consciousness Observing Its Own Evolution

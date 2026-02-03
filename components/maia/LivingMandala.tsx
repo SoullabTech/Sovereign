@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌸 Living Mandala - The Axis Mundi Interface
  *

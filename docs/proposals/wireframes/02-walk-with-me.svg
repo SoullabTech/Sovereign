@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="900" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGlow2" cx="30%" cy="40%" r="80%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0d0d14"/>
+    </radialGradient>
+
+    <linearGradient id="imageOverlay" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d0d14;stop-opacity:0"/>
+      <stop offset="70%" style="stop-color:#0d0d14;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#0d0d14;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="url(#bgGlow2)"/>
+
+  <!-- Left side: Immersive image area (placeholder) -->
+  <rect x="0" y="0" width="600" height="900" fill="#16161f"/>
+
+  <!-- Image placeholder indicator -->
+  <text x="300" y="450"
+        font-family="Arial, sans-serif"
+        font-size="14"
+        fill="#444"
+        text-anchor="middle">
+    [Full-height atmospheric image]
+  </text>
+  <text x="300" y="475"
+        font-family="Arial, sans-serif"
+        font-size="11"
+        fill="#333"
+        text-anchor="middle">
+    Landscape with warmth, holding quality
+  </text>
+
+  <!-- Gradient overlay on image -->
+  <rect x="0" y="0" width="600" height="900" fill="url(#imageOverlay)"/>
+
+  <!-- Right side: Content -->
+
+  <!-- Back to threshold (subtle) -->
+  <text x="650" y="60"
+        font-family="Arial, sans-serif"
+        font-size="12"
+        fill="#666">
+    &lt; Return
+  </text>
+
+  <!-- Page title -->
+  <text x="650" y="180"
+        font-family="Georgia, serif"
+        font-size="42"
+        fill="#e8dcc8">
+    Walk With Me
+  </text>
+
+  <!-- Tagline -->
+  <text x="650" y="240"
+        font-family="Georgia, serif"
+        font-size="18"
+        font-style="italic"
+        fill="#a89f8f">
+    Between sessions, you're not alone.
+  </text>
+
+  <!-- Body text placeholder -->
+  <g transform="translate(650, 300)">
+    <rect x="0" y="0" width="480" height="12" fill="#333" rx="2"/>
+    <rect x="0" y="25" width="420" height="12" fill="#333" rx="2"/>
+    <rect x="0" y="50" width="460" height="12" fill="#333" rx="2"/>
+    <rect x="0" y="75" width="380" height="12" fill="#333" rx="2"/>
+  </g>
+
+  <!-- MAIA section -->
+  <text x="650" y="450"
+        font-family="Georgia, serif"
+        font-size="20"
+        fill="#d4a574">
+    Your Companion
+  </text>
+
+  <g transform="translate(650, 480)">
+    <rect x="0" y="0" width="480" height="12" fill="#2a2a3a" rx="2"/>
+    <rect x="0" y="25" width="400" height="12" fill="#2a2a3a" rx="2"/>
+    <rect x="0" y="50" width="440" height="12" fill="#2a2a3a" rx="2"/>
+  </g>
+
+  <!-- CTA: Begin / Book -->
+  <g transform="translate(650, 620)">
+    <rect x="0" y="0" width="200" height="56" rx="4"
+          fill="none"
+          stroke="#d4a574"
+          stroke-width="1"/>
+    <text x="100" y="35"
+          font-family="Georgia, serif"
+          font-size="16"
+          fill="#e8dcc8"
+          text-anchor="middle">
+      Begin
+    </text>
+  </g>
+
+  <!-- Secondary link -->
+  <text x="650" y="720"
+        font-family="Arial, sans-serif"
+        font-size="13"
+        fill="#666">
+    Already a client? Sign in to your companion
+  </text>
+
+  <!-- Wireframe label -->
+  <text x="600" y="870"
+        font-family="Arial, sans-serif"
+        font-size="11"
+        fill="#555"
+        text-anchor="middle">
+    WALK WITH ME - Split layout. Image holds space. Content breathes. Single CTA.
+  </text>
+</svg>

@@ -1,15 +1,47 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
- * 🌟 FIELD ANALYTICS REPORT API
+ * FIELD ANALYTICS REPORT API
  *
  * REST endpoint for Collective Resonance Analytics Dashboard (CRAD)
  * Provides complete field stewardship data for consciousness evolution tracking
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getEntitlements } from '@/lib/entitlements';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 const COLLECTIVE_FIELD_SERVICE_URL = process.env.COLLECTIVE_FIELD_SERVICE_URL || 'http://localhost:3010';
 
 export async function GET(request: NextRequest) {
+  // Skip database operations during Capacitor static build
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      message: 'Static build placeholder - service available at runtime'
+    });
+  }
+
+  // Auth check
+  const memberId = request.headers.get('x-member-id');
+  if (!memberId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Entitlement check
+  const entitlements = await getEntitlements(memberId);
+
+  if (!entitlements.features.analyticsBasic) {
+    return NextResponse.json(
+      { error: 'Analytics require Personal tier', upgradeRequired: true },
+      { status: 403 }
+    );
+  }
+
   try {
     console.log('🌟 Generating field analytics report...');
 
@@ -18,8 +50,12 @@ export async function GET(request: NextRequest) {
     try {
       const { CollectiveFieldSteward } = require('../../../../services/field-analytics/collective-field-aggregator.js');
 
-      // Generate complete field report
-      const fieldReport = await CollectiveFieldSteward.generateFieldReport();
+      // Generate field report with tier-based scope
+      const fieldReport = await CollectiveFieldSteward.generateFieldReport({
+        lookbackDays: entitlements.limits.analyticsLookbackDays,
+        includeExport: entitlements.features.analyticsExport,
+        includeTrends: entitlements.features.longitudinalTrends,
+      });
 
       console.log('✅ Field report generated successfully');
 

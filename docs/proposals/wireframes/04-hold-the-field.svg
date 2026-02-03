@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="900" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGlow4" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0d0d14"/>
+    </radialGradient>
+
+    <linearGradient id="imageOverlay4" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d0d14;stop-opacity:1"/>
+      <stop offset="40%" style="stop-color:#0d0d14;stop-opacity:0.7"/>
+      <stop offset="100%" style="stop-color:#0d0d14;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="url(#bgGlow4)"/>
+
+  <!-- Top: Full-width cinematic image area -->
+  <rect x="0" y="0" width="1200" height="450" fill="#16161f"/>
+
+  <!-- Image placeholder indicator -->
+  <text x="600" y="200"
+        font-family="Arial, sans-serif"
+        font-size="14"
+        fill="#444"
+        text-anchor="middle">
+    [Cinematic gathering image - SEE moments, connection]
+  </text>
+  <text x="600" y="225"
+        font-family="Arial, sans-serif"
+        font-size="11"
+        fill="#333"
+        text-anchor="middle">
+    People in field, not posed, atmospheric
+  </text>
+
+  <!-- Gradient overlay on image -->
+  <rect x="0" y="0" width="1200" height="450" fill="url(#imageOverlay4)"/>
+
+  <!-- Back to threshold (subtle) -->
+  <text x="80" y="50"
+        font-family="Arial, sans-serif"
+        font-size="12"
+        fill="#888">
+    &lt; Return
+  </text>
+
+  <!-- Title overlay on image -->
+  <text x="600" y="380"
+        font-family="Georgia, serif"
+        font-size="48"
+        fill="#e8dcc8"
+        text-anchor="middle">
+    Hold the Field
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="430"
+        font-family="Georgia, serif"
+        font-size="20"
+        font-style="italic"
+        fill="#a89f8f"
+        text-anchor="middle">
+    Once a year, we gather. The rest of the year, the field remains.
+  </text>
+
+  <!-- Content section below -->
+
+  <!-- SEE description -->
+  <g transform="translate(100, 500)">
+    <text x="0" y="30" font-family="Georgia, serif" font-size="24" fill="#d4a574">SEE</text>
+    <text x="60" y="30" font-family="Georgia, serif" font-size="16" fill="#666">Somatic Experiencing Exchange</text>
+
+    <rect x="0" y="55" width="400" height="10" fill="#333" rx="2"/>
+    <rect x="0" y="75" width="350" height="10" fill="#333" rx="2"/>
+    <rect x="0" y="95" width="380" height="10" fill="#333" rx="2"/>
+  </g>
+
+  <!-- Year-round connection -->
+  <g transform="translate(650, 500)">
+    <text x="0" y="30" font-family="Georgia, serif" font-size="24" fill="#d4a574">The Commons</text>
+
+    <rect x="0" y="55" width="400" height="10" fill="#333" rx="2"/>
+    <rect x="0" y="75" width="350" height="10" fill="#333" rx="2"/>
+    <rect x="0" y="95" width="380" height="10" fill="#333" rx="2"/>
+  </g>
+
+  <!-- Two CTAs side by side -->
+  <g transform="translate(100, 680)">
+    <rect x="0" y="0" width="200" height="56" rx="4"
+          fill="none"
+          stroke="#d4a574"
+          stroke-width="1"/>
+    <text x="100" y="35"
+          font-family="Georgia, serif"
+          font-size="16"
+          fill="#e8dcc8"
+          text-anchor="middle">
+      This Year's Gathering
+    </text>
+  </g>
+
+  <g transform="translate(650, 680)">
+    <rect x="0" y="0" width="200" height="56" rx="4"
+          fill="none"
+          stroke="#666"
+          stroke-width="1"/>
+    <text x="100" y="35"
+          font-family="Georgia, serif"
+          font-size="16"
+          fill="#a89f8f"
+          text-anchor="middle">
+      Enter the Commons
+    </text>
+  </g>
+
+  <!-- Note about commons -->
+  <text x="650" y="770"
+        font-family="Arial, sans-serif"
+        font-size="12"
+        fill="#555">
+    For SEE participants - year-round connection
+  </text>
+
+  <!-- Wireframe label -->
+  <text x="600" y="870"
+        font-family="Arial, sans-serif"
+        font-size="11"
+        fill="#555"
+        text-anchor="middle">
+    HOLD THE FIELD - Cinematic top image. SEE info + Commons portal for alumni. Living network.
+  </text>
+</svg>

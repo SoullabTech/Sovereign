@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strict": false
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "hooks/**/*.ts",
+    "lib/**/*.ts",
+    "middleware.ts",
+    "next-env.d.ts",
+    "types/**/*.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**",
+    ".next/**",
+    "out/**",
+    "dist/**",
+    "app/api/**",
+    "app/maia/labtools/**",
+    "lib/**/__tests__/**",
+    "lib/consciousness/ConversationPatternAnalyzer.ts",
+    "lib/consciousness/gebser-field-integration.ts",
+    "lib/consciousness/consciousness-structure-assessment.ts",
+    "lib/analytics/DreamConsciousnessCorrelationEngine.ts",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.backup.*"
+  ]
+}

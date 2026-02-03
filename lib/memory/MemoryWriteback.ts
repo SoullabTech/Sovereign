@@ -134,15 +134,16 @@ export const MemoryWritebackService = {
 
       console.log(`✅ [MemoryWriteback] Promoted to developmental_memories: ${memoryId}`);
 
-      // Check for breakthrough (high significance + insight pattern)
-      if (significance >= 0.8 || this.isBreakthroughPattern(userMessage, assistantResponse)) {
+      // Check for breakthrough (lowered threshold for spiral-relative awareness)
+      // Breakthroughs at any level are meaningful and worth recording
+      if (significance >= 0.5 || this.isBreakthroughPattern(userMessage, assistantResponse)) {
         await this.writeBreakthroughMoment({
           userId,
           sessionId,
           insight: this.extractInsight(userMessage, assistantResponse),
           element: input.element,
         });
-        console.log(`⭐ [MemoryWriteback] Breakthrough moment recorded`);
+        console.log(`⭐ [MemoryWriteback] Breakthrough moment recorded (significance: ${significance.toFixed(2)})`);
       }
 
       return { wrote: true, memoryId };

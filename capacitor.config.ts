@@ -1,17 +1,55 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+// Build mode detection
+// - CAPACITOR_MODE=dev for local dev server (must be explicit)
+// - Default to beta/prod (soullab.life) for TestFlight builds
+const BUILD_MODE = (process.env.CAPACITOR_MODE || 'beta') as 'dev' | 'beta' | 'prod';
+
+const isProdLike = BUILD_MODE === 'beta' || BUILD_MODE === 'prod';
+
+// Dev server config (only used in dev mode)
+const devServer = {
+  url: 'http://192.168.4.210:3000',
+  cleartext: true,
+  androidScheme: 'http' as const,
+};
+
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
   webDir: 'out',
-  server: {
-    // For simulator: use localhost (points to Mac)
-    // For physical device: change to LAN IP (192.168.4.210)
-    url: 'http://localhost:3000',
-    cleartext: true,
-    androidScheme: 'https'
+
+  // IMPORTANT: iOS must use LOCAL assets (not remote URL) for native plugins to work
+  // Using server.url breaks Capacitor.getPlatform() - returns 'web' instead of 'ios'
+  // See: https://github.com/ionic-team/capacitor/issues/2373
+  // Dev mode: use local dev server for hot reload
+  server: BUILD_MODE === 'dev' ? devServer : undefined,
+
+  // Enable WebView debugging for Safari Web Inspector (even in TestFlight)
+  ios: {
+    webContentsDebuggingEnabled: true,
   },
+  // Custom iOS plugins that need explicit registration
+  // AudioSessionManager is our custom plugin for managing iOS audio session state
+  packageClassList: [
+    'BluetoothLe',
+    'SpeechRecognition',
+    'AudioSessionManager',
+    'AppPlugin',
+    'ClipboardPlugin',
+    'FilesystemPlugin',
+    'HapticsPlugin',
+    'LocalNotificationsPlugin',
+    'SharePlugin',
+    'SplashScreenPlugin',
+    'StatusBarPlugin',
+    'VoiceRecorder'
+  ],
   plugins: {
+    // Enable native HTTP to bypass CORS in WKWebView
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchShowDuration: 3000,
       backgroundColor: "#1A1513",
@@ -41,6 +79,13 @@ const config: CapacitorConfig = {
     },
     Clipboard: {
       enabled: true
+    },
+    SpeechRecognition: {
+      language: 'en-US',
+      maxResults: 5,
+      prompt: 'Speak to MAIA',
+      partialResults: true,
+      popup: false
     }
   }
 };

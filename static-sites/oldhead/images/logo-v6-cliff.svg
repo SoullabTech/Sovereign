@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- V6 - The Cliff: OH where O is the headland silhouette -->
+  <g fill="#FAFAF8">
+    <!-- Cliff/headland shape forming the O -->
+    <path d="M30 4
+             Q45 8 48 20
+             Q52 35 45 45
+             Q38 54 30 56
+             Q22 54 15 45
+             Q8 35 12 20
+             Q15 8 30 4 Z"
+          fill="none" stroke="#FAFAF8" stroke-width="2.5"/>
+
+    <!-- H integrated - like standing stones on the cliff -->
+    <rect x="18" y="16" width="4" height="28"/>
+    <rect x="38" y="16" width="4" height="28"/>
+    <rect x="18" y="28" width="24" height="4"/>
+
+    <!-- Wave line at base -->
+    <path d="M8 48 Q15 44 22 48 Q30 52 38 48 Q45 44 52 48"
+          fill="none" stroke="#FAFAF8" stroke-width="2" opacity="0.6"/>
+  </g>
+</svg>

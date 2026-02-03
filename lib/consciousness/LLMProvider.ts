@@ -74,10 +74,15 @@ export class MultiLLMProvider {
   private anthropic?: Anthropic;
   private ollamaBaseUrl: string;
   private enableClaude: boolean;
+  private strict503: boolean;
 
   constructor() {
     // Claude as primary (enabled by default)
     this.enableClaude = process.env.DISABLE_CLAUDE !== 'true';
+
+    // STRICT 503 MODE: When enabled, Claude failures return 503 instead of falling back to Ollama
+    // Use for gold/eval paths where you need to verify actual Claude output
+    this.strict503 = process.env.MAIA_STRICT_503 === '1' || process.env.MAIA_STRICT_503 === 'true';
 
     if (this.enableClaude && process.env.ANTHROPIC_API_KEY) {
       this.anthropic = new Anthropic({
@@ -127,8 +132,19 @@ export class MultiLLMProvider {
       try {
         return await this.generateClaude(systemPrompt, userInput, config, startTime);
       } catch (error) {
-        console.error('Claude generation failed, trying Ollama fallback:', error);
-        // Fallback to Ollama if Claude fails
+        console.error('Claude generation failed:', error);
+
+        // STRICT 503 MODE: Do not fall back to Ollama, throw ServiceUnavailable
+        if (this.strict503) {
+          console.warn('[LLMProvider] STRICT_503 mode enabled - NOT falling back to Ollama');
+          const err = new Error('Primary provider (Claude) unavailable');
+          (err as any).code = 'SERVICE_UNAVAILABLE';
+          (err as any).provider = 'anthropic';
+          throw err;
+        }
+
+        // Graceful degradation: Fallback to Ollama if Claude fails
+        console.log('[LLMProvider] Falling back to Ollama...');
         try {
           return await this.generateOllama(systemPrompt, userInput, config, startTime);
         } catch (ollamaError) {

@@ -54,46 +54,8 @@ export default function AdminPage() {
       setUsers(usersList);
     }
 
-    // Always include default test users
-    const defaultUsers = [
-      {
-        id: 'user_kelly_default',
-        username: 'Kelly@Soullab.org',
-        name: 'Kelly',
-        email: 'Kelly@Soullab.org',
-        password: 'Mandala21',
-        onboarded: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'user_kelly_lowercase',
-        username: 'kelly@soullab.org',
-        name: 'Kelly',
-        email: 'kelly@soullab.org',
-        password: 'Mandala21',
-        onboarded: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'user_kelly_name',
-        username: 'Kelly',
-        name: 'Kelly',
-        email: 'Kelly@Soullab.org',
-        password: 'Mandala21',
-        onboarded: true,
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    // Merge with existing users, avoiding duplicates
-    const allUsers = [...defaultUsers];
-    users.forEach(user => {
-      if (!defaultUsers.find(du => du.username === user.username)) {
-        allUsers.push(user);
-      }
-    });
-
-    setUsers(allUsers);
+    // Note: Default test users removed for security.
+    // Users should be created through proper registration with hashed passwords.
   };
 
   const saveUsers = (updatedUsers: User[]) => {
@@ -131,13 +93,6 @@ export default function AdminPage() {
   };
 
   const handleDeleteUser = (userId: string) => {
-    const userToDelete = users.find(u => u.id === userId);
-    if (userToDelete && ['user_kelly_default', 'user_kelly_lowercase', 'user_kelly_name'].includes(userId)) {
-      setMessage('Cannot delete default test users');
-      setTimeout(() => setMessage(''), 3000);
-      return;
-    }
-
     if (confirm('Are you sure you want to delete this user?')) {
       const updatedUsers = users.filter(user => user.id !== userId);
       saveUsers(updatedUsers);

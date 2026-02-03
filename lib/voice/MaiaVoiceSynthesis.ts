@@ -3,17 +3,34 @@
  * Works in both Chat and Voice modes
  */
 
+import { getAccountSettings } from '@/lib/settings/accountSettings';
+
+interface VoiceOptions {
+  voice?: string;
+  speed?: number;
+}
+
 export class MayaVoiceSynthesis {
   private static audioQueue: HTMLAudioElement[] = [];
   private static isSpeaking = false;
 
   /**
    * Speak Maya's text using OpenAI TTS or fallback to browser speech
+   * @param text - Text to speak
+   * @param element - Element for voice modulation (fire, water, earth, air)
+   * @param options - Optional voice settings override (defaults to account settings)
    */
-  static async speak(text: string, element: string = 'earth'): Promise<void> {
+  static async speak(text: string, element: string = 'earth', options?: VoiceOptions): Promise<void> {
     // Clean text for speech
     const cleanText = this.cleanForSpeech(text);
     if (!cleanText) return;
+
+    // Load voice settings from account preferences if not provided
+    const accountSettings = getAccountSettings();
+    const voiceSettings = {
+      voice: options?.voice ?? accountSettings.voice.openaiVoice,
+      speed: options?.speed ?? accountSettings.voice.speed,
+    };
 
     try {
       // For desktop browsers, prefer browser speech synthesis due to autoplay restrictions
@@ -21,21 +38,21 @@ export class MayaVoiceSynthesis {
 
       if (isMobile) {
         // Mobile: Try OpenAI TTS first
-        const audioUrl = await this.generateTTS(cleanText, element);
+        const audioUrl = await this.generateTTS(cleanText, element, voiceSettings);
         if (audioUrl) {
           await this.playAudio(audioUrl);
         } else {
-          await this.speakWithBrowser(cleanText, element);
+          await this.speakWithBrowser(cleanText, element, voiceSettings.speed);
         }
       } else {
         // Desktop: Use browser speech synthesis directly
-        await this.speakWithBrowser(cleanText, element);
+        await this.speakWithBrowser(cleanText, element, voiceSettings.speed);
       }
     } catch (error) {
       console.error('Voice synthesis error:', error);
       // Try browser speech as final fallback
       try {
-        await this.speakWithBrowser(text, element);
+        await this.speakWithBrowser(text, element, voiceSettings.speed);
       } catch (e) {
         console.error('Browser speech also failed:', e);
       }
@@ -45,18 +62,26 @@ export class MayaVoiceSynthesis {
   /**
    * Generate TTS using OpenAI API
    */
-  private static async generateTTS(text: string, element: string): Promise<string | null> {
+  private static async generateTTS(
+    text: string,
+    element: string,
+    voiceSettings: { voice: string; speed: number }
+  ): Promise<string | null> {
     try {
+      // Apply element-based speed modulation on top of user's base speed
+      const elementSpeedMod = element === 'fire' ? 1.1 :
+                              element === 'water' ? 0.95 :
+                              element === 'earth' ? 0.9 :
+                              element === 'air' ? 1.05 : 1.0;
+      const finalSpeed = voiceSettings.speed * elementSpeedMod;
+
       const response = await fetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text,
-          voice: 'alloy', // Maya's voice
-          speed: element === 'fire' ? 1.1 :
-                 element === 'water' ? 0.95 :
-                 element === 'earth' ? 0.9 :
-                 element === 'air' ? 1.05 : 1.0
+          voice: voiceSettings.voice,
+          speed: Math.max(0.25, Math.min(4.0, finalSpeed)) // Clamp to OpenAI limits
         })
       });
 
@@ -101,7 +126,7 @@ export class MayaVoiceSynthesis {
   /**
    * Fallback to browser speech synthesis
    */
-  private static async speakWithBrowser(text: string, element: string): Promise<void> {
+  private static async speakWithBrowser(text: string, element: string, baseSpeed: number = 1.0): Promise<void> {
     if (!('speechSynthesis' in window)) {
       console.log('Browser speech synthesis not available');
       return;
@@ -122,11 +147,12 @@ export class MayaVoiceSynthesis {
 
         const utterance = new SpeechSynthesisUtterance(text);
 
-        // Configure voice based on element
-        utterance.rate = element === 'fire' ? 1.1 :
-                        element === 'water' ? 0.95 :
-                        element === 'earth' ? 0.9 :
-                        element === 'air' ? 1.05 : 1.0;
+        // Apply element-based speed modulation on top of user's base speed
+        const elementSpeedMod = element === 'fire' ? 1.1 :
+                                element === 'water' ? 0.95 :
+                                element === 'earth' ? 0.9 :
+                                element === 'air' ? 1.05 : 1.0;
+        utterance.rate = Math.max(0.1, Math.min(10, baseSpeed * elementSpeedMod)); // Browser limits
 
         utterance.pitch = element === 'water' ? 1.1 :
                          element === 'earth' ? 0.95 :

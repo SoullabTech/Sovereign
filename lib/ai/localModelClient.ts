@@ -1,6 +1,7 @@
 // @ts-nocheck - AI prototype, not type-checked
 // backend: lib/ai/localModelClient.ts
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
+import type { TextResult, ProviderMeta } from './types';
 
 type LocalProvider = 'ollama' | 'consciousness_engine';
 
@@ -19,30 +20,49 @@ export interface LocalChatParams {
   meta?: Record<string, unknown>;
 }
 
+// Helper to extract error reason for tracking
+function errReason(err: unknown): string {
+  if (!err) return 'unknown_error';
+  if (typeof err === 'string') return err.slice(0, 120);
+  const anyErr = err as Record<string, unknown>;
+  const msg = anyErr?.message || anyErr?.toString?.() || 'unknown_error';
+  return String(msg).slice(0, 120);
+}
+
 /**
  * Main entry for MAIA local text generation.
- * Based on proven test-sovereignty.js architecture.
+ * Returns text + provider metadata for sovereignty auditing.
  */
 export async function generateWithLocalModel(
   params: LocalChatParams,
-): Promise<string> {
+): Promise<TextResult> {
+  const t0 = Date.now();
+
   switch (LOCAL_PROVIDER) {
     case 'ollama':
-      return generateWithOllama(params);
+      return generateWithOllamaTracked(params, t0);
     case 'consciousness_engine':
-      return generateWithConsciousnessEngine(params);
+      return {
+        text: await generateWithConsciousnessEngine(params),
+        provider: {
+          provider: 'consciousness_engine',
+          model: 'template-engine',
+          mode: 'full', // When explicitly configured, it's "full" mode
+          latencyMs: Date.now() - t0,
+        },
+      };
     default:
       throw new Error(`Unsupported LOCAL_PROVIDER: ${LOCAL_PROVIDER}`);
   }
 }
 
 /**
- * Generate with Ollama (DeepSeek-R1, Llama, etc)
- * Uses the same chat format as proven test-sovereignty.js
+ * Generate with Ollama (DeepSeek-R1, Llama, etc) with tracking
  */
-async function generateWithOllama(
+async function generateWithOllamaTracked(
   params: LocalChatParams,
-): Promise<string> {
+  t0: number,
+): Promise<TextResult> {
   const { systemPrompt, userInput } = params;
 
   try {
@@ -82,10 +102,9 @@ async function generateWithOllama(
 
     const data = await response.json() as {
       message?: { content?: string };
-      response?: string; // fallback for generate API
+      response?: string;
     };
 
-    // Handle both chat API and generate API responses
     const content = data.message?.content || data.response || '';
 
     if (!content.trim()) {
@@ -93,11 +112,27 @@ async function generateWithOllama(
     }
 
     console.log('✅ Local model response generated:', content.length, 'chars');
-    return content.trim();
+
+    return {
+      text: content.trim(),
+      provider: {
+        provider: 'ollama',
+        model: OLLAMA_MODEL,
+        mode: 'full',
+        latencyMs: Date.now() - t0,
+      },
+    };
 
   } catch (error) {
-    console.warn('Local Ollama model failed, falling back to consciousness engine:', error);
-    return generateWithConsciousnessEngine(params);
+    // FAIL CLOSED: Never let a fallback pretend to be MAIA.
+    // If both Claude and Ollama fail, return a clear provider error.
+    console.error('🚨 Local Ollama model failed - NO FALLBACK (fail closed):', error);
+
+    const providerError = new Error('All language providers unavailable (Claude + Ollama). Check API keys and model availability.');
+    (providerError as any).code = 'PROVIDERS_UNAVAILABLE';
+    (providerError as any).httpStatus = 503;
+    (providerError as any).reason = errReason(error);
+    throw providerError;
   }
 }
 
@@ -123,17 +158,29 @@ async function generateWithConsciousnessEngine(
   let response: string;
 
   if (isMaiaPrompt) {
-    // MAIA-specific responses that honor her elder-wise voice
+    // MAIA-specific responses - natural, conversational, varied
     if (isGreeting) {
-      response = "I'm here with you. What's moving through you today that wants attention?";
+      const greetings = [
+        "Hey there. What's on your mind?",
+        "Hi. What brings you here today?",
+        "Hello. I'm listening.",
+        "Hey. What would you like to explore?",
+      ];
+      response = greetings[Math.floor(Math.random() * greetings.length)];
     } else if (isCreative) {
-      response = `I sense the creative fire stirring in your question about "${userInput}". There's something alive here wanting to emerge. What feels ready to break through? What small step might honor this creative impulse right now?`;
+      response = `There's something alive in what you're sharing. What feels ready to emerge?`;
     } else if (isPractical) {
-      response = `You're asking about practical steps - I appreciate the grounded energy in that. From what you're sharing, "${userInput}", there's wisdom in starting where you have the most clarity. What feels most concrete and doable right now?`;
+      response = `What feels like the most concrete next step from where you are right now?`;
     } else if (isReflection) {
-      response = `There's depth in what you're exploring. When you say "${userInput}", I notice there might be wisdom that's already stirring within you. What feels most true when you sit quietly with this question?`;
+      response = `What feels most true when you sit quietly with this?`;
     } else {
-      response = `I hear what you're bringing: "${userInput}". There's often more beneath the surface of what we first notice. What draws your attention most strongly about this right now?`;
+      const openings = [
+        "Tell me more about that.",
+        "What's underneath that for you?",
+        "Say more.",
+        "What else is there?",
+      ];
+      response = openings[Math.floor(Math.random() * openings.length)];
     }
   } else {
     // Generic local AI responses for non-MAIA contexts
@@ -146,18 +193,7 @@ async function generateWithConsciousnessEngine(
     }
   }
 
-  // Add sovereignty affirmation for MAIA responses
-  if (isMaiaPrompt) {
-    const affirmations = [
-      "✨ You are the author of your reality. This moment is yours to shape.",
-      "🌟 You are sovereign over your path. Trust your inner wisdom.",
-      "🔥 Your creative power is limitless. Trust it to guide you.",
-      "🌊 You are perfectly equipped to navigate these depths. Trust your flow.",
-      "🌱 You have access to all the clarity you need. Your perspective is valuable.",
-    ];
-    const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
-    response += `\n\n${randomAffirmation}`;
-  }
+  // Removed emoji affirmations - MAIA should speak naturally without forced taglines
 
   return response;
 }
@@ -171,16 +207,20 @@ export async function checkLocalModelHealth(): Promise<{
   status: 'healthy' | 'degraded' | 'offline';
   endpoint: string;
 }> {
-  const health = {
+  const health: {
+    provider: string;
+    model: string;
+    status: 'healthy' | 'degraded' | 'offline';
+    endpoint: string;
+  } = {
     provider: LOCAL_PROVIDER,
     model: OLLAMA_MODEL,
-    status: 'offline' as const,
+    status: 'offline',
     endpoint: OLLAMA_BASE_URL
   };
 
   try {
     if (LOCAL_PROVIDER === 'ollama') {
-      // Check Ollama health using the same pattern as test-sovereignty.js
       const response = await fetch(`${OLLAMA_BASE_URL}/api/version`, {
         signal: AbortSignal.timeout(5000)
       });

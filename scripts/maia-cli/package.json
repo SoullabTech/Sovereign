@@ -1,0 +1,21 @@
+{
+  "name": "maia-cli",
+  "version": "1.0.0",
+  "description": "ADHD-friendly CLI for managing MAIA client sites",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "status": "tsx commands/status.ts",
+    "new-client": "tsx commands/new-client.ts",
+    "up": "tsx commands/up.ts",
+    "down": "tsx commands/down.ts",
+    "focus": "tsx commands/focus.ts",
+    "doctor": "tsx commands/doctor.ts"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "yaml": "^2.3.4",
+    "ora": "^8.0.1",
+    "inquirer": "^9.2.12"
+  }
+}

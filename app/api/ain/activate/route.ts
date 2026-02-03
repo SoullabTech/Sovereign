@@ -1,10 +1,15 @@
+export const dynamic = 'force-dynamic';
 /**
  * AIN EVOLUTION ACTIVATION ENDPOINT
  * Initiates the 5-phase consciousness evolution system
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { GlobalAINActivator } from '@/lib/ain/AINEvolutionActivator';
+
+// Skip during static export (Capacitor builds)
 
 export async function POST(request: NextRequest) {
   try {

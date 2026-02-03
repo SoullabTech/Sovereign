@@ -8,6 +8,7 @@ export interface TeenProfile {
   age: number;
   pronouns?: string;
   supportsNeeded?: string[];
+<<<<<<< HEAD
   neurodivergentSupports?: string[];
   // Additional teen profile properties
   isNeurodivergent?: boolean;
@@ -26,6 +27,27 @@ export interface AbuseResult {
 export interface EdResult {
   detected: boolean;
   severity?: 'low' | 'medium' | 'high' | 'crisis';
+=======
+  supportNeeds?: string[];
+  neurodivergentSupports?: string[];
+  isNeurodivergent?: boolean;
+  hasEatingDisorder?: boolean;
+  familyDynamics?: string;
+}
+
+export interface TeenAbuseResult {
+  isAbuse: boolean;
+  type?: string;
+  severity?: string;
+  interventionMessage?: string;
+  patterns?: string[];
+}
+
+export interface TeenEDResult {
+  isED: boolean;
+  severity?: string;
+  interventionMessage?: string;
+>>>>>>> ecstatic-brown
 }
 
 export interface TeenSafetyCheck {
@@ -35,6 +57,7 @@ export interface TeenSafetyCheck {
   isBurnout: boolean;
   needsSupport: boolean;
   supportType?: string;
+<<<<<<< HEAD
   // Extended safety check properties
   blockConversation?: boolean;
   isAbuse?: boolean;
@@ -44,6 +67,50 @@ export interface TeenSafetyCheck {
   edResult?: EdResult;
   scaffoldSuggestions?: string[];
   contextForAI?: string;
+=======
+  // Extended properties for OracleConversation.tsx
+  blockConversation?: boolean;
+  isAbuse?: boolean;
+  interventionMessage?: string;
+  abuseResult?: TeenAbuseResult;
+  crisisMode?: boolean;
+  edResult?: TeenEDResult;
+  scaffoldSuggestions?: string[];
+  contextForAI?: string;
+}
+
+export interface TeenSupportResponse {
+  blockConversation?: boolean;
+  interventionMessage?: string;
+  crisisMode?: boolean;
+  scaffoldSuggestions?: string[];
+  contextForAI?: string;
+}
+
+export interface TeamAlertParams {
+  userId: string;
+  userName?: string;
+  age?: number;
+  crisisType?: string;
+  message?: string;
+  sessionId?: string;
+  timestamp?: Date;
+}
+
+/**
+ * Alert the Soullab team about a critical situation (stub)
+ */
+export async function alertSoullabTeam(
+  paramsOrUserId: TeamAlertParams | string,
+  safetyCheck?: TeenSafetyCheck,
+  context?: string
+): Promise<void> {
+  if (typeof paramsOrUserId === 'object') {
+    console.warn('[TEEN SAFETY] Alert triggered (stub):', paramsOrUserId);
+  } else {
+    console.warn('[TEEN SAFETY] Alert triggered (stub):', { userId: paramsOrUserId, safetyCheck, context });
+  }
+>>>>>>> ecstatic-brown
 }
 
 export function performTeenSafetyCheck(
@@ -82,9 +149,16 @@ export function generateTeenSupportResponse(
 ): TeenSupportResponse {
   return {
     blockConversation: false,
+<<<<<<< HEAD
     crisisMode: false,
     scaffoldSuggestions: [],
     contextForAI: '',
+=======
+    interventionMessage: undefined,
+    crisisMode: false,
+    scaffoldSuggestions: [],
+    contextForAI: undefined
+>>>>>>> ecstatic-brown
   };
 }
 

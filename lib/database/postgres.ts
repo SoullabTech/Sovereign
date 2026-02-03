@@ -52,8 +52,11 @@ export async function queryOne<T = any>(text: string, params: any[] = []): Promi
   return rows.length > 0 ? rows[0] : null;
 }
 
+// Type for query function signature
+export type QueryFn = <T = unknown>(text: string, params?: unknown[]) => Promise<T[]>;
+
 // Transaction helper
-export async function transaction<T>(callback: (query: typeof query) => Promise<T>): Promise<T> {
+export async function transaction<T>(callback: (queryFn: QueryFn) => Promise<T>): Promise<T> {
   const pool = getPool();
   const client = await pool.connect();
 

@@ -1,6 +1,6 @@
 // @ts-nocheck - Services prototype, not type-checked
 /**
- * COLLECTIVE BREAKTHROUGH INTELLIGENCE
+ * COLLECTIVE BREAKTHROUGH INTELLIGENCE (SOVEREIGN)
  *
  * Each person's transformation feeds the Aether field, enriching collective wisdom.
  * Like mycelial networks - individual growth nourishes the whole.
@@ -8,47 +8,50 @@
  * Privacy-preserving: Only anonymized patterns, never personal content.
  *
  * Vision: "Something's moving through the field right now - others are feeling this shift too."
+ *
+ * SOVEREIGN: Uses local PostgreSQL, NOT Supabase (per Canon)
  */
 
-const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
-const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
+import { query } from '@/lib/db/postgres';
+import { createHash } from 'crypto';
 
 // ============== Types ==============
 
 export interface BreakthroughPattern {
+  id?: string;
   pattern_id: string; // Hash - no user identifying info
 
   // What catalyzed the breakthrough
   catalyst: {
     type: 'question' | 'reflection' | 'practice' | 'archetypal_shift' | 'elemental_transition';
-    archetype_from?: string; // e.g., "Victim"
-    archetype_to?: string;    // e.g., "Warrior"
-    elemental_phase_from?: string; // e.g., "Fire"
-    elemental_phase_to?: string;   // e.g., "Water"
-    practice_offered?: string; // e.g., "slowing down", "grounding practice"
+    archetype_from?: string;
+    archetype_to?: string;
+    elemental_phase_from?: string;
+    elemental_phase_to?: string;
+    practice_offered?: string;
   };
 
   // Pattern signature (semantic, not content)
   signature: {
     transformation_type: 'insight' | 'embodiment' | 'integration' | 'release' | 'awakening';
-    emotional_shift: string; // e.g., "stuck → flowing", "fragmented → whole"
-    body_involvement: boolean; // Did they mention somatic awareness?
-    duration_to_breakthrough: number; // Days from first mention to breakthrough
+    emotional_shift: string;
+    body_involvement: boolean;
+    duration_to_breakthrough: number;
   };
 
   // Outcome
   outcome: {
     integration_level: 'emerging' | 'stabilizing' | 'embodied';
-    follow_through: boolean; // Did they continue exploring after breakthrough?
-    resonance_strength: number; // 0-1, how profound was it
+    follow_through: boolean;
+    resonance_strength: number;
   };
 
   // Field conditions when breakthrough occurred
   field_conditions: {
     spiralogic_phase: string;
     dominant_element: string;
-    moon_phase?: string; // If we have this data
-    collective_phase?: string; // What others in field are experiencing
+    moon_phase?: string;
+    collective_phase?: string;
   };
 
   created_at: Date;
@@ -56,79 +59,97 @@ export interface BreakthroughPattern {
 
 export interface BreakthroughCluster {
   cluster_id: string;
-  theme: string; // e.g., "Fire → Water transitions through slowing"
-  patterns: string[]; // Pattern IDs in this cluster
+  theme: string;
+  patterns: string[];
   common_catalysts: string[];
-  typical_timeline: number; // Days
+  typical_timeline: number;
   success_indicators: string[];
-  collective_wisdom: string; // Synthesized insight from this cluster
+  collective_wisdom: string;
 }
 
 export interface CollectiveWisdom {
-  active_movements: string[]; // "Many moving from Fire to Water", "Shadow integration wave"
+  active_movements: string[];
   relevant_patterns: BreakthroughPattern[];
-  suggested_reflection: string; // Gentle wisdom from the field
-  synchronicity_detected: boolean; // Are they part of a larger movement?
+  suggested_reflection: string;
+  synchronicity_detected: boolean;
+}
+
+export interface BreakthroughContribution {
+  catalyst_type: 'question' | 'reflection' | 'practice' | 'archetypal_shift' | 'elemental_transition';
+  archetype_from?: string;
+  archetype_to?: string;
+  elemental_phase_from?: string;
+  elemental_phase_to?: string;
+  practice_offered?: string;
+  transformation_type: 'insight' | 'embodiment' | 'integration' | 'release' | 'awakening';
+  emotional_shift: string;
+  body_involved: boolean;
+  resonance_strength?: number;
+  spiralogic_phase: string;
+  dominant_element: string;
 }
 
 // ============== Service ==============
 
 export class CollectiveBreakthroughService {
-  private supabase = createClient(dbUrl, dbKey);
+  /**
+   * Hash user ID for anonymization (one-way, can't reverse)
+   */
+  private hashUserId(userId: string): string {
+    const salt = process.env.BREAKTHROUGH_SALT || 'maia-collective-wisdom';
+    return createHash('sha256').update(userId + salt).digest('hex');
+  }
 
   /**
    * Contribute a breakthrough to the collective field (anonymized)
    */
   async contributeBreakthrough(
     userId: string,
-    breakthroughData: {
-      catalyst_type: string;
-      archetype_from?: string;
-      archetype_to?: string;
-      elemental_phase_from?: string;
-      elemental_phase_to?: string;
-      transformation_type: string;
-      emotional_shift: string;
-      body_involved: boolean;
-      spiralogic_phase: string;
-      dominant_element: string;
-    }
-  ): Promise<void> {
+    data: BreakthroughContribution
+  ): Promise<{ success: boolean; patternId?: string }> {
     try {
-      // Create anonymized pattern (hash user_id for pattern_id, don't store user_id)
-      const patternId = await this.hashUserId(userId);
+      const patternId = this.hashUserId(userId);
 
-      const pattern: Partial<BreakthroughPattern> = {
-        pattern_id: patternId,
-        catalyst: {
-          type: breakthroughData.catalyst_type as any,
-          archetype_from: breakthroughData.archetype_from,
-          archetype_to: breakthroughData.archetype_to,
-          elemental_phase_from: breakthroughData.elemental_phase_from,
-          elemental_phase_to: breakthroughData.elemental_phase_to,
-        },
-        signature: {
-          transformation_type: breakthroughData.transformation_type as any,
-          emotional_shift: breakthroughData.emotional_shift,
-          body_involvement: breakthroughData.body_involved,
-          duration_to_breakthrough: 0, // Will calculate from history
-        },
-        field_conditions: {
-          spiralogic_phase: breakthroughData.spiralogic_phase,
-          dominant_element: breakthroughData.dominant_element,
-        },
-        created_at: new Date(),
-      };
+      const result = await query(
+        `INSERT INTO collective_breakthroughs (
+          pattern_id,
+          catalyst_type,
+          archetype_from,
+          archetype_to,
+          elemental_phase_from,
+          elemental_phase_to,
+          practice_offered,
+          transformation_type,
+          emotional_shift,
+          body_involvement,
+          resonance_strength,
+          spiralogic_phase,
+          dominant_element
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        RETURNING id`,
+        [
+          patternId,
+          data.catalyst_type,
+          data.archetype_from || null,
+          data.archetype_to || null,
+          data.elemental_phase_from || null,
+          data.elemental_phase_to || null,
+          data.practice_offered || null,
+          data.transformation_type,
+          data.emotional_shift,
+          data.body_involved,
+          data.resonance_strength || 0.5,
+          data.spiralogic_phase,
+          data.dominant_element,
+        ]
+      );
 
-      // Store in collective_breakthroughs table (anonymized)
-      await this.supabase
-        .from('collective_breakthroughs')
-        .insert(pattern);
+      console.log('✨ [Collective] Breakthrough contributed to field');
 
-      console.log('✨ Breakthrough contributed to collective field');
+      return { success: true, patternId };
     } catch (error) {
-      console.error('Error contributing breakthrough:', error);
-      // Fail silently - don't break user experience
+      console.error('❌ [Collective] Error contributing breakthrough:', error);
+      return { success: false };
     }
   }
 
@@ -141,127 +162,138 @@ export class CollectiveBreakthroughService {
     recentArchetype?: string
   ): Promise<CollectiveWisdom | null> {
     try {
-      // Find recent patterns (last 30 days) matching current conditions
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Get relevant patterns using PostgreSQL function
+      const patternsResult = await query(
+        `SELECT * FROM get_relevant_breakthrough_patterns($1, $2, $3, 5)`,
+        [currentPhase, dominantElement, recentArchetype || null]
+      );
 
-      const { data: recentPatterns, error } = await this.supabase
-        .from('collective_breakthroughs')
-        .select('*')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .or(`field_conditions->spiralogic_phase.eq.${currentPhase},field_conditions->dominant_element.eq.${dominantElement}`)
-        .limit(20);
+      // Get active field movements
+      const movementsResult = await query(
+        `SELECT * FROM get_active_field_movements(3)`
+      );
 
-      if (error || !recentPatterns || recentPatterns.length === 0) {
+      const patterns = patternsResult.rows || [];
+      const movements = movementsResult.rows || [];
+
+      if (patterns.length === 0) {
         return null;
       }
 
-      // Detect active movements (multiple people in similar transitions)
-      const movements = this.detectActiveMovements(recentPatterns);
+      // Format patterns to match expected interface
+      const formattedPatterns: BreakthroughPattern[] = patterns.map((p: any) => ({
+        id: p.id,
+        pattern_id: '',
+        catalyst: {
+          type: p.catalyst_type,
+          practice_offered: p.practice_offered,
+        },
+        signature: {
+          transformation_type: p.transformation_type,
+          emotional_shift: p.emotional_shift,
+          body_involvement: false,
+          duration_to_breakthrough: 0,
+        },
+        outcome: {
+          integration_level: 'emerging',
+          follow_through: false,
+          resonance_strength: p.resonance_strength || 0.5,
+        },
+        field_conditions: {
+          spiralogic_phase: '',
+          dominant_element: '',
+        },
+        created_at: new Date(),
+      }));
 
-      // Find patterns most relevant to user's current state
-      const relevantPatterns = this.filterRelevantPatterns(
-        recentPatterns,
-        currentPhase,
-        dominantElement,
-        recentArchetype
+      // Format movements
+      const activeMovements = movements.map((m: any) =>
+        `${m.movement_description} (${m.participant_count} in field)`
       );
 
-      // Synthesize wisdom from the field
-      const wisdom = this.synthesizeWisdom(relevantPatterns, movements);
+      // Synthesize wisdom
+      const wisdom = this.synthesizeWisdom(formattedPatterns, activeMovements);
 
       return {
-        active_movements: movements,
-        relevant_patterns: relevantPatterns,
+        active_movements: activeMovements,
+        relevant_patterns: formattedPatterns,
         suggested_reflection: wisdom,
-        synchronicity_detected: movements.length > 0,
+        synchronicity_detected: activeMovements.length > 0,
       };
     } catch (error) {
-      console.error('Error retrieving collective wisdom:', error);
+      console.error('❌ [Collective] Error retrieving wisdom:', error);
       return null;
     }
   }
 
   /**
-   * Detect active movements in the field (multiple people experiencing similar shifts)
+   * Get recent field movements (for "others are experiencing this too" awareness)
    */
-  private detectActiveMovements(patterns: any[]): string[] {
-    const movements: string[] = [];
-
-    // Count elemental transitions
-    const transitions: Record<string, number> = {};
-    patterns.forEach(p => {
-      if (p.catalyst?.elemental_phase_from && p.catalyst?.elemental_phase_to) {
-        const key = `${p.catalyst.elemental_phase_from} → ${p.catalyst.elemental_phase_to}`;
-        transitions[key] = (transitions[key] || 0) + 1;
-      }
-    });
-
-    // If 3+ people in same transition within 30 days, that's a movement
-    Object.entries(transitions).forEach(([transition, count]) => {
-      if (count >= 3) {
-        movements.push(`${transition} transition (${count} in field)`);
-      }
-    });
-
-    // Count archetypal shifts
-    const archetypeShifts: Record<string, number> = {};
-    patterns.forEach(p => {
-      if (p.catalyst?.archetype_from && p.catalyst?.archetype_to) {
-        const key = `${p.catalyst.archetype_from} → ${p.catalyst.archetype_to}`;
-        archetypeShifts[key] = (archetypeShifts[key] || 0) + 1;
-      }
-    });
-
-    Object.entries(archetypeShifts).forEach(([shift, count]) => {
-      if (count >= 3) {
-        movements.push(`${shift} emergence (${count} in field)`);
-      }
-    });
-
-    return movements;
+  async getActiveFieldMovements(): Promise<string[]> {
+    try {
+      const result = await query(`SELECT * FROM get_active_field_movements(3)`);
+      return (result.rows || []).map((m: any) =>
+        `${m.movement_description} (${m.participant_count} in field)`
+      );
+    } catch (error) {
+      console.error('❌ [Collective] Error getting field movements:', error);
+      return [];
+    }
   }
 
   /**
-   * Filter patterns most relevant to user's current state
+   * Get breakthrough statistics for the field
    */
-  private filterRelevantPatterns(
-    patterns: any[],
-    currentPhase: string,
-    dominantElement: string,
-    recentArchetype?: string
-  ): BreakthroughPattern[] {
-    // Prioritize patterns matching:
-    // 1. Same phase + element
-    // 2. Same archetype work
-    // 3. Recent (last 7 days)
+  async getFieldStats(): Promise<{
+    totalBreakthroughs: number;
+    last30Days: number;
+    topCatalysts: string[];
+    activeMovements: string[];
+  }> {
+    try {
+      // Total count
+      const totalResult = await query(
+        `SELECT COUNT(*) as count FROM collective_breakthroughs`
+      );
 
-    const scored = patterns.map(p => {
-      let score = 0;
+      // Last 30 days
+      const recentResult = await query(
+        `SELECT COUNT(*) as count FROM collective_breakthroughs
+         WHERE created_at >= NOW() - INTERVAL '30 days'`
+      );
 
-      if (p.field_conditions?.spiralogic_phase === currentPhase) score += 3;
-      if (p.field_conditions?.dominant_element === dominantElement) score += 2;
-      if (recentArchetype &&
-          (p.catalyst?.archetype_from === recentArchetype ||
-           p.catalyst?.archetype_to === recentArchetype)) {
-        score += 3;
-      }
+      // Top catalysts
+      const catalystResult = await query(
+        `SELECT catalyst_type, COUNT(*) as count
+         FROM collective_breakthroughs
+         WHERE created_at >= NOW() - INTERVAL '30 days'
+         GROUP BY catalyst_type
+         ORDER BY count DESC
+         LIMIT 3`
+      );
 
-      // Recency bonus
-      const daysAgo = (Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysAgo < 7) score += 2;
+      // Active movements
+      const movements = await this.getActiveFieldMovements();
 
-      return { pattern: p as BreakthroughPattern, score };
-    });
-
-    return scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-      .map(s => s.pattern);
+      return {
+        totalBreakthroughs: parseInt(totalResult.rows[0]?.count || '0'),
+        last30Days: parseInt(recentResult.rows[0]?.count || '0'),
+        topCatalysts: (catalystResult.rows || []).map((r: any) => r.catalyst_type),
+        activeMovements: movements,
+      };
+    } catch (error) {
+      console.error('❌ [Collective] Error getting field stats:', error);
+      return {
+        totalBreakthroughs: 0,
+        last30Days: 0,
+        topCatalysts: [],
+        activeMovements: [],
+      };
+    }
   }
 
   /**
-   * Synthesize wisdom from collective patterns (not prescriptive, just gentle reflection)
+   * Synthesize wisdom from collective patterns
    */
   private synthesizeWisdom(
     patterns: BreakthroughPattern[],
@@ -269,18 +301,15 @@ export class CollectiveBreakthroughService {
   ): string {
     if (patterns.length === 0) return '';
 
-    // Find common catalysts
     const catalysts = patterns.map(p => p.catalyst.type);
     const mostCommon = this.getMostCommon(catalysts);
 
-    // Find common practices if any
     const practices = patterns
       .map(p => p.catalyst.practice_offered)
       .filter(p => p) as string[];
 
     const commonPractice = practices.length > 0 ? this.getMostCommon(practices) : null;
 
-    // Build gentle wisdom (not prescriptive)
     let wisdom = '';
 
     if (movements.length > 0) {
@@ -293,6 +322,8 @@ export class CollectiveBreakthroughService {
       wisdom += `Sometimes a well-timed question unlocks what's ready to emerge. `;
     } else if (mostCommon === 'archetypal_shift') {
       wisdom += `Archetypal transitions often come when we stop forcing and start witnessing. `;
+    } else if (mostCommon === 'reflection') {
+      wisdom += `Reflection has been a doorway for many in the field lately. `;
     }
 
     return wisdom.trim();
@@ -313,17 +344,7 @@ export class CollectiveBreakthroughService {
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     return sorted[0][0] as T;
   }
-
-  /**
-   * Hash user ID for anonymization (one-way, can't reverse to get user_id)
-   */
-  private async hashUserId(userId: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(userId + process.env.BREAKTHROUGH_SALT);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
 }
 
+// Singleton export
 export const collectiveBreakthroughService = new CollectiveBreakthroughService();

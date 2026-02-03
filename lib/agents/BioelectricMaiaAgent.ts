@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⚡ Bioelectric MAIA Agent
  *

@@ -13,10 +13,12 @@
  * - Wisdom over information
  */
 
-import { useEffect, useState } from 'react';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings, ArrowLeft, Orbit } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
+import { apiUrl } from '@/lib/http/apiBase';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
 import { getSpiralogicPlanetDescription } from '@/lib/astrology/spiralogicHouseMapping';
@@ -41,6 +43,12 @@ interface BirthChartData {
   chiron?: { sign: string; degree: number; house: number };
   northNode?: { sign: string; degree: number; house: number };
   southNode?: { sign: string; degree: number; house: number };
+  // Asteroids - Feminine Archetypes
+  lilith?: { sign: string; degree: number; house: number };
+  ceres?: { sign: string; degree: number; house: number };
+  pallas?: { sign: string; degree: number; house: number };
+  juno?: { sign: string; degree: number; house: number };
+  vesta?: { sign: string; degree: number; house: number };
   ascendant: { sign: string; degree: number };
   midheaven?: { sign: string; degree: number };
   houses?: number[]; // Array of 12 house cusp degrees
@@ -50,6 +58,23 @@ interface BirthChartData {
     type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition';
     orb: number;
   }>;
+}
+
+// Transit data from API
+interface Transit {
+  planet: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+  house?: number;
+}
+
+interface TransitAspect {
+  transitPlanet: string;
+  natalPlanet: string;
+  aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
+  orb: number;
+  applying: boolean;
 }
 
 // Arrakis night color palette - desert mysticism after the twin moons rise
@@ -76,93 +101,6 @@ const elementalColors = {
   },
 };
 
-// Kelly's Real Missions - Demo/Test Case for Mission Tracking
-const KELLY_MISSIONS: Mission[] = [
-  {
-    id: 'mission-1',
-    userId: 'kelly',
-    title: 'Build MAIA Platform',
-    description: 'Create consciousness co-authorship platform where everyone becomes their own mythographer',
-    status: 'active',
-    house: 10, // Career/Legacy/Public work
-    relatedPlanets: ['Saturn'], // Saturn focal point
-    progress: 75,
-    milestones: [
-      { id: 'm1', title: 'Sacred Scribe system architecture', completed: true },
-      { id: 'm2', title: 'Mission tracking with pulsing dots', completed: true },
-      { id: 'm3', title: 'Database integration', completed: false },
-      { id: 'm4', title: 'Launch to first cohort', completed: false },
-    ],
-    identifiedDate: new Date('2024-06-01'),
-    startedDate: new Date('2024-07-15'),
-    transitContext: {
-      activatingPlanet: 'Saturn in Pisces',
-      transitDescription: 'Saturn focal point crystallizing life\'s work through consciousness technology',
-    },
-    createdAt: new Date('2024-06-01'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-2',
-    userId: 'kelly',
-    title: 'Spiralogic Teaching Curriculum',
-    description: 'Develop comprehensive teaching system for Spiralogic archetypal framework',
-    status: 'active',
-    house: 9, // Teaching/Philosophy/Expansion
-    relatedPlanets: ['Sun', 'Venus'], // Sun in 9th area, Venus teaching
-    progress: 45,
-    milestones: [
-      { id: 'm1', title: 'Core framework documented', completed: true },
-      { id: 'm2', title: 'Alchemical house system complete', completed: true },
-      { id: 'm3', title: 'First cohort curriculum', completed: false },
-      { id: 'm4', title: 'Certification program', completed: false },
-    ],
-    identifiedDate: new Date('2024-03-15'),
-    startedDate: new Date('2024-04-01'),
-    createdAt: new Date('2024-03-15'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-3',
-    userId: 'kelly',
-    title: 'Collective Vision Crystallization',
-    description: 'Building community of practitioners who see the pattern and serve as sacred scribes',
-    status: 'emerging',
-    house: 11, // Community/Collective/Future vision
-    relatedPlanets: ['Uranus'], // Innovation, collective consciousness
-    progress: 20,
-    milestones: [
-      { id: 'm1', title: 'Vision articulated', completed: true },
-      { id: 'm2', title: 'First practitioners gathering', completed: false },
-      { id: 'm3', title: 'Training protocols', completed: false },
-    ],
-    identifiedDate: new Date('2024-09-01'),
-    createdAt: new Date('2024-09-01'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-4',
-    userId: 'kelly',
-    title: 'Sacred Geometry Integration',
-    description: 'Bringing pre-literate symbolic transmission into the consciousness field',
-    status: 'completed',
-    house: 12, // Spirituality/Dissolution/Transcendence
-    relatedPlanets: ['Jupiter', 'Neptune'], // Expansion + Mysticism
-    progress: 100,
-    milestones: [
-      { id: 'm1', title: 'Metatron\'s Cube', completed: true, completedDate: new Date('2024-10-01') },
-      { id: 'm2', title: '7 Sacred Spirals', completed: true, completedDate: new Date('2024-10-05') },
-      { id: 'm3', title: 'Torus vortex', completed: true, completedDate: new Date('2024-10-10') },
-      { id: 'm4', title: 'Alchemical symbols', completed: true, completedDate: new Date('2024-10-15') },
-    ],
-    identifiedDate: new Date('2024-09-15'),
-    startedDate: new Date('2024-09-20'),
-    completedDate: new Date('2024-10-15'),
-    createdAt: new Date('2024-09-15'),
-    lastUpdated: new Date('2024-10-15'),
-  },
-];
-
 export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,8 +119,11 @@ export default function AstrologyPage() {
   const { missions, loading: missionsLoading } = useMissions();
   const [showMissionManager, setShowMissionManager] = useState(false);
 
-  // Demo/Tutorial mode - toggle between user's chart and Kelly's example chart
-  const [showExampleChart, setShowExampleChart] = useState(false);
+  // Current transits - live planetary positions
+  const [transits, setTransits] = useState<Transit[]>([]);
+  const [transitAspects, setTransitAspects] = useState<TransitAspect[]>([]);
+  const [showTransits, setShowTransits] = useState(false);
+  const [transitsLoading, setTransitsLoading] = useState(false);
 
   // Welcome modal for first-time users
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -225,55 +166,116 @@ export default function AstrologyPage() {
     };
     clearDemoData();
 
-    // Load saved birth data - check user profile FIRST (more persistent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let birthDataToLoad: any = null;
+    // Load saved birth data - prioritize database, then localStorage
+    const loadBirthData = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let birthDataToLoad: any = null;
 
-    // Priority 1: Check user profile
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const userData = JSON.parse(betaUser);
-        if (userData.birthData) {
-          birthDataToLoad = userData.birthData;
-          console.log('✅ Loaded birth data from user profile');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading from user profile:', error);
-    }
-
-    // Priority 2: Fallback to birthChartData if no profile data
-    if (!birthDataToLoad) {
-      const savedBirthData = localStorage.getItem('birthChartData');
-      if (savedBirthData) {
-        try {
-          birthDataToLoad = JSON.parse(savedBirthData);
-          console.log('✅ Loaded birth data from localStorage');
-        } catch (error) {
-          console.error('Error parsing birthChartData:', error);
-        }
-      }
-    }
-
-    // Only auto-load if this is intentionally a user's saved data
-    // Don't auto-load if it's example/demo data
-    if (birthDataToLoad && !birthDataToLoad.isExample) {
+      // Priority 1: Fetch from profile API (database - most persistent)
       try {
-        // Ensure house system is set (default to Porphyry if not present)
-        if (!birthDataToLoad.houseSystem) {
-          birthDataToLoad.houseSystem = 'porphyry';
-          console.log('Using default Porphyry house system');
+        const betaUser = localStorage.getItem('beta_user');
+        if (betaUser) {
+          const userData = JSON.parse(betaUser);
+          const memberId = userData.id || userData.passkey;
+
+          if (memberId) {
+            console.log('[Journey] Fetching birth data from profile API for:', memberId);
+            const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+              console.log('[Journey] Profile response:', profile);
+
+              if (profile.birthData?.date) {
+                // Normalize time format (strip seconds if present)
+                const timeStr = profile.birthData.time
+                  ? profile.birthData.time.substring(0, 5)
+                  : '12:00';
+
+                birthDataToLoad = {
+                  date: profile.birthData.date,
+                  time: timeStr,
+                  location: profile.birthData.location || {
+                    lat: 30.4515,
+                    lng: -91.1871,
+                    name: 'Unknown',
+                    timezone: 'America/Chicago',
+                  },
+                  houseSystem: 'porphyry',
+                };
+                console.log('✅ Loaded birth data from profile API:', birthDataToLoad);
+              }
+            }
+          }
         }
-        calculateChart(birthDataToLoad);
       } catch (error) {
-        console.error('Failed to calculate chart:', error);
+        console.error('[Journey] Error fetching from profile API:', error);
+      }
+
+      // Priority 2: Check localStorage beta_user.birthData
+      if (!birthDataToLoad) {
+        try {
+          const betaUser = localStorage.getItem('beta_user');
+          if (betaUser) {
+            const userData = JSON.parse(betaUser);
+            if (userData.birthData?.date) {
+              const timeStr = userData.birthData.time
+                ? userData.birthData.time.substring(0, 5)
+                : '12:00';
+              birthDataToLoad = {
+                date: userData.birthData.date,
+                time: timeStr,
+                location: userData.birthData.location || {
+                  lat: 30.4515,
+                  lng: -91.1871,
+                  name: 'Unknown',
+                  timezone: 'America/Chicago',
+                },
+                houseSystem: 'porphyry',
+              };
+              console.log('✅ Loaded birth data from localStorage beta_user');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading from localStorage:', error);
+        }
+      }
+
+      // Priority 3: Fallback to birthChartData localStorage
+      if (!birthDataToLoad) {
+        const savedBirthData = localStorage.getItem('birthChartData');
+        if (savedBirthData) {
+          try {
+            birthDataToLoad = JSON.parse(savedBirthData);
+            // Normalize time format
+            if (birthDataToLoad.time && birthDataToLoad.time.length > 5) {
+              birthDataToLoad.time = birthDataToLoad.time.substring(0, 5);
+            }
+            console.log('✅ Loaded birth data from birthChartData localStorage');
+          } catch (error) {
+            console.error('Error parsing birthChartData:', error);
+          }
+        }
+      }
+
+      // Calculate chart if we have valid data
+      if (birthDataToLoad && !birthDataToLoad.isExample) {
+        try {
+          if (!birthDataToLoad.houseSystem) {
+            birthDataToLoad.houseSystem = 'porphyry';
+          }
+          console.log('[Journey] Calculating chart with:', birthDataToLoad);
+          calculateChart(birthDataToLoad);
+        } catch (error) {
+          console.error('Failed to calculate chart:', error);
+          setLoading(false);
+        }
+      } else {
+        console.log('ℹ️ No saved birth data found - showing input form');
         setLoading(false);
       }
-    } else {
-      console.log('ℹ️ No saved birth data found - showing input form');
-      setLoading(false);
-    }
+    };
+
+    loadBirthData();
   }, []);
 
 
@@ -366,6 +368,81 @@ export default function AstrologyPage() {
   useEffect(() => {
     setLoading(false);
   }, []);
+
+  // Fetch current transits - with auto-refresh every 15 minutes (Moon moves fast)
+  const fetchTransits = useCallback(async () => {
+    if (!chartData || !birthData) return;
+
+    setTransitsLoading(true);
+    try {
+      const response = await fetch('/api/astrology/current-transits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birthChart: {
+            sun: chartData.sun,
+            moon: chartData.moon,
+            mercury: chartData.mercury,
+            venus: chartData.venus,
+            mars: chartData.mars,
+            jupiter: chartData.jupiter,
+            saturn: chartData.saturn,
+            uranus: chartData.uranus,
+            neptune: chartData.neptune,
+            pluto: chartData.pluto,
+            ascendant: chartData.ascendant,
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        // Convert API response to Transit format
+        const transitData: Transit[] = result.data.positions.map((p: { planet: string; sign: string; degree: number; longitude: number; house?: number }) => ({
+          planet: p.planet,
+          sign: p.sign,
+          degree: p.degree,
+          longitude: p.longitude,
+          house: p.house,
+        }));
+        setTransits(transitData);
+
+        // Convert aspects to TransitAspect format
+        if (result.data.aspects) {
+          const aspectData: TransitAspect[] = result.data.aspects.map((a: { transitPlanet: string; natalPlanet: string; aspectType: string; orb: number; applying: boolean }) => ({
+            transitPlanet: a.transitPlanet,
+            natalPlanet: a.natalPlanet,
+            aspectType: a.aspectType as TransitAspect['aspectType'],
+            orb: a.orb,
+            applying: a.applying,
+          }));
+          setTransitAspects(aspectData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching transits:', error);
+    } finally {
+      setTransitsLoading(false);
+    }
+  }, [chartData, birthData]);
+
+  // Fetch transits when showTransits is toggled on and chart exists
+  useEffect(() => {
+    if (showTransits && chartData && transits.length === 0) {
+      fetchTransits();
+    }
+  }, [showTransits, chartData, transits.length, fetchTransits]);
+
+  // Auto-refresh transits every 15 minutes when visible
+  useEffect(() => {
+    if (!showTransits || !chartData) return;
+
+    const refreshInterval = setInterval(() => {
+      fetchTransits();
+    }, 15 * 60 * 1000); // 15 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [showTransits, chartData, fetchTransits]);
 
   // Threshold - The invitation unfolds
   if (loading) {
@@ -466,6 +543,12 @@ export default function AstrologyPage() {
     if (chartData.chiron?.house === houseNumber) planetsInHouse.push({ name: 'Chiron', ...chartData.chiron });
     if (chartData.northNode?.house === houseNumber) planetsInHouse.push({ name: 'North Node', ...chartData.northNode });
     if (chartData.southNode?.house === houseNumber) planetsInHouse.push({ name: 'South Node', ...chartData.southNode });
+    // Asteroids - Feminine Archetypes
+    if (chartData.lilith?.house === houseNumber) planetsInHouse.push({ name: 'Lilith', ...chartData.lilith });
+    if (chartData.ceres?.house === houseNumber) planetsInHouse.push({ name: 'Ceres', ...chartData.ceres });
+    if (chartData.pallas?.house === houseNumber) planetsInHouse.push({ name: 'Pallas', ...chartData.pallas });
+    if (chartData.juno?.house === houseNumber) planetsInHouse.push({ name: 'Juno', ...chartData.juno });
+    if (chartData.vesta?.house === houseNumber) planetsInHouse.push({ name: 'Vesta', ...chartData.vesta });
 
     return planetsInHouse;
   };
@@ -478,6 +561,19 @@ export default function AstrologyPage() {
           ? 'radial-gradient(circle at 50% 30%, #E8DCC8 0%, #D4C4B0 100%)'
           : 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
       }}>
+
+      {/* Back to MAIA navigation */}
+      <Link
+        href="/maia"
+        className={`fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
+          isDayMode
+            ? 'bg-amber-100/80 text-amber-800 hover:bg-amber-200/80'
+            : 'bg-white/10 text-amber-200 hover:bg-white/20'
+        }`}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">MAIA</span>
+      </Link>
 
       {/* Twilight horizon - hint of sunlight just past dusk */}
       {!isDayMode && (
@@ -647,34 +743,30 @@ export default function AstrologyPage() {
               Soul-centric field instrument · Hover to reveal neural pathways and archetypal insights
             </p>
 
-            {/* Toggle and CTA buttons */}
+            {/* Start Your Missions CTA + Transit Toggle */}
             <div className="flex items-center justify-center gap-3 mb-2">
-              {/* View Example Chart Toggle */}
               <button
-                onClick={() => setShowExampleChart(!showExampleChart)}
-                className={`px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all ${
-                  showExampleChart
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-900'
-                    : 'bg-stone-800/40 text-stone-300 border border-stone-700/50'
+                onClick={() => setShowMissionManager(true)}
+                className="px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: 'white',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                🎯 Start Your Missions with MAIA
+              </button>
+              <button
+                onClick={() => setShowTransits(!showTransits)}
+                className={`px-3 py-2 rounded-lg text-xs font-serif tracking-wide transition-all flex items-center gap-1.5 ${
+                  showTransits
+                    ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50'
+                    : 'bg-stone-700/50 text-stone-400 border border-stone-600/50 hover:bg-stone-700'
                 }`}
               >
-                {showExampleChart ? '👁️ Viewing Example (Kelly\'s Chart)' : '✨ View Example Chart'}
+                <Orbit className="w-3.5 h-3.5" />
+                {transitsLoading ? 'Loading...' : showTransits ? 'Transits On' : 'Transits'}
               </button>
-
-              {/* Start Your Missions CTA */}
-              {!showExampleChart && (
-                <button
-                  onClick={() => setShowMissionManager(true)}
-                  className="px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: 'white',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                  }}
-                >
-                  🎯 Start Your Missions with MAIA
-                </button>
-              )}
             </div>
             {/* Spiralogic Process Legend - Hide on mobile to save space */}
             <div className={`space-y-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'} hidden sm:block`}>
@@ -704,9 +796,9 @@ export default function AstrologyPage() {
                 animate={true}
               >
                 {/* Sacred House Wheel - Now actually BIG at the SVG level */}
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex items-center justify-center" style={{ pointerEvents: 'auto' }}>
                     {/* Central Holoflower - Fibonacci spiral pattern */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                       <div className="w-20 h-20 md:w-28 md:h-28 opacity-15">
                         <svg viewBox="0 0 200 200" className="w-full h-full">
                           {/* Fibonacci spiral of dots - pre-calculated */}
@@ -752,11 +844,27 @@ export default function AstrologyPage() {
                         ...(chartData.chiron ? [{ name: 'Chiron', sign: chartData.chiron.sign, house: chartData.chiron.house, degree: chartData.chiron.degree }] : []),
                         ...(chartData.northNode ? [{ name: 'North Node', sign: chartData.northNode.sign, house: chartData.northNode.house, degree: chartData.northNode.degree }] : []),
                         ...(chartData.southNode ? [{ name: 'South Node', sign: chartData.southNode.sign, house: chartData.southNode.house, degree: chartData.southNode.degree }] : []),
+                        // Asteroids - Feminine Archetypes
+                        ...(chartData.lilith ? [{ name: 'Lilith', sign: chartData.lilith.sign, house: chartData.lilith.house, degree: chartData.lilith.degree }] : []),
+                        ...(chartData.ceres ? [{ name: 'Ceres', sign: chartData.ceres.sign, house: chartData.ceres.house, degree: chartData.ceres.degree }] : []),
+                        ...(chartData.pallas ? [{ name: 'Pallas', sign: chartData.pallas.sign, house: chartData.pallas.house, degree: chartData.pallas.degree }] : []),
+                        ...(chartData.juno ? [{ name: 'Juno', sign: chartData.juno.sign, house: chartData.juno.house, degree: chartData.juno.degree }] : []),
+                        ...(chartData.vesta ? [{ name: 'Vesta', sign: chartData.vesta.sign, house: chartData.vesta.house, degree: chartData.vesta.degree }] : []),
                       ]}
                       aspects={chartData.aspects}
                       isDayMode={isDayMode}
                       showAspects={true}
-                      missions={missions}  // Show user's actual missions with progress rings
+                      missions={missions}
+                      missionLayerSettings={{
+                        showEmerging: true,
+                        showActive: true,
+                        showCompleted: true,
+                        showUrgent: true,
+                        showArchetypal: true,
+                        showTransits: showTransits,
+                      }}
+                      transits={transits}
+                      transitAspects={transitAspects}
                     />
                 </div>
               </ConsciousnessFieldWithTorus>
@@ -1950,37 +2058,21 @@ export default function AstrologyPage() {
             </p>
 
             <p className="text-stone-400 text-sm mb-8 leading-relaxed">
-              Want a guided tour using Kelly's chart as an example? You'll see how mission dots work, how to read planetary nodes, and what the sacred geometry means.
+              Click on any planet to reveal its archetypal insights - your sign expression, house activation, and aspects with other planets.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  setShowWelcomeModal(false);
-                  setShowExampleChart(true);
-                }}
-                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
-                  color: '#2C1810',
-                  boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
-                }}
-              >
-                Yes, show me how it works
-              </button>
-
-              <button
-                onClick={() => setShowWelcomeModal(false)}
-                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all backdrop-blur-md"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(212, 175, 55, 0.4)',
-                  color: '#E8D4BF',
-                }}
-              >
-                Explore on my own
-              </button>
-            </div>
+            <button
+              onClick={() => setShowWelcomeModal(false)}
+              className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
+                color: '#FFF5E0',
+                fontWeight: 600,
+                boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
+              }}
+            >
+              Explore My Chart
+            </button>
           </motion.div>
         </motion.div>
       )}

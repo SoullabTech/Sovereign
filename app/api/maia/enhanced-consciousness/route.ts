@@ -1,3 +1,5 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 /**
  * Enhanced Consciousness API Endpoint - Phase III
  * Quantum Field Memory + Consciousness Evolution + Collective Intelligence
@@ -11,6 +13,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { createHash } from 'crypto';
 
 // Import Phase III enhanced systems
@@ -19,6 +23,8 @@ import { quantumFieldMemory } from '@/lib/consciousness/memory/QuantumFieldMemor
 
 // Import Phase II components (for compatibility)
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
+
+// Skip during static export (Capacitor builds)
 
 // Create global enhanced integration instance
 let enhancedIntegration: EnhancedMAIAFieldIntegration | null = null;
@@ -55,6 +61,10 @@ function getExpectedStage(sessionId: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');

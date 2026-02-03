@@ -8,9 +8,9 @@ set -e
 echo "🤖 MAIA-SOVEREIGN Android Build Pipeline"
 echo "========================================="
 
-# Set Android environment
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21
-export ANDROID_HOME=$HOME/Library/Android/sdk
+# Set Android environment (use existing env vars if set, otherwise fall back to Mac paths)
+export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}
+export ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk}
 export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 
 # Build type (debug or release)

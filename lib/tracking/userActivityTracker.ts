@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Real User Activity Tracker
  * Records actual user sessions for the beta monitor

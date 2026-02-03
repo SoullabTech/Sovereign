@@ -1,0 +1,48 @@
+# deploy.yaml - Akash Network Deployment Manifest
+version: "2.0"
+services:
+  fire-agent:
+    image: your-registry/fire-agent:latest
+    env:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+    resources:
+      cpu:
+        limit: "1.0"
+      memory:
+        limit: "1Gi"
+      storage:
+        limit: "10Gi"
+
+profiles:
+  compute:
+    fire-agent:
+      resources:
+        cpu:
+          limit: "1.0"
+        memory:
+          limit: "1Gi"
+        storage:
+          limit: "10Gi"
+  placement:
+    westcoast:
+      attributes:
+        region: us-west
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        fire-agent:
+          denom: uakt
+          amount: 1000
+
+deployment:
+  fire-agent:
+    westcoast:
+      profile: fire-agent
+      count: 1

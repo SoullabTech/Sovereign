@@ -1,29 +1,85 @@
+// Dynamic API - needs database access at runtime
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db/postgres';
 
 /**
  * User Profile API endpoint
  * Returns basic profile information for guest users and authenticated users
+ * Now fetches the real name from the members table!
  */
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const domain = searchParams.get('domain');
 
     // Try to get a more personalized name based on userId or use a fallback
-    let userName = 'Explorer'; // Default fallback
+    // Note: 'Explorer' is filtered as a generic name, so use 'Friend' as default
+    let userName = 'Friend'; // Default fallback
+    let isGuest = userId === 'guest' || !userId;
 
-    // Check for Kelly special case
-    if (userId === 'kelly-nezat' || userId === 'kelly') {
-      userName = 'Kelly';
+    // First, try to look up the member in the database
+    if (userId && userId !== 'guest' && !userId.startsWith('guest_')) {
+      try {
+        // Check if userId is a valid member ID, username, or passkey
+        // Note: id is UUID type, so we cast to text for string comparison
+        // Also check for legacy format where username is embedded (e.g., 'kelly-nezat' should match username 'kelly')
+        const legacyUsername = userId.includes('-') ? userId.split('-')[0] : null;
+
+        const result = await query(
+          `SELECT id, name, username, passkey, preferred_name FROM members
+           WHERE id::text = $1 OR username = $1 OR passkey = $1
+           OR ($2::text IS NOT NULL AND username = $2)`,
+          [userId, legacyUsername]
+        );
+
+        if (result.rows.length > 0) {
+          const member = result.rows[0];
+          // Prioritize preferred_name, then name, then username - never use passkey as display name
+          userName = member.preferred_name || member.name || member.username;
+          isGuest = false;
+          console.log(`✅ [USER-PROFILE] Found member: ${userName} (id: ${member.id})`);
+
+          // Return full member data for proper name handling
+          const profile = {
+            id: member.id,
+            name: userName,
+            username: member.username,
+            preferredName: member.preferred_name,
+            domain: domain || 'localhost',
+            isGuest: false,
+            preferences: {
+              theme: 'dark',
+              voiceEnabled: true,
+            },
+            created: new Date().toISOString(),
+          };
+
+          return NextResponse.json({
+            success: true,
+            user: profile
+          });
+        } else {
+          console.log(`⚠️ [USER-PROFILE] No member found for userId: ${userId}`);
+        }
+      } catch (dbError) {
+        console.error('⚠️ [USER-PROFILE] Database lookup failed:', dbError);
+        // Fall through to name extraction below
+      }
     }
-    // Check for other custom user IDs
-    else if (userId && userId !== 'guest') {
+
+    // If database lookup didn't find a name, try to extract from userId
+    if (userName === 'Friend' && userId && userId !== 'guest' && !userId.startsWith('guest_')) {
       // Extract a friendly name from user ID if possible
       const fullName = userId.replace(/[-_]/g, ' ')
                              .replace(/\b\w/g, l => l.toUpperCase())
-                             .replace(/^Guest\d*$/, 'Explorer'); // Clean up guest IDs
+                             .replace(/^Guest\d*$/, 'Friend'); // Clean up guest IDs
       // Extract first name only for conversational intimacy
       userName = fullName.split(' ')[0];
     }
@@ -32,7 +88,7 @@ export async function GET(request: NextRequest) {
       id: userId || 'guest',
       name: userName,
       domain: domain || 'localhost',
-      isGuest: userId === 'guest' || !userId,
+      isGuest,
       preferences: {
         theme: 'dark',
         voiceEnabled: true,

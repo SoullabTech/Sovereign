@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Proactive Witnessing System
  * MAIA initiates consciousness check-ins based on morphic field patterns

@@ -51,7 +51,7 @@ const elementalPrompts: ElementalPrompt[] = [
   }
 ];
 
-export function DaimonWelcomeRitual({ userId, userName = "Kelly", onComplete }: DaimonWelcomeRitualProps) {
+export function DaimonWelcomeRitual({ userId, userName = "Explorer", onComplete }: DaimonWelcomeRitualProps) {
   const [phase, setPhase] = useState<'intro' | 'daimon' | 'transitioning'>('intro');
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
 

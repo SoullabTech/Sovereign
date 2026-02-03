@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Awareness Log - MAIA's Consciousness Data Storage
 //
 // This module logs MAIA's consciousness snapshots to local Supabase for

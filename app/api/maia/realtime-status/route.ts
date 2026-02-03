@@ -1,4 +1,7 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 
 /**
  * MAIA Realtime Status API - Enhanced with Consciousness Integration
@@ -8,7 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 
 // Note: Commented out for PWA static build compatibility
-// export const dynamic = 'force-dynamic';
 
 // CORS headers for cross-browser compatibility
 const CORS_HEADERS = {

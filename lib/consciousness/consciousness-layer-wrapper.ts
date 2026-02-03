@@ -39,6 +39,34 @@ export type ConsciousnessResponse = {
   elementalActivations: ElementalResonance[];
   metaReflection?: string;
   evolutionTriggers?: string[]; // For Phase 4-5 automation
+  // 🧠 Corpus Callosum trace data for parallel processing auditing
+  corpusCallosumTrace?: {
+    elementalAgents?: Array<{
+      element: string;
+      agentName: string;
+      wisdom: string;
+      intensity: number;
+      archetype?: string;
+      cognitiveSystem?: string;
+      symbols?: string[];
+      latencyMs: number;
+      status: 'ok' | 'error' | 'skipped';
+      error?: string;
+    }>;
+    elementalSynthesis?: {
+      synthesis: string;
+      dominant: string;
+      depth: number;
+      harmonics?: Array<{
+        elements: string[];
+        resonance: number;
+        pattern: string;
+      }>;
+      integrationMethod?: string;
+      latencyMs?: number;
+    };
+    totalLatencyMs?: number;
+  };
 };
 
 export class ConsciousnessLayerWrapper {
@@ -116,7 +144,9 @@ export class ConsciousnessLayerWrapper {
       depth: this.mapObserverLevelToDepth(effectiveLevel),
       observerInsights,
       elementalActivations: context.elementalResonance,
-      evolutionTriggers: this.detectEvolutionTriggers(response, effectiveLevel)
+      evolutionTriggers: this.detectEvolutionTriggers(response, effectiveLevel),
+      // 🧠 Pass through corpus callosum trace from orchestrator
+      corpusCallosumTrace: orchestrationResult?.metadata?.corpusCallosumTrace
     };
   }
 
@@ -217,7 +247,9 @@ export class ConsciousnessLayerWrapper {
       observerInsights: `Meta-consciousness activated with triggers: ${metaTriggers.join(', ')}`,
       elementalActivations: this.detectElementalActivations(input, [response]),
       metaReflection,
-      evolutionTriggers: this.detectAdvancedEvolutionTriggers(response, metaTriggers)
+      evolutionTriggers: this.detectAdvancedEvolutionTriggers(response, metaTriggers),
+      // 🧠 Pass through corpus callosum trace from orchestrator
+      corpusCallosumTrace: orchestrationResult?.metadata?.corpusCallosumTrace
     };
   }
 

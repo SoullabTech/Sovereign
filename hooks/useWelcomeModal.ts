@@ -30,7 +30,8 @@ export function useWelcomeModal() {
       if (betaUser) {
         try {
           const userData = JSON.parse(betaUser);
-          const userName = userData.username || userData.name || userData.displayName;
+          // FIXED: Prefer name over username (name is display name, username is for login)
+          const userName = userData.name || userData.displayName || userData.username;
           if (userData.onboarded && userData.id && userName) {
             existingUser = { id: userData.id, name: userName, onboarded: true };
           }

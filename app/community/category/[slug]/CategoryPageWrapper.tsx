@@ -95,7 +95,13 @@ const mockPosts = [
 export default function CategoryPageWrapper() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+
+  if (!params) return null;
+
+  const slugParam = params.slug as string | string[] | undefined;
+  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+
+  if (!slug) return null;
 
   // State for real channel data
   const [channel, setChannel] = useState<CommunityChannel | null>(null);

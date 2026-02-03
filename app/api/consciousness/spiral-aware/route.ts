@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 🌀 SPIRAL-AWARE CONSCIOUSNESS COMPUTING API
  *
@@ -11,8 +12,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { spiralAwareResponseService } from '@/lib/consciousness/spiral-aware-response';
 import { getSessionUserId } from '@/lib/auth/session-utils';
+
+// Skip during static export (Capacitor builds)
 
 export type ConstellationExposureMode =
   | 'implicit_only'      // MAIA uses constellation, doesn't mention it
@@ -129,6 +134,10 @@ export async function POST(request: NextRequest) {
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const userId = await getSessionUserId(request);
     if (!userId) {

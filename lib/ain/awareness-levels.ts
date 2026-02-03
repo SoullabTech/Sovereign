@@ -1,10 +1,35 @@
+/**
+ * @deprecated LEGACY 5-LEVEL SYSTEM (Knowledge Gate)
+ *
+ * This file is DEPRECATED. Use the canonical 7-level system instead:
+ *
+ *   import { AwarenessLevel, to5Level, from5Level } from '@/lib/consciousness/awareness-levels';
+ *
+ * Migration:
+ * - AwarenessLevel enum → import type from awareness-levels.ts (7-level)
+ * - To get 5-level values, use: to5Level(sevenLevelValue)
+ * - To convert back, use: from5Level(fiveLevelValue)
+ * - detectAwarenessLevel() → use from awareness-detection.ts instead
+ *
+ * This file remains for backwards compatibility but will be removed in a future version.
+ *
+ * Mapping: 7-level → 5-level
+ *   1   → 1 (UNCONSCIOUS)
+ *   2   → 2 (PARTIAL)
+ *   3-4 → 3 (RELATIONAL)
+ *   5-6 → 4 (INTEGRATED)
+ *   7   → 5 (MASTER)
+ */
+
 // frontend
 
 /**
- * MAIA's Five Levels of Awareness
+ * MAIA's Five Levels of Awareness (LEGACY)
  *
  * The vertical axis of consciousness that complements the horizontal Knowledge Gate sources.
  * This creates a 5×5 mandala of Elemental Knowing × Depth of Awareness.
+ *
+ * @deprecated Use 7-level system from @/lib/consciousness/awareness-levels
  */
 
 export enum AwarenessLevel {

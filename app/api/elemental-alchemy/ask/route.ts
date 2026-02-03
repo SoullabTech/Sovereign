@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * ASK THE BOOK API ROUTE
  *
@@ -9,8 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { askTheBook, BookQuery } from '@/lib/features/AskTheBookService';
 import { query } from '@/lib/db/postgres';
+
+// Skip during static export (Capacitor builds)
 
 // Valid element types for forcing chapter load
 type ForceElement = 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'spiralogic';
@@ -141,6 +146,10 @@ export async function POST(request: NextRequest) {
  * Get recent queries for a user
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

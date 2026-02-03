@@ -192,7 +192,7 @@ export class FieldIntelligenceSystem {
 
     const markers = {
       linguistic: this.containsSacredLanguage(input),
-      somatic: somatic.presenceLevel > 0.8 && somatic.tensionLevel < 0.3,
+      somatic: (somatic.presenceLevel ?? 0) > 0.8 && somatic.tensionLevel < 0.3,
       consciousness: consciousness.coherence > 0.8 && consciousness.resonance > 0.8,
       temporal: this.detectTemporalShift(input)
     };
@@ -421,7 +421,7 @@ export class FieldIntelligenceSystem {
     const markers = {
       consciousnessShift: Math.abs(consciousness.coherence - 0.5) < 0.2,
       somaticTransition: somatic.tensionLevel > 0.3 && somatic.tensionLevel < 0.7,
-      presenceFlux: Math.abs(somatic.presenceLevel - 0.5) < 0.2
+      presenceFlux: Math.abs((somatic.presenceLevel ?? 0) - 0.5) < 0.2
     };
 
     return Object.values(markers).filter(m => m).length >= 2;

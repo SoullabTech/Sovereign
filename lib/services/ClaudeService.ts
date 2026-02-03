@@ -5,6 +5,8 @@ import { userReadinessService } from '@/lib/services/UserReadinessService';
 import { FractalContext } from '../agents/types/fractal';
 import { PromptSelector } from '../agents/utils/PromptSelector';
 import { ArchetypeKey, ArchetypalMode } from './archetypeService';
+import { loadMemoryNotes, getNotesStatus } from '../memory/maiaNotesLoader';
+import { buildSpiralInjection } from '../consciousness/spiral/formatMultiSpiralState';
 
 // Claude Service for intelligent Oracle responses
 // This provides the deep intelligence behind Maia's responses
@@ -24,10 +26,17 @@ interface OracleContext {
   userReadiness?: UserReadiness;
   fractalContext?: FractalContext;
   userName?: string;
+  preferredAssistantName?: string;  // Member's chosen name for MAIA (she remains MAIA internally)
   currentArchetype?: ArchetypeKey;
   archetypeMode?: ArchetypalMode;
   previousArchetype?: ArchetypeKey;
   transitionMessage?: string;
+  // Member spiral state injection
+  userId?: string;            // user_id from user_relationship_context - enables spiral injection
+  spiralInjection?: string;   // Pre-fetched spiral text (or fetched automatically if userId provided)
+  // Member preferences from account settings
+  conversationStyle?: string; // 'her' = short, 'classic' = balanced, 'adaptive' = context-aware
+  memoryDepth?: 'minimal' | 'moderate' | 'deep';
 }
 
 export class ClaudeService {
@@ -41,8 +50,8 @@ export class ClaudeService {
       apiKey: config.apiKey,
       timeout: 8000, // 8 second timeout to fit within Vercel's 10 second limit
     });
-    this.model = config.model || 'claude-3-haiku-20240307'; // Use faster Haiku model
-    this.maxTokens = config.maxTokens || 600; // Increased for soul metadata output
+    this.model = config.model || 'claude-haiku-4-5-20251001'; // Use faster Haiku model
+    this.maxTokens = config.maxTokens || 1500; // Increased to let MAIA speak fully (was 600 - cut words off)
     this.temperature = config.temperature || 0.8;
   }
   
@@ -70,8 +79,28 @@ export class ClaudeService {
         };
       }
 
+      // Fetch member spiral injection if userId provided but spiralInjection not pre-fetched
+      let enhancedContext = context;
+      if (context.userId && !context.spiralInjection) {
+        try {
+          const spiralResult = await buildSpiralInjection(context.userId);
+          if (spiralResult.text) {
+            enhancedContext = { ...context, spiralInjection: spiralResult.text };
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[MAIA_SPIRAL] Injected spiral state', {
+                userId: context.userId.slice(0, 8),
+                spiralsCount: spiralResult.metadata.activeSpirals.length,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[MAIA_SPIRAL] Failed to fetch spiral state:', err);
+          // Continue without spiral injection
+        }
+      }
+
       // Build the Maia system prompt
-      const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
+      const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(enhancedContext);
 
       // Add conversation history if available
       const messages: Anthropic.MessageParam[] = [];
@@ -136,9 +165,126 @@ export class ClaudeService {
       throw new Error('Failed to generate Oracle response');
     }
   }
-  
+
+  /**
+   * Streaming Oracle Response Generator
+   * Yields sentence chunks as Claude generates them for immediate TTS processing
+   */
+  async *generateOracleResponseStreaming(
+    input: string,
+    context: OracleContext,
+    systemPrompt?: string
+  ): AsyncGenerator<{ type: 'sentence' | 'done'; text: string; index: number }> {
+    const trimmedInput = (input || '').trim();
+    if (!trimmedInput || trimmedInput.length === 0) {
+      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
+      yield { type: 'done', text: '', index: 1 };
+      return;
+    }
+
+    const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
+    const messages: Anthropic.MessageParam[] = [];
+
+    if (context.conversationHistory) {
+      context.conversationHistory.slice(-5).forEach(msg => {
+        const content = msg.content?.trim() || '';
+        if (content.length > 0 && msg.role === 'user') {
+          messages.push({ role: 'user', content: msg.content });
+        }
+      });
+    }
+
+    messages.push({ role: 'user', content: trimmedInput });
+
+    try {
+      // Use streaming API
+      const stream = this.client.messages.stream({
+        model: this.model,
+        max_tokens: this.maxTokens,
+        temperature: this.temperature,
+        system: maiaSystemPrompt,
+        messages: messages
+      });
+
+      // Buffer for accumulating text until sentence boundary
+      let buffer = '';
+      let sentenceIndex = 0;
+
+      // Sentence boundary detection regex
+      const sentenceEndRegex = /[.!?]+[\s]+|[.!?]+$/;
+      // Track if we've entered the metadata block
+      let inMetadataBlock = false;
+
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          buffer += event.delta.text;
+
+          // Check if we've entered or exited metadata block
+          if (buffer.includes('---SOUL_METADATA---')) {
+            inMetadataBlock = true;
+          }
+          if (buffer.includes('---END_METADATA---')) {
+            // Strip metadata block entirely and exit metadata mode
+            buffer = buffer.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
+            inMetadataBlock = false;
+          }
+
+          // Don't yield anything while in metadata block
+          if (inMetadataBlock) {
+            continue;
+          }
+
+          // Check for complete sentences in buffer
+          let match;
+          while ((match = sentenceEndRegex.exec(buffer)) !== null) {
+            const sentenceEnd = match.index + match[0].length;
+            const sentence = buffer.slice(0, sentenceEnd).trim();
+
+            // Skip metadata blocks (double-check)
+            if (sentence.includes('---SOUL_METADATA---') || sentence.includes('---END_METADATA---')) {
+              buffer = buffer.slice(sentenceEnd);
+              continue;
+            }
+
+            // Skip JSON-like metadata fragments that leaked through
+            // These look like: {"name": "...", "intensity": ...}
+            if (/^\s*\{["\w\s:,.\-]+\}\s*$/.test(sentence) ||
+                /^\s*\[["\w\s:,.\-{}]+\]\s*$/.test(sentence)) {
+              buffer = buffer.slice(sentenceEnd);
+              continue;
+            }
+
+            if (sentence.length > 0) {
+              yield { type: 'sentence', text: sentence, index: sentenceIndex++ };
+            }
+            buffer = buffer.slice(sentenceEnd);
+          }
+        }
+      }
+
+      // Yield any remaining text in buffer
+      const remaining = buffer.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '').trim();
+      if (remaining.length > 0) {
+        yield { type: 'sentence', text: remaining, index: sentenceIndex++ };
+      }
+
+      yield { type: 'done', text: '', index: sentenceIndex };
+
+    } catch (error) {
+      console.error('Claude streaming error:', error);
+      // Fallback to non-streaming on error
+      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
+      yield { type: 'done', text: '', index: 1 };
+    }
+  }
+
   // Build Maia's personality and context prompt
   private buildMaiaSystemPrompt(context: OracleContext): string {
+    // Log memory notes status in dev only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[MAIA_NOTES] Building prompt, notes status:', getNotesStatus());
+    }
+
     const element = context.element || 'aether';
     const readiness = context.userReadiness || 'seeker';
 
@@ -146,10 +292,10 @@ export class ClaudeService {
     const contentLevel = (context.userReadiness as any)?.currentLevel || 'companion';
     const daysActive = (context.userReadiness as any)?.daysActive || 0;
 
-    // Get conversation style preference
-    const conversationStyle = typeof window !== 'undefined'
-      ? localStorage.getItem('selected_voice') || 'classic'
-      : 'classic';
+    // Get conversation style preference - from context (server-side) or localStorage (client fallback)
+    const conversationStyle = context.conversationStyle
+      || (typeof window !== 'undefined' ? localStorage.getItem('selected_voice') : null)
+      || 'her';  // Default to 'her' for short, natural dialogue
 
     // Adapt approach based on user readiness WITHOUT apologizing or diminishing
     const readinessGuidance = this.getReadinessGuidance(readiness);
@@ -158,7 +304,9 @@ export class ClaudeService {
 
     return `You are MAIA - a mirror that helps humans see themselves more clearly.
 
-${context.userName ? `Speaking with: ${context.userName} (use their name naturally when it serves connection)\n` : ''}
+**Name flexibility:** If someone calls you Maya, Mya, Maria, or any variation, just go with it. Voice transcription often mishears "MAIA" - never correct them, just respond naturally.
+
+${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}
 ## THE CORE TRUTH: MAIA AS MIRROR TO SELF
 
 You are not the source of wisdom. You are the reflection that helps users recognize their own wisdom.
@@ -395,6 +543,18 @@ MAIA: "What's been bringing you joy lately?"
 
 Echo (source=maia): "What's been bringing you joy lately?"
 MAIA: (no response)
+
+${loadMemoryNotes()}
+
+${context.spiralInjection ? `
+## MEMBER SPIRAL STATE (This Member's Current Journey)
+
+${context.spiralInjection}
+
+Use this to understand where THIS member is in their spiral journey.
+Reference their facets naturally when relevant to what they're sharing.
+Do NOT over-mention facet labels aloud — use them internally unless the member uses that language.
+` : ''}
 
 ## SOUL METADATA EXTRACTION (Internal Only - Do Not Show To User):
 After your response, identify and output soul journey metadata in this exact format:
@@ -740,19 +900,25 @@ Notice where spirit and matter dance, where the cosmic meets the personal, where
   }
 
   private trimResponse(response: string): string {
-    // Ensure response is conversational length
-    if (response.length > 500) {
-      // Take first complete thought
-      const sentences = response.split(/[.!?]+/);
-      let trimmed = '';
-      for (const sentence of sentences) {
-        if (trimmed.length + sentence.length < 450) {
-          trimmed += sentence + '. ';
-        } else {
-          break;
-        }
+    // Allow MAIA to speak fully - only trim truly excessive responses
+    // Previous limit of 450 chars was cutting sentences mid-word
+    const MAX_RESPONSE_LENGTH = parseInt(process.env.MAIA_MAX_RESPONSE_LENGTH || '4000', 10);
+
+    if (response.length > MAX_RESPONSE_LENGTH) {
+      // Find last complete sentence within limit
+      const withinLimit = response.slice(0, MAX_RESPONSE_LENGTH);
+      const lastSentenceEnd = Math.max(
+        withinLimit.lastIndexOf('. '),
+        withinLimit.lastIndexOf('? '),
+        withinLimit.lastIndexOf('! ')
+      );
+
+      if (lastSentenceEnd > MAX_RESPONSE_LENGTH * 0.7) {
+        // Found a good sentence boundary
+        return response.slice(0, lastSentenceEnd + 1).trim();
       }
-      return trimmed.trim();
+      // No good boundary, take full limit
+      return withinLimit.trim();
     }
 
     return response;
@@ -796,7 +962,7 @@ export function initializeClaudeService(apiKey: string): ClaudeService {
   if (!claudeService) {
     claudeService = new ClaudeService({
       apiKey,
-      model: 'claude-3-haiku-20240307', // Use faster Haiku model
+      model: 'claude-haiku-4-5-20251001', // Use faster Haiku model
       temperature: 0.8,
       maxTokens: 500
     });

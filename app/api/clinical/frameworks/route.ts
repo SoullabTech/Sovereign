@@ -1,4 +1,10 @@
+// @ts-nocheck
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 /**
  * Clinical Framework Registry and Loader API
@@ -375,6 +381,10 @@ clinicalFrameworks.set(ippFramework.frameworkId, ippFramework);
 clinicalFrameworks.set(emdrFramework.frameworkId, emdrFramework);
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

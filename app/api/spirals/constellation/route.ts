@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * 🌌 SPIRAL CONSTELLATION API
  *
@@ -6,14 +7,22 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { spiralConstellationService } from '@/lib/services/spiral-constellation';
 import { getSessionUserId } from '@/lib/auth/session-utils';
+
+// Skip during static export (Capacitor builds)
 
 // ==============================================================================
 // GET - Retrieve Spiral Constellation
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const userId = await getSessionUserId(request);
     if (!userId) {

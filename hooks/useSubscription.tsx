@@ -1,7 +1,20 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, UserTier, SubscriptionStatus, PremiumFeature, TIER_FEATURES, FEATURE_NAMES } from '@/lib/subscription/types';
+import {
+  User,
+  UserTier,
+  ContributionCircle,
+  MembershipStatus,
+  PremiumFeature,
+  TIER_FEATURES,
+  FEATURE_NAMES,
+  CONTRIBUTION_SUGGESTIONS,
+  CIRCLE_DESCRIPTIONS,
+  SEVA_PATHWAYS,
+  SevaPathway
+} from '@/lib/subscription/types';
+import { redirectToCheckout, isStripeAvailable, ContributionTier } from '@/lib/stripe/client';
 
 interface SubscriptionContextType {
   user: User | null;
@@ -46,13 +59,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(userData);
         setUser(parsed);
       } else {
-        // Create default free user
+        // Try to get name from beta_user localStorage first
+        const betaUser = localStorage.getItem('beta_user');
+        const memberName = betaUser ? JSON.parse(betaUser).name : null;
+
+        // Create default user (everyone gets full access)
         const defaultUser: User = {
           id: 'guest',
-          name: 'Explorer',
+          name: memberName || 'Friend',
           subscription: {
-            status: 'none',
-            tier: 'free',
+            status: 'explorer',
+            tier: 'explorer',
             features: []
           },
           createdAt: new Date(),
@@ -64,13 +81,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error initializing subscription:', error);
-      // Fallback to free user
+      // Fallback - try to get name from beta_user localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const fallbackName = betaUser ? JSON.parse(betaUser).name : null;
       setUser({
         id: 'guest',
-        name: 'Explorer',
+        name: fallbackName || 'Friend',
         subscription: {
-          status: 'none',
-          tier: 'free',
+          status: 'explorer',
+          tier: 'explorer',
           features: []
         },
         createdAt: new Date(),
@@ -82,11 +101,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   const hasFeature = useCallback((feature: PremiumFeature): boolean => {
-    // Beta testers get full premium access (uses state for hydration-safe check)
-    if (isBetaTester) return true;
-    if (!user) return false;
-    return TIER_FEATURES[user.subscription.tier].includes(feature);
-  }, [isBetaTester, user]);
+    // NEW MODEL: Everyone gets full access - consciousness shouldn't be paywalled
+    // Contribution circles are about gratitude/recognition, not feature gating
+    return true;
+  }, []);
 
   const requireSubscription = useCallback((feature: PremiumFeature): boolean => {
     const hasAccess = hasFeature(feature);
@@ -136,71 +154,171 @@ export function useFeatureAccess(feature: PremiumFeature) {
   const { hasFeature, requireSubscription, user } = useSubscription();
 
   return {
-    hasAccess: hasFeature(feature),
+    hasAccess: hasFeature(feature),  // Always true - everyone has full access
     require: () => requireSubscription(feature),
-    tier: user?.subscription.tier || 'free',
-    isSubscriber: user?.subscription.tier !== 'free'
+    tier: user?.subscription.tier || 'explorer',
+    circle: user?.subscription.tier || 'explorer',
+    isContributor: user?.subscription.tier !== 'explorer'  // Are they actively contributing?
   };
 }
 
-// Utility functions for manual subscription management (dev/testing)
-export const subscriptionUtils = {
-  // Activate beta tester access with SOULLAB-[NAME] code
+/**
+ * Sustaining Circle Utilities
+ *
+ * Philosophy: Everyone gets full access. Contribution is gratitude, not payment.
+ */
+export const membershipUtils = {
+  // Activate beta tester / founding member code
   activateBetaCode: (code: string): boolean => {
     if (typeof window === 'undefined') return false;
     if (code && code.toUpperCase().startsWith('SOULLAB-')) {
       localStorage.setItem('soullab_beta_code', code.toUpperCase());
-      console.log(`🌟 Beta access activated: ${code}`);
-      window.location.reload(); // Refresh to apply changes
+      console.log(`🌟 Founding member activated: ${code}`);
+      window.location.reload();
       return true;
     }
-    console.error('Invalid beta code. Must start with SOULLAB-');
+    console.error('Invalid code. Must start with SOULLAB-');
     return false;
   },
 
-  // Check if user has beta access
+  // Check if user is a founding member / beta tester
   isBetaTester: (): boolean => {
     if (typeof window === 'undefined') return false;
     const betaCode = localStorage.getItem('soullab_beta_code');
     return !!(betaCode && betaCode.toUpperCase().startsWith('SOULLAB-'));
   },
 
-  // Get beta code
+  // Get beta/founding code
   getBetaCode: (): string | null => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('soullab_beta_code');
   },
 
-  // Remove beta access
-  removeBetaCode: () => {
+  // Get current contribution circle
+  getCurrentCircle: (): ContributionCircle => {
+    if (typeof window === 'undefined') return 'explorer';
+    // Founding members get 'founder' circle
+    if (membershipUtils.isBetaTester()) return 'founder';
+    const userData = localStorage.getItem('maia_user_subscription');
+    if (userData) {
+      const user = JSON.parse(userData);
+      return user.membership?.circle || user.subscription?.tier || 'explorer';
+    }
+    return 'explorer';
+  },
+
+  // Join Sustaining Circle (monthly contribution)
+  joinSustainingCircle: async (amount: number = 25) => {
     if (typeof window === 'undefined') return;
-    localStorage.removeItem('soullab_beta_code');
+
+    // Determine tier based on amount (unified with /patrons page)
+    let tier: ContributionTier = 'seedkeeper';
+    if (amount >= 1000) tier = 'founder';
+    else if (amount >= 250) tier = 'sanctuary';
+    else if (amount >= 75) tier = 'storyweaver';
+    else tier = 'seedkeeper';
+
+    // Check if Stripe is configured
+    if (isStripeAvailable()) {
+      // Get member ID from localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const memberId = betaUser ? JSON.parse(betaUser).id : undefined;
+
+      console.log(`🕯️ Redirecting to Stripe checkout for ${tier} ($${amount}/mo)...`);
+      const result = await redirectToCheckout({ tier, memberId });
+
+      if (!result.success) {
+        console.error('Checkout failed:', result.error);
+        alert(`Payment setup failed: ${result.error}. Please try again.`);
+      }
+      // If successful, redirectToCheckout will navigate to Stripe
+      return;
+    }
+
+    // Fallback: Store locally if Stripe not configured (dev mode)
+    console.log('[Dev Mode] Stripe not configured, using localStorage');
+    const userData = localStorage.getItem('maia_user_subscription');
+    const user = userData ? JSON.parse(userData) : { id: 'guest', name: 'Explorer' };
+
+    user.membership = {
+      status: 'active',
+      circle: tier,
+      contributionAmount: amount,
+      joinedAt: new Date().toISOString()
+    };
+    user.subscription = { ...user.subscription, tier, status: 'active' };
+    localStorage.setItem('maia_user_subscription', JSON.stringify(user));
+    console.log(`🕯️ [Dev] Joined Sustaining Circle as ${tier} ($${amount}/mo)`);
     window.location.reload();
   },
 
-  // Upgrade user to subscriber
-  upgradeToSubscriber: () => {
+  // Join Pioneer/Founding Circle (one-time lifetime)
+  joinFoundingCircle: async () => {
     if (typeof window === 'undefined') return;
-    const userData = localStorage.getItem('maia_user_subscription');
-    if (userData) {
-      const user = JSON.parse(userData);
-      user.subscription.tier = 'subscriber';
-      user.subscription.status = 'active';
-      localStorage.setItem('maia_user_subscription', JSON.stringify(user));
-      window.location.reload(); // Refresh to apply changes
+
+    // Check if Stripe is configured
+    if (isStripeAvailable()) {
+      // Get member ID from localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const memberId = betaUser ? JSON.parse(betaUser).id : undefined;
+
+      console.log('⭐ Redirecting to Stripe checkout for Founder ($222 one-time)...');
+      const result = await redirectToCheckout({ tier: 'founder', memberId });
+
+      if (!result.success) {
+        console.error('Checkout failed:', result.error);
+        alert(`Payment setup failed: ${result.error}. Please try again.`);
+      }
+      return;
     }
+
+    // Fallback: Store locally if Stripe not configured (dev mode)
+    console.log('[Dev Mode] Stripe not configured, using localStorage');
+    const userData = localStorage.getItem('maia_user_subscription');
+    const user = userData ? JSON.parse(userData) : { id: 'guest', name: 'Explorer' };
+
+    user.membership = {
+      status: 'founding',
+      circle: 'founder',
+      lifetimeContribution: 222,
+      joinedAt: new Date().toISOString()
+    };
+    user.subscription = { ...user.subscription, tier: 'founder', status: 'active' };
+    localStorage.setItem('maia_user_subscription', JSON.stringify(user));
+    console.log('⭐ [Dev] Joined Pioneer Founding Circle');
+    window.location.reload();
   },
 
-  // Downgrade to free
-  downgradeToFree: () => {
+  // Join through Seva (service exchange)
+  joinSeva: (pathway: SevaPathway) => {
     if (typeof window === 'undefined') return;
     const userData = localStorage.getItem('maia_user_subscription');
-    if (userData) {
-      const user = JSON.parse(userData);
-      user.subscription.tier = 'free';
-      user.subscription.status = 'none';
-      localStorage.setItem('maia_user_subscription', JSON.stringify(user));
-      window.location.reload(); // Refresh to apply changes
-    }
-  }
+    const user = userData ? JSON.parse(userData) : { id: 'guest', name: 'Explorer' };
+
+    user.membership = {
+      status: 'seva',
+      circle: 'seva',
+      sevaPathway: pathway,
+      joinedAt: new Date().toISOString()
+    };
+    user.subscription = { ...user.subscription, tier: 'seva', status: 'active' };
+    localStorage.setItem('maia_user_subscription', JSON.stringify(user));
+    console.log(`🙏 Joined through Seva: ${SEVA_PATHWAYS[pathway].name}`);
+    window.location.reload();
+  },
+
+  // Get contribution suggestions
+  getContributionSuggestions: () => CONTRIBUTION_SUGGESTIONS,
+
+  // Get circle descriptions
+  getCircleDescriptions: () => CIRCLE_DESCRIPTIONS,
+
+  // Get seva pathways
+  getSevaPathways: () => SEVA_PATHWAYS,
+
+  // Everyone gets all features
+  hasFullAccess: () => true
 };
+
+// Legacy export for backward compatibility
+export const subscriptionUtils = membershipUtils;

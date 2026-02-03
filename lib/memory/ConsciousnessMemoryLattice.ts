@@ -242,8 +242,9 @@ export class ConsciousnessMemoryLattice {
     // 1. Create lattice node
     const node = await this.createNode(userId, event, facet, phase);
 
-    // 2. Check if this should form a developmental memory
-    const memoryFormed = await this.evaluateMemoryFormation(node);
+    // 2. Check if this should form a developmental memory (returns ID or null)
+    const newMemoryId = await this.evaluateMemoryFormation(node);
+    const memoryFormed = newMemoryId !== null;
 
     // 3. Detect patterns across time
     const patterns = await this.detectEmergentPatterns(userId, event, facet);
@@ -256,7 +257,44 @@ export class ConsciousnessMemoryLattice {
       await this.syncWithBeads(userId, event, memoryFormed);
     }
 
-    console.log(`✨ [INTEGRATED] Node: ${node.id}, Memory: ${memoryFormed}, Patterns: ${patterns.length}, Insights: ${insights.length}`);
+    // 6. Create memory links: upsert patterns and link new memory to them
+    try {
+      if (patterns?.length > 0) {
+        const { PatternMemoryStore } = await import('./stores/PatternMemoryStore');
+        const { MemoryLinksStore } = await import('./stores/MemoryLinksStore');
+
+        for (const patternKey of patterns) {
+          // Upsert the pattern as a stable record
+          const patternId = await PatternMemoryStore.upsertByKey({
+            userId,
+            patternKey,
+            facetCode: facet.code,
+            confidence: 0.7,
+          });
+
+          // If a new memory was formed, link it to this pattern
+          if (newMemoryId && patternId) {
+            await MemoryLinksStore.createLink({
+              userId,
+              fromTable: 'developmental_memories',
+              fromId: newMemoryId,
+              toTable: 'developmental_memories',
+              toId: patternId,
+              linkType: 'supports',
+              weight: 1.0,
+              confidence: 0.8,
+              createdBy: 'system',
+            });
+            console.log(`🔗 [MemoryLinks] Linked memory ${newMemoryId.slice(0, 8)}... → pattern '${patternKey}'`);
+          }
+        }
+        console.log(`📊 [Patterns] Processed ${patterns.length} pattern(s) for user`);
+      }
+    } catch (linkErr) {
+      console.warn('⚠️ [MemoryLinks] Failed in linking logic:', linkErr);
+    }
+
+    console.log(`✨ [INTEGRATED] Node: ${node.id}, Memory: ${memoryFormed ? newMemoryId?.slice(0, 8) + '...' : 'none'}, Patterns: ${patterns.length}, Insights: ${insights.length}`);
 
     return { node, memoryFormed, patternsDetected: patterns, insights };
   }
@@ -437,7 +475,11 @@ export class ConsciousnessMemoryLattice {
     };
   }
 
-  private async evaluateMemoryFormation(node: LatticeNode): Promise<boolean> {
+  /**
+   * Evaluate if this event warrants forming a developmental memory.
+   * Returns the memory ID if formed, null otherwise.
+   */
+  private async evaluateMemoryFormation(node: LatticeNode): Promise<string | null> {
     // Surprise-based memory formation
     const shouldForm =
       (node.event.type === 'somatic' && node.event.effectiveness && node.event.effectiveness >= 8) ||
@@ -455,11 +497,11 @@ export class ConsciousnessMemoryLattice {
         sourceConsciousnessEntryId: node.id,
       };
 
-      await developmentalMemory.formMemory(memoryInput);
-      return true;
+      const memory = await developmentalMemory.formMemory(memoryInput);
+      return memory.id;
     }
 
-    return false;
+    return null;
   }
 
   private mapEventToMemoryType(event: ConsciousnessEvent): any {

@@ -1,0 +1,201 @@
+# backend
+name: Issue Auto-Label
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  autolabel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-label issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = (issue.title || "").toLowerCase();
+            const body  = (issue.body  || "").toLowerCase();
+            const text = `${title}\n\n${body}`;
+
+            // Current labels on the issue
+            const currentLabels = new Set((issue.labels || []).map(l => (typeof l === "string" ? l : l.name)));
+
+            // Labels we may add (and auto-create if missing)
+            const LABEL_DEFS = {
+              "voice":        { color: "6f42c1", description: "Voice / mic / speech / audio pipeline" },
+              "ui":           { color: "0e8a16", description: "UI/UX, layout, visuals, interaction" },
+              "permissions":  { color: "d93f0b", description: "Permissions / privacy prompts / access denied" },
+              "bluetooth":    { color: "1d76db", description: "Bluetooth / BLE / headset routing" },
+              "crash":        { color: "b60205", description: "Crash / hang / freeze / fatal error" },
+              "needs-repro":  { color: "fbca04", description: "Missing reproduction steps / unclear report" },
+              "testflight":   { color: "5319e7", description: "TestFlight / iOS beta report" },
+            };
+
+            function hasAny(patterns) {
+              return patterns.some((p) => (p instanceof RegExp ? p.test(text) : text.includes(p)));
+            }
+
+            // --- Heuristics ---
+            const isTestflight = hasAny([
+              "testflight", "ios build", "build ", "tf build", "capacit", "xcode",
+            ]);
+
+            const isVoice = hasAny([
+              "voice", "speech", "mic", "microphone", "audio", "whisper", "transcription",
+              "stt", "tts", "realtime", "webrtc", "dictation", "recognition",
+            ]);
+
+            const isBluetooth = hasAny([
+              "bluetooth", "ble", "airpods", "headphones", "headset", "carplay",
+              "connected device", "audio route", "routing",
+            ]);
+
+            const isPermissions = hasAny([
+              "permission", "permissions", "allow", "denied", "privacy",
+              "microphone access", "camera access", "notifications",
+              "calendar access", "contacts access", "location access",
+            ]);
+
+            const isUI = hasAny([
+              "ui", "ux", "screen", "button", "layout", "spacing", "scroll",
+              "tap", "click", "drawer", "modal", "badge", "navbar", "responsive",
+              "dark mode", "light mode",
+            ]);
+
+            const isCrash = hasAny([
+              "crash", "crashed", "freeze", "frozen", "hang", "hung",
+              "unresponsive", "stuck", "white screen", "black screen",
+              "sigabrt", "fatal", "exception", "stacktrace",
+            ]);
+
+            // needs-repro: widened heuristics for common issue formats
+            const rawBody = issue.body || "";
+
+            // PATCH 1: Widen mentionsSteps to catch headings + common variants
+            const mentionsSteps = hasAny([
+              "steps to reproduce", "steps:", "reproduction steps", "repro steps",
+              "repro:", "how to reproduce", "to reproduce",
+            ]) || /(^|\n)\s{0,3}#{1,6}\s*steps\b/i.test(rawBody)
+               || /(^|\n)\s{0,3}#{1,6}\s*steps to reproduce\b/i.test(rawBody);
+
+            // PATCH 2: Expand hasNumberedSteps to catch 1) / 1- / Step 1:
+            const hasNumberedSteps =
+              /(^|\n)\s*\d+\.\s+/.test(rawBody) ||     // 1. foo
+              /(^|\n)\s*\d+\)\s+/.test(rawBody) ||     // 1) foo
+              /(^|\n)\s*\d+\s*-\s+/.test(rawBody) ||   // 1 - foo
+              /(^|\n)\s*step\s*\d+\s*[:\-]/i.test(rawBody); // Step 1: foo
+
+            // PATCH 3: Detect bullet lists as steps
+            const hasBulletSteps =
+              /(^|\n)\s*[-*]\s+(open|tap|click|press|go to|select|choose|start|stop|record)\b/i.test(rawBody) ||
+              /(^|\n)\s*[-*]\s+\w+/.test(rawBody); // fallback: any bullet list at all
+
+            // PATCH 3b: Treat markdown task lists as steps (common in templates)
+            // - [ ] Open app  /  - [x] Tap record
+            const hasChecklistSteps =
+              /(^|\n)\s*[-*]\s*\[\s*[xX ]\s*\]\s+\S+/.test(rawBody);
+
+            // PATCH 4: Allow "Expected behavior" / "Actual behavior" headings without colon
+            const hasExpectedActual =
+              hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]) ||
+              /(^|\n)\s*expected(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody) ||
+              /(^|\n)\s*actual(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody);
+
+            const likelyMissingRepro = !(
+              mentionsSteps ||
+              hasNumberedSteps ||
+              hasBulletSteps ||
+              hasChecklistSteps ||
+              hasExpectedActual
+            );
+
+            // If repro info is now present, remove needs-repro (self-healing on edits)
+            const shouldRemoveNeedsRepro = !likelyMissingRepro && currentLabels.has("needs-repro");
+
+            // Collect labels to add
+            const desired = new Set();
+            if (isTestflight) desired.add("testflight");
+            if (isVoice) desired.add("voice");
+            if (isBluetooth) desired.add("bluetooth");
+            if (isPermissions) desired.add("permissions");
+            if (isUI) desired.add("ui");
+            if (isCrash) desired.add("crash");
+            if (likelyMissingRepro) desired.add("needs-repro");
+
+            // Skip if nothing to add AND nothing to remove
+            if (desired.size === 0 && !shouldRemoveNeedsRepro) {
+              core.info("No labels to add or remove; skipping.");
+              return;
+            }
+
+            // Helper: ensure label exists
+            async function ensureLabel(name) {
+              const def = LABEL_DEFS[name];
+              if (!def) return;
+
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                });
+              } catch (err) {
+                // Create it if missing
+                if (err.status === 404) {
+                  core.info(`Creating missing label: ${name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name,
+                    color: def.color,
+                    description: def.description,
+                  });
+                } else {
+                  throw err;
+                }
+              }
+            }
+
+            // Ensure all desired labels exist
+            for (const name of desired) {
+              await ensureLabel(name);
+            }
+
+            // Add labels (only if there are any to add)
+            const labels = Array.from(desired);
+            core.info(`likelyMissingRepro=${likelyMissingRepro} shouldRemoveNeedsRepro=${shouldRemoveNeedsRepro}`);
+            core.info(`desired_labels_to_add=${labels.join(",") || "(none)"}`);
+
+            if (labels.length > 0) {
+              core.info(`Adding labels: ${labels.join(", ")}`);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels,
+              });
+            } else {
+              core.info("No labels to add.");
+            }
+
+            // Self-healing: remove needs-repro if repro info was added
+            if (shouldRemoveNeedsRepro) {
+              core.info("Removing label: needs-repro (repro info detected)");
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  name: "needs-repro",
+                });
+              } catch (err) {
+                // ignore if missing / already removed
+                const status = err?.status || err?.response?.status || err?.statusCode;
+                if (status !== 404) throw err;
+              }
+            }

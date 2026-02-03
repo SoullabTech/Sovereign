@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface SageTealWelcomeProps {
   userName?: string;
@@ -18,7 +19,7 @@ const ELEMENTAL_QUESTIONS = [
   { element: 'Aether', question: 'What connects you?', symbol: '◇', color: 'text-[#00695C]' },
 ];
 
-export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelcomeProps) {
+export function SageTealWelcome({ userName = 'Explorer', onComplete }: SageTealWelcomeProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
 
   // Rotate questions every 3 seconds
@@ -175,13 +176,13 @@ export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelc
                 }}
                 className="relative z-10 w-24 h-24"
               >
-                <img
-                  src="/holoflower-sacred.svg"
+                <Image
+                  src="/logo_flower 2.png"
                   alt="Sacred Holoflower"
+                  width={96}
+                  height={96}
+                  priority
                   className="w-full h-full object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 0 20px rgba(167, 216, 209, 0.6)) drop-shadow(0 0 10px rgba(251, 191, 36, 0.3)) drop-shadow(0 0 5px rgba(128, 203, 196, 0.4))'
-                  }}
                 />
               </motion.div>
 
@@ -249,6 +250,19 @@ export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelc
                 This is Soullab
               </p>
             </div>
+
+            {/* Ethos message - spoken version */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              className="pt-4 text-center"
+            >
+              <p className="text-[#00695C]/60 text-xs italic leading-relaxed max-w-sm mx-auto">
+                Explore freely on your device. When you&apos;re ready to extend—sync
+                across devices, upload files—sovereign cloud is here.
+              </p>
+            </motion.div>
           </motion.div>
         </div>
 

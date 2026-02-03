@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- V13 - Atlantic Wave: Where sea meets stone -->
+  <g fill="none" stroke="#FAFAF8" stroke-width="2.5" stroke-linecap="round">
+    <!-- O as a spiral wave -->
+    <path d="M30 8
+             A22 22 0 1 1 30 52
+             A16 16 0 1 0 30 20
+             A6 6 0 1 1 30 32"/>
+
+    <!-- H rising from the wave -->
+    <line x1="18" y1="54" x2="18" y2="32"/>
+    <line x1="42" y1="54" x2="42" y2="32"/>
+    <line x1="18" y1="42" x2="42" y2="42"/>
+  </g>
+</svg>

@@ -14,7 +14,7 @@
 import { performance } from "perf_hooks";
 import { ConsciousnessKernel } from "../src/consciousness_kernel";
 import type { ExtractionResult } from "../../lib/intelligence/SymbolExtractionEngine";
-import type { AgentResponse } from "../../app/api/backend/src/types/agentResponse";
+import type { AgentResponse } from "../../app/api/_backend/src/types/agentResponse";
 
 // --- Helpers ---------------------------------------------------------------
 

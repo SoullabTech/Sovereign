@@ -130,7 +130,7 @@ export function MAIADaimonIntroduction({ userId, userName = "Explorer", onComple
                     ease: "easeInOut"
                   }}
                 >
-                  <img src="/elementalHoloflower.svg" alt="MAIA" className="w-full h-full object-contain drop-shadow-lg" />
+                  <img src="/holoflower.svg" alt="MAIA" className="w-full h-full object-contain drop-shadow-lg" />
                 </motion.div>
 
                 {/* Sacred content container */}
@@ -257,7 +257,7 @@ export function MAIADaimonIntroduction({ userId, userName = "Explorer", onComple
                     ease: "easeInOut"
                   }}
                 >
-                  <img src="/elementalHoloflower.svg" alt="MAIA" className="w-full h-full object-contain drop-shadow-lg" />
+                  <img src="/holoflower.svg" alt="MAIA" className="w-full h-full object-contain drop-shadow-lg" />
                 </motion.div>
                 <p
                   className="text-white/70 text-sm font-light tracking-wider"

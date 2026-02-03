@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for the dark atmospheric background -->
+    <radialGradient id="bgGlow" cx="50%" cy="60%" r="70%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0d0d14"/>
+    </radialGradient>
+
+    <!-- Warm glow for the hearth effect -->
+    <radialGradient id="hearthGlow" cx="50%" cy="70%" r="40%">
+      <stop offset="0%" style="stop-color:#d4a574;stop-opacity:0.15"/>
+      <stop offset="70%" style="stop-color:#d4a574;stop-opacity:0.05"/>
+      <stop offset="100%" style="stop-color:#d4a574;stop-opacity:0"/>
+    </radialGradient>
+
+    <!-- Portal hover glow -->
+    <filter id="portalGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#bgGlow)"/>
+
+  <!-- Warm hearth glow from bottom -->
+  <ellipse cx="600" cy="750" rx="500" ry="300" fill="url(#hearthGlow)"/>
+
+  <!-- Subtle particle suggestion (dots) -->
+  <g opacity="0.3">
+    <circle cx="200" cy="150" r="1" fill="#d4a574"/>
+    <circle cx="350" cy="200" r="1.5" fill="#d4a574"/>
+    <circle cx="500" cy="100" r="1" fill="#d4a574"/>
+    <circle cx="700" cy="180" r="1.5" fill="#d4a574"/>
+    <circle cx="850" cy="120" r="1" fill="#d4a574"/>
+    <circle cx="1000" cy="200" r="1.5" fill="#d4a574"/>
+    <circle cx="150" cy="300" r="1" fill="#d4a574"/>
+    <circle cx="1050" cy="280" r="1" fill="#d4a574"/>
+  </g>
+
+  <!-- Central tagline -->
+  <text x="600" y="280"
+        font-family="Georgia, serif"
+        font-size="28"
+        font-style="italic"
+        fill="#e8dcc8"
+        text-anchor="middle"
+        opacity="0.9">
+    A place to walk with what is already alive in you.
+  </text>
+
+  <!-- Three Portals -->
+
+  <!-- Portal 1: Walk With Me -->
+  <g transform="translate(200, 450)">
+    <rect x="0" y="0" width="240" height="200" rx="4"
+          fill="none"
+          stroke="#d4a574"
+          stroke-width="1"
+          opacity="0.4"/>
+    <text x="120" y="90"
+          font-family="Georgia, serif"
+          font-size="22"
+          fill="#e8dcc8"
+          text-anchor="middle">
+      Walk With Me
+    </text>
+    <text x="120" y="130"
+          font-family="Arial, sans-serif"
+          font-size="12"
+          fill="#a89f8f"
+          text-anchor="middle"
+          opacity="0.7">
+      Individual Work
+    </text>
+  </g>
+
+  <!-- Portal 2: Walk With Others -->
+  <g transform="translate(480, 450)">
+    <rect x="0" y="0" width="240" height="200" rx="4"
+          fill="none"
+          stroke="#d4a574"
+          stroke-width="1"
+          opacity="0.4"/>
+    <text x="120" y="90"
+          font-family="Georgia, serif"
+          font-size="22"
+          fill="#e8dcc8"
+          text-anchor="middle">
+      Walk With Others
+    </text>
+    <text x="120" y="130"
+          font-family="Arial, sans-serif"
+          font-size="12"
+          fill="#a89f8f"
+          text-anchor="middle"
+          opacity="0.7">
+      Practitioners &amp; Mentoring
+    </text>
+  </g>
+
+  <!-- Portal 3: Hold the Field -->
+  <g transform="translate(760, 450)">
+    <rect x="0" y="0" width="240" height="200" rx="4"
+          fill="none"
+          stroke="#d4a574"
+          stroke-width="1"
+          opacity="0.4"/>
+    <text x="120" y="90"
+          font-family="Georgia, serif"
+          font-size="22"
+          fill="#e8dcc8"
+          text-anchor="middle">
+      Hold the Field
+    </text>
+    <text x="120" y="130"
+          font-family="Arial, sans-serif"
+          font-size="12"
+          fill="#a89f8f"
+          text-anchor="middle"
+          opacity="0.7">
+      SEE &amp; Collective
+    </text>
+  </g>
+
+  <!-- Wireframe label -->
+  <text x="600" y="770"
+        font-family="Arial, sans-serif"
+        font-size="11"
+        fill="#666"
+        text-anchor="middle">
+    THRESHOLD / LANDING - Full viewport, no scroll. Three portals as invitations.
+  </text>
+
+  <!-- Note: No menu, no footer indicated -->
+  <text x="1180" y="30"
+        font-family="Arial, sans-serif"
+        font-size="10"
+        fill="#444"
+        text-anchor="end">
+    No menu. No footer.
+  </text>
+</svg>
