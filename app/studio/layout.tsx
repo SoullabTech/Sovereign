@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -77,8 +78,14 @@ export default function StudioLayout({
         {/* Header with Logo and Time */}
         <div className="p-4">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
+              <Image
+                src="/soullab-logo.png"
+                alt="Soullab"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain"
+              />
             </div>
             {!collapsed && <span className="font-semibold text-white">Studio</span>}
             {!collapsed && (
