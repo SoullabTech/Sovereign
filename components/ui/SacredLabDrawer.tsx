@@ -242,26 +242,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: LayoutGrid,
           label: 'Studio',
           action: () => onNavigate('/studio'),
-          description: 'Services, calendar, clients & bookings',
-          badge: '✨ New'
-        },
-        {
-          icon: MessageSquare,
-          label: 'Client Comms',
-          action: () => onNavigate('/stellium/comms'),
-          description: 'Client messaging inbox (Stellium)'
-        },
-        {
-          icon: Briefcase,
-          label: 'Caseload',
-          action: () => onNavigate('/caseload'),
-          description: 'Manage client cases with MAIA consultation'
-        },
-        {
-          icon: Users,
-          label: 'Consult MAIA',
-          action: () => onAction?.('caseload-consult'),
-          description: 'Cross-caseload clinical consultation'
+          description: 'Pro suite: clients, sessions, caseload, calendar & MAIA consult',
         },
       ],
     },

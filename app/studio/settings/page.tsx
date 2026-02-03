@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   Settings,
   User,
@@ -26,6 +28,7 @@ import {
   Send,
   Phone,
   Mail,
+  ArrowRight,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
@@ -60,8 +63,15 @@ interface MessagingStatus {
   connected: boolean;
 }
 
-export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState('profile');
+function SettingsContent() {
+  // Onboarding params
+  const searchParams = useSearchParams();
+  const onboarding = searchParams.get('onboarding');
+  const connected = searchParams.get('connected');
+  const isCalendarOnboarding = onboarding === 'calendar';
+  const justConnectedGoogle = connected === 'google';
+
+  const [activeSection, setActiveSection] = useState(isCalendarOnboarding || justConnectedGoogle ? 'integrations' : 'profile');
   const [googleStatus, setGoogleStatus] = useState<CalendarStatus | null>(null);
   const [googleLoading, setGoogleLoading] = useState(true);
   const [googleConnecting, setGoogleConnecting] = useState(false);
@@ -81,8 +91,12 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchGoogleStatus = async () => {
       try {
-        // Use localStorage memberId or fallback for development
-        const memberId = getLocalMemberId() || '00000000-0000-0000-0000-000000000001';
+        const memberId = getLocalMemberId();
+        if (!memberId) {
+          setGoogleStatus({ configured: true, connected: false, email: null });
+          setGoogleLoading(false);
+          return;
+        }
 
         const response = await apiFetch(`/api/auth/google/status?userId=${memberId}`);
         const data = await response.json();
@@ -175,9 +189,7 @@ export default function SettingsPage() {
     try {
       setGoogleConnecting(true);
 
-      // Use localStorage memberId or fallback for development
-      const memberId = getLocalMemberId() || '00000000-0000-0000-0000-000000000001';
-
+      const memberId = getLocalMemberId();
       if (!memberId) {
         alert('Please sign in to connect Google Calendar');
         return;
@@ -342,6 +354,71 @@ export default function SettingsPage() {
 
       {/* Settings Content */}
       <div className="flex-1 p-8 max-w-3xl">
+        {/* Onboarding Card */}
+        {((isCalendarOnboarding && !googleStatus?.connected) || justConnectedGoogle) && (
+          <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 rounded-xl bg-slate-800 p-2">
+                  <Calendar className={`h-5 w-5 ${justConnectedGoogle ? 'text-emerald-400' : 'text-amber-400'}`} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-100">
+                    {justConnectedGoogle ? 'Google Calendar connected' : 'Connect Google Calendar'}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {justConnectedGoogle
+                      ? 'Your Studio can now sync sessions to your calendar and show availability.'
+                      : 'This lets Studio sync sessions, pull availability, and keep everything aligned automatically.'}
+                  </p>
+                </div>
+              </div>
+
+              {!justConnectedGoogle && !googleStatus?.connected && (
+                <button
+                  onClick={handleGoogleConnect}
+                  disabled={googleConnecting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {googleConnecting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      Connect <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              )}
+
+              {justConnectedGoogle && (
+                <div className="flex items-center gap-2 text-emerald-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="text-sm font-medium">Connected</span>
+                </div>
+              )}
+            </div>
+
+            {!justConnectedGoogle && !googleStatus?.connected && (
+              <div className="mt-3 text-sm">
+                <Link href="/studio" className="text-slate-500 hover:text-slate-300">
+                  Skip for now
+                </Link>
+              </div>
+            )}
+
+            {justConnectedGoogle && (
+              <div className="mt-3">
+                <Link
+                  href="/studio"
+                  className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300"
+                >
+                  Go to Command Center <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeSection === 'profile' && (
           <div className="space-y-6">
             <div>
@@ -1096,5 +1173,13 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-8 h-8 text-slate-400 animate-spin" /></div>}>
+      <SettingsContent />
+    </Suspense>
   );
 }

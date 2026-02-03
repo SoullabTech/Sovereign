@@ -14,6 +14,14 @@ interface CreatePractitionerInput {
   practiceName: string;
   slug: string;
   email: string;
+  portalType?: 'generalist' | 'astrology' | 'therapy' | 'bodywork' | 'groups';
+}
+
+const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician'] as const;
+type PortalType = typeof VALID_PORTAL_TYPES[number];
+
+function isValidPortalType(t: string): t is PortalType {
+  return VALID_PORTAL_TYPES.includes(t as PortalType);
 }
 
 /**
@@ -28,12 +36,20 @@ interface CreatePractitionerInput {
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePractitionerInput = await request.json();
-    const { memberId, practiceName, slug, email } = body;
+    const { memberId, practiceName, slug, email, portalType = 'generalist' } = body;
 
     // Validate required fields
     if (!memberId || !practiceName || !slug || !email) {
       return NextResponse.json(
         { error: 'Missing required fields: memberId, practiceName, slug, email' },
+        { status: 400 }
+      );
+    }
+
+    // Validate portal type
+    if (!isValidPortalType(portalType)) {
+      return NextResponse.json(
+        { error: `Invalid portal type. Must be one of: ${VALID_PORTAL_TYPES.join(', ')}` },
         { status: 400 }
       );
     }
@@ -91,12 +107,20 @@ export async function POST(request: NextRequest) {
       const practitionerId = uuid();
       const now = new Date().toISOString();
 
+      // Default notification settings for new practitioners
+      const defaultNotificationSettings = {
+        preferred_channel: 'email',
+        reminder_24h: true,
+        reminder_1h: true,
+        booking_confirmation: true,
+      };
+
       // Create practitioner record (status defaults to 'onboarding')
       await client.query(
         `INSERT INTO practitioners (
-          id, member_id, slug, name, email, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [practitionerId, memberId, slug, practiceName, email, now, now]
+          id, member_id, slug, name, email, portal_type, notification_settings, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [practitionerId, memberId, slug, practiceName, email, portalType, JSON.stringify(defaultNotificationSettings), now, now]
       );
 
       // Create initial practitioner_themes record with defaults
@@ -153,6 +177,7 @@ export async function POST(request: NextRequest) {
         slug,
         name: practiceName,
         email,
+        portal_type: portalType,
         status: 'onboarding',
         created_at: now,
         updated_at: now,

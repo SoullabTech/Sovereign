@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   LayoutGrid,
@@ -22,15 +22,20 @@ import {
   Camera,
   Megaphone,
   FolderOpen,
+  Loader2,
+  Briefcase,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
+import { apiFetch } from '@/lib/http/apiBase';
+import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 
 const navItems = [
   { href: '/studio', icon: LayoutGrid, label: 'Command Center' },
   { href: '/studio/clients', icon: Users, label: 'Clients' },
   { href: '/studio/groups', icon: FolderOpen, label: 'Groups' },
   { href: '/studio/sessions', icon: Calendar, label: 'Sessions' },
+  { href: '/studio/caseload', icon: Briefcase, label: 'Caseload' },
   { href: '/studio/services', icon: Package, label: 'Services' },
   { href: '/studio/calendar', icon: CalendarDays, label: 'Calendar' },
   { href: '/studio/tasks', icon: CheckSquare, label: 'Tasks' },
@@ -51,8 +56,52 @@ export default function StudioLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [checkingPractitioner, setCheckingPractitioner] = useState(true);
+  const [isPractitioner, setIsPractitioner] = useState(false);
+
+  // Skip practitioner check on /studio/create page
+  const isCreatePage = pathname === '/studio/create';
+
+  // Check if user is a practitioner
+  useEffect(() => {
+    if (isCreatePage) {
+      setCheckingPractitioner(false);
+      return;
+    }
+
+    const memberId = getLocalMemberId();
+    if (!memberId) {
+      // No member ID - redirect to sign in
+      router.replace('/signin');
+      return;
+    }
+
+    async function checkPractitioner() {
+      try {
+        const response = await apiFetch('/api/studio/whoami');
+        const data = await response.json();
+
+        if (data.isPractitioner) {
+          setIsPractitioner(true);
+        } else {
+          // Not a practitioner - redirect to create
+          router.replace('/studio/create');
+          return;
+        }
+      } catch {
+        // Error checking - assume not practitioner
+        router.replace('/studio/create');
+        return;
+      } finally {
+        setCheckingPractitioner(false);
+      }
+    }
+
+    checkPractitioner();
+  }, [isCreatePage, router]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -65,6 +114,27 @@ export default function StudioLayout({
     minute: '2-digit',
     hour12: true
   });
+
+  // Show loading while checking practitioner status
+  if (checkingPractitioner && !isCreatePage) {
+    return (
+      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+          <p className="text-slate-400">Loading Studio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Create page gets minimal layout (no sidebar)
+  if (isCreatePage) {
+    return (
+      <div className="min-h-screen bg-[#1a1a2e]">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <TeamContextProvider>
