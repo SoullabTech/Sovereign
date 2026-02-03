@@ -177,15 +177,12 @@ export function SageTealWelcome({ userName = 'Explorer', onComplete }: SageTealW
                 className="relative z-10 w-24 h-24"
               >
                 <Image
-                  src="/holoflower.png"
+                  src="/logo_flower 2.png"
                   alt="Sacred Holoflower"
                   width={96}
                   height={96}
                   priority
                   className="w-full h-full object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 0 20px rgba(167, 216, 209, 0.6)) drop-shadow(0 0 10px rgba(251, 191, 36, 0.3)) drop-shadow(0 0 5px rgba(128, 203, 196, 0.4))'
-                  }}
                 />
               </motion.div>
 

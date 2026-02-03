@@ -25,7 +25,7 @@ export default function Error({
         {/* MAIA Logo/Icon */}
         <div className="w-20 h-20 mx-auto mb-4 opacity-60">
           <img
-            src="/holoflower-amber.png"
+            src="/logo_flower 2.png"
             alt="MAIA"
             className="w-full h-full object-contain"
           />

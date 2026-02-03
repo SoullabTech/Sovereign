@@ -1981,7 +1981,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (voiceMicRef.current?.startListening) {
             console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
             setIsMuted(false);
-            voiceMicRef.current.startListening();
+            voiceMicRef.current.startListening({ forceOverride: true });
           }
         }, 500);
         return;
@@ -2017,7 +2017,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
-          voiceMicRef.current.startListening();
+          voiceMicRef.current.startListening({ forceOverride: true });
         }
       }, 500);
     }
@@ -2063,7 +2063,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           setIsMuted(false);
           // Optimistic listening already set above - don't show "Activating..."
-          voiceMicRef.current.startListening();
+          // 🔥 FIX: Use forceOverride to bypass stale isSpeakingRef (React state is async)
+          voiceMicRef.current.startListening({ forceOverride: true });
 
           setTimeout(() => {
             if (voiceMicRef.current?.isListening) {
@@ -2171,6 +2172,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // Reset the progress timer
           lastAudioProgressRef.current = Date.now();
+
+          // 🔥 CRITICAL: Actually restart the mic - not just UI state!
+          if (voiceMicRef.current?.startListening) {
+            console.log('🐕 [WATCHDOG] Force-restarting microphone...');
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
 
           toast('⚠️ Voice recovered', { duration: 2000 });
         }
@@ -4191,7 +4198,7 @@ I'm not sure what I'm feeling yet.`;
                           if (voiceMicRef.current?.startListening) {
                             console.log('🎤 [STREAM] Final attempt after state reset...');
                             setIsMuted(false);
-                            voiceMicRef.current.startListening();
+                            voiceMicRef.current.startListening({ forceOverride: true });
                           }
                         }, 500);
                         return;
@@ -4209,7 +4216,7 @@ I'm not sure what I'm feeling yet.`;
                         if (canRestart) {
                           setIsMuted(false);
                           console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
-                          voiceMicRef.current.startListening();
+                          voiceMicRef.current.startListening({ forceOverride: true });
                           // Verify mic actually started after a brief delay
                           setTimeout(() => {
                             if (voiceMicRef.current?.isListening) {
@@ -4738,7 +4745,7 @@ I'm not sure what I'm feeling yet.`;
                       if (voiceMicRef.current?.startListening) {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        voiceMicRef.current.startListening();
+                        voiceMicRef.current.startListening({ forceOverride: true });
                       }
                     }, 500);
                     return;
@@ -4755,7 +4762,7 @@ I'm not sure what I'm feeling yet.`;
 
                     if (canRestart) {
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      voiceMicRef.current.startListening();
+                      voiceMicRef.current.startListening({ forceOverride: true });
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
                         if (voiceMicRef.current?.isListening) {
@@ -5971,12 +5978,9 @@ I'm not sure what I'm feeling yet.`;
                   }}
                 >
                   <img
-                    src="/holoflower-amber.png"
+                    src="/logo_flower 2.png"
                     alt="MAIA"
-                    className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_24px_rgba(251,146,60,0.6)]"
-                    style={{
-                      filter: 'brightness(1.2)',
-                    }}
+                    className="w-14 h-14 md:w-16 md:h-16 object-contain"
                   />
                 </motion.div>
 
@@ -6420,13 +6424,12 @@ I'm not sure what I'm feeling yet.`;
             {/* Holoflower Image - Amber radiance */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
               <img
-                src="/holoflower-amber.png"
+                src="/logo_flower 2.png"
                 alt="Holoflower"
-                className="object-contain opacity-80 drop-shadow-[0_0_15px_rgba(251,146,60,0.7)]"
+                className="object-contain"
                 style={{
                   width: `${holoflowerSize * 0.85}px`,
                   height: `${holoflowerSize * 0.85}px`,
-                  filter: 'brightness(1.3)',
                 }}
               />
             </div>
@@ -7731,7 +7734,7 @@ I'm not sure what I'm feeling yet.`;
                       !isProcessingRef.current &&
                       !isRespondingRef.current &&
                       !isAudioPlayingRef.current) {
-                    await voiceMicRef.current.startListening();
+                    await voiceMicRef.current.startListening({ forceOverride: true });
                     console.log('🎤 Microphone ON');
                   }
                 }, 100);

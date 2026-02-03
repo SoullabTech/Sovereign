@@ -1321,10 +1321,9 @@ function MAIAPageContent() {
         >
           <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full">
             <img
-              src="/holoflower-amber.png"
+              src="/logo_flower 2.png"
               alt="Holoflower"
-              className="w-6 h-6 opacity-100 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
-              style={{ filter: 'brightness(1.2)' }}
+              className="w-6 h-6 opacity-100"
             />
             <h1 className="text-lg font-light text-amber-300/90 tracking-wider">
               SOULLAB
