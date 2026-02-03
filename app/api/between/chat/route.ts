@@ -1500,6 +1500,17 @@ This user is in guest mode (no authenticated identity).
       wuxingLen: safeAddenda.wuxing.length,
     });
 
+    // 🚨 SELF-ALERTING: Warn when addenda should exist but arrived empty
+    if (birthData?.date && safeAddenda.astro.length === 0) {
+      console.warn('[MAIA CONTEXT] ⚠️ birthData present but astro addendum is empty');
+    }
+    if (!isAnon && relationshipMemory && safeAddenda.relationshipMode.length === 0) {
+      console.warn('[MAIA CONTEXT] ⚠️ recognized user with memory but relationshipMode is empty');
+    }
+    if (selfletContext?.surfacedMessageId && safeAddenda.capture.length === 0) {
+      console.warn('[MAIA CONTEXT] ⚠️ active capture surfaced but capture addendum is empty');
+    }
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
