@@ -1615,13 +1615,27 @@ This user is in guest mode (no authenticated identity).
     });
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
-    if (contextWarnings.length > 0) {
+    const routeMode = orchestratorResult.route?.mode ?? 'unknown';
+
+    // Route-aware filtering: only warn W_REL_EMPTY if route should have relationship context
+    const routeShouldHaveRelationship = ['care', 'mentor', 'deep'].includes(routeMode);
+    const filteredWarnings = contextWarnings.filter(w => {
+      if (w === 'W_REL_EMPTY' && !routeShouldHaveRelationship) return false;
+      return true;
+    });
+
+    if (filteredWarnings.length > 0) {
       console.warn('[MAIA CONTEXT]', {
-        warnings: contextWarnings,
+        warnings: filteredWarnings,
         reqId,
         userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
         recognized: !isAnon,
-        route: orchestratorResult.route?.mode ?? 'unknown',
+        // Full route object (typed)
+        route: orchestratorResult.route ? {
+          mode: orchestratorResult.route.mode,
+          type: orchestratorResult.route.type,
+          safeMode: orchestratorResult.route.safeMode,
+        } : null,
         // "Why this should exist" signals
         birthDataPresent: !!birthData?.date,
         hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
