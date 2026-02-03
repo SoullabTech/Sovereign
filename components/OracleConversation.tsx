@@ -6421,9 +6421,9 @@ I'm not sure what I'm feeling yet.`;
               />
             </motion.div>
 
-            {/* Holoflower Image - Layered design like petals unfolding */}
+            {/* Holoflower Image - Sacred geometry golden ratio (φ) proportions */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-              {/* Outer layer - white, subtle, largest */}
+              {/* Outer layer - 90% */}
               <img
                 src="/holoflower.png"
                 alt="Holoflower outer layer"
@@ -6434,26 +6434,26 @@ I'm not sure what I'm feeling yet.`;
                   opacity: 0.35,
                 }}
               />
-              {/* Middle layer - white, more visible */}
+              {/* Middle layer - 90% / φ ≈ 55.6% */}
               <img
                 src="/holoflower.png"
                 alt="Holoflower middle layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.70}px`,
-                  height: `${holoflowerSize * 0.70}px`,
-                  opacity: 0.5,
+                  width: `${holoflowerSize * 0.556}px`,
+                  height: `${holoflowerSize * 0.556}px`,
+                  opacity: 0.55,
                 }}
               />
-              {/* Inner layer - white, brightest */}
+              {/* Inner layer - 55.6% / φ ≈ 34.4% */}
               <img
                 src="/holoflower.png"
                 alt="Holoflower inner layer"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.50}px`,
-                  height: `${holoflowerSize * 0.50}px`,
-                  opacity: 0.7,
+                  width: `${holoflowerSize * 0.344}px`,
+                  height: `${holoflowerSize * 0.344}px`,
+                  opacity: 0.8,
                 }}
               />
             </div>
