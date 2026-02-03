@@ -126,13 +126,14 @@ function assertNeverConversationMode(x: never): never {
 /**
  * Normalize client mode names to internal ConversationMode.
  * Maps: normal→dialogue, patient→counsel, session→scribe
- * Defaults to 'dialogue' if undefined or unrecognized.
+ * Defaults to 'dialogue' if undefined, null, or unrecognized.
+ *
+ * Input is `string | null | undefined` (not the strict union) to harden
+ * against upstream schema drift — request bodies are inherently loose.
  *
  * @returns ConversationMode (typed, never undefined)
  */
-function normalizeConversationMode(
-  rawMode: 'dialogue' | 'counsel' | 'scribe' | 'normal' | 'patient' | 'session' | undefined
-): ConversationMode {
+function normalizeConversationMode(rawMode: string | null | undefined): ConversationMode {
   switch (rawMode) {
     // Client legacy names
     case 'normal':  return 'dialogue';
@@ -143,8 +144,7 @@ function normalizeConversationMode(
     case 'counsel':
     case 'scribe':
       return rawMode;
-    // Undefined or unrecognized → default
-    case undefined:
+    // Null, undefined, or unrecognized → default
     default:
       return 'dialogue';
   }
@@ -1735,7 +1735,16 @@ This user is in guest mode (no authenticated identity).
         enforcement: enforcementForLog, // Policy decision (allow/nudge/block)
         // Conversation mode (actual mode, not orchestrator.route.mode which is hardcoded)
         conversationMode: mode, // dialogue | counsel | scribe
-        orchestratorRoute: orchestratorResult.route?.mode, // Diagnostic: what orchestrator thought it was doing
+        // Orchestrator route object (non-sensitive diagnostic context)
+        orchestratorRoute: orchestratorResult.route
+          ? {
+              mode: orchestratorResult.route.mode,
+              type: orchestratorResult.route.type,
+              safeMode: orchestratorResult.route.safeMode,
+              operational: orchestratorResult.route.operational,
+              endpoint: orchestratorResult.route.endpoint,
+            }
+          : null,
         // "Why this should exist" signals
         continuityExpected,
         modeShouldHaveRelationship, // true only for 'counsel' (Care mode)
