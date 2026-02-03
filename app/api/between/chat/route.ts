@@ -920,6 +920,9 @@ export async function POST(req: NextRequest) {
     // Stable anon ID for usage tracking - prefer header (shared with voice routes)
     // This ensures Free tier limits accumulate consistently across text AND voice
     const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
+    if (isAnon && !headerAnonId) {
+      console.warn('[limits] Missing x-maia-anon-id header; text usage may not accumulate properly');
+    }
     const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
 

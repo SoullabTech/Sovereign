@@ -413,15 +413,15 @@ export function getOrCreateVisitorId(): string {
       return existing;
     }
 
-    // Generate new stable visitor ID
-    const newId = `anon_${crypto.randomUUID().slice(0, 8)}`;
+    // Generate new stable visitor ID (16 hex chars for collision safety at scale)
+    const newId = `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
     localStorage.setItem(VISITOR_ID_KEY, newId);
     console.log('[visitor] Created stable visitor ID:', newId);
     return newId;
   } catch {
     // localStorage blocked (private mode, etc) - generate per-session ID
     // This is better than nothing, at least accumulates within a single session
-    return `anon_session_${crypto.randomUUID().slice(0, 8)}`;
+    return `anon_session_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
   }
 }
 

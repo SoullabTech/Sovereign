@@ -38,8 +38,11 @@ export async function POST(req: NextRequest) {
     // Use stable anon ID from client header (persisted in localStorage) instead of random per-request ID
     // This ensures Free tier usage actually accumulates across requests
     const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
-    const anonId = memberId ? undefined : (headerAnonId || `anon_${requestId.slice(0, 8)}`);
     const isAnon = !memberId;
+    if (isAnon && !headerAnonId) {
+      console.warn('[limits] Missing x-maia-anon-id header; TTS usage may not accumulate properly');
+    }
+    const anonId = isAnon ? (headerAnonId || `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
 
     // ═══ TIER-BASED LIMITS CHECK ═══
     const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
