@@ -14,6 +14,7 @@ import {
   Pause,
   Bell,
   Mic,
+  MicOff,
   Brain,
   X,
   Check,
@@ -31,7 +32,7 @@ interface SystemSetting {
 // Setting categories for better organization
 const SETTING_CATEGORIES = {
   'System Control': ['maintenance_mode', 'global_banner'],
-  'Feature Flags': ['limits_disabled', 'voice_enabled', 'memory_write_enabled', 'journal_enabled'],
+  'Feature Flags': ['limits_disabled', 'voice_enabled', 'voice_interrupt_enabled', 'memory_write_enabled', 'journal_enabled'],
 };
 
 const SETTING_ICONS: Record<string, any> = {
@@ -39,6 +40,7 @@ const SETTING_ICONS: Record<string, any> = {
   global_banner: Bell,
   limits_disabled: AlertTriangle,
   voice_enabled: Mic,
+  voice_interrupt_enabled: MicOff,
   memory_write_enabled: Brain,
   journal_enabled: Edit2,
 };

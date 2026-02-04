@@ -724,20 +724,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return false;
   });
 
-  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior
+  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior (default OFF for beta)
   const [interruptEnabled, setInterruptEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('maia_settings');
         if (saved) {
           const settings = JSON.parse(saved);
-          return settings.interrupt?.enabled !== false; // Default true
+          // Only enable if explicitly set to true (default false)
+          return settings.interrupt?.enabled === true;
         }
       } catch (e) {
         console.warn('[Interrupt] Failed to load initial state:', e);
       }
     }
-    return true; // Default ON
+    return false; // Default OFF - prevents jarring interruptions during beta
   });
 
   const [interruptDebounceMs, setInterruptDebounceMs] = useState(() => {
