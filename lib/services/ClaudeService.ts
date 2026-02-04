@@ -103,21 +103,35 @@ export class ClaudeService {
       const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(enhancedContext);
 
       // Add conversation history if available
+      // Include BOTH user and assistant messages for proper conversation context
+      // Claude's API expects alternating user/assistant messages
       const messages: Anthropic.MessageParam[] = [];
 
       if (context.conversationHistory) {
-        context.conversationHistory.slice(-5).forEach(msg => {
-          // Echo Prevention: Skip MAIA's own messages (assistant role) to prevent response loops
-          const content = msg.content?.trim() || '';
+        // Take last 6 messages (3 turns) for context without overwhelming
+        const recentHistory = context.conversationHistory.slice(-6);
 
-          // ONLY include user messages, skip ALL assistant messages
-          if (content.length > 0 && msg.role === 'user') {
-            messages.push({
-              role: 'user',
-              content: msg.content
-            });
-          }
+        recentHistory.forEach(msg => {
+          const content = msg.content?.trim() || '';
+          if (content.length === 0) return;
+
+          // Normalize role to valid Anthropic types
+          const role = msg.role === 'assistant' ? 'assistant' : 'user';
+
+          messages.push({
+            role,
+            content: msg.content
+          });
         });
+
+        // Claude API requires messages to start with 'user' role
+        // If first message is assistant, prepend a system context message
+        if (messages.length > 0 && messages[0].role === 'assistant') {
+          messages.unshift({
+            role: 'user',
+            content: '[Continuing conversation...]'
+          });
+        }
       }
 
       // Add current user input (now validated to be non-empty)
@@ -186,12 +200,29 @@ export class ClaudeService {
     const messages: Anthropic.MessageParam[] = [];
 
     if (context.conversationHistory) {
-      context.conversationHistory.slice(-5).forEach(msg => {
+      // Take last 6 messages (3 turns) for context without overwhelming
+      const recentHistory = context.conversationHistory.slice(-6);
+
+      recentHistory.forEach(msg => {
         const content = msg.content?.trim() || '';
-        if (content.length > 0 && msg.role === 'user') {
-          messages.push({ role: 'user', content: msg.content });
-        }
+        if (content.length === 0) return;
+
+        // Normalize role to valid Anthropic types
+        const role = msg.role === 'assistant' ? 'assistant' : 'user';
+
+        messages.push({
+          role,
+          content: msg.content
+        });
       });
+
+      // Claude API requires messages to start with 'user' role
+      if (messages.length > 0 && messages[0].role === 'assistant') {
+        messages.unshift({
+          role: 'user',
+          content: '[Continuing conversation...]'
+        });
+      }
     }
 
     messages.push({ role: 'user', content: trimmedInput });
