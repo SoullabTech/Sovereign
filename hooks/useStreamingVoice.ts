@@ -54,7 +54,6 @@ export type StreamingVoicePlaybackSignal =
 /** Limits block response from API (429 + blocked: true) */
 interface LimitsBlockData {
   message: string;
-  upgradeHint?: string;
   tier?: string;
 }
 
@@ -576,7 +575,6 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
             setState(prev => ({ ...prev, isStreaming: false, error: 'Voice limit reached' }));
             onLimitsBlock?.({
               message: errData.error ?? errData.message ?? "You've reached your voice limit for this tier.",
-              upgradeHint: errData.upgradeHint,
               tier: errData.tier,
             });
             return; // Don't throw - handled gracefully

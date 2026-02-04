@@ -417,7 +417,6 @@ export async function POST(req: NextRequest) {
       error: voiceLimitsCheck.message,
       blocked: true,
       tier: memberTier,
-      upgradeHint: 'upgradeHint' in voiceLimitsCheck ? voiceLimitsCheck.upgradeHint : undefined,
     }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },

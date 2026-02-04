@@ -18,7 +18,7 @@ export type MemberTier = 'free' | 'member_plus' | 'studio_pro';
 export type EnforcementDecision =
   | { action: 'allow' }
   | { action: 'nudge'; message: string; nudgeType: string }
-  | { action: 'block'; message: string; upgradeHint?: string }
+  | { action: 'block'; message: string }
   | { action: 'suggest_addon'; message: string; addonType: string };
 
 export type ResourceType = 'text' | 'voice_stt' | 'voice_tts' | 'journal' | 'thread';
@@ -63,19 +63,15 @@ const LIMITS = {
 
 const MESSAGES = {
   // Free tier
-  free_text_limit: "You've reached today's conversation limit. This resets tomorrow, or Member+ offers unlimited daily conversations.",
-  free_voice_exhausted: "Your voice introduction has completed. Voice conversations are part of Member+, where presence continues.",
-  free_no_journal: "This conversation won't be saved. Journals and returning conversations are part of Member+.",
+  free_text_limit: "You've reached today's conversation limit. This resets tomorrow.",
+  free_voice_exhausted: "Your voice introduction has completed.",
+  free_no_journal: "This conversation won't be saved.",
 
   // Member+ tier
   member_plus_text_nudge: "You've been active today. MAIA is still here — just pacing for sustainability.",
   member_plus_text_soft_limit: "Taking a pause to stay grounded. Your conversations continue tomorrow.",
-  member_plus_voice_limit: "You've reached this month's voice ritual time. Voice will refresh next month, or you can add more with Voice Boost.",
+  member_plus_voice_limit: "You've reached this month's voice ritual time. Voice will refresh next month.",
   member_plus_voice_low: "You have about 5 minutes of voice time remaining this month.",
-
-  // Upgrade hints
-  upgrade_to_member_plus: "If you'd like MAIA to remember what matters to you, Member+ keeps your journals and conversations alive.",
-  voice_boost_hint: "Want more voice time this month? Voice Boost adds ritual minutes without changing your plan.",
 } as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -138,7 +134,6 @@ export class LimitsEnforcer {
         return {
           action: 'block',
           message: MESSAGES.free_text_limit,
-          upgradeHint: MESSAGES.upgrade_to_member_plus,
         };
       }
       return { action: 'allow' };
@@ -151,7 +146,6 @@ export class LimitsEnforcer {
         return {
           action: 'block',
           message: MESSAGES.free_voice_exhausted,
-          upgradeHint: MESSAGES.upgrade_to_member_plus,
         };
       }
       return { action: 'allow' };

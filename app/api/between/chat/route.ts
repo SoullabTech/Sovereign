@@ -956,7 +956,6 @@ This user is in guest mode (no authenticated identity).
         console.log(`[Chat API] 🚫 Usage blocked for ${effectiveUserId}: ${limitsCheck.message}`);
         return NextResponse.json({
           message: limitsCheck.message,
-          upgradeHint: limitsCheck.upgradeHint,
           blocked: true,
           tier: memberTier,
         }, {

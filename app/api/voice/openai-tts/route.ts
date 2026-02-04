@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
         error: limitsCheck.message,
         blocked: true,
         tier: memberTier,
-        upgradeHint: 'upgradeHint' in limitsCheck ? limitsCheck.upgradeHint : undefined,
         requestId,
       }), {
         status: 429,

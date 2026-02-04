@@ -696,7 +696,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
   const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
-  const [limitsBlock, setLimitsBlock] = useState<null | { message: string; upgradeHint?: string; tier?: string }>(null);
+  const [limitsBlock, setLimitsBlock] = useState<null | { message: string; tier?: string }>(null);
 
   // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
   // This is separate from messages - history can be restored but greeting shows until activation
@@ -2010,7 +2010,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('[StreamingVoice] Voice limit reached:', data.message);
       setLimitsBlock({
         message: data.message,
-        upgradeHint: data.upgradeHint,
         tier: data.tier,
       });
       // Reset voice state so user isn't stuck
@@ -4154,7 +4153,6 @@ I'm not sure what I'm feeling yet.`;
             console.log('[OracleConversation] Usage limit reached:', errData.message);
             setLimitsBlock({
               message: errData.message ?? "You've reached a limit for this tier.",
-              upgradeHint: errData.upgradeHint,
               tier: errData.tier,
             });
             setIsResponding(false);
@@ -6095,27 +6093,13 @@ I'm not sure what I'm feeling yet.`;
               </div>
               <div className="flex-1">
                 <h3 className="text-white/90 font-medium mb-2">Taking a pause</h3>
-                <p className="text-sm text-white/70 mb-3">{limitsBlock.message}</p>
-                {limitsBlock.upgradeHint && (
-                  <p className="text-xs text-white/50 mb-4">{limitsBlock.upgradeHint}</p>
-                )}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setLimitsBlock(null)}
-                    className="flex-1 rounded-lg bg-white/10 px-4 py-2.5 text-sm text-white/85 hover:bg-white/15 transition-colors"
-                  >
-                    OK
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLimitsBlock(null);
-                      window.location.href = '/settings/billing';
-                    }}
-                    className="flex-1 rounded-lg bg-amber-500/90 px-4 py-2.5 text-sm text-black font-medium hover:bg-amber-400 transition-colors"
-                  >
-                    See options
-                  </button>
-                </div>
+                <p className="text-sm text-white/70 mb-4">{limitsBlock.message}</p>
+                <button
+                  onClick={() => setLimitsBlock(null)}
+                  className="w-full rounded-lg bg-white/10 px-4 py-2.5 text-sm text-white/85 hover:bg-white/15 transition-colors"
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>
