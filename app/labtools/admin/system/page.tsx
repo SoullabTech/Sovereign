@@ -19,6 +19,7 @@ import {
   X,
   Check,
   Edit2,
+  Eye,
 } from 'lucide-react';
 
 interface SystemSetting {
@@ -33,6 +34,7 @@ interface SystemSetting {
 const SETTING_CATEGORIES = {
   'System Control': ['maintenance_mode', 'global_banner'],
   'Feature Flags': ['limits_disabled', 'voice_enabled', 'voice_interrupt_enabled', 'memory_write_enabled', 'journal_enabled'],
+  'Debug': ['show_soul_metadata'],
 };
 
 const SETTING_ICONS: Record<string, any> = {
@@ -43,6 +45,7 @@ const SETTING_ICONS: Record<string, any> = {
   voice_interrupt_enabled: MicOff,
   memory_write_enabled: Brain,
   journal_enabled: Edit2,
+  show_soul_metadata: Eye,
 };
 
 export default function SystemAdminPage() {
