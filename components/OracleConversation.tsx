@@ -143,6 +143,7 @@ import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousn
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
+import { useDemoEventListener } from '@/hooks/useDemoEventListener';
 import { BookPlus } from 'lucide-react';
 // Reflection Capsules - "Capture the Spirit"
 import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
@@ -1913,6 +1914,34 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     practitionerId: userId || sessionId,
     autoCapture: true,
     captureThreshold: 5
+  });
+
+  // 🎬 DEMO ORCHESTRATION - Listen for demo events to trigger UI during manifesto
+  useDemoEventListener({
+    onShowCapture: () => {
+      console.log('🎬 [Demo] Triggering Capture panel');
+      setShowCapturePanel(true);
+    },
+    onShowBreakthrough: () => {
+      console.log('🎬 [Demo] Triggering Breakthrough suggestion');
+      setShowJournalSuggestion(true);
+    },
+    onShowPatternOffering: (data) => {
+      console.log('🎬 [Demo] Triggering Pattern offering', data);
+      // Pattern offering would need a dedicated UI component
+      // For now, show breakthrough as proxy
+      setShowJournalSuggestion(true);
+    },
+    onHideAll: () => {
+      console.log('🎬 [Demo] Hiding all demo popups');
+      setShowCapturePanel(false);
+      setShowJournalSuggestion(false);
+      setShowCaptureSuggestion(false);
+    },
+    onPulseHoloflower: () => {
+      console.log('🎬 [Demo] Pulsing holoflower');
+      // Could trigger a holoflower animation state change here
+    },
   });
 
   // Scribe Mode - Derived aliases for compatibility with UI components
