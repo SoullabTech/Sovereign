@@ -314,11 +314,11 @@ export default function BeadsPage() {
                   <button
                     type="submit"
                     disabled={sending || !recipientName || !recipientEmail}
-                    className="flex-1 py-3 bg-gradient-to-r from-[#D4B896] to-[#B8956E] text-black rounded-lg font-medium hover:from-[#E5C9A7] hover:to-[#C9A67F] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-[#D4B896]/20 border border-[#D4B896]/40 text-[#D4B896] rounded-lg font-medium hover:bg-[#D4B896]/30 hover:border-[#D4B896]/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {sending ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-[#D4B896]/30 border-t-[#D4B896] rounded-full animate-spin" />
                         Sending...
                       </>
                     ) : (
@@ -539,7 +539,7 @@ export default function BeadsPage() {
 
                     {/* CTA Button */}
                     <div className="text-center mb-6">
-                      <div className="inline-block bg-gradient-to-r from-[#D4B896] to-[#B8956E] text-black px-8 py-3 rounded-xl font-medium">
+                      <div className="inline-block bg-[#D4B896]/20 border border-[#D4B896]/40 text-[#D4B896] px-8 py-3 rounded-xl font-medium">
                         Begin Your Journey
                       </div>
                       <p className="text-white/50 text-sm mt-3">
@@ -588,7 +588,7 @@ export default function BeadsPage() {
                       if (form) form.requestSubmit();
                     }}
                     disabled={!recipientName || !recipientEmail}
-                    className="px-6 py-2 bg-[#D4B896] text-black rounded-lg font-medium hover:bg-[#E5C9A7] transition-colors disabled:opacity-50"
+                    className="px-6 py-2 bg-[#D4B896]/20 border border-[#D4B896]/40 text-[#D4B896] rounded-lg font-medium hover:bg-[#D4B896]/30 transition-colors disabled:opacity-50"
                   >
                     Send This Bead
                   </button>
