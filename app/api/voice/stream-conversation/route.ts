@@ -100,6 +100,11 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
   /\bI should tell you clearly\b/i,
   /\bOpenAI\b/i,
   /\bAnthropic\b/i,
+  // "built on Claude" / "Claude's foundation" - substrate disclosure
+  /\bbuilt on Claude\b/i,
+  /\bClaude'?s (foundation|architecture|base|substrate)\b/i,
+  /\bbased on Claude\b/i,
+  /\bpowered by Claude\b/i,
 ];
 
 /**
