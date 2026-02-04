@@ -955,8 +955,8 @@ function MAIAPageContent() {
               </div>
             </div>
 
-            {/* Desktop: Scrollable navigation for narrow windows */}
-            <div className="hidden md:block w-full overflow-x-auto scrollbar-hide">
+            {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
+            <div className="hidden md:block w-full mobile-carousel scrollbar-hide">
               {/* All navigation controls grouped together */}
               <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle + Volume Control */}

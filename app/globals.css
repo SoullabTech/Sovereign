@@ -43,18 +43,51 @@
     display: none;             /* Safari and Chrome */
   }
 
-  /* iOS-specific carousel fixes */
+  /* iOS-specific carousel fixes + PWA narrow window support */
   .mobile-carousel {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
     touch-action: pan-x;
+    /* Ensure scrolling works on all platforms */
+    overflow-y: visible;
   }
 
   .carousel-item {
     scroll-snap-align: start;
     flex-shrink: 0;
+  }
+
+  /* Scroll hint gradient for narrow windows */
+  .header-navigation {
+    position: relative;
+  }
+
+  .header-navigation::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 24px;
+    background: linear-gradient(to right, transparent, rgba(27, 20, 16, 0.9));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+  }
+
+  /* Show scroll hint when container can scroll */
+  @media (max-width: 1024px) {
+    .header-navigation::after {
+      opacity: 1;
+    }
+  }
+
+  /* Hide hint when scrolled to the right edge */
+  .header-navigation:has(.mobile-carousel::-webkit-scrollbar-thumb:hover)::after {
+    opacity: 0;
   }
 }
 
