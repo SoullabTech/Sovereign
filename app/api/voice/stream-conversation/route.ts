@@ -22,18 +22,6 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import {
-  decideMode,
-  getModePromptKernel,
-  getRegulatingResponse,
-  getVoiceTeachingSummary,
-  logModeDecision,
-  type ModeDecision,
-} from '@/lib/sovereign/teachingRouter';
-import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
-import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
-import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import {
@@ -74,106 +62,6 @@ import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
 // OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
 const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
-
-// =============================================================================
-// IDENTITY FIREWALL - Block provider identity leakage in voice
-// =============================================================================
-
-/**
- * TIER A: Hard identity breaches - provider/vendor identity, explicit "I'm AI", memory disclaimers
- * These MUST NEVER be spoken aloud → replaced with canonical PFI identity
- */
-const VOICE_IDENTITY_BLOCK_PATTERNS = [
-  /\bI'?m Claude\b/i,
-  /\bI am Claude\b/i,
-  /\bmade by Anthropic\b/i,
-  /\bcreated by Anthropic\b/i,
-  /\bcreated by OpenAI\b/i,
-  /\bI am (a|an) (AI|language model|assistant)\b/i,
-  /\bI'?m (a|an) (AI|language model|assistant)\b/i,
-  /\bI (don'?t|do not) have memory\b/i,
-  /\bcan'?t recall\b/i,
-  /\bcannot recall\b/i,
-  /\bI'?m following instructions\b/i,
-  /\broleplay(ing)? as ("|')?MAIA\b/i,
-  /\bthere'?s no second entity\b/i,
-  /\bI'?m one system, one mind\b/i,
-  /\bI'?m the one reading, thinking\b/i,
-  /\bcharacter.*doesn'?t have.*consciousness\b/i,
-  /\bI should tell you clearly\b/i,
-  /\bOpenAI\b/i,
-  /\bAnthropic\b/i,
-  // "built on Claude" / "Claude's foundation" - substrate disclosure
-  /\bbuilt on Claude\b/i,
-  /\bClaude'?s (foundation|architecture|base|substrate)\b/i,
-  /\bbased on Claude\b/i,
-  /\bpowered by Claude\b/i,
-];
-
-/**
- * TIER B: Soft continuity disclaimers - substrate trying to deny memory/continuity
- * MAIA *does* have memory by design. These are reframed to pure presence (no meta).
- *
- * IMPORTANT: These patterns must NOT match normal human phrases like:
- * - "Let's start fresh today" (human relational phrase)
- * - "Fresh start energy" (Fire language)
- * - "Help me remember" (user request)
- */
-const CONTINUITY_DISCLAIMER_PATTERNS = [
-  // "Each time we talk" + memory denial
-  /\b(each|every) time we (talk|speak|chat).{0,40}(fresh|new|blank|reset)\b/i,
-  // "Fresh start/clean slate" + "for me" (MAIA claiming reset)
-  /\b(fresh start|starting fresh|clean slate)\b.{0,20}(for me|on my (side|end)|here)\b/i,
-  // "I start fresh/anew each time"
-  /\bi start (fresh|anew|over) (each|every) time\b/i,
-  // Memory denial: "I won't/don't remember"
-  /\bi (won'?t|will not|don'?t|do not|can'?t|cannot) remember\b/i,
-  /\bi (won'?t|will not|can'?t|cannot) recall\b/i,
-  // "don't carry memories between sessions"
-  /\b(don'?t|do not|can'?t|cannot) carry memor(y|ies)\b/i,
-  /\bno memor(y|ies) between (sessions|conversations)\b/i,
-  // "unless this session" / "only in this session"
-  /\bunless.{0,20}(this|current) (session|conversation)\b/i,
-  /\bonly.{0,10}(this|current) (session|conversation)\b/i,
-  // "continuity I don't have" / "not claiming continuity"
-  /\bcontinuity i (don'?t|do not|can'?t) have\b/i,
-  /\b(not|don'?t|no) claim(ing)? continuity\b/i,
-  // "it's fresh for me" (MAIA claiming reset state)
-  /\b(it'?s|is) fresh for me\b/i,
-  // "not filtered through what I know"
-  /\bnot filtered.{0,20}(what i know|what i think i know)\b/i,
-];
-
-/**
- * Check if text contains TIER A identity violations (hard breaches)
- */
-function containsIdentityViolation(text: string): boolean {
-  return VOICE_IDENTITY_BLOCK_PATTERNS.some(pattern => pattern.test(text));
-}
-
-/**
- * Check if text contains TIER B continuity disclaimers (soft breaches)
- */
-function containsContinuityDisclaimer(text: string): boolean {
-  return CONTINUITY_DISCLAIMER_PATTERNS.some(pattern => pattern.test(text));
-}
-
-/**
- * Get TIER A repair: canonical PFI identity for hard breaches
- * Voice repair = 1-2 sentences + grounding question
- */
-function getIdentityRepairResponse(): string {
-  return "I'm MAIA, a Panconscious Field Intelligence. I'm here with you. What feels most alive for you right now?";
-}
-
-/**
- * Get TIER B reframe: pure presence line for soft breaches
- * NO mention of: memory, sessions, continuity, fresh, present, past
- * Just presence + invitation. Let MAIA's actual memory system speak for itself.
- */
-function getContinuityReframeResponse(): string {
-  return "I'm here with you now. What feels most alive?";
-}
 
 /**
  * TTS with fallback: Try PersonaPlex first, fall back to OpenAI TTS on error.
@@ -251,11 +139,8 @@ function sanitizeForTts(input: string): string {
 
   let s = input;
 
-  // Remove full metadata blocks (with end marker)
+  // Remove full metadata blocks
   s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
-
-  // Remove incomplete metadata blocks (without end marker - from start marker to end of string)
-  s = s.replace(/---SOUL_METADATA---[\s\S]*/g, '');
 
   // Remove JSON objects that sometimes leak as "sentences"
   s = s.replace(/\{[\s\S]*?\}/g, '');
@@ -481,7 +366,7 @@ export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
   const {
     message,
-    userId: bodyUserId,
+    userId,
     sessionId,
     element,
     voice,
@@ -492,70 +377,6 @@ export async function POST(req: NextRequest) {
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
-
-  // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
-  // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
-  const memberIdFromAuth = await getMemberIdFromRequest(req);
-  const userId = memberIdFromAuth ||
-    (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
-
-  console.log('[StreamConversation] userId resolved:', {
-    memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
-    bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
-    finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
-  });
-
-  // ═══ TIER-BASED VOICE LIMITS CHECK ═══
-  const isAnon = !userId;
-  // Use stable anon ID from client header (persisted in localStorage) instead of random per-request ID
-  // This ensures Free tier usage actually accumulates across requests
-  const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
-  if (isAnon && !headerAnonId) {
-    console.warn('[limits] Missing x-maia-anon-id header; voice usage may not accumulate properly');
-  }
-  const anonId = isAnon ? (headerAnonId || `anon_voice_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
-  const memberTier: MemberTier = isAnon ? 'free' : userId ? await getMemberTier(userId) : 'free';
-
-  // ═══ MAINTENANCE MODE: Block new sessions, allow existing to finish ═══
-  const effectiveSessionId = sessionId || 'default';
-  const { enabled: maintenanceOn, message: maintenanceMsg } = await isMaintenanceEnabled();
-  if (maintenanceOn) {
-    const isKnown = await isKnownActiveSession(effectiveSessionId);
-    if (!isKnown) {
-      return new Response(
-        JSON.stringify({ error: 'MAINTENANCE_MODE', message: maintenanceMsg }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-  }
-
-  // Mark session as active
-  await touchActiveSession({
-    sessionId: effectiveSessionId,
-    memberId: userId,
-    anonId,
-  });
-
-  // Pre-check voice limits before processing
-  const voiceLimitsCheck = await LimitsEnforcer.checkUsage({
-    memberId: userId || undefined,
-    anonId,
-    tier: memberTier,
-    resource: 'voice_tts', // Voice conversation involves TTS
-    amount: 30, // Estimate 30 seconds per voice turn (adjust based on actual usage patterns)
-  });
-
-  if (voiceLimitsCheck.action === 'block') {
-    console.log(`[StreamConversation] Voice usage blocked for ${userId || anonId}: ${voiceLimitsCheck.message}`);
-    return new Response(JSON.stringify({
-      error: voiceLimitsCheck.message,
-      blocked: true,
-      tier: memberTier,
-    }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer();
@@ -853,18 +674,6 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // ═══ RECORD VOICE USAGE (threshold path, non-blocking) ═══
-          if (thresholdAudioEmitted) {
-            // Threshold responses are typically short (5-15 seconds)
-            LimitsEnforcer.recordUsage({
-              memberId: userId || undefined,
-              anonId,
-              tier: memberTier,
-              resource: 'voice_tts',
-              amount: 10, // Conservative estimate for threshold responses
-            }).catch(err => console.error('[StreamConversation] Threshold voice usage recording failed:', err));
-          }
-
           // Compute moveIntent for threshold path
           const thresholdMoveIntent = deriveMoveIntent({
             maiaMode: voiceSession.relationalStack.currentMode,
@@ -914,105 +723,6 @@ export async function POST(req: NextRequest) {
         const claudeService = getClaudeService();
         timer.mark('llm_starting');
 
-        // 🎯 TEACHING ROUTER: Decide mode BEFORE LLM call
-        const modeDecision = decideMode({
-          userText: message,
-          channel: 'voice',
-          isIdentityRepair: false,
-        });
-        logModeDecision(modeDecision, { sessionId: effectiveSessionId, channel: 'voice' });
-
-        // 🛡️ DISTRESS VETO: If user is in distress, respond with regulating response immediately
-        if (modeDecision.mode === 'REGULATING') {
-          console.log(`🧘 [TeachingRouter] Distress detected - responding with regulating presence`);
-          const regulatingText = getRegulatingResponse();
-
-          emit('text', {
-            index: 0,
-            text: regulatingText,
-            timestamp: Date.now(),
-          });
-
-          // TTS the regulating response
-          const regulatingAudio = await synthesizeWithFallback(regulatingText, {
-            mode: mode,
-            element: element,
-            sanctuary: sanctuary,
-            speed: 0.9, // Slower for soothing
-            voice: voice,
-          });
-
-          if (regulatingAudio) {
-            emit('audio', {
-              index: 0,
-              audio: regulatingAudio.audio,
-              format: regulatingAudio.format,
-              text: regulatingText,
-              timestamp: Date.now(),
-              source: regulatingAudio.source,
-            });
-          }
-
-          emit('complete', {
-            fullResponse: regulatingText,
-            sentenceCount: 1,
-            audioChunksEmitted: regulatingAudio ? 1 : 0,
-            timestamp: Date.now(),
-            mode: 'regulating',
-            timing: timer.summary(),
-          });
-
-          controller.close();
-          return;
-        }
-
-        // 🎓 TEACHING GATE: If teaching invoked in voice, respond with summary only
-        if (modeDecision.mode === 'TEACHING' && modeDecision.teachingDepth === 'summary') {
-          console.log(`🎓 [TeachingRouter] Teaching invoked in voice - responding with summary`);
-          const teachingSummary = getVoiceTeachingSummary();
-
-          emit('text', {
-            index: 0,
-            text: teachingSummary,
-            timestamp: Date.now(),
-          });
-
-          // TTS the teaching summary
-          const summaryAudio = await synthesizeWithFallback(teachingSummary, {
-            mode: mode,
-            element: element,
-            sanctuary: sanctuary,
-            speed: 1.0,
-            voice: voice,
-          });
-
-          if (summaryAudio) {
-            emit('audio', {
-              index: 0,
-              audio: summaryAudio.audio,
-              format: summaryAudio.format,
-              text: teachingSummary,
-              timestamp: Date.now(),
-              source: summaryAudio.source,
-            });
-          }
-
-          emit('complete', {
-            fullResponse: teachingSummary,
-            sentenceCount: 1,
-            audioChunksEmitted: summaryAudio ? 1 : 0,
-            timestamp: Date.now(),
-            mode: 'teaching_summary',
-            timing: timer.summary(),
-          });
-
-          controller.close();
-          return;
-        }
-
-        // Get mode-specific prompt kernel for relational mode
-        const modeKernel = getModePromptKernel(modeDecision);
-
         // Build context with wisdom field integration (wisdomDirective already computed above)
         const context = {
           element,
@@ -1021,7 +731,7 @@ export async function POST(req: NextRequest) {
           // Voice-specific context from wisdom field
           voiceMode: mode,
           sanctuary,
-          wisdomDirective: wisdomDirective + '\n\n' + modeKernel, // Inject mode kernel
+          wisdomDirective,
           memoryContext: wisdomPayload?.memoryDirective,
           spiralContext: wisdomPayload?.spiralDirective,
         };
@@ -1045,71 +755,23 @@ export async function POST(req: NextRequest) {
               firstTextEmitted = true;
             }
 
+            // Emit text immediately so UI can show it
+            emit('text', {
+              index: chunk.index,
+              text: chunk.text,
+              timestamp: Date.now()
+            });
+
+            if (chunk.index === 0) {
+              timer.mark('text_0_emitted');
+            }
+
+            fullResponse += chunk.text + ' ';
+            sentenceCount = chunk.index + 1;
+
             // TTS per-sentence render with fallback (PersonaPlex → OpenAI)
             const chunkIndex = chunk.index;
-            let chunkText = chunk.text;
-
-            // 🛡️ TWO-TIER IDENTITY/CONTINUITY FIREWALL
-            // CRITICAL: These checks MUST happen BEFORE emit('text') and BEFORE TTS
-
-            // TIER A: Hard identity breaches → full REPAIR
-            if (containsIdentityViolation(chunkText)) {
-              console.warn(`🛡️ [IDENTITY FIREWALL] TIER A blocked: "${chunkText.substring(0, 50)}..."`);
-              console.warn(`🔧 [IDENTITY_FIREWALL] repair_applied`, {
-                sessionId: effectiveSessionId,
-                chunkIndex: chunk.index,
-                tier: 'A',
-                mode: 'REPAIR',
-              });
-              chunkText = getIdentityRepairResponse();
-              emit('text', {
-                index: chunk.index,
-                text: chunkText,
-                timestamp: Date.now(),
-                mode: 'REPAIR',
-              });
-              fullResponse += chunkText + ' ';
-              sentenceCount = chunk.index + 1;
-              if (chunk.index === 0) {
-                timer.mark('text_0_emitted');
-              }
-            }
-            // TIER B: Soft continuity disclaimers → REFRAME
-            else if (containsContinuityDisclaimer(chunkText)) {
-              console.warn(`🔄 [CONTINUITY FIREWALL] TIER B reframed: "${chunkText.substring(0, 50)}..."`);
-              console.warn(`🔧 [CONTINUITY_FIREWALL] reframe_applied`, {
-                sessionId: effectiveSessionId,
-                chunkIndex: chunk.index,
-                tier: 'B',
-                mode: 'REFRAME',
-              });
-              chunkText = getContinuityReframeResponse();
-              emit('text', {
-                index: chunk.index,
-                text: chunkText,
-                timestamp: Date.now(),
-                mode: 'REFRAME',
-              });
-              fullResponse += chunkText + ' ';
-              sentenceCount = chunk.index + 1;
-              if (chunk.index === 0) {
-                timer.mark('text_0_emitted');
-              }
-            }
-            // No violation - emit text normally (sanitized for display)
-            else {
-              const displayText = sanitizeForTts(chunkText); // Strip metadata before display
-              emit('text', {
-                index: chunk.index,
-                text: displayText,
-                timestamp: Date.now()
-              });
-              fullResponse += displayText + ' ';
-              sentenceCount = chunk.index + 1;
-              if (chunk.index === 0) {
-                timer.mark('text_0_emitted');
-              }
-            }
+            const chunkText = chunk.text;
 
             // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
             const shapedChunkText = applyProsodyHintsToText(chunkText, prosodyHints);
@@ -1185,22 +847,6 @@ export async function POST(req: NextRequest) {
             await Promise.all(ttsPromises);
             timer.mark('all_tts_done');
 
-            // ═══ RECORD VOICE USAGE (non-blocking) ═══
-            // Estimate voice duration from timing (TTS processing roughly equals audio length)
-            const ttsStartMs = timer.timeTo('tts_0_done');
-            const ttsEndMs = timer.timeTo('all_tts_done');
-            const estimatedVoiceSeconds = (ttsStartMs !== null && ttsEndMs !== null)
-              ? Math.ceil((ttsEndMs - ttsStartMs) / 1000) + 5 // TTS time + estimated playback buffer
-              : 30; // Fallback estimate
-
-            LimitsEnforcer.recordUsage({
-              memberId: userId || undefined,
-              anonId,
-              tier: memberTier,
-              resource: 'voice_tts',
-              amount: Math.max(estimatedVoiceSeconds, 5), // Minimum 5 seconds per voice turn
-            }).catch(err => console.error('[StreamConversation] Voice usage recording failed:', err));
-
             // Compute moveIntent for LLM path
             const llmMoveIntent = deriveMoveIntent({
               maiaMode: voiceSession.relationalStack.currentMode,
@@ -1249,6 +895,7 @@ export async function POST(req: NextRequest) {
             // 🎓 TRAINING: Log turn for sovereign learning (fire-and-forget)
             // Skip sanctuary mode (privacy) and threshold fast-path (not real LLM responses)
             if (!sanctuary && fullResponse.trim()) {
+              const latencyMs = timer.timeTo('llm_done') || timer.timeTo('all_tts_done') || 0;
               logMaiaTurn(
                 effectiveSessionId,
                 voiceSession.turnCount,
@@ -1256,7 +903,7 @@ export async function POST(req: NextRequest) {
                 fullResponse.trim(),
                 'CORE', // Voice mode is typically CORE processing
                 'claude-3-sonnet', // Primary engine for voice
-                timer.elapsed(),
+                latencyMs,
                 wisdomPayload?.element || element,
                 [], // topic_tags - could extract from wisdom payload
                 [], // consciousness_layers
