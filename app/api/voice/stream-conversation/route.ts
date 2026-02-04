@@ -251,8 +251,11 @@ function sanitizeForTts(input: string): string {
 
   let s = input;
 
-  // Remove full metadata blocks
+  // Remove full metadata blocks (with end marker)
   s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
+
+  // Remove incomplete metadata blocks (without end marker - from start marker to end of string)
+  s = s.replace(/---SOUL_METADATA---[\s\S]*/g, '');
 
   // Remove JSON objects that sometimes leak as "sentences"
   s = s.replace(/\{[\s\S]*?\}/g, '');
@@ -1093,14 +1096,15 @@ export async function POST(req: NextRequest) {
                 timer.mark('text_0_emitted');
               }
             }
-            // No violation - emit text normally
+            // No violation - emit text normally (sanitized for display)
             else {
+              const displayText = sanitizeForTts(chunkText); // Strip metadata before display
               emit('text', {
                 index: chunk.index,
-                text: chunkText,
+                text: displayText,
                 timestamp: Date.now()
               });
-              fullResponse += chunkText + ' ';
+              fullResponse += displayText + ' ';
               sentenceCount = chunk.index + 1;
               if (chunk.index === 0) {
                 timer.mark('text_0_emitted');
