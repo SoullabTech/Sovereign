@@ -1946,11 +1946,18 @@ This user is in guest mode (no authenticated identity).
       console.error('[Socratic Validator ORCH] Validation failed (non-blocking):', err);
     }
 
+    // 🧹 STRIP INTERNAL METADATA: Remove SOUL_METADATA blocks before storing/sending
+    // This metadata is for internal processing only - never expose to users or persist
+    const cleanedText = outboundText2
+      .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+      .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
+      .trim();
+
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {
       console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
     } else {
-      await addConversationExchange(safeSessionId, message, outboundText2, {
+      await addConversationExchange(safeSessionId, message, cleanedText, {
         type: 'orchestrator',
         mode: mode || 'dialogue',
         userId: effectiveUserId,
@@ -2028,7 +2035,7 @@ This user is in guest mode (no authenticated identity).
     });
 
     const response2 = NextResponse.json({
-      message: outboundText2,
+      message: cleanedText,
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,

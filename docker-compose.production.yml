@@ -104,6 +104,9 @@ services:
       MAIA_EMBEDDINGS_MODE: queue
       # Admin cockpit password (set in .env.production)
       LABTOOLS_ADMIN_PASSWORD: ${LABTOOLS_ADMIN_PASSWORD:-}
+      # Shadow mode: local model for comparison learning
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "deepseek-r1:8b"
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
