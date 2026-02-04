@@ -32,6 +32,7 @@ import {
   Activity,
   Settings,
   Users,
+  Gift,
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -169,6 +170,18 @@ export default function LabToolsPage() {
           label: 'Patterns',
           path: '/patterns',
           description: 'Symbolic systems & cycles'
+        },
+      ],
+    },
+    {
+      title: 'SHARE',
+      icon: '🎁',
+      items: [
+        {
+          icon: Gift,
+          label: 'Beads',
+          path: '/labtools/beads',
+          description: 'Invite friends to MAIA'
         },
       ],
     },

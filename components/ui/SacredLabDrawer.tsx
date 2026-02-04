@@ -44,6 +44,7 @@ import {
   Users,
   GraduationCap,
   LayoutGrid,
+  Gift,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -116,6 +117,18 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Session Recap',
           action: () => onAction?.('session-recap'),
           description: 'Summary of themes, insights & invitation'
+        },
+      ],
+    },
+    {
+      title: 'SHARE MAIA',
+      icon: '🎁',
+      items: [
+        {
+          icon: Gift,
+          label: 'Beads',
+          action: () => onNavigate('/labtools/beads'),
+          description: 'Invite friends to experience MAIA'
         },
       ],
     },
