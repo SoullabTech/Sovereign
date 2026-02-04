@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireMemberId } from '@/lib/auth/session';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   CapsuleCreateFromChatWindowSchema,
   createCapsule,
@@ -18,8 +18,15 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    // Require authentication
-    const memberId = await requireMemberId();
+    // Require authentication (uses same method as voice routes for consistency)
+    const memberId = await getMemberIdFromRequest(request);
+
+    if (!memberId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
 
     // Parse and validate body
     const body = await request.json();
@@ -69,13 +76,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ capsule }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
     console.error('[API] POST /api/capsules/from-chat-window error:', error);
     return NextResponse.json(
       { error: 'Failed to create capsule from chat' },

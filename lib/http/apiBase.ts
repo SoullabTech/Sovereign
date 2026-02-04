@@ -478,15 +478,23 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     headers.set('Content-Type', 'application/json');
   }
 
-  // Add session token header (required for server-side validation)
+  // Add session token header (for session-based auth routes)
   const sessionToken = getSessionToken();
   if (sessionToken) {
     headers.set('x-session-token', sessionToken);
     console.log('[apiFetch/safari] x-session-token present:', true);
   } else {
-    // No session token - auth will fail on protected endpoints
-    // x-member-id alone is no longer accepted (security fix)
-    console.warn('[apiFetch/safari] x-session-token present:', false, '- user may need to re-authenticate');
+    console.log('[apiFetch/safari] x-session-token present:', false);
+  }
+
+  // Add member ID header (for routes using getMemberIdFromRequest)
+  // This ensures compatibility with voice routes and other legacy auth
+  const memberId = getValidMemberId();
+  if (memberId) {
+    headers.set('x-member-id', memberId);
+    console.log('[apiFetch/safari] x-member-id present:', true);
+  } else {
+    console.log('[apiFetch/safari] x-member-id present:', false);
   }
 
   // Add stable visitor ID for anonymous usage tracking (Free tier limits)
