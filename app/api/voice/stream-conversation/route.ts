@@ -895,6 +895,7 @@ export async function POST(req: NextRequest) {
             // 🎓 TRAINING: Log turn for sovereign learning (fire-and-forget)
             // Skip sanctuary mode (privacy) and threshold fast-path (not real LLM responses)
             if (!sanctuary && fullResponse.trim()) {
+              const latencyMs = timer.timeTo('llm_done') || timer.timeTo('all_tts_done') || 0;
               logMaiaTurn(
                 effectiveSessionId,
                 voiceSession.turnCount,
@@ -902,7 +903,7 @@ export async function POST(req: NextRequest) {
                 fullResponse.trim(),
                 'CORE', // Voice mode is typically CORE processing
                 'claude-3-sonnet', // Primary engine for voice
-                timer.elapsed(),
+                latencyMs,
                 wisdomPayload?.element || element,
                 [], // topic_tags - could extract from wisdom payload
                 [], // consciousness_layers
