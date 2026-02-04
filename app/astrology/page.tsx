@@ -34,6 +34,7 @@ import { useUserAuth } from '@/lib/hooks/useUserAuth';
 import { mapAudienceMode } from '@/lib/content/audienceMode';
 import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
 import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
+import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -674,7 +675,7 @@ export default function AstrologyPage() {
   return (
     <div className="min-h-screen bg-maia-navy-900 relative overflow-hidden">
       {/* Fixed Navigation Header */}
-      <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
+      <div className="fixed top-4 left-4 z-50">
         <Link
           href="/maia"
           className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
@@ -682,16 +683,10 @@ export default function AstrologyPage() {
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">MAIA</span>
         </Link>
-
-        <Link
-          href="/journey"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
-          title="Edit birth data"
-        >
-          <Settings2 className="w-4 h-4" />
-          <span className="text-sm font-medium hidden sm:inline">Edit Birth Data</span>
-        </Link>
       </div>
+
+      {/* Birth Chart Calculator - Upper Right Corner */}
+      <BirthChartCalculator isDayMode={isDayMode} />
 
       {/* Arrakis Night Sky - Starfield */}
       <div className="absolute inset-0 opacity-40">
