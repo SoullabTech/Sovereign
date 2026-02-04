@@ -43,6 +43,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
 import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
+import { getSystemSetting } from '@/lib/system/systemSettings';
 import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
   computeMemberSpiralState,
@@ -1947,11 +1948,14 @@ This user is in guest mode (no authenticated identity).
     }
 
     // 🧹 STRIP INTERNAL METADATA: Remove SOUL_METADATA blocks before storing/sending
-    // This metadata is for internal processing only - never expose to users or persist
-    const cleanedText = outboundText2
-      .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-      .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
-      .trim();
+    // Admin can enable show_soul_metadata to see internal processing data
+    const showMetadata = await getSystemSetting<boolean>('show_soul_metadata') === true;
+    const cleanedText = showMetadata
+      ? outboundText2.trim()
+      : outboundText2
+          .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+          .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
+          .trim();
 
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {
