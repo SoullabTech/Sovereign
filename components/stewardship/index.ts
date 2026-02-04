@@ -15,3 +15,6 @@ export { AnnualCheckinModal } from './AnnualCheckinModal';
 export { HelperFundPrompt } from './HelperFundPrompt';
 
 export { useUpgradePrompt, useFeatureGate } from './useUpgradePrompt';
+
+// New cost-bearing threshold system
+export { HoldingBanner, type StewardshipThreshold } from './HoldingBanner';
