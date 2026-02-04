@@ -8046,6 +8046,7 @@ I'm not sure what I'm feeling yet.`;
             console.log('🌟 [WisdomTool] Completed:', toolId, result);
             setActiveWisdomTool(null);
           }}
+          memberId={getValidMemberId() || undefined}
         />
       )}
 
