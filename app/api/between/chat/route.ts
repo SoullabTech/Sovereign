@@ -21,7 +21,7 @@ import {
   enhanceResponseIfRuptureDetected,
   type RuptureDetectionResult
 } from '@/lib/consultation/rupture-detection-middleware';
-import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
+import { getConversationHistory, getUserConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
@@ -1000,8 +1000,18 @@ This user is in guest mode (no authenticated identity).
     }
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
-    const conversationHistory = await getConversationHistory(safeSessionId, 20);
-    console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns`);
+    // First try session-level, then fall back to cross-session user history
+    let conversationHistory = await getConversationHistory(safeSessionId, 20);
+    let historySource = 'session';
+
+    // If this is a new session with no history, load cross-session memory
+    // This is what gives MAIA continuity across conversations
+    if (conversationHistory.length === 0 && effectiveUserId && !effectiveUserId.startsWith('anon:')) {
+      conversationHistory = await getUserConversationHistory(effectiveUserId, 10, safeSessionId);
+      historySource = 'cross-session';
+    }
+
+    console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns (source: ${historySource})`);
 
     // Add messageCount to meta for voice tier selection (Opus vs Sonnet)
     (normalizedMeta as Record<string, unknown>).messageCount = conversationHistory.length;
