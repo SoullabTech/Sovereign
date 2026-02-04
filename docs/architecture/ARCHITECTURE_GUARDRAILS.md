@@ -236,6 +236,39 @@ When uncertain whether a change violates these guardrails, ask:
 - `npm run preflight` — Full sovereignty check
 - Git hooks configured via `scripts/setup-githooks.sh`
 
+### How to Verify Guardrails Are Active in Production
+
+After any deployment, run these commands to confirm the identity firewall is live:
+
+```bash
+# 1. Confirm container was recently rebuilt
+docker compose -f docker-compose.production.yml ps
+docker image inspect maia-sovereign:prod --format 'Created={{.Created}}'
+
+# 2. Verify identity scrubber exists in maiaService
+docker exec maia-sovereign grep "scrubIdentityDisclaimers" /app/lib/sovereign/maiaService.ts
+
+# 3. Verify voice firewall patterns are compiled into the route
+docker exec maia-sovereign sh -c '
+  FILE="/app/.next/server/app/api/voice/stream-conversation/route.js";
+  node -e "const fs=require(\"fs\"); const s=fs.readFileSync(process.argv[1],\"utf8\");
+  const hits=[\"VOICE\",\"Claude\",\"Anthropic\",\"OpenAI\"].map(k=>[k,(s.match(new RegExp(k,\"gi\"))||[]).length]);
+  console.log(hits.map(([k,n])=>k+\": \"+n).join(\"\\n\"));" "$FILE"
+'
+
+# 4. Verify blocking logic and repair response exist
+docker exec maia-sovereign sh -c '
+  FILE="/app/.next/server/app/api/voice/stream-conversation/route.js";
+  grep -oE "here with you|continue" "$FILE" | head -5
+'
+```
+
+Expected results:
+- Container `Created` timestamp should be recent (within minutes of deploy)
+- `scrubIdentityDisclaimers` function should be found
+- Token counts: `Claude > 0`, `Anthropic > 0` (patterns are in the regex list)
+- `continue` statements present (blocking logic) and `here with you` (repair response)
+
 ### Code Review
 
 Required questions for any PR touching:
