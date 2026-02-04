@@ -973,13 +973,19 @@ export async function POST(req: NextRequest) {
             // CRITICAL: This check MUST happen BEFORE emit('text') and BEFORE TTS
             if (containsIdentityViolation(chunkText)) {
               console.warn(`🛡️ [IDENTITY FIREWALL] Blocked output: "${chunkText.substring(0, 50)}..."`);
+              console.warn(`🔧 [IDENTITY_FIREWALL] repair_applied`, {
+                sessionId: effectiveSessionId,
+                chunkIndex: chunk.index,
+                mode: 'REPAIR',
+              });
               // Replace the entire chunk with canonical identity repair
               chunkText = getIdentityRepairResponse();
-              // Emit the repaired text
+              // Emit the repaired text with REPAIR mode annotation
               emit('text', {
                 index: chunk.index,
                 text: chunkText,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                mode: 'REPAIR', // Annotate for UI/telemetry
               });
               fullResponse += chunkText + ' ';
               sentenceCount = chunk.index + 1;

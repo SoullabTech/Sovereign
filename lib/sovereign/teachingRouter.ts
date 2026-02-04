@@ -59,7 +59,8 @@ const DISTRESS_VETO = [
   /\b(end it|kill myself|suicid|want to die)\b/i,
   /\b(i'?m|im) (terrified|overwhelmed|breaking|falling apart)\b/i,
   /\bcan'?t stop crying\b/i,
-  /\b(help me|please help)\b/i,
+  // Removed: /\b(help me|please help)\b/i - too broad, triggers on normal requests like "help me understand"
+  // Genuine distress is caught by intensity markers in other patterns
   /\beverything is (falling apart|too much)\b/i,
   /\bi'?m (scared|afraid|frightened)\b/i,
   /\bhaving a (breakdown|crisis|panic attack)\b/i,
