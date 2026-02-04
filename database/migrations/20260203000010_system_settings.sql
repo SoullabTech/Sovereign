@@ -12,7 +12,12 @@ CREATE TABLE IF NOT EXISTS system_settings (
 -- Insert default settings
 INSERT INTO system_settings (key, value, description)
 VALUES
-  ('limits_disabled', 'false'::jsonb, 'When true, all usage limits are bypassed (for testing)')
+  ('limits_disabled', 'false'::jsonb, 'When true, all usage limits are bypassed (for testing)'),
+  ('maintenance_mode', '{"enabled": false, "message": "MAIA is taking a brief pause. Back soon."}'::jsonb, 'Block new sessions while allowing existing ones to finish'),
+  ('global_banner', '{"enabled": false, "text": "", "level": "info", "dismissible": true}'::jsonb, 'Show announcement banner to all users'),
+  ('voice_enabled', 'true'::jsonb, 'Enable/disable voice features globally'),
+  ('memory_write_enabled', 'true'::jsonb, 'Enable/disable memory writes (read-only mode when false)'),
+  ('journal_enabled', 'true'::jsonb, 'Enable/disable journal saving')
 ON CONFLICT (key) DO NOTHING;
 
 -- Index for quick lookups

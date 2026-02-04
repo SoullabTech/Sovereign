@@ -102,6 +102,8 @@ services:
       WEBAUTHN_ORIGIN: "https://soullab.life"
       # Embedding mode: queue jobs for async processing by embed-worker
       MAIA_EMBEDDINGS_MODE: queue
+      # Admin cockpit password (set in .env.production)
+      LABTOOLS_ADMIN_PASSWORD: ${LABTOOLS_ADMIN_PASSWORD:-}
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
