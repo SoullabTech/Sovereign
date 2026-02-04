@@ -362,6 +362,7 @@ interface OracleConversationProps {
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
   voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
   voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
+  voiceVolume?: number; // Voice playback volume (0.0 - 1.0)
   onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
@@ -453,6 +454,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   voice = 'alloy',
   voiceSpeed = 0.95,
   voiceModel = 'tts-1-hd',
+  voiceVolume = 1.0,
   onVoiceChange,
   initialMode = 'normal',
   onModeChange,
@@ -1998,6 +2000,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     speed: voiceSettings.speed,
     model: voiceSettings.model,
     prosodyRange: voiceSettings.prosodyRange,
+    volume: voiceVolume,
     assistantName,  // Member's preferred name for MAIA
     archetype: voiceSettings.archetype,
     conversationMode: voiceSettings.conversationMode,

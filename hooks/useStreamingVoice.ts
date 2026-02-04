@@ -84,6 +84,8 @@ interface StreamingVoiceOptions {
   conversationMode?: string;
   /** Memory depth preference */
   memoryDepth?: 'minimal' | 'moderate' | 'deep';
+  /** Audio playback volume (0.0 - 1.0) */
+  volume?: number;
 }
 
 interface StreamingVoiceState {
@@ -233,6 +235,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     archetype,
     conversationMode,
     memoryDepth,
+    volume = 1.0,
   } = options;
 
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
@@ -415,8 +418,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       audio.onerror = null;
       audio.onended = null;
 
-      // Update source (reusing element)
+      // Update source and volume (reusing element)
       audio.src = audioSrc;
+      audio.volume = volume;
       audio.preload = 'auto';
 
       audio.onended = () => {
@@ -482,7 +486,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       console.error('[StreamingVoice] Audio creation error:', e);
       advance(0);
     }
-  }, [forceRecoverFromFalseSpeaking]);
+  }, [forceRecoverFromFalseSpeaking, volume]);
 
   /**
    * Send a message and stream the response

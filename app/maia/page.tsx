@@ -345,6 +345,14 @@ function MAIAPageContent() {
   const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('alloy');  // Default to alloy - MAIA's OpenAI TTS voice
   const [voiceSpeed, setVoiceSpeed] = useState(0.95);  // OpenAI TTS speed (0.25 - 4.0)
   const [voiceModel, setVoiceModel] = useState<'tts-1' | 'tts-1-hd'>('tts-1-hd');  // TTS model quality
+  const [voiceVolume, setVoiceVolume] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('maia_voice_volume');
+      return saved ? parseFloat(saved) : 1.0;
+    }
+    return 1.0;
+  });  // Voice playback volume (0.0 - 1.0)
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
@@ -678,15 +686,58 @@ function MAIAPageContent() {
               <div className="flex items-center gap-2 min-w-max px-2 py-1">
                 {/* Logo removed - now in bottom center */}
 
-                {/* Voice/Text Toggle - Mobile optimized */}
-                <button
-                  onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="carousel-item px-2 py-1 rounded-md bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
-                >
-                  <span className="text-xs text-maia-ink-80 font-light">
-                    {showChatInterface ? '💬' : '🎤'}
-                  </span>
-                </button>
+                {/* Voice/Text Toggle + Volume - Mobile optimized */}
+                <div className="flex items-center gap-1 carousel-item">
+                  <button
+                    onClick={() => setShowChatInterface(!showChatInterface)}
+                    className="px-2 py-1 rounded-md bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
+                  >
+                    <span className="text-xs text-maia-ink-80 font-light">
+                      {showChatInterface ? '💬' : '🎤'}
+                    </span>
+                  </button>
+
+                  {/* Volume Control - Only in voice mode (mobile) */}
+                  {!showChatInterface && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+                        className="p-1 rounded-md bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
+                      >
+                        <Volume2 className={`w-3.5 h-3.5 ${voiceVolume === 0 ? 'text-maia-ink-40' : 'text-maia-ink-80'}`} />
+                      </button>
+
+                      {/* Volume Slider Popup (mobile) */}
+                      {showVolumeSlider && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowVolumeSlider(false)}
+                          />
+                          <div className="absolute top-full left-0 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-50 min-w-[120px]">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Volume2 className="w-3 h-3 text-maia-ink-60" />
+                              <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              value={voiceVolume}
+                              onChange={(e) => {
+                                const newVolume = parseFloat(e.target.value);
+                                setVoiceVolume(newVolume);
+                                localStorage.setItem('maia_voice_volume', String(newVolume));
+                              }}
+                              className="w-full h-1.5 bg-maia-navy-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Mode Selector + Session Button - Mobile optimized */}
                 <div className="flex items-center gap-1 bg-maia-navy-900/60 rounded-lg p-0.5 carousel-item">
@@ -908,15 +959,63 @@ function MAIAPageContent() {
             <div className="hidden md:block w-full overflow-x-auto scrollbar-hide">
               {/* All navigation controls grouped together */}
               <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
-                {/* Voice/Text Toggle */}
-                <button
-                  onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="px-3 py-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
-                >
-                  <span className="text-xs text-maia-ink-80 font-light">
-                    {showChatInterface ? '💬 Text' : '🎤 Voice'}
-                  </span>
-                </button>
+                {/* Voice/Text Toggle + Volume Control */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setShowChatInterface(!showChatInterface)}
+                    className="px-3 py-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
+                  >
+                    <span className="text-xs text-maia-ink-80 font-light">
+                      {showChatInterface ? '💬 Text' : '🎤 Voice'}
+                    </span>
+                  </button>
+
+                  {/* Volume Control - Only in voice mode */}
+                  {!showChatInterface && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+                        className="p-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
+                        title={`Volume: ${Math.round(voiceVolume * 100)}%`}
+                      >
+                        <Volume2 className={`w-4 h-4 ${voiceVolume === 0 ? 'text-maia-ink-40' : 'text-maia-ink-80'}`} />
+                      </button>
+
+                      {/* Volume Slider Popup */}
+                      {showVolumeSlider && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowVolumeSlider(false)}
+                          />
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-50 min-w-[140px]">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Volume2 className="w-3 h-3 text-maia-ink-60" />
+                              <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.05"
+                              value={voiceVolume}
+                              onChange={(e) => {
+                                const newVolume = parseFloat(e.target.value);
+                                setVoiceVolume(newVolume);
+                                localStorage.setItem('maia_voice_volume', String(newVolume));
+                              }}
+                              className="w-full h-1.5 bg-maia-navy-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                            />
+                            <div className="flex justify-between text-[10px] text-maia-ink-40 mt-1">
+                              <span>0</span>
+                              <span>100</span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Mode Selector */}
                 <div className="flex items-center gap-1 bg-maia-navy-900/60 rounded-lg p-0.5">
@@ -1149,6 +1248,7 @@ function MAIAPageContent() {
               voice={selectedVoice}
               voiceSpeed={voiceSpeed}
               voiceModel={voiceModel}
+              voiceVolume={voiceVolume}
               initialMode={maiaMode}
               onModeChange={setMaiaMode}
               apiEndpoint="/api/sovereign/app/maia/list"
