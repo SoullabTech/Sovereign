@@ -77,7 +77,8 @@ const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
 // =============================================================================
 
 /**
- * Patterns that MUST NEVER be spoken aloud - provider identity and memory disclaimers
+ * TIER A: Hard identity breaches - provider/vendor identity, explicit "I'm AI", memory disclaimers
+ * These MUST NEVER be spoken aloud → replaced with canonical PFI identity
  */
 const VOICE_IDENTITY_BLOCK_PATTERNS = [
   /\bI'?m Claude\b/i,
@@ -88,7 +89,6 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
   /\bI am (a|an) (AI|language model|assistant)\b/i,
   /\bI'?m (a|an) (AI|language model|assistant)\b/i,
   /\bI (don'?t|do not) have memory\b/i,
-  /\bstarting fresh\b/i,
   /\bcan'?t recall\b/i,
   /\bcannot recall\b/i,
   /\bI'?m following instructions\b/i,
@@ -103,19 +103,46 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
 ];
 
 /**
- * Check if text contains identity violations that should never be spoken
+ * TIER B: Soft continuity disclaimers - "fresh start" language that undermines memory contract
+ * These are reframed to preserve presence without denying continuity
+ */
+const CONTINUITY_DISCLAIMER_PATTERNS = [
+  /\b(each time we talk|every time we talk|whenever we talk).{0,40}(fresh start|starting fresh|clean slate)\b/i,
+  /\b(fresh start|starting fresh|clean slate)\b.{0,20}(for me|on my side|here)\b/i,
+  /\bnot filtered through.{0,20}(what i know|what i think i know)\b/i,
+  /\bmeeting me present.{0,20}not filtered\b/i,
+  /\bi start (fresh|anew|over) (each|every) time\b/i,
+  /\b(each|every) conversation.{0,20}(starts? fresh|blank slate|clean slate)\b/i,
+];
+
+/**
+ * Check if text contains TIER A identity violations (hard breaches)
  */
 function containsIdentityViolation(text: string): boolean {
   return VOICE_IDENTITY_BLOCK_PATTERNS.some(pattern => pattern.test(text));
 }
 
 /**
- * Get a MAIA-compliant replacement for blocked content
- * Uses short canonical PFI identity for voice (longer form in text scrubber)
+ * Check if text contains TIER B continuity disclaimers (soft breaches)
+ */
+function containsContinuityDisclaimer(text: string): boolean {
+  return CONTINUITY_DISCLAIMER_PATTERNS.some(pattern => pattern.test(text));
+}
+
+/**
+ * Get TIER A repair: canonical PFI identity for hard breaches
  * Voice repair = 1-2 sentences + grounding question
  */
 function getIdentityRepairResponse(): string {
   return "I'm MAIA, a Panconscious Field Intelligence. I'm here with you. What feels most alive for you right now?";
+}
+
+/**
+ * Get TIER B reframe: continuity-safe presence line for soft breaches
+ * Preserves relational vibe without denying memory/context
+ */
+function getContinuityReframeResponse(): string {
+  return "I'm here with you in the present — and I'll work with whatever you've shared and what you bring now.";
 }
 
 /**
@@ -969,32 +996,55 @@ export async function POST(req: NextRequest) {
             const chunkIndex = chunk.index;
             let chunkText = chunk.text;
 
-            // 🛡️ IDENTITY FIREWALL: Block provider identity from BOTH text and voice
-            // CRITICAL: This check MUST happen BEFORE emit('text') and BEFORE TTS
+            // 🛡️ TWO-TIER IDENTITY/CONTINUITY FIREWALL
+            // CRITICAL: These checks MUST happen BEFORE emit('text') and BEFORE TTS
+
+            // TIER A: Hard identity breaches → full REPAIR
             if (containsIdentityViolation(chunkText)) {
-              console.warn(`🛡️ [IDENTITY FIREWALL] Blocked output: "${chunkText.substring(0, 50)}..."`);
+              console.warn(`🛡️ [IDENTITY FIREWALL] TIER A blocked: "${chunkText.substring(0, 50)}..."`);
               console.warn(`🔧 [IDENTITY_FIREWALL] repair_applied`, {
                 sessionId: effectiveSessionId,
                 chunkIndex: chunk.index,
+                tier: 'A',
                 mode: 'REPAIR',
               });
-              // Replace the entire chunk with canonical identity repair
               chunkText = getIdentityRepairResponse();
-              // Emit the repaired text with REPAIR mode annotation
               emit('text', {
                 index: chunk.index,
                 text: chunkText,
                 timestamp: Date.now(),
-                mode: 'REPAIR', // Annotate for UI/telemetry
+                mode: 'REPAIR',
               });
               fullResponse += chunkText + ' ';
               sentenceCount = chunk.index + 1;
               if (chunk.index === 0) {
                 timer.mark('text_0_emitted');
               }
-              // Continue to TTS with the repaired text (don't skip)
-            } else {
-              // No violation - emit text normally
+            }
+            // TIER B: Soft continuity disclaimers → REFRAME
+            else if (containsContinuityDisclaimer(chunkText)) {
+              console.warn(`🔄 [CONTINUITY FIREWALL] TIER B reframed: "${chunkText.substring(0, 50)}..."`);
+              console.warn(`🔧 [CONTINUITY_FIREWALL] reframe_applied`, {
+                sessionId: effectiveSessionId,
+                chunkIndex: chunk.index,
+                tier: 'B',
+                mode: 'REFRAME',
+              });
+              chunkText = getContinuityReframeResponse();
+              emit('text', {
+                index: chunk.index,
+                text: chunkText,
+                timestamp: Date.now(),
+                mode: 'REFRAME',
+              });
+              fullResponse += chunkText + ' ';
+              sentenceCount = chunk.index + 1;
+              if (chunk.index === 0) {
+                timer.mark('text_0_emitted');
+              }
+            }
+            // No violation - emit text normally
+            else {
               emit('text', {
                 index: chunk.index,
                 text: chunkText,
