@@ -16,7 +16,7 @@
  * - Integral: Each phase flows naturally
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, Sparkles } from 'lucide-react';
 
@@ -43,6 +43,7 @@ interface FocusGardenProps {
   onClose: () => void;
   onComplete?: (result: FocusGardenResult) => void;
   initialContext?: string; // What the user said that triggered this
+  memberId?: string; // For weight tracking and pattern saving
 }
 
 export interface FocusGardenResult {
@@ -107,6 +108,7 @@ export function FocusGarden({
   onClose,
   onComplete,
   initialContext,
+  memberId,
 }: FocusGardenProps) {
   const [phase, setPhase] = useState<Phase>('welcome');
   const [obstacle, setObstacle] = useState<Obstacle>({ name: '' });
@@ -116,6 +118,24 @@ export function FocusGarden({
     smallAction: '',
   });
   const [chosenAction, setChosenAction] = useState('');
+  const hasLoggedVisit = useRef(false);
+
+  // Log garden visit when opened (weight = 1)
+  useEffect(() => {
+    if (isOpen && memberId && !hasLoggedVisit.current) {
+      hasLoggedVisit.current = true;
+      fetch('/api/focus/garden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId, action: 'visit' }),
+      }).catch(() => {
+        // Silent - weight tracking shouldn't block experience
+      });
+    }
+    if (!isOpen) {
+      hasLoggedVisit.current = false;
+    }
+  }, [isOpen, memberId]);
 
   const reset = useCallback(() => {
     setPhase('welcome');
@@ -129,17 +149,38 @@ export function FocusGarden({
     onClose();
   }, [reset, onClose]);
 
-  const handleComplete = useCallback(() => {
-    if (onComplete) {
-      onComplete({
-        obstacle,
-        gateAnswers,
-        chosenAction: gateAnswers.smallAction || chosenAction,
-        completedAt: new Date(),
+  const handleComplete = useCallback(async () => {
+    const result: FocusGardenResult = {
+      obstacle,
+      gateAnswers,
+      chosenAction: gateAnswers.smallAction || chosenAction,
+      completedAt: new Date(),
+    };
+
+    // Log completion to backend (weight tracking + optional pattern save)
+    try {
+      await fetch('/api/focus/garden', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          action: 'complete',
+          obstacle,
+          gateAnswers,
+          chosenAction: result.chosenAction,
+          savePattern: false, // TODO: Add UI toggle for Steward+ members
+        }),
       });
+    } catch (err) {
+      // Silent - weight tracking shouldn't block completion
+      console.warn('[FocusGarden] API call failed:', err);
+    }
+
+    if (onComplete) {
+      onComplete(result);
     }
     handleClose();
-  }, [obstacle, gateAnswers, chosenAction, onComplete, handleClose]);
+  }, [obstacle, gateAnswers, chosenAction, onComplete, handleClose, memberId]);
 
   const nextPhase = useCallback(() => {
     const phases: Phase[] = [

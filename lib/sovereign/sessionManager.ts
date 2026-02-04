@@ -1,6 +1,7 @@
 // backend: lib/sovereign/sessionManager.ts
 import { query } from '@/lib/db';
 import { randomUUID } from 'crypto';
+import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 
 export type ConversationExchange = {
   timestamp: string;
@@ -63,6 +64,7 @@ export async function addConversationExchange(
     meta
   };
 
+  // Update session-level history (legacy, for within-session continuity)
   await query(
     `UPDATE maia_sessions
      SET conversation_history = COALESCE(conversation_history, '[]'::jsonb) || $2::jsonb,
@@ -70,6 +72,18 @@ export async function addConversationExchange(
      WHERE id = $1`,
     [sessionId, JSON.stringify(exchange)]
   );
+
+  // CRITICAL: Also persist to conversation_turns for cross-session memory
+  // This is what getConversationHistory() reads from
+  const userId = (meta?.userId as string) || (meta?.memberId as string);
+  if (userId) {
+    try {
+      await TurnsStore.addExchange(userId, sessionId, userMessage, maiaResponse);
+    } catch (err) {
+      // Non-blocking: don't break the conversation if turns storage fails
+      console.warn('[SessionManager] Failed to persist turns:', err);
+    }
+  }
 }
 
 export async function getSessionWithHistory(sessionId: string): Promise<MaiaSession | null> {
@@ -108,6 +122,43 @@ export async function getConversationHistory(sessionId: string, limit = 10): Pro
   }
 
   // Transform individual turns into paired ConversationExchange format
+  return transformTurnsToExchanges(turns, limit);
+}
+
+/**
+ * Get cross-session conversation history for a user.
+ * This provides continuity across multiple sessions - MAIA remembers you.
+ *
+ * @param userId - The user/member ID
+ * @param limit - Maximum number of exchanges to return (default 10)
+ * @param excludeSessionId - Optionally exclude current session's turns
+ */
+export async function getUserConversationHistory(
+  userId: string,
+  limit = 10,
+  excludeSessionId?: string
+): Promise<ConversationExchange[]> {
+  // Get user's recent turns across all sessions
+  const turns = await TurnsStore.getRecentTurns(userId, limit * 2);
+
+  if (turns.length === 0) {
+    return [];
+  }
+
+  // Transform to exchanges
+  return transformTurnsToExchanges(
+    turns.map(t => ({ role: t.role, content: t.content, created_at: t.createdAt })),
+    limit
+  );
+}
+
+/**
+ * Helper: Transform raw turns into paired ConversationExchange format
+ */
+function transformTurnsToExchanges(
+  turns: Array<{ role: 'user' | 'assistant'; content: string; created_at: string }>,
+  limit: number
+): ConversationExchange[] {
   const exchanges: ConversationExchange[] = [];
 
   for (let i = 0; i < turns.length - 1; i += 2) {

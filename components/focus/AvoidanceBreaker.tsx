@@ -31,6 +31,7 @@ interface AvoidanceBreakerProps {
   onClose: () => void;
   onComplete?: (result: AvoidanceResult) => void;
   context?: string; // What they're avoiding (from conversation)
+  memberId?: string; // For stewardship weight tracking
 }
 
 export interface AvoidanceResult {
@@ -41,6 +42,12 @@ export interface AvoidanceResult {
   followUpScheduled: boolean;
   followUpDate?: Date;
   sent: boolean;
+  stewardship?: {
+    threshold: 'none' | 'acknowledgment' | 'invitation' | 'pause';
+    weeklyWeight: number;
+    projectedWeight: number;
+    tier: string;
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -84,7 +91,8 @@ export function AvoidanceBreaker({
   isOpen,
   onClose,
   onComplete,
-  context = ''
+  context = '',
+  memberId
 }: AvoidanceBreakerProps) {
   const [phase, setPhase] = useState<'type' | 'who' | 'what' | 'draft' | 'followup' | 'done'>('type');
   const [messageType, setMessageType] = useState<MessageType>('text');
@@ -97,6 +105,7 @@ export function AvoidanceBreaker({
   const [copied, setCopied] = useState(false);
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
+  const [latestStewardship, setLatestStewardship] = useState<AvoidanceResult['stewardship']>(null);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -164,7 +173,8 @@ export function AvoidanceBreaker({
             messageType,
             recipient,
             situation,
-            context
+            context,
+            memberId, // For stewardship weight tracking
           })
         });
 
@@ -172,6 +182,7 @@ export function AvoidanceBreaker({
           const data = await response.json();
           setMessageBody(data.draft || generateFallbackDraft());
           if (data.subject) setSubject(data.subject);
+          if (data.stewardship) setLatestStewardship(data.stewardship);
         } else {
           setMessageBody(generateFallbackDraft());
         }
@@ -183,7 +194,7 @@ export function AvoidanceBreaker({
       setIsGenerating(false);
       setPhase('draft');
     }
-  }, [situation, messageType, recipient, context]);
+  }, [situation, messageType, recipient, context, memberId]);
 
   const generateFallbackDraft = () => {
     // Pick a random starter based on situation keywords
@@ -213,7 +224,8 @@ export function AvoidanceBreaker({
           recipient,
           situation,
           context,
-          regenerate: true
+          regenerate: true,
+          memberId, // For stewardship weight tracking
         })
       });
 
@@ -296,18 +308,26 @@ export function AvoidanceBreaker({
     };
 
     // Schedule the follow-up
+    let stewardship = latestStewardship;
     if (followUpDate) {
       try {
-        await fetch('/api/focus/schedule-followup', {
+        const response = await fetch('/api/focus/schedule-followup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             recipient,
             situation,
             followUpDate,
-            originalMessage: messageBody
+            originalMessage: messageBody,
+            memberId, // For stewardship weight tracking
           })
         });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.stewardship) {
+            stewardship = data.stewardship;
+          }
+        }
       } catch (err) {
         console.error('Follow-up scheduling error:', err);
       }
@@ -317,10 +337,10 @@ export function AvoidanceBreaker({
     setPhase('done');
 
     setTimeout(() => {
-      onComplete?.(result);
+      onComplete?.({ ...result, stewardship });
       onClose();
     }, 1500);
-  }, [messageType, recipient, subject, messageBody, situation, emailSent, onComplete, onClose]);
+  }, [messageType, recipient, subject, messageBody, situation, emailSent, latestStewardship, memberId, onComplete, onClose]);
 
   if (!isOpen) return null;
 

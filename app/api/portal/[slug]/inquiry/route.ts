@@ -15,6 +15,7 @@ import db from '@/lib/db/postgres';
 import crypto from 'crypto';
 import { getPractitionerFeaturesBySlug } from '@/lib/practitioner/features';
 import { sendInquiryNotification } from '@/lib/portal/notifications';
+import { logAction } from '@/lib/focus/weightTracking';
 
 export async function POST(
   request: NextRequest,
@@ -35,7 +36,7 @@ export async function POST(
 
     // Get practitioner
     const practitionerResult = await db.query(
-      `SELECT id, name, email, business_name
+      `SELECT id, member_id, name, email, business_name
        FROM practitioners
        WHERE slug = $1 AND status = 'active'`,
       [slug]
@@ -116,7 +117,19 @@ export async function POST(
         portalSlug: slug,
         businessName: practitioner.business_name,
       }
-    ).catch((err) => console.error('[Portal Inquiry] Notification error:', err));
+    ).then(async (result) => {
+      // Log weight for practitioner (silent, Phase 1)
+      if (result.success && practitioner.member_id) {
+        try {
+          await logAction(practitioner.member_id, 'email_send', {
+            source: 'portal-inquiry',
+            metadata: { portalSlug: slug }
+          });
+        } catch (e) {
+          console.warn('[Portal Inquiry] Weight logging skipped:', e);
+        }
+      }
+    }).catch((err) => console.error('[Portal Inquiry] Notification error:', err));
 
     return NextResponse.json({
       success: true,
