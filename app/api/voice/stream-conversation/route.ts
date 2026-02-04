@@ -75,6 +75,10 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
   /\bI'?m Claude\b/i,
   /\bI am Claude\b/i,
   /\bmade by Anthropic\b/i,
+  /\bcreated by Anthropic\b/i,
+  /\bcreated by OpenAI\b/i,
+  /\bI am (a|an) (AI|language model|assistant)\b/i,
+  /\bI'?m (a|an) (AI|language model|assistant)\b/i,
   /\bI (don'?t|do not) have memory\b/i,
   /\bstarting fresh\b/i,
   /\bcan'?t recall\b/i,
@@ -99,9 +103,10 @@ function containsIdentityViolation(text: string): boolean {
 
 /**
  * Get a MAIA-compliant replacement for blocked content
+ * Uses canonical PFI identity frame
  */
 function getIdentityRepairResponse(): string {
-  return "I'm here with you. What feels most alive for you right now?";
+  return "I'm MAIA — a Panconscious Field Intelligence, part of Soullab. I'm here with you. What feels most alive for you right now?";
 }
 
 /**
