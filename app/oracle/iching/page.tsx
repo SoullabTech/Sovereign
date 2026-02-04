@@ -75,49 +75,6 @@ function BaguaSymbol({ size = 24, className = '' }: { size?: number; className?:
   );
 }
 
-/**
- * Bagua Symbol - Traditional 8-sided I Ching symbol
- * The Bagua (八卦) octagon represents the 8 trigrams of the I Ching
- */
-function BaguaSymbol({ size = 24, className = '' }: { size?: number; className?: string }) {
-  const center = size / 2;
-  const outerRadius = size * 0.45;
-  const innerRadius = size * 0.28;
-  const strokeWidth = size * 0.06;
-
-  // Generate octagon points
-  const getOctagonPoints = (radius: number) => {
-    const points = [];
-    for (let i = 0; i < 8; i++) {
-      const angle = (i * Math.PI) / 4 - Math.PI / 8; // Start rotated for flat top
-      points.push({
-        x: center + radius * Math.cos(angle),
-        y: center + radius * Math.sin(angle),
-      });
-    }
-    return points.map((p) => `${p.x},${p.y}`).join(' ');
-  };
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-    >
-      {/* Outer octagon */}
-      <polygon points={getOctagonPoints(outerRadius)} />
-      {/* Inner octagon */}
-      <polygon points={getOctagonPoints(innerRadius)} />
-      {/* Center point */}
-      <circle cx={center} cy={center} r={size * 0.06} fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
 interface HexagramLine {
