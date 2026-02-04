@@ -284,6 +284,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = '';
       // 🔥 iOS FIX: Don't null out - keep the element for reuse (maintains unlock state)
@@ -406,6 +409,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         console.log('[StreamingVoice] 🎧 Created reusable Audio element for iOS compatibility');
       }
 
+      // 🔥 FIX: Clear stale handlers BEFORE setting new source
+      // When reusing an audio element, old onerror handlers can fire for the
+      // previous empty/cleared src. This prevents spurious error logs.
+      audio.onerror = null;
+      audio.onended = null;
+
       // Update source (reusing element)
       audio.src = audioSrc;
       audio.preload = 'auto';
@@ -486,6 +495,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
     audioQueueRef.current = [];
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = ''; // Clear source but keep element
       // currentAudioRef.current = null; // REMOVED - breaks iOS audio unlock
@@ -849,6 +861,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     // Stop current audio (but keep element for iOS reuse)
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = '';
       // Keep the element for iOS - don't null it out
