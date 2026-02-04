@@ -1603,11 +1603,7 @@ This user is in guest mode (no authenticated identity).
 
     // ═══════════════════════════════════════════════════════════════════════
     // CONTEXT WARNINGS (self-alerting diagnostic system)
-    // ═══════════════════════════════════════════════════════════════════════
-    // Taxonomy:
-    //   W_*           = investigate (something weird happened, check logs)
-    //   E_INVARIANT_* = impossible path (code should never reach, blow up loud)
-    //   CANARY        = intentional semantic lock (allowed to change, but on purpose)
+    // TAXONOMY: W_* investigate | E_INVARIANT_* blow up | CANARY intentional
     // ═══════════════════════════════════════════════════════════════════════
     const contextWarnings: string[] = [];
 
