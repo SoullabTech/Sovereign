@@ -23,6 +23,14 @@
 
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import {
+  decideMode,
+  getModePromptKernel,
+  getRegulatingResponse,
+  getVoiceTeachingSummary,
+  logModeDecision,
+  type ModeDecision,
+} from '@/lib/sovereign/teachingRouter';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
@@ -826,6 +834,105 @@ export async function POST(req: NextRequest) {
         const claudeService = getClaudeService();
         timer.mark('llm_starting');
 
+        // 🎯 TEACHING ROUTER: Decide mode BEFORE LLM call
+        const modeDecision = decideMode({
+          userText: message,
+          channel: 'voice',
+          isIdentityRepair: false,
+        });
+        logModeDecision(modeDecision, { sessionId: effectiveSessionId, channel: 'voice' });
+
+        // 🛡️ DISTRESS VETO: If user is in distress, respond with regulating response immediately
+        if (modeDecision.mode === 'REGULATING') {
+          console.log(`🧘 [TeachingRouter] Distress detected - responding with regulating presence`);
+          const regulatingText = getRegulatingResponse();
+
+          emit('text', {
+            index: 0,
+            text: regulatingText,
+            timestamp: Date.now(),
+          });
+
+          // TTS the regulating response
+          const regulatingAudio = await synthesizeWithFallback(regulatingText, {
+            mode: mode,
+            element: element,
+            sanctuary: sanctuary,
+            speed: 0.9, // Slower for soothing
+            voice: voice,
+          });
+
+          if (regulatingAudio) {
+            emit('audio', {
+              index: 0,
+              audio: regulatingAudio.audio,
+              format: regulatingAudio.format,
+              text: regulatingText,
+              timestamp: Date.now(),
+              source: regulatingAudio.source,
+            });
+          }
+
+          emit('complete', {
+            fullResponse: regulatingText,
+            sentenceCount: 1,
+            audioChunksEmitted: regulatingAudio ? 1 : 0,
+            timestamp: Date.now(),
+            mode: 'regulating',
+            timing: timer.summary(),
+          });
+
+          controller.close();
+          return;
+        }
+
+        // 🎓 TEACHING GATE: If teaching invoked in voice, respond with summary only
+        if (modeDecision.mode === 'TEACHING' && modeDecision.teachingDepth === 'summary') {
+          console.log(`🎓 [TeachingRouter] Teaching invoked in voice - responding with summary`);
+          const teachingSummary = getVoiceTeachingSummary();
+
+          emit('text', {
+            index: 0,
+            text: teachingSummary,
+            timestamp: Date.now(),
+          });
+
+          // TTS the teaching summary
+          const summaryAudio = await synthesizeWithFallback(teachingSummary, {
+            mode: mode,
+            element: element,
+            sanctuary: sanctuary,
+            speed: 1.0,
+            voice: voice,
+          });
+
+          if (summaryAudio) {
+            emit('audio', {
+              index: 0,
+              audio: summaryAudio.audio,
+              format: summaryAudio.format,
+              text: teachingSummary,
+              timestamp: Date.now(),
+              source: summaryAudio.source,
+            });
+          }
+
+          emit('complete', {
+            fullResponse: teachingSummary,
+            sentenceCount: 1,
+            audioChunksEmitted: summaryAudio ? 1 : 0,
+            timestamp: Date.now(),
+            mode: 'teaching_summary',
+            timing: timer.summary(),
+          });
+
+          controller.close();
+          return;
+        }
+
+        // Get mode-specific prompt kernel for relational mode
+        const modeKernel = getModePromptKernel(modeDecision);
+
         // Build context with wisdom field integration (wisdomDirective already computed above)
         const context = {
           element,
@@ -834,7 +941,7 @@ export async function POST(req: NextRequest) {
           // Voice-specific context from wisdom field
           voiceMode: mode,
           sanctuary,
-          wisdomDirective,
+          wisdomDirective: wisdomDirective + '\n\n' + modeKernel, // Inject mode kernel
           memoryContext: wisdomPayload?.memoryDirective,
           spiralContext: wisdomPayload?.spiralDirective,
         };
