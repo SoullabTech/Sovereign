@@ -14,7 +14,7 @@ function getResendClient() {
 }
 
 // Default beads for beta testers
-const DEFAULT_BEADS = 3;
+const DEFAULT_BEADS = 10;
 
 function generatePasskey(name: string): string {
   const cleanName = name

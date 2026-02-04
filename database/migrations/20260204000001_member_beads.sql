@@ -3,7 +3,7 @@
 
 -- Add beads_remaining column to members
 ALTER TABLE members
-ADD COLUMN IF NOT EXISTS beads_remaining INTEGER DEFAULT 3;
+ADD COLUMN IF NOT EXISTS beads_remaining INTEGER DEFAULT 10;
 
 -- Add gifter_member_id to gift_passkeys to track which member sent the bead
 ALTER TABLE gift_passkeys
