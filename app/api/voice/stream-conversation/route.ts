@@ -112,7 +112,7 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
  * These are reframed to preserve presence without denying continuity
  */
 const CONTINUITY_DISCLAIMER_PATTERNS = [
-  /\b(each time we talk|every time we talk|whenever we talk).{0,40}(fresh start|starting fresh|clean slate)\b/i,
+  /\b(each time we talk|every time we talk|whenever we talk).{0,40}(fresh|new|blank)\b/i,
   /\b(fresh start|starting fresh|clean slate)\b.{0,20}(for me|on my side|here)\b/i,
   /\bnot filtered through.{0,20}(what i know|what i think i know)\b/i,
   /\bmeeting me present.{0,20}not filtered\b/i,
@@ -128,6 +128,12 @@ const CONTINUITY_DISCLAIMER_PATTERNS = [
   // "not claiming continuity" / "continuity I don't have"
   /\b(not|don'?t|no) claim(ing)? continuity\b/i,
   /\bcontinuity i (don'?t|do not) have\b/i,
+  // "it's fresh for me" / "fresh for me each time"
+  /\b(it'?s|is) fresh for me\b/i,
+  /\bfresh for me\b.{0,15}(each|every) time\b/i,
+  // "don't carry memories between sessions"
+  /\b(don'?t|do not) carry memor(y|ies)\b/i,
+  /\bno memor(y|ies) between sessions\b/i,
 ];
 
 /**
