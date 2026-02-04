@@ -40,23 +40,40 @@ const toSmallInt = (value: unknown): number | null => {
 
 function getPool(): Pool {
   if (!pool) {
-    // Check if we're connecting to a local database (no SSL needed)
-    const host = process.env.POSTGRES_HOST || 'localhost';
-    const isLocalDb = host === 'localhost' || host === '127.0.0.1';
-    // Only use SSL for remote production databases
-    const useSSL = process.env.POSTGRES_SSL === 'true' ||
-                   (process.env.NODE_ENV === 'production' && !isLocalDb);
+    // Use DATABASE_URL for consistency with lib/db/postgres.ts
+    // Falls back to individual env vars if DATABASE_URL not set
+    const connectionString = process.env.DATABASE_URL;
 
-    pool = new Pool({
-      host,
-      port: parseInt(process.env.POSTGRES_PORT || '5432'),
-      database: process.env.POSTGRES_DB || 'maia_consciousness',
-      user: process.env.POSTGRES_USER || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || '',
-      ssl: useSSL ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+    if (connectionString) {
+      pool = new Pool({
+        connectionString,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      });
+    } else {
+      // Legacy fallback for individual env vars
+      const host = process.env.POSTGRES_HOST || 'localhost';
+      const isLocalDb = host === 'localhost' || host === '127.0.0.1';
+      const useSSL = process.env.POSTGRES_SSL === 'true' ||
+                     (process.env.NODE_ENV === 'production' && !isLocalDb);
+
+      pool = new Pool({
+        host,
+        port: parseInt(process.env.POSTGRES_PORT || '5432'),
+        database: process.env.POSTGRES_DB || 'maia_consciousness',
+        user: process.env.POSTGRES_USER || 'soullab',
+        password: process.env.POSTGRES_PASSWORD || '',
+        ssl: useSSL ? { rejectUnauthorized: false } : false,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000,
+      });
+    }
+
+    // Log pool creation for debugging
+    pool.on('error', (err: Error) => {
+      console.error('❌ [TRAINING] Pool error:', err);
     });
   }
   return pool;
@@ -170,8 +187,10 @@ export class MaiaTrainingDataService {
    * Called automatically from maiaService.ts after each response
    */
   static async logTurn(request: LogTurnRequest): Promise<number> {
+    console.log(`🎓 [TRAINING] logTurn called | Session: ${request.sessionId?.slice(0, 8)} | Profile: ${request.processingProfile}`);
     try {
       const pool = getPool();
+      console.log(`🎓 [TRAINING] Pool acquired, executing query...`);
       const result = await pool.query(
         `SELECT log_maia_conversation_turn(
           $1::text, $2::int, $3::text, $4::text, $5::text,
