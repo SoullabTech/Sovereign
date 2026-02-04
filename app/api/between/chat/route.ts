@@ -1348,6 +1348,27 @@ This user is in guest mode (no authenticated identity).
         metrics: voiceOutput.metrics,
       };
 
+      // 🧹 STRIP INTERNAL METADATA + MARKDOWN: Clean response for user display (safe mode path)
+      const showMetaSafe = await getSystemSetting<boolean>('show_soul_metadata') === true;
+      const showMarkdownSafe = await getSystemSetting<boolean>('show_markdown') === true;
+
+      if (!showMetaSafe) {
+        outboundText = outboundText
+          .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+          .replace(/---SOUL_METADATA---[\s\S]*/g, '');
+      }
+      if (!showMarkdownSafe) {
+        outboundText = outboundText
+          .replace(/^#{1,6}\s+/gm, '')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/^[-*]{3,}\s*$/gm, '')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/→/g, '➝')
+          .replace(/\n{3,}/g, '\n\n');
+      }
+      outboundText = outboundText.trim();
+
       // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
       let socraticValidation: SocraticValidationResult | null = null;
       try {
@@ -1947,15 +1968,39 @@ This user is in guest mode (no authenticated identity).
       console.error('[Socratic Validator ORCH] Validation failed (non-blocking):', err);
     }
 
-    // 🧹 STRIP INTERNAL METADATA: Remove SOUL_METADATA blocks before storing/sending
-    // Admin can enable show_soul_metadata to see internal processing data
+    // 🧹 STRIP INTERNAL METADATA + MARKDOWN: Clean response for user display
+    // Admin can enable show_soul_metadata or show_markdown to see raw output
     const showMetadata = await getSystemSetting<boolean>('show_soul_metadata') === true;
-    const cleanedText = showMetadata
-      ? outboundText2.trim()
-      : outboundText2
-          .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-          .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
-          .trim();
+    const showMarkdown = await getSystemSetting<boolean>('show_markdown') === true;
+
+    let cleanedText = outboundText2;
+
+    // Strip SOUL_METADATA blocks (internal processing data)
+    if (!showMetadata) {
+      cleanedText = cleanedText
+        .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+        .replace(/---SOUL_METADATA---[\s\S]*/g, ''); // partial block at end
+    }
+
+    // Strip markdown artifacts that look messy in plain text UI
+    if (!showMarkdown) {
+      cleanedText = cleanedText
+        // Remove markdown headers (## Header)
+        .replace(/^#{1,6}\s+/gm, '')
+        // Remove bold/italic markers (**text** or *text*)
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        // Remove horizontal rules (--- or ***)
+        .replace(/^[-*]{3,}\s*$/gm, '')
+        // Remove inline code backticks
+        .replace(/`([^`]+)`/g, '$1')
+        // Clean up arrows to be more readable
+        .replace(/→/g, '➝')
+        // Remove excessive newlines from stripped content
+        .replace(/\n{3,}/g, '\n\n');
+    }
+
+    cleanedText = cleanedText.trim();
 
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {

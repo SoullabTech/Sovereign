@@ -111,6 +111,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const recognitionStartTime = useRef<number>(0);
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
+  const noSpeechGraceRestartsRef = useRef<number>(0); // Track grace restarts when user hasn't spoken yet
+  const MAX_NO_SPEECH_GRACE_RESTARTS = 1; // Allow 1 restart before stopping (gives ~16s total to start speaking)
 
   // 🔥 SERIALIZED NATIVE SR: Prevent start/stop race conditions that cause micro-stops
   const nativeSessionIdRef = useRef<number>(0);      // increments every SR start
@@ -353,6 +355,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Update speech time on any speech
       if (interimTranscript || finalTranscript) {
         lastSpeechTime.current = Date.now();
+        noSpeechGraceRestartsRef.current = 0; // Reset grace restarts since user is actively speaking
 
         // CRITICAL FIX: Accumulate final transcripts, but only show latest interim
         if (finalTranscript) {
@@ -494,12 +497,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // In Care/Scribe modes, ALWAYS restart to stay open for the user
       if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
-        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
-        console.log('   (User can tap mic to restart when ready to speak)');
-        setIsListening(false);
-        isListeningRef.current = false;
-        onRecordingStateChange?.(false);
-        return;
+        // 🎯 GRACE RESTART: Give users more time to start speaking (one free restart)
+        if (!hasEverSpoken && noSpeechGraceRestartsRef.current < MAX_NO_SPEECH_GRACE_RESTARTS) {
+          noSpeechGraceRestartsRef.current++;
+          console.log(`🔄 [onend] No speech yet, grace restart ${noSpeechGraceRestartsRef.current}/${MAX_NO_SPEECH_GRACE_RESTARTS} - giving user more time`);
+          // Fall through to restart logic below
+        } else {
+          console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke, grace restarts exhausted') + ') - stopping');
+          console.log('   (User can tap mic to restart when ready to speak)');
+          setIsListening(false);
+          isListeningRef.current = false;
+          onRecordingStateChange?.(false);
+          noSpeechGraceRestartsRef.current = 0; // Reset for next time
+          return;
+        }
       }
 
       // Log if persistent mode is keeping us open
@@ -1118,6 +1129,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       return;
     }
     lastStartAttemptRef.current = now;
+
+    // Reset grace restarts on fresh start (user tapped mic)
+    noSpeechGraceRestartsRef.current = 0;
 
     // 🛡️ CRASH PREVENTION: Don't start if already starting
     if (isStartingRef.current) {
