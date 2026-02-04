@@ -5764,6 +5764,7 @@ I'm not sure what I'm feeling yet.`;
       const audioUrl = URL.createObjectURL(audioBlob);
 
       const audio = new Audio(audioUrl);
+      audio.volume = voiceVolume;
       audioRef.current = audio;
 
       audio.onended = () => {
