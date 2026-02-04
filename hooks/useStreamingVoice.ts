@@ -421,6 +421,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       // Update source and volume (reusing element)
       audio.src = audioSrc;
       audio.volume = volume;
+      console.log('[StreamingVoice] 🔊 Audio volume set to:', volume);
       audio.preload = 'auto';
 
       audio.onended = () => {
