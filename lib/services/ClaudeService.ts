@@ -254,8 +254,15 @@ export class ClaudeService {
               continue;
             }
 
-            if (sentence.length > 0) {
-              yield { type: 'sentence', text: sentence, index: sentenceIndex++ };
+            // Final cleanup: strip any metadata/JSON that leaked into sentence
+            const cleanSentence = sentence
+              .replace(/---SOUL_METADATA---[\s\S]*/g, '')  // Metadata start to end
+              .replace(/[\s\S]*---END_METADATA---/g, '')   // Start to metadata end
+              .replace(/\{[^{}]*\}/g, '')  // JSON objects
+              .trim();
+
+            if (cleanSentence.length > 0) {
+              yield { type: 'sentence', text: cleanSentence, index: sentenceIndex++ };
             }
             buffer = buffer.slice(sentenceEnd);
           }
@@ -263,7 +270,14 @@ export class ClaudeService {
       }
 
       // Yield any remaining text in buffer
-      const remaining = buffer.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '').trim();
+      // Strip complete metadata blocks AND incomplete ones (no end marker)
+      let remaining = buffer
+        .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')  // Complete blocks
+        .replace(/---SOUL_METADATA---[\s\S]*/g, '')  // Incomplete blocks (to end of string)
+        .replace(/\{[\s\S]*?\}/g, '')  // JSON objects that leaked
+        .replace(/\[[\s\S]*?\]/g, '')  // JSON arrays that leaked
+        .trim();
+
       if (remaining.length > 0) {
         yield { type: 'sentence', text: remaining, index: sentenceIndex++ };
       }
