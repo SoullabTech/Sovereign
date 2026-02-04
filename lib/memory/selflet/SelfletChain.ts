@@ -29,6 +29,8 @@ import {
   RecordReinterpretationInput,
   Element,
   getMetamorphosisSymbol,
+  UserSelfletState,
+  SelfletActionResult,
 } from './types';
 
 // ═══════════════════════════════════════════════════════════════
@@ -200,6 +202,8 @@ export class SelfletChainService {
          JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
          WHERE sn.user_id = $1
            AND sm.delivered_at IS NULL
+           AND sm.archived_at IS NULL
+           AND (sm.snoozed_until IS NULL OR sm.snoozed_until <= NOW())
            AND sm.to_selflet_id IS NULL
          ORDER BY sn.created_at DESC`,
         [userId]
@@ -228,6 +232,8 @@ export class SelfletChainService {
         JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
         WHERE sn.user_id = $1
           AND sm.delivered_at IS NULL
+          AND sm.archived_at IS NULL
+          AND (sm.snoozed_until IS NULL OR sm.snoozed_until <= NOW())
       `;
       const params: any[] = [userId];
 
@@ -652,9 +658,11 @@ export class SelfletChainService {
     relevanceThemes: string[] | null;
     deliveryContext: Record<string, unknown> | null;
     createdAt: Date;
+    deliveryCount: number; // Phase 2K-b
   }> {
     const limit = input.limit ?? 1;
 
+    // Phase 2K-b: Include delivery_count for "Returning" badge
     const query = `
       SELECT
         m.id,
@@ -664,11 +672,14 @@ export class SelfletChainService {
         m.content,
         m.relevance_themes,
         m.delivery_context,
-        m.created_at
+        m.created_at,
+        m.delivery_count
       FROM selflet_messages m
       JOIN selflet_nodes n ON n.id = m.from_selflet_id
       WHERE n.user_id = $1
         AND m.delivered_at IS NULL
+        AND m.archived_at IS NULL
+        AND (m.snoozed_until IS NULL OR m.snoozed_until <= NOW())
         AND (
           $2::text[] IS NULL
           OR array_length($2::text[], 1) IS NULL
@@ -692,25 +703,88 @@ export class SelfletChainService {
       relevanceThemes: row.relevance_themes ?? null,
       deliveryContext: row.delivery_context ?? null,
       createdAt: new Date(row.created_at),
+      deliveryCount: row.delivery_count ?? 0,
     };
   }
 
   /**
    * Mark a message as delivered (called when surfaced in conversation)
+   * Phase 2I: Also stores session/turn for cooldown gating
    */
   async markMessageDeliveredById(input: {
     messageId: string;
     deliveryContext?: Record<string, unknown>;
+    deliveredSessionId?: string | null;
+    deliveredTurnId?: number | null;
   }): Promise<void> {
+    // Phase 2K-b: Track delivery count for "Returning" badge
+    // Guard: only increment if this is a new turn (prevents double-bump on race/double-render)
     const query = `
       UPDATE selflet_messages
       SET delivered_at = NOW(),
-          delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb
+          delivery_count = COALESCE(delivery_count, 0) + 1,
+          first_delivered_at = COALESCE(first_delivered_at, NOW()),
+          last_delivered_at = NOW(),
+          delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb,
+          delivered_session_id = COALESCE($3, delivered_session_id),
+          delivered_turn_id = COALESCE($4, delivered_turn_id)
       WHERE id = $1
-        AND delivered_at IS NULL
+        AND (delivered_turn_id IS DISTINCT FROM $4)
     `;
-    await dbQuery(query, [input.messageId, JSON.stringify(input.deliveryContext ?? {})]);
-    console.log(`✅ [SELFLET MESSAGE] Marked delivered: ${input.messageId}`);
+    await dbQuery(query, [
+      input.messageId,
+      JSON.stringify(input.deliveryContext ?? {}),
+      input.deliveredSessionId ?? null,
+      input.deliveredTurnId ?? null,
+    ]);
+    console.log(`✅ [SELFLET MESSAGE] Marked delivered: ${input.messageId} (session: ${input.deliveredSessionId ?? 'none'})`);
+  }
+
+  /**
+   * Phase 2I: Get user's selflet delivery state for surfacing gating
+   * Returns last delivery time, last turn, and count for current session
+   */
+  async getUserSelfletState(userId: string, sessionId?: string): Promise<UserSelfletState> {
+    const current = await this.getCurrentSelflet(userId);
+    if (!current) {
+      return { lastSelfletTime: null, lastSelfletTurn: null, countThisSession: 0 };
+    }
+
+    try {
+      // Get last delivery time across all sessions
+      const lastTimeRes = await dbQuery(
+        `SELECT MAX(delivered_at) AS last_time
+         FROM selflet_messages
+         WHERE to_selflet_id = $1 AND delivered_at IS NOT NULL`,
+        [current.id]
+      );
+      const lastSelfletTime = (lastTimeRes.rows[0]?.last_time as Date | null) ?? null;
+
+      if (!sessionId) {
+        return { lastSelfletTime, lastSelfletTurn: null, countThisSession: 0 };
+      }
+
+      // Get per-session stats
+      const perSessionRes = await dbQuery(
+        `SELECT
+            COUNT(*)::int AS count_session,
+            MAX(delivered_turn_id)::int AS last_turn
+         FROM selflet_messages
+         WHERE to_selflet_id = $1
+           AND delivered_session_id = $2
+           AND delivered_at IS NOT NULL`,
+        [current.id, sessionId]
+      );
+
+      return {
+        lastSelfletTime,
+        lastSelfletTurn: perSessionRes.rows[0]?.last_turn ?? null,
+        countThisSession: perSessionRes.rows[0]?.count_session ?? 0,
+      };
+    } catch (error) {
+      console.log(`[SELFLET] Error getting user state for ${userId}:`, error);
+      return { lastSelfletTime: null, lastSelfletTurn: null, countThisSession: 0 };
+    }
   }
 
   /**
@@ -892,6 +966,164 @@ export class SelfletChainService {
       triggerContext: row.trigger_context,
       createdAt: new Date(row.created_at),
     };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PHASE 2J: SNOOZE / ARCHIVE CONTROLS
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Snooze a message - clears delivery tracking and sets snooze timer
+   * Message will resurface after snooze expires
+   */
+  async snoozeMessageById(input: {
+    userId: string;
+    messageId: string;
+    snoozeMinutes: number;
+    reason?: string;
+  }): Promise<SelfletActionResult> {
+    const snoozedUntil = new Date(Date.now() + input.snoozeMinutes * 60_000);
+
+    // Phase 2K-b: Track last_snoozed_at for history
+    const { rows } = await dbQuery(
+      `
+      UPDATE selflet_messages sm
+      SET
+        snoozed_until = $1,
+        last_snoozed_at = NOW(),
+        delivered_at = NULL,
+        delivered_session_id = NULL,
+        delivered_turn_id = NULL
+      FROM selflet_nodes sn
+      WHERE
+        sm.id = $2
+        AND sm.from_selflet_id = sn.id
+        AND sn.user_id = $3
+        AND sm.archived_at IS NULL
+      RETURNING sm.id, sm.snoozed_until
+      `,
+      [snoozedUntil.toISOString(), input.messageId, input.userId]
+    );
+
+    if (!rows?.length) {
+      console.log(`[SELFLET] Snooze failed for message ${input.messageId} (not found or archived)`);
+      return { ok: false, messageId: input.messageId, action: 'snooze' };
+    }
+
+    console.log(`[SELFLET] ⏰ Snoozed message ${input.messageId} until ${snoozedUntil.toISOString()}`);
+    return {
+      ok: true,
+      messageId: rows[0].id,
+      action: 'snooze',
+      snoozedUntil: rows[0].snoozed_until,
+    };
+  }
+
+  /**
+   * Archive a message - permanently removes from surfacing queue
+   */
+  async archiveMessageById(input: {
+    userId: string;
+    messageId: string;
+    reason?: string;
+  }): Promise<SelfletActionResult> {
+    const reason = input.reason ?? 'user_archive';
+
+    const { rows } = await dbQuery(
+      `
+      UPDATE selflet_messages sm
+      SET
+        archived_at = NOW(),
+        archived_reason = $1
+      FROM selflet_nodes sn
+      WHERE
+        sm.id = $2
+        AND sm.from_selflet_id = sn.id
+        AND sn.user_id = $3
+      RETURNING sm.id
+      `,
+      [reason, input.messageId, input.userId]
+    );
+
+    if (!rows?.length) {
+      console.log(`[SELFLET] Archive failed for message ${input.messageId} (not found)`);
+      return { ok: false, messageId: input.messageId, action: 'archive' };
+    }
+
+    console.log(`[SELFLET] 📦 Archived message ${input.messageId} (reason: ${reason})`);
+    return { ok: true, messageId: rows[0].id, action: 'archive' };
+  }
+
+  /**
+   * Phase 2K-a: Get archived messages for user (for archive drawer)
+   * Returns messages ordered by archived_at DESC (newest first)
+   */
+  async getArchivedMessagesForUser(input: {
+    userId: string;
+    limit?: number;
+    cursor?: string; // ISO timestamp for pagination
+  }): Promise<{
+    items: Array<SelfletMessage & { archivedAt: Date; archivedReason?: string }>;
+    nextCursor: string | null;
+  }> {
+    const limit = Math.min(input.limit ?? 25, 100);
+    const cursorClause = input.cursor
+      ? `AND sm.archived_at < $3`
+      : '';
+    const params: (string | number)[] = [input.userId, limit + 1];
+    if (input.cursor) {
+      params.push(input.cursor);
+    }
+
+    const { rows } = await dbQuery(
+      `
+      SELECT
+        sm.id,
+        sm.from_selflet_id AS "fromSelfletId",
+        sm.to_selflet_id AS "toSelfletId",
+        sm.message_type AS "messageType",
+        sm.title,
+        sm.content,
+        sm.symbolic_objects AS "symbolicObjects",
+        sm.ritual_trigger AS "ritualTrigger",
+        sm.relevance_themes AS "relevanceThemes",
+        sm.delivered_at AS "deliveredAt",
+        sm.created_at AS "createdAt",
+        sm.archived_at AS "archivedAt",
+        sm.archived_reason AS "archivedReason"
+      FROM selflet_messages sm
+      JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
+      WHERE sn.user_id = $1
+        AND sm.archived_at IS NOT NULL
+        ${cursorClause}
+      ORDER BY sm.archived_at DESC
+      LIMIT $2
+      `,
+      params
+    );
+
+    const hasMore = rows.length > limit;
+    const items = rows.slice(0, limit).map((row) => ({
+      id: row.id,
+      fromSelfletId: row.fromSelfletId,
+      toSelfletId: row.toSelfletId ?? undefined,
+      messageType: row.messageType,
+      title: row.title ?? undefined,
+      content: row.content,
+      symbolicObjects: row.symbolicObjects ?? undefined,
+      ritualTrigger: row.ritualTrigger ?? undefined,
+      relevanceThemes: row.relevanceThemes ?? undefined,
+      deliveredAt: row.deliveredAt ? new Date(row.deliveredAt) : undefined,
+      createdAt: new Date(row.createdAt),
+      archivedAt: new Date(row.archivedAt),
+      archivedReason: row.archivedReason ?? undefined,
+    }));
+
+    const nextCursor = hasMore && items.length > 0
+      ? items[items.length - 1].archivedAt.toISOString()
+      : null;
+
+    return { items, nextCursor };
   }
 }
 

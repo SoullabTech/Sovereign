@@ -3,10 +3,13 @@
  *
  * Sends an email via Gmail on behalf of the authenticated user.
  * Used by Avoidance Breaker to send drafted messages.
+ *
+ * Weight: 5 (highest cost action - real external infrastructure)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GmailService } from '@/lib/gmail/GmailService';
+import { logAction, checkThreshold } from '@/lib/focus/weightTracking';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,12 +20,13 @@ interface SendEmailRequest {
   body: string;
   cc?: string;
   bcc?: string;
+  memberId?: string; // For weight tracking
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: SendEmailRequest = await request.json();
-    const { userId, to, subject, body: emailBody, cc, bcc } = body;
+    const { userId, to, subject, body: emailBody, cc, bcc, memberId } = body;
 
     // Validate required fields
     if (!userId) {
@@ -44,6 +48,25 @@ export async function POST(request: NextRequest) {
         { error: 'Subject and body are required' },
         { status: 400 }
       );
+    }
+
+    // Check threshold before allowing high-cost action (weight 5)
+    if (memberId) {
+      try {
+        const threshold = await checkThreshold(memberId);
+        if (threshold.level === 'hard') {
+          // At hard threshold, suggest pause before sending
+          return NextResponse.json({
+            success: false,
+            error: 'threshold_reached',
+            threshold: threshold.level,
+            message: 'You\'ve been doing meaningful work this week. Consider becoming a steward to continue, or take a moment to pause.',
+          }, { status: 429 });
+        }
+      } catch (thresholdError) {
+        // Non-blocking - continue if threshold check fails
+        console.warn('[GmailSend] Threshold check skipped:', thresholdError);
+      }
     }
 
     // Check if user has Gmail permission
@@ -75,6 +98,18 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[GmailSend] Email sent to ${to} for user ${userId}`);
+
+    // Log weight for gmail send (weight = 5, highest cost action)
+    if (memberId) {
+      try {
+        await logAction(memberId, 'gmail_send', {
+          source: 'avoidance-breaker',
+          metadata: { recipient: to }
+        });
+      } catch (weightError) {
+        console.warn('[GmailSend] Weight logging skipped:', weightError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

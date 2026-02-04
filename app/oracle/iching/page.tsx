@@ -24,9 +24,56 @@ import {
   Loader2,
   MessageSquare,
   Save,
-  Check
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Zap
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { EmbeddedMAIAChat } from '@/components/oracle/EmbeddedMAIAChat';
+
+/**
+ * Bagua Symbol - Traditional 8-sided I Ching symbol
+ * The Bagua (八卦) octagon represents the 8 trigrams of the I Ching
+ */
+function BaguaSymbol({ size = 24, className = '' }: { size?: number; className?: string }) {
+  const center = size / 2;
+  const outerRadius = size * 0.45;
+  const innerRadius = size * 0.28;
+  const strokeWidth = size * 0.06;
+
+  // Generate octagon points
+  const getOctagonPoints = (radius: number) => {
+    const points = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4 - Math.PI / 8; // Start rotated for flat top
+      points.push({
+        x: center + radius * Math.cos(angle),
+        y: center + radius * Math.sin(angle),
+      });
+    }
+    return points.map((p) => `${p.x},${p.y}`).join(' ');
+  };
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    >
+      {/* Outer octagon */}
+      <polygon points={getOctagonPoints(outerRadius)} />
+      {/* Inner octagon */}
+      <polygon points={getOctagonPoints(innerRadius)} />
+      {/* Center point */}
+      <circle cx={center} cy={center} r={size * 0.06} fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 /**
  * Bagua Symbol - Traditional 8-sided I Ching symbol
@@ -79,6 +126,11 @@ interface HexagramLine {
   value: number; // 6-9 traditional values
 }
 
+interface ChangingLineMeaning {
+  line: number;
+  meaning: string;
+}
+
 interface Hexagram {
   number: number;
   name: string;
@@ -89,6 +141,7 @@ interface Hexagram {
   guidance: string;
   timing: string;
   changingLines?: number[];
+  changingLineMeanings?: ChangingLineMeaning[];
   transformed?: {
     number: number;
     name: string;
@@ -116,6 +169,7 @@ export default function IChingOraclePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [expandedLines, setExpandedLines] = useState<Set<number>>(new Set());
 
   // Yarrow stalk casting simulation - builds hexagram line by line
   const castYarrowStalks = async () => {
@@ -150,7 +204,7 @@ export default function IChingOraclePage() {
 
   const fetchReading = async (lines: HexagramLine[]) => {
     try {
-      const response = await fetch('/api/oracle/iching', {
+      const response = await apiFetch('/api/oracle/iching', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -193,6 +247,19 @@ export default function IChingOraclePage() {
     setCurrentLineIndex(0);
     setIsSaved(false);
     setSaveError(null);
+    setExpandedLines(new Set());
+  };
+
+  const toggleLineExpanded = (lineNum: number) => {
+    setExpandedLines(prev => {
+      const next = new Set(prev);
+      if (next.has(lineNum)) {
+        next.delete(lineNum);
+      } else {
+        next.add(lineNum);
+      }
+      return next;
+    });
   };
 
   const handleSaveReading = async () => {
@@ -570,6 +637,116 @@ export default function IChingOraclePage() {
                       </div>
                     </div>
 
+                    {/* Changing Lines - The Heart of I Ching */}
+                    {reading.hexagram.changingLineMeanings && reading.hexagram.changingLineMeanings.length > 0 && (
+                      <div className="bg-gradient-to-br from-amber-900/20 via-orange-800/15 to-yellow-900/20 backdrop-blur-xl border border-amber-500/30 rounded-2xl p-8 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-6">
+                          <Zap className="w-6 h-6 text-amber-500" />
+                          <h3 className="text-2xl font-bold text-amber-100">Changing Lines</h3>
+                          <span className="ml-auto text-amber-400/70 text-sm">
+                            {reading.hexagram.changingLineMeanings.length} line{reading.hexagram.changingLineMeanings.length > 1 ? 's' : ''} in motion
+                          </span>
+                        </div>
+
+                        <p className="text-amber-200/70 text-sm mb-6 leading-relaxed">
+                          The changing lines are the living heart of your reading. They reveal where energy is actively transforming
+                          and offer specific guidance for your situation. Click each line to explore its meaning.
+                        </p>
+
+                        <div className="space-y-3">
+                          {reading.hexagram.changingLineMeanings.map((changingLine) => {
+                            const isExpanded = expandedLines.has(changingLine.line);
+                            const lineValue = hexagramLines[changingLine.line - 1]?.value;
+                            const isOldYang = lineValue === 9;
+                            const isOldYin = lineValue === 6;
+
+                            return (
+                              <motion.div
+                                key={changingLine.line}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: changingLine.line * 0.1 }}
+                                className="bg-black/20 rounded-xl overflow-hidden"
+                              >
+                                <button
+                                  onClick={() => toggleLineExpanded(changingLine.line)}
+                                  className="w-full p-4 flex items-center gap-4 hover:bg-white/5 transition-colors text-left"
+                                >
+                                  {/* Line number badge */}
+                                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-600/30 flex items-center justify-center">
+                                    <span className="text-amber-200 font-bold">{changingLine.line}</span>
+                                  </div>
+
+                                  {/* Line visualization */}
+                                  <div className="flex-shrink-0 flex items-center gap-2">
+                                    {isOldYang ? (
+                                      <>
+                                        <div className="w-8 h-2 bg-amber-500 rounded" />
+                                        <span className="text-amber-400 text-xs">→</span>
+                                        <div className="w-3 h-2 bg-amber-500/50 rounded" />
+                                        <div className="w-3 h-2 bg-amber-500/50 rounded" />
+                                      </>
+                                    ) : isOldYin ? (
+                                      <>
+                                        <div className="w-3 h-2 bg-amber-500 rounded" />
+                                        <div className="w-3 h-2 bg-amber-500 rounded" />
+                                        <span className="text-amber-400 text-xs">→</span>
+                                        <div className="w-8 h-2 bg-amber-500/50 rounded" />
+                                      </>
+                                    ) : null}
+                                  </div>
+
+                                  {/* Change type label */}
+                                  <div className="flex-1">
+                                    <span className="text-amber-300 text-sm">
+                                      {isOldYang ? 'Yang becoming Yin' : isOldYin ? 'Yin becoming Yang' : 'Changing'}
+                                    </span>
+                                  </div>
+
+                                  {/* Expand/collapse indicator */}
+                                  <motion.div
+                                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <ChevronDown className="w-5 h-5 text-amber-400" />
+                                  </motion.div>
+                                </button>
+
+                                {/* Expanded content */}
+                                <AnimatePresence>
+                                  {isExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      transition={{ duration: 0.3 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="px-4 pb-4 pt-2 border-t border-amber-500/20">
+                                        <p className="text-amber-100/90 leading-relaxed">
+                                          {changingLine.meaning}
+                                        </p>
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Summary of transformation */}
+                        {reading.hexagram.transformed && (
+                          <div className="mt-6 pt-6 border-t border-amber-500/20">
+                            <p className="text-amber-200/70 text-sm text-center">
+                              Through these changes, Hexagram {reading.hexagram.number} ({reading.hexagram.name})
+                              transforms into Hexagram {reading.hexagram.transformed.number} ({reading.hexagram.transformed.name})
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
                       <div className="bg-teal-800/10 backdrop-blur-xl border border-teal-600/20 rounded-xl p-6">
@@ -583,34 +760,23 @@ export default function IChingOraclePage() {
                       </div>
                     )}
 
-                    {/* Consult with MAIA */}
-                    <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <MessageSquare className="w-6 h-6 text-violet-400" />
-                        <h4 className="text-xl font-semibold text-violet-200">Explore with MAIA</h4>
-                      </div>
-                      <p className="text-violet-300/70 text-sm mb-4">
-                        Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
-                      </p>
-                      <button
-                        onClick={() => {
-                          const context = encodeURIComponent(
-                            `I just received an I Ching reading for my question: "${question}"\n\n` +
-                            `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name} (${reading.hexagram.keyword})\n` +
-                            `Upper trigram: ${reading.hexagram.trigrams.upper}, Lower trigram: ${reading.hexagram.trigrams.lower}\n\n` +
-                            `Interpretation: ${reading.hexagram.interpretation}\n\n` +
-                            `Guidance: ${reading.guidance}\n\n` +
-                            (reading.hexagram.transformed ? `This transforms into Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}\n\n` : '') +
-                            `Help me understand how this applies to my situation and what it means for me.`
-                          );
-                          router.push(`/maia?context=${context}`);
-                        }}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <MessageSquare className="w-5 h-5" />
-                        Consult with MAIA
-                      </button>
-                    </div>
+                    {/* Embedded MAIA Chat */}
+                    <EmbeddedMAIAChat
+                      oracleType="I Ching"
+                      question={question}
+                      readingContext={
+                        `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name} (${reading.hexagram.keyword})\n` +
+                        `Upper trigram: ${reading.hexagram.trigrams.upper}, Lower trigram: ${reading.hexagram.trigrams.lower}\n\n` +
+                        `Interpretation: ${reading.hexagram.interpretation}\n\n` +
+                        `Guidance: ${reading.guidance}\n` +
+                        (reading.hexagram.changingLineMeanings?.length
+                          ? `\nChanging Lines:\n${reading.hexagram.changingLineMeanings.map(cl => `Line ${cl.line}: ${cl.meaning}`).join('\n')}\n`
+                          : '') +
+                        (reading.hexagram.transformed
+                          ? `\nThis transforms into Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}`
+                          : '')
+                      }
+                    />
 
                     {/* Save Error Display */}
                     {saveError && (

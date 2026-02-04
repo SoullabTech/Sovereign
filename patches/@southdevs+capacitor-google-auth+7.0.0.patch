@@ -14,7 +14,7 @@ index 28d5e6d..6e90593 100644
      s.static_framework = true
    end
 diff --git a/node_modules/@southdevs/capacitor-google-auth/ios/Plugin/Plugin.swift b/node_modules/@southdevs/capacitor-google-auth/ios/Plugin/Plugin.swift
-index 26d5407..8859cc5 100644
+index 26d5407..016f710 100644
 --- a/node_modules/@southdevs/capacitor-google-auth/ios/Plugin/Plugin.swift
 +++ b/node_modules/@southdevs/capacitor-google-auth/ios/Plugin/Plugin.swift
 @@ -5,12 +5,13 @@ import GoogleSignIn
@@ -33,17 +33,17 @@ index 26d5407..8859cc5 100644
      var additionalScopes: [String]!;
  
 @@ -22,7 +23,9 @@ public class GoogleAuth: CAPPlugin {
- 
+         
          let serverClientId = getServerClientIdValue();
  
 -        googleSignInConfiguration = GIDConfiguration.init(clientID: customClientId, serverClientID: serverClientId)
 +        // GoogleSignIn 7.x: configuration is set on the singleton
 +        let config = GIDConfiguration(clientID: customClientId, serverClientID: serverClientId)
 +        googleSignIn.configuration = config
- 
+         
          // these are scopes granted by default by the signIn method
          let defaultGrantedScopes = ["email", "profile", "openid"];
-@@ -72,12 +75,17 @@ public class GoogleAuth: CAPPlugin {
+@@ -72,12 +75,18 @@ public class GoogleAuth: CAPPlugin {
          signInCall = call;
          DispatchQueue.main.async {
              if self.googleSignIn.hasPreviousSignIn() && !self.forceAuthCode {
@@ -60,14 +60,15 @@ index 26d5407..8859cc5 100644
 +                        return;
 +                    }
 +                    if let user = user {
-+                        self.resolveSignInCallWith(user: user)
++                        // Restore doesn't provide serverAuthCode (it's a one-time code from initial sign-in)
++                        self.resolveSignInCallWith(user: user, serverAuthCode: nil)
 +                    } else {
 +                        self.signInCall?.reject("No user returned from restore");
 +                    }
                  }
              } else {
                  let presentingVc = self.bridge!.viewController!;
-@@ -93,13 +101,19 @@ public class GoogleAuth: CAPPlugin {
+@@ -93,13 +102,20 @@ public class GoogleAuth: CAPPlugin {
                      NSLog("no server client id found in config")
                      return;
                  }
@@ -82,15 +83,16 @@ index 26d5407..8859cc5 100644
                          return;
                      }
 -                    self.resolveSignInCallWith(user: user!);
-+                    guard let user = result?.user else {
-+                        self.signInCall?.reject("No user returned from sign in");
++                    guard let result = result else {
++                        self.signInCall?.reject("No result returned from sign in");
 +                        return;
 +                    }
-+                    self.resolveSignInCallWith(user: user);
++                    // GoogleSignIn 9.x: serverAuthCode is on result, not user
++                    self.resolveSignInCallWith(user: result.user, serverAuthCode: result.serverAuthCode);
                  };
              }
          }
-@@ -112,15 +126,21 @@ public class GoogleAuth: CAPPlugin {
+@@ -112,15 +128,21 @@ public class GoogleAuth: CAPPlugin {
                  call.reject("User not logged in.");
                  return
              }
@@ -119,11 +121,14 @@ index 26d5407..8859cc5 100644
                  ]
                  call.resolve(authenticationData);
              }
-@@ -174,11 +194,12 @@ public class GoogleAuth: CAPPlugin {
+@@ -173,14 +195,16 @@ public class GoogleAuth: CAPPlugin {
+         return nil;
      }
  
-     func resolveSignInCallWith(user: GIDGoogleUser) {
-+        // GoogleSignIn 7.x: tokens are now direct properties on GIDGoogleUser
+-    func resolveSignInCallWith(user: GIDGoogleUser) {
++    func resolveSignInCallWith(user: GIDGoogleUser, serverAuthCode: String?) {
++        // GoogleSignIn 9.x: tokens are direct properties on GIDGoogleUser
++        // serverAuthCode is passed separately (from GIDSignInResult or nil for restore)
          var userData: [String: Any] = [
              "authentication": [
 -                "accessToken": user.authentication.accessToken,
@@ -133,5 +138,8 @@ index 26d5407..8859cc5 100644
 +                "idToken": user.idToken?.tokenString ?? NSNull(),
 +                "refreshToken": user.refreshToken.tokenString
              ],
-             "serverAuthCode": user.serverAuthCode ?? NSNull(),
+-            "serverAuthCode": user.serverAuthCode ?? NSNull(),
++            "serverAuthCode": serverAuthCode ?? NSNull(),
              "email": user.profile?.email ?? NSNull(),
+             "familyName": user.profile?.familyName ?? NSNull(),
+             "givenName": user.profile?.givenName ?? NSNull(),

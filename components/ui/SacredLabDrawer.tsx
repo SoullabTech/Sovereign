@@ -42,7 +42,9 @@ import {
   ClipboardList,
   Briefcase,
   Users,
-  GraduationCap
+  GraduationCap,
+  LayoutGrid,
+  Gift,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -115,6 +117,18 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Session Recap',
           action: () => onAction?.('session-recap'),
           description: 'Summary of themes, insights & invitation'
+        },
+      ],
+    },
+    {
+      title: 'SHARE MAIA',
+      icon: '🎁',
+      items: [
+        {
+          icon: Gift,
+          label: 'Beads',
+          action: () => onNavigate('/labtools/beads'),
+          description: 'Invite friends to experience MAIA'
         },
       ],
     },
@@ -238,22 +252,10 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '⚕️',
       items: [
         {
-          icon: MessageSquare,
-          label: 'Client Comms',
-          action: () => onNavigate('/stellium/comms'),
-          description: 'Client messaging inbox (Stellium)'
-        },
-        {
-          icon: Briefcase,
-          label: 'Caseload',
-          action: () => onNavigate('/caseload'),
-          description: 'Manage client cases with MAIA consultation'
-        },
-        {
-          icon: Users,
-          label: 'Consult MAIA',
-          action: () => onAction?.('caseload-consult'),
-          description: 'Cross-caseload clinical consultation'
+          icon: LayoutGrid,
+          label: 'Studio',
+          action: () => onNavigate('/studio'),
+          description: 'Pro suite: clients, sessions, caseload, calendar & MAIA consult',
         },
       ],
     },

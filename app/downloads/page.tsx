@@ -186,11 +186,10 @@ export default function DownloadsPage() {
               }}
             >
               <Image
-                src="/holoflower-amber.png"
+                src="/logo_flower 2.png"
                 alt="MAIA"
                 width={100}
                 height={100}
-                className="drop-shadow-lg"
               />
             </motion.div>
 

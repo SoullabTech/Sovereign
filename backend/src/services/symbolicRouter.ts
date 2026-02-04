@@ -121,16 +121,44 @@ export function runSymbolicRouter(args: {
     }
 
     if (args.trace) {
+      // Build reasonCodes for human-readable trace diagnostics
+      const reasonCodes = [
+        `band:${depthResult.band}`,
+        depthResult.flags.precisionMode ? 'precisionMode:true' : null,
+        (depthInputs?.numTurns ?? 0) >= 6 ? 'driver:numTurns' : null,
+        (depthInputs?.memoryHitsCount ?? 0) >= 3 ? 'driver:memoryHits' : null,
+        depthResult.flags.distressTokens ? 'driver:distress' : null,
+        depthResult.flags.referBack ? 'driver:referBack' : null,
+        depthResult.flags.multiSource ? 'driver:multiSource' : null,
+      ].filter(Boolean) as string[];
+
       pushTraceEvent(args.trace, {
         kind: "depth_routing",
-        label: "depth_score",
+        label: "depth_profile",
         data: {
+          // Decision outputs
           score: depthResult.score,
           band: depthResult.band,
           modelTier,
           retrievalProfile,
           components: depthResult.components,
           flags: depthResult.flags,
+
+          // Inputs (for explainability)
+          inputs: {
+            existingIntent,
+            intent: maiaNativeIntent,
+            numTurns: depthInputs?.numTurns ?? 0,
+            memoryHitsCount: depthInputs?.memoryHitsCount ?? 0,
+            retrievedSourceTypesCount: (depthInputs?.retrievedSourceTypes ?? []).length,
+          },
+
+          // Scoring metadata (self-documenting trace)
+          depthScoreVersion: DepthScoreService.version(),
+          thresholds: DepthScoreService.thresholds(),
+
+          // Human-readable reason codes
+          reasonCodes,
         },
       });
     }

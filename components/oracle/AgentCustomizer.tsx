@@ -6,12 +6,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, User, Volume2, X, Check } from 'lucide-react';
-import { 
-  getAgentConfig, 
-  saveAgentConfig, 
+import {
+  getAgentConfig,
+  saveAgentConfig,
   DEFAULT_AGENTS,
-  AgentConfig 
+  AgentConfig
 } from '@/lib/agent-config';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface AgentCustomizerProps {
   position?: 'top-right' | 'right' | 'bottom-right' | 'bottom-left' | 'left' | 'top-left';
@@ -195,7 +196,7 @@ export const AgentCustomizer: React.FC<AgentCustomizerProps> = ({
                       ? "It's good to see you."
                       : "Good to meet you."}`;
 
-                    const response = await fetch('/api/voice/openai-tts', {
+                    const response = await apiFetch('/api/voice/openai-tts', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({

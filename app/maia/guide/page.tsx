@@ -752,7 +752,7 @@ export default function MAIAGuidePage() {
                   }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
                     FIRST_ENTRY_STEPS[currentStep].action?.type === 'maia'
-                      ? 'bg-[#B8860B] text-[#0A1628] hover:bg-[#CD853F] shadow-lg shadow-[#B8860B]/30'
+                      ? 'bg-[#B8860B]/20 border border-[#B8860B]/40 text-[#B8860B] hover:bg-[#B8860B]/30 hover:border-[#B8860B]/60'
                       : 'bg-[#1E3A5F] text-[#E5E9F0] border border-[#2A4A70] hover:bg-[#2A4A70]'
                   }`}
                 >
@@ -853,7 +853,7 @@ export default function MAIAGuidePage() {
                 onClick={() => handleCategoryChange(cat)}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                   selectedTermCategory === cat
-                    ? 'bg-[#B8860B] text-[#0A1628] border border-[#CD853F] shadow-lg shadow-[#B8860B]/40'
+                    ? 'bg-[#B8860B]/20 text-[#B8860B] border border-[#B8860B]/40'
                     : 'bg-[#0F1D32] text-[#A0AAB8] border border-[#1E3A5F] hover:bg-[#1E3A5F]/50'
                 }`}
               >

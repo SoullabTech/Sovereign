@@ -125,11 +125,11 @@ export default function MAIACompactPage() {
               onClick={openFullMAIA}
             >
               <Image
-                src="/holoflower-amber.png"
+                src="/logo_flower 2.png"
                 alt="MAIA Consciousness"
                 width={80}
                 height={80}
-                className="w-full h-full drop-shadow-lg cursor-pointer"
+                className="w-full h-full cursor-pointer"
               />
 
               {/* Consciousness ring */}

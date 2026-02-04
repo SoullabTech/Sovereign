@@ -138,10 +138,12 @@ import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
+import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
+import { useDemoEventListener } from '@/hooks/useDemoEventListener';
 import { BookPlus } from 'lucide-react';
 // Reflection Capsules - "Capture the Spirit"
 import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
@@ -207,6 +209,61 @@ function getCanonWrapEnabled(): boolean {
 function setCanonWrapEnabled(enabled: boolean) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
+}
+
+// ============================================================================
+// Welcome Greeting Helpers (Track 1: personalized greetings)
+// ============================================================================
+
+type WelcomeMemberStyleProfile =
+  | 'warm'
+  | 'direct'
+  | 'playful'
+  | 'mystic'
+  | 'minimal'
+  | 'professional';
+
+function safeJsonParse<T>(raw: string | null): T | null {
+  if (!raw) return null;
+  try { return JSON.parse(raw) as T; } catch { return null; }
+}
+
+function coerceStyleProfile(input: unknown): WelcomeMemberStyleProfile | undefined {
+  const s = (typeof input === 'string' ? input : '').toLowerCase().trim();
+  if (!s) return undefined;
+
+  // Permissive matching for whatever is already stored
+  if (['warm', 'gentle', 'soft', 'kind'].includes(s)) return 'warm';
+  if (['direct', 'clear', 'straight', 'concise'].includes(s)) return 'direct';
+  if (['playful', 'fun', 'light'].includes(s)) return 'playful';
+  if (['mystic', 'mythic', 'symbolic', 'poetic'].includes(s)) return 'mystic';
+  if (['minimal', 'short', 'brief'].includes(s)) return 'minimal';
+  if (['professional', 'clinical', 'coach'].includes(s)) return 'professional';
+
+  return undefined;
+}
+
+function pickLastConversationTheme(opts: {
+  lastUserText?: string;
+  lastAssistantText?: string;
+}): string | undefined {
+  const text = `${opts.lastUserText ?? ''}\n${opts.lastAssistantText ?? ''}`.toLowerCase();
+  if (!text.trim()) return undefined;
+
+  // Simple keyword-based theme detection (no new system, just heuristic)
+  if (text.includes('dream')) return 'dreams';
+  if (text.includes('shadow') || text.includes('trigger') || text.includes('projection')) return 'shadow work';
+  if (text.includes('relationship') || text.includes('partner') || text.includes('marriage')) return 'relationships';
+  if (text.includes('journal')) return 'journaling';
+  if (text.includes('iching') || text.includes('i ching') || text.includes('hexagram')) return 'I Ching';
+  if (text.includes('tarot')) return 'tarot';
+  if (text.includes('astrology') || text.includes('natal') || text.includes('transit')) return 'astrology';
+  if (text.includes('work') || text.includes('business') || text.includes('client')) return 'work';
+  if (text.includes('anxiety') || text.includes('anxious') || text.includes('worried')) return 'anxiety';
+  if (text.includes('grief') || text.includes('loss') || text.includes('death')) return 'grief';
+  if (text.includes('decision') || text.includes('choice') || text.includes('stuck')) return 'decision-making';
+
+  return undefined;
 }
 
 // Performance: Cap conversation history to prevent UI lag and API bloat
@@ -306,6 +363,7 @@ interface OracleConversationProps {
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
   voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
   voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
+  voiceVolume?: number; // Voice playback volume (0.0 - 1.0)
   onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
@@ -397,6 +455,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   voice = 'alloy',
   voiceSpeed = 0.95,
   voiceModel = 'tts-1-hd',
+  voiceVolume = 1.0,
   onVoiceChange,
   initialMode = 'normal',
   onModeChange,
@@ -624,6 +683,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
   const [showWelcome, setShowWelcome] = useState(true);
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [daysSinceLastVisit, setDaysSinceLastVisit] = useState<number>(0);
   const [isSavingJournal, setIsSavingJournal] = useState(false);
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
@@ -636,6 +696,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
+
+  // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
+  const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
+  const [limitsBlock, setLimitsBlock] = useState<null | { message: string; tier?: string }>(null);
 
   // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
   // This is separate from messages - history can be restored but greeting shows until activation
@@ -661,20 +725,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return false;
   });
 
-  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior
+  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior (default OFF for beta)
   const [interruptEnabled, setInterruptEnabled] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('maia_settings');
         if (saved) {
           const settings = JSON.parse(saved);
-          return settings.interrupt?.enabled !== false; // Default true
+          // Only enable if explicitly set to true (default false)
+          return settings.interrupt?.enabled === true;
         }
       } catch (e) {
         console.warn('[Interrupt] Failed to load initial state:', e);
       }
     }
-    return true; // Default ON
+    return false; // Default OFF - prevents jarring interruptions during beta
   });
 
   const [interruptDebounceMs, setInterruptDebounceMs] = useState(() => {
@@ -1252,8 +1317,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       const ctx = audioContextRef.current;
 
-      // Resume if suspended
-      if (ctx.state === 'suspended') {
+      // Resume if suspended or interrupted (iOS can be in either state)
+      if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
         ctx.resume();
       }
 
@@ -1516,9 +1581,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('📱 [iOS Safari] Blob type:', audioBlob.type, 'size:', audioBlob.size);
 
         try {
-          // Ensure AudioContext is running
-          if (audioContextRef.current.state === 'suspended') {
-            console.log('📱 [iOS Safari] Resuming AudioContext...');
+          // Ensure AudioContext is running (check both suspended and interrupted)
+          if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+            console.log(`📱 [iOS Safari] AudioContext ${audioContextRef.current.state}, resuming...`);
             await audioContextRef.current.resume();
             console.log('📱 [iOS Safari] AudioContext state:', audioContextRef.current.state);
           }
@@ -1851,6 +1916,34 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     captureThreshold: 5
   });
 
+  // 🎬 DEMO ORCHESTRATION - Listen for demo events to trigger UI during manifesto
+  useDemoEventListener({
+    onShowCapture: () => {
+      console.log('🎬 [Demo] Triggering Capture panel');
+      setShowCapturePanel(true);
+    },
+    onShowBreakthrough: () => {
+      console.log('🎬 [Demo] Triggering Breakthrough suggestion');
+      setShowJournalSuggestion(true);
+    },
+    onShowPatternOffering: (data) => {
+      console.log('🎬 [Demo] Triggering Pattern offering', data);
+      // Pattern offering would need a dedicated UI component
+      // For now, show breakthrough as proxy
+      setShowJournalSuggestion(true);
+    },
+    onHideAll: () => {
+      console.log('🎬 [Demo] Hiding all demo popups');
+      setShowCapturePanel(false);
+      setShowJournalSuggestion(false);
+      setShowCaptureSuggestion(false);
+    },
+    onPulseHoloflower: () => {
+      console.log('🎬 [Demo] Pulsing holoflower');
+      // Could trigger a holoflower animation state change here
+    },
+  });
+
   // Scribe Mode - Derived aliases for compatibility with UI components
   const isScribing = scribeSession.isActive;
   const startScribing = useCallback(() => startScribeSession('witness'), [startScribeSession]);
@@ -1937,6 +2030,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     speed: voiceSettings.speed,
     model: voiceSettings.model,
     prosodyRange: voiceSettings.prosodyRange,
+    volume: voiceVolume,
     assistantName,  // Member's preferred name for MAIA
     archetype: voiceSettings.archetype,
     conversationMode: voiceSettings.conversationMode,
@@ -1944,6 +2038,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     element: undefined, // Will be set dynamically per message
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,
+    // 🛑 LIMITS BLOCK: Show modal when voice limit hit (429 + blocked)
+    onLimitsBlock: (data) => {
+      console.log('[StreamingVoice] Voice limit reached:', data.message);
+      setLimitsBlock({
+        message: data.message,
+        tier: data.tier,
+      });
+      // Reset voice state so user isn't stuck
+      setIsProcessing(false);
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      setIsListening(false);
+      isProcessingRef.current = false;
+      isRespondingRef.current = false;
+      isAudioPlayingRef.current = false;
+      isMicrophonePausedRef.current = false;
+    },
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
       setMaiaResponseText(text);
@@ -1981,7 +2093,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (voiceMicRef.current?.startListening) {
             console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
             setIsMuted(false);
-            voiceMicRef.current.startListening();
+            voiceMicRef.current.startListening({ forceOverride: true });
           }
         }, 500);
         return;
@@ -2017,7 +2129,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
-          voiceMicRef.current.startListening();
+          voiceMicRef.current.startListening({ forceOverride: true });
         }
       }, 500);
     }
@@ -2063,7 +2175,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           setIsMuted(false);
           // Optimistic listening already set above - don't show "Activating..."
-          voiceMicRef.current.startListening();
+          // 🔥 FIX: Use forceOverride to bypass stale isSpeakingRef (React state is async)
+          voiceMicRef.current.startListening({ forceOverride: true });
 
           setTimeout(() => {
             if (voiceMicRef.current?.isListening) {
@@ -2171,6 +2284,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // Reset the progress timer
           lastAudioProgressRef.current = Date.now();
+
+          // 🔥 CRITICAL: Actually restart the mic - not just UI state!
+          if (voiceMicRef.current?.startListening) {
+            console.log('🐕 [WATCHDOG] Force-restarting microphone...');
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
 
           toast('⚠️ Voice recovered', { duration: 2000 });
         }
@@ -2519,12 +2638,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // Add greeting message on mount (for returning users)
     const isFirstVisit = !localStorage.getItem('betaOnboardingComplete');
     const lastSessionDate = localStorage.getItem('lastSessionDate');
-    const daysSinceLastVisit = lastSessionDate
+    const computedDaysSinceLastVisit = lastSessionDate
       ? Math.floor((Date.now() - new Date(lastSessionDate).getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
+    // Store in state for welcome screen
+    setDaysSinceLastVisit(computedDaysSinceLastVisit);
+
     // Check if returning user
-    setIsReturningUser(!isFirstVisit && daysSinceLastVisit > 0);
+    setIsReturningUser(!isFirstVisit && computedDaysSinceLastVisit > 0);
 
     // Load soul-recognized greeting asynchronously
     (async () => {
@@ -2555,7 +2677,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             sessionType: 'returning',
             lastReason: lastReason || undefined,
             lastFeeling: lastFeeling || undefined,
-            lastSeenDays: daysSinceLastVisit,
+            lastSeenDays: computedDaysSinceLastVisit,
             partnerContext: partnerContext || 'general',
             partnerContextData: partnerContextData ? JSON.parse(partnerContextData) : undefined,
             hasConversationHistory: messages.length > 0
@@ -2590,8 +2712,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userName: resolvedName,
           userId: userId, // Pass userId for soul-level recognition
           isFirstVisit,
-          daysSinceLastVisit,
-          daysActive: daysSinceLastVisit > 0 ? 7 : 1,
+          daysSinceLastVisit: computedDaysSinceLastVisit,
+          daysActive: computedDaysSinceLastVisit > 0 ? 7 : 1,
           mode: realtimeMode, // 🎯 Pass mode for Talk/Care/Note aware greetings
           onboardingContext, // Pass onboarding metadata for first contact
           returningContext, // Pass returning session metadata
@@ -3116,11 +3238,14 @@ I'm not sure what I'm feeling yet.`;
   // Note: Voice amplitude is now driven by real-time audio analysis in startAudioAnalysis()
 
   // iOS PWA: Resume AudioContext on visibility change and user interaction
+  // CRITICAL: Must check for BOTH 'suspended' AND 'interrupted' states!
+  // iOS puts AudioContext in 'interrupted' state when audio session is taken by another source
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
-          console.log('📱 App returned to foreground, resuming AudioContext...');
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          console.log(`📱 App returned to foreground, AudioContext ${state}, resuming...`);
           try {
             await audioContextRef.current.resume();
             console.log('✅ AudioContext resumed on visibility change');
@@ -3132,12 +3257,15 @@ I'm not sure what I'm feeling yet.`;
     };
 
     const handleUserInteraction = async () => {
-      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-        try {
-          await audioContextRef.current.resume();
-          console.log('✅ AudioContext resumed on user interaction');
-        } catch (error) {
-          console.warn('Could not resume AudioContext:', error);
+      if (audioContextRef.current) {
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          try {
+            await audioContextRef.current.resume();
+            console.log(`✅ AudioContext resumed on user interaction (was ${state})`);
+          } catch (error) {
+            console.warn('Could not resume AudioContext:', error);
+          }
         }
       }
     };
@@ -3176,9 +3304,10 @@ I'm not sure what I'm feeling yet.`;
         console.log('📱 AudioContext created:', audioContextRef.current.state);
       }
 
-      // Resume if suspended (critical for iOS)
+      // Resume if suspended OR interrupted (critical for iOS - interrupted state blocks speech recognition!)
       if (audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+          console.log(`🎵 Audio context ${audioContextRef.current.state}, resuming...`);
           await audioContextRef.current.resume();
           console.log('🎵 Audio context resumed, state:', audioContextRef.current.state);
         } else {
@@ -4050,6 +4179,41 @@ I'm not sure what I'm feeling yet.`;
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // 🛑 LIMITS ENFORCEMENT: Check for tier-based usage block (429)
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.blocked) {
+            console.log('[OracleConversation] Usage limit reached:', errData.message);
+            setLimitsBlock({
+              message: errData.message ?? "You've reached a limit for this tier.",
+              tier: errData.tier,
+            });
+            setIsResponding(false);
+            return; // Don't show fallback - show limits UI instead
+          }
+        }
+
+        // 🚧 MAINTENANCE MODE: Show pause message when system is in maintenance
+        if (response.status === 503) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.error === 'MAINTENANCE_MODE') {
+            console.log('[OracleConversation] Maintenance mode active:', errData.message);
+            const maintenanceMessage: ConversationMessage = {
+              id: `maintenance-${Date.now()}`,
+              role: 'oracle',
+              text: errData.message || 'MAIA is taking a brief pause. Back soon.',
+              timestamp: new Date().toISOString(),
+              element: 'aether',
+              metadata: { isMaintenance: true },
+            };
+            setMessages(prev => appendMessageCapped(prev, maintenanceMessage, MAX_DISPLAY_MESSAGES));
+            setIsProcessing(false);
+            setIsResponding(false);
+            setMaiaResponseText(maintenanceMessage.text);
+            return;
+          }
+        }
+
         const errorText = await response.text().catch(() => '(no body)');
         console.error('[fetch] non-OK response:', response.status, errorText);
 
@@ -4184,7 +4348,7 @@ I'm not sure what I'm feeling yet.`;
                           if (voiceMicRef.current?.startListening) {
                             console.log('🎤 [STREAM] Final attempt after state reset...');
                             setIsMuted(false);
-                            voiceMicRef.current.startListening();
+                            voiceMicRef.current.startListening({ forceOverride: true });
                           }
                         }, 500);
                         return;
@@ -4202,7 +4366,7 @@ I'm not sure what I'm feeling yet.`;
                         if (canRestart) {
                           setIsMuted(false);
                           console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
-                          voiceMicRef.current.startListening();
+                          voiceMicRef.current.startListening({ forceOverride: true });
                           // Verify mic actually started after a brief delay
                           setTimeout(() => {
                             if (voiceMicRef.current?.isListening) {
@@ -4421,6 +4585,16 @@ I'm not sure what I'm feeling yet.`;
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
+
+        // 🛑 LIMITS NUDGE: Check for soft cap warnings (non-blocking)
+        if (responseData?.metadata?.limitNudge?.message) {
+          setLimitsBanner({
+            message: responseData.metadata.limitNudge.message,
+            nudgeType: responseData.metadata.limitNudge.nudgeType,
+            tier: responseData.metadata.tier,
+          });
+        }
+
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
         responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
@@ -4731,7 +4905,7 @@ I'm not sure what I'm feeling yet.`;
                       if (voiceMicRef.current?.startListening) {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        voiceMicRef.current.startListening();
+                        voiceMicRef.current.startListening({ forceOverride: true });
                       }
                     }, 500);
                     return;
@@ -4748,7 +4922,7 @@ I'm not sure what I'm feeling yet.`;
 
                     if (canRestart) {
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      voiceMicRef.current.startListening();
+                      voiceMicRef.current.startListening({ forceOverride: true });
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
                         if (voiceMicRef.current?.isListening) {
@@ -5619,6 +5793,7 @@ I'm not sure what I'm feeling yet.`;
       const audioUrl = URL.createObjectURL(audioBlob);
 
       const audio = new Audio(audioUrl);
+      audio.volume = voiceVolume;
       audioRef.current = audio;
 
       audio.onended = () => {
@@ -5940,9 +6115,90 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
+      {/* 🛑 LIMITS BANNER: Soft cap nudge (non-blocking, dismissible) */}
+      {limitsBanner && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-[calc(100%-2rem)]">
+          <div className="rounded-xl border border-white/10 bg-soul-background/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-amber-400/80 text-lg">✦</span>
+              <div className="flex-1">
+                <p className="text-sm text-white/80">{limitsBanner.message}</p>
+              </div>
+              <button
+                onClick={() => setLimitsBanner(null)}
+                className="text-white/40 hover:text-white/60 transition-colors"
+                aria-label="Dismiss"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🛑 LIMITS BLOCK: Hard cap reached (modal overlay) */}
+      {limitsBlock && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full rounded-2xl border border-white/10 bg-soul-background p-6 shadow-2xl">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-amber-400 text-xl">✦</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white/90 font-medium mb-2">Taking a pause</h3>
+                <p className="text-sm text-white/70 mb-4">{limitsBlock.message}</p>
+                <button
+                  onClick={() => setLimitsBlock(null)}
+                  className="w-full rounded-lg bg-white/10 px-4 py-2.5 text-sm text-white/85 hover:bg-white/15 transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
       <AnimatePresence>
-        {!hasActivated && !isProcessing && !isResponding && (
+        {!hasActivated && !isProcessing && !isResponding && (() => {
+          // Derive memberStyleProfile from beta_user preferences (if stored)
+          const betaUser = safeJsonParse<Record<string, unknown>>(
+            typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null
+          );
+          const memberStyleProfile = coerceStyleProfile(
+            betaUser?.memberStyleProfile ??
+            betaUser?.styleProfile ??
+            (betaUser?.voiceProfile as Record<string, unknown> | undefined)?.styleProfile ??
+            (betaUser?.voiceProfile as Record<string, unknown> | undefined)?.tone ??
+            (betaUser?.preferences as Record<string, unknown> | undefined)?.tone
+          );
+
+          // Derive lastConversationTheme from historical messages (if any)
+          const history = historicalMessagesRef.current;
+          const lastUserMsg = history.filter(m => m.role === 'user').pop();
+          const lastAssistantMsg = history.filter(m => m.role === 'oracle' || m.role === 'assistant').pop();
+          const lastConversationTheme = pickLastConversationTheme({
+            lastUserText: typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : undefined,
+            lastAssistantText: typeof lastAssistantMsg?.content === 'string' ? lastAssistantMsg.content : undefined,
+          });
+
+          // Generate personalized welcome greeting (one clean signal)
+          const hourLocal = new Date().getHours();
+          const welcomeGreeting = generateWelcomeGreeting({
+            userName,
+            daysSinceLastVisit,
+            hourLocal,
+            memberStyleProfile,
+            lastConversationTheme,
+          });
+
+          // Debug: verify one-signal principle
+          console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+
+          return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -5964,12 +6220,9 @@ I'm not sure what I'm feeling yet.`;
                   }}
                 >
                   <img
-                    src="/holoflower-amber.png"
+                    src="/logo_flower 2.png"
                     alt="MAIA"
-                    className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_24px_rgba(251,146,60,0.6)]"
-                    style={{
-                      filter: 'brightness(1.2)',
-                    }}
+                    className="w-14 h-14 md:w-16 md:h-16 object-contain"
                   />
                 </motion.div>
 
@@ -5985,11 +6238,11 @@ I'm not sure what I'm feeling yet.`;
                     letterSpacing: '-0.02em',
                   }}
                 >
-                  {getTimeGreeting()}{userName ? `, ${userName}` : ''}
+                  {welcomeGreeting.greeting}
                 </motion.h1>
               </div>
 
-              {/* Welcome Invitation - atmospheric text, not interactive */}
+              {/* Welcome Invitation - one clean signal, context-aware */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -6000,12 +6253,13 @@ I'm not sure what I'm feeling yet.`;
                   className="text-maia-ink-60 text-lg md:text-xl"
                   style={{ fontFamily: 'Spectral, Georgia, serif' }}
                 >
-                  I'm here when you're ready
+                  {welcomeGreeting.subtext}
                 </p>
               </motion.div>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
       {/* Scribe Mode Recording Indicator - Red when witnessing, Blue when aside */}
@@ -6410,16 +6664,37 @@ I'm not sure what I'm feeling yet.`;
               />
             </motion.div>
 
-            {/* Holoflower Image - Amber radiance */}
+            {/* Holoflower Image - Two layers with golden ratio */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              {/* Outer layer - 90% */}
               <img
-                src="/holoflower-amber.png"
-                alt="Holoflower"
-                className="object-contain opacity-80 drop-shadow-[0_0_15px_rgba(251,146,60,0.7)]"
+                src="/holoflower.png"
+                alt="Holoflower outer layer"
+                className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.85}px`,
-                  height: `${holoflowerSize * 0.85}px`,
-                  filter: 'brightness(1.3)',
+                  width: `${holoflowerSize * 0.90}px`,
+                  height: `${holoflowerSize * 0.90}px`,
+                  opacity: 0.4,
+                }}
+              />
+              {/* Inner layer - 90% / φ ≈ 55.6% */}
+              <img
+                src="/holoflower.png"
+                alt="Holoflower inner layer"
+                className="object-contain absolute"
+                style={{
+                  width: `${holoflowerSize * 0.556}px`,
+                  height: `${holoflowerSize * 0.556}px`,
+                  opacity: 0.7,
+                }}
+              />
+              {/* White center dot - covers dark center */}
+              <div
+                className="absolute rounded-full"
+                style={{
+                  width: `${holoflowerSize * 0.12}px`,
+                  height: `${holoflowerSize * 0.12}px`,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 60%, transparent 100%)',
                 }}
               />
             </div>
@@ -7724,7 +7999,7 @@ I'm not sure what I'm feeling yet.`;
                       !isProcessingRef.current &&
                       !isRespondingRef.current &&
                       !isAudioPlayingRef.current) {
-                    await voiceMicRef.current.startListening();
+                    await voiceMicRef.current.startListening({ forceOverride: true });
                     console.log('🎤 Microphone ON');
                   }
                 }, 100);
@@ -7918,6 +8193,7 @@ I'm not sure what I'm feeling yet.`;
             console.log('🌟 [WisdomTool] Completed:', toolId, result);
             setActiveWisdomTool(null);
           }}
+          memberId={getValidMemberId() || undefined}
         />
       )}
 

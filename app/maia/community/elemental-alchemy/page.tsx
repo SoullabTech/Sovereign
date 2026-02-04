@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { AskMaiaSheet } from '@/components/elemental-alchemy/AskMaiaSheet'
 import { BookChat } from '@/components/elemental-alchemy/BookChat'
+import { apiFetch } from '@/lib/http/apiBase'
 
 // Track current audio for stopping
 let currentAudio: HTMLAudioElement | null = null
@@ -163,7 +164,7 @@ const speakChunk = async (text: string, element: string = 'earth'): Promise<bool
   if (!text || shouldStopReading) return false
 
   try {
-    const response = await fetch('/api/voice/openai-tts', {
+    const response = await apiFetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

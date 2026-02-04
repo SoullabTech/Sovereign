@@ -28,6 +28,7 @@ import {
   Save,
   Check
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
 
@@ -139,7 +140,7 @@ export default function RunesOraclePage() {
 
   const fetchReading = async (spread: RuneSpreadOption) => {
     try {
-      const response = await fetch('/api/oracle/runes', {
+      const response = await apiFetch('/api/oracle/runes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -200,7 +201,7 @@ export default function RunesOraclePage() {
         'week': 'custom'
       };
 
-      const response = await fetch('/api/divination/save', {
+      const response = await apiFetch('/api/divination/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

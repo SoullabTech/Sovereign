@@ -51,12 +51,20 @@ export type StreamingVoicePlaybackSignal =
   | { type: 'AUDIO_FAILED'; reason: string }
   | { type: 'AUDIO_BLOCKED'; reason: string };
 
+/** Limits block response from API (429 + blocked: true) */
+interface LimitsBlockData {
+  message: string;
+  tier?: string;
+}
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
   onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
   onSilence?: (silence: SilenceResponse) => void;
   onMoveOutcome?: (outcome: MoveOutcomeEvent) => void;
   onError?: (error: string) => void;
+  /** Called when voice is blocked due to tier limits (429 + blocked) */
+  onLimitsBlock?: (data: LimitsBlockData) => void;
   /** PWA playback signal callback for confirmed audio states */
   onPlaybackSignal?: (signal: StreamingVoicePlaybackSignal) => void;
   voice?: string;
@@ -76,6 +84,8 @@ interface StreamingVoiceOptions {
   conversationMode?: string;
   /** Memory depth preference */
   memoryDepth?: 'minimal' | 'moderate' | 'deep';
+  /** Audio playback volume (0.0 - 1.0) */
+  volume?: number;
 }
 
 interface StreamingVoiceState {
@@ -103,6 +113,7 @@ interface AudioQueueItem {
 }
 
 const VOICE_SESSION_KEY = 'maia_voice_session_id';
+const CONVERSATION_ID_KEY = 'maia_conversation_id';
 
 /**
  * Sanitize text for display/speech - removes JSON metadata fragments
@@ -149,6 +160,29 @@ function generateSessionId(): string {
 }
 
 /**
+ * Get or create a persistent conversation ID.
+ * Uses localStorage for cross-session persistence (survives app restarts).
+ * This is used for memory continuity - MAIA remembers based on this ID.
+ */
+function getOrCreateConversationId(): string {
+  try {
+    const existing = localStorage.getItem(CONVERSATION_ID_KEY);
+    if (existing) return existing;
+  } catch {
+    // localStorage unavailable
+  }
+
+  // Generate new and persist
+  const created = `conv-${crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`}`;
+  try {
+    localStorage.setItem(CONVERSATION_ID_KEY, created);
+  } catch {
+    // localStorage unavailable
+  }
+  return created;
+}
+
+/**
  * Get or create a persistent session ID.
  * Stores in sessionStorage for continuity across page reloads.
  * Falls back to memory-only if sessionStorage unavailable.
@@ -189,6 +223,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onSilence,
     onMoveOutcome,
     onError,
+    onLimitsBlock,  // 🛑 Tier limits callback
     onPlaybackSignal,  // 🎤 PWA playback signals
     voice = 'maya',
     speed = 1.0,
@@ -200,6 +235,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     archetype,
     conversationMode,
     memoryDepth,
+    volume = 1.0,
   } = options;
 
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
@@ -251,6 +287,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = '';
       // 🔥 iOS FIX: Don't null out - keep the element for reuse (maintains unlock state)
@@ -273,6 +312,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     // Call onError so parent components (OracleConversation) can clear their speaking state too
     onError?.(errorMessage);
+
+    // 🔇 FEEDBACK PREVENTION: Signal MAIA stopped speaking (even in error case)
+    if (typeof window !== 'undefined') {
+      console.log('🎤 [StreamingVoice] Dispatching maya-voice-end (recovery)');
+      window.dispatchEvent(new Event('maya-voice-end'));
+    }
   }, [onError]);
 
   // ── POSTURE LOG (tuning trace) ──
@@ -373,8 +418,16 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         console.log('[StreamingVoice] 🎧 Created reusable Audio element for iOS compatibility');
       }
 
-      // Update source (reusing element)
+      // 🔥 FIX: Clear stale handlers BEFORE setting new source
+      // When reusing an audio element, old onerror handlers can fire for the
+      // previous empty/cleared src. This prevents spurious error logs.
+      audio.onerror = null;
+      audio.onended = null;
+
+      // Update source and volume (reusing element)
       audio.src = audioSrc;
+      audio.volume = volume;
+      console.log('[StreamingVoice] 🔊 Audio volume set to:', volume);
       audio.preload = 'auto';
 
       audio.onended = () => {
@@ -385,6 +438,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         // 🎤 PWA SIGNAL: If this is the LAST chunk, emit AUDIO_ENDED
         if (audioQueueRef.current.length === 0) {
           onPlaybackSignalRef.current?.({ type: 'AUDIO_ENDED' });
+          // 🔇 FEEDBACK PREVENTION: Signal MAIA finished speaking to re-enable mic
+          if (typeof window !== 'undefined') {
+            console.log('🎤 [StreamingVoice] Dispatching maya-voice-end for feedback prevention');
+            setTimeout(() => {
+              window.dispatchEvent(new Event('maya-voice-end'));
+            }, 500); // Small delay to ensure audio has fully finished
+          }
         }
         advance(50);
       };
@@ -407,6 +467,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
           if (audioPlayedCountRef.current === 1) {
             onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
+            // 🔇 FEEDBACK PREVENTION: Signal MAIA is speaking to stop mic
+            if (typeof window !== 'undefined') {
+              console.log('🔇 [StreamingVoice] Dispatching maya-voice-start for feedback prevention');
+              window.dispatchEvent(new Event('maya-voice-start'));
+            }
           }
 
           // Clear watchdog on first successful play - we're not stuck
@@ -440,7 +505,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       console.error('[StreamingVoice] Audio creation error:', e);
       advance(0);
     }
-  }, [forceRecoverFromFalseSpeaking]);
+  }, [forceRecoverFromFalseSpeaking, volume]);
 
   /**
    * Send a message and stream the response
@@ -453,6 +518,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
     audioQueueRef.current = [];
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = ''; // Clear source but keep element
       // currentAudioRef.current = null; // REMOVED - breaks iOS audio unlock
@@ -507,7 +575,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     try {
       // Use apiFetch for iOS/Safari compatibility (adds x-session-token header)
-      console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation');
+      // 🔧 FIX: Include stable conversationId for memory continuity
+      const conversationId = getOrCreateConversationId();
+      console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation, conversationId:', conversationId.slice(0, 12) + '...');
       const response = await apiFetch('/api/voice/stream-conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -520,6 +590,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           element,
           conversationHistory,
           sessionId: sessionIdRef.current, // Stable session ID for relational stack
+          conversationId, // 🧠 Stable conversation ID for memory continuity
           prosodyRange,  // MAIA's prosody policy range (0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial)
           assistantName, // Member's preferred name for MAIA
           archetype,     // MAIA's presence/archetype mode
@@ -531,6 +602,19 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       console.log('[StreamingVoice] Response status:', response.status);
 
       if (!response.ok) {
+        // 🛑 LIMITS ENFORCEMENT: Check for tier-based voice limit (429)
+        if (response.status === 429) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.blocked) {
+            console.log('[StreamingVoice] Voice limit reached:', errData.error || errData.message);
+            setState(prev => ({ ...prev, isStreaming: false, error: 'Voice limit reached' }));
+            onLimitsBlock?.({
+              message: errData.error ?? errData.message ?? "You've reached your voice limit for this tier.",
+              tier: errData.tier,
+            });
+            return; // Don't throw - handled gracefully
+          }
+        }
         throw new Error(`Stream request failed: ${response.status}`);
       }
 
@@ -786,7 +870,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk, forceRecoverFromFalseSpeaking]);
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, onLimitsBlock, playNextChunk, forceRecoverFromFalseSpeaking]);
 
   /**
    * Stop streaming and playback
@@ -800,6 +884,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     // Stop current audio (but keep element for iOS reuse)
     if (currentAudioRef.current) {
+      // Clear handlers before clearing src to prevent stale error callbacks
+      currentAudioRef.current.onerror = null;
+      currentAudioRef.current.onended = null;
       currentAudioRef.current.pause();
       currentAudioRef.current.src = '';
       // Keep the element for iOS - don't null it out

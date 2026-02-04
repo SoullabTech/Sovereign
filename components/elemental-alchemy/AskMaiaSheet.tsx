@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   X,
   Sparkles,
@@ -41,7 +42,7 @@ const speakMaiaResponse = async (text: string): Promise<void> => {
   if (!cleanText) return;
 
   try {
-    const response = await fetch('/api/voice/openai-tts', {
+    const response = await apiFetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

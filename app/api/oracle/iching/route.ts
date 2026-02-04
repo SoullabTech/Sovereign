@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
       const { hexagram, changingLines, transformedHexagram } = findHexagramFromLines(lineValues);
 
       // Build the reading response
+      // Extract just the changing line meanings for lines that are changing
+      const changingLineMeanings = changingLines.map(lineNum => ({
+        line: lineNum,
+        meaning: hexagram.changingLinesMeanings[lineNum - 1] // 1-indexed to 0-indexed
+      }));
+
       reading = {
         hexagram: {
           number: hexagram.number,
@@ -55,6 +61,7 @@ export async function POST(request: NextRequest) {
           guidance: hexagram.guidance,
           timing: hexagram.timing,
           changingLines: changingLines,
+          changingLineMeanings: changingLineMeanings,
           transformed: transformedHexagram ? {
             number: transformedHexagram.number,
             name: transformedHexagram.englishName,
@@ -71,6 +78,12 @@ export async function POST(request: NextRequest) {
       // Cast fresh using the library
       const castReading = castIChing(query, method);
 
+      // Extract just the changing line meanings for lines that are changing
+      const freshChangingLineMeanings = castReading.changingLines.map(lineNum => ({
+        line: lineNum,
+        meaning: castReading.primaryHexagram.changingLinesMeanings[lineNum - 1]
+      }));
+
       reading = {
         hexagram: {
           number: castReading.primaryHexagram.number,
@@ -85,6 +98,7 @@ export async function POST(request: NextRequest) {
           guidance: castReading.primaryHexagram.guidance,
           timing: castReading.primaryHexagram.timing,
           changingLines: castReading.changingLines,
+          changingLineMeanings: freshChangingLineMeanings,
           transformed: castReading.transformedHexagram ? {
             number: castReading.transformedHexagram.number,
             name: castReading.transformedHexagram.englishName,

@@ -290,18 +290,38 @@ export async function healIdentity(): Promise<HealedIdentity | null> {
 
 /**
  * Clear all auth-related local storage (for poisoned states)
+ *
+ * IMPORTANT: This must be exhaustive. Any leftover identity key can
+ * trigger rehydration loops where the app thinks the user is still signed in.
  */
 export function clearAuthState(): void {
   if (typeof window === 'undefined') return;
 
-  console.warn('[auth] Clearing poisoned auth state');
+  console.warn('[auth] Clearing auth state for clean signout');
+
+  // Primary session
   localStorage.removeItem('beta_user');
+  localStorage.removeItem('beta_users'); // Legacy plaintext store
+
+  // Member identity
   localStorage.removeItem('memberId');
+  localStorage.removeItem('soullab_member');
+  localStorage.removeItem('member_profile');
+
+  // Explorer identity (all variants)
   localStorage.removeItem('explorerId');
   localStorage.removeItem('explorerName');
+  localStorage.removeItem('explorerPreferredName');
+
+  // Onboarding state
+  localStorage.removeItem('betaOnboardingComplete');
   localStorage.removeItem('signup_completed');
+
+  // Session markers
   localStorage.removeItem('maia_session_version');
   localStorage.removeItem('maia_session_token'); // Safari/iOS header-based auth
+  localStorage.removeItem('maia_session_id');
+  localStorage.removeItem('maia_session_date');
 }
 
 // Expose healIdentity for console debugging
@@ -374,6 +394,38 @@ function getSessionToken(): string | null {
 }
 
 /**
+ * Get or create a stable visitor ID for anonymous usage tracking.
+ * This ID persists in localStorage so Free tier limits actually accumulate.
+ *
+ * Format: anon_<8-char-uuid> (stable across requests for the same browser/device)
+ */
+const VISITOR_ID_KEY = 'maia_visitor_id';
+
+export function getOrCreateVisitorId(): string {
+  if (typeof window === 'undefined') {
+    // Server-side: return a placeholder that backend will ignore
+    return 'server_render';
+  }
+
+  try {
+    const existing = localStorage.getItem(VISITOR_ID_KEY);
+    if (existing && existing.startsWith('anon_')) {
+      return existing;
+    }
+
+    // Generate new stable visitor ID (16 hex chars for collision safety at scale)
+    const newId = `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    localStorage.setItem(VISITOR_ID_KEY, newId);
+    console.log('[visitor] Created stable visitor ID:', newId);
+    return newId;
+  } catch {
+    // localStorage blocked (private mode, etc) - generate per-session ID
+    // This is better than nothing, at least accumulates within a single session
+    return `anon_session_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+  }
+}
+
+/**
  * Enhanced fetch for API calls - handles Safari ITP cookie blocking
  *
  * For Safari/iOS (cookies blocked by ITP):
@@ -426,15 +478,30 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     headers.set('Content-Type', 'application/json');
   }
 
-  // Add session token header (required for server-side validation)
+  // Add session token header (for session-based auth routes)
   const sessionToken = getSessionToken();
   if (sessionToken) {
     headers.set('x-session-token', sessionToken);
     console.log('[apiFetch/safari] x-session-token present:', true);
   } else {
-    // No session token - auth will fail on protected endpoints
-    // x-member-id alone is no longer accepted (security fix)
-    console.warn('[apiFetch/safari] x-session-token present:', false, '- user may need to re-authenticate');
+    console.log('[apiFetch/safari] x-session-token present:', false);
+  }
+
+  // Add member ID header (for routes using getMemberIdFromRequest)
+  // This ensures compatibility with voice routes and other legacy auth
+  const memberId = getValidMemberId();
+  if (memberId) {
+    headers.set('x-member-id', memberId);
+    console.log('[apiFetch/safari] x-member-id present:', true);
+  } else {
+    console.log('[apiFetch/safari] x-member-id present:', false);
+  }
+
+  // Add stable visitor ID for anonymous usage tracking (Free tier limits)
+  // This ensures usage accumulates properly even for non-authenticated users
+  const visitorId = getOrCreateVisitorId();
+  if (visitorId && visitorId !== 'server_render') {
+    headers.set('x-maia-anon-id', visitorId);
   }
 
   return fetch(url, {
@@ -491,6 +558,12 @@ async function apiFetchNative(
     // No session token - auth will fail on protected endpoints
     // x-member-id alone is no longer accepted (security fix)
     console.warn('[apiFetch/native] No session token - user may need to re-authenticate');
+  }
+
+  // Add stable visitor ID for anonymous usage tracking (Free tier limits)
+  const visitorId = getOrCreateVisitorId();
+  if (visitorId && visitorId !== 'server_render') {
+    headers['x-maia-anon-id'] = visitorId;
   }
 
   // Parse body if it's a string (likely JSON)
@@ -572,6 +645,12 @@ async function apiFetchWeb(url: string, options: RequestInit): Promise<Response>
   // Ensure Content-Type is set for POST/PUT requests with body
   if (options.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+
+  // Add stable visitor ID for anonymous usage tracking (Free tier limits)
+  const visitorId = getOrCreateVisitorId();
+  if (visitorId && visitorId !== 'server_render') {
+    headers.set('x-maia-anon-id', visitorId);
   }
 
   return fetch(url, {

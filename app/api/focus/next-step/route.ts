@@ -11,6 +11,19 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { FocusScheduler } from '@/lib/focus/FocusScheduler';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { logAction, checkThreshold, type ThresholdCheck } from '@/lib/focus/weightTracking';
+
+// Helper to map threshold check to API response format
+function mapStewardship(check: ThresholdCheck) {
+  return {
+    threshold: check.level === 'none' ? 'none' :
+               check.level === 'acknowledgment' ? 'acknowledgment' :
+               check.level === 'invitation' ? 'invitation' : 'pause',
+    weeklyWeight: check.currentWeight,
+    projectedWeight: check.projectedWeight,
+    tier: check.tier,
+  };
+}
 
 // Default calendar for MAIA Focus events
 const DEFAULT_FOCUS_CALENDAR = '219018e653bb2b05613d6bfdcaed6edd5f5c21257cb408a2c76673a8015a732d@group.calendar.google.com';
@@ -23,12 +36,13 @@ interface NextStepRequest {
   duration?: number; // minutes
   userId?: string;
   calendarId?: string;
+  memberId?: string; // For weight tracking
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: NextStepRequest = await request.json();
-    const { originalTask, nextStep, action, scheduledTime, duration = 15, userId, calendarId } = body;
+    const { originalTask, nextStep, action, scheduledTime, duration = 15, userId, calendarId, memberId } = body;
     const effectiveCalendarId = calendarId || DEFAULT_FOCUS_CALENDAR;
 
     if (!originalTask || !nextStep || !action) {
@@ -74,6 +88,20 @@ export async function POST(request: NextRequest) {
 
         console.log(`[NextStep] Started: ${duration} min timer, check-in at ${checkInTime.toISOString()}`);
 
+        // Log weight for next step + reminder (weight = 1 + 2)
+        let stewardship = null;
+        if (memberId) {
+          try {
+            await logAction(memberId, 'next_step', { source: 'next-step-builder' });
+            await logAction(memberId, 'reminder_scheduled', { source: 'next-step-builder' });
+            // Get updated threshold after logging
+            const check = await checkThreshold(memberId, 'next_step');
+            stewardship = mapStewardship(check);
+          } catch (weightError) {
+            console.warn('[NextStep] Weight logging skipped:', weightError);
+          }
+        }
+
         return NextResponse.json({
           success: true,
           action: 'start-now',
@@ -83,7 +111,8 @@ export async function POST(request: NextRequest) {
             nextStep,
             duration,
             checkInAt: checkInTime.toISOString(),
-          }
+          },
+          stewardship,
         });
       }
 
@@ -144,6 +173,20 @@ export async function POST(request: NextRequest) {
 
         console.log(`[NextStep] Scheduled: "${nextStep}" at ${startTime.toISOString()}`);
 
+        // Log weight for next step + reminder (weight = 1 + 2)
+        let stewardship = null;
+        if (memberId) {
+          try {
+            await logAction(memberId, 'next_step', { source: 'next-step-builder' });
+            await logAction(memberId, 'reminder_scheduled', { source: 'next-step-builder' });
+            // Get updated threshold after logging
+            const check = await checkThreshold(memberId, 'next_step');
+            stewardship = mapStewardship(check);
+          } catch (weightError) {
+            console.warn('[NextStep] Weight logging skipped:', weightError);
+          }
+        }
+
         return NextResponse.json({
           success: true,
           action: 'schedule',
@@ -154,7 +197,8 @@ export async function POST(request: NextRequest) {
             startTime: startTime.toISOString(),
             endTime: endTime.toISOString(),
             calendarEventId,
-          }
+          },
+          stewardship,
         });
       }
 
@@ -189,6 +233,20 @@ export async function POST(request: NextRequest) {
 
         console.log(`[NextStep] Reminder set: "${nextStep}" at ${reminderTime.toISOString()}`);
 
+        // Log weight for next step + reminder (weight = 1 + 2)
+        let stewardship = null;
+        if (memberId) {
+          try {
+            await logAction(memberId, 'next_step', { source: 'next-step-builder' });
+            await logAction(memberId, 'reminder_scheduled', { source: 'next-step-builder' });
+            // Get updated threshold after logging
+            const check = await checkThreshold(memberId, 'next_step');
+            stewardship = mapStewardship(check);
+          } catch (weightError) {
+            console.warn('[NextStep] Weight logging skipped:', weightError);
+          }
+        }
+
         return NextResponse.json({
           success: true,
           action: 'remind-later',
@@ -197,7 +255,8 @@ export async function POST(request: NextRequest) {
             taskId: task.id,
             nextStep,
             reminderTime: reminderTime.toISOString(),
-          }
+          },
+          stewardship,
         });
       }
 

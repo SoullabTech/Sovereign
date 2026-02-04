@@ -30,6 +30,9 @@ import {
   Star,
   Search,
   Activity,
+  Settings,
+  Users,
+  Gift,
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -171,6 +174,18 @@ export default function LabToolsPage() {
       ],
     },
     {
+      title: 'SHARE',
+      icon: '🎁',
+      items: [
+        {
+          icon: Gift,
+          label: 'Beads',
+          path: '/labtools/beads',
+          description: 'Invite friends to MAIA'
+        },
+      ],
+    },
+    {
       title: 'ADVANCED',
       icon: '🧪',
       items: [
@@ -227,6 +242,24 @@ export default function LabToolsPage() {
           label: 'AIN Telemetry',
           path: '/labtools/ain',
           description: 'Response structure analysis'
+        },
+      ],
+    },
+    {
+      title: 'ADMIN',
+      icon: '🔐',
+      items: [
+        {
+          icon: Settings,
+          label: 'System Settings',
+          path: '/labtools/admin/system',
+          description: 'Feature flags & controls'
+        },
+        {
+          icon: Users,
+          label: 'Beta Testers',
+          path: '/labtools/admin/beta-testers',
+          description: 'Manage beta access'
         },
       ],
     },

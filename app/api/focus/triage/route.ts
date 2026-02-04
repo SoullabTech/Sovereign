@@ -12,6 +12,19 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { FocusScheduler } from '@/lib/focus/FocusScheduler';
+import { logAction, checkThreshold, type ThresholdCheck } from '@/lib/focus/weightTracking';
+
+// Helper to map threshold check to API response format
+function mapStewardship(check: ThresholdCheck) {
+  return {
+    threshold: check.level === 'none' ? 'none' :
+               check.level === 'acknowledgment' ? 'acknowledgment' :
+               check.level === 'invitation' ? 'invitation' : 'pause',
+    weeklyWeight: check.currentWeight,
+    projectedWeight: check.projectedWeight,
+    tier: check.tier,
+  };
+}
 
 interface TriageRequest {
   captureText: string;
@@ -19,12 +32,13 @@ interface TriageRequest {
   nextAction?: string;
   scheduledFor?: string;
   userId?: string;
+  memberId?: string; // For weight tracking
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: TriageRequest = await request.json();
-    const { captureText, type, nextAction, scheduledFor, userId } = body;
+    const { captureText, type, nextAction, scheduledFor, userId, memberId } = body;
 
     if (!captureText || !type) {
       return NextResponse.json(
@@ -51,6 +65,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Log weight (capture = 0, but we track for patterns)
+    // Only log if we have a valid memberId (UUID), not 'anonymous' strings
+    let stewardship = null;
+    if (memberId) {
+      try {
+        await logAction(memberId, 'capture', { source: 'inbox-triage' });
+        // Get current threshold state
+        const check = await checkThreshold(memberId, 'capture');
+        stewardship = mapStewardship(check);
+      } catch (weightError) {
+        // Silent - weight tracking is invisible accounting, shouldn't break triage
+        console.warn('[Triage] Weight logging skipped:', weightError);
+      }
+    }
+
     // Return success with task details
     return NextResponse.json({
       success: true,
@@ -61,7 +90,8 @@ export async function POST(request: NextRequest) {
         captureText,
         nextAction,
         scheduledFor,
-      }
+      },
+      stewardship,
     });
 
   } catch (error) {

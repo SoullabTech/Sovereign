@@ -16,6 +16,7 @@ import {
   sendBookingConfirmation,
   sendBookingNotificationToPractitioner,
 } from '@/lib/portal/notifications';
+import { logAction } from '@/lib/focus/weightTracking';
 
 export async function POST(
   request: NextRequest,
@@ -36,7 +37,7 @@ export async function POST(
 
     // Get practitioner
     const practitionerResult = await db.query(
-      `SELECT id, name as practitioner_name, email, business_name, settings
+      `SELECT id, member_id, name as practitioner_name, email, business_name, settings
        FROM practitioners
        WHERE slug = $1 AND status = 'active'`,
       [slug]
@@ -181,7 +182,23 @@ export async function POST(
       Promise.all([
         sendBookingConfirmation(bookingDetails, practitionerInfo),
         sendBookingNotificationToPractitioner(bookingDetails, practitionerInfo),
-      ]).catch((err) => {
+      ]).then(async (results) => {
+        // Log weight for practitioner (silent, Phase 1)
+        // 2 emails sent = 2 x email_send (weight 3 each = 6 total)
+        if (practitioner.member_id) {
+          const successCount = results.filter(r => r.success).length;
+          for (let i = 0; i < successCount; i++) {
+            try {
+              await logAction(practitioner.member_id, 'email_send', {
+                source: 'portal-booking',
+                metadata: { portalSlug: slug, target: i === 0 ? 'client' : 'practitioner' }
+              });
+            } catch (e) {
+              console.warn('[Portal Booking] Weight logging skipped:', e);
+            }
+          }
+        }
+      }).catch((err) => {
         console.error('[Portal Booking] Email notification error:', err);
       });
     }

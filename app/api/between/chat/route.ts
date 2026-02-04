@@ -21,9 +21,10 @@ import {
   enhanceResponseIfRuptureDetected,
   type RuptureDetectionResult
 } from '@/lib/consultation/rupture-detection-middleware';
-import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
+import { getConversationHistory, getUserConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
+import { loadSignificantMoments, formatSignificantMomentsAddendum } from '@/lib/memory/SignificantMomentsService';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
@@ -40,13 +41,19 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { hasContinuityAccess, toMemberTier } from '@/lib/auth/tierAccess';
+import { normalizeConversationMode, isRelationshipMode, type ConversationMode } from '@/lib/api/conversationMode';
 import { query } from '@/lib/db/postgres';
+import { getSystemSetting } from '@/lib/system/systemSettings';
+import { LimitsEnforcer, getMemberTier, type MemberTier, type EnforcementDecision } from '@/lib/limits/LimitsEnforcer';
 import {
   computeMemberSpiralState,
   buildSpiralSnapshot,
   generateSnapshotPromptAddendum,
   type ConversationTurn
 } from '@/lib/consciousness/spiralSnapshot';
+import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
+import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 import {
   checkResponseIntegrity,
   applyMinimalRevision,
@@ -68,6 +75,37 @@ import {
   type BridgedSnapshot,
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
+
+// ═══════════════════════════════════════════════════════════════
+// CONTEXT PLUMBING HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Tight gating for relationship memory: only returns true if memory has real content.
+ * Avoids false positives from placeholder objects like {} or { version: "" }.
+ */
+function hasMeaningfulRelationshipMemory(m: unknown): boolean {
+  if (!m || typeof m !== 'object') return false;
+  const mem = m as Record<string, unknown>;
+  // Shape drift escape hatch: recognize future markers
+  if (typeof mem.kind === 'string' && (mem.kind as string).length > 0) return true;
+  if (typeof mem.version === 'string' && (mem.version as string).length > 0) return true;
+  // Real memory signals: summary text or populated arrays
+  if (typeof mem.summary === 'string' && (mem.summary as string).trim().length > 0) return true;
+  if (Array.isArray(mem.themes) && mem.themes.length > 0) return true;
+  if (Array.isArray(mem.patterns) && mem.patterns.length > 0) return true;
+  if (Array.isArray(mem.events) && mem.events.length > 0) return true;
+  return false;
+}
+
+/**
+ * Exhaustive switch tripwire: ensures all EnforcementDecision actions are handled.
+ * - Compile-time: TS forces you to handle new actions if EnforcementDecision evolves
+ * - Runtime: catches `as any` escapes or JSON drift with a loud error
+ */
+function assertNeverEnforcement(x: never): never {
+  throw new Error(`[E_INVARIANT_ENFORCEMENT_ACTION] Unexpected enforcement action: ${JSON.stringify(x)}`);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -773,10 +811,7 @@ export async function POST(req: NextRequest) {
 
     // 🔄 MODE NORMALIZATION: Map client mode names to API mode names
     // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
-    const mode = rawMode === 'patient' ? 'counsel'
-               : rawMode === 'session' ? 'scribe'
-               : rawMode === 'normal' ? 'dialogue'
-               : rawMode; // Pass through if already normalized
+    const mode = normalizeConversationMode(rawMode);
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
     // When true: no content retention, no patterns formed, no training data
@@ -813,6 +848,23 @@ export async function POST(req: NextRequest) {
       allowBodySessionId && requestedSessionId
         ? buildSessionCookie(safeSessionId)
         : generatedCookie;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚧 MAINTENANCE MODE: Block new sessions, allow existing ones to finish
+    // ═══════════════════════════════════════════════════════════════════════
+    const { enabled: maintenanceOn, message: maintenanceMsg } = await isMaintenanceEnabled();
+    if (maintenanceOn) {
+      const isKnown = await isKnownActiveSession(safeSessionId);
+      if (!isKnown) {
+        return withSessionCookie(
+          NextResponse.json(
+            { error: 'MAINTENANCE_MODE', message: maintenanceMsg },
+            { status: 503 }
+          ),
+          sessionCookie
+        );
+      }
+    }
 
     if (!message || typeof message !== 'string') {
       return withSessionCookie(
@@ -877,7 +929,89 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET eligibility (allow override for local testing)
     const SELFLET_ALLOW_ANON = process.env.MAIA_SELFLET_ALLOW_ANON === '1';
     const isAnon = effectiveUserId.startsWith('anon:');
+
+    // Stable anon ID for usage tracking - prefer header (shared with voice routes)
+    // This ensures Free tier limits accumulate consistently across text AND voice
+    const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
+    if (isAnon && !headerAnonId) {
+      console.warn('[limits] Missing x-maia-anon-id header; text usage may not accumulate properly');
+    }
+    const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
+    // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
+    await touchActiveSession({
+      sessionId: safeSessionId,
+      memberId: authUserId,
+      anonId: stableAnonId,
+    });
+
+    // 👤 GUEST CONTEXT: Explicit messaging when context is unavailable
+    // Prevents MAIA from hallucinating "I remember you" or assuming prior history
+    const guestContextAddendum = isAnon
+      ? `👤 GUEST CONTEXT NOTE:
+This user is in guest mode (no authenticated identity).
+- Do NOT assume long-term memory, profile, or prior sessions
+- Do NOT say "I remember" or reference past conversations
+- Keep responses self-contained and complete
+- If continuity context would help, ask ONE gentle clarifying question
+- Journal and capture context are unavailable in guest mode`
+      : null;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚦 LIMITS ENFORCEMENT: Check usage before processing
+    // ═══════════════════════════════════════════════════════════════════════
+    const memberTier: MemberTier = isAnon
+      ? 'free'
+      : authUserId
+        ? await getMemberTier(authUserId)
+        : 'free';
+
+    const limitsCheck = await LimitsEnforcer.checkUsage({
+      memberId: isAnon ? undefined : authUserId ?? undefined,
+      anonId: stableAnonId,
+      tier: memberTier,
+      resource: 'text',
+    });
+
+    // Handle enforcement decisions (exhaustive switch for structural safety)
+    // - Compile-time: TS forces handling of new actions if EnforcementDecision evolves
+    // - Runtime: default case catches `as any` escapes or JSON drift
+    let limitNudge: Extract<EnforcementDecision, { action: 'nudge' }> | null = null;
+
+    switch (limitsCheck.action) {
+      case 'block':
+        console.log(`[Chat API] 🚫 Usage blocked for ${effectiveUserId}: ${limitsCheck.message}`);
+        return NextResponse.json({
+          message: limitsCheck.message,
+          blocked: true,
+          tier: memberTier,
+        }, {
+          status: 429,
+          headers: makeCanonHeaders({ requestId: reqId, pipeline: 'direct', source: 'direct' }),
+        });
+
+      case 'nudge':
+        limitNudge = limitsCheck;
+        console.log(`[Chat API] 💬 Usage nudge for ${effectiveUserId}: ${limitsCheck.nudgeType}`);
+        break;
+
+      case 'allow':
+      case 'suggest_addon':
+        break;
+
+      default:
+        // If types drift or something came in as `any`, fail loudly
+        assertNeverEnforcement(limitsCheck);
+    }
+
+    // Log-safe enforcement snapshot (for diagnostic warnings, not response body)
+    // Only stable scalars + reason codes — never log `message` (user-facing content)
+    const enforcementForLog = {
+      action: limitsCheck.action,
+      nudgeType: limitsCheck.action === 'nudge' ? limitsCheck.nudgeType : null,
+      addonType: limitsCheck.action === 'suggest_addon' ? limitsCheck.addonType : null,
+    };
 
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
@@ -929,8 +1063,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
-    const conversationHistory = await getConversationHistory(safeSessionId, 20);
-    console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns`);
+    // First try session-level, then fall back to cross-session user history
+    let conversationHistory = await getConversationHistory(safeSessionId, 20);
+    let historySource = 'session';
+
+    // If this is a new session with no history, load cross-session memory
+    // This is what gives MAIA continuity across conversations
+    if (conversationHistory.length === 0 && effectiveUserId && !effectiveUserId.startsWith('anon:')) {
+      conversationHistory = await getUserConversationHistory(effectiveUserId, 10, safeSessionId);
+      historySource = 'cross-session';
+    }
+
+    console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns (source: ${historySource})`);
 
     // Add messageCount to meta for voice tier selection (Opus vs Sonnet)
     (normalizedMeta as Record<string, unknown>).messageCount = conversationHistory.length;
@@ -980,6 +1124,25 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       console.warn('[Chat API] Could not load wisdom field:', err);
       // Graceful degradation - continue without wisdom field
+    }
+
+    // 📌 SIGNIFICANT MOMENTS: Load captures, breakthroughs, journals (what matters most)
+    let significantMomentsAddendum = '';
+    if (!effectiveUserId.startsWith('anon:')) {
+      try {
+        const significantMoments = await loadSignificantMoments(effectiveUserId, {
+          maxCaptures: 15,
+          maxBreakthroughs: 10,
+          maxJournals: 5
+        });
+        significantMomentsAddendum = formatSignificantMomentsAddendum(significantMoments);
+        if (significantMomentsAddendum) {
+          console.log(`[Chat API] 📌 Significant moments loaded: ${significantMoments.summary.totalCaptures} captures, ${significantMoments.summary.totalBreakthroughs} breakthroughs, ${significantMoments.summary.totalJournals} journals`);
+        }
+      } catch (err) {
+        console.warn('[Chat API] Could not load significant moments:', err);
+        // Graceful degradation - continue without significant moments
+      }
     }
 
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
@@ -1215,6 +1378,27 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
+      // 🧹 STRIP INTERNAL METADATA + MARKDOWN: Clean response for user display (safe mode path)
+      const showMetaSafe = await getSystemSetting<boolean>('show_soul_metadata') === true;
+      const showMarkdownSafe = await getSystemSetting<boolean>('show_markdown') === true;
+
+      if (!showMetaSafe) {
+        outboundText = outboundText
+          .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+          .replace(/---SOUL_METADATA---[\s\S]*/g, '');
+      }
+      if (!showMarkdownSafe) {
+        outboundText = outboundText
+          .replace(/^#{1,6}\s+/gm, '')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/^[-*]{3,}\s*$/gm, '')
+          .replace(/`([^`]+)`/g, '$1')
+          .replace(/→/g, '➝')
+          .replace(/\n{3,}/g, '\n\n');
+      }
+      outboundText = outboundText.trim();
+
       // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
       let socraticValidation: SocraticValidationResult | null = null;
       try {
@@ -1448,6 +1632,70 @@ export async function POST(req: NextRequest) {
     const relationshipResult = await buildRelationshipAddendumForUser(effectiveUserId);
     const relationshipModeAddendum = relationshipResult?.addendum ?? null;
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🛡️ SAFE ADDENDA: Normalize all addenda to safe strings (Track 2B)
+    // Prevents null/undefined/"undefined"/"null" from reaching MAIA
+    // ═══════════════════════════════════════════════════════════════════════════
+    const asSafeAddendum = (v: unknown): string => {
+      if (typeof v !== 'string') return '';
+      const s = v.trim();
+      // Guard against accidental stringified null/undefined
+      if (s === 'undefined' || s === 'null' || s === '') return '';
+      return s;
+    };
+
+    const safeAddenda = {
+      relationshipMode: asSafeAddendum(relationshipModeAddendum),
+      governor: asSafeAddendum(governorAddendum),
+      guest: asSafeAddendum(guestContextAddendum),
+      journal: asSafeAddendum(null), // Placeholder: wire when journal table exists
+      capture: asSafeAddendum(significantMomentsAddendum), // Captures, breakthroughs, journals
+      astro: asSafeAddendum(astrologicalContextAddendum),
+      spiral: asSafeAddendum(spiralSnapshotAddendum),
+      wuxing: asSafeAddendum(wuxingSnapshotAddendum),
+      bridge: asSafeAddendum(bridgeSnapshotAddendum),
+      therapeuticFramework: asSafeAddendum(therapeuticFrameworkAddendum),
+      reflectionLens: asSafeAddendum(reflectionLensAddendum),
+      epistemicPath: asSafeAddendum(epistemicPathAddendum),
+    };
+
+    // 📊 DIAGNOSTIC: Context plumbing visibility (catches null/undefined instantly)
+    console.log('[MAIA CONTEXT]', {
+      effectiveUserId: effectiveUserId.substring(0, 8) + '...',
+      recognized: !isAnon,
+      relationshipLen: safeAddenda.relationshipMode.length,
+      governorLen: safeAddenda.governor.length,
+      journalLen: safeAddenda.journal.length,
+      captureLen: safeAddenda.capture.length,
+      astroLen: safeAddenda.astro.length,
+      spiralLen: safeAddenda.spiral.length,
+      wuxingLen: safeAddenda.wuxing.length,
+    });
+
+    // 🚨 SELF-ALERTING: Warn when addenda should exist but arrived empty
+    // Greppable codes: W_ASTRO_EMPTY, W_REL_EMPTY, W_CAPTURE_EMPTY
+    const CAPTURE_ADDENDUM_ENABLED =
+      process.env.CAPTURE_ADDENDUM_ENABLED === '1' ||
+      process.env.CAPTURE_ADDENDUM_ENABLED === 'true';
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONTEXT WARNINGS (self-alerting diagnostic system)
+    // TAXONOMY: W_* investigate | E_INVARIANT_* blow up | CANARY intentional
+    // ═══════════════════════════════════════════════════════════════════════
+    const contextWarnings: string[] = [];
+
+    if (birthData?.date && safeAddenda.astro.length === 0) {
+      contextWarnings.push('W_ASTRO_EMPTY');
+    }
+    if (!isAnon && hasMeaningfulRelationshipMemory(relationshipMemory) && safeAddenda.relationshipMode.length === 0) {
+      contextWarnings.push('W_REL_EMPTY');
+    }
+    if (CAPTURE_ADDENDUM_ENABLED && selfletContext?.surfacedMessageId && safeAddenda.capture.length === 0) {
+      contextWarnings.push('W_CAPTURE_EMPTY');
+    }
+
+    // Note: warnings logged AFTER orchestratorResult for route context
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1458,26 +1706,78 @@ export async function POST(req: NextRequest) {
       context: {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
-        mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
+        mode, // Pass mode (Talk/Care/Note) for appropriate system prompts — typed ConversationMode
         userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
         localHour, // Client's local hour (0-23) for correct time-of-day greetings
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
-        epistemicPathAddendum, // 🧭 User-chosen epistemic lens
-        spiralSnapshotAddendum, // 🌀 Computed spiral state (Pass 1)
-        wuxingSnapshotAddendum, // 🌿 Wu Xing five element state
-        bridgeSnapshotAddendum, // 🌉 Spiral × Wu Xing bridged awareness
-        therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
-        reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
-        astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
-        governorAddendum, // 🌀 Spiralogic posture constraints
-        relationshipModeAddendum, // 💫 Tier-based relationship depth
+        // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence, safe-wrapped) ═══
+        relationshipModeAddendum: safeAddenda.relationshipMode || undefined,
+        governorAddendum: safeAddenda.governor || undefined,
+        guestContextAddendum: safeAddenda.guest || undefined,
+        journalContextAddendum: safeAddenda.journal || undefined,
+        captureContextAddendum: safeAddenda.capture || undefined,
+        astrologicalContextAddendum: safeAddenda.astro || undefined,
+        spiralSnapshotAddendum: safeAddenda.spiral || undefined,
+        wuxingSnapshotAddendum: safeAddenda.wuxing || undefined,
+        bridgeSnapshotAddendum: safeAddenda.bridge || undefined,
+        therapeuticFrameworkAddendum: safeAddenda.therapeuticFramework || undefined,
+        reflectionLensAddendum: safeAddenda.reflectionLens || undefined,
+        epistemicPathAddendum: safeAddenda.epistemicPath || undefined
       },
       // Route/profile tracing for corpus callosum filtering
       originRoute: '/api/between/chat',
       processingProfileOverride: 'BETWEEN',
     });
+
+    // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
+    // Note: `mode` is the actual conversation mode (dialogue/counsel/scribe), not orchestrator.route.mode
+    // (orchestrator.route.mode is hardcoded to 'fail-soft-orchestration' and doesn't reflect conversation mode)
+
+    // Tier-aware + mode-aware filtering for W_REL_EMPTY
+    // Only warn when: continuity tier + relationship-expecting mode + meaningful memory + empty addendum
+    const accessTier = toMemberTier(memberTier); // Canonical mapping from LimitsEnforcer → tierAccess
+    const continuityExpected = hasContinuityAccess({ tier: accessTier });
+    const modeShouldHaveRelationship = isRelationshipMode(mode);
+    const hasRel = hasMeaningfulRelationshipMemory(relationshipMemory);
+
+    const filteredWarnings = contextWarnings.filter(w => {
+      if (w === 'W_REL_EMPTY' && (!continuityExpected || !modeShouldHaveRelationship || !hasRel)) {
+        return false;
+      }
+      return true;
+    });
+
+    if (filteredWarnings.length > 0) {
+      console.warn('[MAIA CONTEXT]', {
+        warnings: filteredWarnings,
+        reqId,
+        userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
+        recognized: !isAnon,
+        limitsTier: memberTier,  // LimitsEnforcer vocabulary
+        accessTier,              // tierAccess vocabulary (mapped)
+        enforcement: enforcementForLog, // Policy decision (allow/nudge/block)
+        // Conversation mode (actual mode, not orchestrator.route.mode which is hardcoded)
+        conversationMode: mode, // dialogue | counsel | scribe
+        // Orchestrator route object (non-sensitive diagnostic context)
+        orchestratorRoute: orchestratorResult.route
+          ? {
+              mode: orchestratorResult.route.mode,
+              type: orchestratorResult.route.type,
+              safeMode: orchestratorResult.route.safeMode,
+              operational: orchestratorResult.route.operational,
+              endpoint: orchestratorResult.route.endpoint,
+            }
+          : null,
+        // "Why this should exist" signals
+        continuityExpected,
+        modeShouldHaveRelationship, // true only for 'counsel' (Care mode)
+        birthDataPresent: !!birthData?.date,
+        hasRelationshipMemory: hasRel,
+        hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
+      });
+    }
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
     // Dev-only simulation headers for calibration testing
@@ -1698,11 +1998,45 @@ export async function POST(req: NextRequest) {
       console.error('[Socratic Validator ORCH] Validation failed (non-blocking):', err);
     }
 
+    // 🧹 STRIP INTERNAL METADATA + MARKDOWN: Clean response for user display
+    // Admin can enable show_soul_metadata or show_markdown to see raw output
+    const showMetadata = await getSystemSetting<boolean>('show_soul_metadata') === true;
+    const showMarkdown = await getSystemSetting<boolean>('show_markdown') === true;
+
+    let cleanedText = outboundText2;
+
+    // Strip SOUL_METADATA blocks (internal processing data)
+    if (!showMetadata) {
+      cleanedText = cleanedText
+        .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
+        .replace(/---SOUL_METADATA---[\s\S]*/g, ''); // partial block at end
+    }
+
+    // Strip markdown artifacts that look messy in plain text UI
+    if (!showMarkdown) {
+      cleanedText = cleanedText
+        // Remove markdown headers (## Header)
+        .replace(/^#{1,6}\s+/gm, '')
+        // Remove bold/italic markers (**text** or *text*)
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        // Remove horizontal rules (--- or ***)
+        .replace(/^[-*]{3,}\s*$/gm, '')
+        // Remove inline code backticks
+        .replace(/`([^`]+)`/g, '$1')
+        // Clean up arrows to be more readable
+        .replace(/→/g, '➝')
+        // Remove excessive newlines from stripped content
+        .replace(/\n{3,}/g, '\n\n');
+    }
+
+    cleanedText = cleanedText.trim();
+
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {
       console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
     } else {
-      await addConversationExchange(safeSessionId, message, outboundText2, {
+      await addConversationExchange(safeSessionId, message, cleanedText, {
         type: 'orchestrator',
         mode: mode || 'dialogue',
         userId: effectiveUserId,
@@ -1780,7 +2114,7 @@ export async function POST(req: NextRequest) {
     });
 
     const response2 = NextResponse.json({
-      message: outboundText2,
+      message: cleanedText,
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,
@@ -1822,12 +2156,32 @@ export async function POST(req: NextRequest) {
           isGold: socraticValidation2.isGold,
           passes: socraticValidation2.passes,
         } : undefined,
+        // 🚦 Usage limits nudge (for gentle client-side messaging)
+        limitNudge: limitNudge ? {
+          message: limitNudge.message,
+          nudgeType: limitNudge.nudgeType,
+        } : undefined,
+        tier: memberTier,
       }
     });
 
     // Apply canon headers to response
     Object.entries(canonHeaders2).forEach(([key, value]) => {
       response2.headers.set(key, value);
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚦 LIMITS: Record usage after successful response (non-blocking)
+    // ═══════════════════════════════════════════════════════════════════════
+    LimitsEnforcer.recordUsage({
+      memberId: isAnon ? undefined : authUserId ?? undefined,
+      anonId: stableAnonId,
+      tier: memberTier,
+      resource: 'text',
+      tokensIn: orchestratorResult.metadata?.tokensUsed?.input ?? 0,
+      tokensOut: orchestratorResult.metadata?.tokensUsed?.output ?? 0,
+    }).catch(err => {
+      console.error('[LimitsEnforcer] Failed to record usage:', err);
     });
 
     return withSessionCookie(response2, sessionCookie);

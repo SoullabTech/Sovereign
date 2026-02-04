@@ -21,6 +21,15 @@ export default function RootPage() {
     console.log('[ROOT PAGE] ===== ROUTING START =====');
     console.log('[ROOT PAGE] location:', window.location.href);
 
+    // SIGNOUT LATCH: If user explicitly signed out, route to signin immediately
+    // This latch survives iOS WebView restore and overrides all "returning user" logic
+    const signedOut = localStorage.getItem('maia_signed_out') === '1';
+    if (signedOut) {
+      console.log('[NAV] / -> /signin (reason: signout latch active)');
+      window.location.replace('/signin?from=signed_out_latch');
+      return;
+    }
+
     // THREE-WAY ROUTING LOGIC:
     // 1. User currently authenticated (active session) → /maia
     // 2. User has ANY prior MAIA data (signed out) → /welcome-back (returning user)

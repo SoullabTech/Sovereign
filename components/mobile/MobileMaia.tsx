@@ -126,9 +126,9 @@ export function MobileMaia({ userId, userName, onConversationStart, className = 
       <div className="flex-shrink-0 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
-            src="/holoflower-amber.png"
+            src="/logo_flower 2.png"
             alt="MAIA"
-            className="w-8 h-8 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
+            className="w-8 h-8"
           />
           <span className="text-white text-lg font-light">MAIA</span>
         </div>

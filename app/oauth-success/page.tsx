@@ -77,6 +77,10 @@ function OAuthSuccessContent() {
       localStorage.setItem('maia_session_version', '2');
       localStorage.setItem('signup_completed', 'true');
 
+      // Clear signout latch - user has consciously signed in again
+      localStorage.removeItem('maia_signed_out');
+      localStorage.removeItem('maia_signed_out_at');
+
       setStatus('success');
 
       if (isNew) {

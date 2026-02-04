@@ -182,6 +182,15 @@ function SigninContent() {
       return;
     }
 
+    // SIGNOUT LATCH: If user explicitly signed out, stay on signin
+    // This prevents any auto-redirect from overriding explicit signout
+    const signedOut = localStorage.getItem('maia_signed_out') === '1';
+    if (signedOut) {
+      console.log('[SIGNIN PAGE] latch active - skipping auto-redirect');
+      setCheckingAuth(false);
+      return;
+    }
+
     // NATIVE: Never do auth preflight
     if (isNative) {
       console.log('[SIGNIN PAGE] Native - form ready');
@@ -233,6 +242,10 @@ function SigninContent() {
       localStorage.setItem('maia_session_token', sessionToken);
       console.log('[storeSession] Stored session token for header-based auth');
     }
+
+    // Clear signout latch - user has consciously signed in again
+    localStorage.removeItem('maia_signed_out');
+    localStorage.removeItem('maia_signed_out_at');
   }
 
   // Passkey sign-in (biometric) - uses unified biometry on native platforms

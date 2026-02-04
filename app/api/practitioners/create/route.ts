@@ -14,6 +14,14 @@ interface CreatePractitionerInput {
   practiceName: string;
   slug: string;
   email: string;
+  portalType?: 'generalist' | 'astrology' | 'therapy' | 'bodywork' | 'groups';
+}
+
+const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician'] as const;
+type PortalType = typeof VALID_PORTAL_TYPES[number];
+
+function isValidPortalType(t: string): t is PortalType {
+  return VALID_PORTAL_TYPES.includes(t as PortalType);
 }
 
 /**
@@ -28,12 +36,20 @@ interface CreatePractitionerInput {
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePractitionerInput = await request.json();
-    const { memberId, practiceName, slug, email } = body;
+    const { memberId, practiceName, slug, email, portalType = 'generalist' } = body;
 
     // Validate required fields
     if (!memberId || !practiceName || !slug || !email) {
       return NextResponse.json(
         { error: 'Missing required fields: memberId, practiceName, slug, email' },
+        { status: 400 }
+      );
+    }
+
+    // Validate portal type
+    if (!isValidPortalType(portalType)) {
+      return NextResponse.json(
+        { error: `Invalid portal type. Must be one of: ${VALID_PORTAL_TYPES.join(', ')}` },
         { status: 400 }
       );
     }
@@ -94,9 +110,9 @@ export async function POST(request: NextRequest) {
       // Create practitioner record (status defaults to 'onboarding')
       await client.query(
         `INSERT INTO practitioners (
-          id, member_id, slug, name, email, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [practitionerId, memberId, slug, practiceName, email, now, now]
+          id, member_id, slug, name, email, portal_type, status, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [practitionerId, memberId, slug, practiceName, email, portalType, 'active', now, now]
       );
 
       // Create initial practitioner_themes record with defaults
@@ -153,7 +169,8 @@ export async function POST(request: NextRequest) {
         slug,
         name: practiceName,
         email,
-        status: 'onboarding',
+        portal_type: portalType,
+        status: 'active',
         created_at: now,
         updated_at: now,
       };

@@ -8,6 +8,7 @@ export type TraceEventKind =
   | "state_inference"
   | "rule_eval"
   | "routing_decision"
+  | "depth_routing"
   | "response_plan"
   | "model_call"
   | "output_sent"

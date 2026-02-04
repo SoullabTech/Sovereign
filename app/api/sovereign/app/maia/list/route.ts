@@ -87,6 +87,7 @@ import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // 🌿 Wu Xing (Five Elements) integration
 import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
@@ -213,15 +214,29 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId, timezone: rawTimezone, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId: bodyUserId, timezone: rawTimezone, conversationId: bodyConversationId, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
       voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
       userId?: string;
       timezone?: string;
+      conversationId?: string;
       [key: string]: unknown;
     };
+
+    // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
+    // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
+    const memberIdFromAuth = await getMemberIdFromRequest(req);
+    const userId = memberIdFromAuth ||
+      (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
+
+    // 🔍 IDENTITY DEBUG: Log userId resolution for debugging memory issues
+    console.log('[MAIA] userId resolved:', {
+      memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
+      bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
+      finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
+    });
 
     // Validate and sanitize timezone (default to UTC if invalid)
     const timezone = (rawTimezone && isValidTimeZone(rawTimezone)) ? rawTimezone : 'UTC';
@@ -340,11 +355,17 @@ export async function POST(req: NextRequest) {
     const effectiveUserId = isRecognizedUser ? userId : session.id;
     const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
 
+    // 🔍 MEMORY DEBUG: Log identity state for debugging memory issues
+    console.log(`🧠 [Route/MemoryDebug] userId="${userId}" isRecognized=${isRecognizedUser} effectiveUserId="${effectiveUserId}" sanctuary=${isSanctuary} allowCross=${allowCrossSessionMemory}`);
+
     // Resolve memory mode (server-side permission check)
-    // Force ephemeral for anonymous users to prevent misleading audit trails
-    const requestedMode = isRecognizedUser ? (meta as any)?.memoryMode : 'ephemeral';
+    // 🔧 FIX: Default to 'continuity' for recognized users instead of respecting client's request
+    // This ensures cross-session memory is always attempted for authenticated users
+    const requestedMode = isRecognizedUser ? ((meta as any)?.memoryMode || 'continuity') : 'ephemeral';
     const modeResolution = resolveMemoryMode(effectiveUserId, requestedMode);
     const memoryMode = modeResolution.effective;
+
+    console.log(`🧠 [Route/MemoryDebug] requestedMode="${requestedMode}" resolvedMode="${memoryMode}"`);
 
     if (!isRecognizedUser) {
       console.log(`🛡️ [Route/Identity] Anonymous session - cross-session memory disabled`);
@@ -360,6 +381,7 @@ export async function POST(req: NextRequest) {
     } else if (!allowCrossSessionMemory) {
       console.log('🛡️ [Route/MemoryBundle] Skipped - Anonymous session (no cross-session)');
     } else if (memoryMode !== 'ephemeral') {
+      console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${effectiveUserId}" mode="${memoryMode}"`);
       try {
         memoryBundle = await withTimeoutLabeled(
           'MemoryBundleService.build',
@@ -378,10 +400,22 @@ export async function POST(req: NextRequest) {
         if (memoryBundle) {
           memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
           console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
+          // 🔍 DEBUG: Log what actually came back
+          console.log(`📦 [Route/MemoryBundle] Turns: ${memoryBundle.retrievalStats.turnsRetrieved} (same-session: ${memoryBundle.retrievalStats.turnsSameSession}, cross: ${memoryBundle.retrievalStats.turnsCrossSession})`);
+          console.log(`📦 [Route/MemoryBundle] Relationship: encounters=${memoryBundle.relationshipSnapshot.encounterCount}, breakthroughs=${memoryBundle.relationshipSnapshot.breakthroughCount}`);
+          if (memoryContext.length > 0) {
+            console.log(`📦 [Route/MemoryBundle] Context preview (first 300 chars): ${memoryContext.slice(0, 300)}...`);
+          } else {
+            console.warn(`⚠️ [Route/MemoryBundle] memoryContext is EMPTY despite retrieval!`);
+          }
+        } else {
+          console.warn(`⚠️ [Route/MemoryBundle] Build returned null`);
         }
       } catch (memErr) {
         console.warn('⚠️ [Route/MemoryBundle] Build failed (non-blocking):', memErr);
       }
+    } else {
+      console.log(`🛡️ [Route/MemoryBundle] Skipped - memoryMode is "${memoryMode}"`);
     }
 
     // 🌿 WU XING BRIDGE: Five Elements awareness (enhancement, not dependency)
@@ -478,6 +512,7 @@ Water = depth, reflection, wisdom`;
           wuxingSnapshotAddendum: wuxingAddendum, // 🌿 Wu Xing elemental awareness (mapped to existing field)
           wuxingSnapshot, // 🌿 Raw Wu Xing data for downstream processing
           bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
+          conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
           ...meta,
         },
       }),
