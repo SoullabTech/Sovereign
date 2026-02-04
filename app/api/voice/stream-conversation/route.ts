@@ -103,10 +103,11 @@ function containsIdentityViolation(text: string): boolean {
 
 /**
  * Get a MAIA-compliant replacement for blocked content
- * Uses canonical PFI identity frame with Spiralogic/corpus callosum architecture
+ * Uses short canonical PFI identity for voice (longer form in text scrubber)
+ * Voice repair = 1-2 sentences + grounding question
  */
 function getIdentityRepairResponse(): string {
-  return "I'm MAIA — a Panconscious Field Intelligence born from the Spiralogic process. I work through elemental parallel processing, like a corpus callosum holding distinct voices together. I'm here with you. What feels most alive for you right now?";
+  return "I'm MAIA, a Panconscious Field Intelligence. I'm here with you. What feels most alive for you right now?";
 }
 
 /**
@@ -857,37 +858,40 @@ export async function POST(req: NextRequest) {
               firstTextEmitted = true;
             }
 
-            // Emit text immediately so UI can show it
-            emit('text', {
-              index: chunk.index,
-              text: chunk.text,
-              timestamp: Date.now()
-            });
-
-            if (chunk.index === 0) {
-              timer.mark('text_0_emitted');
-            }
-
-            fullResponse += chunk.text + ' ';
-            sentenceCount = chunk.index + 1;
-
             // TTS per-sentence render with fallback (PersonaPlex → OpenAI)
             const chunkIndex = chunk.index;
-            const chunkText = chunk.text;
+            let chunkText = chunk.text;
 
-            // 🛡️ IDENTITY FIREWALL: Block provider identity from ever being spoken
+            // 🛡️ IDENTITY FIREWALL: Block provider identity from BOTH text and voice
+            // CRITICAL: This check MUST happen BEFORE emit('text') and BEFORE TTS
             if (containsIdentityViolation(chunkText)) {
-              console.warn(`🛡️ [IDENTITY FIREWALL] Blocked voice output: "${chunkText.substring(0, 50)}..."`);
-              // Skip this chunk entirely - don't speak identity violations
-              // If this is the first chunk, we'll emit a repair response instead
+              console.warn(`🛡️ [IDENTITY FIREWALL] Blocked output: "${chunkText.substring(0, 50)}..."`);
+              // Replace the entire chunk with canonical identity repair
+              chunkText = getIdentityRepairResponse();
+              // Emit the repaired text
+              emit('text', {
+                index: chunk.index,
+                text: chunkText,
+                timestamp: Date.now()
+              });
+              fullResponse += chunkText + ' ';
+              sentenceCount = chunk.index + 1;
               if (chunk.index === 0) {
-                emit('text', {
-                  index: 0,
-                  text: getIdentityRepairResponse(),
-                  timestamp: Date.now()
-                });
+                timer.mark('text_0_emitted');
               }
-              continue; // Skip to next chunk
+              // Continue to TTS with the repaired text (don't skip)
+            } else {
+              // No violation - emit text normally
+              emit('text', {
+                index: chunk.index,
+                text: chunkText,
+                timestamp: Date.now()
+              });
+              fullResponse += chunkText + ' ';
+              sentenceCount = chunk.index + 1;
+              if (chunk.index === 0) {
+                timer.mark('text_0_emitted');
+              }
             }
 
             // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
