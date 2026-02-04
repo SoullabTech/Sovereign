@@ -56,6 +56,7 @@ import {
   mapProsodyToSpeed,
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
+import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -890,6 +891,25 @@ export async function POST(req: NextRequest) {
               'SPOKEN',
               voiceSession.relationalStack.smoother.lastActivation
             );
+
+            // 🎓 TRAINING: Log turn for sovereign learning (fire-and-forget)
+            // Skip sanctuary mode (privacy) and threshold fast-path (not real LLM responses)
+            if (!sanctuary && fullResponse.trim()) {
+              logMaiaTurn(
+                effectiveSessionId,
+                voiceSession.turnCount,
+                message,
+                fullResponse.trim(),
+                'CORE', // Voice mode is typically CORE processing
+                'claude-3-sonnet', // Primary engine for voice
+                timer.elapsed(),
+                wisdomPayload?.element || element,
+                [], // topic_tags - could extract from wisdom payload
+                [], // consciousness_layers
+                undefined, // consciousness_depth
+                true // used_claude_consult
+              ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
+            }
 
             console.log(`[voice] LLM path: ${timer.summary()}${wisdomPayload?.sanctuary ? ' (sanctuary)' : ''}`);
           }
