@@ -120,6 +120,9 @@ const CONTINUITY_DISCLAIMER_PATTERNS = [
   /\bif we'?ve talked before.{0,20}(won'?t|will not|don'?t|do not) remember\b/i,
   // "unless they're in this session" type disclaimers
   /\bunless.{0,20}(this|current) session\b/i,
+  // "not claiming continuity" / "continuity I don't have"
+  /\b(not|don'?t|no) claim(ing)? continuity\b/i,
+  /\bcontinuity i (don'?t|do not) have\b/i,
 ];
 
 /**
