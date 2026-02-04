@@ -28,6 +28,7 @@ import { Mission } from '@/lib/story/types';
 import ConsciousnessFieldWithTorus from '@/components/consciousness/ConsciousnessFieldWithTorus';
 import { useMissions } from '@/lib/hooks/useMissions';
 import MissionManager from '@/components/missions/MissionManager';
+import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
 
 interface BirthChartData {
   sun: { sign: string; degree: number; house: number };
@@ -574,6 +575,12 @@ export default function AstrologyPage() {
         <ArrowLeft className="w-4 h-4" />
         <span className="text-sm font-medium">MAIA</span>
       </Link>
+
+      {/* Birth Chart Calculator - Upper Right Corner */}
+      <BirthChartCalculator
+        isDayMode={isDayMode}
+        onCalculate={calculateChart}
+      />
 
       {/* Twilight horizon - hint of sunlight just past dusk */}
       {!isDayMode && (
