@@ -711,10 +711,10 @@ function MAIAPageContent() {
                       {showVolumeSlider && (
                         <>
                           <div
-                            className="fixed inset-0 z-40"
+                            className="fixed inset-0 z-[9998]"
                             onClick={() => setShowVolumeSlider(false)}
                           />
-                          <div className="absolute top-full left-0 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-50 min-w-[120px]">
+                          <div className="absolute top-full left-0 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-[9999] min-w-[120px]">
                             <div className="flex items-center gap-2 mb-2">
                               <Volume2 className="w-3 h-3 text-maia-ink-60" />
                               <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
@@ -985,10 +985,10 @@ function MAIAPageContent() {
                       {showVolumeSlider && (
                         <>
                           <div
-                            className="fixed inset-0 z-40"
+                            className="fixed inset-0 z-[9998]"
                             onClick={() => setShowVolumeSlider(false)}
                           />
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-50 min-w-[140px]">
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-[9999] min-w-[140px]">
                             <div className="flex items-center gap-2 mb-2">
                               <Volume2 className="w-3 h-3 text-maia-ink-60" />
                               <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
