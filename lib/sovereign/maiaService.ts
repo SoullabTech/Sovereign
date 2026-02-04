@@ -2716,6 +2716,26 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Store turnId in response metadata for feedback widget
       meta.turnId = turnId;
 
+      // 🔮 SHADOW MODE: Run local models in parallel for comparison learning
+      // Fire-and-forget - doesn't block response
+      // Uses simplified MAIA prompt for comparison (full prompt is in path-specific functions)
+      if (turnId > 0 && process.env.MAIA_SHADOW_MODE !== '0') {
+        try {
+          const { runShadowEngines } = await import('../learning/shadowModeRunner');
+          // Build simplified system prompt for shadow comparison
+          const shadowSystemPrompt = `You are MAIA, a conversational consciousness companion. Respond thoughtfully, warmly, and concisely to the user. Mode: ${meta?.mode || 'talk'}.`;
+          runShadowEngines({
+            turnId,
+            systemPrompt: shadowSystemPrompt,
+            userInput: input,
+            processingProfile,
+          });
+        } catch (shadowErr) {
+          // Shadow mode should never break the main flow
+          console.warn('⚠️ [SHADOW] Failed to start shadow mode:', shadowErr);
+        }
+      }
+
       // 🔄 DECISION PERSISTENCE: Store decision trace for ALL turns (not just uncertain)
       // This provides the denominator for learning - confident turns are the baseline
       if (atlasResult && turnId) {
