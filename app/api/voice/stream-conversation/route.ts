@@ -113,10 +113,13 @@ const CONTINUITY_DISCLAIMER_PATTERNS = [
   /\bmeeting me present.{0,20}not filtered\b/i,
   /\bi start (fresh|anew|over) (each|every) time\b/i,
   /\b(each|every) conversation.{0,20}(starts? fresh|blank slate|clean slate)\b/i,
-  // "I won't remember" / "won't recall" patterns
+  // Memory denial patterns - "I won't/don't remember"
+  /\bi (won'?t|will not|don'?t|do not) remember\b.{0,30}(earlier|previous|past|before)\b/i,
   /\bi (won'?t|will not) remember\b/i,
   /\bi (won'?t|will not) recall\b/i,
   /\bif we'?ve talked before.{0,20}(won'?t|will not|don'?t|do not) remember\b/i,
+  // "unless they're in this session" type disclaimers
+  /\bunless.{0,20}(this|current) session\b/i,
 ];
 
 /**
