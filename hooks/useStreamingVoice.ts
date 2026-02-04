@@ -312,6 +312,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     // Call onError so parent components (OracleConversation) can clear their speaking state too
     onError?.(errorMessage);
+
+    // 🔇 FEEDBACK PREVENTION: Signal MAIA stopped speaking (even in error case)
+    if (typeof window !== 'undefined') {
+      console.log('🎤 [StreamingVoice] Dispatching maya-voice-end (recovery)');
+      window.dispatchEvent(new Event('maya-voice-end'));
+    }
   }, [onError]);
 
   // ── POSTURE LOG (tuning trace) ──
@@ -432,6 +438,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         // 🎤 PWA SIGNAL: If this is the LAST chunk, emit AUDIO_ENDED
         if (audioQueueRef.current.length === 0) {
           onPlaybackSignalRef.current?.({ type: 'AUDIO_ENDED' });
+          // 🔇 FEEDBACK PREVENTION: Signal MAIA finished speaking to re-enable mic
+          if (typeof window !== 'undefined') {
+            console.log('🎤 [StreamingVoice] Dispatching maya-voice-end for feedback prevention');
+            setTimeout(() => {
+              window.dispatchEvent(new Event('maya-voice-end'));
+            }, 500); // Small delay to ensure audio has fully finished
+          }
         }
         advance(50);
       };
@@ -454,6 +467,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
           if (audioPlayedCountRef.current === 1) {
             onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
+            // 🔇 FEEDBACK PREVENTION: Signal MAIA is speaking to stop mic
+            if (typeof window !== 'undefined') {
+              console.log('🔇 [StreamingVoice] Dispatching maya-voice-start for feedback prevention');
+              window.dispatchEvent(new Event('maya-voice-start'));
+            }
           }
 
           // Clear watchdog on first successful play - we're not stuck
