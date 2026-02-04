@@ -1601,6 +1601,14 @@ This user is in guest mode (no authenticated identity).
       process.env.CAPTURE_ADDENDUM_ENABLED === '1' ||
       process.env.CAPTURE_ADDENDUM_ENABLED === 'true';
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONTEXT WARNINGS (self-alerting diagnostic system)
+    // ═══════════════════════════════════════════════════════════════════════
+    // Taxonomy:
+    //   W_*           = investigate (something weird happened, check logs)
+    //   E_INVARIANT_* = impossible path (code should never reach, blow up loud)
+    //   CANARY        = intentional semantic lock (allowed to change, but on purpose)
+    // ═══════════════════════════════════════════════════════════════════════
     const contextWarnings: string[] = [];
 
     if (birthData?.date && safeAddenda.astro.length === 0) {
