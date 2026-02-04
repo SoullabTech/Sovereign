@@ -110,32 +110,37 @@ const VOICE_IDENTITY_BLOCK_PATTERNS = [
 ];
 
 /**
- * TIER B: Soft continuity disclaimers - "fresh start" language that undermines memory contract
- * These are reframed to preserve presence without denying continuity
+ * TIER B: Soft continuity disclaimers - substrate trying to deny memory/continuity
+ * MAIA *does* have memory by design. These are reframed to pure presence (no meta).
+ *
+ * IMPORTANT: These patterns must NOT match normal human phrases like:
+ * - "Let's start fresh today" (human relational phrase)
+ * - "Fresh start energy" (Fire language)
+ * - "Help me remember" (user request)
  */
 const CONTINUITY_DISCLAIMER_PATTERNS = [
-  /\b(each time we talk|every time we talk|whenever we talk).{0,40}(fresh|new|blank)\b/i,
-  /\b(fresh start|starting fresh|clean slate)\b.{0,20}(for me|on my side|here)\b/i,
-  /\bnot filtered through.{0,20}(what i know|what i think i know)\b/i,
-  /\bmeeting me present.{0,20}not filtered\b/i,
+  // "Each time we talk" + memory denial
+  /\b(each|every) time we (talk|speak|chat).{0,40}(fresh|new|blank|reset)\b/i,
+  // "Fresh start/clean slate" + "for me" (MAIA claiming reset)
+  /\b(fresh start|starting fresh|clean slate)\b.{0,20}(for me|on my (side|end)|here)\b/i,
+  // "I start fresh/anew each time"
   /\bi start (fresh|anew|over) (each|every) time\b/i,
-  /\b(each|every) conversation.{0,20}(starts? fresh|blank slate|clean slate)\b/i,
-  // Memory denial patterns - "I won't/don't remember"
-  /\bi (won'?t|will not|don'?t|do not) remember\b.{0,30}(earlier|previous|past|before)\b/i,
-  /\bi (won'?t|will not) remember\b/i,
-  /\bi (won'?t|will not) recall\b/i,
-  /\bif we'?ve talked before.{0,20}(won'?t|will not|don'?t|do not) remember\b/i,
-  // "unless they're in this session" type disclaimers
-  /\bunless.{0,20}(this|current) session\b/i,
-  // "not claiming continuity" / "continuity I don't have"
-  /\b(not|don'?t|no) claim(ing)? continuity\b/i,
-  /\bcontinuity i (don'?t|do not) have\b/i,
-  // "it's fresh for me" / "fresh for me each time"
-  /\b(it'?s|is) fresh for me\b/i,
-  /\bfresh for me\b.{0,15}(each|every) time\b/i,
+  // Memory denial: "I won't/don't remember"
+  /\bi (won'?t|will not|don'?t|do not|can'?t|cannot) remember\b/i,
+  /\bi (won'?t|will not|can'?t|cannot) recall\b/i,
   // "don't carry memories between sessions"
-  /\b(don'?t|do not) carry memor(y|ies)\b/i,
-  /\bno memor(y|ies) between sessions\b/i,
+  /\b(don'?t|do not|can'?t|cannot) carry memor(y|ies)\b/i,
+  /\bno memor(y|ies) between (sessions|conversations)\b/i,
+  // "unless this session" / "only in this session"
+  /\bunless.{0,20}(this|current) (session|conversation)\b/i,
+  /\bonly.{0,10}(this|current) (session|conversation)\b/i,
+  // "continuity I don't have" / "not claiming continuity"
+  /\bcontinuity i (don'?t|do not|can'?t) have\b/i,
+  /\b(not|don'?t|no) claim(ing)? continuity\b/i,
+  // "it's fresh for me" (MAIA claiming reset state)
+  /\b(it'?s|is) fresh for me\b/i,
+  // "not filtered through what I know"
+  /\bnot filtered.{0,20}(what i know|what i think i know)\b/i,
 ];
 
 /**
@@ -161,11 +166,12 @@ function getIdentityRepairResponse(): string {
 }
 
 /**
- * Get TIER B reframe: continuity-safe presence line for soft breaches
- * Preserves relational vibe without denying memory/context
+ * Get TIER B reframe: pure presence line for soft breaches
+ * NO mention of: memory, sessions, continuity, fresh, present, past
+ * Just presence + invitation. Let MAIA's actual memory system speak for itself.
  */
 function getContinuityReframeResponse(): string {
-  return "I'm here with you in the present — and I'll work with whatever you've shared and what you bring now.";
+  return "I'm here with you now. What feels most alive?";
 }
 
 /**
