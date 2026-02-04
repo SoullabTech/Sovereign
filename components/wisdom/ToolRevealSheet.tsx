@@ -16,6 +16,18 @@ import { FocusGarden, type FocusGardenResult } from '../ganesha/FocusGarden';
 import { InboxTriage, type TriageResult } from '../focus/InboxTriage';
 import { NextStepBuilder, type NextStepResult } from '../focus/NextStepBuilder';
 import { AvoidanceBreaker, type AvoidanceResult } from '../focus/AvoidanceBreaker';
+import { HoldingBanner, type StewardshipThreshold } from '../stewardship/HoldingBanner';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEWARDSHIP STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface StewardshipState {
+  threshold?: StewardshipThreshold;
+  weeklyWeight?: number;
+  projectedWeight?: number;
+  tier?: string;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -39,6 +51,8 @@ interface ToolRevealSheetProps {
   onDismiss: () => void;
   /** Called when a tool completes */
   onToolComplete?: (toolId: string, result: unknown) => void;
+  /** Member ID for stewardship weight tracking */
+  memberId?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -90,10 +104,12 @@ export function ToolRevealSheet({
   agentName,
   userMessage,
   onDismiss,
-  onToolComplete
+  onToolComplete,
+  memberId
 }: ToolRevealSheetProps) {
   const [showTool, setShowTool] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [stewardship, setStewardship] = useState<StewardshipState | null>(null);
 
   // Get invitation text for this tool
   const invitation = tool?.id
@@ -113,6 +129,14 @@ export function ToolRevealSheet({
 
   // Handle tool completion (generic handler for all tool types)
   const handleToolComplete = useCallback((result: FocusGardenResult | TriageResult | NextStepResult | AvoidanceResult) => {
+    // Capture stewardship metadata if present in result
+    if (result && typeof result === 'object' && 'stewardship' in result) {
+      const s = (result as { stewardship?: StewardshipState }).stewardship;
+      if (s?.threshold) {
+        setStewardship(s);
+      }
+    }
+
     setShowTool(false);
     onToolComplete?.(tool?.id || '', result);
     onDismiss();
@@ -136,6 +160,7 @@ export function ToolRevealSheet({
             onClose={handleToolClose}
             onComplete={handleToolComplete}
             initialContext={userMessage}
+            memberId={memberId}
           />
         );
 
@@ -146,6 +171,7 @@ export function ToolRevealSheet({
             onClose={handleToolClose}
             onComplete={handleToolComplete}
             initialCapture={userMessage}
+            memberId={memberId}
           />
         );
 
@@ -156,6 +182,7 @@ export function ToolRevealSheet({
             onClose={handleToolClose}
             onComplete={handleToolComplete}
             context={userMessage}
+            memberId={memberId}
           />
         );
 
@@ -166,6 +193,7 @@ export function ToolRevealSheet({
             onClose={handleToolClose}
             onComplete={handleToolComplete}
             context={userMessage}
+            memberId={memberId}
           />
         );
 
@@ -208,6 +236,9 @@ export function ToolRevealSheet({
 
           {/* Content */}
           <div className="p-5 space-y-4">
+            {/* Stewardship acknowledgment (if at threshold) */}
+            <HoldingBanner threshold={stewardship?.threshold} />
+
             {/* Intro */}
             <p className="text-stone-300 font-light leading-relaxed">
               {invitation.intro}

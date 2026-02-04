@@ -28,6 +28,7 @@ interface NextStepBuilderProps {
   onComplete?: (result: NextStepResult) => void;
   task?: string; // The task to break down
   context?: string; // Additional context from conversation
+  memberId?: string; // For stewardship weight tracking
 }
 
 export interface NextStepResult {
@@ -36,6 +37,12 @@ export interface NextStepResult {
   action: 'start-now' | 'schedule' | 'remind-later';
   scheduledTime?: Date;
   duration?: number; // minutes
+  stewardship?: {
+    threshold: 'none' | 'acknowledgment' | 'invitation' | 'pause';
+    weeklyWeight: number;
+    projectedWeight: number;
+    tier: string;
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -74,7 +81,8 @@ export function NextStepBuilder({
   onClose,
   onComplete,
   task = '',
-  context = ''
+  context = '',
+  memberId
 }: NextStepBuilderProps) {
   const [phase, setPhase] = useState<'task' | 'step' | 'action' | 'schedule' | 'done'>('task');
   const [taskText, setTaskText] = useState(task);
@@ -131,14 +139,21 @@ export function NextStepBuilder({
     };
 
     // Call backend to schedule/remind
+    let stewardship = null;
     try {
       const response = await fetch('/api/focus/next-step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(result)
+        body: JSON.stringify({
+          ...result,
+          memberId, // For stewardship weight tracking
+        })
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        stewardship = data.stewardship;
+      } else {
         console.error('Next step API failed:', await response.text());
       }
     } catch (err) {
@@ -149,7 +164,7 @@ export function NextStepBuilder({
     setPhase('done');
 
     setTimeout(() => {
-      onComplete?.(result);
+      onComplete?.({ ...result, stewardship });
       onClose();
     }, 1500);
   };

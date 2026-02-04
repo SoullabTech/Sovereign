@@ -29,6 +29,7 @@ interface InboxTriageProps {
   onClose: () => void;
   onComplete?: (result: TriageResult) => void;
   initialCapture?: string; // Pre-filled from voice/chat
+  memberId?: string; // For stewardship weight tracking
 }
 
 export interface TriageResult {
@@ -37,13 +38,19 @@ export interface TriageResult {
   nextAction?: string; // For tasks: what's the next physical action?
   scheduledFor?: Date; // For events: when?
   followUp?: boolean; // Want a reminder?
+  stewardship?: {
+    threshold: 'none' | 'acknowledgment' | 'invitation' | 'pause';
+    weeklyWeight: number;
+    projectedWeight: number;
+    tier: string;
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '' }: InboxTriageProps) {
+export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '', memberId }: InboxTriageProps) {
   const [phase, setPhase] = useState<'capture' | 'classify' | 'refine' | 'done'>('capture');
   const [captureText, setCaptureText] = useState(initialCapture);
   const [selectedType, setSelectedType] = useState<CaptureType | null>(null);
@@ -96,14 +103,21 @@ export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '' }
     };
 
     // Call the backend to actually place this somewhere
+    let stewardship = null;
     try {
       const response = await fetch('/api/focus/triage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(result)
+        body: JSON.stringify({
+          ...result,
+          memberId, // For stewardship weight tracking
+        })
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        stewardship = data.stewardship;
+      } else {
         console.error('Triage API failed:', await response.text());
       }
     } catch (err) {
@@ -114,7 +128,7 @@ export function InboxTriage({ isOpen, onClose, onComplete, initialCapture = '' }
     setPhase('done');
 
     setTimeout(() => {
-      onComplete?.(result);
+      onComplete?.({ ...result, stewardship });
       onClose();
     }, 1500);
   }, [captureText, selectedType, nextAction, onComplete, onClose]);
