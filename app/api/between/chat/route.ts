@@ -24,6 +24,7 @@ import {
 import { getConversationHistory, getUserConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
+import { loadSignificantMoments, formatSignificantMomentsAddendum } from '@/lib/memory/SignificantMomentsService';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
@@ -1063,6 +1064,25 @@ This user is in guest mode (no authenticated identity).
       // Graceful degradation - continue without wisdom field
     }
 
+    // 📌 SIGNIFICANT MOMENTS: Load captures, breakthroughs, journals (what matters most)
+    let significantMomentsAddendum = '';
+    if (!effectiveUserId.startsWith('anon:')) {
+      try {
+        const significantMoments = await loadSignificantMoments(effectiveUserId, {
+          maxCaptures: 15,
+          maxBreakthroughs: 10,
+          maxJournals: 5
+        });
+        significantMomentsAddendum = formatSignificantMomentsAddendum(significantMoments);
+        if (significantMomentsAddendum) {
+          console.log(`[Chat API] 📌 Significant moments loaded: ${significantMoments.summary.totalCaptures} captures, ${significantMoments.summary.totalBreakthroughs} breakthroughs, ${significantMoments.summary.totalJournals} journals`);
+        }
+      } catch (err) {
+        console.warn('[Chat API] Could not load significant moments:', err);
+        // Graceful degradation - continue without significant moments
+      }
+    }
+
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext: SelfletLoadResult | null = null;
@@ -1545,8 +1565,8 @@ This user is in guest mode (no authenticated identity).
       relationshipMode: asSafeAddendum(relationshipModeAddendum),
       governor: asSafeAddendum(governorAddendum),
       guest: asSafeAddendum(guestContextAddendum),
-      journal: asSafeAddendum(null), // Placeholder: wire when available
-      capture: asSafeAddendum(null), // Placeholder: wire when available
+      journal: asSafeAddendum(null), // Placeholder: wire when journal table exists
+      capture: asSafeAddendum(significantMomentsAddendum), // Captures, breakthroughs, journals
       astro: asSafeAddendum(astrologicalContextAddendum),
       spiral: asSafeAddendum(spiralSnapshotAddendum),
       wuxing: asSafeAddendum(wuxingSnapshotAddendum),
