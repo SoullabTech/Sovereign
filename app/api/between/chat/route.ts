@@ -50,6 +50,8 @@ import {
   generateSnapshotPromptAddendum,
   type ConversationTurn
 } from '@/lib/consciousness/spiralSnapshot';
+import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
+import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 import {
   checkResponseIntegrity,
   applyMinimalRevision,
@@ -845,6 +847,23 @@ export async function POST(req: NextRequest) {
         ? buildSessionCookie(safeSessionId)
         : generatedCookie;
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚧 MAINTENANCE MODE: Block new sessions, allow existing ones to finish
+    // ═══════════════════════════════════════════════════════════════════════
+    const { enabled: maintenanceOn, message: maintenanceMsg } = await isMaintenanceEnabled();
+    if (maintenanceOn) {
+      const isKnown = await isKnownActiveSession(safeSessionId);
+      if (!isKnown) {
+        return withSessionCookie(
+          NextResponse.json(
+            { error: 'MAINTENANCE_MODE', message: maintenanceMsg },
+            { status: 503 }
+          ),
+          sessionCookie
+        );
+      }
+    }
+
     if (!message || typeof message !== 'string') {
       return withSessionCookie(
         NextResponse.json({ error: 'Message is required' }, { status: 400 }),
@@ -917,6 +936,13 @@ export async function POST(req: NextRequest) {
     }
     const stableAnonId = isAnon ? (headerAnonId || effectiveUserId) : undefined;
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
+    // 🔒 ACTIVE SESSION: Mark this session as active (for maintenance mode tracking)
+    await touchActiveSession({
+      sessionId: safeSessionId,
+      memberId: authUserId,
+      anonId: stableAnonId,
+    });
 
     // 👤 GUEST CONTEXT: Explicit messaging when context is unavailable
     // Prevents MAIA from hallucinating "I remember you" or assuming prior history

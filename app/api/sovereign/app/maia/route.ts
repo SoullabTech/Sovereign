@@ -5,6 +5,8 @@ import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
+import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -79,6 +81,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(defaultSovereignResponse(), { status: 200 });
     }
 
+    // 🚧 Maintenance Mode Gate
+    const effectiveSessionId = sessionId || 'default';
+    const { enabled: maintenanceOn, message: maintenanceMsg } = await isMaintenanceEnabled();
+    if (maintenanceOn) {
+      const isKnown = await isKnownActiveSession(effectiveSessionId);
+      if (!isKnown) {
+        return NextResponse.json(
+          { error: 'MAINTENANCE_MODE', message: maintenanceMsg },
+          { status: 503 }
+        );
+      }
+    }
+
     if (!message || typeof message !== 'string') {
       const duration = Date.now() - start;
       console.warn(
@@ -94,6 +109,13 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const session = await ensureSession(sessionId);
+
+    // Touch active session for maintenance mode tracking
+    await touchActiveSession({
+      sessionId: session.id,
+      memberId: userId,
+      anonId: null,
+    });
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
     let cognitiveProfile = null;

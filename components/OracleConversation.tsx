@@ -4160,6 +4160,27 @@ I'm not sure what I'm feeling yet.`;
           }
         }
 
+        // 🚧 MAINTENANCE MODE: Show pause message when system is in maintenance
+        if (response.status === 503) {
+          const errData = await response.json().catch(() => null);
+          if (errData?.error === 'MAINTENANCE_MODE') {
+            console.log('[OracleConversation] Maintenance mode active:', errData.message);
+            const maintenanceMessage: ConversationMessage = {
+              id: `maintenance-${Date.now()}`,
+              role: 'oracle',
+              text: errData.message || 'MAIA is taking a brief pause. Back soon.',
+              timestamp: new Date().toISOString(),
+              element: 'aether',
+              metadata: { isMaintenance: true },
+            };
+            setMessages(prev => appendMessageCapped(prev, maintenanceMessage, MAX_DISPLAY_MESSAGES));
+            setIsProcessing(false);
+            setIsResponding(false);
+            setMaiaResponseText(maintenanceMessage.text);
+            return;
+          }
+        }
+
         const errorText = await response.text().catch(() => '(no body)');
         console.error('[fetch] non-OK response:', response.status, errorText);
 

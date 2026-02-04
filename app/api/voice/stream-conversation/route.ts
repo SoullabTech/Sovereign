@@ -32,6 +32,8 @@ import {
   type ModeDecision,
 } from '@/lib/sovereign/teachingRouter';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
+import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
+import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import {
@@ -503,6 +505,26 @@ export async function POST(req: NextRequest) {
   }
   const anonId = isAnon ? (headerAnonId || `anon_voice_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`) : undefined;
   const memberTier: MemberTier = isAnon ? 'free' : userId ? await getMemberTier(userId) : 'free';
+
+  // ═══ MAINTENANCE MODE: Block new sessions, allow existing to finish ═══
+  const effectiveSessionId = sessionId || 'default';
+  const { enabled: maintenanceOn, message: maintenanceMsg } = await isMaintenanceEnabled();
+  if (maintenanceOn) {
+    const isKnown = await isKnownActiveSession(effectiveSessionId);
+    if (!isKnown) {
+      return new Response(
+        JSON.stringify({ error: 'MAINTENANCE_MODE', message: maintenanceMsg }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+  }
+
+  // Mark session as active
+  await touchActiveSession({
+    sessionId: effectiveSessionId,
+    memberId: userId,
+    anonId,
+  });
 
   // Pre-check voice limits before processing
   const voiceLimitsCheck = await LimitsEnforcer.checkUsage({
