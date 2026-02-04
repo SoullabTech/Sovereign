@@ -673,32 +673,55 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [isSpeaking]);
 
-  // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
+  // 🎤 Auto-restart speech recognition when MAIA finishes speaking
   // This ensures the mic comes back on automatically for continuous conversation
+  // Works for both native (iOS) AND web speech recognition
   useEffect(() => {
     // 🔥 FIX: Use wantsContinuousConversationRef instead of isListeningRef
     // isListeningRef gets set to false when we stop for MAIA to respond
     // wantsContinuousConversationRef persists until user explicitly exits voice mode
-    if (!isSpeaking && wantsContinuousConversationRef.current && useNativeSpeechRef.current) {
-      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 1200ms...');
+    if (!isSpeaking && wantsContinuousConversationRef.current) {
+      console.log('🔄 MAIA stopped speaking, will auto-restart mic in 1200ms...');
       isProcessingRef.current = false;
       // 🔥 FIX: Reset restart counter when MAIA stops speaking - new conversational turn!
       // This gives the user a fresh set of restart attempts to respond
       consecutiveRestartCount.current = 0;
+      noSpeechGraceRestartsRef.current = 0; // Reset grace restarts too
 
       const restartTimer = setTimeout(async () => {
         // Double-check conditions before restart
-        // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
-        if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
-          // 🔥 SERIALIZED: Use the guarded start function
-          console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
-          const success = await startNativeSR();
-          if (success) {
-            console.log('✅ [Native] Auto-restart after speech successful');
-            // Note: setIsRecording will be updated by listeningState listener
+        if (!wantsContinuousConversationRef.current || isSpeakingRef.current || isProcessingRef.current) {
+          console.log('🚫 Conditions changed, skipping auto-restart');
+          return;
+        }
+
+        // Handle NATIVE speech recognition (iOS Capacitor)
+        if (useNativeSpeechRef.current) {
+          // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
+          if (nativeStatusRef.current !== 'started') {
+            console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
+            const success = await startNativeSR();
+            if (success) {
+              console.log('✅ [Native] Auto-restart after speech successful');
+            }
           }
         } else {
-          console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
+          // Handle WEB speech recognition
+          if (recognitionRef.current && !isRecording) {
+            try {
+              console.log('🎙️ [Web] Auto-restarting after MAIA speech...');
+              recognitionRef.current.start();
+              setIsRecording(true);
+              isListeningRef.current = true;
+              setIsListening(true);
+              onRecordingStateChange?.(true);
+              console.log('✅ [Web] Auto-restart after speech successful');
+            } catch (err: any) {
+              if (!err?.message?.includes('already started')) {
+                console.warn('⚠️ [Web] Error restarting recognition:', err);
+              }
+            }
+          }
         }
       }, COOLDOWN_MS); // Use cooldown constant for consistency
 
