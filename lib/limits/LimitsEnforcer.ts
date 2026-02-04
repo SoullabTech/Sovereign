@@ -79,11 +79,43 @@ const MESSAGES = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export class LimitsEnforcer {
+  // Cache for limits_disabled setting (refresh every 30s)
+  private static limitsDisabledCache: { value: boolean; timestamp: number } | null = null;
+  private static CACHE_TTL_MS = 30_000; // 30 seconds
+
+  /**
+   * Check if limits are globally disabled (admin override)
+   */
+  private static async areLimitsDisabled(): Promise<boolean> {
+    // Check cache first
+    const now = Date.now();
+    if (this.limitsDisabledCache && (now - this.limitsDisabledCache.timestamp) < this.CACHE_TTL_MS) {
+      return this.limitsDisabledCache.value;
+    }
+
+    try {
+      const result = await query(
+        `SELECT value FROM system_settings WHERE key = 'limits_disabled'`
+      );
+      const disabled = result.rows[0]?.value === true;
+      this.limitsDisabledCache = { value: disabled, timestamp: now };
+      return disabled;
+    } catch (error) {
+      // If table doesn't exist yet, limits are not disabled
+      return false;
+    }
+  }
+
   /**
    * Check if a resource usage is allowed, and return the appropriate decision.
    * This is the SINGLE ENFORCEMENT POINT for all tier-based limits.
    */
   static async checkUsage(params: UsageCheckParams): Promise<EnforcementDecision> {
+    // Check if limits are globally disabled (admin override for testing)
+    if (await this.areLimitsDisabled()) {
+      return { action: 'allow' };
+    }
+
     const { tier, resource, memberId, anonId } = params;
 
     // Route to tier-specific enforcement
