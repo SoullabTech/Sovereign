@@ -270,8 +270,8 @@ export function getTierDisplayName(tier: MemberTier): string {
 export function getTierDescription(tier: MemberTier): string {
   switch (tier) {
     case 'free': return 'Explore MAIA';
-    case 'personal': return 'Your Consciousness Journey';
-    case 'pro': return 'Practitioner & Creator';
+    case 'personal': return 'MAIA remembers the thread';
+    case 'pro': return 'Hold space for others';
     default: return 'Explore MAIA';
   }
 }
@@ -301,7 +301,7 @@ export function getProExtendedInfo(): {
 export function getTierPrice(tier: MemberTier): number {
   switch (tier) {
     case 'free': return 0;
-    case 'personal': return 12;
+    case 'personal': return 9;
     case 'pro': return 35;
     default: return 0;
   }
