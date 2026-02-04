@@ -98,12 +98,24 @@ function StatusBadge({ status }: { status: Chapter['status'] }) {
   );
 }
 
+interface MemberBirthData {
+  date: string;
+  time: string | null;
+  location: {
+    lat: number;
+    lng: number;
+    name: string;
+    timezone: string;
+  } | null;
+}
+
 export default function StoryCreatorPage() {
   const router = useRouter();
 
   // State
   const [loading, setLoading] = useState(true);
   const [storyData, setStoryData] = useState<StoryData | null>(null);
+  const [memberBirthData, setMemberBirthData] = useState<MemberBirthData | null>(null);
   const [showBirthForm, setShowBirthForm] = useState(false);
   const [isCreatingStory, setIsCreatingStory] = useState(false);
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
@@ -112,24 +124,39 @@ export default function StoryCreatorPage() {
   const [isApproving, setIsApproving] = useState(false);
   const [isRevising, setIsRevising] = useState(false);
 
-  // Fetch story data
-  const fetchStory = useCallback(async () => {
+  // Fetch story and member profile data
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiFetch('/api/story');
-      const data = await response.json();
 
-      if (data.success && data.data) {
-        setStoryData(data.data);
+      // Fetch story and profile in parallel
+      const [storyResponse, profileResponse] = await Promise.all([
+        apiFetch('/api/story'),
+        apiFetch('/api/members/profile'),
+      ]);
+
+      const [storyResult, profileResult] = await Promise.all([
+        storyResponse.json(),
+        profileResponse.json(),
+      ]);
+
+      // Set story data if exists
+      if (storyResult.success && storyResult.data) {
+        setStoryData(storyResult.data);
         // Auto-expand Genesis chapter if it's a draft
-        if (data.data.chapters?.[0]?.status === 'draft') {
-          setExpandedChapter(data.data.chapters[0].id);
+        if (storyResult.data.chapters?.[0]?.status === 'draft') {
+          setExpandedChapter(storyResult.data.chapters[0].id);
         }
       } else {
         setStoryData(null);
       }
+
+      // Set member birth data if exists
+      if (profileResult.birthData) {
+        setMemberBirthData(profileResult.birthData);
+      }
     } catch (error) {
-      console.error('[StoryCreator] Failed to fetch story:', error);
+      console.error('[StoryCreator] Failed to fetch data:', error);
       setStoryData(null);
     } finally {
       setLoading(false);
@@ -137,8 +164,8 @@ export default function StoryCreatorPage() {
   }, []);
 
   useEffect(() => {
-    fetchStory();
-  }, [fetchStory]);
+    fetchData();
+  }, [fetchData]);
 
   // Create story from birth chart
   const handleBirthDataSubmit = async (birthData: any) => {
@@ -224,7 +251,7 @@ export default function StoryCreatorPage() {
       }
 
       // Refresh story data
-      await fetchStory();
+      await fetchData();
       setShowBirthForm(false);
     } catch (error) {
       console.error('[StoryCreator] Error creating story:', error);
@@ -232,6 +259,26 @@ export default function StoryCreatorPage() {
     } finally {
       setIsCreatingStory(false);
     }
+  };
+
+  // Create story using member's saved birth data
+  const handleCreateFromSavedData = async () => {
+    if (!memberBirthData || !memberBirthData.location) {
+      alert('Birth data incomplete. Please update your birth data in Settings.');
+      return;
+    }
+
+    // Use saved birth data
+    await handleBirthDataSubmit({
+      date: memberBirthData.date,
+      time: memberBirthData.time || '12:00',
+      location: {
+        lat: memberBirthData.location.lat,
+        lng: memberBirthData.location.lng,
+        timezone: memberBirthData.location.timezone,
+      },
+      houseSystem: 'placidus',
+    });
   };
 
   // Add member note
@@ -408,12 +455,43 @@ export default function StoryCreatorPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowBirthForm(true)}
-                className="px-8 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
-              >
-                Begin Your Story
-              </button>
+              {/* Show different buttons based on whether birth data exists */}
+              {memberBirthData && memberBirthData.location ? (
+                <div className="space-y-4">
+                  <button
+                    onClick={handleCreateFromSavedData}
+                    disabled={isCreatingStory}
+                    className="px-8 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 flex items-center gap-2 mx-auto"
+                  >
+                    {isCreatingStory ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Creating Your Genesis...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Begin Your Story
+                      </>
+                    )}
+                  </button>
+                  <p className="text-gray-500 text-xs">
+                    Using your saved birth data from {memberBirthData.location.name}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setShowBirthForm(true)}
+                    className="px-8 py-3 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-500/20"
+                  >
+                    Begin Your Story
+                  </button>
+                  <p className="text-gray-500 text-xs">
+                    You'll need to enter your birth data first
+                  </p>
+                </div>
+              )}
             </motion.div>
           )}
         </div>
