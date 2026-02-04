@@ -8,6 +8,19 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { logAction, checkThreshold, type ThresholdCheck } from '@/lib/focus/weightTracking';
+
+// Helper to map threshold check to API response format
+function mapStewardship(check: ThresholdCheck) {
+  return {
+    threshold: check.level === 'none' ? 'none' :
+               check.level === 'acknowledgment' ? 'acknowledgment' :
+               check.level === 'invitation' ? 'invitation' : 'pause',
+    weeklyWeight: check.currentWeight,
+    projectedWeight: check.projectedWeight,
+    tier: check.tier,
+  };
+}
 
 interface DraftRequest {
   messageType: 'text' | 'email';
@@ -15,6 +28,7 @@ interface DraftRequest {
   situation: string;
   context?: string;
   regenerate?: boolean;
+  memberId?: string; // For weight tracking
 }
 
 const DRAFT_SYSTEM_PROMPT = `You are helping someone draft a message they've been avoiding.
@@ -99,9 +113,26 @@ Draft the message:`;
 
       console.log(`✅ [Draft] Generated ${draft.length} chars`);
 
+      // Log weight for AI draft (weight = 3, real Claude API cost)
+      let stewardship = null;
+      if (body.memberId) {
+        try {
+          await logAction(body.memberId, 'ai_draft', {
+            source: 'avoidance-breaker',
+            metadata: { messageType, recipient }
+          });
+          // Get updated threshold after logging
+          const check = await checkThreshold(body.memberId, 'ai_draft');
+          stewardship = mapStewardship(check);
+        } catch (weightError) {
+          console.warn('[Draft] Weight logging skipped:', weightError);
+        }
+      }
+
       return NextResponse.json({
         draft,
-        subject
+        subject,
+        stewardship,
       });
 
     } catch (apiError) {
