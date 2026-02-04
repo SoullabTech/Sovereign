@@ -151,9 +151,11 @@ export default function StoryCreatorPage() {
         body: JSON.stringify({
           date: birthData.date,
           time: birthData.time,
-          latitude: birthData.location.lat,
-          longitude: birthData.location.lng,
-          timezone: birthData.location.timezone,
+          location: {
+            lat: birthData.location.lat,
+            lng: birthData.location.lng,
+            timezone: birthData.location.timezone,
+          },
           houseSystem: birthData.houseSystem || 'placidus',
         }),
       });
