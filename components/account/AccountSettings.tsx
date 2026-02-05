@@ -2439,20 +2439,20 @@ export function AccountSettings() {
           {/* Back button - to /maia when on main list, to list when in subsection */}
           <motion.button
             onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-            className="p-2.5 -ml-2 rounded-xl bg-maia-navy-850 border border-maia-navy-700/50 hover:border-maia-navy-700 hover:bg-maia-navy-800 transition-all duration-300 shadow-maia-panel"
+            className="p-2.5 -ml-2 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/30 hover:bg-white/10 transition-all duration-300"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeft size={22} className="text-white/80" />
+            <ArrowLeft size={22} className="text-amber-400/60 hover:text-amber-400" />
           </motion.button>
           <div>
-            <h1 className="text-3xl font-semibold text-maia-ink-100 tracking-tight">
+            <h1 className="text-3xl font-light text-amber-50 tracking-wide">
               {activeSection
                 ? SECTIONS.find(s => s.id === activeSection)?.label
                 : 'Settings'}
             </h1>
             {!activeSection && (
-              <p className="text-sm text-maia-ink-40 mt-1.5 tracking-wide">
+              <p className="text-sm text-amber-200/50 mt-1.5 tracking-wide">
                 Manage your account and preferences
               </p>
             )}
@@ -2512,7 +2512,7 @@ export function AccountSettings() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
-                className="group relative w-full flex items-center gap-4 p-4 bg-maia-navy-850 hover:bg-maia-navy-800 border border-maia-navy-700/50 hover:border-maia-navy-700 rounded-2xl transition-all duration-300 shadow-maia-panel hover:shadow-maia-panel-hover overflow-hidden"
+                className="group relative w-full flex items-center gap-4 p-4 bg-white/5 hover:bg-white/[0.08] border border-white/10 hover:border-white/20 rounded-2xl transition-all duration-300 backdrop-blur-sm overflow-hidden"
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -2520,15 +2520,15 @@ export function AccountSettings() {
                 <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent ${c.hover} transition-all duration-500`} />
 
                 {/* Icon container with glow */}
-                <div className={`relative w-11 h-11 rounded-xl bg-gradient-to-br ${c.bg} flex items-center justify-center ${c.border} transition-all duration-300 flex-shrink-0`}>
+                <div className={`relative w-11 h-11 rounded-xl bg-gradient-to-br ${c.bg} flex items-center justify-center border ${c.border} transition-all duration-300 flex-shrink-0`}>
                   <Icon size={20} className={`${c.icon} transition-colors duration-300`} />
                 </div>
 
                 {/* Label with tracking */}
-                <span className="flex-1 text-left text-maia-ink-100 font-medium tracking-wide">{label}</span>
+                <span className="flex-1 text-left text-amber-100 font-medium tracking-wide">{label}</span>
 
                 {/* Arrow with enhanced animation */}
-                <ChevronRight size={18} className={`text-maia-ink-40 ${c.icon.replace('text-', 'group-hover:text-')} group-hover:translate-x-1 transition-all duration-300 flex-shrink-0`} />
+                <ChevronRight size={18} className={`text-amber-300/40 ${c.icon.replace('text-', 'group-hover:text-')} group-hover:translate-x-1 transition-all duration-300 flex-shrink-0`} />
               </motion.button>
               );
             })}
