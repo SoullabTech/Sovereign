@@ -616,8 +616,7 @@ export default function WisdomTranslationPage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.push('/labtools')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4B896]/10
-                     border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4B896]/10 border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
