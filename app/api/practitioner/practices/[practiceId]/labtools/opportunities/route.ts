@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     let sql = `
       SELECT
         o.id, o.title, o.description, o.stage, o.estimated_value_cents, o.currency,
-        o.expected_close_at, o.actual_close_date,
+        o.expected_close_date, o.actual_close_date,
         o.venture_id, o.person_id,
         o.created_at, o.updated_at,
         v.name as venture_name,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         WHEN 'lost' THEN 6
         WHEN 'nurturing' THEN 7
       END,
-      o.expected_close_at ASC NULLS LAST,
+      o.expected_close_date ASC NULLS LAST,
       o.created_at DESC`;
 
     const result = await query(sql, values);
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         stage: r.stage,
         valueCents: r.estimated_value_cents,
         currency: r.currency,
-        expectedCloseAt: r.expected_close_at,
+        expectedCloseAt: r.expected_close_date,
         closedAt: r.actual_close_date,
         ventureId: r.venture_id,
         ventureName: r.venture_name,
@@ -168,12 +168,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await query(
       `INSERT INTO rl_opportunities (
-        practice_id, title, description, stage, estimated_value_cents, expected_close_at,
+        practice_id, title, description, stage, estimated_value_cents, expected_close_date,
         venture_id, person_id
       )
        VALUES ($1, $2, $3, $4::opportunity_stage, $5, $6, $7, $8)
        RETURNING id, title, description, stage, estimated_value_cents, currency,
-                 expected_close_at, venture_id, person_id, created_at`,
+                 expected_close_date, venture_id, person_id, created_at`,
       [
         practiceId,
         title.trim(),
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         stage: opp.stage,
         valueCents: opp.estimated_value_cents,
         currency: opp.currency,
-        expectedCloseAt: opp.expected_close_at,
+        expectedCloseAt: opp.expected_close_date,
         ventureId: opp.venture_id,
         personId: opp.person_id,
         createdAt: opp.created_at

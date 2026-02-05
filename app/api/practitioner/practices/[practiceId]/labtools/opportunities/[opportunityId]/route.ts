@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const result = await query(
       `SELECT
         o.id, o.title, o.description, o.stage, o.estimated_value_cents, o.currency,
-        o.expected_close_at, o.actual_close_date,
+        o.expected_close_date, o.actual_close_date,
         o.venture_id, o.person_id,
         o.created_at, o.updated_at,
         v.name as venture_name,
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         stage: o.stage,
         valueCents: o.estimated_value_cents,
         currency: o.currency,
-        expectedCloseAt: o.expected_close_at,
+        expectedCloseAt: o.expected_close_date,
         closedAt: o.actual_close_date,
         ventureId: o.venture_id,
         ventureName: o.venture_name,
@@ -189,7 +189,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     if (body.expectedCloseAt !== undefined) {
-      updates.push(`expected_close_at = $${paramIndex++}`);
+      updates.push(`expected_close_date = $${paramIndex++}`);
       values.push(body.expectedCloseAt || null);
     }
 
@@ -212,7 +212,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       `UPDATE rl_opportunities SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
        RETURNING id, title, description, stage, estimated_value_cents, currency,
-                 expected_close_at, actual_close_date, venture_id, person_id,
+                 expected_close_date, actual_close_date, venture_id, person_id,
                  created_at, updated_at`,
       values
     );
@@ -227,7 +227,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         stage: o.stage,
         valueCents: o.estimated_value_cents,
         currency: o.currency,
-        expectedCloseAt: o.expected_close_at,
+        expectedCloseAt: o.expected_close_date,
         closedAt: o.actual_close_date,
         ventureId: o.venture_id,
         personId: o.person_id,

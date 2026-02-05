@@ -78,10 +78,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         [ventureId]
       ),
       query(
-        `SELECT id, title, stage, estimated_value_cents, expected_close_at
+        `SELECT id, title, stage, estimated_value_cents, expected_close_date
          FROM rl_opportunities
          WHERE venture_id = $1 AND stage NOT IN ('won', 'lost')
-         ORDER BY expected_close_at ASC NULLS LAST, created_at DESC`,
+         ORDER BY expected_close_date ASC NULLS LAST, created_at DESC`,
         [ventureId]
       )
     ]);
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         title: o.title,
         stage: o.stage,
         valueCents: o.estimated_value_cents,
-        expectedCloseAt: o.expected_close_at
+        expectedCloseAt: o.expected_close_date
       }))
     });
   } catch (error) {
