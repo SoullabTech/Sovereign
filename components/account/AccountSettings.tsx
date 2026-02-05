@@ -2432,45 +2432,32 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-5 py-10" style={{ paddingTop: 'max(env(safe-area-inset-top), 2.5rem)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-10">
-        <div className="flex items-center gap-4">
-          {/* Back button - to /maia when on main list, to list when in subsection */}
-          <motion.button
-            onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-            className="p-2.5 -ml-2 rounded-xl bg-white/5 border border-white/10 hover:border-amber-500/30 hover:bg-white/10 transition-all duration-300"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ArrowLeft size={22} className="text-amber-400/60 hover:text-amber-400" />
-          </motion.button>
-          <div>
-            <h1 className="text-3xl font-light text-amber-50 tracking-wide">
-              {activeSection
-                ? SECTIONS.find(s => s.id === activeSection)?.label
-                : 'Settings'}
-            </h1>
-            {!activeSection && (
-              <p className="text-sm text-amber-200/50 mt-1.5 tracking-wide">
-                Manage your account and preferences
-              </p>
-            )}
-          </div>
-        </div>
+    <div className="max-w-xl mx-auto px-5 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
+      {/* Header - Claude style: minimal */}
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
+          className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
+        >
+          <ArrowLeft size={20} className="text-white/60" />
+        </button>
+        <h1 className="text-xl font-medium text-white">
+          {activeSection
+            ? SECTIONS.find(s => s.id === activeSection)?.label
+            : 'Settings'}
+        </h1>
 
         {/* Save indicator */}
         <AnimatePresence>
           {saved && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-1.5 text-amber-400 text-sm"
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="ml-auto text-sm text-green-400"
             >
-              <Check size={16} />
-              <span>Saved</span>
-            </motion.div>
+              Saved
+            </motion.span>
           )}
         </AnimatePresence>
       </div>
@@ -2478,37 +2465,26 @@ export function AccountSettings() {
       {/* Content */}
       <AnimatePresence mode="wait">
         {!activeSection ? (
-          /* Section List */
+          /* Section List - Claude style: simple, clean */
           <motion.div
             key="list"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-1"
           >
             {SECTIONS
               .filter(({ practitionerOnly }) => !practitionerOnly || projects.length > 0)
-              .map(({ id, label, icon: Icon }, index) => (
-              <motion.button
+              .map(({ id, label, icon: Icon }) => (
+              <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className="group w-full flex items-center gap-4 p-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-amber-500/20 rounded-xl transition-all duration-300"
-                whileTap={{ scale: 0.98 }}
+                className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
-                {/* Icon - unified amber */}
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <Icon size={18} className="text-amber-400" />
-                </div>
-
-                {/* Label */}
-                <span className="flex-1 text-left text-amber-100/90 font-medium">{label}</span>
-
-                {/* Arrow */}
-                <ChevronRight size={18} className="text-amber-400/30 group-hover:text-amber-400/60 group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
-              </motion.button>
+                <Icon size={18} className="text-white/40" />
+                <span className="flex-1 text-left text-white/90">{label}</span>
+                <ChevronRight size={16} className="text-white/20 group-hover:text-white/40 transition-colors" />
+              </button>
             ))}
           </motion.div>
         ) : (
