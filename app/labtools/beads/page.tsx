@@ -153,7 +153,7 @@ export default function BeadsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0d12] via-[#111827] to-[#0f172a] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/30 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#D4B896]/30 border-t-[#D4B896] rounded-full animate-spin" />
       </div>
     );
@@ -161,7 +161,7 @@ export default function BeadsPage() {
 
   if (!member) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0d12] via-[#111827] to-[#0f172a] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/30 flex items-center justify-center p-4">
         <div className="text-center">
           <p className="text-white/60 mb-4">Please sign in to share beads</p>
           <button
@@ -176,7 +176,7 @@ export default function BeadsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0d12] via-[#111827] to-[#0f172a] p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/30 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

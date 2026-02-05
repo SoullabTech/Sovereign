@@ -152,10 +152,10 @@ export default function DiscoverPage() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
             className="inline-flex items-center justify-center w-14 h-14 mb-3
-                     rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-600/5
-                     border border-violet-500/20"
+                     rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/5
+                     border border-amber-500/20"
           >
-            <Sparkles className="w-6 h-6 text-violet-400" />
+            <Sparkles className="w-6 h-6 text-amber-400" />
           </motion.div>
 
           <h1 className="text-2xl font-bold text-white mb-1">
