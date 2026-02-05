@@ -2432,32 +2432,40 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
-      {/* Header - Claude style: minimal */}
+    <div className="max-w-xl mx-auto px-6 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
+      {/* Header - Minimal matte style */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-          className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
+          className="p-2 -ml-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800/50 transition-colors"
         >
-          <ArrowLeft size={20} className="text-white/60" />
+          <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-medium text-white">
-          {activeSection
-            ? SECTIONS.find(s => s.id === activeSection)?.label
-            : 'Settings'}
-        </h1>
+        <div>
+          <h1 className="text-xl font-medium text-stone-100">
+            {activeSection
+              ? SECTIONS.find(s => s.id === activeSection)?.label
+              : 'Settings'}
+          </h1>
+          {!activeSection && (
+            <p className="text-sm text-stone-500 mt-0.5">
+              Manage your account and preferences
+            </p>
+          )}
+        </div>
 
         {/* Save indicator */}
         <AnimatePresence>
           {saved && (
-            <motion.span
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="ml-auto text-sm text-green-400"
+              className="ml-auto flex items-center gap-1.5 text-amber-600/80 text-sm"
             >
-              Saved
-            </motion.span>
+              <Check size={14} />
+              <span>Saved</span>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -2465,7 +2473,7 @@ export function AccountSettings() {
       {/* Content */}
       <AnimatePresence mode="wait">
         {!activeSection ? (
-          /* Section List - Claude style: simple, clean */
+          /* Section List - Clean matte design */
           <motion.div
             key="list"
             initial={{ opacity: 0 }}
@@ -2479,11 +2487,18 @@ export function AccountSettings() {
               <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
+                className="group w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-orange-500/10 transition-colors"
               >
-                <Icon size={18} className="text-white/40" />
-                <span className="flex-1 text-left text-white/90">{label}</span>
-                <ChevronRight size={16} className="text-white/20 group-hover:text-white/40 transition-colors" />
+                {/* Icon - Claude orange */}
+                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                  <Icon size={16} className="text-orange-400 group-hover:text-orange-300 transition-colors" />
+                </div>
+
+                {/* Label */}
+                <span className="flex-1 text-left text-white/90 group-hover:text-white transition-colors">{label}</span>
+
+                {/* Arrow - Claude orange */}
+                <ChevronRight size={18} className="text-orange-400 group-hover:text-orange-300 transition-colors" />
               </button>
             ))}
           </motion.div>
@@ -2491,9 +2506,9 @@ export function AccountSettings() {
           /* Section Detail */
           <motion.div
             key={activeSection}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
             {activeSection === 'profile' && renderProfile()}
             {activeSection === 'account' && renderAccount()}
@@ -2511,10 +2526,10 @@ export function AccountSettings() {
         )}
       </AnimatePresence>
 
-      {/* Build Info Footer - subtle version stamp */}
-      <div className="mt-12 pt-6 border-t border-white/5 text-center">
-        <p className="text-[10px] text-white/20 font-mono">
-          v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
+      {/* Build Info Footer - minimal */}
+      <div className="mt-16 pt-4 border-t border-stone-800/50 text-center">
+        <p className="text-[10px] text-stone-600 font-mono">
+          v1.1 • {BUILD_STAMP.commit} • {BUILD_STAMP.timestamp.split('T')[0]}
           {Capacitor.isNativePlatform() && (
             <span className="ml-2">• {apiBaseUrl()}</span>
           )}

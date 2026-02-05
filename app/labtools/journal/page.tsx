@@ -8,7 +8,7 @@
  * - Captures: Reflection capsules from conversations
  * - Scribe: Session transcripts and reports
  *
- * Uses sovereign amber/dark Cathedral aesthetic.
+ * Matches the Discover page aesthetic for Lab Tools consistency.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,18 +23,13 @@ import {
   Sun,
   PenTool,
   ChevronRight,
-  Plus,
   RefreshCw,
+  ArrowLeft,
+  X,
+  Plus,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import CapsuleCard from '@/components/capsules/CapsuleCard';
-import {
-  PageShell,
-  PortalHeader,
-  SectionCard,
-  EmptyState,
-  TagPill,
-} from '@/components/ui/portal';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 
 // Types for unified entries
@@ -72,25 +67,37 @@ type ScribeSubFilter = 'all' | 'solo' | 'witness' | 'practitioner';
 const EntryIcon = ({ type, subtype }: { type: string; subtype?: string }) => {
   if (type === 'journal') {
     if (subtype === 'dream') return <Moon className="w-4 h-4 text-indigo-400" />;
-    if (subtype === 'handwriting') return <PenTool className="w-4 h-4 text-amber-400" />;
+    if (subtype === 'handwriting') return <PenTool className="w-4 h-4 text-[#D4B896]" />;
     return <Sun className="w-4 h-4 text-orange-400" />;
   }
   if (type === 'capture') return <Sparkles className="w-4 h-4 text-teal-400" />;
   if (type === 'scribe') return <Mic className="w-4 h-4 text-violet-400" />;
-  return <BookOpen className="w-4 h-4 text-amber-400" />;
+  return <BookOpen className="w-4 h-4 text-[#D4B896]" />;
 };
 
-// Category colors (dark theme)
-const getCategoryColor = (type: string) => {
+// Category colors
+const getCategoryStyle = (type: string, isActive: boolean = false) => {
+  const base = isActive
+    ? 'border-transparent'
+    : 'border-white/[0.06] hover:border-white/10';
+
   switch (type) {
     case 'journal':
-      return 'bg-orange-500/20 border-orange-500/30 text-orange-300';
+      return isActive
+        ? 'bg-orange-500/20 text-orange-300 ' + base
+        : 'bg-white/[0.03] text-white/60 ' + base;
     case 'capture':
-      return 'bg-teal-500/20 border-teal-500/30 text-teal-300';
+      return isActive
+        ? 'bg-teal-500/20 text-teal-300 ' + base
+        : 'bg-white/[0.03] text-white/60 ' + base;
     case 'scribe':
-      return 'bg-violet-500/20 border-violet-500/30 text-violet-300';
+      return isActive
+        ? 'bg-violet-500/20 text-violet-300 ' + base
+        : 'bg-white/[0.03] text-white/60 ' + base;
     default:
-      return 'bg-amber-500/20 border-amber-500/30 text-amber-300';
+      return isActive
+        ? 'bg-[#D4B896]/20 text-[#D4B896] ' + base
+        : 'bg-white/[0.03] text-white/60 ' + base;
   }
 };
 
@@ -324,306 +331,373 @@ export default function UnifiedJournalPage() {
     }
   };
 
+  const handleBack = () => {
+    router.push('/labtools');
+  };
+
+  const totalCount = journalEntries.length + capsules.length + scribeSessions.length;
+
   return (
-    <PageShell maxWidth="4xl">
-      <PortalHeader
-        title="Your Journal"
-        subtitle="All your captured wisdom — entries, reflections, and sessions"
-        backPath="/labtools"
-        backLabel="Back to LabTools"
-        icon={<BookOpen className="w-6 h-6 text-amber-400" />}
-        actions={
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">My Lab</span>
+          </button>
+
           <button
             onClick={fetchAllData}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-amber-400/60 hover:text-amber-400 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70 transition-all"
             title="Refresh"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-        }
-      />
-
-      {/* Category Tabs */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex items-center gap-2 mb-6 overflow-x-auto pb-2"
-      >
-        {categories.map((cat) => (
-          <button
-            key={cat.key}
-            onClick={() => setActiveCategory(cat.key)}
-            className={`
-              flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm transition-all whitespace-nowrap
-              ${
-                activeCategory === cat.key
-                  ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
-                  : 'bg-white/5 text-amber-200/70 hover:bg-white/10 border border-white/10'
-              }
-            `}
-          >
-            {cat.icon}
-            {cat.label}
-            <span
-              className={`
-              ml-1 px-1.5 py-0.5 rounded-full text-xs
-              ${
-                activeCategory === cat.key
-                  ? 'bg-white/20 text-white'
-                  : 'bg-white/10 text-amber-300/60'
-              }
-            `}
-            >
-              {cat.count}
-            </span>
-          </button>
-        ))}
-      </motion.div>
-
-      {/* Sub-filters for Journal */}
-      <AnimatePresence>
-        {activeCategory === 'journal' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2 mb-4"
-          >
-            <span className="text-xs text-amber-300/50 mr-2">Type:</span>
-            {(['all', 'dream', 'day', 'handwriting'] as JournalSubFilter[]).map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setJournalSubFilter(sub)}
-                className={`
-                  px-3 py-1.5 rounded-lg text-xs transition-all
-                  ${
-                    journalSubFilter === sub
-                      ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                      : 'bg-white/5 text-amber-200/60 border border-white/10 hover:bg-white/10'
-                  }
-                `}
-              >
-                {sub === 'all'
-                  ? 'All'
-                  : sub === 'dream'
-                    ? '🌙 Dreams'
-                    : sub === 'day'
-                      ? '☀️ Day'
-                      : '✍️ Handwritten'}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Sub-filters for Scribe */}
-      <AnimatePresence>
-        {activeCategory === 'scribe' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2 mb-4"
-          >
-            <span className="text-xs text-amber-300/50 mr-2">Type:</span>
-            {(['all', 'solo', 'witness', 'practitioner'] as ScribeSubFilter[]).map((sub) => (
-              <button
-                key={sub}
-                onClick={() => setScribeSubFilter(sub)}
-                className={`
-                  px-3 py-1.5 rounded-lg text-xs transition-all
-                  ${
-                    scribeSubFilter === sub
-                      ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                      : 'bg-white/5 text-amber-200/60 border border-white/10 hover:bg-white/10'
-                  }
-                `}
-              >
-                {sub === 'all' ? 'All' : sub.charAt(0).toUpperCase() + sub.slice(1)}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Search */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="relative mb-8"
-      >
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400/50" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search entries..."
-          className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl
-                   text-amber-100 placeholder:text-amber-300/40 text-sm
-                   focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/30"
-        />
-      </motion.div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
         </div>
-      ) : error ? (
-        <SectionCard variant="subtle">
-          <div className="text-center py-8">
+
+        {/* Main Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+            className="inline-flex items-center justify-center w-14 h-14 mb-3 rounded-2xl bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/5 border border-[#D4B896]/20"
+          >
+            <BookOpen className="w-6 h-6 text-[#D4B896]" />
+          </motion.div>
+
+          <h1 className="text-2xl font-bold text-white mb-1">Your Journal</h1>
+          <p className="text-white/50 text-sm">
+            {totalCount} {totalCount === 1 ? 'entry' : 'entries'} — thoughts, reflections, and sessions
+          </p>
+        </motion.div>
+
+        {/* Search */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative mb-4"
+        >
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search entries..."
+            className="w-full pl-12 pr-10 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/30 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </motion.div>
+
+        {/* Category Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide"
+        >
+          {categories.map((cat) => (
+            <button
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm transition-all whitespace-nowrap border ${getCategoryStyle(
+                cat.key === 'all' ? 'default' : cat.key,
+                activeCategory === cat.key
+              )}`}
+            >
+              {cat.icon}
+              {cat.label}
+              <span
+                className={`ml-1 px-1.5 py-0.5 rounded-full text-xs ${
+                  activeCategory === cat.key
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/10 text-white/40'
+                }`}
+              >
+                {cat.count}
+              </span>
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Sub-filters for Journal */}
+        <AnimatePresence>
+          {activeCategory === 'journal' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 mb-6"
+            >
+              <span className="text-xs text-white/40 mr-2">Type:</span>
+              {(['all', 'dream', 'day', 'handwriting'] as JournalSubFilter[]).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setJournalSubFilter(sub)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all border ${
+                    journalSubFilter === sub
+                      ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+                      : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {sub === 'all'
+                    ? 'All'
+                    : sub === 'dream'
+                      ? '🌙 Dreams'
+                      : sub === 'day'
+                        ? '☀️ Day'
+                        : '✍️ Handwritten'}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Sub-filters for Scribe */}
+        <AnimatePresence>
+          {activeCategory === 'scribe' && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex items-center gap-2 mb-6"
+            >
+              <span className="text-xs text-white/40 mr-2">Type:</span>
+              {(['all', 'solo', 'witness', 'practitioner'] as ScribeSubFilter[]).map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setScribeSubFilter(sub)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-all border ${
+                    scribeSubFilter === sub
+                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                      : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {sub === 'all' ? 'All' : sub.charAt(0).toUpperCase() + sub.slice(1)}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <motion.div
+              className="w-8 h-8 border-2 border-[#D4B896]/20 border-t-[#D4B896] rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            />
+          </div>
+        ) : error ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8 text-center"
+          >
             <p className="text-rose-400 text-sm mb-4">{error}</p>
             <button
               onClick={fetchAllData}
-              className="text-sm text-amber-400 hover:text-amber-300 underline"
+              className="text-sm text-[#D4B896] hover:text-[#D4B896]/80 underline"
             >
               Try again
             </button>
-          </div>
-        </SectionCard>
-      ) : filteredEntries.length === 0 ? (
-        <SectionCard variant="subtle" delay={0.2}>
-          <EmptyState
-            icon={<BookOpen className="w-12 h-12" />}
-            title={activeCategory === 'all' ? 'No entries yet' : `No ${activeCategory} entries`}
-            description={
-              activeCategory === 'journal'
+          </motion.div>
+        ) : filteredEntries.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-12 text-center"
+          >
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.03] flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-white/20" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">
+              {activeCategory === 'all' ? 'No entries yet' : `No ${activeCategory} entries`}
+            </h3>
+            <p className="text-white/50 text-sm mb-6 max-w-sm mx-auto">
+              {activeCategory === 'journal'
                 ? 'Start capturing your thoughts with the Quick Journal.'
                 : activeCategory === 'capture'
                   ? 'Use "Capture the Spirit" during conversations with MAIA.'
                   : activeCategory === 'scribe'
                     ? 'Start a Scribe session to transcribe and analyze conversations.'
-                    : 'Your journal entries, captures, and scribe sessions will appear here.'
-            }
-            action={{
-              label: activeCategory === 'scribe' ? 'Start Scribe Session' : 'Talk with MAIA',
-              onClick: () => router.push('/maia'),
-            }}
-          />
-        </SectionCard>
-      ) : (
-        <div className="space-y-3">
-          {filteredEntries.map((entry, idx) => (
-            <motion.div
-              key={`${entry.type}-${entry.type === 'journal' ? entry.data.id : entry.type === 'capture' ? entry.data.id : entry.data.id}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + idx * 0.03 }}
+                    : 'Your journal entries, captures, and scribe sessions will appear here.'}
+            </p>
+            <button
+              onClick={() => router.push('/maia')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#D4B896]/10 border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
             >
-              {entry.type === 'capture' ? (
-                <div className="[&_.capsule-card]:bg-white/5 [&_.capsule-card]:border-white/10 [&_.capsule-card]:text-amber-100">
-                  <CapsuleCard
-                    capsule={entry.data}
-                    onOpen={(id) => router.push(`/labtools/reflections/${id}`)}
-                    onPin={handleCapsulePin}
-                    onArchive={handleCapsuleArchive}
-                  />
-                </div>
-              ) : entry.type === 'journal' ? (
-                <button
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4
-                           hover:bg-white/[0.07] hover:border-amber-500/20 transition-all text-left"
-                  onClick={() => {
-                    /* TODO: Open journal entry detail */
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        entry.data.subtype === 'dream'
-                          ? 'bg-indigo-500/20'
-                          : entry.data.subtype === 'handwriting'
-                            ? 'bg-amber-500/20'
-                            : 'bg-orange-500/20'
-                      }`}
-                    >
-                      <EntryIcon type="journal" subtype={entry.data.subtype} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full border ${getCategoryColor('journal')}`}
-                        >
-                          {getSubtypeLabel('journal', entry.data.subtype)}
-                        </span>
-                        <span className="text-xs text-amber-300/50">
-                          {formatDate(entry.data.createdAt)}
-                        </span>
-                        {entry.data.audioPath && (
-                          <span className="text-xs text-amber-300/50">🎙️</span>
+              <Plus className="w-4 h-4" />
+              {activeCategory === 'scribe' ? 'Start Scribe Session' : 'Talk with MAIA'}
+            </button>
+          </motion.div>
+        ) : (
+          <div className="space-y-3">
+            {filteredEntries.map((entry, idx) => (
+              <motion.div
+                key={`${entry.type}-${entry.data.id}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03 }}
+              >
+                {entry.type === 'capture' ? (
+                  <div className="[&_.capsule-card]:bg-white/[0.03] [&_.capsule-card]:border-white/[0.06] [&_.capsule-card]:text-white">
+                    <CapsuleCard
+                      capsule={entry.data}
+                      onOpen={(id) => router.push(`/labtools/reflections/${id}`)}
+                      onPin={handleCapsulePin}
+                      onArchive={handleCapsuleArchive}
+                    />
+                  </div>
+                ) : entry.type === 'journal' ? (
+                  <button
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.05] hover:border-[#D4B896]/20 transition-all text-left group"
+                    onClick={() => {
+                      /* TODO: Open journal entry detail */
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          entry.data.subtype === 'dream'
+                            ? 'bg-indigo-500/20'
+                            : entry.data.subtype === 'handwriting'
+                              ? 'bg-[#D4B896]/20'
+                              : 'bg-orange-500/20'
+                        }`}
+                      >
+                        <EntryIcon type="journal" subtype={entry.data.subtype} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                              entry.data.subtype === 'dream'
+                                ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
+                                : entry.data.subtype === 'handwriting'
+                                  ? 'bg-[#D4B896]/20 border-[#D4B896]/30 text-[#D4B896]'
+                                  : 'bg-orange-500/20 border-orange-500/30 text-orange-300'
+                            }`}
+                          >
+                            {getSubtypeLabel('journal', entry.data.subtype)}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {formatDate(entry.data.createdAt)}
+                          </span>
+                          {entry.data.audioPath && (
+                            <span className="text-xs text-white/40">🎙️</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-white/70 line-clamp-2">{entry.data.content}</p>
+                        {entry.data.tags.length > 0 && (
+                          <div className="flex items-center gap-1 mt-2">
+                            {entry.data.tags.slice(0, 3).map((tag, i) => (
+                              <span
+                                key={i}
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {entry.data.tags.length > 3 && (
+                              <span className="text-[10px] text-white/30">
+                                +{entry.data.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                      <p className="text-sm text-amber-100/80 line-clamp-2">{entry.data.content}</p>
-                      {entry.data.tags.length > 0 && (
-                        <div className="flex items-center gap-1 mt-2">
-                          {entry.data.tags.slice(0, 3).map((tag, i) => (
-                            <TagPill key={i} color="slate" size="sm">
-                              {tag}
-                            </TagPill>
-                          ))}
-                          {entry.data.tags.length > 3 && (
-                            <span className="text-[10px] text-amber-300/40">
-                              +{entry.data.tags.length - 3}
+                      <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0 group-hover:text-white/40 transition-colors" />
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.05] hover:border-violet-500/20 transition-all text-left group"
+                    onClick={() => router.push(`/sessions/${entry.data.id}`)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                        <Mic className="w-4 h-4 text-violet-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-violet-500/20 border-violet-500/30 text-violet-300">
+                            {getSubtypeLabel('scribe', entry.data.subtype)}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {formatDate(entry.data.startedAt)}
+                          </span>
+                          {entry.data.isActive && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              Live
                             </span>
                           )}
                         </div>
-                      )}
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                  </div>
-                </button>
-              ) : (
-                <button
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4
-                           hover:bg-white/[0.07] hover:border-violet-500/20 transition-all text-left"
-                  onClick={() => router.push(`/sessions/${entry.data.id}`)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                      <Mic className="w-4 h-4 text-violet-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full border ${getCategoryColor('scribe')}`}
-                        >
-                          {getSubtypeLabel('scribe', entry.data.subtype)}
-                        </span>
-                        <span className="text-xs text-amber-300/50">
-                          {formatDate(entry.data.startedAt)}
-                        </span>
-                        {entry.data.isActive && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            Active
-                          </span>
+                        <p className="text-sm text-white/80 font-medium">{entry.data.title}</p>
+                        {entry.data.summary?.short && (
+                          <p className="text-xs text-white/50 mt-1 line-clamp-1">
+                            {entry.data.summary.short}
+                          </p>
+                        )}
+                        {entry.data.summary?.themes && entry.data.summary.themes.length > 0 && (
+                          <div className="flex items-center gap-1 mt-2">
+                            {entry.data.summary.themes.slice(0, 3).map((theme, i) => (
+                              <span
+                                key={i}
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300/70"
+                              >
+                                {theme}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      <h3 className="text-sm font-medium text-amber-100 mb-1">{entry.data.title}</h3>
-                      {entry.data.summary?.short && (
-                        <p className="text-xs text-amber-200/50 line-clamp-2">
-                          {entry.data.summary.short}
-                        </p>
-                      )}
-                      {entry.data.summary?.themes && entry.data.summary.themes.length > 0 && (
-                        <div className="flex items-center gap-1 mt-2">
-                          {entry.data.summary.themes.slice(0, 3).map((theme, i) => (
-                            <TagPill key={i} color="violet" size="sm">
-                              {theme}
-                            </TagPill>
-                          ))}
-                        </div>
-                      )}
+                      <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0 group-hover:text-white/40 transition-colors" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-amber-400/30 flex-shrink-0" />
-                  </div>
-                </button>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </PageShell>
+                  </button>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Quick Actions Footer */}
+        {!loading && filteredEntries.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 pt-6 border-t border-white/[0.06]"
+          >
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => router.push('/maia')}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70 hover:bg-white/[0.06] transition-all text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                New Entry
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
 }

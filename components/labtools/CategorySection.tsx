@@ -40,11 +40,11 @@ export function CategorySection({
         onClick={handleToggle}
         className="w-full flex items-center gap-3 py-2 group"
       >
-        {/* Collapse indicator */}
+        {/* Collapse indicator - amber for visibility */}
         <motion.div
           animate={{ rotate: category.collapsed ? 0 : 90 }}
           transition={{ duration: 0.2 }}
-          className="text-white/30 group-hover:text-white/50 transition-colors"
+          className="text-[#D4B896]/50 group-hover:text-[#D4B896] transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </motion.div>

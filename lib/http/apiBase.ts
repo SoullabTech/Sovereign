@@ -653,6 +653,13 @@ async function apiFetchWeb(url: string, options: RequestInit): Promise<Response>
     headers.set('x-maia-anon-id', visitorId);
   }
 
+  // ALSO add x-member-id header as fallback for cookie issues
+  // Some browsers (Safari, cross-origin) don't reliably send cookies
+  const memberId = getValidMemberId();
+  if (memberId) {
+    headers.set('x-member-id', memberId);
+  }
+
   return fetch(url, {
     ...options,
     headers,

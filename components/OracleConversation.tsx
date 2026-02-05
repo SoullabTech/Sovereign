@@ -41,6 +41,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
+import { TranslateMessageButton } from './wisdom/TranslateMessageButton';
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
 import { formatMessageText } from '@/lib/text/formatMessageText';
@@ -7388,6 +7389,17 @@ I'm not sure what I'm feeling yet.`;
                             turnId={message.turnId}
                             opusAxioms={message.opusAxioms}
                             compact={false}
+                          />
+                        </div>
+                      )}
+
+                      {/* Wisdom Translation - translate MAIA responses through different wisdom systems */}
+                      {message.role === 'oracle' && (
+                        <div className="mt-2">
+                          <TranslateMessageButton
+                            messageContent={message.text ?? message.content ?? ''}
+                            messageId={message.id}
+                            sessionId={sessionId}
                           />
                         </div>
                       )}
