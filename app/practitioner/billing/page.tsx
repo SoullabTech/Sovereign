@@ -5,7 +5,7 @@
  * View financial summary and manage invoices
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -56,7 +56,7 @@ function formatDate(dateStr: string | null) {
   });
 }
 
-export default function BillingPage() {
+function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get('status') || 'all';
@@ -225,5 +225,27 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="h-24 bg-gray-800 rounded" />
+              <div className="h-24 bg-gray-800 rounded" />
+              <div className="h-24 bg-gray-800 rounded" />
+            </div>
+            <div className="h-64 bg-gray-800 rounded" />
+          </div>
+        </div>
+      </div>
+    }>
+      <BillingContent />
+    </Suspense>
   );
 }

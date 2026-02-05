@@ -5,7 +5,7 @@
  * Create a new session for a container
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -44,7 +44,7 @@ const DURATIONS = [
   { value: 90, label: '90 minutes' },
 ];
 
-export default function NewSessionPage() {
+function NewSessionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedContainerId = searchParams.get('containerId');
@@ -318,5 +318,26 @@ export default function NewSessionPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewSessionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-2xl mx-auto px-6 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+            <div className="space-y-4">
+              <div className="h-12 bg-gray-800 rounded" />
+              <div className="h-12 bg-gray-800 rounded" />
+              <div className="h-12 bg-gray-800 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <NewSessionContent />
+    </Suspense>
   );
 }
