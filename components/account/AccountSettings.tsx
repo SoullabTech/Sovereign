@@ -145,19 +145,19 @@ const CIRCLE_TIERS = {
   pioneer: { name: 'Pioneer', emoji: '⭐', color: 'text-purple-400' },
 };
 
-const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; color: string; practitionerOnly?: boolean }[] = [
-  { id: 'profile', label: 'Profile', icon: User, color: 'emerald' },
-  { id: 'account', label: 'Account', icon: Lock, color: 'blue' },
-  { id: 'portals', label: 'Client Portals', icon: Globe, color: 'amber', practitionerOnly: true },
-  { id: 'astrology', label: 'Birth Chart', icon: Star, color: 'violet' },
-  { id: 'maia', label: 'MAIA Settings', icon: Brain, color: 'amber' },
-  { id: 'data-privacy', label: 'Data & Privacy', icon: Eye, color: 'cyan' },
-  { id: 'sovereignty', label: 'Data Sovereignty', icon: Database, color: 'teal' },
-  { id: 'notifications', label: 'Notifications', icon: Bell, color: 'rose' },
-  { id: 'privacy', label: 'Privacy', icon: Shield, color: 'indigo' },
-  { id: 'membership', label: 'Membership', icon: Crown, color: 'yellow' },
-  { id: 'connections', label: 'Connections', icon: LinkIcon, color: 'sky' },
-  { id: 'data', label: 'Your Data', icon: Download, color: 'slate' },
+const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practitionerOnly?: boolean }[] = [
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'account', label: 'Account', icon: Lock },
+  { id: 'portals', label: 'Client Portals', icon: Globe, practitionerOnly: true },
+  { id: 'astrology', label: 'Birth Chart', icon: Star },
+  { id: 'maia', label: 'MAIA Settings', icon: Brain },
+  { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
+  { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'privacy', label: 'Privacy', icon: Shield },
+  { id: 'membership', label: 'Membership', icon: Crown },
+  { id: 'connections', label: 'Connections', icon: LinkIcon },
+  { id: 'data', label: 'Your Data', icon: Download },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2432,43 +2432,38 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-5 py-10" style={{ paddingTop: 'max(env(safe-area-inset-top), 2.5rem)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-10">
-        <div className="flex items-center gap-4">
-          {/* Back button - to /maia when on main list, to list when in subsection */}
-          <motion.button
-            onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-            className="p-2.5 -ml-2 rounded-xl bg-maia-navy-850 border border-maia-navy-700/50 hover:border-maia-navy-700 hover:bg-maia-navy-800 transition-all duration-300 shadow-maia-panel"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ArrowLeft size={22} className="text-white/80" />
-          </motion.button>
-          <div>
-            <h1 className="text-3xl font-semibold text-maia-ink-100 tracking-tight">
-              {activeSection
-                ? SECTIONS.find(s => s.id === activeSection)?.label
-                : 'Settings'}
-            </h1>
-            {!activeSection && (
-              <p className="text-sm text-maia-ink-40 mt-1.5 tracking-wide">
-                Manage your account and preferences
-              </p>
-            )}
-          </div>
+    <div className="max-w-xl mx-auto px-6 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
+      {/* Header - Minimal matte style */}
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
+          className="p-2 -ml-2 rounded-lg text-stone-400 hover:text-stone-200 hover:bg-stone-800/50 transition-colors"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h1 className="text-xl font-medium text-stone-100">
+            {activeSection
+              ? SECTIONS.find(s => s.id === activeSection)?.label
+              : 'Settings'}
+          </h1>
+          {!activeSection && (
+            <p className="text-sm text-stone-500 mt-0.5">
+              Manage your account and preferences
+            </p>
+          )}
         </div>
 
         {/* Save indicator */}
         <AnimatePresence>
           {saved && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-1.5 text-emerald-400 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="ml-auto flex items-center gap-1.5 text-amber-600/80 text-sm"
             >
-              <Check size={16} />
+              <Check size={14} />
               <span>Saved</span>
             </motion.div>
           )}
@@ -2478,68 +2473,42 @@ export function AccountSettings() {
       {/* Content */}
       <AnimatePresence mode="wait">
         {!activeSection ? (
-          /* Section List */
+          /* Section List - Clean matte design */}
           <motion.div
             key="list"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-1"
           >
             {SECTIONS
               .filter(({ practitionerOnly }) => !practitionerOnly || projects.length > 0)
-              .map(({ id, label, icon: Icon, color }, index) => {
-              // Color classes for each section
-              const colorClasses: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
-                emerald: { bg: 'from-emerald-500/25 to-emerald-600/15', border: 'border-emerald-500/25 group-hover:border-emerald-400/40', icon: 'text-emerald-400', hover: 'group-hover:from-emerald-500/5' },
-                blue: { bg: 'from-blue-500/25 to-blue-600/15', border: 'border-blue-500/25 group-hover:border-blue-400/40', icon: 'text-blue-400', hover: 'group-hover:from-blue-500/5' },
-                violet: { bg: 'from-violet-500/25 to-violet-600/15', border: 'border-violet-500/25 group-hover:border-violet-400/40', icon: 'text-violet-400', hover: 'group-hover:from-violet-500/5' },
-                amber: { bg: 'from-amber-500/25 to-amber-600/15', border: 'border-amber-500/25 group-hover:border-amber-400/40', icon: 'text-amber-400', hover: 'group-hover:from-amber-500/5' },
-                cyan: { bg: 'from-cyan-500/25 to-cyan-600/15', border: 'border-cyan-500/25 group-hover:border-cyan-400/40', icon: 'text-cyan-400', hover: 'group-hover:from-cyan-500/5' },
-                teal: { bg: 'from-teal-500/25 to-teal-600/15', border: 'border-teal-500/25 group-hover:border-teal-400/40', icon: 'text-teal-400', hover: 'group-hover:from-teal-500/5' },
-                rose: { bg: 'from-rose-500/25 to-rose-600/15', border: 'border-rose-500/25 group-hover:border-rose-400/40', icon: 'text-rose-400', hover: 'group-hover:from-rose-500/5' },
-                indigo: { bg: 'from-indigo-500/25 to-indigo-600/15', border: 'border-indigo-500/25 group-hover:border-indigo-400/40', icon: 'text-indigo-400', hover: 'group-hover:from-indigo-500/5' },
-                yellow: { bg: 'from-yellow-500/25 to-yellow-600/15', border: 'border-yellow-500/25 group-hover:border-yellow-400/40', icon: 'text-yellow-400', hover: 'group-hover:from-yellow-500/5' },
-                sky: { bg: 'from-sky-500/25 to-sky-600/15', border: 'border-sky-500/25 group-hover:border-sky-400/40', icon: 'text-sky-400', hover: 'group-hover:from-sky-500/5' },
-                slate: { bg: 'from-slate-400/25 to-slate-500/15', border: 'border-slate-400/25 group-hover:border-slate-300/40', icon: 'text-slate-300', hover: 'group-hover:from-slate-400/5' },
-              };
-              const c = colorClasses[color] || colorClasses.amber;
-
-              return (
-              <motion.button
+              .map(({ id, label, icon: Icon }) => (
+              <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className="group relative w-full flex items-center gap-4 p-4 bg-maia-navy-850 hover:bg-maia-navy-800 border border-maia-navy-700/50 hover:border-maia-navy-700 rounded-2xl transition-all duration-300 shadow-maia-panel hover:shadow-maia-panel-hover overflow-hidden"
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
+                className="group w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-stone-800/40 transition-colors"
               >
-                {/* Subtle gradient overlay on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent ${c.hover} transition-all duration-500`} />
-
-                {/* Icon container with glow */}
-                <div className={`relative w-11 h-11 rounded-xl bg-gradient-to-br ${c.bg} flex items-center justify-center ${c.border} transition-all duration-300 flex-shrink-0`}>
-                  <Icon size={20} className={`${c.icon} transition-colors duration-300`} />
+                {/* Minimal icon */}
+                <div className="w-8 h-8 rounded-lg bg-stone-800/60 flex items-center justify-center">
+                  <Icon size={16} className="text-stone-400 group-hover:text-stone-300 transition-colors" />
                 </div>
 
-                {/* Label with tracking */}
-                <span className="flex-1 text-left text-maia-ink-100 font-medium tracking-wide">{label}</span>
+                {/* Label */}
+                <span className="flex-1 text-left text-stone-300 group-hover:text-stone-100 transition-colors">{label}</span>
 
-                {/* Arrow with enhanced animation */}
-                <ChevronRight size={18} className={`text-maia-ink-40 ${c.icon.replace('text-', 'group-hover:text-')} group-hover:translate-x-1 transition-all duration-300 flex-shrink-0`} />
-              </motion.button>
-              );
-            })}
+                {/* Arrow */}
+                <ChevronRight size={16} className="text-stone-600 group-hover:text-stone-400 transition-colors" />
+              </button>
+            ))}
           </motion.div>
         ) : (
           /* Section Detail */
           <motion.div
             key={activeSection}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
             {activeSection === 'profile' && renderProfile()}
             {activeSection === 'account' && renderAccount()}
@@ -2557,10 +2526,10 @@ export function AccountSettings() {
         )}
       </AnimatePresence>
 
-      {/* Build Info Footer - subtle version stamp */}
-      <div className="mt-12 pt-6 border-t border-white/5 text-center">
-        <p className="text-[10px] text-white/20 font-mono">
-          v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
+      {/* Build Info Footer - minimal */}
+      <div className="mt-16 pt-4 border-t border-stone-800/50 text-center">
+        <p className="text-[10px] text-stone-600 font-mono">
+          v1.1 • {BUILD_STAMP.commit} • {BUILD_STAMP.timestamp.split('T')[0]}
           {Capacitor.isNativePlatform() && (
             <span className="ml-2">• {apiBaseUrl()}</span>
           )}
