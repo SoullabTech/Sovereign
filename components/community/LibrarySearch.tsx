@@ -8,7 +8,12 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, X, BookOpen, ChevronRight, ChevronDown, FolderOpen, FileText } from 'lucide-react';
+import {
+  Search, X, BookOpen, ChevronRight, FileText,
+  Compass, Lightbulb, BookMarked, Feather, GraduationCap,
+  Sparkles, Wrench, Users, Code, Megaphone, Heart, FolderOpen,
+  type LucideIcon
+} from 'lucide-react';
 import type { ArticleIndex, LibraryIndex } from '@/lib/library/types';
 
 interface LibrarySearchProps {
@@ -27,20 +32,113 @@ function stripEmojis(text: string): string {
     .trim();
 }
 
-// Category display configuration
-const CATEGORY_CONFIG: Record<string, { name: string; order: number; description: string }> = {
-  '00-START-HERE': { name: 'Getting Started', order: 1, description: 'Begin your journey here' },
-  '01-Core-Concepts': { name: 'Core Concepts', order: 2, description: 'Foundational ideas and frameworks' },
-  '01-Member-Guides': { name: 'Member Guides', order: 3, description: 'Practical guides for members' },
-  '02-Thematic-Essays': { name: 'Thematic Essays', order: 4, description: 'Deep explorations of key themes' },
-  '03-Member-Guides': { name: 'Advanced Guides', order: 5, description: 'In-depth member resources' },
-  '04-Practices': { name: 'Practices', order: 6, description: 'Exercises and rituals' },
-  '06-Resources': { name: 'Resources', order: 7, description: 'Tools and references' },
-  '07-Community-Contributions': { name: 'Community', order: 8, description: 'Contributions from our community' },
-  '09-Technical': { name: 'Technical Documentation', order: 9, description: 'System architecture and specs' },
-  'outreach': { name: 'Outreach', order: 10, description: 'External communications' },
-  'spiritual-guidance': { name: 'Spiritual Guidance', order: 11, description: 'Contemplative wisdom' },
-  '__uncategorized__': { name: 'Other Files', order: 99, description: 'Additional documents and resources' },
+// Category display configuration with icons and colors
+interface CategoryConfig {
+  name: string;
+  order: number;
+  description: string;
+  icon: LucideIcon;
+  color: string; // Tailwind color class
+  bgColor: string; // Background color for icon container
+}
+
+const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
+  '00-START-HERE': {
+    name: 'Getting Started',
+    order: 1,
+    description: 'Begin your journey here',
+    icon: Compass,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/15'
+  },
+  '01-Core-Concepts': {
+    name: 'Core Concepts',
+    order: 2,
+    description: 'Foundational ideas and frameworks',
+    icon: Lightbulb,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/15'
+  },
+  '01-Member-Guides': {
+    name: 'Member Guides',
+    order: 3,
+    description: 'Practical guides for members',
+    icon: BookMarked,
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/15'
+  },
+  '02-Thematic-Essays': {
+    name: 'Thematic Essays',
+    order: 4,
+    description: 'Deep explorations of key themes',
+    icon: Feather,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/15'
+  },
+  '03-Member-Guides': {
+    name: 'Advanced Guides',
+    order: 5,
+    description: 'In-depth member resources',
+    icon: GraduationCap,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/15'
+  },
+  '04-Practices': {
+    name: 'Practices',
+    order: 6,
+    description: 'Exercises and rituals',
+    icon: Sparkles,
+    color: 'text-pink-400',
+    bgColor: 'bg-pink-500/15'
+  },
+  '06-Resources': {
+    name: 'Resources',
+    order: 7,
+    description: 'Tools and references',
+    icon: Wrench,
+    color: 'text-slate-400',
+    bgColor: 'bg-slate-500/15'
+  },
+  '07-Community-Contributions': {
+    name: 'Community',
+    order: 8,
+    description: 'Contributions from our community',
+    icon: Users,
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/15'
+  },
+  '09-Technical': {
+    name: 'Technical Documentation',
+    order: 9,
+    description: 'System architecture and specs',
+    icon: Code,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/15'
+  },
+  'outreach': {
+    name: 'Outreach',
+    order: 10,
+    description: 'External communications',
+    icon: Megaphone,
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/15'
+  },
+  'spiritual-guidance': {
+    name: 'Spiritual Guidance',
+    order: 11,
+    description: 'Contemplative wisdom',
+    icon: Heart,
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-500/15'
+  },
+  '__uncategorized__': {
+    name: 'Other Files',
+    order: 99,
+    description: 'Additional documents and resources',
+    icon: FolderOpen,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/15'
+  },
 };
 
 export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
@@ -220,9 +318,13 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
         {groupedArticles.map(([category, articles]) => {
           const config = CATEGORY_CONFIG[category] || {
             name: category.replace(/^\d+-/, '').replace(/-/g, ' '),
-            description: ''
+            description: '',
+            icon: FolderOpen,
+            color: 'text-gray-400',
+            bgColor: 'bg-gray-500/15'
           };
           const isExpanded = expandedCategories.has(category);
+          const IconComponent = config.icon;
 
           return (
             <div key={category} className="rounded-lg border border-white/10 overflow-hidden">
@@ -231,10 +333,12 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
                 onClick={() => toggleCategory(category)}
                 className="w-full flex items-center gap-3 px-4 py-3 bg-[#2a2a2a] hover:bg-[#333] transition-colors"
               >
-                <div className={`transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
-                  <ChevronRight size={16} className="text-orange-500" />
+                <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                  <ChevronRight size={16} className="text-white/40" />
                 </div>
-                <FolderOpen size={18} className="text-orange-500/70" />
+                <div className={`p-2 rounded-lg ${config.bgColor}`}>
+                  <IconComponent size={18} className={config.color} />
+                </div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-white">{config.name}</span>
@@ -256,10 +360,10 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
                       <button
                         key={article.id}
                         onClick={() => onSelectArticle(article)}
-                        className="w-full flex items-center gap-3 px-4 py-3 pl-12
+                        className="w-full flex items-center gap-3 px-4 py-3 pl-14
                                  hover:bg-white/5 transition-colors group text-left"
                       >
-                        <FileText size={14} className="text-white/30 group-hover:text-orange-500 transition-colors flex-shrink-0" />
+                        <FileText size={14} className="text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0" />
                         <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors line-clamp-1">
                           {stripEmojis(article.title)}
                         </span>
