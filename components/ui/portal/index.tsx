@@ -3,12 +3,12 @@
 /**
  * PORTAL LAYOUT COMPONENTS
  *
- * Shared UI kit for the Commons/Cathedral aesthetic.
- * Dark, breathable, amber/gold authority, clear sections.
+ * Shared UI kit with Claude-style matte dark + orange accents.
+ * Clean, minimal, professional.
  *
  * Components:
  * - PageShell: Full page wrapper with background
- * - SectionCard: Rounded glass card with header
+ * - SectionCard: Rounded card with header
  * - StatTile: Compact stat display
  * - TagPill: Small label pill
  * - EmptyState: Placeholder for empty content
@@ -43,7 +43,7 @@ export function PageShell({ children, className = '', maxWidth = '6xl' }: PageSh
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/30 ${className}`}>
+    <div className={`min-h-screen bg-[#1a1a1a] ${className}`}>
       <div className={`${maxWidthClasses[maxWidth]} mx-auto px-6 py-8`}>
         {children}
       </div>
@@ -79,11 +79,11 @@ export function PortalHeader({
   const router = useRouter();
 
   const badgeColors = {
-    amber: 'bg-amber-500/10 border-amber-500/20 text-amber-300/80',
-    violet: 'bg-violet-500/10 border-violet-500/20 text-violet-300/80',
-    emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300/80',
-    rose: 'bg-rose-500/10 border-rose-500/20 text-rose-300/80',
-    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-300/80',
+    amber: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
+    violet: 'bg-violet-500/10 border-violet-500/20 text-violet-400',
+    emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+    rose: 'bg-rose-500/10 border-rose-500/20 text-rose-400',
+    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
   };
 
   return (
@@ -97,7 +97,7 @@ export function PortalHeader({
       {backPath && (
         <button
           onClick={() => router.push(backPath)}
-          className="flex items-center gap-2 text-amber-400/60 hover:text-amber-400 transition-colors mb-6 text-sm"
+          className="flex items-center gap-2 text-white/50 hover:text-orange-500 transition-colors mb-6 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{backLabel}</span>
@@ -108,7 +108,7 @@ export function PortalHeader({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
           {icon && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div className="p-3 bg-orange-500/10 rounded-xl">
               {icon}
             </div>
           )}
@@ -118,11 +118,11 @@ export function PortalHeader({
                 {badge}
               </span>
             )}
-            <h1 className="text-2xl md:text-3xl font-light text-amber-50 tracking-wide">
+            <h1 className="text-2xl md:text-3xl font-medium text-white">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-amber-200/50 mt-1">{subtitle}</p>
+              <p className="text-white/50 mt-1">{subtitle}</p>
             )}
           </div>
         </div>
@@ -159,13 +159,14 @@ export function SectionCard({
   noPadding = false,
   delay = 0,
 }: SectionCardProps) {
+  // All variants now use consistent matte styling
   const variantStyles = {
-    default: 'bg-white/5 border-white/10',
-    amber: 'bg-amber-500/5 border-amber-500/20',
-    violet: 'bg-violet-500/5 border-violet-500/20',
-    emerald: 'bg-emerald-500/5 border-emerald-500/20',
-    rose: 'bg-rose-500/5 border-rose-500/20',
-    subtle: 'bg-white/[0.02] border-white/5',
+    default: 'bg-[#2a2a2a] border-white/10',
+    amber: 'bg-[#2a2a2a] border-white/10',
+    violet: 'bg-[#2a2a2a] border-white/10',
+    emerald: 'bg-[#2a2a2a] border-white/10',
+    rose: 'bg-[#2a2a2a] border-white/10',
+    subtle: 'bg-[#252525] border-white/5',
   };
 
   return (
@@ -173,15 +174,15 @@ export function SectionCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
-      className={`rounded-2xl border backdrop-blur-sm ${variantStyles[variant]} ${className}`}
+      className={`rounded-xl border ${variantStyles[variant]} ${className}`}
     >
       {(title || actions) && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">
-            {icon && <span className="text-amber-400">{icon}</span>}
+            {icon && <span className="text-orange-500">{icon}</span>}
             <div>
-              {title && <h3 className="font-medium text-amber-100">{title}</h3>}
-              {subtitle && <p className="text-sm text-amber-200/50">{subtitle}</p>}
+              {title && <h3 className="font-medium text-white">{title}</h3>}
+              {subtitle && <p className="text-sm text-white/50">{subtitle}</p>}
             </div>
           </div>
           {actions}
@@ -207,17 +208,17 @@ interface StatTileProps {
 
 export function StatTile({ label, value, icon, trend, trendValue, className = '' }: StatTileProps) {
   const trendColors = {
-    up: 'text-emerald-400',
-    down: 'text-rose-400',
-    neutral: 'text-amber-400/60',
+    up: 'text-green-400',
+    down: 'text-red-400',
+    neutral: 'text-white/40',
   };
 
   return (
-    <div className={`p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm ${className}`}>
-      {icon && <div className="text-amber-400/60 mb-2">{icon}</div>}
-      <div className="text-2xl font-light text-amber-100">{value}</div>
+    <div className={`p-4 bg-[#2a2a2a] border border-white/10 rounded-xl ${className}`}>
+      {icon && <div className="text-orange-500 mb-2">{icon}</div>}
+      <div className="text-2xl font-medium text-white">{value}</div>
       <div className="flex items-center justify-between mt-1">
-        <span className="text-xs text-amber-300/50 uppercase tracking-wider">{label}</span>
+        <span className="text-xs text-white/40 uppercase tracking-wider">{label}</span>
         {trend && trendValue && (
           <span className={`text-xs ${trendColors[trend]}`}>{trendValue}</span>
         )}
@@ -263,12 +264,12 @@ interface TagPillProps {
 
 export function TagPill({ children, color = 'amber', size = 'sm', className = '' }: TagPillProps) {
   const colorStyles = {
-    amber: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-    violet: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
-    emerald: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-    rose: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-    blue: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    slate: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+    amber: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    violet: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+    emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    rose: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    slate: 'bg-white/10 text-white/60 border-white/20',
   };
 
   const sizeStyles = {
@@ -301,15 +302,15 @@ interface EmptyStateProps {
 export function EmptyState({ icon, title, description, action, className = '' }: EmptyStateProps) {
   return (
     <div className={`text-center py-12 ${className}`}>
-      {icon && <div className="text-amber-400/40 mb-4 flex justify-center">{icon}</div>}
-      <h3 className="text-lg font-medium text-amber-100/80 mb-2">{title}</h3>
+      {icon && <div className="text-white/30 mb-4 flex justify-center">{icon}</div>}
+      <h3 className="text-lg font-medium text-white/80 mb-2">{title}</h3>
       {description && (
-        <p className="text-amber-200/50 text-sm max-w-md mx-auto mb-6">{description}</p>
+        <p className="text-white/40 text-sm max-w-md mx-auto mb-6">{description}</p>
       )}
       {action && (
         <button
           onClick={action.onClick}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors text-sm font-medium"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors text-sm font-medium"
         >
           {action.label}
           <ArrowRight className="w-4 h-4" />
@@ -351,7 +352,7 @@ export function ListItem({
         ${className}
       `}
     >
-      {icon && <div className="text-amber-400/60 flex-shrink-0">{icon}</div>}
+      {icon && <div className="text-orange-500 flex-shrink-0">{icon}</div>}
       <div className="flex-1 min-w-0">{children}</div>
       {trailing && <div className="flex-shrink-0">{trailing}</div>}
     </Component>
@@ -371,9 +372,9 @@ export function Divider({ label, className = '' }: DividerProps) {
   if (label) {
     return (
       <div className={`flex items-center gap-4 my-8 ${className}`}>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <span className="text-xs uppercase tracking-widest text-amber-300/40">{label}</span>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="flex-1 h-px bg-white/10" />
+        <span className="text-xs uppercase tracking-widest text-white/30">{label}</span>
+        <div className="flex-1 h-px bg-white/10" />
       </div>
     );
   }
@@ -408,9 +409,9 @@ export function ActionButton({
   type = 'button',
 }: ActionButtonProps) {
   const variantStyles = {
-    primary: 'bg-amber-600 hover:bg-amber-700 text-white border-transparent',
-    secondary: 'bg-white/5 hover:bg-white/10 text-amber-100 border-white/10',
-    ghost: 'bg-transparent hover:bg-white/5 text-amber-300 border-transparent',
+    primary: 'bg-orange-500 hover:bg-orange-600 text-white border-transparent',
+    secondary: 'bg-white/5 hover:bg-white/10 text-white border-white/10',
+    ghost: 'bg-transparent hover:bg-white/5 text-white/60 border-transparent',
   };
 
   const sizeStyles = {
@@ -425,7 +426,7 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled}
       className={`
-        inline-flex items-center justify-center rounded-xl border font-medium transition-all
+        inline-flex items-center justify-center rounded-lg border font-medium transition-all
         ${variantStyles[variant]}
         ${sizeStyles[size]}
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -462,8 +463,8 @@ export function ToggleSwitch({
     <label className={`flex items-center justify-between gap-4 ${disabled ? 'opacity-50' : 'cursor-pointer'}`}>
       {(label || description) && (
         <div>
-          {label && <div className="text-sm font-medium text-amber-100">{label}</div>}
-          {description && <div className="text-xs text-amber-200/50 mt-0.5">{description}</div>}
+          {label && <div className="text-sm font-medium text-white">{label}</div>}
+          {description && <div className="text-xs text-white/50 mt-0.5">{description}</div>}
         </div>
       )}
       <button
@@ -474,7 +475,7 @@ export function ToggleSwitch({
         onClick={() => !disabled && onChange(!checked)}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${checked ? 'bg-amber-600' : 'bg-white/20'}
+          ${checked ? 'bg-orange-500' : 'bg-white/20'}
         `}
       >
         <span
