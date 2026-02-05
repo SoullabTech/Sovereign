@@ -1,369 +1,246 @@
 'use client';
 
 /**
- * MAIA LabTools
+ * My Lab - Personal Tool Dashboard
  *
- * Organized access to tools in drawer-style layout
+ * "Soullab outfits individuals and groups with tools
+ * for conscious evolution and exploration—for discoveries
+ * and advancements."
+ *
+ * This is not a settings page. It's a workshop.
+ * Each tool is an instrument. Each category is a drawer
+ * you can open to find what you need.
+ *
+ * The vibe: serious play. Soulful exploration.
  */
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import {
-  ArrowLeft,
-  Sparkles,
-  Brain,
-  BookOpen,
-  FileText,
-  Library,
-  Compass,
-  Globe,
-  Mic,
-  User,
-  Heart,
-  Radio,
-  Upload,
-  Download,
-  Eye,
-  Zap,
-  Shield,
-  Star,
-  Search,
-  Activity,
-  Settings,
-  Users,
-  Gift,
-} from 'lucide-react';
+import { ArrowLeft, Sparkles, Plus, Compass } from 'lucide-react';
+import { useMemberTools } from '@/hooks/useMemberTools';
+import { CategorySection } from '@/components/labtools/CategorySection';
+import { type ToolCategory } from '@/config/toolRegistry';
 
-export default function LabToolsPage() {
+export default function MyLabPage() {
   const router = useRouter();
+  const { categories, isLoading, error, toggleCategory } = useMemberTools();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleBack = () => {
     router.push('/maia');
   };
 
-  const handleNavigate = (path: string) => {
-    router.push(path);
+  const handleDiscover = () => {
+    router.push('/labtools/discover');
   };
 
-  const menuSections = [
-    {
-      title: 'EXPLORE',
-      icon: '🔮',
-      items: [
-        {
-          icon: Compass,
-          label: 'Oracle',
-          path: '/oracle',
-          description: 'I Ching • Tarot • Runes'
-        },
-        {
-          icon: Compass,
-          label: 'Journey',
-          path: '/journey',
-          description: 'Archetypal mapping & patterns'
-        },
-        {
-          icon: Sparkles,
-          label: 'Story Creator',
-          path: '/labtools/story-creator',
-          description: 'Personalized narratives from 46+ traditions'
-        },
-      ],
-    },
-    {
-      title: 'CREATE',
-      icon: '✍️',
-      items: [
-        {
-          icon: Sparkles,
-          label: 'Reflections',
-          path: '/labtools/reflections',
-          description: 'Distilled moments from conversations'
-        },
-        {
-          icon: BookOpen,
-          label: 'Journal',
-          path: '/labtools/journal',
-          description: 'Capture thoughts and insights'
-        },
-        {
-          icon: FileText,
-          label: 'Lab Notes',
-          path: '/labtools/lab-notes',
-          description: 'Research and discoveries'
-        },
-        {
-          icon: Radio,
-          label: 'Capture',
-          path: '/capture',
-          description: 'Session notes for export'
-        },
-        {
-          icon: Mic,
-          label: 'Scribe',
-          path: '/labtools/scribe',
-          description: 'Record and transcribe sessions'
-        },
-      ],
-    },
-    {
-      title: 'LIBRARY',
-      icon: '📚',
-      items: [
-        {
-          icon: Library,
-          label: 'Library',
-          path: '/library',
-          description: 'Your personal collection'
-        },
-        {
-          icon: Heart,
-          label: 'Favorites',
-          path: '/labtools/favorites',
-          description: 'Saved items'
-        },
-        {
-          icon: Download,
-          label: 'Downloads',
-          path: '/labtools/downloads',
-          description: 'Access your content'
-        },
-        {
-          icon: Upload,
-          label: 'Upload',
-          path: '/labtools/upload',
-          description: 'Share files with MAIA'
-        },
-      ],
-    },
-    {
-      title: 'SETTINGS',
-      icon: '⚙️',
-      items: [
-        {
-          icon: User,
-          label: 'Profile',
-          path: '/labtools/profile',
-          description: 'Account & preferences'
-        },
-        {
-          icon: Globe,
-          label: 'Language',
-          path: '/labtools/language',
-          description: 'MAIA speaks 30+ languages'
-        },
-        {
-          icon: Mic,
-          label: 'Voice',
-          path: '/labtools/voice',
-          description: 'Voice synthesis & modes'
-        },
-        {
-          icon: Shield,
-          label: 'Data Sovereignty',
-          path: '/labtools/sovereignty',
-          description: 'Control over your data'
-        },
-        {
-          icon: Sparkles,
-          label: 'Patterns',
-          path: '/patterns',
-          description: 'Symbolic systems & cycles'
-        },
-      ],
-    },
-    {
-      title: 'SHARE',
-      icon: '🎁',
-      items: [
-        {
-          icon: Gift,
-          label: 'Beads',
-          path: '/labtools/beads',
-          description: 'Invite friends to MAIA'
-        },
-      ],
-    },
-    {
-      title: 'ADVANCED',
-      icon: '🧪',
-      items: [
-        {
-          icon: Brain,
-          label: 'Brain Trust',
-          path: '/labtools/brain-trust',
-          description: 'Multi-model orchestration'
-        },
-        {
-          icon: Eye,
-          label: 'Field Analytics',
-          path: '/labtools/field-analytics',
-          description: 'Observation & metrics'
-        },
-        {
-          icon: Compass,
-          label: 'Navigator',
-          path: '/labtools/navigator',
-          description: 'Spiralogic integration'
-        },
-        {
-          icon: Radio,
-          label: 'Field Protocol',
-          path: '/labtools/field-protocol',
-          description: 'Document explorations'
-        },
-        {
-          icon: Star,
-          label: 'Pioneer Circle',
-          path: '/labtools/beta-testing',
-          description: 'Beta testing program'
-        },
-      ],
-    },
-    {
-      title: 'DEVELOPER',
-      icon: '💻',
-      items: [
-        {
-          icon: Zap,
-          label: 'Claude Code',
-          path: '/labtools/claude-code',
-          description: 'AI development tools'
-        },
-        {
-          icon: Search,
-          label: 'RLM Navigator',
-          path: '/labtools/rlm',
-          description: 'Codebase exploration'
-        },
-        {
-          icon: Activity,
-          label: 'AIN Telemetry',
-          path: '/labtools/ain',
-          description: 'Response structure analysis'
-        },
-      ],
-    },
-    {
-      title: 'ADMIN',
-      icon: '🔐',
-      items: [
-        {
-          icon: Settings,
-          label: 'System Settings',
-          path: '/labtools/admin/system',
-          description: 'Feature flags & controls'
-        },
-        {
-          icon: Users,
-          label: 'Beta Testers',
-          path: '/labtools/admin/beta-testers',
-          description: 'Manage beta access'
-        },
-      ],
-    },
-  ];
+  const handleToggleCategory = (category: string) => {
+    toggleCategory(category as ToolCategory);
+  };
+
+  // Count total tools
+  const totalTools = categories.reduce((sum, cat) => sum + cat.tools.length, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
       <div className="max-w-4xl mx-auto px-4 py-6">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4B896]/10
-                     border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl
+                     bg-white/[0.03] border border-white/[0.06]
+                     text-white/70 hover:text-white hover:bg-white/[0.06]
+                     transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            Return to MAIA
+            <span className="text-sm">MAIA</span>
           </button>
+
+          {/* Discover button */}
+          <motion.button
+            onClick={handleDiscover}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl
+                     bg-[#D4B896]/10 border border-[#D4B896]/20
+                     text-[#D4B896] hover:bg-[#D4B896]/20
+                     transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">Discover</span>
+          </motion.button>
         </div>
 
         {/* Main Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#D4B896] to-[#B8935A] rounded-lg
-                          flex items-center justify-center text-2xl">
-              🧬
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-[#D4B896] tracking-wide">Lab Tools</h1>
-              <p className="text-[#D4B896]/60 text-sm">Your workspace</p>
-            </div>
-          </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          {/* Lab icon */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+            className="inline-flex items-center justify-center w-16 h-16 mb-4
+                     rounded-2xl bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/5
+                     border border-[#D4B896]/20"
+          >
+            <span className="text-3xl">🧬</span>
+          </motion.div>
 
-          <p className="text-white/60 max-w-2xl mx-auto leading-relaxed">
-            Organized access to MAIA's tools and laboratory instruments.
-            Each section contains specialized tools for your journey.
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            My Lab
+          </h1>
+
+          <p className="text-white/50 max-w-md mx-auto">
+            Your instruments for conscious exploration.
+            {totalTools > 0 && (
+              <span className="text-[#D4B896]/70">
+                {' '}
+                {totalTools} tools ready.
+              </span>
+            )}
           </p>
-        </div>
+        </motion.div>
 
-        {/* Menu Sections */}
-        <div className="space-y-8">
-          {menuSections.map((section, sectionIdx) => (
+        {/* Loading state */}
+        <AnimatePresence mode="wait">
+          {isLoading && !mounted ? (
             <motion.div
-              key={section.title}
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-20"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              >
+                <Compass className="w-8 h-8 text-[#D4B896]/50" />
+              </motion.div>
+              <p className="text-white/40 mt-4 text-sm">Preparing your workshop...</p>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-20"
+            >
+              <p className="text-red-400/70">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 rounded-lg bg-white/5 text-white/60 hover:text-white"
+              >
+                Try again
+              </button>
+            </motion.div>
+          ) : categories.length === 0 ? (
+            <motion.div
+              key="empty"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: sectionIdx * 0.1 }}
+              className="text-center py-20"
             >
-              {/* Section Header */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">{section.icon}</span>
-                <h3 className="text-sm font-medium text-[#D4B896]/70 tracking-widest">
-                  {section.title}
-                </h3>
+              <div className="inline-flex items-center justify-center w-20 h-20 mb-6
+                           rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                <Sparkles className="w-8 h-8 text-white/30" />
               </div>
-
-              {/* Section Items */}
-              <div className="space-y-2">
-                {section.items.map((item, itemIdx) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.button
-                      key={item.label}
-                      onClick={() => handleNavigate(item.path)}
-                      className="w-full flex items-start gap-4 p-4 rounded-xl transition-all
-                               bg-white/5 hover:bg-[#D4B896]/10 border border-transparent
-                               hover:border-[#D4B896]/20 group"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
-                                    bg-[#D4B896]/10 group-hover:bg-[#D4B896]/20 transition-all">
-                        <Icon className="w-5 h-5 text-[#D4B896]" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-white/90">
-                          {item.label}
-                        </div>
-                        <div className="text-xs text-white/50 mt-0.5">
-                          {item.description}
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 text-[#D4B896]/40 group-hover:text-[#D4B896]/80 transition-all">
-                        →
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
+              <h2 className="text-xl font-medium text-white/80 mb-2">
+                Your workshop awaits
+              </h2>
+              <p className="text-white/50 mb-6 max-w-sm mx-auto">
+                Discover tools for reflection, divination, training, and more.
+              </p>
+              <motion.button
+                onClick={handleDiscover}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl
+                         bg-[#D4B896]/10 border border-[#D4B896]/20
+                         text-[#D4B896] hover:bg-[#D4B896]/20
+                         transition-all font-medium"
+              >
+                <Plus className="w-5 h-5" />
+                Discover Tools
+              </motion.button>
             </motion.div>
-          ))}
-        </div>
+          ) : (
+            <motion.div
+              key="categories"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-8"
+            >
+              {categories.map((category, idx) => (
+                <motion.div
+                  key={category.category}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <CategorySection
+                    category={category}
+                    onToggleCollapsed={handleToggleCategory}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Footer Note */}
-        <div className="text-center mt-12">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-[#D4B896]/10 border border-[#D4B896]/20 rounded-xl">
-            <Sparkles className="w-4 h-4 text-[#D4B896]" />
-            <span className="text-white/70 text-sm">
-              Your complete laboratory workspace
-            </span>
-          </div>
-        </div>
+        {/* Discover more footer */}
+        {categories.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-12 text-center"
+          >
+            <button
+              onClick={handleDiscover}
+              className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl
+                       bg-gradient-to-r from-white/[0.02] to-white/[0.04]
+                       border border-white/[0.06] hover:border-[#D4B896]/20
+                       text-white/60 hover:text-white/80
+                       transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#D4B896]/10 flex items-center justify-center
+                           group-hover:bg-[#D4B896]/20 transition-all">
+                <Sparkles className="w-5 h-5 text-[#D4B896]" />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-medium text-white/80">
+                  Discover more tools
+                </div>
+                <div className="text-xs text-white/40">
+                  Explore oracles, training protocols, and more
+                </div>
+              </div>
+            </button>
+          </motion.div>
+        )}
 
+        {/* Footer wisdom */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-16 text-center pb-8"
+        >
+          <p className="text-xs text-white/30 max-w-md mx-auto leading-relaxed">
+            Tools for conscious evolution and exploration.
+            For discoveries and advancements.
+          </p>
+        </motion.div>
       </div>
     </div>
   );
