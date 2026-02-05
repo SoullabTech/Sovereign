@@ -162,7 +162,7 @@ export default function LabToolsSettingsPage() {
         subtitle="Configure your LabTools experience"
         backPath="/labtools"
         backLabel="Back to LabTools"
-        icon={<Settings className="w-6 h-6 text-amber-400" />}
+        icon={<Settings className="w-6 h-6 text-orange-500" />}
         actions={
           <ActionButton
             onClick={handleSaveSettings}
@@ -200,16 +200,16 @@ export default function LabToolsSettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-amber-100">Data Retention</div>
-                <div className="text-xs text-amber-200/50 mt-0.5">
+                <div className="text-sm font-medium text-white">Data Retention</div>
+                <div className="text-xs text-white/50 mt-0.5">
                   How long to keep personal data
                 </div>
               </div>
               <select
                 value={settings.privacy.dataRetention}
                 onChange={(e) => updateSetting('privacy', 'dataRetention', e.target.value)}
-                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
-                         focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm"
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
+                         focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-sm"
               >
                 <option value="7days">7 days</option>
                 <option value="30days">30 days</option>
@@ -232,17 +232,17 @@ export default function LabToolsSettingsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Moon className="w-4 h-4 text-violet-400" />
+                <Moon className="w-4 h-4 text-white/50" />
                 <div>
-                  <div className="text-sm font-medium text-amber-100">Theme</div>
-                  <div className="text-xs text-amber-200/50 mt-0.5">Interface appearance</div>
+                  <div className="text-sm font-medium text-white">Theme</div>
+                  <div className="text-xs text-white/50 mt-0.5">Interface appearance</div>
                 </div>
               </div>
               <select
                 value={settings.display.theme}
                 onChange={(e) => updateSetting('display', 'theme', e.target.value)}
-                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
-                         focus:outline-none focus:ring-2 focus:ring-violet-500/50 text-sm"
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
+                         focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-sm"
               >
                 <option value="dark">Dark (Recommended)</option>
                 <option value="light">Light</option>
@@ -284,14 +284,14 @@ export default function LabToolsSettingsPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-amber-100">Default Oracle System</div>
-                <div className="text-xs text-amber-200/50 mt-0.5">Primary divination method</div>
+                <div className="text-sm font-medium text-white">Default Oracle System</div>
+                <div className="text-xs text-white/50 mt-0.5">Primary divination method</div>
               </div>
               <select
                 value={settings.tools.defaultOracleSystem}
                 onChange={(e) => updateSetting('tools', 'defaultOracleSystem', e.target.value)}
-                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
-                         focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm"
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
+                         focus:outline-none focus:ring-2 focus:ring-orange-500/50 text-sm"
               >
                 <option value="iching">I-Ching</option>
                 <option value="tarot">Tarot</option>
@@ -329,8 +329,8 @@ export default function LabToolsSettingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl">
               <div>
-                <div className="text-sm font-medium text-amber-100">Export Settings & Data</div>
-                <div className="text-xs text-amber-200/50 mt-0.5">
+                <div className="text-sm font-medium text-white">Export Settings & Data</div>
+                <div className="text-xs text-white/50 mt-0.5">
                   Download your LabTools configuration
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function LabToolsSettingsPage() {
 
             <div className="flex items-center justify-between p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl">
               <div>
-                <div className="text-sm font-medium text-amber-100">Clear All Data</div>
+                <div className="text-sm font-medium text-white">Clear All Data</div>
                 <div className="text-xs text-rose-300/60 mt-0.5">
                   Delete all LabTools data from this device
                 </div>
