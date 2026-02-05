@@ -27,7 +27,7 @@ async function verifyPracticeOwnership(practiceId: string, memberId: string): Pr
 
 type RouteContext = { params: Promise<{ practiceId: string; meetingId: string }> };
 
-const VALID_MEETING_TYPES = ['internal', 'external', 'discovery', 'followup', 'review'];
+const VALID_MEETING_TYPES = ['internal', 'partner', 'prospect', 'vendor', 'advisory', 'presentation', 'workshop', 'other'];
 const VALID_MEETING_STATUSES = ['scheduled', 'completed', 'canceled', 'no_show'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       `SELECT
         m.id, m.title, m.meeting_type, m.status,
         m.scheduled_start_at, m.scheduled_end_at,
-        m.location, m.agenda, m.notes, m.outcomes,
+        m.location, m.agenda, m.notes, m.action_items,
         m.venture_id, m.opportunity_id,
         m.created_at, m.updated_at,
         v.name as venture_name,
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         location: m.location,
         agenda: m.agenda,
         notes: m.notes,
-        outcomes: m.outcomes,
+        actionItems: m.action_items,
         ventureId: m.venture_id,
         ventureName: m.venture_name,
         opportunityId: m.opportunity_id,
@@ -207,9 +207,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       values.push(body.notes?.trim() || null);
     }
 
-    if (body.outcomes !== undefined) {
-      updates.push(`outcomes = $${paramIndex++}`);
-      values.push(body.outcomes?.trim() || null);
+    if (body.actionItems !== undefined) {
+      updates.push(`action_items = $${paramIndex++}`);
+      values.push(body.actionItems?.trim() || null);
     }
 
     if (body.ventureId !== undefined) {
@@ -231,7 +231,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       `UPDATE rl_meetings SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
        RETURNING id, title, meeting_type, status, scheduled_start_at, scheduled_end_at,
-                 location, agenda, notes, outcomes, venture_id, opportunity_id,
+                 location, agenda, notes, action_items, venture_id, opportunity_id,
                  created_at, updated_at`,
       values
     );
@@ -249,7 +249,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         location: m.location,
         agenda: m.agenda,
         notes: m.notes,
-        outcomes: m.outcomes,
+        actionItems: m.action_items,
         ventureId: m.venture_id,
         opportunityId: m.opportunity_id,
         createdAt: m.created_at,

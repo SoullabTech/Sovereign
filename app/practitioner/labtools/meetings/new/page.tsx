@@ -21,10 +21,13 @@ interface Opportunity {
 
 const MEETING_TYPES = [
   { value: 'internal', label: 'Internal', description: 'Team/internal meeting' },
-  { value: 'external', label: 'External', description: 'External meeting' },
-  { value: 'discovery', label: 'Discovery', description: 'Discovery call' },
-  { value: 'followup', label: 'Follow-up', description: 'Follow-up meeting' },
-  { value: 'review', label: 'Review', description: 'Review meeting' }
+  { value: 'partner', label: 'Partner', description: 'Partner meeting' },
+  { value: 'prospect', label: 'Prospect', description: 'Prospect meeting' },
+  { value: 'vendor', label: 'Vendor', description: 'Vendor meeting' },
+  { value: 'advisory', label: 'Advisory', description: 'Advisory call' },
+  { value: 'presentation', label: 'Presentation', description: 'Presentation' },
+  { value: 'workshop', label: 'Workshop', description: 'Workshop session' },
+  { value: 'other', label: 'Other', description: 'Other meeting' }
 ];
 
 function formatDateTimeLocal(date: Date): string {
@@ -48,7 +51,7 @@ function NewMeetingContent() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
 
   const [title, setTitle] = useState('');
-  const [meetingType, setMeetingType] = useState('external');
+  const [meetingType, setMeetingType] = useState('other');
   const [scheduledStartAt, setScheduledStartAt] = useState('');
   const [scheduledEndAt, setScheduledEndAt] = useState('');
   const [location, setLocation] = useState('');

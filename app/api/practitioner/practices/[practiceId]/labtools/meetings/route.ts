@@ -26,7 +26,7 @@ async function verifyPracticeOwnership(practiceId: string, memberId: string): Pr
 
 type RouteContext = { params: Promise<{ practiceId: string }> };
 
-const VALID_MEETING_TYPES = ['internal', 'external', 'discovery', 'followup', 'review'];
+const VALID_MEETING_TYPES = ['internal', 'partner', 'prospect', 'vendor', 'advisory', 'presentation', 'workshop', 'other'];
 const VALID_MEETING_STATUSES = ['scheduled', 'completed', 'canceled', 'no_show'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       SELECT
         m.id, m.title, m.meeting_type, m.status,
         m.scheduled_start_at, m.scheduled_end_at,
-        m.location, m.agenda, m.notes, m.outcomes,
+        m.location, m.agenda, m.notes, m.action_items,
         m.venture_id, m.opportunity_id,
         m.created_at, m.updated_at,
         v.name as venture_name,
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         location: r.location,
         agenda: r.agenda,
         notes: r.notes,
-        outcomes: r.outcomes,
+        actionItems: r.action_items,
         ventureId: r.venture_id,
         ventureName: r.venture_name,
         opportunityId: r.opportunity_id,

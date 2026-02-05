@@ -24,10 +24,13 @@ interface Meeting {
 
 const MEETING_TYPE_LABELS: Record<string, string> = {
   internal: 'Internal',
-  external: 'External',
-  discovery: 'Discovery',
-  followup: 'Follow-up',
-  review: 'Review'
+  partner: 'Partner',
+  prospect: 'Prospect',
+  vendor: 'Vendor',
+  advisory: 'Advisory',
+  presentation: 'Presentation',
+  workshop: 'Workshop',
+  other: 'Other'
 };
 
 const STATUS_LABELS: Record<string, string> = {
