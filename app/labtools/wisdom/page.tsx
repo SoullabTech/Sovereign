@@ -642,8 +642,7 @@ export default function WisdomTranslationPage() {
         {/* Page Title */}
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#D4B896] to-[#B8935A] rounded-lg
-                          flex items-center justify-center text-2xl">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#D4B896] to-[#B8935A] rounded-lg flex items-center justify-center text-2xl">
               🌐
             </div>
             <div className="text-left">
@@ -709,8 +708,7 @@ export default function WisdomTranslationPage() {
                     <button
                       key={starter.id}
                       onClick={() => handleSendToMaia(starter.prompt)}
-                      className="p-4 bg-white/5 border border-white/10 rounded-xl text-left
-                               hover:bg-[#D4B896]/10 hover:border-[#D4B896]/30 transition-all group"
+                      className="p-4 bg-white/5 border border-white/10 rounded-xl text-left hover:bg-[#D4B896]/10 hover:border-[#D4B896]/30 transition-all group"
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-2xl">{starter.icon}</span>
@@ -780,9 +778,7 @@ export default function WisdomTranslationPage() {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="e.g., Mars in Aries, shadow work, kundalini rising..."
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
-                             text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50
-                             resize-none"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50 resize-none"
                     rows={3}
                   />
                 </div>
@@ -794,8 +790,7 @@ export default function WisdomTranslationPage() {
                     <select
                       value={sourceSystem}
                       onChange={(e) => setSourceSystem(e.target.value as SystemType)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
-                               text-white focus:outline-none focus:border-[#D4B896]/50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-[#D4B896]/50"
                     >
                       {wisdomSystems.map(system => (
                         <option key={system.id} value={system.id} className="bg-[#1a1f2e]">
@@ -810,8 +805,7 @@ export default function WisdomTranslationPage() {
                     <select
                       value={targetSystem}
                       onChange={(e) => setTargetSystem(e.target.value as SystemType)}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg
-                               text-white focus:outline-none focus:border-[#D4B896]/50"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-[#D4B896]/50"
                     >
                       {wisdomSystems.map(system => (
                         <option key={system.id} value={system.id} className="bg-[#1a1f2e]">
@@ -826,9 +820,7 @@ export default function WisdomTranslationPage() {
                 <button
                   onClick={handleTranslate}
                   disabled={!inputText.trim() || isTranslating}
-                  className="w-full py-3 bg-gradient-to-r from-[#D4B896] to-[#B8935A] text-[#0f1419]
-                           font-medium rounded-lg hover:opacity-90 transition-all disabled:opacity-50
-                           flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-gradient-to-r from-[#D4B896] to-[#B8935A] text-[#0f1419] font-medium rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isTranslating ? (
                     <>
@@ -1207,8 +1199,7 @@ export default function WisdomTranslationPage() {
                   </h2>
                   <button
                     onClick={() => setShowAddTerm(!showAddTerm)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#D4B896]/20
-                             text-[#D4B896] rounded-lg hover:bg-[#D4B896]/30 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#D4B896]/20 text-[#D4B896] rounded-lg hover:bg-[#D4B896]/30 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Add Term
@@ -1226,8 +1217,7 @@ export default function WisdomTranslationPage() {
                     value={glossarySearch}
                     onChange={(e) => setGlossarySearch(e.target.value)}
                     placeholder="Search terms..."
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg
-                             text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50"
+                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50"
                   />
                 </div>
 
@@ -1247,9 +1237,7 @@ export default function WisdomTranslationPage() {
                           value={newTermInput}
                           onChange={(e) => setNewTermInput(e.target.value)}
                           placeholder="Enter a term from your tradition..."
-                          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg
-                                   text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50
-                                   mb-2"
+                          className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50 mb-2"
                         />
                         <p className="text-white/40 text-xs">
                           Coming soon: Add your own cross-system mappings and share with the community.
@@ -1316,9 +1304,7 @@ export default function WisdomTranslationPage() {
                                   placeholder="In my tradition, this is more like..."
                                   defaultValue={term.memberNote || ''}
                                   onBlur={(e) => handleAddPersonalNote(term.term, e.target.value)}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg
-                                           text-white text-sm placeholder-white/30 focus:outline-none
-                                           focus:border-[#D4B896]/50"
+                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#D4B896]/50"
                                 />
                               </div>
                             </div>
