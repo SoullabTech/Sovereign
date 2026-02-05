@@ -2473,7 +2473,7 @@ export function AccountSettings() {
       {/* Content */}
       <AnimatePresence mode="wait">
         {!activeSection ? (
-          /* Section List - Clean matte design */}
+          /* Section List - Clean matte design */
           <motion.div
             key="list"
             initial={{ opacity: 0 }}
