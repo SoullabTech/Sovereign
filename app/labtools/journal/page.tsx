@@ -75,29 +75,29 @@ const EntryIcon = ({ type, subtype }: { type: string; subtype?: string }) => {
   return <BookOpen className="w-4 h-4 text-[#D4B896]" />;
 };
 
-// Category colors
+// Category colors - light theme
 const getCategoryStyle = (type: string, isActive: boolean = false) => {
   const base = isActive
     ? 'border-transparent'
-    : 'border-white/[0.06] hover:border-white/10';
+    : 'border-[#D4B896]/30 hover:border-[#C4A07A]/50';
 
   switch (type) {
     case 'journal':
       return isActive
-        ? 'bg-orange-500/20 text-orange-300 ' + base
-        : 'bg-white/[0.03] text-white/60 ' + base;
+        ? 'bg-orange-100 text-orange-700 ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
     case 'capture':
       return isActive
-        ? 'bg-teal-500/20 text-teal-300 ' + base
-        : 'bg-white/[0.03] text-white/60 ' + base;
+        ? 'bg-teal-100 text-teal-700 ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
     case 'scribe':
       return isActive
-        ? 'bg-violet-500/20 text-violet-300 ' + base
-        : 'bg-white/[0.03] text-white/60 ' + base;
+        ? 'bg-violet-100 text-violet-700 ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
     default:
       return isActive
-        ? 'bg-[#D4B896]/20 text-[#D4B896] ' + base
-        : 'bg-white/[0.03] text-white/60 ' + base;
+        ? 'bg-[#C4A07A]/20 text-[#8B7355] ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
   }
 };
 
@@ -338,13 +338,13 @@ export default function UnifiedJournalPage() {
   const totalCount = journalEntries.length + capsules.length + scribeSessions.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+    <div className="min-h-screen bg-[#EAE5DF]">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-600 hover:text-stone-800 hover:bg-white/80 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm">My Lab</span>
@@ -352,7 +352,7 @@ export default function UnifiedJournalPage() {
 
           <button
             onClick={fetchAllData}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70 transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 border border-[#D4B896]/30 text-stone-500 hover:text-stone-700 transition-all"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -369,13 +369,13 @@ export default function UnifiedJournalPage() {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-            className="inline-flex items-center justify-center w-14 h-14 mb-3 rounded-2xl bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/5 border border-[#D4B896]/20"
+            className="inline-flex items-center justify-center w-14 h-14 mb-3 rounded-2xl bg-gradient-to-br from-[#C4A07A]/20 to-[#C4A07A]/5 border border-[#C4A07A]/30"
           >
-            <BookOpen className="w-6 h-6 text-[#D4B896]" />
+            <BookOpen className="w-6 h-6 text-[#8B7355]" />
           </motion.div>
 
-          <h1 className="text-2xl font-bold text-white mb-1">Your Journal</h1>
-          <p className="text-white/50 text-sm">
+          <h1 className="text-2xl font-bold text-stone-800 mb-1">Your Journal</h1>
+          <p className="text-stone-500 text-sm">
             {totalCount} {totalCount === 1 ? 'entry' : 'entries'} — thoughts, reflections, and sessions
           </p>
         </motion.div>
@@ -387,18 +387,18 @@ export default function UnifiedJournalPage() {
           transition={{ delay: 0.1 }}
           className="relative mb-4"
         >
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search entries..."
-            className="w-full pl-12 pr-10 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white placeholder-white/30 focus:outline-none focus:border-[#D4B896]/30 transition-colors"
+            className="w-full pl-12 pr-10 py-3 rounded-xl bg-white/70 border border-[#D4B896]/30 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#C4A07A]/50 transition-colors"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
             >
               <X className="w-4 h-4" />
             </button>
@@ -426,8 +426,8 @@ export default function UnifiedJournalPage() {
               <span
                 className={`ml-1 px-1.5 py-0.5 rounded-full text-xs ${
                   activeCategory === cat.key
-                    ? 'bg-white/20 text-white'
-                    : 'bg-white/10 text-white/40'
+                    ? 'bg-stone-800/20 text-stone-700'
+                    : 'bg-stone-500/10 text-stone-500'
                 }`}
               >
                 {cat.count}
@@ -445,15 +445,15 @@ export default function UnifiedJournalPage() {
               exit={{ opacity: 0, height: 0 }}
               className="flex items-center gap-2 mb-6"
             >
-              <span className="text-xs text-white/40 mr-2">Type:</span>
+              <span className="text-xs text-stone-500 mr-2">Type:</span>
               {(['all', 'dream', 'day', 'handwriting'] as JournalSubFilter[]).map((sub) => (
                 <button
                   key={sub}
                   onClick={() => setJournalSubFilter(sub)}
                   className={`px-3 py-1.5 rounded-lg text-xs transition-all border ${
                     journalSubFilter === sub
-                      ? 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-                      : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-orange-100 text-orange-700 border-orange-300'
+                      : 'bg-white/70 text-stone-600 border-[#D4B896]/30 hover:bg-white/90'
                   }`}
                 >
                   {sub === 'all'
@@ -478,15 +478,15 @@ export default function UnifiedJournalPage() {
               exit={{ opacity: 0, height: 0 }}
               className="flex items-center gap-2 mb-6"
             >
-              <span className="text-xs text-white/40 mr-2">Type:</span>
+              <span className="text-xs text-stone-500 mr-2">Type:</span>
               {(['all', 'solo', 'witness', 'practitioner'] as ScribeSubFilter[]).map((sub) => (
                 <button
                   key={sub}
                   onClick={() => setScribeSubFilter(sub)}
                   className={`px-3 py-1.5 rounded-lg text-xs transition-all border ${
                     scribeSubFilter === sub
-                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
-                      : 'bg-white/[0.03] text-white/50 border-white/[0.06] hover:bg-white/[0.06]'
+                      ? 'bg-violet-100 text-violet-700 border-violet-300'
+                      : 'bg-white/70 text-stone-600 border-[#D4B896]/30 hover:bg-white/90'
                   }`}
                 >
                   {sub === 'all' ? 'All' : sub.charAt(0).toUpperCase() + sub.slice(1)}
@@ -500,7 +500,7 @@ export default function UnifiedJournalPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <motion.div
-              className="w-8 h-8 border-2 border-[#D4B896]/20 border-t-[#D4B896] rounded-full"
+              className="w-8 h-8 border-2 border-[#C4A07A]/30 border-t-[#8B7355] rounded-full"
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             />
@@ -509,12 +509,12 @@ export default function UnifiedJournalPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-8 text-center"
+            className="bg-white/70 border border-[#D4B896]/30 rounded-2xl p-8 text-center"
           >
-            <p className="text-rose-400 text-sm mb-4">{error}</p>
+            <p className="text-rose-600 text-sm mb-4">{error}</p>
             <button
               onClick={fetchAllData}
-              className="text-sm text-[#D4B896] hover:text-[#D4B896]/80 underline"
+              className="text-sm text-[#8B7355] hover:text-[#6B5A45] underline"
             >
               Try again
             </button>
@@ -523,15 +523,15 @@ export default function UnifiedJournalPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-12 text-center"
+            className="bg-white/70 border border-[#D4B896]/30 rounded-2xl p-12 text-center"
           >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/[0.03] flex items-center justify-center">
-              <BookOpen className="w-8 h-8 text-white/20" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#D4B896]/10 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-[#C4A07A]" />
             </div>
-            <h3 className="text-lg font-medium text-white mb-2">
+            <h3 className="text-lg font-medium text-stone-800 mb-2">
               {activeCategory === 'all' ? 'No entries yet' : `No ${activeCategory} entries`}
             </h3>
-            <p className="text-white/50 text-sm mb-6 max-w-sm mx-auto">
+            <p className="text-stone-500 text-sm mb-6 max-w-sm mx-auto">
               {activeCategory === 'journal'
                 ? 'Start capturing your thoughts with the Quick Journal.'
                 : activeCategory === 'capture'
@@ -542,7 +542,7 @@ export default function UnifiedJournalPage() {
             </p>
             <button
               onClick={() => router.push('/maia')}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#D4B896]/10 border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C4A07A]/20 border border-[#C4A07A]/40 text-[#8B7355] hover:bg-[#C4A07A]/30 transition-all"
             >
               <Plus className="w-4 h-4" />
               {activeCategory === 'scribe' ? 'Start Scribe Session' : 'Talk with MAIA'}
@@ -558,7 +558,7 @@ export default function UnifiedJournalPage() {
                 transition={{ delay: idx * 0.03 }}
               >
                 {entry.type === 'capture' ? (
-                  <div className="[&_.capsule-card]:bg-white/[0.03] [&_.capsule-card]:border-white/[0.06] [&_.capsule-card]:text-white">
+                  <div className="[&_.capsule-card]:bg-stone-800/50 [&_.capsule-card]:border-stone-700/60 [&_.capsule-card]:text-white">
                     <CapsuleCard
                       capsule={entry.data}
                       onOpen={(id) => router.push(`/labtools/reflections/${id}`)}
@@ -568,7 +568,7 @@ export default function UnifiedJournalPage() {
                   </div>
                 ) : entry.type === 'journal' ? (
                   <button
-                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.05] hover:border-[#D4B896]/20 transition-all text-left group"
+                    className="w-full bg-white/70 border border-[#D4B896]/30 rounded-xl p-4 hover:bg-white/90 hover:border-[#C4A07A]/50 transition-all text-left group"
                     onClick={() => {
                       /* TODO: Open journal entry detail */
                     }}
@@ -577,10 +577,10 @@ export default function UnifiedJournalPage() {
                       <div
                         className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           entry.data.subtype === 'dream'
-                            ? 'bg-indigo-500/20'
+                            ? 'bg-indigo-100'
                             : entry.data.subtype === 'handwriting'
-                              ? 'bg-[#D4B896]/20'
-                              : 'bg-orange-500/20'
+                              ? 'bg-[#C4A07A]/20'
+                              : 'bg-orange-100'
                         }`}
                       >
                         <EntryIcon type="journal" subtype={entry.data.subtype} />
@@ -590,69 +590,69 @@ export default function UnifiedJournalPage() {
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-full border ${
                               entry.data.subtype === 'dream'
-                                ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
+                                ? 'bg-indigo-100 border-indigo-200 text-indigo-700'
                                 : entry.data.subtype === 'handwriting'
-                                  ? 'bg-[#D4B896]/20 border-[#D4B896]/30 text-[#D4B896]'
-                                  : 'bg-orange-500/20 border-orange-500/30 text-orange-300'
+                                  ? 'bg-[#C4A07A]/20 border-[#C4A07A]/40 text-[#8B7355]'
+                                  : 'bg-orange-100 border-orange-200 text-orange-700'
                             }`}
                           >
                             {getSubtypeLabel('journal', entry.data.subtype)}
                           </span>
-                          <span className="text-xs text-white/40">
+                          <span className="text-xs text-stone-500">
                             {formatDate(entry.data.createdAt)}
                           </span>
                           {entry.data.audioPath && (
-                            <span className="text-xs text-white/40">🎙️</span>
+                            <span className="text-xs text-stone-500">🎙️</span>
                           )}
                         </div>
-                        <p className="text-sm text-white/70 line-clamp-2">{entry.data.content}</p>
+                        <p className="text-sm text-stone-700 line-clamp-2">{entry.data.content}</p>
                         {entry.data.tags.length > 0 && (
                           <div className="flex items-center gap-1 mt-2">
                             {entry.data.tags.slice(0, 3).map((tag, i) => (
                               <span
                                 key={i}
-                                className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50"
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-stone-200/70 text-stone-600"
                               >
                                 {tag}
                               </span>
                             ))}
                             {entry.data.tags.length > 3 && (
-                              <span className="text-[10px] text-white/30">
+                              <span className="text-[10px] text-stone-400">
                                 +{entry.data.tags.length - 3}
                               </span>
                             )}
                           </div>
                         )}
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0 group-hover:text-white/40 transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
                     </div>
                   </button>
                 ) : (
                   <button
-                    className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 hover:bg-white/[0.05] hover:border-violet-500/20 transition-all text-left group"
+                    className="w-full bg-white/70 border border-[#D4B896]/30 rounded-xl p-4 hover:bg-white/90 hover:border-violet-300 transition-all text-left group"
                     onClick={() => router.push(`/sessions/${entry.data.id}`)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-                        <Mic className="w-4 h-4 text-violet-400" />
+                      <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                        <Mic className="w-4 h-4 text-violet-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-violet-500/20 border-violet-500/30 text-violet-300">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-violet-100 border-violet-200 text-violet-700">
                             {getSubtypeLabel('scribe', entry.data.subtype)}
                           </span>
-                          <span className="text-xs text-white/40">
+                          <span className="text-xs text-stone-500">
                             {formatDate(entry.data.startedAt)}
                           </span>
                           {entry.data.isActive && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                               Live
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-white/80 font-medium">{entry.data.title}</p>
+                        <p className="text-sm text-stone-800 font-medium">{entry.data.title}</p>
                         {entry.data.summary?.short && (
-                          <p className="text-xs text-white/50 mt-1 line-clamp-1">
+                          <p className="text-xs text-stone-500 mt-1 line-clamp-1">
                             {entry.data.summary.short}
                           </p>
                         )}
@@ -661,7 +661,7 @@ export default function UnifiedJournalPage() {
                             {entry.data.summary.themes.slice(0, 3).map((theme, i) => (
                               <span
                                 key={i}
-                                className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300/70"
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-violet-50 text-violet-600"
                               >
                                 {theme}
                               </span>
@@ -669,7 +669,7 @@ export default function UnifiedJournalPage() {
                           </div>
                         )}
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0 group-hover:text-white/40 transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
                     </div>
                   </button>
                 )}
@@ -684,12 +684,12 @@ export default function UnifiedJournalPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 pt-6 border-t border-white/[0.06]"
+            className="mt-8 pt-6 border-t border-[#D4B896]/30"
           >
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => router.push('/maia')}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/50 hover:text-white/70 hover:bg-white/[0.06] transition-all text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 border border-[#D4B896]/30 text-stone-600 hover:text-stone-800 hover:bg-white/90 transition-all text-sm"
               >
                 <Plus className="w-4 h-4" />
                 New Entry
