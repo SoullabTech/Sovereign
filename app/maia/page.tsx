@@ -1513,16 +1513,16 @@ function MAIAPageContent() {
                   <span className="text-base">Labtools</span>
                 </button>
 
-                {/* Practitioner Studio - Pro tools for practitioners */}
+                {/* Soullab Studios - Main practitioner portal */}
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
-                    router.push('/practitioner/dashboard');
+                    router.push('/studio');
                   }}
-                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]/70 hover:text-[#D4B896]"
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Briefcase className="w-5 h-5" />
-                  <span className="text-base">Practitioner Studio</span>
+                  <span className="text-base">Soullab Studios</span>
                 </button>
 
                 {/* Account Settings */}
