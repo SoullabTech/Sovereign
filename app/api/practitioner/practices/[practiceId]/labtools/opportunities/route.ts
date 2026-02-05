@@ -26,7 +26,7 @@ async function verifyPracticeOwnership(practiceId: string, memberId: string): Pr
 
 type RouteContext = { params: Promise<{ practiceId: string }> };
 
-const VALID_STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
+const VALID_STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'nurturing'];
 const ACTIVE_STAGES = ['lead', 'qualified', 'proposal', 'negotiation'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     let sql = `
       SELECT
-        o.id, o.title, o.description, o.stage, o.value_cents, o.currency,
-        o.expected_close_at, o.closed_at,
+        o.id, o.title, o.description, o.stage, o.estimated_value_cents, o.currency,
+        o.expected_close_at, o.actual_close_date,
         o.venture_id, o.person_id,
         o.created_at, o.updated_at,
         v.name as venture_name,
@@ -93,8 +93,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         WHEN 'proposal' THEN 2
         WHEN 'qualified' THEN 3
         WHEN 'lead' THEN 4
-        WHEN 'closed_won' THEN 5
-        WHEN 'closed_lost' THEN 6
+        WHEN 'won' THEN 5
+        WHEN 'lost' THEN 6
+        WHEN 'nurturing' THEN 7
       END,
       o.expected_close_at ASC NULLS LAST,
       o.created_at DESC`;
@@ -107,10 +108,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         title: r.title,
         description: r.description,
         stage: r.stage,
-        valueCents: r.value_cents,
+        valueCents: r.estimated_value_cents,
         currency: r.currency,
         expectedCloseAt: r.expected_close_at,
-        closedAt: r.closed_at,
+        closedAt: r.actual_close_date,
         ventureId: r.venture_id,
         ventureName: r.venture_name,
         personId: r.person_id,
@@ -167,11 +168,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const result = await query(
       `INSERT INTO rl_opportunities (
-        practice_id, title, description, stage, value_cents, expected_close_at,
+        practice_id, title, description, stage, estimated_value_cents, expected_close_at,
         venture_id, person_id
       )
        VALUES ($1, $2, $3, $4::opportunity_stage, $5, $6, $7, $8)
-       RETURNING id, title, description, stage, value_cents, currency,
+       RETURNING id, title, description, stage, estimated_value_cents, currency,
                  expected_close_at, venture_id, person_id, created_at`,
       [
         practiceId,
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         title: opp.title,
         description: opp.description,
         stage: opp.stage,
-        valueCents: opp.value_cents,
+        valueCents: opp.estimated_value_cents,
         currency: opp.currency,
         expectedCloseAt: opp.expected_close_at,
         ventureId: opp.venture_id,

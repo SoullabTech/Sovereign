@@ -27,8 +27,8 @@ async function verifyPracticeOwnership(practiceId: string, memberId: string): Pr
 
 type RouteContext = { params: Promise<{ practiceId: string; opportunityId: string }> };
 
-const VALID_STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
-const CLOSED_STAGES = ['closed_won', 'closed_lost'];
+const VALID_STAGES = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'nurturing'];
+const CLOSED_STAGES = ['won', 'lost'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
@@ -44,8 +44,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const result = await query(
       `SELECT
-        o.id, o.title, o.description, o.stage, o.value_cents, o.currency,
-        o.expected_close_at, o.closed_at,
+        o.id, o.title, o.description, o.stage, o.estimated_value_cents, o.currency,
+        o.expected_close_at, o.actual_close_date,
         o.venture_id, o.person_id,
         o.created_at, o.updated_at,
         v.name as venture_name,
@@ -88,10 +88,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         title: o.title,
         description: o.description,
         stage: o.stage,
-        valueCents: o.value_cents,
+        valueCents: o.estimated_value_cents,
         currency: o.currency,
         expectedCloseAt: o.expected_close_at,
-        closedAt: o.closed_at,
+        closedAt: o.actual_close_date,
         ventureId: o.venture_id,
         ventureName: o.venture_name,
         personId: o.person_id,
@@ -170,13 +170,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       updates.push(`stage = $${paramIndex++}::opportunity_stage`);
       values.push(body.stage);
 
-      // Auto-set closed_at when closing
+      // Auto-set actual_close_date when closing
       if (CLOSED_STAGES.includes(body.stage) && !CLOSED_STAGES.includes(existing.rows[0].stage)) {
-        updates.push(`closed_at = NOW()`);
+        updates.push(`actual_close_date = CURRENT_DATE`);
       }
-      // Clear closed_at if reopening
+      // Clear actual_close_date if reopening
       if (!CLOSED_STAGES.includes(body.stage) && CLOSED_STAGES.includes(existing.rows[0].stage)) {
-        updates.push(`closed_at = NULL`);
+        updates.push(`actual_close_date = NULL`);
       }
     }
 
@@ -184,7 +184,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       if (typeof body.valueCents !== 'number' || body.valueCents < 0) {
         return NextResponse.json({ error: 'Value must be a non-negative number' }, { status: 400 });
       }
-      updates.push(`value_cents = $${paramIndex++}`);
+      updates.push(`estimated_value_cents = $${paramIndex++}`);
       values.push(body.valueCents);
     }
 
@@ -211,8 +211,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = await query(
       `UPDATE rl_opportunities SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
-       RETURNING id, title, description, stage, value_cents, currency,
-                 expected_close_at, closed_at, venture_id, person_id,
+       RETURNING id, title, description, stage, estimated_value_cents, currency,
+                 expected_close_at, actual_close_date, venture_id, person_id,
                  created_at, updated_at`,
       values
     );
@@ -225,10 +225,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         title: o.title,
         description: o.description,
         stage: o.stage,
-        valueCents: o.value_cents,
+        valueCents: o.estimated_value_cents,
         currency: o.currency,
         expectedCloseAt: o.expected_close_at,
-        closedAt: o.closed_at,
+        closedAt: o.actual_close_date,
         ventureId: o.venture_id,
         personId: o.person_id,
         createdAt: o.created_at,

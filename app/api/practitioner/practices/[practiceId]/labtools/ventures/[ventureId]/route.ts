@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const result = await query(
       `SELECT
-        v.id, v.name, v.type, v.description, v.is_active,
+        v.id, v.name, v.venture_type, v.description, v.status,
         v.created_at, v.updated_at
       FROM rl_ventures v
       WHERE v.id = $1 AND v.practice_id = $2`,
@@ -78,9 +78,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         [ventureId]
       ),
       query(
-        `SELECT id, title, stage, value_cents, expected_close_at
+        `SELECT id, title, stage, estimated_value_cents, expected_close_at
          FROM rl_opportunities
-         WHERE venture_id = $1 AND stage NOT IN ('closed_won', 'closed_lost')
+         WHERE venture_id = $1 AND stage NOT IN ('won', 'lost')
          ORDER BY expected_close_at ASC NULLS LAST, created_at DESC`,
         [ventureId]
       )
@@ -90,9 +90,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       venture: {
         id: v.id,
         name: v.name,
-        type: v.type,
+        type: v.venture_type,
         description: v.description,
-        isActive: v.is_active,
+        isActive: v.status === 'active' || v.status === 'planning',
+        status: v.status,
         createdAt: v.created_at,
         updatedAt: v.updated_at
       },
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         id: o.id,
         title: o.title,
         stage: o.stage,
-        valueCents: o.value_cents,
+        valueCents: o.estimated_value_cents,
         expectedCloseAt: o.expected_close_at
       }))
     });
@@ -165,7 +166,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           error: `Type must be one of: ${VALID_VENTURE_TYPES.join(', ')}`
         }, { status: 400 });
       }
-      updates.push(`type = $${paramIndex++}::venture_type`);
+      updates.push(`venture_type = $${paramIndex++}::venture_type`);
       values.push(body.type);
     }
 
@@ -174,9 +175,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       values.push(body.description?.trim() || null);
     }
 
-    if (body.isActive !== undefined) {
-      updates.push(`is_active = $${paramIndex++}`);
-      values.push(body.isActive);
+    if (body.status !== undefined) {
+      const VALID_STATUSES = ['idea', 'planning', 'active', 'on_hold', 'completed', 'archived'];
+      if (!VALID_STATUSES.includes(body.status)) {
+        return NextResponse.json({
+          error: `Status must be one of: ${VALID_STATUSES.join(', ')}`
+        }, { status: 400 });
+      }
+      updates.push(`status = $${paramIndex++}::venture_status`);
+      values.push(body.status);
     }
 
     if (updates.length === 0) {
@@ -187,7 +194,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const result = await query(
       `UPDATE rl_ventures SET ${updates.join(', ')}
        WHERE id = $${paramIndex}
-       RETURNING id, name, type, description, is_active, created_at, updated_at`,
+       RETURNING id, name, venture_type, description, status, created_at, updated_at`,
       values
     );
 
@@ -197,9 +204,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       venture: {
         id: v.id,
         name: v.name,
-        type: v.type,
+        type: v.venture_type,
         description: v.description,
-        isActive: v.is_active,
+        isActive: v.status === 'active' || v.status === 'planning',
+        status: v.status,
         createdAt: v.created_at,
         updatedAt: v.updated_at
       }

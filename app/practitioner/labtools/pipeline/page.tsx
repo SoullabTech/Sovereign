@@ -28,8 +28,8 @@ const STAGES = [
   { key: 'qualified', label: 'Qualified' },
   { key: 'proposal', label: 'Proposal' },
   { key: 'negotiation', label: 'Negotiation' },
-  { key: 'closed_won', label: 'Won' },
-  { key: 'closed_lost', label: 'Lost' }
+  { key: 'won', label: 'Won' },
+  { key: 'lost', label: 'Lost' }
 ];
 
 const ACTIVE_STAGES = ['lead', 'qualified', 'proposal', 'negotiation'];
@@ -111,7 +111,7 @@ function OpportunityCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onStageChange('closed_won');
+              onStageChange('won');
             }}
             className="text-xs px-2 py-1 text-green-500 hover:text-green-400 hover:bg-green-900/20
                      rounded transition-colors"
@@ -121,7 +121,7 @@ function OpportunityCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onStageChange('closed_lost');
+              onStageChange('lost');
             }}
             className="text-xs px-2 py-1 text-gray-500 hover:text-gray-400 hover:bg-gray-700
                      rounded transition-colors"
@@ -176,8 +176,8 @@ function PipelineContent() {
 
         let queryParams = '';
         if (filter === 'active') queryParams = '?active=true';
-        else if (filter === 'won') queryParams = '?stage=closed_won';
-        else if (filter === 'lost') queryParams = '?stage=closed_lost';
+        else if (filter === 'won') queryParams = '?stage=won';
+        else if (filter === 'lost') queryParams = '?stage=lost';
         else if (filter === 'stalled') queryParams = '?filter=stalled';
 
         const oppsRes = await fetch(
@@ -224,8 +224,8 @@ function PipelineContent() {
         ).filter(o =>
           filter === 'all' ||
           (filter === 'active' && ACTIVE_STAGES.includes(o.stage)) ||
-          (filter === 'won' && o.stage === 'closed_won') ||
-          (filter === 'lost' && o.stage === 'closed_lost')
+          (filter === 'won' && o.stage === 'won') ||
+          (filter === 'lost' && o.stage === 'lost')
         )
       );
     } catch (err) {

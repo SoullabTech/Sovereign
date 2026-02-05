@@ -49,7 +49,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     let sql = `
       SELECT
-        v.id, v.name, v.type, v.description, v.is_active,
+        v.id, v.name, v.venture_type, v.description, v.status,
         v.created_at, v.updated_at,
         COALESCE(t.open_tasks, 0) as open_tasks,
         COALESCE(m.upcoming_meetings, 0) as upcoming_meetings,
@@ -73,9 +73,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
       LEFT JOIN (
         SELECT venture_id,
                COUNT(*) as active_opportunities,
-               SUM(value_cents) as pipeline_value_cents
+               SUM(estimated_value_cents) as pipeline_value_cents
         FROM rl_opportunities
-        WHERE stage NOT IN ('closed_won', 'closed_lost')
+        WHERE stage NOT IN ('won', 'lost')
           AND venture_id IS NOT NULL
         GROUP BY venture_id
       ) o ON o.venture_id = v.id
@@ -85,15 +85,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
     let paramIndex = 2;
 
     if (isActive !== null) {
-      sql += ` AND v.is_active = $${paramIndex++}`;
-      values.push(isActive === 'true');
+      const activeStatuses = isActive === 'true' ? ['active', 'planning'] : ['on_hold', 'completed', 'archived', 'idea'];
+      sql += ` AND v.status = ANY($${paramIndex++}::venture_status[])`;
+      values.push(activeStatuses);
     }
     if (type && VALID_VENTURE_TYPES.includes(type)) {
-      sql += ` AND v.type = $${paramIndex++}::venture_type`;
+      sql += ` AND v.venture_type = $${paramIndex++}::venture_type`;
       values.push(type);
     }
 
-    sql += ` ORDER BY v.is_active DESC, v.created_at DESC`;
+    sql += ` ORDER BY CASE WHEN v.status IN ('active', 'planning') THEN 0 ELSE 1 END, v.created_at DESC`;
 
     const result = await query(sql, values);
 
@@ -101,9 +102,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
       ventures: result.rows.map(r => ({
         id: r.id,
         name: r.name,
-        type: r.type,
+        type: r.venture_type,
         description: r.description,
-        isActive: r.is_active,
+        isActive: r.status === 'active' || r.status === 'planning',
+        status: r.status,
         openTasks: parseInt(r.open_tasks, 10),
         upcomingMeetings: parseInt(r.upcoming_meetings, 10),
         activeOpportunities: parseInt(r.active_opportunities, 10),
@@ -144,9 +146,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const result = await query(
-      `INSERT INTO rl_ventures (practice_id, name, type, description)
-       VALUES ($1, $2, $3::venture_type, $4)
-       RETURNING id, name, type, description, is_active, created_at, updated_at`,
+      `INSERT INTO rl_ventures (practice_id, name, venture_type, description, status)
+       VALUES ($1, $2, $3::venture_type, $4, 'active'::venture_status)
+       RETURNING id, name, venture_type, description, status, created_at, updated_at`,
       [practiceId, name.trim(), type, description?.trim() || null]
     );
 
@@ -156,9 +158,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       venture: {
         id: venture.id,
         name: venture.name,
-        type: venture.type,
+        type: venture.venture_type,
         description: venture.description,
-        isActive: venture.is_active,
+        isActive: venture.status === 'active' || venture.status === 'planning',
+        status: venture.status,
         createdAt: venture.created_at,
         updatedAt: venture.updated_at
       }

@@ -39,22 +39,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
-    // Get ventures summary
+    // Get ventures summary (uses status enum: active, planning = "active")
     const venturesResult = await query(
       `SELECT
-        COUNT(*) FILTER (WHERE is_active = TRUE)::int as active,
+        COUNT(*) FILTER (WHERE status IN ('active', 'planning'))::int as active,
         COUNT(*)::int as total
        FROM rl_ventures
        WHERE practice_id = $1`,
       [practiceId]
     );
 
-    // Get pipeline summary
+    // Get pipeline summary (uses estimated_value_cents, 'won'/'lost' stages)
     const pipelineResult = await query(
       `SELECT
         COUNT(*) FILTER (WHERE stage = ANY($2::opportunity_stage[]))::int as active_count,
-        COALESCE(SUM(value_cents) FILTER (WHERE stage = ANY($2::opportunity_stage[])), 0)::bigint as active_value_cents,
-        COALESCE(SUM(value_cents) FILTER (WHERE stage = 'closed_won' AND closed_at >= DATE_TRUNC('month', NOW())), 0)::bigint as won_this_month_cents
+        COALESCE(SUM(estimated_value_cents) FILTER (WHERE stage = ANY($2::opportunity_stage[])), 0)::bigint as active_value_cents,
+        COALESCE(SUM(estimated_value_cents) FILTER (WHERE stage = 'won' AND actual_close_date >= DATE_TRUNC('month', NOW())), 0)::bigint as won_this_month_cents
        FROM rl_opportunities
        WHERE practice_id = $1`,
       [practiceId, ACTIVE_STAGES]
