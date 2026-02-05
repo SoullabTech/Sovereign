@@ -8,30 +8,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-
-async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) return null;
-  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
-  return result.rows.length > 0 ? { id: memberId } : null;
-}
-
-async function verifyContainerAccess(containerId: string, memberId: string): Promise<boolean> {
-  const result = await query(
-    `SELECT c.id FROM rl_containers c
-     JOIN rl_practices p ON p.id = c.practice_id
-     WHERE c.id = $1 AND p.owner_user_id = $2`,
-    [containerId, memberId]
-  );
-  return result.rows.length > 0;
-}
+import { getAuthenticatedMember, verifyContainerAccess } from '@/lib/practitioner/auth';
 
 type RouteContext = { params: Promise<{ containerId: string }> };
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { containerId } = await context.params;
-    const member = await getMemberFromRequest(request);
+    const member = await getAuthenticatedMember(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -85,7 +69,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { containerId } = await context.params;
-    const member = await getMemberFromRequest(request);
+    const member = await getAuthenticatedMember(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

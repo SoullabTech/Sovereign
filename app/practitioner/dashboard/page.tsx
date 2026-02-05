@@ -203,13 +203,30 @@ export default function StewardshipDashboard() {
   };
 
   const handleTaskClick = (taskId: string) => {
-    // TODO: Implement task detail view
-    console.log('Task clicked:', taskId);
+    router.push(`/practitioner/tasks/${taskId}`);
   };
 
   const handleTaskComplete = async (taskId: string) => {
-    // TODO: Implement task completion
-    console.log('Complete task:', taskId);
+    try {
+      const res = await apiFetch(`/api/practitioner/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+
+      if (res.ok) {
+        // Refresh dashboard data
+        setData(prev => prev ? {
+          ...prev,
+          careHorizon: {
+            ...prev.careHorizon,
+            tasks: prev.careHorizon.tasks.filter(t => t.id !== taskId)
+          }
+        } : null);
+      }
+    } catch (err) {
+      console.error('Failed to complete task:', err);
+    }
   };
 
   const handleContainerClick = (containerId: string) => {
