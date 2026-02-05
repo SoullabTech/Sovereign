@@ -40,6 +40,7 @@ const CATEGORY_CONFIG: Record<string, { name: string; order: number; description
   '09-Technical': { name: 'Technical Documentation', order: 9, description: 'System architecture and specs' },
   'outreach': { name: 'Outreach', order: 10, description: 'External communications' },
   'spiritual-guidance': { name: 'Spiritual Guidance', order: 11, description: 'Contemplative wisdom' },
+  '__uncategorized__': { name: 'Other Files', order: 99, description: 'Additional documents and resources' },
 };
 
 export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
@@ -78,16 +79,25 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
     return articles;
   }, [index, query]);
 
-  // Group articles by category
+  // Group articles by category, consolidating uncategorized into "Other"
   const groupedArticles = useMemo(() => {
     const groups: Record<string, ArticleIndex[]> = {};
+    const uncategorized: ArticleIndex[] = [];
 
     for (const article of filteredArticles) {
       const cat = article.category;
-      if (!groups[cat]) {
-        groups[cat] = [];
+      // Check if this is a known category or has multiple articles
+      const isKnownCategory = CATEGORY_CONFIG[cat];
+
+      if (isKnownCategory) {
+        if (!groups[cat]) {
+          groups[cat] = [];
+        }
+        groups[cat].push(article);
+      } else {
+        // Collect uncategorized articles (file names as categories, single-item cats, etc.)
+        uncategorized.push(article);
       }
-      groups[cat].push(article);
     }
 
     // Sort groups by configured order
@@ -98,8 +108,16 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
       return a.localeCompare(b);
     });
 
+    // Add uncategorized at the end if any exist
+    if (uncategorized.length > 0) {
+      sortedGroups.push(['__uncategorized__', uncategorized]);
+    }
+
     return sortedGroups;
   }, [filteredArticles]);
+
+  // Count only the main categories for display
+  const mainCategoryCount = groupedArticles.filter(([cat]) => cat !== '__uncategorized__').length;
 
   // Toggle category expansion
   const toggleCategory = (category: string) => {
@@ -176,9 +194,9 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
       <div className="flex items-center justify-between text-sm">
         <p className="text-white/40">
           {query ? (
-            <span>Found <span className="text-white/70">{filteredArticles.length}</span> files in <span className="text-white/70">{groupedArticles.length}</span> categories</span>
+            <span>Found <span className="text-white/70">{filteredArticles.length}</span> files in <span className="text-white/70">{mainCategoryCount}</span> categories</span>
           ) : (
-            <span><span className="text-white/70">{index.totalArticles}</span> files in <span className="text-white/70">{groupedArticles.length}</span> categories</span>
+            <span><span className="text-white/70">{index.totalArticles}</span> files in <span className="text-white/70">{mainCategoryCount}</span> categories</span>
           )}
         </p>
         {!query && (
