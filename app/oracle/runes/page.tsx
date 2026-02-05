@@ -238,13 +238,13 @@ export default function RunesOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] via-[#7FB5B3] to-[#5A9A97] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] relative overflow-hidden">
       {/* Atmospheric Particles */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(50)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -265,14 +265,14 @@ export default function RunesOraclePage() {
       </div>
 
       {/* Subtle glow from below */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-teal-900/20 via-teal-800/10 to-transparent pointer-events-none" />
+      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#D4B896]/10 via-[#D4B896]/5 to-transparent pointer-events-none" />
 
       {/* Runic circle pattern overlay */}
       <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="400" fill="none" stroke="#5A9A97" strokeWidth="0.5" />
-          <circle cx="500" cy="500" r="300" fill="none" stroke="#5A9A97" strokeWidth="0.5" />
-          <circle cx="500" cy="500" r="200" fill="none" stroke="#5A9A97" strokeWidth="0.5" />
+          <circle cx="500" cy="500" r="400" fill="none" stroke="#D4B896" strokeWidth="0.5" />
+          <circle cx="500" cy="500" r="300" fill="none" stroke="#D4B896" strokeWidth="0.5" />
+          <circle cx="500" cy="500" r="200" fill="none" stroke="#D4B896" strokeWidth="0.5" />
           {/* 8 lines radiating outward for the aettir */}
           {[...Array(8)].map((_, i) => {
             const angle = (i * 45 * Math.PI) / 180;
@@ -280,7 +280,7 @@ export default function RunesOraclePage() {
             const y1 = 500 + Math.sin(angle) * 150;
             const x2 = 500 + Math.cos(angle) * 450;
             const y2 = 500 + Math.sin(angle) * 450;
-            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#5A9A97" strokeWidth="0.3" />;
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#D4B896" strokeWidth="0.3" />;
           })}
         </svg>
       </div>
@@ -297,15 +297,15 @@ export default function RunesOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-teal-900/70 hover:text-teal-900 transition-colors"
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <Moon className="w-6 h-6 text-teal-800" />
-              <h1 className="text-2xl font-light text-teal-900 tracking-wide">Rune Oracle</h1>
+              <Moon className="w-6 h-6 text-[#D4B896]" />
+              <h1 className="text-2xl font-light text-white tracking-wide">Rune Oracle</h1>
             </div>
 
             <div className="w-24" /> {/* Spacer for centering */}
@@ -335,40 +335,40 @@ export default function RunesOraclePage() {
                     className="inline-block mb-6"
                   >
                     {/* Ansuz rune symbol */}
-                    <div className="w-20 h-20 flex items-center justify-center text-5xl text-teal-800/80 font-bold">
+                    <div className="w-20 h-20 flex items-center justify-center text-5xl text-[#D4B896]/80 font-bold">
                       <svg viewBox="0 0 24 24" className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M12 4 L12 20 M12 4 L18 10 M12 4 L6 10" />
                       </svg>
                     </div>
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-teal-900 mb-4">
+                  <h2 className="text-4xl font-bold text-white mb-4">
                     Consult the Elder Futhark
                   </h2>
-                  <p className="text-teal-800/70 text-lg">
+                  <p className="text-[#D4B896]/70 text-lg">
                     The ancient Norse runes hold the secrets of wyrd and orlog
                   </p>
                 </div>
 
-                <div className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the runes?"
-                    className="w-full h-32 px-4 py-3 bg-white/50 border border-teal-600/40 rounded-lg text-teal-900 placeholder-teal-700/50 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all resize-none"
+                    className="w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 disabled:from-teal-400/30 disabled:to-teal-500/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
                     Reach Into the Rune Bag
                   </button>
 
-                  <p className="text-teal-700/60 text-xs text-center mt-4">
+                  <p className="text-[#D4B896]/40 text-xs text-center mt-4">
                     Drawing from the 24 runes of the Elder Futhark
                   </p>
                 </div>
@@ -385,10 +385,10 @@ export default function RunesOraclePage() {
                 className="max-w-3xl mx-auto"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-teal-900 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Choose Your Spread
                   </h2>
-                  <p className="text-teal-800/70">
+                  <p className="text-[#D4B896]/70">
                     Select how many runes to draw for your reading
                   </p>
                 </div>
@@ -398,19 +398,19 @@ export default function RunesOraclePage() {
                     <motion.button
                       key={spread.id}
                       onClick={() => handleSpreadSelect(spread)}
-                      className="group relative p-6 bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-xl hover:border-teal-500/50 transition-all duration-300 text-left"
+                      className="group relative p-6 bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-xl hover:border-[#D4B896]/40 transition-all duration-300 text-left"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-teal-700/30 text-teal-800 font-bold text-lg">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#D4B896]/20 text-[#D4B896] font-bold text-lg">
                           {spread.runeCount}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-teal-900 mb-1 group-hover:text-teal-900">
+                          <h3 className="text-xl font-semibold text-white mb-1 group-hover:text-white">
                             {spread.name}
                           </h3>
-                          <p className="text-teal-800/70 text-sm">
+                          <p className="text-[#D4B896]/70 text-sm">
                             {spread.description}
                           </p>
                         </div>
@@ -421,7 +421,7 @@ export default function RunesOraclePage() {
 
                 <button
                   onClick={() => setPhase('question')}
-                  className="mt-6 mx-auto block text-teal-700 hover:text-teal-900 text-sm transition-colors"
+                  className="mt-6 mx-auto block text-[#D4B896]/70 hover:text-white text-sm transition-colors"
                 >
                   Back to question
                 </button>
@@ -438,13 +438,13 @@ export default function RunesOraclePage() {
                 className="max-w-3xl mx-auto"
               >
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-teal-900 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Drawing the Runes
                   </h2>
-                  <p className="text-teal-800/70">
+                  <p className="text-[#D4B896]/70">
                     Drawing rune {currentRuneIndex + 1} of {selectedSpread.runeCount}...
                   </p>
-                  <p className="text-teal-700/60 text-sm mt-2">
+                  <p className="text-[#D4B896]/40 text-sm mt-2">
                     {selectedSpread.positions[currentRuneIndex]}
                   </p>
                 </div>
@@ -465,9 +465,9 @@ export default function RunesOraclePage() {
                       className="mb-12"
                     >
                       <div className="relative">
-                        <div className="w-24 h-32 bg-gradient-to-b from-teal-700 to-teal-900 rounded-t-3xl rounded-b-lg shadow-2xl border border-teal-600/50" />
-                        <div className="absolute top-2 left-2 right-2 h-6 bg-teal-800 rounded-t-2xl" />
-                        <Loader2 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-teal-800 animate-spin" />
+                        <div className="w-24 h-32 bg-gradient-to-b from-[#2a2520] to-[#1a1815] rounded-t-3xl rounded-b-lg shadow-2xl border border-[#D4B896]/30" />
+                        <div className="absolute top-2 left-2 right-2 h-6 bg-[#252018] rounded-t-2xl" />
+                        <Loader2 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-[#D4B896] animate-spin" />
                       </div>
                     </motion.div>
                   )}
@@ -482,12 +482,12 @@ export default function RunesOraclePage() {
                         transition={{ duration: 0.6 }}
                         className="flex flex-col items-center"
                       >
-                        <div className={`w-20 h-28 bg-gradient-to-b from-teal-700 to-teal-800 rounded-lg shadow-xl border border-teal-600/50 flex items-center justify-center ${rune.isReversed ? 'rotate-180' : ''}`}>
-                          <span className="text-3xl text-teal-900 font-bold">
+                        <div className={`w-20 h-28 bg-gradient-to-b from-[#2a2520] to-[#1f1a18] rounded-lg shadow-xl border border-[#D4B896]/30 flex items-center justify-center ${rune.isReversed ? 'rotate-180' : ''}`}>
+                          <span className="text-3xl text-white font-bold">
                             {rune.symbol || '?'}
                           </span>
                         </div>
-                        <p className="text-teal-800/70 text-xs mt-2">
+                        <p className="text-[#D4B896]/70 text-xs mt-2">
                           {selectedSpread.positions[index]}
                         </p>
                       </motion.div>
@@ -508,10 +508,10 @@ export default function RunesOraclePage() {
                 {/* Runes Display */}
                 <div className="mb-12">
                   <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-teal-900 mb-2">
+                    <h2 className="text-3xl font-bold text-white mb-2">
                       {selectedSpread.name} Reading
                     </h2>
-                    <p className="text-teal-800/70">
+                    <p className="text-[#D4B896]/70">
                       The runes have spoken
                     </p>
                   </div>
@@ -526,8 +526,8 @@ export default function RunesOraclePage() {
                         transition={{ delay: index * 0.15 }}
                         className="flex flex-col items-center"
                       >
-                        <div className={`relative w-24 h-32 bg-gradient-to-b from-teal-700 to-teal-800 rounded-lg shadow-xl border border-teal-600/50 flex items-center justify-center ${rune.isReversed ? 'rotate-180' : ''}`}>
-                          <span className="text-4xl text-teal-900 font-bold">
+                        <div className={`relative w-24 h-32 bg-gradient-to-b from-[#2a2520] to-[#1f1a18] rounded-lg shadow-xl border border-[#D4B896]/30 flex items-center justify-center ${rune.isReversed ? 'rotate-180' : ''}`}>
+                          <span className="text-4xl text-white font-bold">
                             {rune.symbol}
                           </span>
                           {rune.isReversed && (
@@ -536,13 +536,13 @@ export default function RunesOraclePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-teal-900 font-semibold mt-3">
+                        <p className="text-white font-semibold mt-3">
                           {rune.name}
                         </p>
-                        <p className="text-teal-700/70 text-xs">
+                        <p className="text-[#D4B896]/50 text-xs">
                           {rune.position}
                         </p>
-                        <p className="text-teal-800/60 text-xs mt-1">
+                        <p className="text-[#D4B896]/60 text-xs mt-1">
                           {rune.meaning}
                         </p>
                       </motion.div>
@@ -563,26 +563,26 @@ export default function RunesOraclePage() {
                       {reading.drawnRunes.map((rune, index) => (
                         <div
                           key={index}
-                          className="bg-white/40 backdrop-blur-xl border border-teal-600/30 rounded-xl p-6"
+                          className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/20 rounded-xl p-6"
                         >
                           <div className="flex items-center gap-3 mb-3">
                             <span className="text-2xl">{rune.symbol}</span>
                             <div>
-                              <h4 className="text-lg font-semibold text-teal-900">
+                              <h4 className="text-lg font-semibold text-white">
                                 {rune.name}
                                 {rune.isReversed && <span className="text-red-400 text-sm ml-2">(Merkstave)</span>}
                               </h4>
-                              <p className="text-teal-700/70 text-xs">{rune.position}</p>
+                              <p className="text-[#D4B896]/50 text-xs">{rune.position}</p>
                             </div>
                           </div>
-                          <p className="text-teal-800/70 text-sm leading-relaxed">
+                          <p className="text-[#D4B896]/70 text-sm leading-relaxed">
                             {rune.interpretation}
                           </p>
                           <div className="flex gap-2 mt-3">
-                            <span className="px-2 py-1 bg-teal-700/30 rounded text-xs text-teal-800">
+                            <span className="px-2 py-1 bg-[#D4B896]/20 rounded text-xs text-[#D4B896]">
                               {rune.element}
                             </span>
-                            <span className="px-2 py-1 bg-teal-700/30 rounded text-xs text-teal-800">
+                            <span className="px-2 py-1 bg-[#D4B896]/20 rounded text-xs text-[#D4B896]">
                               {rune.aett} Aett
                             </span>
                           </div>
@@ -591,34 +591,34 @@ export default function RunesOraclePage() {
                     </div>
 
                     {/* Main Reading */}
-                    <div className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl">
+                    <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                       <div className="flex items-center gap-3 mb-6">
-                        <BookOpen className="w-6 h-6 text-teal-800" />
-                        <h3 className="text-2xl font-bold text-teal-900">The Runes Speak</h3>
+                        <BookOpen className="w-6 h-6 text-[#D4B896]" />
+                        <h3 className="text-2xl font-bold text-white">The Runes Speak</h3>
                       </div>
 
                       <div className="space-y-6">
                         <div>
-                          <h4 className="text-teal-800/80 font-semibold mb-3">Insight:</h4>
-                          <p className="text-teal-900/70 leading-relaxed">
+                          <h4 className="text-[#D4B896]/80 font-semibold mb-3">Insight:</h4>
+                          <p className="text-white/70 leading-relaxed">
                             {reading.insight}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-teal-800/80 font-semibold mb-3">Soul Guidance:</h4>
-                          <p className="text-teal-900/70 leading-relaxed">
+                          <h4 className="text-[#D4B896]/80 font-semibold mb-3">Soul Guidance:</h4>
+                          <p className="text-white/70 leading-relaxed">
                             {reading.soulGuidance}
                           </p>
                         </div>
 
                         {reading.wyrdMessage && (
                           <div>
-                            <h4 className="text-teal-800/80 font-semibold mb-3 flex items-center gap-2">
+                            <h4 className="text-[#D4B896]/80 font-semibold mb-3 flex items-center gap-2">
                               <Flame className="w-4 h-4 text-orange-400" />
                               Message from Wyrd:
                             </h4>
-                            <p className="text-teal-900/70 leading-relaxed italic">
+                            <p className="text-white/70 leading-relaxed italic">
                               {reading.wyrdMessage}
                             </p>
                           </div>
@@ -628,12 +628,12 @@ export default function RunesOraclePage() {
 
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
-                      <div className="bg-teal-800/10 backdrop-blur-xl border border-teal-600/20 rounded-xl p-6">
-                        <h4 className="text-teal-800/80 font-semibold mb-3 flex items-center gap-2">
+                      <div className="bg-[#D4B896]/10 backdrop-blur-xl border border-[#D4B896]/15 rounded-xl p-6">
+                        <h4 className="text-[#D4B896]/80 font-semibold mb-3 flex items-center gap-2">
                           <Sparkles className="w-5 h-5" />
                           Integration Ritual
                         </h4>
-                        <p className="text-teal-900/60 text-sm leading-relaxed">
+                        <p className="text-white/60 text-sm leading-relaxed">
                           {reading.ritual}
                         </p>
                       </div>
@@ -679,7 +679,7 @@ export default function RunesOraclePage() {
                         className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                           isSaved
                             ? 'bg-green-600/80 text-white cursor-default'
-                            : 'bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 text-white'
+                            : 'bg-gradient-to-r from-[#D4B896] to-[#B49876] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white'
                         }`}
                       >
                         {isSaving ? (
@@ -693,14 +693,14 @@ export default function RunesOraclePage() {
                       </button>
                       <button
                         onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-teal-800/20 hover:bg-teal-700/30 text-teal-900 font-semibold rounded-lg transition-all duration-300"
+                        className="px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/20 text-white font-semibold rounded-lg transition-all duration-300"
                       >
                         Back to Oracle
                       </button>

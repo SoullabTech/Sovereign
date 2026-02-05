@@ -267,13 +267,13 @@ export default function IChingOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] via-[#7FB5B3] to-[#5A9A97] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] relative overflow-hidden">
       {/* Atmospheric Particles */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -294,7 +294,7 @@ export default function IChingOraclePage() {
       </div>
 
       {/* Subtle glow from below */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-teal-900/20 via-teal-800/10 to-transparent pointer-events-none" />
+      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#D4B896]/10 via-[#D4B896]/5 to-transparent pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
@@ -308,15 +308,15 @@ export default function IChingOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-teal-900/70 hover:text-teal-900 transition-colors"
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <BaguaSymbol size={24} className="text-teal-800" />
-              <h1 className="text-2xl font-light text-teal-900 tracking-wide">I Ching Oracle</h1>
+              <BaguaSymbol size={24} className="text-[#D4B896]" />
+              <h1 className="text-2xl font-light text-white tracking-wide">I Ching Oracle</h1>
             </div>
 
             <div className="w-24" /> {/* Spacer for centering */}
@@ -345,36 +345,36 @@ export default function IChingOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-                    <BaguaSymbol size={64} className="text-teal-800/80" />
+                    <BaguaSymbol size={64} className="text-[#D4B896]/80" />
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-teal-900 mb-4">
+                  <h2 className="text-4xl font-bold text-white mb-4">
                     Consult the Book of Changes
                   </h2>
-                  <p className="text-teal-800/70 text-lg">
+                  <p className="text-[#D4B896]/70 text-lg">
                     The ancient wisdom of the I Ching awaits your question
                   </p>
                 </div>
 
-                <div className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What situation requires wisdom and guidance?"
-                    className="w-full h-32 px-4 py-3 bg-white/50 border border-teal-600/40 rounded-lg text-teal-900 placeholder-teal-700/50 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all resize-none"
+                    className="w-full h-32 px-4 py-3 bg-white/[0.08] border border-[#D4B896]/30 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#D4B896]/50 focus:border-[#D4B896] transition-all resize-none"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 disabled:from-teal-400/30 disabled:to-teal-500/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] disabled:from-[#D4B896]/30 disabled:to-[#B49876]/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
                     Cast the Yarrow Stalks
                   </button>
 
-                  <p className="text-teal-800/50 text-xs text-center mt-4">
+                  <p className="text-[#D4B896]/50 text-xs text-center mt-4">
                     Using the traditional 50 yarrow stalk method
                   </p>
                 </div>
@@ -391,10 +391,10 @@ export default function IChingOraclePage() {
                 className="max-w-3xl mx-auto"
               >
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-teal-900 mb-4">
+                  <h2 className="text-3xl font-bold text-white mb-4">
                     Casting the Hexagram
                   </h2>
-                  <p className="text-teal-800/70">
+                  <p className="text-[#D4B896]/70">
                     Building line {currentLineIndex + 1} of 6...
                   </p>
                 </div>
@@ -414,7 +414,7 @@ export default function IChingOraclePage() {
                       }}
                       className="mb-12"
                     >
-                      <Loader2 className="w-12 h-12 text-teal-800" />
+                      <Loader2 className="w-12 h-12 text-[#D4B896]" />
                     </motion.div>
                   )}
 
@@ -439,7 +439,7 @@ export default function IChingOraclePage() {
                           {isRevealed && line ? (
                             <HexagramLineDisplay line={line} />
                           ) : (
-                            <div className="w-48 h-3 bg-teal-800/20 rounded" />
+                            <div className="w-48 h-3 bg-[#D4B896]/15 rounded" />
                           )}
                         </motion.div>
                       );
@@ -460,21 +460,21 @@ export default function IChingOraclePage() {
                 {/* Hexagram Display */}
                 <div className="mb-12">
                   <div className="text-center mb-8">
-                    <h2 className="text-4xl font-bold text-teal-900 mb-2">
+                    <h2 className="text-4xl font-bold text-white mb-2">
                       Hexagram {reading.hexagram.number}
                     </h2>
-                    <h3 className="text-2xl text-teal-800 mb-1">
+                    <h3 className="text-2xl text-[#D4B896] mb-1">
                       {reading.hexagram.name}
                     </h3>
-                    <p className="text-teal-800/60 text-lg">
+                    <p className="text-[#D4B896]/60 text-lg">
                       {reading.hexagram.keyword}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     {/* Primary Hexagram */}
-                    <div className="bg-white/40 backdrop-blur-xl border border-teal-600/40 rounded-xl p-8 shadow-xl">
-                      <h4 className="text-teal-800 text-center mb-6 font-semibold">
+                    <div className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/30 rounded-xl p-8 shadow-xl">
+                      <h4 className="text-[#D4B896] text-center mb-6 font-semibold">
                         Present Hexagram
                       </h4>
 
@@ -489,28 +489,28 @@ export default function IChingOraclePage() {
                           >
                             <div className={`h-3 rounded transition-all ${
                               line === '-------'
-                                ? 'w-48 bg-teal-600'
+                                ? 'w-48 bg-[#D4B896]'
                                 : 'w-48 flex gap-4'
                             }`}>
                               {line === '--- ---' && (
                                 <>
-                                  <div className="flex-1 bg-teal-600 rounded" />
-                                  <div className="flex-1 bg-teal-600 rounded" />
+                                  <div className="flex-1 bg-[#D4B896] rounded" />
+                                  <div className="flex-1 bg-[#D4B896] rounded" />
                                 </>
                               )}
                             </div>
                             {reading.hexagram.changingLines?.includes(5 - index + 1) && (
-                              <Sparkles className="w-4 h-4 text-teal-800 ml-3" />
+                              <Sparkles className="w-4 h-4 text-[#D4B896] ml-3" />
                             )}
                           </motion.div>
                         ))}
                       </div>
 
                       <div className="text-center space-y-2">
-                        <div className="text-teal-800/60 text-sm">
+                        <div className="text-[#D4B896]/60 text-sm">
                           Upper Trigram: {reading.hexagram.trigrams.upper}
                         </div>
-                        <div className="text-teal-800/60 text-sm">
+                        <div className="text-[#D4B896]/60 text-sm">
                           Lower Trigram: {reading.hexagram.trigrams.lower}
                         </div>
                       </div>
@@ -518,26 +518,26 @@ export default function IChingOraclePage() {
 
                     {/* Transformed Hexagram (if changing lines exist) */}
                     {reading.hexagram.transformed && (
-                      <div className="bg-white/40 backdrop-blur-xl border border-teal-600/40 rounded-xl p-8 shadow-xl">
-                        <h4 className="text-teal-800 text-center mb-6 font-semibold">
+                      <div className="bg-white/[0.05] backdrop-blur-xl border border-[#D4B896]/30 rounded-xl p-8 shadow-xl">
+                        <h4 className="text-[#D4B896] text-center mb-6 font-semibold">
                           Future Hexagram
                         </h4>
 
                         <div className="text-center space-y-3">
-                          <BaguaSymbol size={64} className="text-teal-700/70 mx-auto" />
-                          <h5 className="text-2xl font-bold text-teal-900">
+                          <BaguaSymbol size={64} className="text-[#D4B896]/50 mx-auto" />
+                          <h5 className="text-2xl font-bold text-white">
                             {reading.hexagram.transformed.number}
                           </h5>
-                          <p className="text-teal-800">
+                          <p className="text-[#D4B896]">
                             {reading.hexagram.transformed.name}
                           </p>
-                          <p className="text-teal-700/70 text-sm">
+                          <p className="text-[#D4B896]/50 text-sm">
                             {reading.hexagram.transformed.keyword}
                           </p>
                         </div>
 
-                        <div className="mt-6 p-4 bg-teal-800/10 rounded-lg">
-                          <p className="text-teal-800/70 text-sm text-center">
+                        <div className="mt-6 p-4 bg-[#D4B896]/10 rounded-lg">
+                          <p className="text-[#D4B896]/70 text-sm text-center">
                             The changing lines indicate transformation from the present to this future state
                           </p>
                         </div>
@@ -555,38 +555,38 @@ export default function IChingOraclePage() {
                     className="space-y-6"
                   >
                     {/* Main Interpretation */}
-                    <div className="bg-white/30 backdrop-blur-xl border border-teal-600/30 rounded-2xl p-8 shadow-2xl">
+                    <div className="bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl p-8 shadow-2xl">
                       <div className="flex items-center gap-3 mb-6">
-                        <BookOpen className="w-6 h-6 text-teal-800" />
-                        <h3 className="text-2xl font-bold text-teal-900">Oracle's Wisdom</h3>
+                        <BookOpen className="w-6 h-6 text-[#D4B896]" />
+                        <h3 className="text-2xl font-bold text-white">Oracle's Wisdom</h3>
                       </div>
 
                       <div className="space-y-6">
                         <div>
-                          <h4 className="text-teal-800 font-semibold mb-3">Interpretation:</h4>
-                          <p className="text-teal-900/70 leading-relaxed">
+                          <h4 className="text-[#D4B896] font-semibold mb-3">Interpretation:</h4>
+                          <p className="text-white/70 leading-relaxed">
                             {reading.hexagram.interpretation}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-teal-800 font-semibold mb-3">Guidance:</h4>
-                          <p className="text-teal-900/70 leading-relaxed">
+                          <h4 className="text-[#D4B896] font-semibold mb-3">Guidance:</h4>
+                          <p className="text-white/70 leading-relaxed">
                             {reading.guidance}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-teal-800 font-semibold mb-3">Sacred Timing:</h4>
-                          <p className="text-teal-900/70 leading-relaxed">
+                          <h4 className="text-[#D4B896] font-semibold mb-3">Sacred Timing:</h4>
+                          <p className="text-white/70 leading-relaxed">
                             {reading.sacredTiming}
                           </p>
                         </div>
 
                         {reading.archetypalTheme && (
                           <div>
-                            <h4 className="text-teal-800 font-semibold mb-3">Archetypal Theme:</h4>
-                            <p className="text-teal-900/70 leading-relaxed">
+                            <h4 className="text-[#D4B896] font-semibold mb-3">Archetypal Theme:</h4>
+                            <p className="text-white/70 leading-relaxed">
                               {reading.archetypalTheme}
                             </p>
                           </div>
@@ -706,12 +706,12 @@ export default function IChingOraclePage() {
 
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
-                      <div className="bg-teal-800/10 backdrop-blur-xl border border-teal-600/20 rounded-xl p-6">
-                        <h4 className="text-teal-800 font-semibold mb-3 flex items-center gap-2">
+                      <div className="bg-[#D4B896]/10 backdrop-blur-xl border border-[#D4B896]/15 rounded-xl p-6">
+                        <h4 className="text-[#D4B896] font-semibold mb-3 flex items-center gap-2">
                           <Sparkles className="w-5 h-5" />
                           Integration Ritual
                         </h4>
-                        <p className="text-teal-900/60 text-sm leading-relaxed">
+                        <p className="text-white/60 text-sm leading-relaxed">
                           {reading.ritual}
                         </p>
                       </div>
@@ -752,7 +752,7 @@ export default function IChingOraclePage() {
                             ? 'bg-green-600/80 text-white cursor-default'
                             : saveError
                             ? 'bg-red-700 hover:bg-red-600 text-white'
-                            : 'bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-600 hover:to-teal-700 text-white'
+                            : 'bg-gradient-to-r from-[#D4B896] to-[#B49876] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white'
                         }`}
                       >
                         {isSaving ? (
@@ -766,14 +766,14 @@ export default function IChingOraclePage() {
                       </button>
                       <button
                         onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-teal-800/20 hover:bg-teal-700/30 text-teal-900 font-semibold rounded-lg transition-all duration-300"
+                        className="px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/20 text-white font-semibold rounded-lg transition-all duration-300"
                       >
                         Back to Oracle
                       </button>
@@ -795,13 +795,13 @@ function HexagramLineDisplay({ line }: { line: HexagramLine }) {
     <div className="flex items-center gap-3">
       <div className={`h-4 rounded transition-all ${
         line.type === 'yang'
-          ? 'w-48 bg-teal-600'
+          ? 'w-48 bg-[#D4B896]'
           : 'w-48 flex gap-4'
       }`}>
         {line.type === 'yin' && (
           <>
-            <div className="flex-1 bg-teal-600 rounded" />
-            <div className="flex-1 bg-teal-600 rounded" />
+            <div className="flex-1 bg-[#D4B896] rounded" />
+            <div className="flex-1 bg-[#D4B896] rounded" />
           </>
         )}
       </div>
@@ -816,7 +816,7 @@ function HexagramLineDisplay({ line }: { line: HexagramLine }) {
             repeat: Infinity,
           }}
         >
-          <Sparkles className="w-5 h-5 text-teal-800" />
+          <Sparkles className="w-5 h-5 text-[#D4B896]" />
         </motion.div>
       )}
     </div>

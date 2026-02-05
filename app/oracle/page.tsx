@@ -92,19 +92,19 @@ export default function OraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] text-white">
       <div className="mx-auto w-full max-w-5xl px-6 pb-20 pt-8">
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.push('/maia')}
-            className="group inline-flex items-center gap-2 text-stone-400 hover:text-white transition-colors text-sm"
+            className="group inline-flex items-center gap-2 text-[#D4B896]/70 hover:text-white transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Return to MAIA
           </button>
 
-          <div className="text-xs text-stone-500">
+          <div className="text-xs text-[#D4B896]/50">
             FREE • {readingsThisWeek} this week
           </div>
         </div>
@@ -115,20 +115,20 @@ export default function OraclePage() {
             <h1 className="text-3xl font-medium text-white tracking-tight">
               Reflect your spiral.
             </h1>
-            <p className="mt-2 text-xl text-stone-400">
+            <p className="mt-2 text-xl text-[#D4B896]/70">
               Elements, states, and phases — made visible.
             </p>
 
-            <p className="mt-6 text-stone-400 leading-relaxed max-w-xl">
+            <p className="mt-6 text-[#D4B896]/70 leading-relaxed max-w-xl">
               Each oracle is a different lens for the same living truth: you are in motion.
               Use these portals as meditation — to clarify what's emerging, what's completing,
               and what wants your attention next.
             </p>
           </div>
 
-          <div className="rounded-lg border border-stone-800 bg-stone-900/50 p-5">
+          <div className="rounded-lg border border-[#D4B896]/15 bg-white/[0.03] p-5">
             <div className="text-sm font-medium text-white">A simple way to enter</div>
-            <div className="mt-2 text-sm text-stone-400">
+            <div className="mt-2 text-sm text-[#D4B896]/70">
               Name the life area (relationship, work, health, purpose). Then ask:
             </div>
             <div className="mt-4 space-y-2">
@@ -137,7 +137,7 @@ export default function OraclePage() {
                 '"What wants to evolve next?"',
                 '"What is the wise posture to take?"',
               ].map((q, i) => (
-                <div key={i} className="rounded-lg bg-stone-800/50 px-4 py-3 text-sm text-stone-300">
+                <div key={i} className="rounded-lg bg-[#D4B896]/10 px-4 py-3 text-sm text-white/80">
                   {q}
                 </div>
               ))}
@@ -153,30 +153,30 @@ export default function OraclePage() {
             return (
               <div
                 key={m.key}
-                className="group rounded-lg border border-stone-800 bg-stone-900/30 p-5 hover:bg-stone-800/40 transition-colors"
+                className="group rounded-lg border border-[#D4B896]/15 bg-white/[0.02] p-5 hover:bg-[#D4B896]/08 transition-colors"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-10 h-10 rounded-lg bg-stone-800/60 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-[#D4B896]/15 flex items-center justify-center">
                     <Icon className="h-5 w-5 text-amber-400" />
                   </div>
-                  <span className="text-3xl text-stone-700 font-light select-none">
+                  <span className="text-3xl text-[#D4B896]/30 font-light select-none">
                     {m.sigil}
                   </span>
                 </div>
 
                 <div className="mt-4">
                   <div className="text-lg font-medium text-white">{m.title}</div>
-                  <div className="mt-1 text-sm text-stone-400">{m.subtitle}</div>
-                  <p className="mt-3 text-sm text-stone-500 leading-relaxed">{m.description}</p>
+                  <div className="mt-1 text-sm text-[#D4B896]/70">{m.subtitle}</div>
+                  <p className="mt-3 text-sm text-[#D4B896]/50 leading-relaxed">{m.description}</p>
 
-                  <div className="mt-4 rounded-lg bg-stone-800/40 px-4 py-3">
+                  <div className="mt-4 rounded-lg bg-[#D4B896]/08 px-4 py-3">
                     <div className="text-xs font-medium text-amber-400/80">Ritual cue</div>
-                    <div className="mt-1 text-sm text-stone-400">{m.ritual}</div>
+                    <div className="mt-1 text-sm text-[#D4B896]/70">{m.ritual}</div>
                   </div>
 
                   <button
                     onClick={() => handleEnter(m.route, m.key)}
-                    className="mt-4 w-full flex items-center justify-center gap-2 rounded-lg bg-stone-800/60 hover:bg-stone-700/60 px-4 py-3 text-sm font-medium text-white transition-colors"
+                    className="mt-4 w-full flex items-center justify-center gap-2 rounded-lg bg-[#D4B896]/15 hover:bg-[#D4B896]/25 px-4 py-3 text-sm font-medium text-white transition-colors"
                   >
                     <span>Enter</span>
                     <ChevronRight className="h-4 w-4 text-amber-400" />
@@ -191,7 +191,7 @@ export default function OraclePage() {
         <div className="mt-10 flex justify-center">
           <button
             onClick={() => router.push('/oracle/reflections')}
-            className="inline-flex items-center gap-2 text-stone-500 hover:text-amber-400 transition-colors text-sm"
+            className="inline-flex items-center gap-2 text-[#D4B896]/50 hover:text-amber-400 transition-colors text-sm"
           >
             <BookOpen className="w-4 h-4" />
             View Saved Readings
@@ -199,9 +199,9 @@ export default function OraclePage() {
         </div>
 
         {/* Footer note */}
-        <div className="mt-12 rounded-lg border border-stone-800 bg-stone-900/30 p-5">
-          <div className="text-sm font-medium text-stone-300">A Soullab note</div>
-          <p className="mt-2 text-sm text-stone-500 leading-relaxed">
+        <div className="mt-12 rounded-lg border border-[#D4B896]/15 bg-white/[0.02] p-5">
+          <div className="text-sm font-medium text-white/80">A Soullab note</div>
+          <p className="mt-2 text-sm text-[#D4B896]/50 leading-relaxed">
             These are not "fortune" tools — they're coherence tools. Let the reading become a mirror:
             notice what you feel, what you resist, what you already knew, and what you're now willing to admit.
           </p>
