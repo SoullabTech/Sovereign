@@ -2487,18 +2487,18 @@ export function AccountSettings() {
               <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                className="group w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-stone-800/40 transition-colors"
+                className="group w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-[#D4B896]/10 transition-colors"
               >
-                {/* Minimal icon */}
-                <div className="w-8 h-8 rounded-lg bg-stone-800/60 flex items-center justify-center">
-                  <Icon size={16} className="text-stone-400 group-hover:text-stone-300 transition-colors" />
+                {/* Minimal icon - amber/gold for visibility */}
+                <div className="w-8 h-8 rounded-lg bg-[#D4B896]/10 flex items-center justify-center">
+                  <Icon size={16} className="text-[#D4B896]/70 group-hover:text-[#D4B896] transition-colors" />
                 </div>
 
                 {/* Label */}
-                <span className="flex-1 text-left text-stone-300 group-hover:text-stone-100 transition-colors">{label}</span>
+                <span className="flex-1 text-left text-white/70 group-hover:text-white transition-colors">{label}</span>
 
-                {/* Arrow */}
-                <ChevronRight size={16} className="text-stone-600 group-hover:text-stone-400 transition-colors" />
+                {/* Arrow - amber for visibility */}
+                <ChevronRight size={16} className="text-[#D4B896]/40 group-hover:text-[#D4B896]/70 transition-colors" />
               </button>
             ))}
           </motion.div>
