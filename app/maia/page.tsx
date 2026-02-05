@@ -1744,7 +1744,7 @@ function MAIAPageContent() {
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
-                    setShowLabDrawer(true);
+                    router.push('/labtools');
                   }}
                   className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-blue-500/10 text-blue-400"
                 >
