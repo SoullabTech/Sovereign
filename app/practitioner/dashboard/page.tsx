@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   CommitmentCards,
   UpcomingSessions,
@@ -119,10 +120,8 @@ export default function StewardshipDashboard() {
         const member = JSON.parse(memberData);
         const memberId = member.id;
 
-        // First, get or create practice
-        const practicesRes = await fetch('/api/practitioner/practices', {
-          headers: { 'x-member-id': memberId }
-        });
+        // First, get or create practice (apiFetch adds x-session-token header)
+        const practicesRes = await apiFetch('/api/practitioner/practices');
 
         if (!practicesRes.ok) {
           throw new Error('Failed to load practices');
@@ -134,11 +133,10 @@ export default function StewardshipDashboard() {
 
         if (practices.length === 0) {
           // Create default practice
-          const createRes = await fetch('/api/practitioner/practices', {
+          const createRes = await apiFetch('/api/practitioner/practices', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'x-member-id': memberId
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               name: `${member.name || member.username}'s Practice`,
@@ -160,9 +158,8 @@ export default function StewardshipDashboard() {
         setPractice(currentPractice);
 
         // Load dashboard data
-        const dashboardRes = await fetch(
-          `/api/practitioner/practices/${currentPractice.id}/dashboard`,
-          { headers: { 'x-member-id': memberId } }
+        const dashboardRes = await apiFetch(
+          `/api/practitioner/practices/${currentPractice.id}/dashboard`
         );
 
         if (!dashboardRes.ok) {
