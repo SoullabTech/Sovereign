@@ -5,7 +5,7 @@
  * Schedule a new business meeting
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -32,7 +32,7 @@ function formatDateTimeLocal(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export default function NewMeetingPage() {
+function NewMeetingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedVentureId = searchParams.get('ventureId');
@@ -387,5 +387,24 @@ export default function NewMeetingPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+        <div className="h-96 bg-gray-800 rounded" />
+      </div>
+    </div>
+  );
+}
+
+export default function NewMeetingPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <NewMeetingContent />
+    </Suspense>
   );
 }

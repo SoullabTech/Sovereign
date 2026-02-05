@@ -5,7 +5,7 @@
  * View and manage opportunities/deals
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -134,7 +134,7 @@ function OpportunityCard({
   );
 }
 
-export default function PipelinePage() {
+function PipelineContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -406,5 +406,27 @@ export default function PipelinePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-4xl mx-auto px-6 py-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+        <div className="space-y-4">
+          <div className="h-24 bg-gray-800 rounded" />
+          <div className="h-24 bg-gray-800 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function PipelinePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <PipelineContent />
+    </Suspense>
   );
 }

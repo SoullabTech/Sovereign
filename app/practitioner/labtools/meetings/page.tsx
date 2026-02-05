@@ -5,7 +5,7 @@
  * View and manage business meetings
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -117,7 +117,7 @@ function MeetingCard({ meeting, onClick }: { meeting: Meeting; onClick: () => vo
   );
 }
 
-export default function MeetingsPage() {
+function MeetingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
@@ -294,5 +294,27 @@ export default function MeetingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-4xl mx-auto px-6 py-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+        <div className="space-y-4">
+          <div className="h-24 bg-gray-800 rounded" />
+          <div className="h-24 bg-gray-800 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MeetingsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <MeetingsContent />
+    </Suspense>
   );
 }

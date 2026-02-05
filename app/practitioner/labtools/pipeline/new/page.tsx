@@ -5,7 +5,7 @@
  * Create a new opportunity/deal
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -27,7 +27,7 @@ const STAGES = [
   { value: 'negotiation', label: 'Negotiation', description: 'In negotiation' }
 ];
 
-export default function NewOpportunityPage() {
+function NewOpportunityContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedVentureId = searchParams.get('ventureId');
@@ -346,5 +346,24 @@ export default function NewOpportunityPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+        <div className="h-96 bg-gray-800 rounded" />
+      </div>
+    </div>
+  );
+}
+
+export default function NewOpportunityPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <NewOpportunityContent />
+    </Suspense>
   );
 }
