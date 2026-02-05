@@ -1,67 +1,118 @@
 'use client';
 
 /**
- * LabTools Settings - Configure preferences, privacy settings, and tool behaviors
+ * LabTools Settings - Control Room
+ *
+ * Configure preferences, privacy settings, and tool behaviors.
+ * Uses sovereign amber/dark Cathedral aesthetic.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   Settings,
   Shield,
-  Eye,
-  Bell,
   Palette,
   Database,
   Download,
   Trash2,
-  Save
+  Save,
+  Sparkles,
+  Eye,
+  Volume2,
+  Moon,
+  Zap,
 } from 'lucide-react';
+import {
+  PageShell,
+  PortalHeader,
+  SectionCard,
+  ToggleSwitch,
+  ActionButton,
+  Divider,
+} from '@/components/ui/portal';
+
+interface LabToolsSettings {
+  privacy: {
+    saveReadings: boolean;
+    shareAnalytics: boolean;
+    localProcessing: boolean;
+    dataRetention: string;
+  };
+  display: {
+    theme: string;
+    animations: boolean;
+    soundEffects: boolean;
+    notifications: boolean;
+  };
+  tools: {
+    autoSaveJournal: boolean;
+    defaultOracleSystem: string;
+    voiceProvider: string;
+    showBetaFeatures: boolean;
+  };
+}
 
 export default function LabToolsSettingsPage() {
   const router = useRouter();
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<LabToolsSettings>({
     privacy: {
       saveReadings: true,
       shareAnalytics: false,
       localProcessing: true,
-      dataRetention: '30days'
+      dataRetention: '30days',
     },
     display: {
-      theme: 'auto',
+      theme: 'dark',
       animations: true,
       soundEffects: true,
-      notifications: true
+      notifications: true,
     },
     tools: {
       autoSaveJournal: true,
       defaultOracleSystem: 'iching',
       voiceProvider: 'openai',
-      showBetaFeatures: false
-    }
+      showBetaFeatures: false,
+    },
   });
+  const [saved, setSaved] = useState(false);
 
-  const updateSetting = (category: string, key: string, value: any) => {
-    setSettings(prev => ({
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('labtools_settings');
+    if (stored) {
+      try {
+        setSettings(JSON.parse(stored));
+      } catch {}
+    }
+  }, []);
+
+  const updateSetting = <K extends keyof LabToolsSettings>(
+    category: K,
+    key: keyof LabToolsSettings[K],
+    value: LabToolsSettings[K][keyof LabToolsSettings[K]]
+  ) => {
+    setSettings((prev) => ({
       ...prev,
       [category]: {
-        ...prev[category as keyof typeof prev],
-        [key]: value
-      }
+        ...prev[category],
+        [key]: value,
+      },
     }));
+    setSaved(false);
   };
 
   const handleSaveSettings = () => {
     localStorage.setItem('labtools_settings', JSON.stringify(settings));
-    alert('Settings saved successfully!');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   const handleExportData = () => {
     const data = {
       settings,
       exportDate: new Date().toISOString(),
-      version: '1.0'
+      version: '1.0',
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -76,274 +127,251 @@ export default function LabToolsSettingsPage() {
   };
 
   const handleClearData = () => {
-    if (confirm('Are you sure you want to clear all LabTools data? This action cannot be undone.')) {
+    if (confirm('Are you sure you want to clear all LabTools data? This cannot be undone.')) {
       localStorage.removeItem('labtools_settings');
       localStorage.removeItem('oracle_readings');
       localStorage.removeItem('journal_entries');
       localStorage.removeItem('voice_settings');
-      alert('All LabTools data has been cleared.');
+      setSettings({
+        privacy: {
+          saveReadings: true,
+          shareAnalytics: false,
+          localProcessing: true,
+          dataRetention: '30days',
+        },
+        display: {
+          theme: 'dark',
+          animations: true,
+          soundEffects: true,
+          notifications: true,
+        },
+        tools: {
+          autoSaveJournal: true,
+          defaultOracleSystem: 'iching',
+          voiceProvider: 'openai',
+          showBetaFeatures: false,
+        },
+      });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-background via-soul-surface to-soul-background">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => router.push('/labtools')}
-              className="flex items-center space-x-2 text-soul-textSecondary hover:text-soul-textPrimary transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to LabTools</span>
-            </button>
-
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-gray-100 to-slate-100 rounded-xl">
-                <Settings className="h-6 w-6 text-gray-600" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-soul-textPrimary">LabTools Settings</h1>
-                <p className="text-soul-textSecondary text-sm">Configure preferences and privacy</p>
-              </div>
-            </div>
-          </div>
-
-          <button
+    <PageShell maxWidth="4xl">
+      <PortalHeader
+        title="Settings"
+        subtitle="Configure your LabTools experience"
+        backPath="/labtools"
+        backLabel="Back to LabTools"
+        icon={<Settings className="w-6 h-6 text-amber-400" />}
+        actions={
+          <ActionButton
             onClick={handleSaveSettings}
-            className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all"
+            icon={<Save className="w-4 h-4" />}
+            iconPosition="left"
           >
-            <Save className="h-4 w-4" />
-            <span>Save Settings</span>
-          </button>
-        </div>
+            {saved ? 'Saved!' : 'Save Settings'}
+          </ActionButton>
+        }
+      />
 
-        <div className="space-y-8">
-          {/* Privacy & Security */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
-            <div className="flex items-center space-x-3 mb-6">
-              <Shield className="h-5 w-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-soul-textPrimary">Privacy & Security</h2>
-            </div>
+      <div className="space-y-6">
+        {/* Privacy & Security */}
+        <SectionCard
+          title="Privacy & Security"
+          subtitle="Control how your data is handled"
+          icon={<Shield className="w-5 h-5" />}
+          variant="emerald"
+          delay={0.1}
+        >
+          <div className="space-y-6">
+            <ToggleSwitch
+              checked={settings.privacy.saveReadings}
+              onChange={(v) => updateSetting('privacy', 'saveReadings', v)}
+              label="Save Oracle Readings"
+              description="Keep history of divination sessions"
+            />
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Save Oracle Readings</h3>
-                  <p className="text-sm text-soul-textSecondary">Keep history of divination sessions</p>
+            <ToggleSwitch
+              checked={settings.privacy.localProcessing}
+              onChange={(v) => updateSetting('privacy', 'localProcessing', v)}
+              label="Local Processing"
+              description="Process data locally when possible"
+            />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-amber-100">Data Retention</div>
+                <div className="text-xs text-amber-200/50 mt-0.5">
+                  How long to keep personal data
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.privacy.saveReadings}
-                    onChange={(e) => updateSetting('privacy', 'saveReadings', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
               </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Local Processing</h3>
-                  <p className="text-sm text-soul-textSecondary">Process data locally when possible</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.privacy.localProcessing}
-                    onChange={(e) => updateSetting('privacy', 'localProcessing', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Data Retention</h3>
-                  <p className="text-sm text-soul-textSecondary">How long to keep personal data</p>
-                </div>
-                <select
-                  value={settings.privacy.dataRetention}
-                  onChange={(e) => updateSetting('privacy', 'dataRetention', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="7days">7 days</option>
-                  <option value="30days">30 days</option>
-                  <option value="90days">90 days</option>
-                  <option value="1year">1 year</option>
-                  <option value="forever">Keep forever</option>
-                </select>
-              </div>
+              <select
+                value={settings.privacy.dataRetention}
+                onChange={(e) => updateSetting('privacy', 'dataRetention', e.target.value)}
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
+                         focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm"
+              >
+                <option value="7days">7 days</option>
+                <option value="30days">30 days</option>
+                <option value="90days">90 days</option>
+                <option value="1year">1 year</option>
+                <option value="forever">Keep forever</option>
+              </select>
             </div>
           </div>
+        </SectionCard>
 
-          {/* Display & Interface */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
-            <div className="flex items-center space-x-3 mb-6">
-              <Palette className="h-5 w-5 text-purple-600" />
-              <h2 className="text-lg font-semibold text-soul-textPrimary">Display & Interface</h2>
+        {/* Display & Interface */}
+        <SectionCard
+          title="Display & Interface"
+          subtitle="Customize your visual experience"
+          icon={<Palette className="w-5 h-5" />}
+          variant="violet"
+          delay={0.2}
+        >
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Moon className="w-4 h-4 text-violet-400" />
+                <div>
+                  <div className="text-sm font-medium text-amber-100">Theme</div>
+                  <div className="text-xs text-amber-200/50 mt-0.5">Interface appearance</div>
+                </div>
+              </div>
+              <select
+                value={settings.display.theme}
+                onChange={(e) => updateSetting('display', 'theme', e.target.value)}
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
+                         focus:outline-none focus:ring-2 focus:ring-violet-500/50 text-sm"
+              >
+                <option value="dark">Dark (Recommended)</option>
+                <option value="light">Light</option>
+                <option value="auto">System</option>
+              </select>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Theme</h3>
-                  <p className="text-sm text-soul-textSecondary">Interface appearance</p>
-                </div>
-                <select
-                  value={settings.display.theme}
-                  onChange={(e) => updateSetting('display', 'theme', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </div>
+            <ToggleSwitch
+              checked={settings.display.animations}
+              onChange={(v) => updateSetting('display', 'animations', v)}
+              label="Animations"
+              description="Enable interface animations"
+            />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Animations</h3>
-                  <p className="text-sm text-soul-textSecondary">Enable interface animations</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.display.animations}
-                    onChange={(e) => updateSetting('display', 'animations', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
-              </div>
+            <ToggleSwitch
+              checked={settings.display.soundEffects}
+              onChange={(v) => updateSetting('display', 'soundEffects', v)}
+              label="Sound Effects"
+              description="Audio feedback for interactions"
+            />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Sound Effects</h3>
-                  <p className="text-sm text-soul-textSecondary">Audio feedback for interactions</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.display.soundEffects}
-                    onChange={(e) => updateSetting('display', 'soundEffects', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                </label>
+            <ToggleSwitch
+              checked={settings.display.notifications}
+              onChange={(v) => updateSetting('display', 'notifications', v)}
+              label="Notifications"
+              description="Receive alerts and reminders"
+            />
+          </div>
+        </SectionCard>
+
+        {/* Tool Defaults */}
+        <SectionCard
+          title="Tool Defaults"
+          subtitle="Configure default behaviors"
+          icon={<Zap className="w-5 h-5" />}
+          variant="amber"
+          delay={0.3}
+        >
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-amber-100">Default Oracle System</div>
+                <div className="text-xs text-amber-200/50 mt-0.5">Primary divination method</div>
               </div>
+              <select
+                value={settings.tools.defaultOracleSystem}
+                onChange={(e) => updateSetting('tools', 'defaultOracleSystem', e.target.value)}
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-amber-100
+                         focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm"
+              >
+                <option value="iching">I-Ching</option>
+                <option value="tarot">Tarot</option>
+                <option value="consciousness">Consciousness Oracle</option>
+                <option value="holoflower">Holoflower</option>
+              </select>
+            </div>
+
+            <ToggleSwitch
+              checked={settings.tools.autoSaveJournal}
+              onChange={(v) => updateSetting('tools', 'autoSaveJournal', v)}
+              label="Auto-Save Journal"
+              description="Automatically save journal entries"
+            />
+
+            <ToggleSwitch
+              checked={settings.tools.showBetaFeatures}
+              onChange={(v) => updateSetting('tools', 'showBetaFeatures', v)}
+              label="Show Beta Features"
+              description="Access experimental tools"
+            />
+          </div>
+        </SectionCard>
+
+        <Divider label="Data" />
+
+        {/* Data Management */}
+        <SectionCard
+          title="Data Management"
+          subtitle="Export or clear your data"
+          icon={<Database className="w-5 h-5" />}
+          variant="subtle"
+          delay={0.4}
+        >
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl">
+              <div>
+                <div className="text-sm font-medium text-amber-100">Export Settings & Data</div>
+                <div className="text-xs text-amber-200/50 mt-0.5">
+                  Download your LabTools configuration
+                </div>
+              </div>
+              <ActionButton
+                onClick={handleExportData}
+                variant="secondary"
+                size="sm"
+                icon={<Download className="w-4 h-4" />}
+              >
+                Export
+              </ActionButton>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-rose-500/5 border border-rose-500/10 rounded-xl">
+              <div>
+                <div className="text-sm font-medium text-amber-100">Clear All Data</div>
+                <div className="text-xs text-rose-300/60 mt-0.5">
+                  Delete all LabTools data from this device
+                </div>
+              </div>
+              <button
+                onClick={handleClearData}
+                className="flex items-center gap-2 px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30
+                         border border-rose-500/30 text-rose-300 rounded-lg transition-all text-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Clear</span>
+              </button>
             </div>
           </div>
-
-          {/* Tool Defaults */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
-            <div className="flex items-center space-x-3 mb-6">
-              <Settings className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-soul-textPrimary">Tool Defaults</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Default Oracle System</h3>
-                  <p className="text-sm text-soul-textSecondary">Primary divination method</p>
-                </div>
-                <select
-                  value={settings.tools.defaultOracleSystem}
-                  onChange={(e) => updateSetting('tools', 'defaultOracleSystem', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="iching">I-Ching</option>
-                  <option value="tarot">Tarot</option>
-                  <option value="consciousness">Consciousness Oracle</option>
-                  <option value="holoflower">Holoflower</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Auto-Save Journal</h3>
-                  <p className="text-sm text-soul-textSecondary">Automatically save journal entries</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.tools.autoSaveJournal}
-                    onChange={(e) => updateSetting('tools', 'autoSaveJournal', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Show Beta Features</h3>
-                  <p className="text-sm text-soul-textSecondary">Access experimental tools</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={settings.tools.showBetaFeatures}
-                    onChange={(e) => updateSetting('tools', 'showBetaFeatures', e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Management */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
-            <div className="flex items-center space-x-3 mb-6">
-              <Database className="h-5 w-5 text-gray-600" />
-              <h2 className="text-lg font-semibold text-soul-textPrimary">Data Management</h2>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Export Settings & Data</h3>
-                  <p className="text-sm text-soul-textSecondary">Download your LabTools configuration and data</p>
-                </div>
-                <button
-                  onClick={handleExportData}
-                  className="flex items-center space-x-2 px-3 py-2 bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-700 rounded-lg transition-all"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Export</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-soul-textPrimary">Clear All Data</h3>
-                  <p className="text-sm text-soul-textSecondary">Delete all LabTools data from this device</p>
-                </div>
-                <button
-                  onClick={handleClearData}
-                  className="flex items-center space-x-2 px-3 py-2 bg-red-100 hover:bg-red-200 border border-red-300 text-red-700 rounded-lg transition-all"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>Clear Data</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 text-center text-soul-textSecondary text-sm">
-          <p>
-            Settings are saved locally on your device.
-            <br />
-            Export your data regularly to prevent loss.
-          </p>
-        </div>
+        </SectionCard>
       </div>
-    </div>
+
+      {/* Footer */}
+      <footer className="mt-12 text-center">
+        <p className="text-xs text-amber-300/40">
+          Settings are saved locally on your device.
+          <br />
+          Export your data regularly to prevent loss.
+        </p>
+      </footer>
+    </PageShell>
   );
 }

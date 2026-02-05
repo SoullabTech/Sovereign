@@ -183,6 +183,12 @@ export default function LabToolsPage() {
           path: '/labtools/beads',
           description: 'Invite friends to MAIA'
         },
+        {
+          icon: Users,
+          label: 'Community Commons',
+          path: '/commons',
+          description: 'Collective wisdom patterns'
+        },
       ],
     },
     {

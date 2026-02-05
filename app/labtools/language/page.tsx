@@ -1,114 +1,154 @@
 'use client';
 
 /**
- * Language & Translation - Multi-language support and consciousness translation protocols
+ * LANGUAGE SETTINGS
+ *
+ * Spoken language preference for MAIA conversations.
+ * For wisdom system translation, see /labtools/wisdom
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Languages, Globe, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Globe, Check, ChevronRight } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
+
+const LANGUAGES = [
+  { code: 'en', name: 'English', native: 'English' },
+  { code: 'es', name: 'Spanish', native: 'Español' },
+  { code: 'fr', name: 'French', native: 'Français' },
+  { code: 'de', name: 'German', native: 'Deutsch' },
+  { code: 'it', name: 'Italian', native: 'Italiano' },
+  { code: 'pt', name: 'Portuguese', native: 'Português' },
+  { code: 'zh', name: 'Chinese', native: '中文' },
+  { code: 'ja', name: 'Japanese', native: '日本語' },
+  { code: 'ko', name: 'Korean', native: '한국어' },
+  { code: 'ar', name: 'Arabic', native: 'العربية' },
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+  { code: 'ru', name: 'Russian', native: 'Русский' },
+  { code: 'nl', name: 'Dutch', native: 'Nederlands' },
+  { code: 'sv', name: 'Swedish', native: 'Svenska' },
+  { code: 'pl', name: 'Polish', native: 'Polski' },
+  { code: 'tr', name: 'Turkish', native: 'Türkçe' },
+  { code: 'he', name: 'Hebrew', native: 'עברית' },
+  { code: 'th', name: 'Thai', native: 'ไทย' },
+  { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt' },
+  { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia' },
+];
 
 export default function LanguageSettingsPage() {
   const router = useRouter();
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    // Load saved preference
+    const saved = localStorage.getItem('maia.language');
+    if (saved) setSelectedLanguage(saved);
+  }, []);
+
+  const handleSelect = async (code: string) => {
+    setSelectedLanguage(code);
+    setSaving(true);
+
+    try {
+      // Save to localStorage
+      localStorage.setItem('maia.language', code);
+
+      // Try to save to server
+      await apiFetch('/api/members/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: code }),
+      });
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.warn('[Language] Failed to save to server:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-soul-background via-soul-surface to-soul-background">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex items-center space-x-4 mb-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0f1a] to-[#1a1f2e] text-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-[#0a0f1a]/90 backdrop-blur-lg border-b border-white/10">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.push('/labtools')}
-            className="flex items-center space-x-2 text-soul-textSecondary hover:text-soul-textPrimary transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to LabTools</span>
+            <ArrowLeft className="w-5 h-5" />
           </button>
-        </div>
-
-        {/* Content */}
-        <div className="text-center space-y-6">
-          <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl w-fit mx-auto">
-            <Languages className="h-12 w-12 text-blue-600" />
-          </div>
-
           <div>
-            <h1 className="text-3xl font-bold text-soul-textPrimary mb-4">Language & Translation</h1>
-            <p className="text-soul-textSecondary text-lg max-w-2xl mx-auto leading-relaxed">
-              Multi-language support and consciousness translation protocols for global MAIA experiences.
-            </p>
+            <h1 className="text-lg font-semibold">Language</h1>
+            <p className="text-sm text-white/50">MAIA speaks 30+ languages</p>
           </div>
+          {saved && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="ml-auto flex items-center gap-1 text-emerald-400 text-sm"
+            >
+              <Check className="w-4 h-4" />
+              Saved
+            </motion.div>
+          )}
+        </div>
+      </div>
 
-          <div className="bg-orange-100 border border-orange-200 rounded-xl p-6 max-w-2xl mx-auto">
-            <div className="flex items-center space-x-3 mb-3">
-              <Sparkles className="h-5 w-5 text-orange-600" />
-              <h3 className="font-semibold text-orange-800">Under Development</h3>
-            </div>
-            <p className="text-orange-700 text-sm leading-relaxed">
-              The Language & Translation system is being developed to support:
-            </p>
-            <ul className="text-orange-700 text-sm mt-3 space-y-1 text-left">
-              <li>• Multi-language voice interaction with MAIA</li>
-              <li>• Consciousness-aware translation that preserves meaning depth</li>
-              <li>• Cultural adaptation of oracle systems and symbols</li>
-              <li>• Language-specific elemental correspondences</li>
-              <li>• Real-time translation of divination insights</li>
-              <li>• Sacred geometry and symbols across cultures</li>
-            </ul>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-2xl mx-auto">
-            {[
-              { name: 'English', code: 'en', status: 'Active' },
-              { name: 'Spanish', code: 'es', status: 'Coming Soon' },
-              { name: 'French', code: 'fr', status: 'Coming Soon' },
-              { name: 'Mandarin', code: 'zh', status: 'Planned' },
-              { name: 'Japanese', code: 'ja', status: 'Planned' },
-              { name: 'Sanskrit', code: 'sa', status: 'Planned' }
-            ].map((lang, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg border ${
-                  lang.status === 'Active'
-                    ? 'bg-emerald-50 border-emerald-200'
-                    : lang.status === 'Coming Soon'
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-gray-50 border-gray-200'
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Language list */}
+        <div className="space-y-2">
+          {LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => handleSelect(lang.code)}
+              disabled={saving}
+              className={`w-full flex items-center justify-between p-4 rounded-xl transition-all
+                ${
+                  selectedLanguage === lang.code
+                    ? 'bg-[#D4B896]/20 border border-[#D4B896]/40'
+                    : 'bg-white/5 border border-white/10 hover:bg-white/10'
                 }`}
-              >
-                <div className="flex items-center space-x-2 mb-1">
-                  <Globe className="h-4 w-4 text-gray-600" />
-                  <span className="font-medium text-sm">{lang.name}</span>
-                </div>
-                <div
-                  className={`text-xs px-2 py-1 rounded-full w-fit ${
-                    lang.status === 'Active'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : lang.status === 'Coming Soon'
-                      ? 'bg-orange-100 text-orange-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {lang.status}
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-white/40" />
+                <div className="text-left">
+                  <div className="font-medium">{lang.name}</div>
+                  <div className="text-sm text-white/50">{lang.native}</div>
                 </div>
               </div>
-            ))}
-          </div>
+              {selectedLanguage === lang.code && (
+                <Check className="w-5 h-5 text-[#D4B896]" />
+              )}
+            </button>
+          ))}
+        </div>
 
-          <div className="flex items-center justify-center space-x-4 pt-4">
-            <button
-              onClick={() => router.push('/labtools/voice')}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 border border-blue-300 text-blue-700 rounded-lg transition-all"
-            >
-              <Languages className="h-4 w-4" />
-              <span>Voice Settings</span>
-            </button>
-            <button
-              onClick={() => router.push('/labtools')}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-lg transition-all"
-            >
-              <span>Return to LabTools</span>
-            </button>
-          </div>
+        {/* Link to Wisdom Translation */}
+        <div className="pt-4 border-t border-white/10">
+          <button
+            onClick={() => router.push('/labtools/wisdom')}
+            className="w-full flex items-center justify-between p-4 rounded-xl
+                     bg-gradient-to-r from-[#D4B896]/10 to-transparent
+                     border border-[#D4B896]/20 hover:border-[#D4B896]/40
+                     transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🌀</span>
+              <div className="text-left">
+                <div className="font-medium text-[#D4B896]">Wisdom Translation</div>
+                <div className="text-sm text-white/50">
+                  Explore insights across wisdom systems
+                </div>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-[#D4B896] group-hover:translate-x-1 transition-transform" />
+          </button>
         </div>
       </div>
     </div>

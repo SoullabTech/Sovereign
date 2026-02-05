@@ -98,21 +98,21 @@ export default function AINTelemetryPage() {
     : 0;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-black via-black/95 to-black px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/30 px-4 py-8">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/labtools')}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 transition-all"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-amber-400/60 hover:text-amber-400 hover:bg-white/10 transition-all"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
             <div>
-              <h1 className="text-2xl font-semibold text-white">AIN Shape Telemetry</h1>
-              <p className="text-sm text-white/60">
+              <h1 className="text-2xl font-semibold text-amber-50">AIN Shape Telemetry</h1>
+              <p className="text-sm text-amber-200/50">
                 Structural evaluation of MAIA responses
               </p>
             </div>

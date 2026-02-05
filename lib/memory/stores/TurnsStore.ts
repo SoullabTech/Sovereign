@@ -7,6 +7,17 @@
 
 import { query } from '../../db/postgres';
 
+export interface TurnMeta {
+  kind?: 'normal' | 'translation';
+  parentTurnId?: string;       // Matches DB column; used for threading in meta if needed
+  parentLocalId?: string;      // Client-side ID when parent not yet persisted
+  toSystem?: string;
+  fromSystem?: string;
+  lens?: string;
+  style?: string;
+  [key: string]: unknown;
+}
+
 export interface ConversationTurn {
   id?: string;
   userId: string;
@@ -14,6 +25,8 @@ export interface ConversationTurn {
   role: 'user' | 'assistant';
   content: string;
   createdAt: string;
+  meta?: TurnMeta;
+  parentTurnId?: string;
 }
 
 export const TurnsStore = {
@@ -67,14 +80,60 @@ export const TurnsStore = {
   /**
    * Store a new turn
    */
-  async addTurn(turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<void> {
-    await query(
+  async addTurn(turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+    const result = await query<{ id: string }>(
       `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO conversation_turns (user_id, session_id, role, content, meta, parent_turn_id)
+      VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+      RETURNING id
       `,
-      [turn.userId, turn.sessionId ?? null, turn.role, turn.content]
+      [
+        turn.userId,
+        turn.sessionId ?? null,
+        turn.role,
+        turn.content,
+        turn.meta ? JSON.stringify(turn.meta) : '{}',
+        turn.parentTurnId ?? null,
+      ]
     );
+    return result.rows[0]?.id ?? null;
+  },
+
+  /**
+   * Store a translation turn (assistant response with translation metadata)
+   *
+   * parentTurnId: Valid UUID FK to parent turn (used for DB threading)
+   * parentLocalId: Client-side ID when parent not yet persisted (stored in meta only)
+   */
+  async addTranslation(opts: {
+    userId: string;
+    sessionId?: string;
+    content: string;
+    parentTurnId?: string;     // Valid UUID for FK column
+    parentLocalId?: string;    // Non-UUID client ID → stored in meta
+    toSystem: string;
+    fromSystem?: string;
+    lens?: string;
+    style?: string;
+  }): Promise<string | null> {
+    const meta: TurnMeta = {
+      kind: 'translation',
+      toSystem: opts.toSystem,
+      fromSystem: opts.fromSystem ?? 'auto',
+      lens: opts.lens ?? 'member-default',
+      style: opts.style ?? 'meaning',
+      // Store local ID in meta if parent wasn't a valid UUID
+      ...(opts.parentLocalId ? { parentLocalId: opts.parentLocalId } : {}),
+    };
+
+    return this.addTurn({
+      userId: opts.userId,
+      sessionId: opts.sessionId,
+      role: 'assistant',
+      content: opts.content,
+      meta,
+      parentTurnId: opts.parentTurnId, // Only set if valid UUID
+    });
   },
 
   /**
