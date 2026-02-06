@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import {
   Wrench,
   ExternalLink,
@@ -14,6 +15,7 @@ import {
   Target,
   Heart,
   Repeat,
+  ArrowRight,
 } from 'lucide-react';
 
 // --- Data types ---
@@ -23,9 +25,13 @@ interface PractitionerTool {
   name: string;
   description: string;
   whyItMatters: string;
+  /** Price range for external tools, tier label for internal tools */
   priceRange: string;
   category: 'analog' | 'digital' | 'resources';
+  /** External URL for affiliate/partner tools */
   url?: string;
+  /** Internal path for Soullab tools */
+  internalPath?: string;
   comingSoon?: boolean;
   inserts?: { icon: typeof FileText; name: string; purpose: string }[];
 }
@@ -41,11 +47,12 @@ interface ToolCategory {
 
 const CATEGORIES: ToolCategory[] = [
   { key: 'analog', label: 'Analog Tools', icon: PenTool, description: 'Sovereign instruments. No cloud, no tracking, no feed.' },
-  { key: 'digital', label: 'Digital Tools', icon: Monitor, description: 'Software that respects your sovereignty.' },
-  { key: 'resources', label: 'Practice Resources', icon: BookOpen, description: 'Books, references, and frameworks.' },
+  { key: 'digital', label: 'Digital Tools', icon: Monitor, description: 'Built-in Soullab tools that respect your sovereignty.' },
+  { key: 'resources', label: 'Practice Resources', icon: BookOpen, description: 'Frameworks, references, and community for your practice.' },
 ];
 
 const TOOLS: PractitionerTool[] = [
+  // ── Analog ──────────────────────────────────────────────────────────────────
   {
     id: 'modular-planner',
     name: 'Modular Planner System',
@@ -60,6 +67,100 @@ const TOOLS: PractitionerTool[] = [
       { icon: Heart, name: 'Wellness Tracker', purpose: 'Monitor your own patterns as a practitioner \u2014 burnout prevention' },
       { icon: Repeat, name: 'Habit Tracker', purpose: 'Build consistency in the rituals that sustain your practice' },
     ],
+  },
+
+  // ── Digital ─────────────────────────────────────────────────────────────────
+  {
+    id: 'scribe',
+    name: 'Scribe',
+    description: 'Voice recording with transcription. Capture sessions, meetings, or supervision notes in audio form \u2014 then export clean text.',
+    whyItMatters: 'Presence over typing. When you are holding space for a client, you should not be hunched over a keyboard. Scribe lets you record and transcribe after the session, keeping you fully present during it.',
+    priceRange: 'Pro tier',
+    category: 'digital',
+    internalPath: '/labtools/scribe',
+  },
+  {
+    id: 'journal',
+    name: 'Journal',
+    description: 'Your private writing space. Voice or text entries that become part of your continuity with MAIA. Designed for practitioner reflection, not just client notes.',
+    whyItMatters: 'Practitioners need their own reflective practice. The Journal is sovereign \u2014 your entries never leave your instance, never train a model, never get scraped. It is your space to process the weight you carry.',
+    priceRange: 'Personal tier',
+    category: 'digital',
+    internalPath: '/labtools/journal',
+  },
+  {
+    id: 'capture',
+    name: 'Capture',
+    description: 'Quick session notes for export. Capture key moments during or after client work, then export to your notes app or Obsidian vault.',
+    whyItMatters: 'Session documentation should not be a burden. Capture gives you a fast, structured way to record what matters \u2014 without rebuilding your entire workflow around yet another app.',
+    priceRange: 'Personal tier',
+    category: 'digital',
+    internalPath: '/capture',
+  },
+  {
+    id: 'navigator',
+    name: 'Navigator',
+    description: 'Structured practice with the Spiralogic framework. Track your position, work with elements, follow the spiral \u2014 as a personal development tool for practitioners.',
+    whyItMatters: 'If you are guiding others through transformation, you need your own map. Navigator gives you a framework for your own growth that mirrors the depth you bring to client work.',
+    priceRange: 'Personal tier',
+    category: 'digital',
+    internalPath: '/labtools/navigator',
+  },
+  {
+    id: 'field-protocol',
+    name: 'Field Protocol',
+    description: 'Structured protocols for consciousness exploration and documentation. Use for case formulation, supervision notes, or tracking therapeutic themes across your caseload.',
+    whyItMatters: 'Rigorous documentation is not bureaucracy \u2014 it is how you track patterns across clients, notice your own blind spots, and build evidence for what actually works in your practice.',
+    priceRange: 'Pro tier',
+    category: 'digital',
+    internalPath: '/labtools/field-protocol',
+  },
+  {
+    id: 'sovereignty',
+    name: 'Data Sovereignty',
+    description: 'Export, delete, or manage all your data. Full control over what is stored, what is shared, and what disappears.',
+    whyItMatters: 'Your sovereignty is not a feature \u2014 it is a right. As a practitioner, you need tools that respect the same boundaries you hold for your clients. Data Sovereignty ensures your practice data stays yours.',
+    priceRange: 'Personal tier',
+    category: 'digital',
+    internalPath: '/labtools/sovereignty',
+  },
+
+  // ── Resources ───────────────────────────────────────────────────────────────
+  {
+    id: 'spiralogic-framework',
+    name: 'Spiralogic Framework',
+    description: 'The core mapping system behind MAIA. A developmental spiral model integrating elements, phases, and consciousness states into a practical framework for growth work.',
+    whyItMatters: 'Understanding Spiralogic gives you a shared language with your clients who use MAIA. It also provides a non-pathologizing map for human development that respects cultural and spiritual diversity.',
+    priceRange: 'Built-in',
+    category: 'resources',
+    internalPath: '/labtools/navigator',
+  },
+  {
+    id: 'portal-case-studies',
+    name: 'Portal Case Studies',
+    description: '13 imagineer scenarios showing how MAIA adapts to different cultural contexts \u2014 from Gen Z seekers to Indigenous practitioners, corporate leaders to recovery communities.',
+    whyItMatters: 'These scenarios help you understand the range of client journeys MAIA supports. Use them to envision how your own clients might engage, and to identify which portals align with your practice.',
+    priceRange: 'Built-in',
+    category: 'resources',
+    internalPath: '/studio/case-studies',
+  },
+  {
+    id: 'practitioner-stories',
+    name: 'Practitioner Stories',
+    description: 'Real accounts from practitioners using Soullab tools in their practice. How they integrate analog and digital, what worked, what surprised them.',
+    whyItMatters: 'Nothing replaces hearing from peers. These stories are not testimonials \u2014 they are honest accounts of what it means to bring sovereignty-respecting tools into real practice with real clients.',
+    priceRange: 'Coming soon',
+    category: 'resources',
+    comingSoon: true,
+  },
+  {
+    id: 'community-circle',
+    name: 'Practitioner Community',
+    description: 'Connect with other practitioners using Soullab tools. Share approaches, ask questions, and build referral relationships grounded in shared values.',
+    whyItMatters: 'Sovereignty does not mean isolation. A community of practitioners who share your commitment to ethical, client-centered work is one of the most valuable resources you can have.',
+    priceRange: 'Coming soon',
+    category: 'resources',
+    comingSoon: true,
   },
 ];
 
@@ -153,7 +254,7 @@ export default function PractitionerToolsPage() {
                   <p className="text-slate-400 text-sm leading-relaxed">{tool.whyItMatters}</p>
                 </div>
 
-                {/* Recommended inserts */}
+                {/* Recommended inserts (analog tools) */}
                 {tool.inserts && (
                   <div className="mt-5">
                     <div className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">
@@ -178,7 +279,15 @@ export default function PractitionerToolsPage() {
 
                 {/* Action */}
                 <div className="mt-5 flex items-center gap-3">
-                  {tool.url && !tool.comingSoon ? (
+                  {tool.internalPath && !tool.comingSoon ? (
+                    <Link
+                      href={tool.internalPath}
+                      className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors text-sm"
+                    >
+                      Open Tool
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  ) : tool.url && !tool.comingSoon ? (
                     <a
                       href={tool.url}
                       target="_blank"
@@ -190,7 +299,7 @@ export default function PractitionerToolsPage() {
                     </a>
                   ) : (
                     <span className="px-3 py-1.5 bg-slate-800/80 text-slate-500 rounded-lg text-xs">
-                      Affiliate link coming soon
+                      {tool.comingSoon ? 'Coming soon' : 'Affiliate link coming soon'}
                     </span>
                   )}
                 </div>
