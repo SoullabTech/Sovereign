@@ -51,24 +51,28 @@ export async function POST(request: NextRequest) {
     } | null = null;
 
     if (practitionerId) {
-      const result = await query(
-        `SELECT config_encrypted
-         FROM practitioner_integrations
-         WHERE practitioner_id = $1
-         AND integration_type = 'sms'
-         AND status = 'connected'`,
-        [practitionerId]
-      );
+      try {
+        const result = await query(
+          `SELECT config_encrypted
+           FROM practitioner_integrations
+           WHERE practitioner_id = $1
+           AND integration_type = 'whatsapp'
+           AND status = 'connected'`,
+          [practitionerId]
+        );
 
-      if (result.rows.length > 0 && result.rows[0].config_encrypted) {
-        const creds = typeof result.rows[0].config_encrypted === 'string'
-          ? JSON.parse(result.rows[0].config_encrypted)
-          : result.rows[0].config_encrypted;
-        credentials = {
-          account_sid: creds.account_sid,
-          auth_token: creds.auth_token,
-          whatsapp_number: creds.whatsapp_number || creds.from_number,
-        };
+        if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+          const creds = typeof result.rows[0].config_encrypted === 'string'
+            ? JSON.parse(result.rows[0].config_encrypted)
+            : result.rows[0].config_encrypted;
+          credentials = {
+            account_sid: creds.account_sid,
+            auth_token: creds.auth_token,
+            whatsapp_number: creds.whatsapp_number || creds.from_number,
+          };
+        }
+      } catch (error) {
+        console.warn('[WhatsApp Notifications] Practitioner credential lookup failed, falling back to env vars:', error instanceof Error ? error.message : error);
       }
     }
 

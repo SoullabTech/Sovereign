@@ -48,19 +48,26 @@ export async function POST(request: NextRequest) {
     } | null = null;
 
     if (practitionerId) {
-      const result = await query(
-        `SELECT config_encrypted
-         FROM practitioner_integrations
-         WHERE practitioner_id = $1
-         AND integration_type = 'telegram'
-         AND status = 'connected'`,
-        [practitionerId]
-      );
+      try {
+        const result = await query(
+          `SELECT config_encrypted
+           FROM practitioner_integrations
+           WHERE practitioner_id = $1
+           AND integration_type = 'telegram'
+           AND status = 'connected'`,
+          [practitionerId]
+        );
 
-      if (result.rows.length > 0 && result.rows[0].config_encrypted) {
-        credentials = typeof result.rows[0].config_encrypted === 'string'
-          ? JSON.parse(result.rows[0].config_encrypted)
-          : result.rows[0].config_encrypted;
+        if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+          const config = typeof result.rows[0].config_encrypted === 'string'
+            ? JSON.parse(result.rows[0].config_encrypted)
+            : result.rows[0].config_encrypted;
+          if (config.bot_token) {
+            credentials = config;
+          }
+        }
+      } catch (error) {
+        console.warn('[Telegram Notifications] Practitioner credential lookup failed, falling back to env vars:', error instanceof Error ? error.message : error);
       }
     }
 

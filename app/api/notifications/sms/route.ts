@@ -48,19 +48,26 @@ export async function POST(request: NextRequest) {
     } | null = null;
 
     if (practitionerId) {
-      const result = await query(
-        `SELECT config_encrypted
-         FROM practitioner_integrations
-         WHERE practitioner_id = $1
-         AND integration_type = 'sms'
-         AND status = 'connected'`,
-        [practitionerId]
-      );
+      try {
+        const result = await query(
+          `SELECT config_encrypted
+           FROM practitioner_integrations
+           WHERE practitioner_id = $1
+           AND integration_type = 'sms'
+           AND status = 'connected'`,
+          [practitionerId]
+        );
 
-      if (result.rows.length > 0 && result.rows[0].config_encrypted) {
-        credentials = typeof result.rows[0].config_encrypted === 'string'
-          ? JSON.parse(result.rows[0].config_encrypted)
-          : result.rows[0].config_encrypted;
+        if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+          const config = typeof result.rows[0].config_encrypted === 'string'
+            ? JSON.parse(result.rows[0].config_encrypted)
+            : result.rows[0].config_encrypted;
+          if (config.account_sid && config.auth_token && config.from_number) {
+            credentials = config;
+          }
+        }
+      } catch (error) {
+        console.warn('[SMS Notifications] Practitioner credential lookup failed, falling back to env vars:', error instanceof Error ? error.message : error);
       }
     }
 
