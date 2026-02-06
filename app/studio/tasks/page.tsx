@@ -19,6 +19,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useTeamContext } from '@/hooks/useStudioData';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Subtask {
   id: string;
@@ -81,7 +82,7 @@ export default function TasksPage() {
         }
         if (statusFilter !== 'all') params.set('status', statusFilter);
 
-        const res = await fetch(`/api/studio/tasks?${params.toString()}`);
+        const res = await apiFetch(`/api/studio/tasks?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setTasks(data.tasks || []);
@@ -115,7 +116,7 @@ export default function TasksPage() {
     ));
 
     try {
-      const res = await fetch('/api/studio/tasks', {
+      const res = await apiFetch('/api/studio/tasks', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: taskId, status: newStatus }),
@@ -138,7 +139,7 @@ export default function TasksPage() {
   const createTask = async (taskData: Partial<Task>) => {
     setSaving(true);
     try {
-      const res = await fetch('/api/studio/tasks', {
+      const res = await apiFetch('/api/studio/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

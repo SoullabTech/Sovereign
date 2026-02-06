@@ -203,13 +203,16 @@ async function getTwilioCredentials(practitionerId?: string): Promise<{
   // Try practitioner-specific credentials first
   if (practitionerId) {
     const result = await query(
-      `SELECT credentials_data FROM practitioner_integrations
-       WHERE practitioner_id = $1 AND integration_type = 'twilio' AND is_active = true`,
+      `SELECT config_encrypted FROM practitioner_integrations
+       WHERE practitioner_id = $1 AND integration_type = 'sms' AND status = 'connected'`,
       [practitionerId]
     );
 
-    if (result.rows.length > 0 && result.rows[0].credentials_data) {
-      return result.rows[0].credentials_data;
+    if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+      const creds = typeof result.rows[0].config_encrypted === 'string'
+        ? JSON.parse(result.rows[0].config_encrypted)
+        : result.rows[0].config_encrypted;
+      return creds;
     }
   }
 

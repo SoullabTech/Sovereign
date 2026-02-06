@@ -19,6 +19,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Client {
   id: string;
@@ -96,7 +97,7 @@ export default function NewGroupPage() {
   useEffect(() => {
     async function fetchClients() {
       try {
-        const res = await fetch('/api/studio/clients');
+        const res = await apiFetch('/api/studio/clients');
         if (res.ok) {
           const data = await res.json();
           setClients(data.clients || []);
@@ -155,7 +156,7 @@ export default function NewGroupPage() {
         groupData.maxMembers = maxMembers;
       }
 
-      const response = await fetch('/api/studio/groups', {
+      const response = await apiFetch('/api/studio/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(groupData),
@@ -229,13 +230,18 @@ export default function NewGroupPage() {
               <label className="block text-sm text-slate-400 mb-2">Color</label>
               <div className="flex gap-2 flex-wrap">
                 {colorOptions.map((c) => (
-                  <button
+                  <div
                     key={c}
+                    tabIndex={0}
                     onClick={() => setColor(c)}
-                    className={`w-8 h-8 rounded-lg transition-all ${
-                      color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
+                    onKeyDown={(e) => e.key === 'Enter' && setColor(c)}
+                    className={`w-8 h-8 rounded-lg transition-all border-2 cursor-pointer ${
+                      color === c
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 border-white/50'
+                        : 'border-slate-600 hover:border-slate-400'
                     }`}
                     style={{ backgroundColor: c }}
+                    title={c}
                   />
                 ))}
               </div>
