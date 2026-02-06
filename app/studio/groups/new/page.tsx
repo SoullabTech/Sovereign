@@ -19,6 +19,7 @@ import {
   Search,
   X,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Client {
   id: string;
@@ -96,7 +97,7 @@ export default function NewGroupPage() {
   useEffect(() => {
     async function fetchClients() {
       try {
-        const res = await fetch('/api/studio/clients');
+        const res = await apiFetch('/api/studio/clients');
         if (res.ok) {
           const data = await res.json();
           setClients(data.clients || []);
@@ -155,7 +156,7 @@ export default function NewGroupPage() {
         groupData.maxMembers = maxMembers;
       }
 
-      const response = await fetch('/api/studio/groups', {
+      const response = await apiFetch('/api/studio/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(groupData),
