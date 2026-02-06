@@ -1,77 +1,78 @@
 'use client';
 
 /**
- * New Venture
- * Create a new business venture/initiative
+ * New Venture Page
+ * Create a new business venture
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { apiFetch } from '@/lib/http/apiBase';
 
 const VENTURE_TYPES = [
-  { value: 'maia_rd', label: 'MAIA R&D', description: 'MAIA research and development' },
-  { value: 'soullab_rd', label: 'SoulLab R&D', description: 'SoulLab research and development' },
-  { value: 'marketing', label: 'Marketing', description: 'Marketing initiatives' },
-  { value: 'sales', label: 'Sales', description: 'Sales initiatives' },
-  { value: 'partnerships', label: 'Partnerships', description: 'Partnership development' },
-  { value: 'operations', label: 'Operations', description: 'Operational improvements' },
-  { value: 'content', label: 'Content', description: 'Content creation' },
-  { value: 'events', label: 'Events', description: 'Events and workshops' }
+  { value: 'maia_rd', label: 'MAIA R&D' },
+  { value: 'soullab_rd', label: 'Soullab R&D' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'sales', label: 'Sales' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'operations', label: 'Operations' },
+  { value: 'content', label: 'Content' },
+  { value: 'events', label: 'Events' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'idea', label: 'Idea' },
+  { value: 'planning', label: 'Planning' },
+  { value: 'active', label: 'Active' },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 1, label: 'Critical' },
+  { value: 2, label: 'High' },
+  { value: 3, label: 'Medium' },
+  { value: 4, label: 'Low' },
+  { value: 5, label: 'Someday' },
 ];
 
 export default function NewVenturePage() {
   const router = useRouter();
   const [practiceId, setPracticeId] = useState<string | null>(null);
-  const [memberId, setMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Form state
   const [name, setName] = useState('');
-  const [type, setType] = useState('');
   const [description, setDescription] = useState('');
+  const [ventureType, setVentureType] = useState('');
+  const [status, setStatus] = useState('idea');
+  const [priority, setPriority] = useState(3);
+  const [targetStartDate, setTargetStartDate] = useState('');
+  const [targetEndDate, setTargetEndDate] = useState('');
 
   useEffect(() => {
-    async function init() {
+    async function loadPractice() {
       try {
-        const memberData = localStorage.getItem('beta_user');
-        if (!memberData) {
-          router.push('/signin');
-          return;
-        }
-
-        const member = JSON.parse(memberData);
-        setMemberId(member.id);
-
-        const practicesRes = await fetch('/api/practitioner/practices', {
-          headers: { 'x-member-id': member.id }
-        });
-
-        if (!practicesRes.ok) throw new Error('Failed to load practices');
-
-        const { practices } = await practicesRes.json();
+        const res = await apiFetch('/api/practitioner/practices');
+        if (!res.ok) throw new Error('Failed to load practice');
+        const { practices } = await res.json();
         if (practices.length === 0) {
           router.push('/practitioner/dashboard');
           return;
         }
-
         setPracticeId(practices[0].id);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to initialize');
+        setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
         setIsLoading(false);
       }
     }
-
-    init();
+    loadPractice();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!practiceId || !memberId) return;
-    if (!name.trim() || !type) {
+    if (!practiceId || !name.trim() || !ventureType) {
       setError('Name and type are required');
       return;
     }
@@ -80,21 +81,19 @@ export default function NewVenturePage() {
     setError(null);
 
     try {
-      const res = await fetch(
-        `/api/practitioner/practices/${practiceId}/labtools/ventures`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-member-id': memberId
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            type,
-            description: description.trim() || null
-          })
-        }
-      );
+      const res = await apiFetch(`/api/practitioner/practices/${practiceId}/labtools/ventures`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim() || null,
+          ventureType,
+          status,
+          priority,
+          targetStartDate: targetStartDate || null,
+          targetEndDate: targetEndDate || null,
+        }),
+      });
 
       if (!res.ok) {
         const data = await res.json();
@@ -112,119 +111,173 @@ export default function NewVenturePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a]">
-        <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        <div className="animate-pulse">
           <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
-          <div className="h-64 bg-gray-800 rounded" />
+          <div className="space-y-4">
+            <div className="h-12 bg-gray-800 rounded" />
+            <div className="h-12 bg-gray-800 rounded" />
+            <div className="h-24 bg-gray-800 rounded" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Link href="/practitioner/labtools" className="hover:text-gray-400">
-              Labtools
-            </Link>
-            <span>/</span>
-            <Link href="/practitioner/labtools/ventures" className="hover:text-gray-400">
-              Ventures
-            </Link>
-            <span>/</span>
-            <span className="text-gray-400">New</span>
-          </div>
-          <h1 className="text-xl font-medium text-white">New Venture</h1>
-        </header>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <header className="flex items-center gap-4 mb-8">
+        <button
+          onClick={() => router.back()}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 className="text-xl font-medium text-white">New Venture</h1>
+      </header>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
+      {error && (
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
+          <p className="text-red-400">{error}</p>
+        </div>
+      )}
 
-          <div className="bg-[#111827] rounded-xl border border-gray-700 p-6 space-y-6">
-            {/* Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Q1 Marketing Campaign"
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
-                         text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Name *
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="What are you building?"
+            required
+            autoFocus
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                     text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+          />
+        </div>
 
-            {/* Type */}
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-2">
-                Type *
-              </label>
-              <select
-                id="type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
-                         text-white focus:outline-none focus:border-blue-500"
-                required
-              >
-                <option value="">Select a type...</option>
-                {VENTURE_TYPES.map((vt) => (
-                  <option key={vt.value} value={vt.value}>
-                    {vt.label} - {vt.description}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Type *
+          </label>
+          <select
+            value={ventureType}
+            onChange={(e) => setVentureType(e.target.value)}
+            required
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                     text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+          >
+            <option value="">Select type...</option>
+            {VENTURE_TYPES.map(t => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
 
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description of this venture..."
-                rows={4}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
-                         text-white placeholder-gray-500 focus:outline-none focus:border-blue-500
-                         resize-none"
-              />
-            </div>
-          </div>
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What's the goal? What will success look like?"
+            rows={4}
+            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                     text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+          />
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-3">
-            <Link
-              href="/practitioner/labtools/ventures"
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+        {/* Status & Priority */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Status
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                       text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
             >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={isSaving || !name.trim() || !type}
-              className="px-6 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white
-                       rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? 'Creating...' : 'Create Venture'}
-            </button>
+              {STATUS_OPTIONS.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
           </div>
-        </form>
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Priority
+            </label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(parseInt(e.target.value))}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                       text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            >
+              {PRIORITY_OPTIONS.map(p => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Target Start
+            </label>
+            <input
+              type="date"
+              value={targetStartDate}
+              onChange={(e) => setTargetStartDate(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                       text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Target End
+            </label>
+            <input
+              type="date"
+              value={targetEndDate}
+              onChange={(e) => setTargetEndDate(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                       text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
+        <div className="flex gap-3 pt-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg
+                     text-gray-300 hover:bg-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving || !name.trim() || !ventureType}
+            className="flex-1 px-4 py-3 bg-amber-600 hover:bg-amber-500 disabled:bg-gray-700
+                     disabled:text-gray-500 text-white rounded-lg transition-colors"
+          >
+            {isSaving ? 'Creating...' : 'Create Venture'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
