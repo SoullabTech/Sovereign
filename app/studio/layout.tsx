@@ -24,6 +24,7 @@ import {
   FolderOpen,
   Loader2,
   Briefcase,
+  Wrench,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -47,6 +48,7 @@ const navItems = [
   { href: '/studio/code', icon: Code2, label: 'Code Sessions' },
   { href: '/studio/teams', icon: Users, label: 'Teams' },
   { href: '/studio/maia', icon: Sparkles, label: 'MAIA' },
+  { href: '/studio/tools', icon: Wrench, label: 'Tools' },
   { href: '/studio/settings', icon: Settings, label: 'Settings' },
 ];
 
