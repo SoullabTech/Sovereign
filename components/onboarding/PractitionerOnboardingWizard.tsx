@@ -577,6 +577,7 @@ function Step5Publish({ theme }: { theme: PractitionerThemeV1 }) {
           <li>- Invite your first client via email</li>
           <li>- Set up intake questions (optional)</li>
           <li>- Add resources to your library</li>
+          <li>- Explore <a href="/studio/tools" className="text-primary hover:underline">practitioner tools</a> we recommend</li>
           <li>- Schedule your first session</li>
         </ul>
       </div>
