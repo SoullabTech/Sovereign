@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function AccountSettingsPage() {
   return (
-    <main className="min-h-screen bg-[#1a1a1a] overflow-y-auto">
+    <main className="min-h-screen bg-gradient-to-b from-[#0f1419] via-[#1a1f2e] to-[#16213e] overflow-y-auto">
       <AccountSettings />
     </main>
   );

@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   MessageSquare,
   Plus,
-  Search,
+  Search as SearchIcon,
   Clock,
   User,
   Heart,
@@ -103,15 +103,17 @@ const mockPosts = [
   }
 ];
 
-// Map slug to icon
+// Map slug to icon - matches actual territory slugs from database
 function getTerritoryIcon(slug: string): React.ComponentType<{ className?: string }> {
   const map: Record<string, React.ComponentType<{ className?: string }>> = {
-    'soul-work': Sparkles,
-    'practices': Mountain,
-    'traditions': BookOpen,
-    'breakthrough': Zap,
-    'workshop': Wrench,
-    'general': MessageSquare
+    'threshold': Globe,       // 🚪 Where every journey begins
+    'seeking': SearchIcon,    // 🔍 Questions and curiosity
+    'practice': Mountain,     // 🧘 Where wisdom becomes embodied
+    'breakthrough': Zap,      // ✨ Moments of shift and insight
+    'offering': Heart,        // 🎁 Give back what you've learned
+    'circle': Users,          // ⭕ Support and connection
+    'foundation': Crown,      // 🏛️ Core teachings
+    'workshop': Wrench        // ⚗️ Technical discussions
   };
   return map[slug] || MessageSquare;
 }
@@ -140,7 +142,7 @@ export default function TerritoryPageWrapper() {
       const response = await apiFetch('/api/community/territories');
       const data = await response.json();
 
-      if (data.success && data.territories) {
+      if ((data.ok || data.success) && data.territories) {
         const foundTerritory = data.territories.find((t: Territory) => t.slug === slug);
         if (foundTerritory) {
           setTerritory(foundTerritory);
@@ -211,7 +213,7 @@ export default function TerritoryPageWrapper() {
 
           <div className="flex items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-amber-500/20 transition-colors">
-              <Search className="w-4 h-4" />
+              <SearchIcon className="w-4 h-4" />
               Search
             </button>
             <button className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-amber-50 rounded-lg hover:bg-amber-700 transition-colors">

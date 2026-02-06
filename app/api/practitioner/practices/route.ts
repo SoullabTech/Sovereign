@@ -5,16 +5,47 @@ export const dynamic = 'force-dynamic';
  * GET  - List all practices for authenticated user
  * POST - Create a new practice
  *
- * Security: Uses httpOnly session cookie auth.
+ * Security: Session cookie (primary) or x-member-id header (fallback for beta/local).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { requireMemberId } from '@/lib/auth/session';
+import { getMemberIdIfAuthenticated } from '@/lib/auth/session';
+import { headers } from 'next/headers';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Get member ID from session (preferred) or x-member-id header (fallback).
+ * Returns null if neither is available/valid.
+ */
+async function getMemberIdWithFallback(): Promise<string | null> {
+  // Try session auth first (cookie or x-session-token)
+  const sessionMemberId = await getMemberIdIfAuthenticated();
+  if (sessionMemberId) {
+    return sessionMemberId;
+  }
+
+  // Fallback: x-member-id header (for beta/local development)
+  const headerStore = await headers();
+  const headerMemberId = headerStore.get('x-member-id');
+  if (headerMemberId && UUID_REGEX.test(headerMemberId)) {
+    // Verify member exists
+    const result = await query('SELECT id FROM members WHERE id = $1', [headerMemberId]);
+    if (result.rows.length > 0) {
+      return headerMemberId;
+    }
+  }
+
+  return null;
+}
 
 export async function GET() {
   try {
-    const memberId = await requireMemberId();
+    const memberId = await getMemberIdWithFallback();
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const result = await query(
       `SELECT
@@ -38,9 +69,6 @@ export async function GET() {
       }))
     });
   } catch (error) {
-    if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     console.error('[PRACTICES] List error:', error);
     return NextResponse.json({ error: 'Failed to list practices' }, { status: 500 });
   }
@@ -48,7 +76,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await requireMemberId();
+    const memberId = await getMemberIdWithFallback();
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const body = await request.json();
     const { name, modes = [], timezone = 'UTC', capacityPolicy = {} } = body;
@@ -79,9 +110,6 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     console.error('[PRACTICES] Create error:', error);
     return NextResponse.json({ error: 'Failed to create practice' }, { status: 500 });
   }

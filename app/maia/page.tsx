@@ -33,7 +33,7 @@ import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -352,7 +352,6 @@ function MAIAPageContent() {
     }
     return 1.0;
   });  // Voice playback volume (0.0 - 1.0)
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
@@ -686,7 +685,7 @@ function MAIAPageContent() {
               <div className="flex items-center gap-2 min-w-max px-2 py-1">
                 {/* Logo removed - now in bottom center */}
 
-                {/* Voice/Text Toggle + Volume - Mobile optimized */}
+                {/* Voice/Text Toggle - Mobile */}
                 <div className="flex items-center gap-1 carousel-item">
                   <button
                     onClick={() => setShowChatInterface(!showChatInterface)}
@@ -696,47 +695,6 @@ function MAIAPageContent() {
                       {showChatInterface ? '💬' : '🎤'}
                     </span>
                   </button>
-
-                  {/* Volume Control - Only in voice mode (mobile) */}
-                  {!showChatInterface && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
-                        className="p-1 rounded-md bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
-                      >
-                        <Volume2 className={`w-3.5 h-3.5 ${voiceVolume === 0 ? 'text-maia-ink-40' : 'text-maia-ink-80'}`} />
-                      </button>
-
-                      {/* Volume Slider Popup (mobile) */}
-                      {showVolumeSlider && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-[9998]"
-                            onClick={() => setShowVolumeSlider(false)}
-                          />
-                          <div className="absolute top-full left-0 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-[9999] min-w-[120px]">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Volume2 className="w-3 h-3 text-maia-ink-60" />
-                              <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.05"
-                              value={voiceVolume}
-                              onChange={(e) => {
-                                const newVolume = parseFloat(e.target.value);
-                                setVoiceVolume(newVolume);
-                                localStorage.setItem('maia_voice_volume', String(newVolume));
-                              }}
-                              className="w-full h-1.5 bg-maia-navy-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* Mode Selector + Session Button - Mobile optimized */}
@@ -959,7 +917,7 @@ function MAIAPageContent() {
             <div className="hidden md:block w-full mobile-carousel scrollbar-hide">
               {/* All navigation controls grouped together */}
               <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
-                {/* Voice/Text Toggle + Volume Control */}
+                {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => setShowChatInterface(!showChatInterface)}
@@ -969,52 +927,6 @@ function MAIAPageContent() {
                       {showChatInterface ? '💬 Text' : '🎤 Voice'}
                     </span>
                   </button>
-
-                  {/* Volume Control - Only in voice mode */}
-                  {!showChatInterface && (
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
-                        className="p-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
-                        title={`Volume: ${Math.round(voiceVolume * 100)}%`}
-                      >
-                        <Volume2 className={`w-4 h-4 ${voiceVolume === 0 ? 'text-maia-ink-40' : 'text-maia-ink-80'}`} />
-                      </button>
-
-                      {/* Volume Slider Popup */}
-                      {showVolumeSlider && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-[9998]"
-                            onClick={() => setShowVolumeSlider(false)}
-                          />
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-maia-navy-800/95 backdrop-blur-xl border border-maia-navy-700/50 rounded-lg shadow-xl z-[9999] min-w-[140px]">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Volume2 className="w-3 h-3 text-maia-ink-60" />
-                              <span className="text-xs text-maia-ink-80">{Math.round(voiceVolume * 100)}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max="1"
-                              step="0.05"
-                              value={voiceVolume}
-                              onChange={(e) => {
-                                const newVolume = parseFloat(e.target.value);
-                                setVoiceVolume(newVolume);
-                                localStorage.setItem('maia_voice_volume', String(newVolume));
-                              }}
-                              className="w-full h-1.5 bg-maia-navy-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                            />
-                            <div className="flex justify-between text-[10px] text-maia-ink-40 mt-1">
-                              <span>0</span>
-                              <span>100</span>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {/* Mode Selector */}
@@ -1577,164 +1489,13 @@ function MAIAPageContent() {
 
               {/* Menu Items */}
               <div className="space-y-2 max-w-md mx-auto">
-                {/* Sustaining Circle Section */}
-                <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-rose-500/5 border border-amber-500/20">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Flame className="w-5 h-5 text-amber-400" />
-                    <span className="text-base text-amber-400 font-medium">Sustaining Circle</span>
-                  </div>
-                  <p className="text-[10px] text-stone-400 mb-3 italic">
-                    Everyone has full access. Your contribution sustains the sacred work.
-                  </p>
-
-                  {/* Current Circle Status */}
-                  {membershipUtils.isBetaTester() && (
-                    <div className="mb-3 flex items-center justify-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                      <span className="text-sm text-amber-300 font-medium">Pioneer Founding Member</span>
-                    </div>
-                  )}
-
-                  {/* Choose Your Path */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Sustaining Circle */}
-                    <button
-                      onClick={() => setShowSustainingSlider(!showSustainingSlider)}
-                      className={`p-2 rounded-lg transition-all text-center ${
-                        showSustainingSlider
-                          ? 'bg-amber-500/20 border border-amber-500/40'
-                          : 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30'
-                      }`}
-                    >
-                      <Flame className="w-4 h-4 mx-auto mb-1 text-amber-400" />
-                      <p className="text-[10px] text-amber-300 font-medium">Sustaining Circle</p>
-                      <p className="text-[9px] text-stone-400">Choose your level</p>
-                    </button>
-
-                    {/* Seva Exchange */}
-                    <button
-                      onClick={() => setShowSevaOptions(!showSevaOptions)}
-                      className={`p-2 rounded-lg transition-all text-center ${
-                        showSevaOptions
-                          ? 'bg-teal-500/20 border border-teal-500/40'
-                          : 'bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30'
-                      }`}
-                    >
-                      <Users className="w-4 h-4 mx-auto mb-1 text-teal-400" />
-                      <p className="text-[10px] text-teal-300 font-medium">Seva Exchange</p>
-                      <p className="text-[9px] text-stone-400">Contribute service</p>
-                    </button>
-                  </div>
-
-                  {/* Sustaining Circle Slider (expandable) */}
-                  {showSustainingSlider && (
-                    <div className="mt-3 p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-                      <p className="text-[10px] text-amber-300 mb-3 font-medium text-center">
-                        Choose what feels right for you
-                      </p>
-
-                      {/* Amount Display */}
-                      <div className="text-center mb-4">
-                        <p className="text-2xl font-light text-amber-300">${sustainingAmount}<span className="text-sm text-stone-400">/mo</span></p>
-                      </div>
-
-                      {/* Slider */}
-                      <div className="mb-4">
-                        <input
-                          type="range"
-                          min="5"
-                          max="500"
-                          step="5"
-                          value={sustainingAmount}
-                          onChange={(e) => setSustainingAmount(parseInt(e.target.value))}
-                          className="w-full h-2 rounded-full cursor-pointer accent-amber-500
-                            [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-stone-700/50
-                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-1.5
-                            [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-stone-700/50
-                            [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
-                            [&::-moz-range-thumb]:bg-amber-500 [&::-moz-range-thumb]:border-0"
-                          style={{ WebkitAppearance: 'none', appearance: 'none', background: 'transparent' }}
-                        />
-                        <div className="flex justify-between text-[9px] text-stone-500 mt-1">
-                          <span>$5</span>
-                          <span>$500+</span>
-                        </div>
-                      </div>
-
-                      {/* Benefits Preview */}
-                      <div className="text-[9px] text-stone-400 mb-3 space-y-1">
-                        <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Monthly build letters</p>
-                        {sustainingAmount >= 25 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Early access + previews</p>}
-                        {sustainingAmount >= 75 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Patron Q&A circle</p>}
-                        {sustainingAmount >= 250 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Direct roadmap input</p>}
-                        {sustainingAmount >= 500 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Founder channel access</p>}
-                      </div>
-
-                      {/* Transparency */}
-                      <div className="bg-stone-800/50 rounded-lg p-3 mb-3 border border-stone-700/50">
-                        <p className="text-[8px] text-stone-500 uppercase tracking-wide mb-2">What this sustains</p>
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[9px]">
-                          <span className="text-stone-400">Infrastructure</span>
-                          <span className="text-stone-500 text-right">~$500/mo</span>
-                          <span className="text-stone-400">Development</span>
-                          <span className="text-stone-500 text-right">70+ hrs/wk</span>
-                          <span className="text-amber-400 font-medium">Target</span>
-                          <span className="text-amber-400 text-right font-medium">$3,500/mo</span>
-                        </div>
-                        <p className="text-[8px] text-stone-500 mt-2">
-                          No VC. No ads. For us by us.
-                        </p>
-                      </div>
-
-                      {/* Join Button */}
-                      <button
-                        onClick={() => membershipUtils.joinSustainingCircle(sustainingAmount)}
-                        className="w-full py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-medium transition-all"
-                      >
-                        Join Circle
-                      </button>
-
-                      {/* Full Details Link */}
-                      <a
-                        href="/patrons"
-                        className="block text-center text-[9px] text-stone-500 hover:text-amber-400 mt-2 transition-colors"
-                      >
-                        View full details →
-                      </a>
-                    </div>
-                  )}
-
-                  {/* Seva Options (expandable) */}
-                  {showSevaOptions && (
-                    <div className="mt-3 p-3 bg-teal-500/5 border border-teal-500/20 rounded-lg">
-                      <p className="text-[10px] text-teal-300 mb-2 font-medium">Choose your path of service:</p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {(Object.entries(SEVA_PATHWAYS) as [SevaPathway, typeof SEVA_PATHWAYS[SevaPathway]][]).map(([key, path]) => (
-                          <button
-                            key={key}
-                            onClick={() => membershipUtils.joinSeva(key)}
-                            className="p-1.5 rounded bg-teal-500/10 hover:bg-teal-500/20 text-left transition-all"
-                          >
-                            <p className="text-[9px] text-teal-300 font-medium">{path.name}</p>
-                            <p className="text-[8px] text-stone-500">{path.description}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-amber-500/20 my-2" />
-
                 {/* Commons */}
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
                     router.push('/maia/community');
                   }}
-                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-amber-500/10 text-amber-400"
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Users className="w-5 h-5" />
                   <span className="text-base">Community Commons</span>
@@ -1744,12 +1505,24 @@ function MAIAPageContent() {
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
-                    setShowLabDrawer(true);
+                    router.push('/labtools');
                   }}
-                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-blue-500/10 text-blue-400"
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <FlaskConical className="w-5 h-5" />
                   <span className="text-base">Labtools</span>
+                </button>
+
+                {/* Soullab Studios - Main practitioner portal */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/studio');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <Briefcase className="w-5 h-5" />
+                  <span className="text-base">Soullab Studios</span>
                 </button>
 
                 {/* Account Settings */}
@@ -1758,7 +1531,7 @@ function MAIAPageContent() {
                     setShowAccountMenu(false);
                     router.push('/account/settings');
                   }}
-                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-purple-500/10 text-purple-400"
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Settings className="w-5 h-5" />
                   <span className="text-base">Settings</span>
@@ -1770,14 +1543,165 @@ function MAIAPageContent() {
                     setShowAccountMenu(false);
                     requestAnimationFrame(() => setShowFeedbackSheet(true));
                   }}
-                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-green-500/10 text-green-400"
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span className="text-base">Send Feedback</span>
                 </button>
 
                 {/* Divider */}
-                <div className="border-t border-amber-500/20 my-2" />
+                <div className="border-t border-[#D4B896]/20 my-2" />
+
+                {/* Sustaining Circle Section - Moved to bottom */}
+                <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#D4B896]/5 via-[#D4B896]/3 to-transparent border border-[#D4B896]/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Flame className="w-5 h-5 text-[#D4B896]" />
+                    <span className="text-base text-[#D4B896] font-medium">Sustaining Circle</span>
+                  </div>
+                  <p className="text-[10px] text-stone-400 mb-3 italic">
+                    Everyone has full access. Your contribution sustains the sacred work.
+                  </p>
+
+                  {/* Current Circle Status */}
+                  {membershipUtils.isBetaTester() && (
+                    <div className="mb-3 flex items-center justify-center gap-2 px-3 py-2 bg-[#D4B896]/10 border border-[#D4B896]/30 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-[#D4B896]" />
+                      <span className="text-sm text-[#D4B896] font-medium">Pioneer Founding Member</span>
+                    </div>
+                  )}
+
+                  {/* Choose Your Path */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Sustaining Circle */}
+                    <button
+                      onClick={() => setShowSustainingSlider(!showSustainingSlider)}
+                      className={`p-2 rounded-lg transition-all text-center ${
+                        showSustainingSlider
+                          ? 'bg-[#D4B896]/20 border border-[#D4B896]/40'
+                          : 'bg-[#D4B896]/10 hover:bg-[#D4B896]/20 border border-[#D4B896]/30'
+                      }`}
+                    >
+                      <Flame className="w-4 h-4 mx-auto mb-1 text-[#D4B896]" />
+                      <p className="text-[10px] text-[#D4B896] font-medium">Sustaining Circle</p>
+                      <p className="text-[9px] text-stone-400">Choose your level</p>
+                    </button>
+
+                    {/* Seva Exchange */}
+                    <button
+                      onClick={() => setShowSevaOptions(!showSevaOptions)}
+                      className={`p-2 rounded-lg transition-all text-center ${
+                        showSevaOptions
+                          ? 'bg-[#D4B896]/20 border border-[#D4B896]/40'
+                          : 'bg-[#D4B896]/10 hover:bg-[#D4B896]/20 border border-[#D4B896]/30'
+                      }`}
+                    >
+                      <Users className="w-4 h-4 mx-auto mb-1 text-[#D4B896]" />
+                      <p className="text-[10px] text-[#D4B896] font-medium">Seva Exchange</p>
+                      <p className="text-[9px] text-stone-400">Contribute service</p>
+                    </button>
+                  </div>
+
+                  {/* Sustaining Circle Slider (expandable) */}
+                  {showSustainingSlider && (
+                    <div className="mt-3 p-4 bg-[#D4B896]/5 border border-[#D4B896]/20 rounded-lg">
+                      <p className="text-[10px] text-[#D4B896] mb-3 font-medium text-center">
+                        Choose what feels right for you
+                      </p>
+
+                      {/* Amount Display */}
+                      <div className="text-center mb-4">
+                        <p className="text-2xl font-light text-[#D4B896]">${sustainingAmount}<span className="text-sm text-stone-400">/mo</span></p>
+                      </div>
+
+                      {/* Slider */}
+                      <div className="mb-4">
+                        <input
+                          type="range"
+                          min="5"
+                          max="500"
+                          step="5"
+                          value={sustainingAmount}
+                          onChange={(e) => setSustainingAmount(parseInt(e.target.value))}
+                          className="w-full h-2 rounded-full cursor-pointer accent-[#D4B896]
+                            [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-stone-700/50
+                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#D4B896] [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-1.5
+                            [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-stone-700/50
+                            [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                            [&::-moz-range-thumb]:bg-[#D4B896] [&::-moz-range-thumb]:border-0"
+                          style={{ WebkitAppearance: 'none', appearance: 'none', background: 'transparent' }}
+                        />
+                        <div className="flex justify-between text-[9px] text-stone-500 mt-1">
+                          <span>$5</span>
+                          <span>$500+</span>
+                        </div>
+                      </div>
+
+                      {/* Benefits Preview */}
+                      <div className="text-[9px] text-stone-400 mb-3 space-y-1">
+                        <p className="flex items-center gap-1"><span className="text-[#D4B896]">✓</span> Monthly build letters</p>
+                        {sustainingAmount >= 25 && <p className="flex items-center gap-1"><span className="text-[#D4B896]">✓</span> Early access + previews</p>}
+                        {sustainingAmount >= 75 && <p className="flex items-center gap-1"><span className="text-[#D4B896]">✓</span> Patron Q&A circle</p>}
+                        {sustainingAmount >= 250 && <p className="flex items-center gap-1"><span className="text-[#D4B896]">✓</span> Direct roadmap input</p>}
+                        {sustainingAmount >= 500 && <p className="flex items-center gap-1"><span className="text-[#D4B896]">✓</span> Founder channel access</p>}
+                      </div>
+
+                      {/* Transparency */}
+                      <div className="bg-stone-800/50 rounded-lg p-3 mb-3 border border-stone-700/50">
+                        <p className="text-[8px] text-stone-500 uppercase tracking-wide mb-2">What this sustains</p>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[9px]">
+                          <span className="text-stone-400">Infrastructure</span>
+                          <span className="text-stone-500 text-right">~$500/mo</span>
+                          <span className="text-stone-400">Development</span>
+                          <span className="text-stone-500 text-right">70+ hrs/wk</span>
+                          <span className="text-[#D4B896] font-medium">Target</span>
+                          <span className="text-[#D4B896] text-right font-medium">$3,500/mo</span>
+                        </div>
+                        <p className="text-[8px] text-stone-500 mt-2">
+                          No VC. No ads. For us by us.
+                        </p>
+                      </div>
+
+                      {/* Join Button */}
+                      <button
+                        onClick={() => membershipUtils.joinSustainingCircle(sustainingAmount)}
+                        className="w-full py-2 rounded-lg bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#C4A886] hover:to-[#B49876] text-black text-sm font-medium transition-all"
+                      >
+                        Join Circle
+                      </button>
+
+                      {/* Full Details Link */}
+                      <a
+                        href="/patrons"
+                        className="block text-center text-[9px] text-stone-500 hover:text-[#D4B896] mt-2 transition-colors"
+                      >
+                        View full details →
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Seva Options (expandable) */}
+                  {showSevaOptions && (
+                    <div className="mt-3 p-3 bg-[#D4B896]/5 border border-[#D4B896]/20 rounded-lg">
+                      <p className="text-[10px] text-[#D4B896] mb-2 font-medium">Choose your path of service:</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {(Object.entries(SEVA_PATHWAYS) as [SevaPathway, typeof SEVA_PATHWAYS[SevaPathway]][]).map(([key, path]) => (
+                          <button
+                            key={key}
+                            onClick={() => membershipUtils.joinSeva(key)}
+                            className="p-1.5 rounded bg-[#D4B896]/10 hover:bg-[#D4B896]/20 text-left transition-all"
+                          >
+                            <p className="text-[9px] text-[#D4B896] font-medium">{path.name}</p>
+                            <p className="text-[8px] text-stone-500">{path.description}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-[#D4B896]/20 my-2" />
 
                 {/* Sign Out */}
                 <button

@@ -1,20 +1,26 @@
 'use client';
 
 /**
- * LibrarySearch — The Card Catalog
+ * LibrarySearch — Organized category-based library
  *
- * A sophisticated search interface styled after ancient library catalogs,
- * with aged parchment cards and brass accents befitting Jung's study.
+ * Collapsible accordion design for clear organization.
+ * Categories are collapsed by default - users expand what they need.
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Search, X, BookOpen, ChevronRight, FileText,
+  Compass, Lightbulb, BookMarked, Feather, GraduationCap,
+  Sparkles, Wrench, Users, Code, Megaphone, Heart, FolderOpen,
+  type LucideIcon
+} from 'lucide-react';
 import type { ArticleIndex, LibraryIndex } from '@/lib/library/types';
 
 interface LibrarySearchProps {
   onSelectArticle: (article: ArticleIndex) => void;
 }
 
-// Strip emojis from text for cleaner scholarly presentation
+// Strip emojis from text for cleaner presentation
 function stripEmojis(text: string): string {
   return text
     .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
@@ -26,11 +32,120 @@ function stripEmojis(text: string): string {
     .trim();
 }
 
+// Category display configuration with icons and colors
+interface CategoryConfig {
+  name: string;
+  order: number;
+  description: string;
+  icon: LucideIcon;
+  color: string; // Tailwind color class
+  bgColor: string; // Background color for icon container
+}
+
+const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
+  '00-START-HERE': {
+    name: 'Getting Started',
+    order: 1,
+    description: 'Begin your journey here',
+    icon: Compass,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/15'
+  },
+  '01-Core-Concepts': {
+    name: 'Core Concepts',
+    order: 2,
+    description: 'Foundational ideas and frameworks',
+    icon: Lightbulb,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/15'
+  },
+  '01-Member-Guides': {
+    name: 'Member Guides',
+    order: 3,
+    description: 'Practical guides for members',
+    icon: BookMarked,
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/15'
+  },
+  '02-Thematic-Essays': {
+    name: 'Thematic Essays',
+    order: 4,
+    description: 'Deep explorations of key themes',
+    icon: Feather,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/15'
+  },
+  '03-Member-Guides': {
+    name: 'Advanced Guides',
+    order: 5,
+    description: 'In-depth member resources',
+    icon: GraduationCap,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/15'
+  },
+  '04-Practices': {
+    name: 'Practices',
+    order: 6,
+    description: 'Exercises and rituals',
+    icon: Sparkles,
+    color: 'text-pink-400',
+    bgColor: 'bg-pink-500/15'
+  },
+  '06-Resources': {
+    name: 'Resources',
+    order: 7,
+    description: 'Tools and references',
+    icon: Wrench,
+    color: 'text-slate-400',
+    bgColor: 'bg-slate-500/15'
+  },
+  '07-Community-Contributions': {
+    name: 'Community',
+    order: 8,
+    description: 'Contributions from our community',
+    icon: Users,
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/15'
+  },
+  '09-Technical': {
+    name: 'Technical Documentation',
+    order: 9,
+    description: 'System architecture and specs',
+    icon: Code,
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/15'
+  },
+  'outreach': {
+    name: 'Outreach',
+    order: 10,
+    description: 'External communications',
+    icon: Megaphone,
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/15'
+  },
+  'spiritual-guidance': {
+    name: 'Spiritual Guidance',
+    order: 11,
+    description: 'Contemplative wisdom',
+    icon: Heart,
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-500/15'
+  },
+  '__uncategorized__': {
+    name: 'Other Files',
+    order: 99,
+    description: 'Additional documents and resources',
+    icon: FolderOpen,
+    color: 'text-gray-400',
+    bgColor: 'bg-gray-500/15'
+  },
+};
+
 export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState<LibraryIndex | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch('/library-index.json')
@@ -45,29 +160,11 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
       });
   }, []);
 
-  // Group definitions with display order and names
-  const categoryGroups: Record<string, { name: string; order: number }> = {
-    '09-Technical': { name: 'Technical Documentation', order: 1 },
-    '01-Core-Concepts': { name: 'Core Concepts', order: 2 },
-    '03-Member-Guides': { name: 'Member Guides', order: 3 },
-    '02-Thematic-Essays': { name: 'Thematic Essays', order: 4 },
-    '04-Practices': { name: 'Practices', order: 5 },
-    '01-Member-Guides': { name: 'Foundational Guides', order: 6 },
-    '07-Community-Contributions': { name: 'Community', order: 7 },
-    '00-START-HERE': { name: 'Getting Started', order: 8 },
-    'outreach': { name: 'Outreach', order: 9 },
-    '06-Resources': { name: 'Resources', order: 10 },
-    'spiritual-guidance': { name: 'Spiritual Guidance', order: 11 },
-  };
-
+  // Filter articles based on search query
   const filteredArticles = useMemo(() => {
     if (!index) return [];
 
     let articles = index.articles;
-
-    if (selectedCategory) {
-      articles = articles.filter(a => a.category === selectedCategory);
-    }
 
     if (query.trim()) {
       const searchTerms = query.toLowerCase().split(/\s+/);
@@ -78,44 +175,78 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
     }
 
     return articles;
-  }, [index, query, selectedCategory]);
+  }, [index, query]);
 
+  // Group articles by category, consolidating uncategorized into "Other"
   const groupedArticles = useMemo(() => {
     const groups: Record<string, ArticleIndex[]> = {};
+    const uncategorized: ArticleIndex[] = [];
 
     for (const article of filteredArticles) {
       const cat = article.category;
-      if (!groups[cat]) {
-        groups[cat] = [];
+      // Check if this is a known category or has multiple articles
+      const isKnownCategory = CATEGORY_CONFIG[cat];
+
+      if (isKnownCategory) {
+        if (!groups[cat]) {
+          groups[cat] = [];
+        }
+        groups[cat].push(article);
+      } else {
+        // Collect uncategorized articles (file names as categories, single-item cats, etc.)
+        uncategorized.push(article);
       }
-      groups[cat].push(article);
     }
 
+    // Sort groups by configured order
     const sortedGroups = Object.entries(groups).sort(([a], [b]) => {
-      const orderA = categoryGroups[a]?.order ?? 100;
-      const orderB = categoryGroups[b]?.order ?? 100;
+      const orderA = CATEGORY_CONFIG[a]?.order ?? 100;
+      const orderB = CATEGORY_CONFIG[b]?.order ?? 100;
       if (orderA !== orderB) return orderA - orderB;
       return a.localeCompare(b);
     });
 
+    // Add uncategorized at the end if any exist
+    if (uncategorized.length > 0) {
+      sortedGroups.push(['__uncategorized__', uncategorized]);
+    }
+
     return sortedGroups;
   }, [filteredArticles]);
 
-  const categories = useMemo(() => {
-    if (!index) return [];
-    return Object.entries(index.categories)
-      .filter(([_, cat]) => cat.count > 0)
-      .sort((a, b) => b[1].count - a[1].count);
-  }, [index]);
+  // Count only the main categories for display
+  const mainCategoryCount = groupedArticles.filter(([cat]) => cat !== '__uncategorized__').length;
+
+  // Toggle category expansion
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
+
+  // Expand all when searching
+  useEffect(() => {
+    if (query.trim()) {
+      // When searching, expand all categories that have results
+      setExpandedCategories(new Set(groupedArticles.map(([cat]) => cat)));
+    } else {
+      // When not searching, collapse all
+      setExpandedCategories(new Set());
+    }
+  }, [query, groupedArticles.length]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-2 border-[#B8860B]/30 border-t-[#B8860B] rounded-full animate-spin" />
-          <p className="text-[#C4A77D]/70 text-sm font-light tracking-wide">
-            Opening the archive...
-          </p>
+          <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+          <p className="text-white/50 text-sm">Loading archive...</p>
         </div>
       </div>
     );
@@ -123,211 +254,140 @@ export function LibrarySearch({ onSelectArticle }: LibrarySearchProps) {
 
   if (!index) {
     return (
-      <div className="text-center py-20 text-[#C4A77D]/70">
-        Failed to load wisdom files. Please refresh.
+      <div className="text-center py-20 text-white/50">
+        Failed to load files. Please refresh.
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
-      {/* Search Input — styled as a brass-trimmed card catalog search */}
-      <div className="relative max-w-2xl mx-auto">
-        <div className="relative">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search topics, subjects, concepts..."
-            className="w-full px-6 py-4 pl-14 rounded-xl
-                     bg-[#F5E6D3]/95 dark:bg-[#2C1810]/95
-                     border border-[#B8860B]/30 hover:border-[#B8860B]/50
-                     focus:border-[#B8860B] focus:ring-2 focus:ring-[#B8860B]/20
-                     text-[#3D2B1F] dark:text-[#D4B896]
-                     placeholder-[#8B4513]/50 dark:placeholder-[#C4A77D]/40
-                     backdrop-blur-sm text-lg shadow-xl
-                     transition-all duration-200"
-            style={{ fontFamily: 'Georgia, serif' }}
-          />
-          <svg
-            className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#B8860B]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 rounded-full
-                       text-[#8B4513]/50 hover:text-[#8B4513] dark:text-[#C4A77D]/50 dark:hover:text-[#C4A77D]
-                       hover:bg-[#B8860B]/10 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Category Filters — brass-accented tabs */}
-      <div className="flex flex-wrap justify-center gap-2">
-        <button
-          onClick={() => setSelectedCategory(null)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-            !selectedCategory
-              ? 'bg-[#B8860B] text-[#1A1008] shadow-lg shadow-[#B8860B]/30'
-              : 'bg-[#D4B896]/15 text-[#D4B896] hover:bg-[#D4B896]/25 border border-[#D4B896]/20'
-          }`}
-        >
-          All ({index.totalArticles})
-        </button>
-        {categories.slice(0, 8).map(([key, cat]) => (
+    <div className="space-y-6">
+      {/* Search Input */}
+      <div className="relative max-w-xl">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search all files..."
+          className="w-full px-4 py-3 pl-11 rounded-lg
+                   bg-[#2a2a2a] border border-white/10
+                   hover:border-white/20 focus:border-orange-500/50
+                   focus:ring-1 focus:ring-orange-500/20
+                   text-white placeholder-white/30
+                   transition-all"
+        />
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+        {query && (
           <button
-            key={key}
-            onClick={() => setSelectedCategory(key === selectedCategory ? null : key)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              selectedCategory === key
-                ? 'bg-[#B8860B] text-[#1A1008] shadow-lg shadow-[#B8860B]/30'
-                : 'bg-[#D4B896]/15 text-[#D4B896] hover:bg-[#D4B896]/25 border border-[#D4B896]/20'
-            }`}
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded
+                     text-white/30 hover:text-white transition-colors"
           >
-            {cat.name} ({cat.count})
+            <X size={16} />
           </button>
-        ))}
+        )}
       </div>
 
-      {/* Results Count — scholarly presentation */}
-      <div className="text-center">
-        <p className="text-sm text-[#C4A77D]/70 tracking-wide">
-          {query || selectedCategory ? (
-            <span>Found <span className="text-[#D4B896] font-medium">{filteredArticles.length}</span> file{filteredArticles.length !== 1 ? 's' : ''}</span>
+      {/* Stats Bar */}
+      <div className="flex items-center justify-between text-sm">
+        <p className="text-white/40">
+          {query ? (
+            <span>Found <span className="text-white/70">{filteredArticles.length}</span> files in <span className="text-white/70">{mainCategoryCount}</span> categories</span>
           ) : (
-            <span>Browse <span className="text-[#D4B896] font-medium">{index.totalArticles}</span> wisdom files</span>
+            <span><span className="text-white/70">{index.totalArticles}</span> files in <span className="text-white/70">{mainCategoryCount}</span> categories</span>
           )}
         </p>
+        {!query && (
+          <button
+            onClick={() => {
+              if (expandedCategories.size === groupedArticles.length) {
+                setExpandedCategories(new Set());
+              } else {
+                setExpandedCategories(new Set(groupedArticles.map(([cat]) => cat)));
+              }
+            }}
+            className="text-orange-500 hover:text-orange-400 transition-colors"
+          >
+            {expandedCategories.size === groupedArticles.length ? 'Collapse all' : 'Expand all'}
+          </button>
+        )}
       </div>
 
-      {/* Grouped Results — aged parchment cards */}
-      <div className="space-y-12">
-        {groupedArticles.map(([category, articles], groupIdx) => {
-          const groupName = categoryGroups[category]?.name || index.categories[category]?.name || category;
-
-          // Warm amber accent colors that complement the theme
-          const accentColors = [
-            '#B8860B', // Dark goldenrod
-            '#CD853F', // Peru
-            '#A0522D', // Sienna
-            '#8B4513', // Saddle brown
-            '#D2691E', // Chocolate
-          ];
-          const accentColor = accentColors[groupIdx % accentColors.length];
+      {/* Category Accordions */}
+      <div className="space-y-2">
+        {groupedArticles.map(([category, articles]) => {
+          const config = CATEGORY_CONFIG[category] || {
+            name: category.replace(/^\d+-/, '').replace(/-/g, ' '),
+            description: '',
+            icon: FolderOpen,
+            color: 'text-gray-400',
+            bgColor: 'bg-gray-500/15'
+          };
+          const isExpanded = expandedCategories.has(category);
+          const IconComponent = config.icon;
 
           return (
-            <section key={category}>
-              {/* Group Header — scholarly section divider */}
-              <div className="flex items-center gap-4 mb-6">
-                <div
-                  className="w-1 h-8 rounded-full"
-                  style={{ backgroundColor: accentColor }}
-                />
-                <div>
-                  <h2
-                    className="text-xl font-light text-[#D4B896] tracking-wide"
-                    style={{ fontFamily: 'Georgia, serif' }}
-                  >
-                    {groupName}
-                  </h2>
-                  <p className="text-sm text-[#C4A77D]/50 mt-0.5">
-                    {articles.length} {articles.length === 1 ? 'entry' : 'entries'}
-                  </p>
+            <div key={category} className="rounded-lg border border-white/10 overflow-hidden">
+              {/* Category Header - Always visible */}
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-[#2a2a2a] hover:bg-[#333] transition-colors"
+              >
+                <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
+                  <ChevronRight size={16} className="text-white/40" />
                 </div>
-              </div>
+                <div className={`p-2 rounded-lg ${config.bgColor}`}>
+                  <IconComponent size={18} className={config.color} />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-white">{config.name}</span>
+                    <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded">
+                      {articles.length}
+                    </span>
+                  </div>
+                  {config.description && !isExpanded && (
+                    <p className="text-xs text-white/40 mt-0.5">{config.description}</p>
+                  )}
+                </div>
+              </button>
 
-              {/* Group Cards — aged parchment index cards */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-                {articles.slice(0, 12).map((article) => (
-                  <button
-                    key={article.id}
-                    onClick={() => onSelectArticle(article)}
-                    className="group relative text-left overflow-hidden rounded-lg
-                             bg-gradient-to-br from-[#F5E6D3]/95 to-[#E8D8C3]/90
-                             dark:from-[#2C1810]/95 dark:to-[#3D2B1F]/90
-                             backdrop-blur-sm
-                             shadow-md hover:shadow-xl
-                             border border-[#B8860B]/20 hover:border-[#B8860B]/40
-                             hover:-translate-y-0.5
-                             transition-all duration-200"
-                  >
-                    {/* Left accent bar — library filing color */}
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1 group-hover:w-1.5 transition-all"
-                      style={{ backgroundColor: accentColor }}
-                    />
-
-                    <div className="pl-5 pr-4 py-4">
-                      {/* Title — scholarly typography */}
-                      <h3
-                        className="text-sm font-medium text-[#3D2B1F] dark:text-[#D4B896]
-                                 leading-relaxed line-clamp-2
-                                 group-hover:text-[#8B4513] dark:group-hover:text-[#F5E6D3]
-                                 transition-colors"
-                        style={{ fontFamily: 'Georgia, serif' }}
+              {/* Articles List - Collapsible */}
+              {isExpanded && (
+                <div className="border-t border-white/5 bg-[#1a1a1a]">
+                  <div className="divide-y divide-white/5">
+                    {articles.map((article) => (
+                      <button
+                        key={article.id}
+                        onClick={() => onSelectArticle(article)}
+                        className="w-full flex items-center gap-3 px-4 py-3 pl-14
+                                 hover:bg-white/5 transition-colors group text-left"
                       >
-                        {stripEmojis(article.title)}
-                      </h3>
-                    </div>
-
-                    {/* Subtle corner flourish on hover */}
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity">
-                      <svg className="w-4 h-4 text-[#B8860B]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Show more link */}
-              {articles.length > 12 && (
-                <button
-                  onClick={() => setSelectedCategory(category)}
-                  className="mt-4 text-sm text-[#B8860B]/70 hover:text-[#B8860B] transition-colors
-                           flex items-center gap-2"
-                >
-                  <span>+ {articles.length - 12} more files</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </button>
+                        <FileText size={14} className="text-white/30 group-hover:text-white/60 transition-colors flex-shrink-0" />
+                        <span className="flex-1 text-sm text-white/70 group-hover:text-white transition-colors line-clamp-1">
+                          {stripEmojis(article.title)}
+                        </span>
+                        <ChevronRight size={14} className="text-white/20 group-hover:text-orange-500 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-            </section>
+            </div>
           );
         })}
       </div>
 
       {/* Empty State */}
-      {filteredArticles.length === 0 && (query || selectedCategory) && (
+      {filteredArticles.length === 0 && query && (
         <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full
-                        bg-[#B8860B]/10 border border-[#B8860B]/20 mb-6">
-            <svg className="w-10 h-10 text-[#B8860B]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl
+                        bg-[#2a2a2a] border border-white/10 mb-4">
+            <BookOpen size={28} className="text-white/30" />
           </div>
-          <p className="text-[#C4A77D]/70 font-light" style={{ fontFamily: 'Georgia, serif' }}>
-            No files found matching your search.
-          </p>
-          <p className="text-[#C4A77D]/50 text-sm mt-2">
-            Try different terms or browse the categories above.
+          <p className="text-white/60">No files found matching "{query}"</p>
+          <p className="text-white/40 text-sm mt-1">
+            Try different search terms
           </p>
         </div>
       )}

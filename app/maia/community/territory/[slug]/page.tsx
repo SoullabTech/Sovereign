@@ -10,13 +10,16 @@ import TerritoryPageWrapper from './TerritoryPageWrapper';
 // Generate static params for deployment
 export async function generateStaticParams() {
   // Return the available community territory slugs for static generation
+  // These match the actual territories in the database
   return [
-    { slug: 'soul-work' },
-    { slug: 'practices' },
-    { slug: 'traditions' },
+    { slug: 'threshold' },
+    { slug: 'seeking' },
+    { slug: 'practice' },
     { slug: 'breakthrough' },
-    { slug: 'workshop' },
-    { slug: 'general' }
+    { slug: 'offering' },
+    { slug: 'circle' },
+    { slug: 'foundation' },
+    { slug: 'workshop' }
   ];
 }
 

@@ -99,11 +99,11 @@ export function ToolCard({ tool, compact = false }: ToolCardProps) {
           )}
         </div>
 
-        {/* Arrow */}
+        {/* Arrow - amber for visibility */}
         {!tool.comingSoon && (
           <ChevronRight
             className={`
-              flex-shrink-0 text-white/20 group-hover:text-[#D4B896]/60
+              flex-shrink-0 text-[#D4B896]/40 group-hover:text-[#D4B896]
               transition-all duration-300 group-hover:translate-x-1
               ${compact ? 'w-4 h-4' : 'w-5 h-5'}
             `}

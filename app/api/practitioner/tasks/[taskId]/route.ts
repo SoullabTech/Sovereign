@@ -9,30 +9,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-
-async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) return null;
-  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
-  return result.rows.length > 0 ? { id: memberId } : null;
-}
-
-async function verifyTaskAccess(taskId: string, memberId: string): Promise<boolean> {
-  const result = await query(
-    `SELECT t.id FROM rl_tasks t
-     JOIN rl_practices p ON p.id = t.practice_id
-     WHERE t.id = $1 AND p.owner_user_id = $2`,
-    [taskId, memberId]
-  );
-  return result.rows.length > 0;
-}
+import { getAuthenticatedMember, verifyTaskAccess } from '@/lib/practitioner/auth';
 
 type RouteContext = { params: Promise<{ taskId: string }> };
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { taskId } = await context.params;
-    const member = await getMemberFromRequest(request);
+    const member = await getAuthenticatedMember(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -75,7 +59,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { taskId } = await context.params;
-    const member = await getMemberFromRequest(request);
+    const member = await getAuthenticatedMember(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -148,7 +132,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { taskId } = await context.params;
-    const member = await getMemberFromRequest(request);
+    const member = await getAuthenticatedMember(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

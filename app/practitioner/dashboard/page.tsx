@@ -14,6 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   CommitmentCards,
   UpcomingSessions,
@@ -119,10 +120,8 @@ export default function StewardshipDashboard() {
         const member = JSON.parse(memberData);
         const memberId = member.id;
 
-        // First, get or create practice
-        const practicesRes = await fetch('/api/practitioner/practices', {
-          headers: { 'x-member-id': memberId }
-        });
+        // First, get or create practice (apiFetch adds x-session-token header)
+        const practicesRes = await apiFetch('/api/practitioner/practices');
 
         if (!practicesRes.ok) {
           throw new Error('Failed to load practices');
@@ -134,11 +133,10 @@ export default function StewardshipDashboard() {
 
         if (practices.length === 0) {
           // Create default practice
-          const createRes = await fetch('/api/practitioner/practices', {
+          const createRes = await apiFetch('/api/practitioner/practices', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'x-member-id': memberId
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify({
               name: `${member.name || member.username}'s Practice`,
@@ -160,9 +158,8 @@ export default function StewardshipDashboard() {
         setPractice(currentPractice);
 
         // Load dashboard data
-        const dashboardRes = await fetch(
-          `/api/practitioner/practices/${currentPractice.id}/dashboard`,
-          { headers: { 'x-member-id': memberId } }
+        const dashboardRes = await apiFetch(
+          `/api/practitioner/practices/${currentPractice.id}/dashboard`
         );
 
         if (!dashboardRes.ok) {
@@ -206,13 +203,30 @@ export default function StewardshipDashboard() {
   };
 
   const handleTaskClick = (taskId: string) => {
-    // TODO: Implement task detail view
-    console.log('Task clicked:', taskId);
+    router.push(`/practitioner/tasks/${taskId}`);
   };
 
   const handleTaskComplete = async (taskId: string) => {
-    // TODO: Implement task completion
-    console.log('Complete task:', taskId);
+    try {
+      const res = await apiFetch(`/api/practitioner/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+
+      if (res.ok) {
+        // Refresh dashboard data
+        setData(prev => prev ? {
+          ...prev,
+          careHorizon: {
+            ...prev.careHorizon,
+            tasks: prev.careHorizon.tasks.filter(t => t.id !== taskId)
+          }
+        } : null);
+      }
+    } catch (err) {
+      console.error('Failed to complete task:', err);
+    }
   };
 
   const handleContainerClick = (containerId: string) => {
@@ -239,6 +253,13 @@ export default function StewardshipDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => router.push('/practitioner/labtools')}
+              className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg
+                       hover:bg-gray-700 text-gray-300 hover:text-white transition-colors flex items-center gap-2"
+            >
+              <span>Labtools</span>
+            </button>
             <button
               onClick={() => router.push('/practitioner/sessions/new')}
               className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg
