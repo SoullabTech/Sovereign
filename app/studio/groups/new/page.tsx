@@ -232,10 +232,13 @@ export default function NewGroupPage() {
                   <button
                     key={c}
                     onClick={() => setColor(c)}
-                    className={`w-8 h-8 rounded-lg transition-all ${
-                      color === c ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''
+                    className={`w-8 h-8 rounded-lg transition-all border-2 ${
+                      color === c
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 border-white/50'
+                        : 'border-slate-600 hover:border-slate-400'
                     }`}
                     style={{ backgroundColor: c }}
+                    title={c}
                   />
                 ))}
               </div>
