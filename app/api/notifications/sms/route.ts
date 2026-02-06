@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
           `SELECT config_encrypted
            FROM practitioner_integrations
            WHERE practitioner_id = $1
-           AND integration_type = 'twilio'
+           AND integration_type = 'sms'
            AND status = 'connected'`,
           [practitionerId]
         );
