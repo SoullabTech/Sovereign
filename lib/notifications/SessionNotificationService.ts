@@ -202,14 +202,25 @@ async function getTwilioCredentials(practitionerId?: string): Promise<{
 } | null> {
   // Try practitioner-specific credentials first
   if (practitionerId) {
-    const result = await query(
-      `SELECT credentials_data FROM practitioner_integrations
-       WHERE practitioner_id = $1 AND integration_type = 'twilio' AND is_active = true`,
-      [practitionerId]
-    );
+    try {
+      const result = await query(
+        `SELECT config_encrypted FROM practitioner_integrations
+         WHERE practitioner_id = $1 AND integration_type = 'twilio' AND status = 'connected'`,
+        [practitionerId]
+      );
 
-    if (result.rows.length > 0 && result.rows[0].credentials_data) {
-      return result.rows[0].credentials_data;
+      if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+        // config_encrypted is a JSON blob with Twilio creds
+        const config = typeof result.rows[0].config_encrypted === 'string'
+          ? JSON.parse(result.rows[0].config_encrypted)
+          : result.rows[0].config_encrypted;
+        if (config.account_sid && config.auth_token && config.from_number) {
+          return config;
+        }
+      }
+    } catch (error) {
+      // Don't let practitioner credential lookup failure prevent env var fallback
+      console.warn('[SessionNotifications] Practitioner credential lookup failed, falling back to env vars:', error instanceof Error ? error.message : error);
     }
   }
 
@@ -607,10 +618,10 @@ async function getPractitionerNotificationConfig(practitionerId: string): Promis
     `SELECT
        p.email,
        p.notification_settings,
-       pi.credentials_data as telegram_config
+       pi.config_encrypted as telegram_config
      FROM practitioners p
      LEFT JOIN practitioner_integrations pi ON p.id = pi.practitioner_id
-       AND pi.integration_type = 'telegram' AND pi.is_active = true
+       AND pi.integration_type = 'telegram' AND pi.status = 'connected'
      WHERE p.id = $1`,
     [practitionerId]
   );
@@ -620,8 +631,14 @@ async function getPractitionerNotificationConfig(practitionerId: string): Promis
   const row = result.rows[0];
   const settings = row.notification_settings || {};
 
+  // telegram_config may be a JSON string (config_encrypted column) or already parsed
+  let telegramConfig = row.telegram_config;
+  if (typeof telegramConfig === 'string') {
+    try { telegramConfig = JSON.parse(telegramConfig); } catch { telegramConfig = null; }
+  }
+
   return {
-    telegramChatId: row.telegram_config?.chat_id || settings.telegram_chat_id,
+    telegramChatId: telegramConfig?.chat_id || settings.telegram_chat_id,
     phone: settings.phone,
     enabled: true,
   };

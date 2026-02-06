@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { sendBookingConfirmation as sendWhatsAppConfirmation } from '@/lib/notifications/SessionNotificationService';
+import { syncNewSessionToGoogle, syncUpdatedSessionToGoogle, syncCancelledSessionToGoogle } from '@/lib/calendar/syncSessionToGoogle';
 
 const VALID_STATUSES = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'] as const;
 const VALID_LOCATION_TYPES = ['video', 'phone', 'in_person', 'async'] as const;
@@ -212,15 +213,25 @@ export async function POST(request: NextRequest) {
 
     const session = result.rows[0];
 
-    // Send WhatsApp/SMS confirmation to client (async, non-blocking)
+    // Get client details (used for both notification and calendar sync)
+    let clientName: string | undefined;
+    let clientPhone: string | undefined;
+    let clientEmail: string | undefined;
     try {
-      // Get client details for notification
       const clientResult = await db.query(
         'SELECT name, email, phone FROM practitioner_clients WHERE id = $1',
         [client_id]
       );
       const client = clientResult.rows[0];
+      clientName = client?.name;
+      clientPhone = client?.phone;
+      clientEmail = client?.email;
+    } catch (err) {
+      console.error('[Studio Sessions] Failed to fetch client details:', err);
+    }
 
+    // Send WhatsApp/SMS confirmation to client (async, non-blocking)
+    try {
       // Get practitioner name
       const practitionerResult = await db.query(
         'SELECT name FROM practitioners WHERE id = $1',
@@ -228,12 +239,12 @@ export async function POST(request: NextRequest) {
       );
       const practitioner = practitionerResult.rows[0];
 
-      if (client?.phone) {
+      if (clientPhone) {
         sendWhatsAppConfirmation({
           id: session.id,
-          clientName: client.name,
-          clientPhone: client.phone,
-          clientEmail: client.email,
+          clientName: clientName || 'Client',
+          clientPhone: clientPhone,
+          clientEmail: clientEmail,
           serviceName: session_type || 'Session',
           scheduledStart: scheduledStart,
           scheduledEnd: scheduledEnd,
@@ -249,6 +260,25 @@ export async function POST(request: NextRequest) {
     } catch (notifError) {
       // Don't fail the session creation if notification fails
       console.error('[Studio Sessions] Failed to send notification:', notifError);
+    }
+
+    // Sync to Google Calendar (async, non-blocking)
+    if (memberId) {
+      syncNewSessionToGoogle(memberId, {
+        id: session.id,
+        scheduledStart: scheduledStart,
+        scheduledEnd: scheduledEnd,
+        clientName: clientName,
+        serviceName: session_type || undefined,
+        locationType: location_type,
+        locationDetails: meeting_link,
+      }).then(syncResult => {
+        if (syncResult.googleEventId) {
+          console.log(`[Studio Sessions] Synced to Google Calendar: ${syncResult.googleEventId}`);
+        }
+      }).catch(err => {
+        console.error('[Studio Sessions] Calendar sync error:', err);
+      });
     }
 
     return NextResponse.json({
@@ -371,6 +401,29 @@ export async function PATCH(request: NextRequest) {
     }
 
     const session = result.rows[0];
+
+    // Sync to Google Calendar (async, non-blocking)
+    if (memberId) {
+      if (updates.status === 'cancelled') {
+        // Session cancelled — delete from Google Calendar
+        syncCancelledSessionToGoogle(memberId, session.id).catch(err => {
+          console.error('[Studio Sessions] Calendar cancel sync error:', err);
+        });
+      } else if (updates.scheduledStart || updates.scheduledEnd) {
+        // Time changed — update Google Calendar event
+        syncUpdatedSessionToGoogle(memberId, {
+          id: session.id,
+          scheduledStart: session.scheduled_start,
+          scheduledEnd: session.scheduled_end,
+          locationType: session.location_type,
+          locationDetails: session.location_details,
+          notes: session.notes,
+        }).catch(err => {
+          console.error('[Studio Sessions] Calendar update sync error:', err);
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       session: {
@@ -416,6 +469,13 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Session ID is required' }, { status: 400 });
+    }
+
+    // Sync cancellation to Google Calendar before updating status
+    if (memberId) {
+      syncCancelledSessionToGoogle(memberId, id).catch(err => {
+        console.error('[Studio Sessions] Calendar cancel sync error:', err);
+      });
     }
 
     // Soft delete by setting status to cancelled
