@@ -18,6 +18,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Client {
   id: string;
@@ -73,7 +74,7 @@ export default function ClientsPage() {
         if (statusFilter !== 'all') params.set('status', statusFilter);
         if (searchQuery) params.set('search', searchQuery);
 
-        const res = await fetch(`/api/studio/clients?${params.toString()}`);
+        const res = await apiFetch(`/api/studio/clients?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setClients(data.clients || []);
@@ -92,7 +93,7 @@ export default function ClientsPage() {
   const createClient = async (clientData: Partial<Client>) => {
     setSaving(true);
     try {
-      const res = await fetch('/api/studio/clients', {
+      const res = await apiFetch('/api/studio/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(clientData),

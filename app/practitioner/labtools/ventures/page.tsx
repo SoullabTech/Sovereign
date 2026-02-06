@@ -1,126 +1,169 @@
 'use client';
 
 /**
- * Ventures List Page
- * View and filter business ventures
+ * Ventures List
+ * View and manage business ventures/initiatives
  */
 
-import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { apiFetch } from '@/lib/http/apiBase';
 
 interface Venture {
   id: string;
   name: string;
+  type: string;
   description: string | null;
-  ventureType: string;
-  status: string;
-  priority: number;
-  targetStartDate: string | null;
-  targetEndDate: string | null;
+  isActive: boolean;
   openTasks: number;
   upcomingMeetings: number;
+  activeOpportunities: number;
+  pipelineValueCents: number;
+  createdAt: string;
 }
 
-const VENTURE_TYPES = [
-  { value: 'maia_rd', label: 'MAIA R&D' },
-  { value: 'soullab_rd', label: 'Soullab R&D' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'sales', label: 'Sales' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'operations', label: 'Operations' },
-  { value: 'content', label: 'Content' },
-  { value: 'events', label: 'Events' },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'planning', label: 'Planning' },
-  { value: 'idea', label: 'Idea' },
-  { value: 'on_hold', label: 'On Hold' },
-  { value: 'completed', label: 'Completed' },
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-500/20 text-green-300 border-green-500/30',
-  planning: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  idea: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-  on_hold: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-  completed: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-  archived: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+const VENTURE_TYPE_LABELS: Record<string, string> = {
+  maia_rd: 'MAIA R&D',
+  soullab_rd: 'SoulLab R&D',
+  marketing: 'Marketing',
+  sales: 'Sales',
+  partnerships: 'Partnerships',
+  operations: 'Operations',
+  content: 'Content',
+  events: 'Events'
 };
 
-const PRIORITY_LABELS: Record<number, string> = {
-  1: 'Critical',
-  2: 'High',
-  3: 'Medium',
-  4: 'Low',
-  5: 'Someday',
-};
+function formatCurrency(cents: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(cents / 100);
+}
 
-function VenturesContent() {
+function VentureCard({ venture, onClick }: { venture: Venture; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left bg-[#111827] rounded-xl border border-gray-700 p-5
+                 hover:border-gray-600 transition-colors"
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <h3 className="text-white font-medium">{venture.name}</h3>
+          <p className="text-xs text-gray-500 mt-1">
+            {VENTURE_TYPE_LABELS[venture.type] || venture.type}
+          </p>
+        </div>
+        {!venture.isActive && (
+          <span className="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded">
+            Inactive
+          </span>
+        )}
+      </div>
+
+      {venture.description && (
+        <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+          {venture.description}
+        </p>
+      )}
+
+      <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="py-2 bg-gray-800/50 rounded">
+          <div className="text-sm font-medium text-white tabular-nums">
+            {venture.openTasks}
+          </div>
+          <div className="text-xs text-gray-500">Tasks</div>
+        </div>
+        <div className="py-2 bg-gray-800/50 rounded">
+          <div className="text-sm font-medium text-white tabular-nums">
+            {venture.upcomingMeetings}
+          </div>
+          <div className="text-xs text-gray-500">Meetings</div>
+        </div>
+        <div className="py-2 bg-gray-800/50 rounded">
+          <div className="text-sm font-medium text-white tabular-nums">
+            {venture.activeOpportunities}
+          </div>
+          <div className="text-xs text-gray-500">Opps</div>
+        </div>
+        <div className="py-2 bg-gray-800/50 rounded">
+          <div className="text-sm font-medium text-white tabular-nums">
+            {formatCurrency(venture.pipelineValueCents)}
+          </div>
+          <div className="text-xs text-gray-500">Pipeline</div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export default function VenturesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const typeFilter = searchParams.get('type') || '';
-  const statusFilter = searchParams.get('status') || 'active,planning,idea';
-
   const [ventures, setVentures] = useState<Venture[]>([]);
-  const [practiceId, setPracticeId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [practiceId, setPracticeId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
   useEffect(() => {
-    async function loadData() {
+    async function loadVentures() {
       try {
-        const practicesRes = await apiFetch('/api/practitioner/practices');
-        if (!practicesRes.ok) throw new Error('Failed to load practice');
+        const memberData = localStorage.getItem('beta_user');
+        if (!memberData) {
+          router.push('/signin');
+          return;
+        }
+
+        const member = JSON.parse(memberData);
+        const memberId = member.id;
+
+        // Get practice
+        const practicesRes = await fetch('/api/practitioner/practices', {
+          headers: { 'x-member-id': memberId }
+        });
+
+        if (!practicesRes.ok) throw new Error('Failed to load practices');
+
         const { practices } = await practicesRes.json();
         if (practices.length === 0) {
           router.push('/practitioner/dashboard');
           return;
         }
-        setPracticeId(practices[0].id);
 
-        let url = `/api/practitioner/practices/${practices[0].id}/labtools/ventures`;
-        const params = new URLSearchParams();
-        if (typeFilter) params.set('type', typeFilter);
-        if (statusFilter) params.set('status', statusFilter);
-        if (params.toString()) url += `?${params.toString()}`;
+        const practice = practices[0];
+        setPracticeId(practice.id);
 
-        const venturesRes = await apiFetch(url);
+        // Load ventures
+        const isActiveParam = filter === 'all' ? '' : `?isActive=${filter === 'active'}`;
+        const venturesRes = await fetch(
+          `/api/practitioner/practices/${practice.id}/labtools/ventures${isActiveParam}`,
+          { headers: { 'x-member-id': memberId } }
+        );
+
         if (!venturesRes.ok) throw new Error('Failed to load ventures');
-        const { ventures: ventureList } = await venturesRes.json();
-        setVentures(ventureList);
+
+        const { ventures: venturesData } = await venturesRes.json();
+        setVentures(venturesData);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        setError(err instanceof Error ? err.message : 'Failed to load ventures');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
-  }, [router, typeFilter, statusFilter]);
 
-  const updateFilters = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set(key, value);
-    } else {
-      params.delete(key);
-    }
-    router.push(`/practitioner/labtools/ventures?${params.toString()}`);
-  };
+    loadVentures();
+  }, [router, filter]);
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-700 rounded w-48" />
-          <div className="h-12 bg-gray-800 rounded" />
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-800 rounded-lg" />
-            ))}
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-4xl mx-auto px-6 py-8 animate-pulse">
+          <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+          <div className="space-y-4">
+            <div className="h-32 bg-gray-800 rounded" />
+            <div className="h-32 bg-gray-800 rounded" />
           </div>
         </div>
       </div>
@@ -129,138 +172,96 @@ function VenturesContent() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-          <p className="text-red-400">{error}</p>
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+            <p className="text-red-400">{error}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-medium text-white">Ventures</h1>
-        <Link
-          href="/practitioner/labtools/ventures/new"
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm transition-colors"
-        >
-          + New Venture
-        </Link>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        {/* Type Filter */}
-        <select
-          value={typeFilter}
-          onChange={(e) => updateFilters('type', e.target.value)}
-          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white"
-        >
-          <option value="">All Types</option>
-          {VENTURE_TYPES.map(t => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
-
-        {/* Status Pills */}
-        <div className="flex gap-1">
-          {STATUS_OPTIONS.map(s => {
-            const isActive = statusFilter.includes(s.value);
-            return (
-              <button
-                key={s.value}
-                onClick={() => {
-                  const current = statusFilter.split(',').filter(Boolean);
-                  const updated = isActive
-                    ? current.filter(v => v !== s.value)
-                    : [...current, s.value];
-                  updateFilters('status', updated.join(','));
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                  isActive
-                    ? STATUS_COLORS[s.value]
-                    : 'bg-gray-800 text-gray-500 border border-gray-700'
-                }`}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Ventures List */}
-      {ventures.length === 0 ? (
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 text-center">
-          <p className="text-gray-500">No ventures found</p>
-          <Link
-            href="/practitioner/labtools/ventures/new"
-            className="text-sm text-amber-400 hover:underline mt-2 inline-block"
-          >
-            Create your first venture
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {ventures.map(venture => (
-            <Link
-              key={venture.id}
-              href={`/practitioner/labtools/ventures/${venture.id}`}
-              className="block bg-gray-800/50 border border-gray-700 rounded-lg p-4 hover:border-amber-500/50 transition-colors"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-white font-medium">{venture.name}</h3>
-                    <span className={`px-2 py-0.5 rounded text-xs border ${STATUS_COLORS[venture.status]}`}>
-                      {venture.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {VENTURE_TYPES.find(t => t.value === venture.ventureType)?.label || venture.ventureType}
-                    {venture.priority && venture.priority !== 3 && (
-                      <span className="ml-2">· {PRIORITY_LABELS[venture.priority]}</span>
-                    )}
-                  </p>
-                  {venture.description && (
-                    <p className="text-sm text-gray-400 mt-2 line-clamp-2">{venture.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  {venture.openTasks > 0 && (
-                    <span>{venture.openTasks} tasks</span>
-                  )}
-                  {venture.upcomingMeetings > 0 && (
-                    <span>{venture.upcomingMeetings} meetings</span>
-                  )}
-                </div>
-              </div>
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+            <Link href="/practitioner/labtools" className="hover:text-gray-400">
+              Labtools
             </Link>
+            <span>/</span>
+            <span className="text-gray-400">Ventures</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-medium text-white">Ventures</h1>
+            <Link
+              href="/practitioner/labtools/ventures/new"
+              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white
+                       rounded-lg transition-colors"
+            >
+              + New Venture
+            </Link>
+          </div>
+        </header>
+
+        {/* Filter tabs */}
+        <div className="flex gap-2 mb-6">
+          {(['active', 'all', 'inactive'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                filter === f
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
 
-export default function VenturesPage() {
-  return (
-    <Suspense fallback={
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-700 rounded w-48" />
-          <div className="h-12 bg-gray-800 rounded" />
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-gray-800 rounded-lg" />
+        {/* Ventures Grid */}
+        {ventures.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">
+              {filter === 'active'
+                ? 'No active ventures yet'
+                : filter === 'inactive'
+                ? 'No inactive ventures'
+                : 'No ventures yet'}
+            </p>
+            <Link
+              href="/practitioner/labtools/ventures/new"
+              className="text-blue-400 hover:text-blue-300"
+            >
+              Create your first venture
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {ventures.map((venture) => (
+              <VentureCard
+                key={venture.id}
+                venture={venture}
+                onClick={() => router.push(`/practitioner/labtools/ventures/${venture.id}`)}
+              />
             ))}
           </div>
+        )}
+
+        {/* Back link */}
+        <div className="mt-8 pt-6 border-t border-gray-800">
+          <Link
+            href="/practitioner/labtools"
+            className="text-sm text-gray-500 hover:text-gray-400"
+          >
+            ← Back to Labtools
+          </Link>
         </div>
       </div>
-    }>
-      <VenturesContent />
-    </Suspense>
+    </div>
   );
 }

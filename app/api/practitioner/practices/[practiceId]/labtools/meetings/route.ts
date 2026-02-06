@@ -2,19 +2,37 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Meetings API
- * List and create business meetings
+ * GET  - List meetings for practice
+ * POST - Create a new meeting
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getAuthenticatedMember, verifyPracticeOwnership } from '@/lib/practitioner/auth';
+
+async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
+  const memberId = request.headers.get('x-member-id');
+  if (!memberId) return null;
+  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
+  return result.rows.length > 0 ? { id: memberId } : null;
+}
+
+async function verifyPracticeOwnership(practiceId: string, memberId: string): Promise<boolean> {
+  const result = await query(
+    'SELECT id FROM rl_practices WHERE id = $1 AND owner_user_id = $2',
+    [practiceId, memberId]
+  );
+  return result.rows.length > 0;
+}
 
 type RouteContext = { params: Promise<{ practiceId: string }> };
+
+const VALID_MEETING_TYPES = ['internal', 'partner', 'prospect', 'vendor', 'advisory', 'presentation', 'workshop', 'other'];
+const VALID_MEETING_STATUSES = ['scheduled', 'completed', 'canceled', 'no_show'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -24,24 +42,25 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const { searchParams } = new URL(request.url);
-    const meetingType = searchParams.get('type');
-    const status = searchParams.get('status') || 'scheduled';
-    const upcoming = searchParams.get('upcoming') === 'true';
+    const status = searchParams.get('status');
+    const meetingType = searchParams.get('meetingType');
+    const ventureId = searchParams.get('ventureId');
+    const opportunityId = searchParams.get('opportunityId');
+    const upcoming = searchParams.get('upcoming');
+    const filter = searchParams.get('filter');
 
     let sql = `
-      SELECT m.*,
+      SELECT
+        m.id, m.title, m.meeting_type, m.status,
+        m.scheduled_start_at, m.scheduled_end_at,
+        m.location, m.agenda, m.notes, m.action_items,
+        m.venture_id, m.opportunity_id,
+        m.created_at, m.updated_at,
         v.name as venture_name,
         o.title as opportunity_title,
-        (SELECT COUNT(*) FROM rl_meeting_attendees ma WHERE ma.meeting_id = m.id) as attendee_count,
-        (SELECT json_agg(json_build_object(
-          'id', ma.id,
-          'personId', ma.person_id,
-          'externalName', ma.external_name,
-          'isOrganizer', ma.is_organizer,
-          'personName', p.display_name
-        )) FROM rl_meeting_attendees ma
-        LEFT JOIN rl_people p ON p.id = ma.person_id
-        WHERE ma.meeting_id = m.id) as attendees
+        (
+          SELECT COUNT(*)::int FROM rl_meeting_attendees ma WHERE ma.meeting_id = m.id
+        ) as attendee_count
       FROM rl_meetings m
       LEFT JOIN rl_ventures v ON v.id = m.venture_id
       LEFT JOIN rl_opportunities o ON o.id = m.opportunity_id
@@ -50,45 +69,53 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const values: unknown[] = [practiceId];
     let paramIndex = 2;
 
-    if (meetingType) {
-      sql += ` AND m.meeting_type = $${paramIndex++}::meeting_type`;
-      values.push(meetingType);
-    }
-
-    if (status) {
+    if (status && VALID_MEETING_STATUSES.includes(status)) {
       sql += ` AND m.status = $${paramIndex++}::meeting_status`;
       values.push(status);
     }
-
-    if (upcoming) {
-      sql += ` AND m.scheduled_start_at > NOW()`;
+    if (meetingType && VALID_MEETING_TYPES.includes(meetingType)) {
+      sql += ` AND m.meeting_type = $${paramIndex++}::meeting_type`;
+      values.push(meetingType);
+    }
+    if (ventureId) {
+      sql += ` AND m.venture_id = $${paramIndex++}`;
+      values.push(ventureId);
+    }
+    if (opportunityId) {
+      sql += ` AND m.opportunity_id = $${paramIndex++}`;
+      values.push(opportunityId);
+    }
+    if (upcoming === 'true') {
+      sql += ` AND m.scheduled_start_at >= NOW() AND m.status = 'scheduled'`;
+    }
+    if (filter === 'missing_notes') {
+      sql += ` AND m.status = 'completed' AND (m.notes IS NULL OR m.notes = '')`;
     }
 
-    sql += ` ORDER BY m.scheduled_start_at ${upcoming ? 'ASC' : 'DESC'}`;
+    sql += ` ORDER BY m.scheduled_start_at ${upcoming === 'true' ? 'ASC' : 'DESC'}`;
 
     const result = await query(sql, values);
 
     return NextResponse.json({
-      meetings: result.rows.map(row => ({
-        id: row.id,
-        title: row.title,
-        meetingType: row.meeting_type,
-        status: row.status,
-        scheduledStartAt: row.scheduled_start_at,
-        scheduledEndAt: row.scheduled_end_at,
-        location: row.location,
-        locationDetails: row.location_details,
-        ventureId: row.venture_id,
-        ventureName: row.venture_name,
-        opportunityId: row.opportunity_id,
-        opportunityTitle: row.opportunity_title,
-        agenda: row.agenda,
-        notes: row.notes,
-        actionItems: row.action_items,
-        attendeeCount: parseInt(row.attendee_count || '0'),
-        attendees: row.attendees || [],
-        createdAt: row.created_at,
-      })),
+      meetings: result.rows.map(r => ({
+        id: r.id,
+        title: r.title,
+        meetingType: r.meeting_type,
+        status: r.status,
+        scheduledStartAt: r.scheduled_start_at,
+        scheduledEndAt: r.scheduled_end_at,
+        location: r.location,
+        agenda: r.agenda,
+        notes: r.notes,
+        actionItems: r.action_items,
+        ventureId: r.venture_id,
+        ventureName: r.venture_name,
+        opportunityId: r.opportunity_id,
+        opportunityTitle: r.opportunity_title,
+        attendeeCount: r.attendee_count,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at
+      }))
     });
   } catch (error) {
     console.error('[MEETINGS] List error:', error);
@@ -99,7 +126,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -111,63 +138,86 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const body = await request.json();
     const {
       title,
-      meetingType = 'other',
-      scheduledStartAt,
-      scheduledEndAt,
-      location = 'video',
-      locationDetails,
-      ventureId,
-      opportunityId,
-      agenda,
-      attendeeIds = [],
-    } = body;
-
-    if (!title || !scheduledStartAt || !scheduledEndAt) {
-      return NextResponse.json({ error: 'Title, start time, and end time are required' }, { status: 400 });
-    }
-
-    // Create meeting
-    const meetingResult = await query(`
-      INSERT INTO rl_meetings (
-        practice_id, title, meeting_type, scheduled_start_at, scheduled_end_at,
-        location, location_details, venture_id, opportunity_id, agenda
-      ) VALUES ($1, $2, $3::meeting_type, $4, $5, $6, $7, $8, $9, $10)
-      RETURNING *
-    `, [
-      practiceId,
-      title,
       meetingType,
       scheduledStartAt,
       scheduledEndAt,
       location,
-      locationDetails || null,
-      ventureId || null,
-      opportunityId || null,
-      agenda || null,
-    ]);
+      agenda,
+      ventureId,
+      opportunityId,
+      attendeeIds
+    } = body;
 
-    const meeting = meetingResult.rows[0];
+    if (!title?.trim()) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
 
-    // Add attendees
-    if (attendeeIds.length > 0) {
-      const attendeeValues = attendeeIds.map((personId: string, i: number) =>
-        `($1, $${i + 2}, ${i === 0 ? 'true' : 'false'})`
-      ).join(', ');
-      await query(
-        `INSERT INTO rl_meeting_attendees (meeting_id, person_id, is_organizer) VALUES ${attendeeValues}`,
-        [meeting.id, ...attendeeIds]
-      );
+    if (!meetingType || !VALID_MEETING_TYPES.includes(meetingType)) {
+      return NextResponse.json({
+        error: `Meeting type must be one of: ${VALID_MEETING_TYPES.join(', ')}`
+      }, { status: 400 });
+    }
+
+    if (!scheduledStartAt || !scheduledEndAt) {
+      return NextResponse.json({ error: 'Start and end times are required' }, { status: 400 });
+    }
+
+    const startTime = new Date(scheduledStartAt);
+    const endTime = new Date(scheduledEndAt);
+    if (endTime <= startTime) {
+      return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
+    }
+
+    const result = await query(
+      `INSERT INTO rl_meetings (
+        practice_id, title, meeting_type, scheduled_start_at, scheduled_end_at,
+        location, agenda, venture_id, opportunity_id
+      )
+       VALUES ($1, $2, $3::meeting_type, $4, $5, $6, $7, $8, $9)
+       RETURNING id, title, meeting_type, status, scheduled_start_at, scheduled_end_at,
+                 location, agenda, venture_id, opportunity_id, created_at`,
+      [
+        practiceId,
+        title.trim(),
+        meetingType,
+        scheduledStartAt,
+        scheduledEndAt,
+        location?.trim() || null,
+        agenda?.trim() || null,
+        ventureId || null,
+        opportunityId || null
+      ]
+    );
+
+    const meeting = result.rows[0];
+
+    // Add attendees if provided
+    if (attendeeIds && Array.isArray(attendeeIds) && attendeeIds.length > 0) {
+      for (const personId of attendeeIds) {
+        await query(
+          `INSERT INTO rl_meeting_attendees (meeting_id, person_id)
+           VALUES ($1, $2)
+           ON CONFLICT (meeting_id, person_id) DO NOTHING`,
+          [meeting.id, personId]
+        );
+      }
     }
 
     return NextResponse.json({
+      success: true,
       meeting: {
         id: meeting.id,
         title: meeting.title,
         meetingType: meeting.meeting_type,
+        status: meeting.status,
         scheduledStartAt: meeting.scheduled_start_at,
         scheduledEndAt: meeting.scheduled_end_at,
-        createdAt: meeting.created_at,
-      },
+        location: meeting.location,
+        agenda: meeting.agenda,
+        ventureId: meeting.venture_id,
+        opportunityId: meeting.opportunity_id,
+        createdAt: meeting.created_at
+      }
     }, { status: 201 });
   } catch (error) {
     console.error('[MEETINGS] Create error:', error);

@@ -1,20 +1,41 @@
 export const dynamic = 'force-dynamic';
 
 /**
- * Venture Detail API
- * Get, update, delete a specific venture
+ * Single Venture API
+ * GET    - Get venture details
+ * PATCH  - Update venture
+ * DELETE - Delete venture
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getAuthenticatedMember, verifyPracticeOwnership } from '@/lib/practitioner/auth';
+
+async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
+  const memberId = request.headers.get('x-member-id');
+  if (!memberId) return null;
+  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
+  return result.rows.length > 0 ? { id: memberId } : null;
+}
+
+async function verifyPracticeOwnership(practiceId: string, memberId: string): Promise<boolean> {
+  const result = await query(
+    'SELECT id FROM rl_practices WHERE id = $1 AND owner_user_id = $2',
+    [practiceId, memberId]
+  );
+  return result.rows.length > 0;
+}
 
 type RouteContext = { params: Promise<{ practiceId: string; ventureId: string }> };
+
+const VALID_VENTURE_TYPES = [
+  'maia_rd', 'soullab_rd', 'marketing', 'sales',
+  'partnerships', 'operations', 'content', 'events'
+];
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId, ventureId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -23,56 +44,84 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
-    const result = await query(`
-      SELECT v.*,
-        (SELECT COUNT(*) FROM rl_tasks t WHERE t.venture_id = v.id AND t.status = 'open') as open_tasks,
-        (SELECT COUNT(*) FROM rl_venture_collaborators vc WHERE vc.venture_id = v.id) as collaborator_count,
-        (SELECT json_agg(json_build_object(
-          'id', vc.id,
-          'personId', vc.person_id,
-          'role', vc.role,
-          'allocatedHours', vc.allocated_hours_per_week,
-          'personName', p.display_name
-        )) FROM rl_venture_collaborators vc
-        JOIN rl_people p ON p.id = vc.person_id
-        WHERE vc.venture_id = v.id) as collaborators
+    const result = await query(
+      `SELECT
+        v.id, v.name, v.venture_type, v.description, v.status,
+        v.created_at, v.updated_at
       FROM rl_ventures v
-      WHERE v.id = $1 AND v.practice_id = $2
-    `, [ventureId, practiceId]);
+      WHERE v.id = $1 AND v.practice_id = $2`,
+      [ventureId, practiceId]
+    );
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Venture not found' }, { status: 404 });
     }
 
-    const row = result.rows[0];
+    const v = result.rows[0];
+
+    // Get related data
+    const [tasksResult, meetingsResult, opportunitiesResult] = await Promise.all([
+      query(
+        `SELECT id, title, due_at, status, created_at
+         FROM rl_tasks
+         WHERE venture_id = $1 AND status = 'open'
+         ORDER BY due_at ASC NULLS LAST, created_at DESC
+         LIMIT 10`,
+        [ventureId]
+      ),
+      query(
+        `SELECT id, title, meeting_type, scheduled_start_at, scheduled_end_at, status
+         FROM rl_meetings
+         WHERE venture_id = $1 AND status = 'scheduled' AND scheduled_start_at >= NOW()
+         ORDER BY scheduled_start_at ASC
+         LIMIT 10`,
+        [ventureId]
+      ),
+      query(
+        `SELECT id, title, stage, estimated_value_cents, expected_close_date
+         FROM rl_opportunities
+         WHERE venture_id = $1 AND stage NOT IN ('won', 'lost')
+         ORDER BY expected_close_date ASC NULLS LAST, created_at DESC`,
+        [ventureId]
+      )
+    ]);
 
     return NextResponse.json({
       venture: {
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        ventureType: row.venture_type,
-        status: row.status,
-        priority: row.priority,
-        targetStartDate: row.target_start_date,
-        targetEndDate: row.target_end_date,
-        actualStartDate: row.actual_start_date,
-        actualEndDate: row.actual_end_date,
-        estimatedHours: row.estimated_hours,
-        actualHours: row.actual_hours,
-        budgetCents: row.budget_cents,
-        spentCents: row.spent_cents,
-        tags: row.tags,
-        notes: row.notes,
-        openTasks: parseInt(row.open_tasks || '0'),
-        collaboratorCount: parseInt(row.collaborator_count || '0'),
-        collaborators: row.collaborators || [],
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        id: v.id,
+        name: v.name,
+        type: v.venture_type,
+        description: v.description,
+        isActive: v.status === 'active' || v.status === 'planning',
+        status: v.status,
+        createdAt: v.created_at,
+        updatedAt: v.updated_at
       },
+      tasks: tasksResult.rows.map(t => ({
+        id: t.id,
+        title: t.title,
+        dueAt: t.due_at,
+        status: t.status,
+        createdAt: t.created_at
+      })),
+      meetings: meetingsResult.rows.map(m => ({
+        id: m.id,
+        title: m.title,
+        meetingType: m.meeting_type,
+        scheduledStartAt: m.scheduled_start_at,
+        scheduledEndAt: m.scheduled_end_at,
+        status: m.status
+      })),
+      opportunities: opportunitiesResult.rows.map(o => ({
+        id: o.id,
+        title: o.title,
+        stage: o.stage,
+        valueCents: o.estimated_value_cents,
+        expectedCloseAt: o.expected_close_date
+      }))
     });
   } catch (error) {
-    console.error('[VENTURE] Get error:', error);
+    console.error('[VENTURES] Get error:', error);
     return NextResponse.json({ error: 'Failed to get venture' }, { status: 500 });
   }
 }
@@ -80,13 +129,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId, ventureId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (!await verifyPracticeOwnership(practiceId, member.id)) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
+    }
+
+    // Verify venture exists
+    const existing = await query(
+      'SELECT id FROM rl_ventures WHERE id = $1 AND practice_id = $2',
+      [ventureId, practiceId]
+    );
+    if (existing.rows.length === 0) {
+      return NextResponse.json({ error: 'Venture not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -94,72 +152,68 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const values: unknown[] = [];
     let paramIndex = 1;
 
-    const fields = [
-      'name', 'description', 'status', 'priority',
-      'target_start_date', 'target_end_date', 'actual_start_date', 'actual_end_date',
-      'estimated_hours', 'actual_hours', 'budget_cents', 'spent_cents', 'tags', 'notes'
-    ];
-
-    const fieldMap: Record<string, string> = {
-      name: 'name',
-      description: 'description',
-      status: 'status',
-      priority: 'priority',
-      targetStartDate: 'target_start_date',
-      targetEndDate: 'target_end_date',
-      actualStartDate: 'actual_start_date',
-      actualEndDate: 'actual_end_date',
-      estimatedHours: 'estimated_hours',
-      actualHours: 'actual_hours',
-      budgetCents: 'budget_cents',
-      spentCents: 'spent_cents',
-      tags: 'tags',
-      notes: 'notes',
-    };
-
-    for (const [key, dbField] of Object.entries(fieldMap)) {
-      if (body[key] !== undefined) {
-        if (dbField === 'status') {
-          updates.push(`${dbField} = $${paramIndex++}::venture_status`);
-        } else {
-          updates.push(`${dbField} = $${paramIndex++}`);
-        }
-        values.push(body[key]);
+    if (body.name !== undefined) {
+      if (!body.name?.trim()) {
+        return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 });
       }
+      updates.push(`name = $${paramIndex++}`);
+      values.push(body.name.trim());
+    }
+
+    if (body.type !== undefined) {
+      if (!VALID_VENTURE_TYPES.includes(body.type)) {
+        return NextResponse.json({
+          error: `Type must be one of: ${VALID_VENTURE_TYPES.join(', ')}`
+        }, { status: 400 });
+      }
+      updates.push(`venture_type = $${paramIndex++}::venture_type`);
+      values.push(body.type);
+    }
+
+    if (body.description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      values.push(body.description?.trim() || null);
+    }
+
+    if (body.status !== undefined) {
+      const VALID_STATUSES = ['idea', 'planning', 'active', 'on_hold', 'completed', 'archived'];
+      if (!VALID_STATUSES.includes(body.status)) {
+        return NextResponse.json({
+          error: `Status must be one of: ${VALID_STATUSES.join(', ')}`
+        }, { status: 400 });
+      }
+      updates.push(`status = $${paramIndex++}::venture_status`);
+      values.push(body.status);
     }
 
     if (updates.length === 0) {
-      return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
-    values.push(ventureId, practiceId);
+    values.push(ventureId);
+    const result = await query(
+      `UPDATE rl_ventures SET ${updates.join(', ')}
+       WHERE id = $${paramIndex}
+       RETURNING id, name, venture_type, description, status, created_at, updated_at`,
+      values
+    );
 
-    const result = await query(`
-      UPDATE rl_ventures
-      SET ${updates.join(', ')}, updated_at = NOW()
-      WHERE id = $${paramIndex++} AND practice_id = $${paramIndex}
-      RETURNING *
-    `, values);
-
-    if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Venture not found' }, { status: 404 });
-    }
-
-    const row = result.rows[0];
-
+    const v = result.rows[0];
     return NextResponse.json({
+      success: true,
       venture: {
-        id: row.id,
-        name: row.name,
-        description: row.description,
-        ventureType: row.venture_type,
-        status: row.status,
-        priority: row.priority,
-        updatedAt: row.updated_at,
-      },
+        id: v.id,
+        name: v.name,
+        type: v.venture_type,
+        description: v.description,
+        isActive: v.status === 'active' || v.status === 'planning',
+        status: v.status,
+        createdAt: v.created_at,
+        updatedAt: v.updated_at
+      }
     });
   } catch (error) {
-    console.error('[VENTURE] Update error:', error);
+    console.error('[VENTURES] Update error:', error);
     return NextResponse.json({ error: 'Failed to update venture' }, { status: 500 });
   }
 }
@@ -167,7 +221,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId, ventureId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -176,11 +230,10 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
-    const result = await query(`
-      DELETE FROM rl_ventures
-      WHERE id = $1 AND practice_id = $2
-      RETURNING id
-    `, [ventureId, practiceId]);
+    const result = await query(
+      'DELETE FROM rl_ventures WHERE id = $1 AND practice_id = $2 RETURNING id',
+      [ventureId, practiceId]
+    );
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Venture not found' }, { status: 404 });
@@ -188,7 +241,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[VENTURE] Delete error:', error);
+    console.error('[VENTURES] Delete error:', error);
     return NextResponse.json({ error: 'Failed to delete venture' }, { status: 500 });
   }
 }

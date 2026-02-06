@@ -19,16 +19,22 @@ import {
   CheckCheck,
   Clock,
   User,
+  Phone,
+  Plus,
+  X,
+  Loader2,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Message {
   id: string;
-  type: 'email' | 'notification' | 'internal';
+  type: 'email' | 'sms' | 'notification' | 'internal';
   from: string;
+  to?: string;
   subject: string;
   preview: string;
   content?: string;
-  status: 'unread' | 'read' | 'replied' | 'archived';
+  status: 'unread' | 'read' | 'replied' | 'archived' | 'sent';
   starred: boolean;
   timestamp: string;
   priority?: 'normal' | 'high';
@@ -48,16 +54,27 @@ const mockMessages: Message[] = [
   },
   {
     id: '2',
+    type: 'sms',
+    from: 'You',
+    to: '+1 (555) 123-4567',
+    subject: 'Session Reminder',
+    preview: 'Hi Sarah, this is a reminder about your session tomorrow at 2pm. Reply YES to confirm.',
+    status: 'sent',
+    starred: false,
+    timestamp: '9:45 AM',
+  },
+  {
+    id: '3',
     type: 'notification',
     from: 'MAIA',
     subject: 'Agent task completed',
     preview: 'The voice mode initialization fix has been completed and is ready for review.',
     status: 'unread',
     starred: false,
-    timestamp: '9:45 AM',
+    timestamp: '9:30 AM',
   },
   {
-    id: '3',
+    id: '4',
     type: 'email',
     from: 'Marcus Johnson',
     subject: 'Rescheduling Friday session',
@@ -67,7 +84,17 @@ const mockMessages: Message[] = [
     timestamp: 'Yesterday',
   },
   {
-    id: '4',
+    id: '5',
+    type: 'sms',
+    from: '+1 (555) 987-6543',
+    subject: 'Incoming SMS',
+    preview: 'Yes, confirmed! See you tomorrow.',
+    status: 'unread',
+    starred: false,
+    timestamp: 'Yesterday',
+  },
+  {
+    id: '6',
     type: 'notification',
     from: 'System',
     subject: 'New client registration',
@@ -77,7 +104,7 @@ const mockMessages: Message[] = [
     timestamp: 'Yesterday',
   },
   {
-    id: '5',
+    id: '7',
     type: 'internal',
     from: 'Triage Queue',
     subject: 'High priority item needs attention',
@@ -90,6 +117,7 @@ const mockMessages: Message[] = [
 
 const typeConfig = {
   email: { icon: Mail, label: 'Email', color: 'blue' },
+  sms: { icon: Phone, label: 'SMS', color: 'emerald' },
   notification: { icon: Bell, label: 'Notification', color: 'amber' },
   internal: { icon: MessageSquare, label: 'Internal', color: 'purple' },
 };
@@ -99,9 +127,15 @@ export default function CommsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [selectedMessage, setSelectedMessage] = useState<string | null>('1');
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [smsTo, setSmsTo] = useState('');
+  const [smsMessage, setSmsMessage] = useState('');
+  const [sendingSms, setSendingSms] = useState(false);
+  const [smsError, setSmsError] = useState<string | null>(null);
 
   const unreadCount = messages.filter(m => m.status === 'unread').length;
   const starredCount = messages.filter(m => m.starred).length;
+  const smsCount = messages.filter(m => m.type === 'sms').length;
 
   const filteredMessages = messages.filter(m => {
     const matchesSearch = m.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -127,6 +161,54 @@ export default function CommsPage() {
     ));
   };
 
+  const sendSms = async () => {
+    if (!smsTo.trim() || !smsMessage.trim()) {
+      setSmsError('Phone number and message are required');
+      return;
+    }
+
+    setSendingSms(true);
+    setSmsError(null);
+
+    try {
+      const response = await apiFetch('/api/notifications/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: smsTo.trim(),
+          message: smsMessage.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Add sent SMS to messages list
+        const newMessage: Message = {
+          id: `sms-${Date.now()}`,
+          type: 'sms',
+          from: 'You',
+          to: smsTo.trim(),
+          subject: 'Sent SMS',
+          preview: smsMessage.trim(),
+          status: 'sent',
+          starred: false,
+          timestamp: 'Just now',
+        };
+        setMessages([newMessage, ...messages]);
+        setShowSmsModal(false);
+        setSmsTo('');
+        setSmsMessage('');
+      } else {
+        setSmsError(data.error || 'Failed to send SMS');
+      }
+    } catch {
+      setSmsError('Failed to send SMS. Please try again.');
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 flex">
       {/* Message List */}
@@ -144,10 +226,22 @@ export default function CommsPage() {
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
+              <Phone className="w-3 h-3" />
+              {smsCount} SMS
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
               <Star className="w-3 h-3" />
               {starredCount} starred
             </span>
           </div>
+          <button
+            onClick={() => setShowSmsModal(true)}
+            className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-colors text-xs font-medium"
+          >
+            <Plus className="w-3 h-3" />
+            Compose SMS
+          </button>
         </div>
 
         {/* Search */}
@@ -166,7 +260,7 @@ export default function CommsPage() {
 
         {/* Filters */}
         <div className="p-2 border-b border-slate-800 flex items-center gap-1 overflow-x-auto">
-          {['all', 'unread', 'starred', 'email', 'notification'].map((f) => (
+          {['all', 'unread', 'starred', 'email', 'sms', 'notification'].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -176,7 +270,7 @@ export default function CommsPage() {
                   : 'text-slate-400 hover:bg-slate-800'
               }`}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f === 'sms' ? 'SMS' : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
         </div>
@@ -206,11 +300,13 @@ export default function CommsPage() {
                   <div className={`
                     w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
                     ${type.color === 'blue' ? 'bg-blue-500/20' : ''}
+                    ${type.color === 'emerald' ? 'bg-emerald-500/20' : ''}
                     ${type.color === 'amber' ? 'bg-amber-500/20' : ''}
                     ${type.color === 'purple' ? 'bg-purple-500/20' : ''}
                   `}>
                     <TypeIcon className={`w-4 h-4
                       ${type.color === 'blue' ? 'text-blue-400' : ''}
+                      ${type.color === 'emerald' ? 'text-emerald-400' : ''}
                       ${type.color === 'amber' ? 'text-amber-400' : ''}
                       ${type.color === 'purple' ? 'text-purple-400' : ''}
                     `} />
@@ -259,11 +355,27 @@ export default function CommsPage() {
             <div className="p-4 border-b border-slate-800">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
+                  <div className="flex items-center gap-2">
+                    {selected.type === 'sms' && (
+                      <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-xs font-medium">
+                        SMS
+                      </span>
+                    )}
+                    <h2 className="text-lg font-semibold text-white">{selected.subject}</h2>
+                  </div>
                   <div className="flex items-center gap-2 mt-1 text-sm text-slate-400">
-                    <span>From: {selected.from}</span>
+                    <span>{selected.status === 'sent' ? 'To' : 'From'}: {selected.status === 'sent' && selected.to ? selected.to : selected.from}</span>
                     <span>•</span>
                     <span>{selected.timestamp}</span>
+                    {selected.status === 'sent' && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <CheckCheck className="w-3 h-3" />
+                          Sent
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -320,6 +432,102 @@ export default function CommsPage() {
           </div>
         )}
       </div>
+
+      {/* SMS Compose Modal */}
+      <AnimatePresence>
+        {showSmsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+            onClick={() => setShowSmsModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md mx-4 overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-700">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-emerald-400" />
+                  Compose SMS
+                </h3>
+                <button
+                  onClick={() => setShowSmsModal(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-4 space-y-4">
+                {smsError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                    {smsError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1.5">
+                    To (Phone Number)
+                  </label>
+                  <input
+                    type="tel"
+                    value={smsTo}
+                    onChange={(e) => setSmsTo(e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1.5">
+                    Message
+                  </label>
+                  <textarea
+                    value={smsMessage}
+                    onChange={(e) => setSmsMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    rows={4}
+                    maxLength={160}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none"
+                  />
+                  <div className="text-xs text-slate-500 mt-1 text-right">
+                    {smsMessage.length}/160 characters
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-700">
+                <button
+                  onClick={() => setShowSmsModal(false)}
+                  className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sendSms}
+                  disabled={sendingSms || !smsTo.trim() || !smsMessage.trim()}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingSms ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Send SMS
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,13 +1,18 @@
 'use client';
 
 /**
- * New Opportunity Page
- * Create a new pipeline opportunity
+ * New Opportunity
+ * Create a new opportunity/deal
  */
 
-import { Suspense, useEffect, useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiFetch } from '@/lib/http/apiBase';
+import Link from 'next/link';
+
+interface Venture {
+  id: string;
+  name: string;
+}
 
 interface Person {
   id: string;
@@ -15,357 +20,349 @@ interface Person {
   company: string | null;
 }
 
-interface Venture {
-  id: string;
-  name: string;
-}
-
-const OPPORTUNITY_TYPES = [
-  { value: 'sale', label: 'Sale' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'investment', label: 'Investment' },
-  { value: 'referral', label: 'Referral' },
-  { value: 'collaboration', label: 'Collaboration' },
-];
-
 const STAGES = [
-  { value: 'lead', label: 'Lead' },
-  { value: 'qualified', label: 'Qualified' },
-  { value: 'proposal', label: 'Proposal' },
-  { value: 'negotiation', label: 'Negotiation' },
-  { value: 'nurturing', label: 'Nurturing' },
-];
-
-const SOURCES = [
-  { value: 'referral', label: 'Referral' },
-  { value: 'website', label: 'Website' },
-  { value: 'conference', label: 'Conference' },
-  { value: 'cold_outreach', label: 'Cold Outreach' },
-  { value: 'social_media', label: 'Social Media' },
-  { value: 'network', label: 'Network' },
-  { value: 'other', label: 'Other' },
+  { value: 'lead', label: 'Lead', description: 'Initial contact/interest' },
+  { value: 'qualified', label: 'Qualified', description: 'Qualified prospect' },
+  { value: 'proposal', label: 'Proposal', description: 'Proposal sent' },
+  { value: 'negotiation', label: 'Negotiation', description: 'In negotiation' }
 ];
 
 function NewOpportunityContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const preselectedPersonId = searchParams.get('personId');
   const preselectedVentureId = searchParams.get('ventureId');
 
   const [practiceId, setPracticeId] = useState<string | null>(null);
+  const [memberId, setMemberId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [people, setPeople] = useState<Person[]>([]);
-  const [ventures, setVentures] = useState<Venture[]>([]);
 
-  // Form state
+  const [ventures, setVentures] = useState<Venture[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [opportunityType, setOpportunityType] = useState('sale');
   const [stage, setStage] = useState('lead');
-  const [estimatedValue, setEstimatedValue] = useState('');
-  const [probability, setProbability] = useState('50');
-  const [expectedCloseDate, setExpectedCloseDate] = useState('');
-  const [source, setSource] = useState('');
-  const [personId, setPersonId] = useState(preselectedPersonId || '');
+  const [valueDollars, setValueDollars] = useState('');
+  const [expectedCloseAt, setExpectedCloseAt] = useState('');
   const [ventureId, setVentureId] = useState(preselectedVentureId || '');
-  const [notes, setNotes] = useState('');
+  const [personId, setPersonId] = useState('');
 
   useEffect(() => {
-    async function loadData() {
+    async function init() {
       try {
-        const practicesRes = await apiFetch('/api/practitioner/practices');
-        if (!practicesRes.ok) throw new Error('Failed to load practice');
+        const memberData = localStorage.getItem('beta_user');
+        if (!memberData) {
+          router.push('/signin');
+          return;
+        }
+
+        const member = JSON.parse(memberData);
+        setMemberId(member.id);
+
+        const practicesRes = await fetch('/api/practitioner/practices', {
+          headers: { 'x-member-id': member.id }
+        });
+
+        if (!practicesRes.ok) throw new Error('Failed to load practices');
+
         const { practices } = await practicesRes.json();
         if (practices.length === 0) {
           router.push('/practitioner/dashboard');
           return;
         }
-        setPracticeId(practices[0].id);
 
-        // Load contacts and ventures for selection
-        const [peopleRes, venturesRes] = await Promise.all([
-          apiFetch(`/api/practitioner/practices/${practices[0].id}/labtools/network`),
-          apiFetch(`/api/practitioner/practices/${practices[0].id}/labtools/ventures`),
-        ]);
+        const practice = practices[0];
+        setPracticeId(practice.id);
 
-        if (peopleRes.ok) {
-          const { contacts } = await peopleRes.json();
-          setPeople(contacts);
-        }
-
+        // Load ventures
+        const venturesRes = await fetch(
+          `/api/practitioner/practices/${practice.id}/labtools/ventures?isActive=true`,
+          { headers: { 'x-member-id': member.id } }
+        );
         if (venturesRes.ok) {
           const { ventures: v } = await venturesRes.json();
           setVentures(v);
         }
+
+        // Load people
+        const peopleRes = await fetch(
+          `/api/practitioner/practices/${practice.id}/people`,
+          { headers: { 'x-member-id': member.id } }
+        );
+        if (peopleRes.ok) {
+          const { people: p } = await peopleRes.json();
+          setPeople(p);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load');
+        setError(err instanceof Error ? err.message : 'Failed to initialize');
       } finally {
         setIsLoading(false);
       }
     }
-    loadData();
-  }, [router, preselectedPersonId, preselectedVentureId]);
+
+    init();
+  }, [router, preselectedVentureId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!practiceId || !title) return;
+
+    if (!practiceId || !memberId) return;
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
 
     setIsSaving(true);
     setError(null);
 
+    const valueCents = valueDollars ? Math.round(parseFloat(valueDollars) * 100) : 0;
+
     try {
-      const res = await apiFetch(
-        `/api/practitioner/practices/${practiceId}/labtools/pipeline`,
+      const res = await fetch(
+        `/api/practitioner/practices/${practiceId}/labtools/opportunities`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-member-id': memberId
+          },
           body: JSON.stringify({
-            title,
-            description: description || null,
-            opportunityType,
+            title: title.trim(),
+            description: description.trim() || null,
             stage,
-            estimatedValueCents: estimatedValue ? Math.round(parseFloat(estimatedValue) * 100) : null,
-            probability: parseInt(probability),
-            expectedCloseDate: expectedCloseDate || null,
-            source: source || null,
-            personId: personId || null,
+            valueCents,
+            expectedCloseAt: expectedCloseAt || null,
             ventureId: ventureId || null,
-            notes: notes || null,
-          }),
+            personId: personId || null
+          })
         }
       );
 
-      if (!res.ok) throw new Error('Failed to create opportunity');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create opportunity');
+      }
 
-      const { id } = await res.json();
-      router.push(`/practitioner/labtools/pipeline/${id}`);
+      const { opportunity } = await res.json();
+      router.push(`/practitioner/labtools/pipeline/${opportunity.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create');
+      setError(err instanceof Error ? err.message : 'Failed to create opportunity');
+    } finally {
       setIsSaving(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-700 rounded w-48" />
-          <div className="h-96 bg-gray-800 rounded-lg" />
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+          <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+          <div className="h-96 bg-gray-800 rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <header className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => router.push('/practitioner/labtools/pipeline')}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl font-medium text-white">New Opportunity</h1>
-      </header>
-
-      {error && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-6">
-          <p className="text-red-400">{error}</p>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
-          {/* Title */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Title *</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Enterprise partnership with Acme Corp"
-              required
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-amber-500 focus:outline-none"
-            />
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+            <Link href="/practitioner/labtools" className="hover:text-gray-400">
+              Labtools
+            </Link>
+            <span>/</span>
+            <Link href="/practitioner/labtools/pipeline" className="hover:text-gray-400">
+              Pipeline
+            </Link>
+            <span>/</span>
+            <span className="text-gray-400">New</span>
           </div>
+          <h1 className="text-xl font-medium text-white">New Opportunity</h1>
+        </header>
 
-          {/* Type & Stage */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Type</label>
-              <select
-                value={opportunityType}
-                onChange={(e) => setOpportunityType(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
-              >
-                {OPPORTUNITY_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+              <p className="text-red-400 text-sm">{error}</p>
             </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Stage</label>
-              <select
-                value={stage}
-                onChange={(e) => setStage(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
-              >
-                {STAGES.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          )}
 
-          {/* Value & Probability */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#111827] rounded-xl border border-gray-700 p-6 space-y-6">
+            {/* Title */}
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Estimated Value (USD)</label>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
+                Title *
+              </label>
               <input
-                type="number"
-                value={estimatedValue}
-                onChange={(e) => setEstimatedValue(e.target.value)}
-                placeholder="e.g., 10000"
-                min="0"
-                step="0.01"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500"
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g., Enterprise Partnership - Acme Corp"
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                         text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                required
               />
             </div>
+
+            {/* Stage and Value */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="stage" className="block text-sm font-medium text-gray-300 mb-2">
+                  Stage *
+                </label>
+                <select
+                  id="stage"
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                           text-white focus:outline-none focus:border-blue-500"
+                  required
+                >
+                  {STAGES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="value" className="block text-sm font-medium text-gray-300 mb-2">
+                  Value ($)
+                </label>
+                <input
+                  id="value"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={valueDollars}
+                  onChange={(e) => setValueDollars(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                           text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Expected Close */}
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Probability (%)</label>
+              <label htmlFor="closeDate" className="block text-sm font-medium text-gray-300 mb-2">
+                Expected Close Date
+              </label>
               <input
-                type="number"
-                value={probability}
-                onChange={(e) => setProbability(e.target.value)}
-                min="0"
-                max="100"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                id="closeDate"
+                type="date"
+                value={expectedCloseAt}
+                onChange={(e) => setExpectedCloseAt(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                         text-white focus:outline-none focus:border-blue-500"
               />
             </div>
+
+            {/* Description */}
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Details about this opportunity..."
+                rows={4}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                         text-white placeholder-gray-500 focus:outline-none focus:border-blue-500
+                         resize-none"
+              />
+            </div>
+
+            {/* Link to Venture */}
+            {ventures.length > 0 && (
+              <div>
+                <label htmlFor="venture" className="block text-sm font-medium text-gray-300 mb-2">
+                  Link to Venture
+                </label>
+                <select
+                  id="venture"
+                  value={ventureId}
+                  onChange={(e) => setVentureId(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                           text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">None</option>
+                  {ventures.map((v) => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Link to Person */}
+            {people.length > 0 && (
+              <div>
+                <label htmlFor="person" className="block text-sm font-medium text-gray-300 mb-2">
+                  Contact Person
+                </label>
+                <select
+                  id="person"
+                  value={personId}
+                  onChange={(e) => setPersonId(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
+                           text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">None</option>
+                  {people.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.displayName}{p.company ? ` (${p.company})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          {/* Expected Close Date */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Expected Close Date</label>
-            <input
-              type="date"
-              value={expectedCloseDate}
-              onChange={(e) => setExpectedCloseDate(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
-            />
-          </div>
-
-          {/* Source */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Source</label>
-            <select
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3">
+            <Link
+              href="/practitioner/labtools/pipeline"
+              className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
             >
-              <option value="">Select source...</option>
-              {SOURCES.map(s => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What's the opportunity about?"
-              rows={3}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500"
-            />
-          </div>
-        </div>
-
-        {/* Relationships */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 space-y-4">
-          <h2 className="text-sm font-medium text-gray-400">Relationships</h2>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Contact</label>
-            <select
-              value={personId}
-              onChange={(e) => setPersonId(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={isSaving || !title.trim()}
+              className="px-6 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white
+                       rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select contact...</option>
-              {people.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.displayName}{p.company ? ` (${p.company})` : ''}
-                </option>
-              ))}
-            </select>
+              {isSaving ? 'Creating...' : 'Create Opportunity'}
+            </button>
           </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Venture</label>
-            <select
-              value={ventureId}
-              onChange={(e) => setVentureId(e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
-            >
-              <option value="">Select venture...</option>
-              {ventures.map(v => (
-                <option key={v.id} value={v.id}>{v.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Notes */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-          <label className="block text-sm text-gray-400 mb-1">Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Next steps, context, history..."
-            rows={3}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500"
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => router.push('/practitioner/labtools/pipeline')}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving || !title}
-            className="px-6 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg"
-          >
-            {isSaving ? 'Creating...' : 'Create Opportunity'}
-          </button>
-        </div>
-      </form>
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#0a0f1a]">
+      <div className="max-w-2xl mx-auto px-6 py-8 animate-pulse">
+        <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+        <div className="h-96 bg-gray-800 rounded" />
+      </div>
     </div>
   );
 }
 
 export default function NewOpportunityPage() {
   return (
-    <Suspense fallback={
-      <div className="max-w-2xl mx-auto">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-700 rounded w-48" />
-          <div className="h-96 bg-gray-800 rounded-lg" />
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingFallback />}>
       <NewOpportunityContent />
     </Suspense>
   );

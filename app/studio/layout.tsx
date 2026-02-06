@@ -25,6 +25,7 @@ import {
   Loader2,
   Briefcase,
   Wrench,
+  Mic,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -46,6 +47,7 @@ const navItems = [
   { href: '/studio/media', icon: MonitorPlay, label: 'Media Studio' },
   { href: '/studio/camera', icon: Camera, label: 'Live Camera' },
   { href: '/studio/code', icon: Code2, label: 'Code Sessions' },
+  { href: '/studio/scribe', icon: Mic, label: 'Scribe' },
   { href: '/studio/teams', icon: Users, label: 'Teams' },
   { href: '/studio/maia', icon: Sparkles, label: 'MAIA' },
   { href: '/studio/tools', icon: Wrench, label: 'Tools' },

@@ -230,10 +230,12 @@ export default function NewGroupPage() {
               <label className="block text-sm text-slate-400 mb-2">Color</label>
               <div className="flex gap-2 flex-wrap">
                 {colorOptions.map((c) => (
-                  <button
+                  <div
                     key={c}
+                    tabIndex={0}
                     onClick={() => setColor(c)}
-                    className={`w-8 h-8 rounded-lg transition-all border-2 ${
+                    onKeyDown={(e) => e.key === 'Enter' && setColor(c)}
+                    className={`w-8 h-8 rounded-lg transition-all border-2 cursor-pointer ${
                       color === c
                         ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900 border-white/50'
                         : 'border-slate-600 hover:border-slate-400'

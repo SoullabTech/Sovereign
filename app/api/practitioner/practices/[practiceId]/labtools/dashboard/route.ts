@@ -2,19 +2,35 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Labtools Dashboard API
- * Aggregated business operations data
+ * GET - Get summary data for labtools hub
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getAuthenticatedMember, verifyPracticeOwnership } from '@/lib/practitioner/auth';
+
+async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
+  const memberId = request.headers.get('x-member-id');
+  if (!memberId) return null;
+  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
+  return result.rows.length > 0 ? { id: memberId } : null;
+}
+
+async function verifyPracticeOwnership(practiceId: string, memberId: string): Promise<boolean> {
+  const result = await query(
+    'SELECT id FROM rl_practices WHERE id = $1 AND owner_user_id = $2',
+    [practiceId, memberId]
+  );
+  return result.rows.length > 0;
+}
 
 type RouteContext = { params: Promise<{ practiceId: string }> };
+
+const ACTIVE_STAGES = ['lead', 'qualified', 'proposal', 'negotiation'];
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { practiceId } = await context.params;
-    const member = await getAuthenticatedMember(request);
+    const member = await getMemberFromRequest(request);
     if (!member) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -23,93 +39,108 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Practice not found' }, { status: 404 });
     }
 
-    // Get venture counts
-    const venturesResult = await query(`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'active') as active,
-        COUNT(*) FILTER (WHERE status = 'planning') as planning,
-        COUNT(*) as total
-      FROM rl_ventures
-      WHERE practice_id = $1
-    `, [practiceId]);
+    // Get ventures summary (uses status enum: active, planning = "active")
+    const venturesResult = await query(
+      `SELECT
+        COUNT(*) FILTER (WHERE status IN ('active', 'planning'))::int as active,
+        COUNT(*)::int as total
+       FROM rl_ventures
+       WHERE practice_id = $1`,
+      [practiceId]
+    );
 
-    // Get meeting counts
-    const meetingsResult = await query(`
-      SELECT
-        COUNT(*) FILTER (WHERE scheduled_start_at > NOW()) as upcoming,
-        COUNT(*) FILTER (WHERE scheduled_start_at BETWEEN NOW() AND NOW() + INTERVAL '7 days') as this_week
-      FROM rl_meetings
-      WHERE practice_id = $1 AND status = 'scheduled'
-    `, [practiceId]);
-
-    // Get pipeline stats
-    const pipelineResult = await query(`
-      SELECT
-        COUNT(*) as active,
-        COALESCE(SUM(estimated_value_cents), 0) as total_value,
-        COALESCE(SUM(estimated_value_cents * probability / 100), 0) as weighted_value
-      FROM rl_opportunities
-      WHERE practice_id = $1 AND stage NOT IN ('won', 'lost')
-    `, [practiceId]);
-
-    // Get network counts (business contacts)
-    const networkResult = await query(`
-      SELECT
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as recent
-      FROM rl_people
-      WHERE practice_id = $1 AND person_type != 'client'
-    `, [practiceId]);
-
-    // Get recent active ventures
-    const recentVenturesResult = await query(`
-      SELECT id, name, venture_type, status
-      FROM rl_ventures
-      WHERE practice_id = $1 AND status IN ('active', 'planning')
-      ORDER BY updated_at DESC
-      LIMIT 5
-    `, [practiceId]);
+    // Get pipeline summary (uses estimated_value_cents, 'won'/'lost' stages)
+    const pipelineResult = await query(
+      `SELECT
+        COUNT(*) FILTER (WHERE stage = ANY($2::opportunity_stage[]))::int as active_count,
+        COALESCE(SUM(estimated_value_cents) FILTER (WHERE stage = ANY($2::opportunity_stage[])), 0)::bigint as active_value_cents,
+        COALESCE(SUM(estimated_value_cents) FILTER (WHERE stage = 'won' AND actual_close_date >= DATE_TRUNC('month', NOW())), 0)::bigint as won_this_month_cents
+       FROM rl_opportunities
+       WHERE practice_id = $1`,
+      [practiceId, ACTIVE_STAGES]
+    );
 
     // Get upcoming meetings
-    const upcomingMeetingsResult = await query(`
-      SELECT id, title, scheduled_start_at, meeting_type
-      FROM rl_meetings
-      WHERE practice_id = $1 AND status = 'scheduled' AND scheduled_start_at > NOW()
-      ORDER BY scheduled_start_at ASC
-      LIMIT 5
-    `, [practiceId]);
+    const meetingsResult = await query(
+      `SELECT id, title, scheduled_start_at
+       FROM rl_meetings
+       WHERE practice_id = $1
+         AND status = 'scheduled'
+         AND scheduled_start_at >= NOW()
+       ORDER BY scheduled_start_at ASC
+       LIMIT 1`,
+      [practiceId]
+    );
+
+    const upcomingMeetingsCount = await query(
+      `SELECT COUNT(*)::int as count
+       FROM rl_meetings
+       WHERE practice_id = $1
+         AND status = 'scheduled'
+         AND scheduled_start_at >= NOW()
+         AND scheduled_start_at <= NOW() + INTERVAL '14 days'`,
+      [practiceId]
+    );
+
+    // Get attention needed
+    // 1. Overdue tasks linked to ventures/opportunities
+    const overdueTasksResult = await query(
+      `SELECT COUNT(*)::int as count
+       FROM rl_tasks
+       WHERE practice_id = $1
+         AND status = 'open'
+         AND due_at < NOW()
+         AND (venture_id IS NOT NULL OR opportunity_id IS NOT NULL OR meeting_id IS NOT NULL)`,
+      [practiceId]
+    );
+
+    // 2. Stalled opportunities (no update in 14 days)
+    const stalledOppsResult = await query(
+      `SELECT COUNT(*)::int as count
+       FROM rl_opportunities
+       WHERE practice_id = $1
+         AND stage = ANY($2::opportunity_stage[])
+         AND updated_at < NOW() - INTERVAL '14 days'`,
+      [practiceId, ACTIVE_STAGES]
+    );
+
+    // 3. Meetings without notes
+    const meetingsWithoutNotesResult = await query(
+      `SELECT COUNT(*)::int as count
+       FROM rl_meetings
+       WHERE practice_id = $1
+         AND status = 'completed'
+         AND (notes IS NULL OR notes = '')`,
+      [practiceId]
+    );
+
+    const ventures = venturesResult.rows[0];
+    const pipeline = pipelineResult.rows[0];
+    const nextMeeting = meetingsResult.rows[0];
 
     return NextResponse.json({
       ventures: {
-        active: parseInt(venturesResult.rows[0]?.active || '0'),
-        planning: parseInt(venturesResult.rows[0]?.planning || '0'),
-        total: parseInt(venturesResult.rows[0]?.total || '0'),
-      },
-      meetings: {
-        upcoming: parseInt(meetingsResult.rows[0]?.upcoming || '0'),
-        thisWeek: parseInt(meetingsResult.rows[0]?.this_week || '0'),
+        active: ventures.active,
+        total: ventures.total
       },
       pipeline: {
-        active: parseInt(pipelineResult.rows[0]?.active || '0'),
-        totalValue: parseInt(pipelineResult.rows[0]?.total_value || '0'),
-        weightedValue: parseInt(pipelineResult.rows[0]?.weighted_value || '0'),
+        activeCount: pipeline.active_count,
+        activeValueCents: parseInt(pipeline.active_value_cents, 10),
+        wonThisMonthCents: parseInt(pipeline.won_this_month_cents, 10)
       },
-      network: {
-        total: parseInt(networkResult.rows[0]?.total || '0'),
-        recent: parseInt(networkResult.rows[0]?.recent || '0'),
+      meetings: {
+        upcoming: upcomingMeetingsCount.rows[0].count,
+        nextMeeting: nextMeeting ? {
+          id: nextMeeting.id,
+          title: nextMeeting.title,
+          scheduledStartAt: nextMeeting.scheduled_start_at
+        } : null
       },
-      recentVentures: recentVenturesResult.rows.map(row => ({
-        id: row.id,
-        name: row.name,
-        ventureType: row.venture_type,
-        status: row.status,
-      })),
-      upcomingMeetings: upcomingMeetingsResult.rows.map(row => ({
-        id: row.id,
-        title: row.title,
-        scheduledStartAt: row.scheduled_start_at,
-        meetingType: row.meeting_type,
-      })),
+      attention: {
+        overdueTasksCount: overdueTasksResult.rows[0].count,
+        stalledOppsCount: stalledOppsResult.rows[0].count,
+        meetingsWithoutNotesCount: meetingsWithoutNotesResult.rows[0].count
+      }
     });
   } catch (error) {
     console.error('[LABTOOLS_DASHBOARD] Error:', error);
