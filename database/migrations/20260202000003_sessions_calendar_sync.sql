@@ -14,10 +14,10 @@ BEGIN
     ALTER TABLE sessions ADD COLUMN google_calendar_id TEXT DEFAULT 'primary';
   END IF;
 
-  -- Sync status: pending, synced, failed, not_connected
+  -- Sync status: pending, synced, failed, not_connected, cancelled
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sessions' AND column_name = 'calendar_sync_status') THEN
     ALTER TABLE sessions ADD COLUMN calendar_sync_status TEXT DEFAULT 'pending'
-      CHECK (calendar_sync_status IN ('pending', 'synced', 'failed', 'not_connected'));
+      CHECK (calendar_sync_status IN ('pending', 'synced', 'failed', 'not_connected', 'cancelled'));
   END IF;
 
   -- Sync error message
