@@ -49,16 +49,18 @@ export async function POST(request: NextRequest) {
 
     if (practitionerId) {
       const result = await query(
-        `SELECT credentials_data
+        `SELECT config_encrypted
          FROM practitioner_integrations
          WHERE practitioner_id = $1
-         AND integration_type = 'twilio'
-         AND is_active = true`,
+         AND integration_type = 'sms'
+         AND status = 'connected'`,
         [practitionerId]
       );
 
-      if (result.rows.length > 0 && result.rows[0].credentials_data) {
-        credentials = result.rows[0].credentials_data;
+      if (result.rows.length > 0 && result.rows[0].config_encrypted) {
+        credentials = typeof result.rows[0].config_encrypted === 'string'
+          ? JSON.parse(result.rows[0].config_encrypted)
+          : result.rows[0].config_encrypted;
       }
     }
 

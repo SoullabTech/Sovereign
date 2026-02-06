@@ -23,6 +23,8 @@ import {
   Plus,
   X,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -132,6 +134,7 @@ export default function CommsPage() {
   const [smsMessage, setSmsMessage] = useState('');
   const [sendingSms, setSendingSms] = useState(false);
   const [smsError, setSmsError] = useState<string | null>(null);
+  const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
 
   const unreadCount = messages.filter(m => m.status === 'unread').length;
   const starredCount = messages.filter(m => m.starred).length;
@@ -323,8 +326,31 @@ export default function CommsPage() {
                     <div className={`text-sm truncate ${message.status === 'unread' ? 'text-white' : 'text-slate-400'}`}>
                       {message.subject}
                     </div>
-                    <div className="text-xs text-slate-500 truncate mt-0.5">
-                      {message.preview}
+                    <div className="mt-0.5">
+                      <div className={`text-xs text-slate-500 ${expandedMessage === message.id ? '' : 'truncate'}`}>
+                        {message.preview}
+                      </div>
+                      {message.preview.length > 60 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedMessage(expandedMessage === message.id ? null : message.id);
+                          }}
+                          className="flex items-center gap-0.5 text-[10px] text-teal-500 hover:text-teal-400 mt-0.5"
+                        >
+                          {expandedMessage === message.id ? (
+                            <>
+                              <ChevronUp className="w-3 h-3" />
+                              Less
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-3 h-3" />
+                              More
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
 
