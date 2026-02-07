@@ -16,9 +16,11 @@ import {
   Loader2,
   RefreshCw,
   Camera,
+  Mic,
 } from 'lucide-react';
 import { useBookings, Booking } from '@/hooks/useStudioData';
 import { useRouter } from 'next/navigation';
+import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
 
 type FilterType = 'upcoming' | 'today' | 'all';
 
@@ -80,6 +82,7 @@ export default function SessionsPage() {
   const router = useRouter();
   const { bookings, loading, error, refetch } = useBookings();
   const [filter, setFilter] = useState<FilterType>('upcoming');
+  const [voiceNoteSessionId, setVoiceNoteSessionId] = useState<string | null>(null);
 
   // Start video call for a session
   const startVideoCall = (booking: Booking) => {
@@ -236,10 +239,11 @@ export default function SessionsPage() {
                   const SyncIcon = syncStatus?.icon;
 
                   return (
+                    <div key={booking.id}>
                     <motion.div
-                      key={booking.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
+                      onClick={() => router.push(`/studio/sessions/${booking.id}`)}
                       className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 hover:border-slate-700/50 transition-colors cursor-pointer group"
                     >
                       <div className="flex items-start justify-between">
@@ -319,6 +323,23 @@ export default function SessionsPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
+                          {/* Voice Note */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVoiceNoteSessionId(
+                                voiceNoteSessionId === booking.id ? null : booking.id
+                              );
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                              voiceNoteSessionId === booking.id
+                                ? 'bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                                : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                            }`}
+                          >
+                            <Mic className="w-4 h-4" />
+                            <span className="hidden sm:inline">Voice Note</span>
+                          </button>
                           {/* Start Video Call - only show for active sessions */}
                           {!['completed', 'cancelled', 'no_show'].includes(booking.status) && (
                             <button
@@ -336,6 +357,19 @@ export default function SessionsPage() {
                         </div>
                       </div>
                     </motion.div>
+
+                    {/* Voice Note Panel — slides open below session card */}
+                    <AnimatePresence>
+                      {voiceNoteSessionId === booking.id && (
+                        <VoiceNotePanel
+                          sessionId={booking.id}
+                          clientName={booking.clientName}
+                          isOpen={voiceNoteSessionId === booking.id}
+                          onClose={() => setVoiceNoteSessionId(null)}
+                        />
+                      )}
+                    </AnimatePresence>
+                    </div>
                   );
                 })}
               </AnimatePresence>
