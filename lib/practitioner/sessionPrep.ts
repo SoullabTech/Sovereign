@@ -22,7 +22,6 @@ import {
 // SQL fragment for selecting encrypted client name columns in JOINs
 const CLIENT_NAME_JOIN_COLUMNS = `
   c.name as client_name,
-  c.preferred_name as client_preferred_name,
   c.name_enc as client_name_enc,
   c.name_enc_meta as client_name_enc_meta,
   c.preferred_name_enc as client_preferred_name_enc,
@@ -541,7 +540,7 @@ export async function getUpcomingSessionsWithPrep(
       client: {
         id: row.client_id,
         name: decrypted.client_name || row.client_name,
-        preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+        preferred_name: decrypted.client_preferred_name || null,
         email: row.client_email,
         phone: row.client_phone,
         total_sessions: row.client_total_sessions,
