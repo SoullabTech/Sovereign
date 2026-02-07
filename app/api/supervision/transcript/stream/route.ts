@@ -8,6 +8,7 @@ export const revalidate = false;
 
 // Whisper endpoint (local container)
 const WHISPER_URL = process.env.WHISPER_URL || 'http://maia-whisper:8000';
+const MAX_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB max per audio chunk
 
 interface WhisperResponse {
   text: string;
@@ -68,6 +69,14 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'audio file is required'
       }, { status: 400 });
+    }
+
+    // Size cap: reject chunks over 10MB
+    if (audioFile.size > MAX_CHUNK_SIZE) {
+      return NextResponse.json({
+        success: false,
+        error: `Audio chunk too large. Maximum size is ${MAX_CHUNK_SIZE / (1024 * 1024)}MB.`
+      }, { status: 413 });
     }
 
     // Verify session exists and is active

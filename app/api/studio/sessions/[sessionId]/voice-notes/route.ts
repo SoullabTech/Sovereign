@@ -100,6 +100,14 @@ export async function POST(
 
     const { sessionId } = await params;
 
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
     // Guard: reject non-multipart requests with a clear 415 error
     const contentType = request.headers.get('content-type') ?? '';
     if (!contentType.includes('multipart/form-data')) {
@@ -139,7 +147,7 @@ export async function POST(
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { success: false, error: 'File too large (max 100MB)' },
-        { status: 400 }
+        { status: 413 }
       );
     }
 

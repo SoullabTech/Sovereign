@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const revalidate = false;
 import fs from "fs/promises";
@@ -39,13 +40,37 @@ const ensureUploadDir = async () => {
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth: require authenticated member (server-derived, never trust client)
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
+    // Guard: reject non-multipart requests with a clear 415 error
+    const ct = req.headers.get('content-type') ?? '';
+    if (!ct.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
+    // Use server-derived identity (never trust client-sent userId)
+    const userId = memberId;
 
-    if (!file || !userId) {
+    if (!file) {
       return NextResponse.json(
-        { success: false, error: "Missing file or userId" },
+        { success: false, error: "Missing file" },
         { status: 400 }
       );
     }
@@ -110,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (file.size > 25 * 1024 * 1024) {
       return NextResponse.json(
         { success: false, error: "File too large. Maximum size is 25MB" },
-        { status: 400 }
+        { status: 413 }
       );
     }
 
@@ -195,7 +220,7 @@ export async function POST(req: NextRequest) {
       setTimeout(async () => {
         try {
           await fs.unlink(filePath);
-        } catch (error) {
+        } catch {
           // File might already be deleted
         }
       }, 60000); // Delete after 1 minute
@@ -208,41 +233,46 @@ export async function POST(req: NextRequest) {
         message: "Voice note transcribed and saved successfully"
       });
 
-    } catch (transcriptionError: any) {
+    } catch (transcriptionError: unknown) {
       // Clean up file on error
       try {
         await fs.unlink(filePath);
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
 
+      const errorMessage = transcriptionError instanceof Error ? transcriptionError.message : String(transcriptionError);
+
       logger.error("Whisper transcription failed", {
-        error: transcriptionError.message,
+        error: errorMessage,
         userId: userId.substring(0, 8) + '...'
       });
 
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: "Transcription failed. Please try again.",
-          details: transcriptionError.message 
-        }, 
+          details: errorMessage
+        },
         { status: 500 }
       );
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
     logger.error("Voice transcription error", {
-      error: error.message,
-      stack: error.stack
+      error: errorMessage,
+      stack: errorStack
     });
 
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "An unexpected error occurred",
-        details: error.message 
-      }, 
+        details: errorMessage
+      },
       { status: 500 }
     );
   }
@@ -258,14 +288,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     const voiceNoteId = pathParts[pathParts.length - 1];
-    const userId = url.searchParams.get('userId');
+    // Use server-derived identity
+    const userId = memberId;
 
-    if (!voiceNoteId || !userId) {
+    if (!voiceNoteId) {
       return NextResponse.json(
-        { error: 'voiceNoteId and userId are required' },
+        { error: 'voiceNoteId is required' },
         { status: 400 }
       );
     }
@@ -299,9 +336,11 @@ export async function GET(req: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
     logger.error('Failed to retrieve voice note', {
-      error: error.message
+      error: errorMessage
     });
 
     return NextResponse.json(

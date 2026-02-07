@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const revalidate = false;
 
@@ -17,6 +18,7 @@ export const revalidate = false;
  */
 
 const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB max for audio transcription
 
 export async function POST(req: NextRequest) {
   console.log("🎤 [TRANSCRIBE-SIMPLE] Request received. Headers:", {
@@ -25,6 +27,29 @@ export async function POST(req: NextRequest) {
   });
 
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
+    // Guard: reject non-multipart requests with a clear 415 error
+    const ct = req.headers.get('content-type') ?? '';
+    if (!ct.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
@@ -35,6 +60,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "No audio file provided" },
         { status: 400 }
+      );
+    }
+
+    // Size cap: reject files over 25MB
+    if (file.size > MAX_FILE_SIZE) {
+      console.error("🎤 [TRANSCRIBE-SIMPLE] ERROR: File too large:", file.size);
+      return NextResponse.json(
+        { success: false, error: `Audio file too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB.` },
+        { status: 413 }
       );
     }
 
@@ -104,14 +138,15 @@ export async function POST(req: NextRequest) {
       source: 'faster-whisper-local' // Indicate local processing
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
     console.error("Transcription endpoint error:", error);
 
     return NextResponse.json(
       {
         success: false,
         error: "Transcription failed",
-        details: error.message
+        details: message
       },
       { status: 500 }
     );
