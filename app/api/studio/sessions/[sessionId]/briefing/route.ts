@@ -77,7 +77,7 @@ export async function GET(
     // Shape the response for the UI — keep it focused on what matters
     // before the session, not the full clinical data dump
     const briefing = {
-      client_name: prep.client.name || prep.client.preferred_name || null,
+      client_name: prep.client.preferred_name || prep.client.name || null,
 
       last_session: prep.last_session
         ? {

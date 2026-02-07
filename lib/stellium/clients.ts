@@ -200,6 +200,36 @@ export function decryptJoinedClientFields(
   return { client_name: clientName, client_preferred_name: clientPreferredName };
 }
 
+/**
+ * Resolve a single canonical display name for a client.
+ *
+ * Priority chain:
+ *   1. Decrypted preferred_name (from encrypted column)
+ *   2. Decrypted name (from encrypted column)
+ *   3. SQL COALESCE fallback (client_display_name — plaintext preferred || name)
+ *   4. Raw preferred_name (plaintext column)
+ *   5. Raw name (plaintext column)
+ *   6. "Client" (safe final fallback)
+ *
+ * Call this everywhere you need "what do we call this person?"
+ * instead of scattering preferred || name logic across files.
+ */
+export function resolveClientDisplayName(
+  row: Record<string, any> | null | undefined,
+  decrypted: { client_preferred_name?: string | null; client_name?: string | null } | null | undefined
+): string {
+  return (
+    decrypted?.client_preferred_name ||
+    decrypted?.client_name ||
+    row?.client_display_name ||
+    row?.client_preferred_name ||
+    row?.client_name ||
+    row?.preferred_name ||
+    row?.name ||
+    'Client'
+  );
+}
+
 // ============================================
 // CLIENT CRUD
 // ============================================
