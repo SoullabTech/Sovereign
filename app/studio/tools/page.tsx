@@ -77,7 +77,7 @@ const TOOLS: PractitionerTool[] = [
     whyItMatters: 'Presence over typing. When you are holding space for a client, you should not be hunched over a keyboard. Scribe lets you record and transcribe after the session, keeping you fully present during it.',
     priceRange: 'Pro tier',
     category: 'digital',
-    internalPath: '/labtools/scribe',
+    internalPath: '/studio/scribe',
   },
   {
     id: 'journal',

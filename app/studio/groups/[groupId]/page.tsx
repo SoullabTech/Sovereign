@@ -24,6 +24,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Group {
   id: string;
@@ -95,7 +96,7 @@ export default function GroupDetailPage() {
     async function fetchGroup() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/studio/groups?includeMembers=true`);
+        const res = await apiFetch(`/api/studio/groups?includeMembers=true`);
         if (res.ok) {
           const data = await res.json();
           const foundGroup = data.groups?.find((g: Group) => g.id === groupId);
@@ -116,7 +117,7 @@ export default function GroupDetailPage() {
   useEffect(() => {
     if (showAddMember && clients.length === 0) {
       setLoadingClients(true);
-      fetch('/api/studio/clients')
+      apiFetch('/api/studio/clients')
         .then(res => res.json())
         .then(data => setClients(data.clients || []))
         .catch(console.error)
@@ -136,7 +137,7 @@ export default function GroupDetailPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/studio/groups/members', {
+      const res = await apiFetch('/api/studio/groups/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId, clientId }),
@@ -146,7 +147,7 @@ export default function GroupDetailPage() {
       if (!data.success) throw new Error(data.error);
 
       // Refresh group data
-      const groupRes = await fetch(`/api/studio/groups?includeMembers=true`);
+      const groupRes = await apiFetch(`/api/studio/groups?includeMembers=true`);
       const groupData = await groupRes.json();
       const updatedGroup = groupData.groups?.find((g: Group) => g.id === groupId);
       if (updatedGroup) setGroup(updatedGroup);
@@ -163,7 +164,7 @@ export default function GroupDetailPage() {
     if (!confirm('Remove this member from the group?')) return;
 
     try {
-      const res = await fetch(`/api/studio/groups/members?membershipId=${membershipId}`, {
+      const res = await apiFetch(`/api/studio/groups/members?membershipId=${membershipId}`, {
         method: 'DELETE',
       });
 
@@ -188,7 +189,7 @@ export default function GroupDetailPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch(`/api/studio/groups?id=${groupId}`, {
+      const res = await apiFetch(`/api/studio/groups?id=${groupId}`, {
         method: 'DELETE',
       });
 

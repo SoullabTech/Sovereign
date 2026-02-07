@@ -18,6 +18,7 @@ import {
   MapPin,
   Phone,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Group {
   id: string;
@@ -59,7 +60,7 @@ export default function GroupsPage() {
         const params = new URLSearchParams();
         if (typeFilter !== 'all') params.set('type', typeFilter);
 
-        const res = await fetch(`/api/studio/groups?${params.toString()}`);
+        const res = await apiFetch(`/api/studio/groups?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setGroups(data.groups || []);

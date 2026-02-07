@@ -25,6 +25,8 @@ import {
   Loader2,
   Briefcase,
   Wrench,
+  Mic,
+  DoorOpen,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -33,6 +35,7 @@ import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 
 const navItems = [
   { href: '/studio', icon: LayoutGrid, label: 'Command Center' },
+  { href: '/studio/threshold', icon: DoorOpen, label: 'Threshold' },
   { href: '/studio/clients', icon: Users, label: 'Clients' },
   { href: '/studio/groups', icon: FolderOpen, label: 'Groups' },
   { href: '/studio/sessions', icon: Calendar, label: 'Sessions' },
@@ -46,6 +49,7 @@ const navItems = [
   { href: '/studio/media', icon: MonitorPlay, label: 'Media Studio' },
   { href: '/studio/camera', icon: Camera, label: 'Live Camera' },
   { href: '/studio/code', icon: Code2, label: 'Code Sessions' },
+  { href: '/studio/scribe', icon: Mic, label: 'Scribe' },
   { href: '/studio/teams', icon: Users, label: 'Teams' },
   { href: '/studio/maia', icon: Sparkles, label: 'MAIA' },
   { href: '/studio/tools', icon: Wrench, label: 'Tools' },

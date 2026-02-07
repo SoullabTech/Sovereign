@@ -17,6 +17,7 @@ import {
   Sparkles,
   Package,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface Service {
   id: string;
@@ -96,7 +97,7 @@ export default function ServicesPage() {
 
   async function fetchServices() {
     try {
-      const res = await fetch(`/api/studio/services?includeInactive=${includeInactive}`);
+      const res = await apiFetch(`/api/studio/services?includeInactive=${includeInactive}`);
       if (!res.ok) throw new Error('Failed to fetch services');
       const data = await res.json();
       setServices(data.services || []);
@@ -185,7 +186,7 @@ export default function ServicesPage() {
         includes: formData.includes,
       };
 
-      const res = await fetch('/api/studio/services', {
+      const res = await apiFetch('/api/studio/services', {
         method: editingService ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -209,7 +210,7 @@ export default function ServicesPage() {
     if (!confirm(`Delete "${service.name}"? This cannot be undone.`)) return;
 
     try {
-      const res = await fetch(`/api/studio/services?id=${service.id}`, {
+      const res = await apiFetch(`/api/studio/services?id=${service.id}`, {
         method: 'DELETE',
       });
 
@@ -231,7 +232,7 @@ export default function ServicesPage() {
 
   async function toggleActive(service: Service) {
     try {
-      const res = await fetch('/api/studio/services', {
+      const res = await apiFetch('/api/studio/services', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: service.id, isActive: !service.isActive }),
@@ -246,7 +247,7 @@ export default function ServicesPage() {
 
   async function toggleFeatured(service: Service) {
     try {
-      const res = await fetch('/api/studio/services', {
+      const res = await apiFetch('/api/studio/services', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: service.id, isFeatured: !service.isFeatured }),

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 export interface CalendarEvent {
@@ -21,6 +21,8 @@ export interface CalendarEvent {
 interface UseCalendarEventsOptions {
   from: Date;
   to: Date;
+  /** Auto-refresh interval in ms. Default: 3 minutes. Set to 0 to disable. */
+  refreshInterval?: number;
 }
 
 interface UseCalendarEventsResult {
@@ -29,13 +31,19 @@ interface UseCalendarEventsResult {
   error: string | null;
   googleConnected: boolean;
   refetch: () => void;
+  /** Time of last successful fetch */
+  lastUpdated: Date | null;
 }
+
+const DEFAULT_REFRESH_INTERVAL = 3 * 60 * 1000; // 3 minutes
 
 export function useCalendarEvents(options: UseCalendarEventsOptions): UseCalendarEventsResult {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [googleConnected, setGoogleConnected] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -56,6 +64,7 @@ export function useCalendarEvents(options: UseCalendarEventsOptions): UseCalenda
 
       setEvents(data.events || []);
       setGoogleConnected(data.googleConnected || false);
+      setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch calendar events');
       setEvents([]);
@@ -64,9 +73,49 @@ export function useCalendarEvents(options: UseCalendarEventsOptions): UseCalenda
     }
   }, [options.from, options.to]);
 
+  // Initial fetch
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Auto-refresh polling — silently updates in the background
+  useEffect(() => {
+    const interval = options.refreshInterval ?? DEFAULT_REFRESH_INTERVAL;
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (interval > 0) {
+      intervalRef.current = setInterval(() => {
+        const params = new URLSearchParams({
+          from: options.from.toISOString(),
+          to: options.to.toISOString(),
+        });
+
+        apiFetch(`/api/studio/calendar/events?${params.toString()}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.error) {
+              setEvents(data.events || []);
+              setGoogleConnected(data.googleConnected || false);
+              setLastUpdated(new Date());
+            }
+          })
+          .catch(() => {
+            // Silent fail — don't overwrite existing data on background refresh
+          });
+      }, interval);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [options.from, options.to, options.refreshInterval]);
 
   return {
     events,
@@ -74,6 +123,7 @@ export function useCalendarEvents(options: UseCalendarEventsOptions): UseCalenda
     error,
     googleConnected,
     refetch: fetchEvents,
+    lastUpdated,
   };
 }
 

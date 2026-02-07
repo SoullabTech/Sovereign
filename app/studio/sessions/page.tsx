@@ -183,8 +183,7 @@ export default function SessionsPage() {
             <RefreshCw className="w-4 h-4" />
           </button>
           <a
-            href="/portal/stellium/book"
-            target="_blank"
+            href="/studio/sessions/new"
             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-400 transition-colors text-sm font-medium"
           >
             <Plus className="w-4 h-4" />

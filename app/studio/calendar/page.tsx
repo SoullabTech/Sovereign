@@ -12,7 +12,10 @@ import {
   Clock,
   User,
   ExternalLink,
+  CloudUpload,
+  Check,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   startOfMonth,
   endOfMonth,
@@ -76,7 +79,32 @@ export default function CalendarPage() {
     }
   }, [currentDate, view]);
 
-  const { events, loading, error, googleConnected, refetch } = useCalendarEvents({ from, to });
+  const { events, loading, error, googleConnected, refetch, lastUpdated } = useCalendarEvents({ from, to });
+
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const handleSyncToGoogle = useCallback(async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await apiFetch('/api/studio/calendar/sync', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setSyncResult({ message: data.message, type: 'success' });
+        refetch(); // Refresh calendar after sync
+      } else {
+        setSyncResult({ message: data.error || 'Sync failed', type: 'error' });
+      }
+    } catch {
+      setSyncResult({ message: 'Failed to sync', type: 'error' });
+    } finally {
+      setSyncing(false);
+      // Clear result after 4 seconds
+      setTimeout(() => setSyncResult(null), 4000);
+    }
+  }, [refetch]);
 
   // Get days for current view
   const calendarDays = useMemo(() => {
@@ -174,6 +202,32 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Sync result toast */}
+          <AnimatePresence>
+            {syncResult && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${
+                  syncResult.type === 'success'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-red-500/20 text-red-400'
+                }`}
+              >
+                {syncResult.type === 'success' && <Check className="w-3 h-3" />}
+                {syncResult.message}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Last updated */}
+          {lastUpdated && !loading && (
+            <span className="text-xs text-slate-600 hidden sm:inline">
+              {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+            </span>
+          )}
+
           {!loading && (
             <div className={`text-xs px-2 py-1 rounded ${
               googleConnected
@@ -183,6 +237,20 @@ export default function CalendarPage() {
               {googleConnected ? 'Google Connected' : 'Google not connected'}
             </div>
           )}
+
+          {/* Sync to Google button — only show when connected */}
+          {googleConnected && (
+            <button
+              onClick={handleSyncToGoogle}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-400 bg-teal-500/10 hover:bg-teal-500/20 rounded-lg transition-colors disabled:opacity-50"
+              title="Sync unsynced sessions to Google Calendar"
+            >
+              <CloudUpload className={`w-3.5 h-3.5 ${syncing ? 'animate-pulse' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync to Google'}
+            </button>
+          )}
+
           <button
             onClick={() => refetch()}
             className="p-2 text-slate-400 hover:text-white transition-colors"
