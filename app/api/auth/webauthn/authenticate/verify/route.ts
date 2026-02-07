@@ -21,6 +21,7 @@ import {
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
 import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 const ENDPOINT = '/api/auth/webauthn/authenticate/verify';
 
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
         id: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         hasWebauthn: member.has_webauthn || true,

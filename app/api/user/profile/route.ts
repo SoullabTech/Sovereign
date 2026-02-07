@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 /**
  * User Profile API endpoint
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
         if (result.rows.length > 0) {
           const member = result.rows[0];
           // Prioritize preferred_name, then name, then username - never use passkey as display name
-          userName = member.preferred_name || member.name || member.username;
+          userName = resolveMemberDisplayName(member);
           isGuest = false;
           console.log(`✅ [USER-PROFILE] Found member: ${userName} (id: ${member.id})`);
 

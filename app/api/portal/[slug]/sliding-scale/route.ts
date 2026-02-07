@@ -18,6 +18,7 @@ import {
   createRequest,
 } from '@/lib/practitioner/slidingScale';
 import { validatePortalAccess } from '@/lib/portal/messages';
+import { resolveClientDisplayName } from '@/lib/stellium/clients';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           [clientId]
         );
         if (clientResult.rows[0]) {
-          clientName = clientResult.rows[0].preferred_name || clientResult.rows[0].name;
+          clientName = resolveClientDisplayName(clientResult.rows[0], null);
           clientEmail = clientResult.rows[0].email;
         }
       }

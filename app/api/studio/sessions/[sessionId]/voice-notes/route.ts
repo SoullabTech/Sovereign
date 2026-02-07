@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
  * GET  - List voice notes for a session
  * POST - Upload audio, save to vault, transcribe via local Whisper
  *
- * Audio is stored locally in /app/data/vault/{practitionerId}/voice-notes/
+ * Table: voice_notes
+ * Audio stored at /app/data/vault/{practitionerId}/voice-notes/{noteId}.webm
  * Transcription is sovereign (local Faster-Whisper, no cloud APIs)
  */
 
@@ -48,9 +49,9 @@ export async function GET(
     const { sessionId } = await params;
 
     const result = await db.query(
-      `SELECT id, session_id, client_id, duration_seconds, transcript,
-              transcription_status, transcription_error, drafted_note,
-              created_at, updated_at, transcribed_at
+      `SELECT id, session_id, client_id, storage_path, mime_type,
+              size_bytes, duration_seconds, transcript,
+              transcription_status, drafted_note, created_at
        FROM voice_notes
        WHERE session_id = $1 AND practitioner_id = $2
        ORDER BY created_at DESC`,
@@ -61,19 +62,19 @@ export async function GET(
       id: row.id,
       sessionId: row.session_id,
       clientId: row.client_id,
+      storagePath: row.storage_path,
+      mimeType: row.mime_type,
+      sizeBytes: row.size_bytes,
       durationSeconds: row.duration_seconds,
       transcript: row.transcript,
       transcriptionStatus: row.transcription_status,
-      transcriptionError: row.transcription_error,
       draftedNote: row.drafted_note,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      transcribedAt: row.transcribed_at,
     }));
 
     return NextResponse.json({ success: true, voiceNotes });
   } catch (error: any) {
-    console.error('❌ [VOICE-NOTES] GET error:', error);
+    console.error('[VOICE-NOTES] GET error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to list voice notes' },
       { status: 500 }
@@ -136,7 +137,7 @@ export async function POST(
     const durationSeconds = durationStr ? parseInt(durationStr, 10) : null;
     const noteId = randomUUID();
 
-    console.log('🎙️ [VOICE-NOTES] Upload received:', {
+    console.log('[VOICE-NOTES] Upload received:', {
       sessionId,
       size: file.size,
       type: file.type,
@@ -150,28 +151,27 @@ export async function POST(
       : '.webm';
 
     // Save audio to vault
-    const storagePath = `${practitionerId}/voice-notes/${noteId}${ext}`;
+    const storagePath = path.join(STORAGE_BASE, practitionerId, 'voice-notes', `${noteId}${ext}`);
     const fullDir = path.join(STORAGE_BASE, practitionerId, 'voice-notes');
     await mkdir(fullDir, { recursive: true });
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    await writeFile(path.join(STORAGE_BASE, storagePath), buffer);
+    await writeFile(storagePath, buffer);
 
-    console.log('🎙️ [VOICE-NOTES] Audio saved:', storagePath);
+    console.log('[VOICE-NOTES] Audio saved:', storagePath);
 
-    // Insert row with pending status
+    // Insert row with pending transcription status
     await db.query(
       `INSERT INTO voice_notes
-        (id, practitioner_id, session_id, client_id, storage_path, mime_type, size_bytes, duration_seconds, transcription_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'transcribing')`,
-      [noteId, practitionerId, sessionId, clientId, storagePath, file.type || 'audio/webm', file.size, durationSeconds]
+        (id, session_id, practitioner_id, client_id, storage_path, mime_type, size_bytes, duration_seconds, transcription_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
+      [noteId, sessionId, practitionerId, clientId, storagePath, file.type || 'audio/webm', file.size, durationSeconds]
     );
 
     // Transcribe via local Whisper (synchronous — voice notes are short)
     let transcript: string | null = null;
-    let transcriptionStatus = 'failed';
-    let transcriptionError: string | null = null;
+    let transcriptionStatus = 'pending';
 
     try {
       // Fix file metadata (same pattern as transcribe-simple)
@@ -183,7 +183,7 @@ export async function POST(
       whisperFormData.append('file', fixedFile, fixedFile.name);
       whisperFormData.append('model', 'base.en');
 
-      console.log('🎙️ [VOICE-NOTES] Forwarding to Whisper:', WHISPER_LOCAL_URL);
+      console.log('[VOICE-NOTES] Forwarding to Whisper:', WHISPER_LOCAL_URL);
 
       const whisperResponse = await fetch(`${WHISPER_LOCAL_URL}/v1/audio/transcriptions`, {
         method: 'POST',
@@ -192,8 +192,14 @@ export async function POST(
 
       if (!whisperResponse.ok) {
         const errorText = await whisperResponse.text();
-        console.error('🎙️ [VOICE-NOTES] Whisper error:', errorText);
-        transcriptionError = `Whisper error: ${errorText.substring(0, 500)}`;
+        console.error('[VOICE-NOTES] Whisper error:', errorText);
+        transcriptionStatus = 'failed';
+
+        await db.query(
+          `UPDATE voice_notes SET transcription_status = 'failed', transcription_error = $1, updated_at = NOW()
+           WHERE id = $2`,
+          [errorText.slice(0, 500), noteId]
+        );
       } else {
         const result = await whisperResponse.json();
         transcript = (result.text || '').trim();
@@ -202,22 +208,27 @@ export async function POST(
         transcript = transcript.replace(/\bMaya\b/gi, 'MAIA');
 
         transcriptionStatus = 'completed';
-        console.log('🎙️ [VOICE-NOTES] Transcribed:', transcript.length, 'chars');
+
+        await db.query(
+          `UPDATE voice_notes SET transcript = $1, transcription_status = 'completed', transcribed_at = NOW(), updated_at = NOW()
+           WHERE id = $2`,
+          [transcript, noteId]
+        );
+
+        console.log('[VOICE-NOTES] Transcribed:', transcript.length, 'chars');
       }
     } catch (whisperErr: any) {
-      console.error('🎙️ [VOICE-NOTES] Whisper call failed:', whisperErr.message);
-      transcriptionError = whisperErr.message;
+      console.error('[VOICE-NOTES] Whisper call failed:', whisperErr.message);
+      transcriptionStatus = 'failed';
+
+      await db.query(
+        `UPDATE voice_notes SET transcription_status = 'failed', transcription_error = $1, updated_at = NOW()
+         WHERE id = $2`,
+        [whisperErr.message?.slice(0, 500) || 'Unknown error', noteId]
+      );
     }
 
-    // Update row with transcription result
-    await db.query(
-      `UPDATE voice_notes
-       SET transcript = $1, transcription_status = $2, transcription_error = $3,
-           transcribed_at = CASE WHEN $2 = 'completed' THEN NOW() ELSE NULL END,
-           updated_at = NOW()
-       WHERE id = $4`,
-      [transcript, transcriptionStatus, transcriptionError, noteId]
-    );
+    console.log('[VOICE-NOTES] Saved to DB:', noteId, transcriptionStatus, transcript ? `(${transcript.length} chars)` : '(no transcript)');
 
     return NextResponse.json({
       success: true,
@@ -228,12 +239,11 @@ export async function POST(
         durationSeconds,
         transcript,
         transcriptionStatus,
-        transcriptionError,
         createdAt: new Date().toISOString(),
       },
     });
   } catch (error: any) {
-    console.error('❌ [VOICE-NOTES] POST error:', error);
+    console.error('[VOICE-NOTES] POST error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to upload voice note' },
       { status: 500 }

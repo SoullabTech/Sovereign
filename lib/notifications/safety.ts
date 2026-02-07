@@ -13,6 +13,7 @@
 
 import { Resend } from 'resend';
 import { query } from '@/lib/db/postgres';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 // Config: whether to include message preview in email (default: false for privacy)
 const INCLUDE_PREVIEW = process.env.SAFETY_EMAIL_INCLUDE_PREVIEW === 'true';
@@ -254,7 +255,7 @@ export async function sendSafetyConcernNotification(
 
     const practitioner = practitionerResult.rows[0];
     const practitionerEmail = practitioner.email;
-    const practitionerName = practitioner.preferred_name || practitioner.name || 'there';
+    const practitionerName = resolveMemberDisplayName(practitioner, 'there');
 
     if (!practitionerEmail) {
       console.warn(`Practitioner ${practitionerId} has no email - skipping safety notification`);

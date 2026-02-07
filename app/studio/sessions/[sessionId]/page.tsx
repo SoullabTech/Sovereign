@@ -15,15 +15,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Camera,
-  Mic,
-  Sparkles,
-  TrendingUp,
-  Heart,
-  MessageCircle,
-  RefreshCw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
+import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
 
 interface SessionDetail {
   id: string;
@@ -44,42 +39,6 @@ interface SessionDetail {
   calendar_sync_status: string | null;
   created_at: string;
   updated_at: string;
-}
-
-interface BriefingLastSession {
-  date: string;
-  type: string;
-  notes: string | null;
-  themes: string[];
-  insights: string[];
-  days_ago: number;
-}
-
-interface BriefingJourney {
-  total_sessions: number;
-  months_together: number;
-  recurring_themes: string[];
-  stated_goals: string | null;
-}
-
-interface BriefingResponse {
-  ok: boolean;
-  hasHistory: boolean;
-  message: string | null;
-  note: string | null;
-  briefing: {
-    client_name: string | null;
-    last_session: BriefingLastSession | null;
-    journey: BriefingJourney;
-    flags: unknown[];
-    recent_sessions: unknown[];
-    message_digest: {
-      messages_since_last_session: number;
-      has_safety_concerns: boolean;
-      has_time_sensitive: boolean;
-      synthesis: string | null;
-    } | null;
-  } | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -131,10 +90,6 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [voiceNotePanelOpen, setVoiceNotePanelOpen] = useState(false);
-  const [briefingResponse, setBriefingResponse] = useState<BriefingResponse | null>(null);
-  const [briefingLoading, setBriefingLoading] = useState(false);
-  const [briefingError, setBriefingError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSession() {
@@ -154,43 +109,6 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
     }
     fetchSession();
   }, [sessionId]);
-
-  // Fetch briefing for upcoming sessions
-  const fetchBriefing = async () => {
-    setBriefingLoading(true);
-    setBriefingError(null);
-    try {
-      const res = await apiFetch(`/api/studio/sessions/${sessionId}/briefing`);
-      if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        throw new Error(json?.error || 'Failed to load briefing');
-      }
-      const json: BriefingResponse = await res.json();
-      setBriefingResponse(json);
-    } catch (e: unknown) {
-      setBriefingError(e instanceof Error ? e.message : 'Failed to load briefing');
-    } finally {
-      setBriefingLoading(false);
-    }
-  };
-
-  // Derived values for easier access
-  const hasHistory = briefingResponse?.hasHistory ?? false;
-  const briefing = briefingResponse?.briefing;
-
-  // Auto-fetch briefing for upcoming sessions
-  useEffect(() => {
-    if (!session) return;
-    const isUpcoming = ['scheduled', 'confirmed'].includes(session.status);
-    const sessionTime = new Date(session.scheduled_start).getTime();
-    const now = Date.now();
-    const within24Hours = sessionTime - now < 24 * 60 * 60 * 1000 && sessionTime > now;
-
-    // Fetch briefing for upcoming sessions within 24h or on-demand
-    if (isUpcoming && within24Hours && session.client_id) {
-      fetchBriefing();
-    }
-  }, [session, sessionId]);
 
   if (loading) {
     return (
@@ -316,139 +234,6 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
             )}
           </div>
 
-          {/* Pre-Session Briefing */}
-          {['scheduled', 'confirmed'].includes(session.status) && session.client_id && (
-            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="flex items-center gap-2 text-sm font-medium text-amber-400">
-                  <Sparkles className="w-4 h-4" />
-                  Pre-Session Briefing
-                </h2>
-                <button
-                  onClick={fetchBriefing}
-                  disabled={briefingLoading}
-                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${briefingLoading ? 'animate-spin' : ''}`} />
-                  {briefingLoading ? 'Loading...' : 'Refresh'}
-                </button>
-              </div>
-
-              {briefingLoading && !briefingResponse && (
-                <div className="flex items-center gap-3 text-slate-400 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Preparing briefing...
-                </div>
-              )}
-
-              {briefingError && (
-                <div className="text-red-400 text-sm">{briefingError}</div>
-              )}
-
-              {!hasHistory && briefingResponse && (
-                <div className="text-slate-400 text-sm">
-                  <p>{briefingResponse.message}</p>
-                  {briefingResponse.note && (
-                    <p className="text-xs text-slate-500 mt-1 italic">{briefingResponse.note}</p>
-                  )}
-                </div>
-              )}
-
-              {hasHistory && briefing && (
-                <div className="space-y-4">
-                  {/* Last Session */}
-                  {briefing.last_session && (
-                    <div className="flex gap-3">
-                      <MessageCircle className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-xs text-slate-500 mb-0.5">
-                          Last Session — {briefing.last_session.days_ago === 0 ? 'Today' :
-                            briefing.last_session.days_ago === 1 ? 'Yesterday' :
-                            `${briefing.last_session.days_ago} days ago`}
-                        </div>
-                        {briefing.last_session.themes.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-1">
-                            {briefing.last_session.themes.map((t) => (
-                              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-slate-800/60 text-slate-300">
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {briefing.last_session.notes && (
-                          <p className="text-slate-200 text-sm line-clamp-2">{briefing.last_session.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Insights */}
-                  {briefing.last_session?.insights && briefing.last_session.insights.length > 0 && (
-                    <div className="flex gap-3">
-                      <Heart className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Insights</div>
-                        <ul className="text-slate-200 text-sm space-y-0.5">
-                          {briefing.last_session.insights.slice(0, 3).map((insight, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-amber-400">-</span>
-                              <span>{insight}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recurring Themes */}
-                  {briefing.journey.recurring_themes.length > 0 && (
-                    <div className="flex gap-3">
-                      <TrendingUp className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Recurring Themes</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {briefing.journey.recurring_themes.map((t) => (
-                            <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Stated Goals */}
-                  {briefing.journey.stated_goals && (
-                    <div className="flex gap-3">
-                      <CheckCircle2 className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Stated Goals</div>
-                        <p className="text-slate-200 text-sm">{briefing.journey.stated_goals}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Session count indicator */}
-                  <div className="pt-2 border-t border-amber-500/10 text-xs text-slate-500">
-                    {briefing.journey.total_sessions} session{briefing.journey.total_sessions !== 1 ? 's' : ''}
-                    {briefing.journey.months_together > 0 && (
-                      <> · {briefing.journey.months_together}mo together</>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {!briefingResponse && !briefingLoading && !briefingError && (
-                <button
-                  onClick={fetchBriefing}
-                  className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
-                >
-                  Load briefing for this client
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Notes Section */}
           {(session.notes || session.practitioner_notes) && (
             <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6">
@@ -477,17 +262,22 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
             </div>
           )}
 
-          {/* Voice Notes Panel */}
+          {/* Voice Notes Panel — always open on detail page */}
           <VoiceNotePanel
             sessionId={sessionId}
-            clientName={session.client_name}
-            isOpen={voiceNotePanelOpen}
-            onClose={() => setVoiceNotePanelOpen(false)}
+            clientName={session.client_name || null}
+            isOpen={true}
+            onClose={() => {}}
           />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Pre-Session Briefing */}
+          {session.client_id && (
+            <SessionBriefingCard sessionId={sessionId} />
+          )}
+
           {/* Payment Info */}
           {session.price_cents !== null && (
             <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
@@ -511,23 +301,6 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
           <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-medium text-white mb-3">Actions</h3>
             <div className="space-y-2">
-              {['scheduled', 'confirmed'].includes(session.status) && session.client_id && !briefing && (
-                <button
-                  onClick={fetchBriefing}
-                  disabled={briefingLoading}
-                  className="w-full px-4 py-2 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors text-left flex items-center gap-2 disabled:opacity-50"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {briefingLoading ? 'Loading...' : 'Prepare for Session'}
-                </button>
-              )}
-              <button
-                onClick={() => setVoiceNotePanelOpen(true)}
-                className="w-full px-4 py-2 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors text-left flex items-center gap-2"
-              >
-                <Mic className="w-4 h-4" />
-                Voice Notes
-              </button>
               <button className="w-full px-4 py-2 text-sm text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors text-left">
                 Edit Session
               </button>

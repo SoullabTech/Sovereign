@@ -16,6 +16,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 import type { Tier, Role } from '@/config/accessMatrix';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 interface SessionRow {
   member_id: string;
@@ -96,7 +97,7 @@ export async function GET() {
         id: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         tier: member.tier,
@@ -192,7 +193,7 @@ export async function POST() {
         id: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         tier: member.tier,

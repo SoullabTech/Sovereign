@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
   try {
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
         [levelResult.rows[0].endorsed_by]
       );
       if (endorserResult.rows.length > 0) {
-        endorsedBy = (endorserResult.rows[0].preferred_name || endorserResult.rows[0].name) as string;
+        endorsedBy = resolveMemberDisplayName(endorserResult.rows[0]);
       }
     }
 

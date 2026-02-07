@@ -50,6 +50,7 @@ import { consult } from '@/lib/ain/consultation';
 /** AIN Collective Breakthrough (afferent/efferent wisdom flow) */
 import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 // Skip during static export (Capacitor builds)
 
@@ -379,7 +380,7 @@ export async function POST(request: NextRequest) {
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
-          serverUserName = member.preferred_name || member.name || 'Explorer';
+          serverUserName = resolveMemberDisplayName(member);
         }
       } else if (serverSession) {
         // Session exists but userId doesn't match - log and use session's member
@@ -390,7 +391,7 @@ export async function POST(request: NextRequest) {
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
-          serverUserName = member.preferred_name || member.name || 'Explorer';
+          serverUserName = resolveMemberDisplayName(member);
         }
       }
       // If no server session, fall back to 'Explorer' - don't trust client-sent name

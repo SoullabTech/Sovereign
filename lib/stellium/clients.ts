@@ -200,6 +200,67 @@ export function decryptJoinedClientFields(
   return { client_name: clientName, client_preferred_name: clientPreferredName };
 }
 
+/**
+ * Resolve a single canonical display name for a client.
+ *
+ * Priority chain:
+ *   1. Decrypted preferred_name (from encrypted column)
+ *   2. Decrypted name (from encrypted column)
+ *   3. SQL COALESCE fallback (client_display_name — plaintext preferred || name)
+ *   4. Raw preferred_name (plaintext column)
+ *   5. Raw name (plaintext column)
+ *   6. "Client" (safe final fallback)
+ *
+ * Call this everywhere you need "what do we call this person?"
+ * instead of scattering preferred || name logic across files.
+ */
+export function resolveClientDisplayName(
+  row: Record<string, any> | null | undefined,
+  decrypted: { client_preferred_name?: string | null; client_name?: string | null } | null | undefined
+): string {
+  const resolved =
+    decrypted?.client_preferred_name ||
+    decrypted?.client_name ||
+    row?.client_display_name ||
+    row?.client_preferred_name ||
+    row?.client_name ||
+    row?.preferred_name ||
+    row?.name ||
+    null;
+
+  if (!resolved && process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[resolveClientDisplayName] fell back to "Client" — missing name data for id=${row?.client_id || row?.id || 'unknown'}`
+    );
+  }
+
+  return resolved || 'Client';
+}
+
+/**
+ * Resolve a single canonical display name for a member.
+ *
+ * Priority chain:
+ *   1. preferred_name (members table, plaintext)
+ *   2. name (members table, plaintext)
+ *   3. username (members table, always populated)
+ *   4. fallback string (default: "Explorer")
+ *
+ * Use this for member-context name resolution (auth, oracle, profile).
+ * For practitioner-client contexts, use resolveClientDisplayName() instead.
+ */
+export function resolveMemberDisplayName(
+  member: Record<string, any> | null | undefined,
+  fallback = 'Explorer'
+): string {
+  return (
+    member?.preferred_name ||
+    member?.name ||
+    member?.username ||
+    fallback
+  );
+}
+
 // ============================================
 // CLIENT CRUD
 // ============================================

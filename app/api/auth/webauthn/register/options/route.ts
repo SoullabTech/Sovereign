@@ -14,6 +14,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { createRegistrationOptions } from '@/lib/auth/webauthnServer';
 import { query } from '@/lib/db/postgres';
 import { logAuthEvent } from '@/lib/security/authAudit';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const member = memberResult.rows[0];
-    const displayName = member.preferred_name || member.name || member.username;
+    const displayName = resolveMemberDisplayName(member);
 
     // Generate registration options
     const options = await createRegistrationOptions(

@@ -15,6 +15,7 @@ import { getSessionContext, storeMaiaPrep } from '@/lib/stellium/sessions';
 import { getPersonaContext, generatePersonaPrompt } from '@/lib/stellium/personas';
 import { MaiaSessionPrep } from '@/lib/stellium/types';
 import Anthropic from '@anthropic-ai/sdk';
+import { resolveClientDisplayName } from '@/lib/stellium/clients';
 
 const anthropic = new Anthropic();
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     let contextMessage = `
 ## Session Details
 - Type: ${sessionInfo.session_type}
-- Client: ${sessionInfo.client?.preferred_name || sessionInfo.client?.name || 'Unknown'}
+- Client: ${resolveClientDisplayName(sessionInfo.client, null)}
 - Scheduled: ${sessionInfo.scheduled_at || 'Unscheduled'}
 - Duration: ${sessionInfo.duration_minutes} minutes
 

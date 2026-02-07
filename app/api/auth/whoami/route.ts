@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession, getSessionFromCookie } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         memberId: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         tier: member.tier || 'free',
         isPractitioner: member.is_practitioner || false,
         debug: {
@@ -210,7 +211,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
       memberId: member.id,
       username: member.username,
       name: member.name,
-      preferredName: member.preferred_name || member.name,
+      preferredName: resolveMemberDisplayName(member),
       tier: member.tier || 'free',
       isPractitioner: member.is_practitioner || false,
       sessionId: session.id,
