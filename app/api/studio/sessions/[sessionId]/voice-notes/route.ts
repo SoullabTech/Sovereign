@@ -104,6 +104,16 @@ export async function POST(
 
     // Feature gate: audio uploads disabled by default (local-only policy)
     if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/studio/sessions/[sessionId]/voice-notes",
+        kind: "upload",
+        bytes: 0,
+        seconds: null,
+        status: "rejected",
+        errorCode: "FEATURE_DISABLED",
+        meta: { reason: "ALLOW_AUDIO_UPLOADS not enabled" },
+      });
       return NextResponse.json(
         { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
         { status: 410 }
@@ -113,6 +123,16 @@ export async function POST(
     // Entitlement check: cloudAudioUploads feature flag
     const entitlements = await getEntitlements(memberId);
     if (!entitlements.features.cloudAudioUploads) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/studio/sessions/[sessionId]/voice-notes",
+        kind: "upload",
+        bytes: 0,
+        seconds: null,
+        status: "rejected",
+        errorCode: "TIER_GATE",
+        meta: { tier: entitlements.tier },
+      });
       return NextResponse.json(
         { success: false, error: 'Cloud audio uploads are disabled for your tier', upgradeRequired: true },
         { status: 403 }
@@ -122,6 +142,16 @@ export async function POST(
     // Guard: reject non-multipart requests with a clear 415 error
     const contentType = request.headers.get('content-type') ?? '';
     if (!contentType.includes('multipart/form-data')) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/studio/sessions/[sessionId]/voice-notes",
+        kind: "upload",
+        bytes: 0,
+        seconds: null,
+        status: "rejected",
+        errorCode: "UNSUPPORTED_MEDIA_TYPE",
+        meta: { contentType },
+      });
       return NextResponse.json(
         { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
         { status: 415 }
@@ -149,6 +179,15 @@ export async function POST(
     const durationStr = formData.get('duration_seconds') as string;
 
     if (!file) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/studio/sessions/[sessionId]/voice-notes",
+        kind: "upload",
+        bytes: 0,
+        seconds: null,
+        status: "rejected",
+        errorCode: "NO_FILE",
+      });
       return NextResponse.json(
         { success: false, error: 'No audio file provided' },
         { status: 400 }
@@ -156,6 +195,16 @@ export async function POST(
     }
 
     if (file.size > MAX_FILE_SIZE) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/studio/sessions/[sessionId]/voice-notes",
+        kind: "upload",
+        bytes: file.size,
+        seconds: null,
+        status: "rejected",
+        errorCode: "SIZE_LIMIT",
+        meta: { maxBytes: MAX_FILE_SIZE },
+      });
       return NextResponse.json(
         { success: false, error: 'File too large (max 100MB)' },
         { status: 413 }
@@ -258,8 +307,8 @@ export async function POST(
 
     console.log('[VOICE-NOTES] Saved to DB:', noteId, transcriptionStatus, transcript ? `(${transcript.length} chars)` : '(no transcript)');
 
-    // Log audio usage for metering
-    await logAudioUsageEvent({
+    // Log audio usage for metering (fire-and-forget)
+    logAudioUsageEvent({
       memberId,
       route: '/api/studio/sessions/[sessionId]/voice-notes',
       kind: 'upload',
