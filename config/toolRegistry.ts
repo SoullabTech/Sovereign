@@ -410,6 +410,22 @@ export const TOOL_REGISTRY: LabTool[] = [
     defaultEnabled: false,
     popularityRank: 12,
   },
+  {
+    id: 'regulation-minute',
+    label: 'Regulation Minute',
+    shortDescription: 'Nervous system downshift',
+    longDescription:
+      'A 60-120s guided regulation using breath patterns, sacred tones, and haptic feedback. Box breathing, deep calm, or natural rhythm — choose your downshift.',
+    emoji: '🫁',
+    icon: Wind,
+    path: '/labtools/regulation-minute',
+    category: 'training',
+    minTier: 'personal',
+    tags: ['breath', 'regulation', 'somatic', 'nervous-system', 'calm', 'shift'],
+    defaultEnabled: false,
+    isNew: true,
+    popularityRank: 8,
+  },
 
   // ---------------------------------------------------------------------------
   // PATTERNS
