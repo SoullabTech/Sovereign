@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import Anthropic from '@anthropic-ai/sdk';
+import { writebackStudioSession, extractThemesFromNote } from '@/lib/practitioner/studioWriteback';
 
 async function getPractitionerId(): Promise<string | null> {
   const result = await db.query(
@@ -69,6 +70,7 @@ export async function POST(
     // Load session context (client name, service, date, duration)
     const sessionResult = await db.query(
       `SELECT s.scheduled_start, s.scheduled_end, s.notes,
+              s.client_id, s.location_type,
               c.name AS client_name,
               svc.name AS service_name
        FROM sessions s
@@ -138,6 +140,27 @@ ${voiceNote.transcript}
     );
 
     console.log('[DRAFT-NOTE] Generated:', draftedNote.length, 'chars');
+
+    // Write back to practitioner_sessions so the briefing engine can see this
+    // session's data next time. Non-fatal — don't block the response.
+    if (session?.client_id && session?.scheduled_start && session?.scheduled_end) {
+      try {
+        const themes = extractThemesFromNote(draftedNote);
+        await writebackStudioSession({
+          studioSessionId: sessionId,
+          practitionerId,
+          clientId: session.client_id,
+          scheduledStart: session.scheduled_start,
+          scheduledEnd: session.scheduled_end,
+          locationType: session.location_type || 'video',
+          sessionNotes: draftedNote,
+          themes,
+          serviceName: serviceName || undefined,
+        });
+      } catch (writebackErr: any) {
+        console.error('[DRAFT-NOTE] Write-back failed (non-fatal):', writebackErr.message);
+      }
+    }
 
     return NextResponse.json({
       success: true,
