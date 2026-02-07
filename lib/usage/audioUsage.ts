@@ -47,10 +47,15 @@ export function logAudioUsageEvent(evt: AudioUsageEvent): void {
     VALUES
       ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
     `,
-    [memberId, route, kind, bytes, seconds, status, errorCode, JSON.stringify(meta)]
+    // node-postgres auto-serializes objects to JSON for jsonb columns
+    [memberId, route, kind, bytes, seconds, status, errorCode, meta]
   ).catch((e) => {
     // Swallow - metering should never break the primary flow
-    console.warn("[audioUsage] failed to log event:", e instanceof Error ? e.message : e);
+    console.warn("[audioUsage] failed to log event:", {
+      error: e instanceof Error ? e.message : String(e),
+      route,
+      memberId: memberId.substring(0, 8) + "...",
+    });
   });
 }
 
