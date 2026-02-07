@@ -12,6 +12,17 @@ import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
+/** Whitelist safe fields from system_settings rows */
+function pickSettingFields(row: Record<string, unknown>) {
+  return {
+    key: row.key,
+    value: row.value,
+    description: row.description,
+    updated_at: row.updated_at,
+    updated_by: row.updated_by,
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const key = req.nextUrl.searchParams.get('key');
@@ -27,7 +38,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Setting not found' }, { status: 404 });
       }
 
-      return NextResponse.json(result.rows[0]);
+      return NextResponse.json(pickSettingFields(result.rows[0]));
     }
 
     // Get all settings
@@ -35,7 +46,7 @@ export async function GET(req: NextRequest) {
       `SELECT key, value, description, updated_at, updated_by FROM system_settings ORDER BY key`
     );
 
-    return NextResponse.json({ settings: result.rows });
+    return NextResponse.json({ settings: result.rows.map(pickSettingFields) });
   } catch (error) {
     console.error('[admin/settings] GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -62,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[admin/settings] Updated ${key} = ${JSON.stringify(value)} by ${updatedBy || 'admin'}`);
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(pickSettingFields(result.rows[0]));
   } catch (error) {
     console.error('[admin/settings] POST error:', error);
     return NextResponse.json({ error: 'Failed to update setting' }, { status: 500 });
