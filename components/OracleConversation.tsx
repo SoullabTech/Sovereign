@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -542,6 +542,74 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMounted, setIsMounted] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
   const [echoSuppressUntil, setEchoSuppressUntil] = useState<number>(0);
+
+  // Studio SMS send modal state
+  const [smsModalOpen, setSmsModalOpen] = useState(false);
+  const [smsModalTo, setSmsModalTo] = useState('');
+  const [smsModalBody, setSmsModalBody] = useState('');
+  const [smsModalSending, setSmsModalSending] = useState(false);
+  const [smsModalResult, setSmsModalResult] = useState<'idle' | 'success' | 'error'>('idle');
+  const [smsModalError, setSmsModalError] = useState('');
+
+  // Studio SMS send handler
+  const openSmsModal = useCallback((messageText: string) => {
+    // Extract draft SMS body — look for common patterns MAIA uses
+    // Patterns: "DRAFT SMS: ...", "--- DRAFT SMS:", or just use full text
+    let body = messageText;
+    const draftMatch = messageText.match(/(?:DRAFT\s*SMS|SMS\s*Draft)[:\s]*(.+?)(?:---|Status:|Ready to send|You'll need to|$)/is);
+    if (draftMatch) {
+      body = draftMatch[1].trim();
+    }
+    setSmsModalBody(body);
+    setSmsModalTo('');
+    setSmsModalSending(false);
+    setSmsModalResult('idle');
+    setSmsModalError('');
+
+    // If clientId is available, try to prefill phone
+    if (studioContext?.clientId) {
+      apiFetch(`/api/studio/clients/${studioContext.clientId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data?.phone) setSmsModalTo(data.phone);
+        })
+        .catch(() => { /* no prefill */ });
+    }
+
+    setSmsModalOpen(true);
+  }, [studioContext?.clientId]);
+
+  const handleSendSms = useCallback(async () => {
+    if (!smsModalTo.trim() || !smsModalBody.trim()) {
+      setSmsModalError('Phone number and message are required');
+      return;
+    }
+    setSmsModalSending(true);
+    setSmsModalError('');
+    try {
+      const response = await apiFetch('/api/notifications/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: smsModalTo.trim(),
+          message: smsModalBody.trim(),
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSmsModalResult('success');
+        setTimeout(() => setSmsModalOpen(false), 1500);
+      } else {
+        setSmsModalError(data.error || 'Failed to send SMS');
+        setSmsModalResult('error');
+      }
+    } catch (err) {
+      setSmsModalError(err instanceof Error ? err.message : 'Network error');
+      setSmsModalResult('error');
+    } finally {
+      setSmsModalSending(false);
+    }
+  }, [smsModalTo, smsModalBody]);
 
   // 🌀 LENS CONSENT: Pending consent for next message (Stay/Switch/Blend ritual)
   const [pendingLensConsent, setPendingLensConsent] = useState<{
@@ -7417,6 +7485,21 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
+                      {/* Studio Actions — Send as SMS (studio surface only) */}
+                      {message.role === 'oracle' && surface === 'studio' && (
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            onClick={() => openSmsModal(message.text ?? message.content ?? '')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full
+                                     bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                                     hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-colors"
+                          >
+                            <Send className="w-3 h-3" />
+                            Send as SMS
+                          </button>
+                        </div>
+                      )}
+
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
                       {message.role === 'oracle' && message.metadata?.patterns && message.metadata.patterns.length > 0 && (
                         <PatternChips
@@ -8387,6 +8470,119 @@ I'm not sure what I'm feeling yet.`;
           onClick={() => setShowLabDrawer(true)}
         />
       )}
+
+      {/* Studio SMS Send Modal */}
+      <AnimatePresence>
+        {smsModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm"
+            onClick={() => setSmsModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md mx-4 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-700">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-emerald-400" />
+                  Send SMS
+                </h3>
+                <button
+                  onClick={() => setSmsModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:bg-slate-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-4 space-y-4">
+                {smsModalError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                    {smsModalError}
+                  </div>
+                )}
+
+                {smsModalResult === 'success' && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-sm flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    SMS sent successfully
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1.5">
+                    To (Phone Number)
+                  </label>
+                  <input
+                    type="tel"
+                    value={smsModalTo}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSmsModalTo(e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1.5">
+                    Message
+                  </label>
+                  <textarea
+                    value={smsModalBody}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSmsModalBody(e.target.value)}
+                    placeholder="Message text..."
+                    rows={4}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 resize-none"
+                  />
+                  <div className="text-xs text-slate-500 mt-1 text-right">
+                    {smsModalBody.length} characters
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-700">
+                <button
+                  onClick={() => setSmsModalOpen(false)}
+                  className="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendSms}
+                  disabled={smsModalSending || smsModalResult === 'success'}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg
+                           hover:bg-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {smsModalSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : smsModalResult === 'success' ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Sent
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Send SMS
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
