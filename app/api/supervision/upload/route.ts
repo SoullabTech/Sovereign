@@ -14,6 +14,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { logAudioUsageEvent } from '@/lib/audio/audioUsageLogger';
 import {
   createSession,
   updateSession,
@@ -32,14 +33,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Feature gate: audio uploads disabled by default (local-only policy)
-    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
-      return NextResponse.json(
-        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
-        { status: 410 }
-      );
-    }
-
     // Guard: reject non-multipart requests with a clear 415 error
     const ct = request.headers.get('content-type') ?? '';
     if (!ct.includes('multipart/form-data')) {
@@ -51,8 +44,9 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
 
-    // Extract fields — use authenticated member as practitioner identity
+    // Extract fields
     const audioFile = formData.get('audio') as File | null;
+    // Use authenticated member as practitioner identity (ignore client-sent practitionerId)
     const practitionerId = memberId;
     const caseId = formData.get('caseId') as string | null;
     const sessionType = formData.get('sessionType') as string | null;
@@ -137,6 +131,11 @@ export async function POST(request: NextRequest) {
     ]);
 
     console.log(`📤 [SUPERVISION] Audio uploaded for session ${session.id}: ${audioFile.name} (${(audioFile.size / (1024 * 1024)).toFixed(2)}MB)`);
+    logAudioUsageEvent({
+      memberId, eventType: 'upload', route: '/api/supervision/upload',
+      fileSizeBytes: audioFile.size, durationMs: durationMs ? parseInt(durationMs, 10) : undefined,
+      mimeType: audioFile.type, status: 'ok', sessionId: session.id,
+    });
 
     return NextResponse.json({
       success: true,
@@ -162,6 +161,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('🔴 [SUPERVISION] Error uploading audio:', error);
+    logAudioUsageEvent({
+      memberId: 'unknown', eventType: 'upload', route: '/api/supervision/upload',
+      status: 'error',
+    });
 
     if ((error as { code?: string }).code === '42P01') {
       return NextResponse.json({

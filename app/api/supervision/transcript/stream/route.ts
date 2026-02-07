@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { logAudioUsageEvent } from '@/lib/audio/audioUsageLogger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,14 +30,6 @@ export async function POST(request: NextRequest) {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Feature gate: audio uploads disabled by default (local-only policy)
-    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
-      return NextResponse.json(
-        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
-        { status: 410 }
-      );
     }
 
     // Guard: reject non-multipart requests with a clear 415 error
@@ -140,6 +133,11 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(`📝 [TranscriptStream] Stored: "${transcriptText.slice(0, 50)}..."`);
+      logAudioUsageEvent({
+        memberId, eventType: 'stream_chunk', route: '/api/supervision/transcript/stream',
+        fileSizeBytes: audioFile.size, durationMs: endMs - startMs || undefined,
+        mimeType: audioFile.type, status: 'ok', sessionId,
+      });
 
       return NextResponse.json({
         success: true,
@@ -155,6 +153,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // No speech detected — still log the chunk attempt
+    logAudioUsageEvent({
+      memberId, eventType: 'stream_chunk', route: '/api/supervision/transcript/stream',
+      fileSizeBytes: audioFile.size, durationMs: endMs - startMs || undefined,
+      mimeType: audioFile.type, status: 'ok', sessionId,
+    });
+
     return NextResponse.json({
       success: true,
       segment: null,
@@ -163,6 +168,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('🔴 [TranscriptStream] Error:', error);
+    logAudioUsageEvent({
+      memberId: 'unknown', eventType: 'stream_chunk', route: '/api/supervision/transcript/stream',
+      status: 'error',
+    });
 
     return NextResponse.json({
       success: false,

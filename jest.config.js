@@ -2,19 +2,14 @@
 const config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/jest.setup.ts'],
   roots: ['<rootDir>'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-  modulePathIgnorePatterns: [
-    '<rootDir>/.next/',
-    '<rootDir>/.next/standalone/',
-  ],
   testPathIgnorePatterns: [
     '/node_modules/',
-    '<rootDir>/.next/',
-    '<rootDir>/.next/standalone/',
     '<rootDir>/app/api/backend/',   // Backend has separate test setup
     '<rootDir>/app/api/_backend/',  // Legacy backend prototype
     '<rootDir>/backend/',           // Backend folder

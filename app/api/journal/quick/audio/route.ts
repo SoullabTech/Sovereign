@@ -17,6 +17,7 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { logAudioUsageEvent } from '@/lib/audio/audioUsageLogger';
 
 // Skip during static export (Capacitor builds)
 
@@ -37,14 +38,6 @@ export async function POST(request: NextRequest) {
     const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Feature gate: audio uploads disabled by default (local-only policy)
-    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
-      return NextResponse.json(
-        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
-        { status: 410 }
-      );
     }
 
     // Guard: reject non-multipart requests with a clear 415 error
@@ -100,6 +93,11 @@ export async function POST(request: NextRequest) {
 
     if (!isPaid) {
       console.log(`🔒 [VoiceJournal] Server audio blocked for free user: ${userId} (tier: ${tier})`);
+      logAudioUsageEvent({
+        memberId: userId, eventType: 'upload', route: '/api/journal/quick/audio',
+        fileSizeBytes: file.size, mimeType: file.type, status: 'rejected',
+        rejectReason: 'PAID_FEATURE', sessionId: entryId, tier,
+      });
       return NextResponse.json(
         {
           success: false,
@@ -114,6 +112,11 @@ export async function POST(request: NextRequest) {
     // Matches "audio privacy (default off)" truth claim
     if (storageConsent.audioServer !== true) {
       console.log(`🔒 [VoiceJournal] Server audio blocked by consent (audioServer=${storageConsent.audioServer}): ${userId}`);
+      logAudioUsageEvent({
+        memberId: userId, eventType: 'upload', route: '/api/journal/quick/audio',
+        fileSizeBytes: file.size, mimeType: file.type, status: 'rejected',
+        rejectReason: 'CONSENT_DISABLED', sessionId: entryId, tier,
+      });
       return NextResponse.json(
         {
           success: false,
@@ -170,6 +173,11 @@ export async function POST(request: NextRequest) {
     );
 
     console.log(`🎙️ [VoiceJournal] Audio saved: ${relPath} (${Math.round(file.size / 1024)}KB, ${durationMs}ms)`);
+    logAudioUsageEvent({
+      memberId: userId, eventType: 'upload', route: '/api/journal/quick/audio',
+      fileSizeBytes: file.size, durationMs: durationMs || undefined, mimeType: audioMime,
+      status: 'ok', sessionId: entryId, tier,
+    });
 
     return NextResponse.json({
       success: true,
@@ -181,6 +189,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ [VoiceJournal] Upload failed:', error);
+    // Best-effort error logging (memberId may not be available if auth failed)
+    logAudioUsageEvent({
+      memberId: 'unknown', eventType: 'upload', route: '/api/journal/quick/audio',
+      status: 'error',
+    });
     return NextResponse.json(
       { success: false, error: 'Audio upload failed' },
       { status: 500 }
