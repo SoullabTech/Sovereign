@@ -24,6 +24,15 @@ interface WhisperResponse {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Guard: reject non-multipart requests with a clear 415 error
+    const ct = request.headers.get('content-type') ?? '';
+    if (!ct.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     const formData = await request.formData();
 
     const sessionId = formData.get('sessionId') as string;
