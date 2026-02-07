@@ -507,7 +507,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
                   type="date"
                   value={birthDate}
                   onChange={e => setBirthDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50 input-dark-native"
                 />
               </div>
               <div>
@@ -516,7 +516,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
                   type="time"
                   value={birthTime}
                   onChange={e => setBirthTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50 input-dark-native"
                 />
               </div>
             </div>

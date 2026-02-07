@@ -43,6 +43,11 @@
     display: none;             /* Safari and Chrome */
   }
 
+  /* Force dark color scheme for native date/time inputs on dark UI */
+  .input-dark-native {
+    color-scheme: dark;
+  }
+
   /* iOS-specific carousel fixes + PWA narrow window support */
   .mobile-carousel {
     -webkit-overflow-scrolling: touch;
