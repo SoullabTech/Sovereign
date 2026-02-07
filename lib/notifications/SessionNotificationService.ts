@@ -112,21 +112,20 @@ async function sendWhatsAppReminder(
 async function sendSMSReminder(
   to: string,
   message: string,
-  credentials: { account_sid: string; auth_token: string; from_number: string }
+  credentials: { account_sid: string; auth_token: string; from_number: string; messaging_service_sid?: string }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const { account_sid, auth_token, from_number } = credentials;
+  const { account_sid, auth_token, from_number, messaging_service_sid } = credentials;
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${account_sid}/Messages.json`;
 
+  // Prefer MessagingServiceSid (A2P 10DLC compliant) over From number
   const body = new URLSearchParams({
     To: to,
     Body: message,
   });
 
-  // Prefer Messaging Service SID for A2P 10DLC compliance, fall back to From number
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-  if (messagingServiceSid) {
-    body.append('MessagingServiceSid', messagingServiceSid);
+  if (messaging_service_sid) {
+    body.append('MessagingServiceSid', messaging_service_sid);
   } else {
     body.append('From', from_number);
   }
@@ -206,6 +205,7 @@ async function getTwilioCredentials(practitionerId?: string): Promise<{
   auth_token: string;
   from_number: string;
   whatsapp_number: string;
+  messaging_service_sid?: string;
 } | null> {
   // Try practitioner-specific credentials first
   if (practitionerId) {
@@ -235,9 +235,10 @@ async function getTwilioCredentials(practitionerId?: string): Promise<{
   const auth_token = process.env.TWILIO_AUTH_TOKEN;
   const from_number = process.env.TWILIO_FROM_NUMBER;
   const whatsapp_number = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+  const messaging_service_sid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 
-  if (account_sid && auth_token && from_number) {
-    return { account_sid, auth_token, from_number, whatsapp_number };
+  if (account_sid && auth_token && (from_number || messaging_service_sid)) {
+    return { account_sid, auth_token, from_number: from_number || '', whatsapp_number, messaging_service_sid };
   }
 
   return null;

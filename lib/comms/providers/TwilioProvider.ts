@@ -19,6 +19,7 @@ interface TwilioCredentials {
   account_sid: string;
   auth_token: string;
   from_number: string;  // E.164 format: +1234567890
+  messaging_service_sid?: string;  // A2P 10DLC Messaging Service SID (MG...)
 }
 
 interface TwilioSendResponse {
@@ -85,7 +86,7 @@ export class TwilioProvider implements CommsProvider {
     payload: DeliveryPayload,
     credentials: Record<string, string>
   ): Promise<DeliveryResult> {
-    const { account_sid, auth_token, from_number } = credentials as unknown as TwilioCredentials;
+    const { account_sid, auth_token, from_number, messaging_service_sid } = credentials as unknown as TwilioCredentials;
 
     if (!account_sid || !auth_token) {
       return {
@@ -96,12 +97,12 @@ export class TwilioProvider implements CommsProvider {
       };
     }
 
-    if (!from_number) {
+    if (!from_number && !messaging_service_sid) {
       return {
         success: false,
         status: 'failed',
         errorCode: 'MISSING_FROM_NUMBER',
-        errorMessage: 'Twilio from number is required',
+        errorMessage: 'Twilio from number or messaging service SID is required',
       };
     }
 
@@ -118,15 +119,15 @@ export class TwilioProvider implements CommsProvider {
 
     try {
       // Twilio uses form-urlencoded for the Messages API
+      // Prefer MessagingServiceSid (A2P 10DLC compliant) over From number
       const body = new URLSearchParams({
         To: toNumber,
         Body: payload.bodyText,
       });
 
       // Prefer Messaging Service SID for A2P 10DLC compliance, fall back to From number
-      const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-      if (messagingServiceSid) {
-        body.append('MessagingServiceSid', messagingServiceSid);
+      if (messaging_service_sid) {
+        body.append('MessagingServiceSid', messaging_service_sid);
       } else {
         body.append('From', from_number);
       }

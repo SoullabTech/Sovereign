@@ -379,6 +379,13 @@ interface OracleConversationProps {
   // Scribe session discussion mode
   scribeSessionId?: string; // ID of scribe session to discuss
   scribeSessionContext?: ScribeSessionContext; // Context for scoped discussion
+  // Studio surface mode
+  surface?: 'maia' | 'studio'; // Which surface MAIA is running on
+  studioContext?: {
+    surface: 'studio';
+    clientId?: string;
+    pathname?: string;
+  };
 }
 
 interface ConversationMessage {
@@ -470,6 +477,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   initialAction,
   scribeSessionId,
   scribeSessionContext,
+  surface,
+  studioContext,
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
@@ -4172,6 +4181,10 @@ I'm not sure what I'm feeling yet.`;
             duration: scribeSessionContext.duration,
             markerCount: scribeSessionContext.markerCount,
           } : undefined,
+
+          // 🏢 STUDIO SURFACE: When running inside Soullab Studio
+          surface: surface ?? 'maia',
+          studioContext: studioContext ?? undefined,
         }),
         signal: controller.signal
       });
