@@ -159,6 +159,42 @@ export default function PrivacyPolicyPage() {
           </div>
         </motion.section>
 
+        {/* SMS Communications */}
+        <motion.section
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.27 }}
+        >
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-white/80 uppercase">
+            SMS Communications
+          </h3>
+          <div className="p-6 rounded-xl border border-white/10 bg-white/5 space-y-4">
+            <p className="text-[14px] leading-relaxed text-white/70">
+              If you opt in to receive SMS notifications from Soullab, we will send you appointment
+              reminders, session confirmations, and scheduling updates related to your booked sessions.
+            </p>
+            <p className="text-[14px] leading-relaxed text-white/70">
+              <strong className="text-white">Message frequency</strong> varies based on your session bookings.
+              Message and data rates may apply. You can opt out at any time by replying{' '}
+              <strong className="text-white">STOP</strong> to any message. Reply{' '}
+              <strong className="text-white">HELP</strong> for assistance.
+            </p>
+            <p className="text-[14px] leading-relaxed text-white/70">
+              Your phone number is stored securely and used solely for delivering the notifications
+              you have consented to receive. We do not share your phone number with third parties
+              for marketing purposes.
+            </p>
+            <p className="text-[14px] leading-relaxed text-white/70">
+              SMS services are provided via Twilio. For questions about SMS communications, contact us
+              at{' '}
+              <a href="mailto:privacy@soullab.life" className="text-amber-400 hover:underline">
+                privacy@soullab.life
+              </a>.
+            </p>
+          </div>
+        </motion.section>
+
         {/* What We Don't Do */}
         <motion.section
           className="mb-12"
