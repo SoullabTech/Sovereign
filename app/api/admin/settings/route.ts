@@ -12,8 +12,17 @@ import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
+/** Type-safe row shape from system_settings table */
+type SystemSettingRow = {
+  key: string;
+  value: unknown;
+  description: string | null;
+  updated_at: string | Date | null;
+  updated_by: string | null;
+};
+
 /** Whitelist safe fields from system_settings rows */
-function pickSettingFields(row: Record<string, unknown>) {
+function pickSettingFields(row: SystemSettingRow) {
   return {
     key: row.key,
     value: row.value,
@@ -34,11 +43,12 @@ export async function GET(req: NextRequest) {
         [key]
       );
 
-      if (result.rows.length === 0) {
+      const row = result.rows[0] as SystemSettingRow | undefined;
+      if (!row) {
         return NextResponse.json({ error: 'Setting not found' }, { status: 404 });
       }
 
-      return NextResponse.json(pickSettingFields(result.rows[0]));
+      return NextResponse.json(pickSettingFields(row));
     }
 
     // Get all settings
@@ -46,7 +56,7 @@ export async function GET(req: NextRequest) {
       `SELECT key, value, description, updated_at, updated_by FROM system_settings ORDER BY key`
     );
 
-    return NextResponse.json({ settings: result.rows.map(pickSettingFields) });
+    return NextResponse.json({ settings: (result.rows as SystemSettingRow[]).map(pickSettingFields) });
   } catch (error) {
     console.error('[admin/settings] GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -73,7 +83,11 @@ export async function POST(req: NextRequest) {
 
     console.log(`[admin/settings] Updated ${key} = ${JSON.stringify(value)} by ${updatedBy || 'admin'}`);
 
-    return NextResponse.json(pickSettingFields(result.rows[0]));
+    const row = result.rows[0] as SystemSettingRow | undefined;
+    if (!row) {
+      return NextResponse.json({ error: 'Setting update failed' }, { status: 500 });
+    }
+    return NextResponse.json(pickSettingFields(row));
   } catch (error) {
     console.error('[admin/settings] POST error:', error);
     return NextResponse.json({ error: 'Failed to update setting' }, { status: 500 });
