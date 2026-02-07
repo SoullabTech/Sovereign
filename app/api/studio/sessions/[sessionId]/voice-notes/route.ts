@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
  * GET  - List voice notes for a session
  * POST - Upload audio, save to vault, transcribe via local Whisper
  *
- * Audio is stored locally in /app/data/vault/{practitionerId}/voice-notes/
+ * Table: session_voice_notes
+ * Audio stored at /app/data/vault/{practitionerId}/voice-notes/{noteId}.webm
  * Transcription is sovereign (local Faster-Whisper, no cloud APIs)
  */
 
@@ -48,10 +49,9 @@ export async function GET(
     const { sessionId } = await params;
 
     const result = await db.query(
-      `SELECT id, session_id, client_id, duration_seconds, transcript,
-              transcription_status, transcription_error, drafted_note,
-              created_at, updated_at, transcribed_at
-       FROM voice_notes
+      `SELECT id, session_id, client_id, file_path, mime_type,
+              original_filename, duration_ms, transcript, created_at
+       FROM session_voice_notes
        WHERE session_id = $1 AND practitioner_id = $2
        ORDER BY created_at DESC`,
       [sessionId, practitionerId]
@@ -61,14 +61,12 @@ export async function GET(
       id: row.id,
       sessionId: row.session_id,
       clientId: row.client_id,
-      durationSeconds: row.duration_seconds,
+      filePath: row.file_path,
+      mimeType: row.mime_type,
+      originalFilename: row.original_filename,
+      durationMs: row.duration_ms,
       transcript: row.transcript,
-      transcriptionStatus: row.transcription_status,
-      transcriptionError: row.transcription_error,
-      draftedNote: row.drafted_note,
       createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      transcribedAt: row.transcribed_at,
     }));
 
     return NextResponse.json({ success: true, voiceNotes });
@@ -117,7 +115,7 @@ export async function POST(
     // Parse FormData
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const durationStr = formData.get('duration_seconds') as string;
+    const durationStr = formData.get('duration_ms') as string;
 
     if (!file) {
       return NextResponse.json(
@@ -133,14 +131,14 @@ export async function POST(
       );
     }
 
-    const durationSeconds = durationStr ? parseInt(durationStr, 10) : null;
+    const durationMs = durationStr ? parseInt(durationStr, 10) : null;
     const noteId = randomUUID();
 
     console.log('🎙️ [VOICE-NOTES] Upload received:', {
       sessionId,
       size: file.size,
       type: file.type,
-      durationSeconds,
+      durationMs,
     });
 
     // Determine file extension from MIME type
@@ -150,28 +148,18 @@ export async function POST(
       : '.webm';
 
     // Save audio to vault
-    const storagePath = `${practitionerId}/voice-notes/${noteId}${ext}`;
+    const filePath = path.join(STORAGE_BASE, practitionerId, 'voice-notes', `${noteId}${ext}`);
     const fullDir = path.join(STORAGE_BASE, practitionerId, 'voice-notes');
     await mkdir(fullDir, { recursive: true });
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    await writeFile(path.join(STORAGE_BASE, storagePath), buffer);
+    await writeFile(filePath, buffer);
 
-    console.log('🎙️ [VOICE-NOTES] Audio saved:', storagePath);
-
-    // Insert row with pending status
-    await db.query(
-      `INSERT INTO voice_notes
-        (id, practitioner_id, session_id, client_id, storage_path, mime_type, size_bytes, duration_seconds, transcription_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'transcribing')`,
-      [noteId, practitionerId, sessionId, clientId, storagePath, file.type || 'audio/webm', file.size, durationSeconds]
-    );
+    console.log('🎙️ [VOICE-NOTES] Audio saved:', filePath);
 
     // Transcribe via local Whisper (synchronous — voice notes are short)
     let transcript: string | null = null;
-    let transcriptionStatus = 'failed';
-    let transcriptionError: string | null = null;
 
     try {
       // Fix file metadata (same pattern as transcribe-simple)
@@ -193,7 +181,6 @@ export async function POST(
       if (!whisperResponse.ok) {
         const errorText = await whisperResponse.text();
         console.error('🎙️ [VOICE-NOTES] Whisper error:', errorText);
-        transcriptionError = `Whisper error: ${errorText.substring(0, 500)}`;
       } else {
         const result = await whisperResponse.json();
         transcript = (result.text || '').trim();
@@ -201,23 +188,22 @@ export async function POST(
         // Post-process: fix common Whisper mis-transcriptions
         transcript = transcript.replace(/\bMaya\b/gi, 'MAIA');
 
-        transcriptionStatus = 'completed';
         console.log('🎙️ [VOICE-NOTES] Transcribed:', transcript.length, 'chars');
       }
     } catch (whisperErr: any) {
       console.error('🎙️ [VOICE-NOTES] Whisper call failed:', whisperErr.message);
-      transcriptionError = whisperErr.message;
+      // Continue without transcript — audio is still saved
     }
 
-    // Update row with transcription result
+    // Insert row with transcript (or null if transcription failed)
     await db.query(
-      `UPDATE voice_notes
-       SET transcript = $1, transcription_status = $2, transcription_error = $3,
-           transcribed_at = CASE WHEN $2 = 'completed' THEN NOW() ELSE NULL END,
-           updated_at = NOW()
-       WHERE id = $4`,
-      [transcript, transcriptionStatus, transcriptionError, noteId]
+      `INSERT INTO session_voice_notes
+        (id, session_id, practitioner_id, client_id, file_path, mime_type, original_filename, duration_ms, transcript)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [noteId, sessionId, practitionerId, clientId, filePath, file.type || 'audio/webm', file.name || `recording${ext}`, durationMs, transcript]
     );
+
+    console.log('🎙️ [VOICE-NOTES] Saved to DB:', noteId, transcript ? `(${transcript.length} chars)` : '(no transcript)');
 
     return NextResponse.json({
       success: true,
@@ -225,10 +211,8 @@ export async function POST(
         id: noteId,
         sessionId,
         clientId,
-        durationSeconds,
+        durationMs,
         transcript,
-        transcriptionStatus,
-        transcriptionError,
         createdAt: new Date().toISOString(),
       },
     });

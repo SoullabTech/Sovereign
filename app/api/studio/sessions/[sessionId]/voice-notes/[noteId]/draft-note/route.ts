@@ -7,6 +7,7 @@ export const maxDuration = 60;
  * Takes a transcribed voice note and generates a structured session note
  * via Claude. The practitioner reviews/edits before saving.
  *
+ * Table: session_voice_notes
  * Sovereignty: Uses Anthropic API (Claude) — the only external AI call
  * permitted per CLAUDE.md. No OpenAI, no cloud transcription.
  */
@@ -41,10 +42,10 @@ export async function POST(
 
     const { sessionId, noteId } = await params;
 
-    // Load voice note
+    // Load voice note from session_voice_notes
     const noteResult = await db.query(
-      `SELECT id, transcript, transcription_status
-       FROM voice_notes
+      `SELECT id, transcript
+       FROM session_voice_notes
        WHERE id = $1 AND session_id = $2 AND practitioner_id = $3`,
       [noteId, sessionId, practitionerId]
     );
@@ -58,7 +59,7 @@ export async function POST(
 
     const voiceNote = noteResult.rows[0];
 
-    if (voiceNote.transcription_status !== 'completed' || !voiceNote.transcript) {
+    if (!voiceNote.transcript) {
       return NextResponse.json(
         { success: false, error: 'Voice note has not been transcribed yet' },
         { status: 400 }
@@ -131,12 +132,6 @@ ${voiceNote.transcript}
       : '';
 
     console.log('📝 [DRAFT-NOTE] Generated:', draftedNote.length, 'chars');
-
-    // Save drafted note to voice_notes row
-    await db.query(
-      `UPDATE voice_notes SET drafted_note = $1, updated_at = NOW() WHERE id = $2`,
-      [draftedNote, noteId]
-    );
 
     return NextResponse.json({
       success: true,

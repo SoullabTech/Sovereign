@@ -9,7 +9,8 @@
  * - useAudioCapture (full mode) for recording
  * - /api/studio/sessions/{id}/voice-notes for upload + transcription
  * - /api/studio/sessions/{id}/voice-notes/{noteId}/draft-note for MAIA note drafting
- * - /api/studio/sessions PATCH for saving practitioner_notes
+ *
+ * Table: session_voice_notes (file_path, duration_ms, transcript, etc.)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -35,11 +36,8 @@ interface VoiceNote {
   id: string;
   sessionId: string;
   clientId: string | null;
-  durationSeconds: number | null;
+  durationMs: number | null;
   transcript: string | null;
-  transcriptionStatus: string;
-  transcriptionError: string | null;
-  draftedNote: string | null;
   createdAt: string;
 }
 
@@ -115,7 +113,8 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     try {
       const formData = new FormData();
       formData.append('file', blob, `voice-note-${Date.now()}.webm`);
-      formData.append('duration_seconds', String(duration));
+      // Send duration in milliseconds (duration from useAudioCapture is in seconds)
+      formData.append('duration_ms', String(Math.round(duration * 1000)));
 
       const res = await apiFetch(`/api/studio/sessions/${sessionId}/voice-notes`, {
         method: 'POST',
@@ -130,10 +129,10 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
 
       setCurrentNote(data.voiceNote);
 
-      if (data.voiceNote.transcriptionStatus === 'completed' && data.voiceNote.transcript) {
+      if (data.voiceNote.transcript) {
         setPanelState('transcribed');
       } else {
-        setError(data.voiceNote.transcriptionError || 'Transcription failed');
+        setError('Transcription failed — audio saved, try again');
         setPanelState('idle');
       }
     } catch (err: any) {
@@ -214,11 +213,17 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     setPanelState('idle');
   }, []);
 
-  // Format duration as mm:ss
+  // Format duration as mm:ss (from seconds)
   const formatDuration = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Format duration from milliseconds
+  const formatDurationMs = (ms: number) => {
+    const totalSecs = Math.round(ms / 1000);
+    return formatDuration(totalSecs);
   };
 
   if (!isOpen) return null;
@@ -325,9 +330,9 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
               <div className="flex items-center gap-2 mb-2 text-xs text-teal-400">
                 <FileText className="w-3 h-3" />
                 Transcript
-                {currentNote.durationSeconds && (
+                {currentNote.durationMs && (
                   <span className="text-slate-500">
-                    ({formatDuration(currentNote.durationSeconds)})
+                    ({formatDurationMs(currentNote.durationMs)})
                   </span>
                 )}
               </div>
@@ -463,27 +468,14 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
                     {new Date(note.createdAt).toLocaleString('en-US', {
                       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                     })}
-                    {note.durationSeconds && ` (${formatDuration(note.durationSeconds)})`}
+                    {note.durationMs && ` (${formatDurationMs(note.durationMs)})`}
                   </span>
-                  <span className={`text-xs ${
-                    note.transcriptionStatus === 'completed' ? 'text-teal-400' :
-                    note.transcriptionStatus === 'failed' ? 'text-red-400' :
-                    'text-slate-500'
-                  }`}>
-                    {note.transcriptionStatus}
+                  <span className={`text-xs ${note.transcript ? 'text-teal-400' : 'text-slate-500'}`}>
+                    {note.transcript ? 'transcribed' : 'no transcript'}
                   </span>
                 </div>
                 {note.transcript && (
                   <p className="text-sm text-slate-400 line-clamp-2">{note.transcript}</p>
-                )}
-                {note.draftedNote && (
-                  <div className="mt-2 pt-2 border-t border-slate-700/50">
-                    <div className="flex items-center gap-1 text-xs text-amber-400 mb-1">
-                      <Sparkles className="w-3 h-3" />
-                      Session Note
-                    </div>
-                    <p className="text-sm text-slate-300 line-clamp-3">{note.draftedNote}</p>
-                  </div>
                 )}
               </div>
             ))}
