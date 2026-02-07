@@ -44,6 +44,7 @@ function getFramingConfig(id: string) {
 
 export default function DecisionDetailPage() {
   const params = useParams();
+  const decisionId = params?.id as string;
   const [decision, setDecision] = useState<DecisionRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [consulting, setConsulting] = useState(false);
@@ -58,12 +59,12 @@ export default function DecisionDetailPage() {
 
   useEffect(() => {
     loadDecision();
-  }, [params.id]);
+  }, [decisionId]);
 
   async function loadDecision() {
     setLoading(true);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${params.id}`);
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}`);
       if (res.ok) {
         const data = await res.json();
         setDecision(data.decision);
@@ -79,7 +80,7 @@ export default function DecisionDetailPage() {
     setConsulting(true);
     setConsultError(null);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${params.id}/consult`, { method: 'POST' });
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setDecision(data.decision);
@@ -98,7 +99,7 @@ export default function DecisionDetailPage() {
   async function saveNotes() {
     setSaving(true);
     try {
-      await apiFetch(`/api/studio/decisions/${params.id}`, {
+      await apiFetch(`/api/studio/decisions/${decisionId}`, {
         method: 'PUT',
         body: JSON.stringify({ consultantNotes: notes, questionsForLeader: questions }),
       });
