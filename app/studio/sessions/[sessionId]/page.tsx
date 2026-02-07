@@ -16,6 +16,11 @@ import {
   AlertCircle,
   Camera,
   Mic,
+  Sparkles,
+  TrendingUp,
+  Heart,
+  MessageCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
@@ -39,6 +44,18 @@ interface SessionDetail {
   calendar_sync_status: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface Briefing {
+  hasHistory: boolean;
+  clientName: string;
+  message?: string;
+  sessionCount?: number;
+  lastSessionDate?: string;
+  lastFocus?: string;
+  emotionalTone?: string;
+  followUp?: string;
+  pattern?: string | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -91,6 +108,9 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [voiceNotePanelOpen, setVoiceNotePanelOpen] = useState(false);
+  const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingError, setBriefingError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSession() {
@@ -110,6 +130,39 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
     }
     fetchSession();
   }, [sessionId]);
+
+  // Fetch briefing for upcoming sessions
+  const fetchBriefing = async () => {
+    setBriefingLoading(true);
+    setBriefingError(null);
+    try {
+      const res = await apiFetch(`/api/studio/sessions/${sessionId}/briefing`);
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error || 'Failed to load briefing');
+      }
+      const json = await res.json();
+      setBriefing(json.briefing);
+    } catch (e: unknown) {
+      setBriefingError(e instanceof Error ? e.message : 'Failed to load briefing');
+    } finally {
+      setBriefingLoading(false);
+    }
+  };
+
+  // Auto-fetch briefing for upcoming sessions
+  useEffect(() => {
+    if (!session) return;
+    const isUpcoming = ['scheduled', 'confirmed'].includes(session.status);
+    const sessionTime = new Date(session.scheduled_start).getTime();
+    const now = Date.now();
+    const within24Hours = sessionTime - now < 24 * 60 * 60 * 1000 && sessionTime > now;
+
+    // Fetch briefing for upcoming sessions within 24h or on-demand
+    if (isUpcoming && within24Hours && session.client_id) {
+      fetchBriefing();
+    }
+  }, [session, sessionId]);
 
   if (loading) {
     return (
@@ -235,6 +288,103 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
             )}
           </div>
 
+          {/* Pre-Session Briefing */}
+          {['scheduled', 'confirmed'].includes(session.status) && session.client_id && (
+            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="flex items-center gap-2 text-sm font-medium text-amber-400">
+                  <Sparkles className="w-4 h-4" />
+                  Pre-Session Briefing
+                </h2>
+                <button
+                  onClick={fetchBriefing}
+                  disabled={briefingLoading}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${briefingLoading ? 'animate-spin' : ''}`} />
+                  {briefingLoading ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {briefingLoading && !briefing && (
+                <div className="flex items-center gap-3 text-slate-400 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Preparing briefing...
+                </div>
+              )}
+
+              {briefingError && (
+                <div className="text-red-400 text-sm">{briefingError}</div>
+              )}
+
+              {briefing && !briefing.hasHistory && (
+                <p className="text-slate-400 text-sm">{briefing.message}</p>
+              )}
+
+              {briefing && briefing.hasHistory && (
+                <div className="space-y-4">
+                  {/* Last Focus */}
+                  {briefing.lastFocus && (
+                    <div className="flex gap-3">
+                      <MessageCircle className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-slate-500 mb-0.5">Last Focus</div>
+                        <p className="text-slate-200 text-sm">{briefing.lastFocus}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Emotional Tone */}
+                  {briefing.emotionalTone && (
+                    <div className="flex gap-3">
+                      <Heart className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-slate-500 mb-0.5">Emotional Tone</div>
+                        <p className="text-slate-200 text-sm">{briefing.emotionalTone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Follow-up */}
+                  {briefing.followUp && (
+                    <div className="flex gap-3">
+                      <CheckCircle2 className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-slate-500 mb-0.5">Follow-up</div>
+                        <p className="text-slate-200 text-sm">{briefing.followUp}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Emerging Pattern */}
+                  {briefing.pattern && (
+                    <div className="flex gap-3">
+                      <TrendingUp className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-slate-500 mb-0.5">Emerging Pattern</div>
+                        <p className="text-slate-200 text-sm">{briefing.pattern}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Session count indicator */}
+                  <div className="pt-2 border-t border-amber-500/10 text-xs text-slate-500">
+                    Based on {briefing.sessionCount} previous session{briefing.sessionCount !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )}
+
+              {!briefing && !briefingLoading && !briefingError && (
+                <button
+                  onClick={fetchBriefing}
+                  className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  Load briefing for this client
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Notes Section */}
           {(session.notes || session.practitioner_notes) && (
             <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6">
@@ -297,6 +447,16 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
           <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-medium text-white mb-3">Actions</h3>
             <div className="space-y-2">
+              {['scheduled', 'confirmed'].includes(session.status) && session.client_id && !briefing && (
+                <button
+                  onClick={fetchBriefing}
+                  disabled={briefingLoading}
+                  className="w-full px-4 py-2 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors text-left flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {briefingLoading ? 'Loading...' : 'Prepare for Session'}
+                </button>
+              )}
               <button
                 onClick={() => setVoiceNotePanelOpen(true)}
                 className="w-full px-4 py-2 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors text-left flex items-center gap-2"
