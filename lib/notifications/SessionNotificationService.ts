@@ -120,9 +120,16 @@ async function sendSMSReminder(
 
   const body = new URLSearchParams({
     To: to,
-    From: from_number,
     Body: message,
   });
+
+  // Prefer Messaging Service SID for A2P 10DLC compliance, fall back to From number
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+  if (messagingServiceSid) {
+    body.append('MessagingServiceSid', messagingServiceSid);
+  } else {
+    body.append('From', from_number);
+  }
 
   try {
     const response = await fetch(url, {

@@ -120,9 +120,16 @@ export class TwilioProvider implements CommsProvider {
       // Twilio uses form-urlencoded for the Messages API
       const body = new URLSearchParams({
         To: toNumber,
-        From: from_number,
         Body: payload.bodyText,
       });
+
+      // Prefer Messaging Service SID for A2P 10DLC compliance, fall back to From number
+      const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+      if (messagingServiceSid) {
+        body.append('MessagingServiceSid', messagingServiceSid);
+      } else {
+        body.append('From', from_number);
+      }
 
       // Optional: Add status callback URL
       // body.append('StatusCallback', `${process.env.BASE_URL}/api/webhooks/twilio`);
