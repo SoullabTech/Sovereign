@@ -731,8 +731,12 @@ function WeekView({
                   }
 
                   const overlap = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
-                  const widthPercent = 100 / overlap.totalColumns;
-                  const leftPercent = overlap.column * widthPercent;
+                  // Calculate position with consistent gaps between overlapping events
+                  const gapPx = 2;
+                  const totalGaps = overlap.totalColumns + 1;
+                  const availableWidth = `calc(100% - ${totalGaps * gapPx}px)`;
+                  const eventWidth = `calc(${availableWidth} / ${overlap.totalColumns})`;
+                  const eventLeft = `calc(${gapPx}px + ${overlap.column} * (${availableWidth} / ${overlap.totalColumns} + ${gapPx}px))`;
 
                   return (
                     <button
@@ -741,8 +745,8 @@ function WeekView({
                       style={{
                         top: `${top}px`,
                         height: `${height}px`,
-                        left: `calc(${leftPercent}% + 1px)`,
-                        width: `calc(${widthPercent}% - 2px)`,
+                        left: eventLeft,
+                        width: eventWidth,
                       }}
                       className={`
                         absolute px-1 py-0.5 rounded text-xs overflow-hidden
@@ -837,8 +841,12 @@ function DayView({
                 }
 
                 const overlap = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
-                const widthPercent = 100 / overlap.totalColumns;
-                const leftPercent = overlap.column * widthPercent;
+                // Calculate position with consistent gaps between overlapping events
+                const gapPx = 4;
+                const totalGaps = overlap.totalColumns + 1;
+                const availableWidth = `calc(100% - ${totalGaps * gapPx}px)`;
+                const eventWidth = `calc(${availableWidth} / ${overlap.totalColumns})`;
+                const eventLeft = `calc(${gapPx}px + ${overlap.column} * (${availableWidth} / ${overlap.totalColumns} + ${gapPx}px))`;
 
                 return (
                   <button
@@ -847,8 +855,8 @@ function DayView({
                     style={{
                       top: `${top}px`,
                       height: `${height}px`,
-                      left: `calc(${leftPercent}% + 8px)`,
-                      width: `calc(${widthPercent}% - 16px)`,
+                      left: eventLeft,
+                      width: eventWidth,
                     }}
                     className={`
                       absolute px-3 py-2 rounded-lg text-left
