@@ -12,6 +12,7 @@ import { logger } from "../../_backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 import { getEntitlements } from "@/lib/entitlements";
 import { getDailyUsage, incrementDailyUsage } from "@/lib/usage";
+import { logAudioUsageEvent } from "@/lib/usage/audioUsage";
 
 interface Memory {
   id: number | string;
@@ -139,6 +140,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Log "accepted" event (bytes captured even if transcription fails later)
+    await logAudioUsageEvent({
+      memberId: userId,
+      route: "/api/voice/transcribe",
+      kind: "transcription",
+      bytes: file.size,
+      seconds: null,
+      status: "accepted",
+      meta: {
+        filename: file.name,
+        contentType: file.type,
+      },
+    });
+
     // Save file temporarily
     const buffer = Buffer.from(await file.arrayBuffer());
     const uploadDir = await ensureUploadDir();
@@ -209,6 +224,20 @@ export async function POST(req: NextRequest) {
       // Track usage for quota enforcement
       await incrementDailyUsage(userId, "voice", durationSeconds);
 
+      // Log "ok" event with final duration
+      await logAudioUsageEvent({
+        memberId: userId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        seconds: durationSeconds,
+        status: "ok",
+        meta: {
+          engine: "whisper-1",
+          transcriptLength: transcript.length,
+        },
+      });
+
       logger.info("Voice transcription successful", {
         userId: userId.substring(0, 8) + '...',
         voiceNoteId,
@@ -242,6 +271,18 @@ export async function POST(req: NextRequest) {
       }
 
       const errorMessage = transcriptionError instanceof Error ? transcriptionError.message : String(transcriptionError);
+
+      // Log "error" event
+      await logAudioUsageEvent({
+        memberId: userId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        seconds: null,
+        status: "error",
+        errorCode: "TRANSCRIBE_FAILED",
+        meta: { message: errorMessage },
+      });
 
       logger.error("Whisper transcription failed", {
         error: errorMessage,
