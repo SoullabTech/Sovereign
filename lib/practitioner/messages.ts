@@ -810,7 +810,7 @@ export async function getMessageDigest(
 ): Promise<MessageDigest | null> {
   // Get client and last session date (including encrypted name columns)
   const clientResult = await query(
-    `SELECT id, ${CLIENT_NAME_DIRECT_COLUMNS}, last_session
+    `SELECT id, ${CLIENT_NAME_DIRECT_COLUMNS}, last_session_at
      FROM practitioner_clients
      WHERE id = $1 AND practitioner_id = $2`,
     [clientId, practitionerId]
@@ -836,7 +836,7 @@ export async function getMessageDigest(
     name: decrypted.client_name || rawClient.name,
     preferred_name: decrypted.client_preferred_name || rawClient.preferred_name,
   };
-  const lastSession = client.last_session;
+  const lastSession = client.last_session_at;
 
   // Get messages since last session with safety log acknowledgment status
   const messagesResult = await query(
