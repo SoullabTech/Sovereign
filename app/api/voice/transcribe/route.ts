@@ -75,8 +75,6 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    // Use server-derived identity (never trust client-sent userId)
-    const userId = memberId;
 
     if (!file) {
       return NextResponse.json(
@@ -86,11 +84,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Entitlement checks
-    const entitlements = await getEntitlements(userId);
+    const entitlements = await getEntitlements(memberId);
 
     if (!entitlements.features.voiceTranscription) {
       await logAudioUsageEvent({
-        memberId: userId,
+        memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
         bytes: file.size,
@@ -109,12 +107,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const usage = await getDailyUsage(userId, "voice");
+    const usage = await getDailyUsage(memberId, "voice");
     const estimatedSeconds = Math.ceil(file.size / 16000); // rough PCM estimate
 
     if (usage.seconds + estimatedSeconds > entitlements.limits.voiceSecondsPerDay) {
       await logAudioUsageEvent({
-        memberId: userId,
+        memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
         bytes: file.size,
@@ -142,7 +140,7 @@ export async function POST(req: NextRequest) {
     }
 
     logger.info("Voice transcription request", {
-      userId: userId.substring(0, 8) + '...',
+      memberId: memberId.substring(0, 8) + '...',
       fileName: file.name,
       fileSize: file.size
     });
@@ -163,7 +161,7 @@ export async function POST(req: NextRequest) {
     // Validate file size (max 25MB for Whisper API)
     if (file.size > 25 * 1024 * 1024) {
       await logAudioUsageEvent({
-        memberId: userId,
+        memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
         bytes: file.size,
@@ -218,7 +216,7 @@ export async function POST(req: NextRequest) {
 
       // Save to SQLite
       const voiceNoteId = await memoryStore.addVoiceNote(
-        userId,
+        memberId,
         transcript,
         filePath,
         durationSeconds
@@ -226,14 +224,14 @@ export async function POST(req: NextRequest) {
 
       // Add to memory table for general retrieval
       await memoryStore.addMemory(
-        userId,
+        memberId,
         'voice',
         Number(voiceNoteId),
         transcript
       );
 
       // Index in LlamaIndex for semantic search
-      await llamaService.addMemory(userId, {
+      await llamaService.addMemory(memberId, {
         id: `voice_${voiceNoteId}`,
         type: 'voice',
         content: transcript,
@@ -245,11 +243,11 @@ export async function POST(req: NextRequest) {
       });
 
       // Track usage for quota enforcement
-      await incrementDailyUsage(userId, "voice", durationSeconds);
+      await incrementDailyUsage(memberId, "voice", durationSeconds);
 
       // Log "ok" event with final duration
       await logAudioUsageEvent({
-        memberId: userId,
+        memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
         bytes: file.size,
@@ -262,7 +260,7 @@ export async function POST(req: NextRequest) {
       });
 
       logger.info("Voice transcription successful", {
-        userId: userId.substring(0, 8) + '...',
+        memberId: memberId.substring(0, 8) + '...',
         voiceNoteId,
         transcriptLength: transcript.length,
         durationSeconds
@@ -297,7 +295,7 @@ export async function POST(req: NextRequest) {
 
       // Log "error" event
       await logAudioUsageEvent({
-        memberId: userId,
+        memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
         bytes: file.size,
@@ -309,7 +307,7 @@ export async function POST(req: NextRequest) {
 
       logger.error("Whisper transcription failed", {
         error: errorMessage,
-        userId: userId.substring(0, 8) + '...'
+        memberId: memberId.substring(0, 8) + '...'
       });
 
       return NextResponse.json(
@@ -361,8 +359,6 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     const voiceNoteId = pathParts[pathParts.length - 1];
-    // Use server-derived identity
-    const userId = memberId;
 
     if (!voiceNoteId) {
       return NextResponse.json(
@@ -378,7 +374,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Retrieve voice note from database
-    const voiceNotes = await memoryStore.getMemories(userId, 1000) as Memory[];
+    const voiceNotes = await memoryStore.getMemories(memberId, 1000) as Memory[];
     const voiceNote = voiceNotes.find(
       (note: Memory) => note.memory_type === 'voice' &&
       note.reference_id === parseInt(voiceNoteId.replace('voice_', ''))
