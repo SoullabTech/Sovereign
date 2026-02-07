@@ -185,8 +185,19 @@ export async function getSessionPrep(
 
   const emergencyInfo = emergencyResult.rows[0];
 
-  // Calculate journey stats
-  const firstSessionDate = client.first_session ? new Date(client.first_session) : null;
+  // Calculate journey stats from practitioner_sessions (not client columns)
+  const journeyResult = await query(
+    `SELECT COUNT(*) as total_sessions,
+            MIN(scheduled_at) as first_session_date
+     FROM practitioner_sessions
+     WHERE client_id = $1 AND practitioner_id = $2
+       AND status = 'completed'`,
+    [clientId, practitionerId]
+  );
+  const totalSessions = parseInt(journeyResult.rows[0]?.total_sessions || '0', 10);
+  const firstSessionDate = journeyResult.rows[0]?.first_session_date
+    ? new Date(journeyResult.rows[0].first_session_date)
+    : null;
   const monthsTogether = firstSessionDate
     ? Math.floor((Date.now() - firstSessionDate.getTime()) / (30 * 24 * 60 * 60 * 1000))
     : 0;
@@ -197,8 +208,8 @@ export async function getSessionPrep(
     ? Math.floor((Date.now() - lastSessionDate.getTime()) / (24 * 60 * 60 * 1000))
     : 0;
 
-  // Extract stated goals from intake data
-  const intakeData = client.intake_data || {};
+  // Extract stated goals from intake responses
+  const intakeData = (client as any).intake_responses || {};
   const statedGoals = intakeData.goals ||
     intakeData.what_brings_you_here ||
     intakeData.intentions ||
@@ -272,8 +283,8 @@ export async function getSessionPrep(
     } : null,
 
     journey: {
-      total_sessions: client.total_sessions,
-      first_session: client.first_session,
+      total_sessions: totalSessions,
+      first_session: firstSessionDate?.toISOString(),
       months_together: monthsTogether,
       recurring_themes: recurringThemes,
       stated_goals: statedGoals,
