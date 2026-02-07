@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS audio_usage_events (
   kind text NOT NULL DEFAULT 'audio', -- e.g. 'audio', 'transcription', 'upload'
   bytes bigint NOT NULL DEFAULT 0,
   seconds integer NULL,
-  status text NOT NULL DEFAULT 'accepted', -- accepted|ok|error|blocked
+  status text NOT NULL, -- ok|rejected|error
   error_code text NULL,
   meta jsonb NOT NULL DEFAULT '{}'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()

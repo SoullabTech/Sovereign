@@ -14,7 +14,8 @@ import {
   type Tier,
   type Role,
 } from './config/accessMatrix';
-import { getEntitlements } from '@/lib/entitlements';
+// NOTE: getEntitlements uses Node.js postgres driver, can't run in Edge runtime
+// Entitlements are checked in route handlers, not middleware
 
 // =============================================================================
 // AUTH EXTRACTION - Replace with your actual auth implementation
@@ -291,25 +292,9 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Entitlements headers for frontend consumption
-  // ---------------------------------------------------------------------
-  if (authed) {
-    const memberId = getMemberId(req);
-    if (memberId) {
-      try {
-        const entitlements = await getEntitlements(memberId);
-        response.headers.set('x-tier', entitlements.tier);
-        response.headers.set('x-features', JSON.stringify(entitlements.features));
-        response.headers.set('x-limits', JSON.stringify(entitlements.limits));
-      } catch (e) {
-        // Entitlements lookup failed - don't block the request
-        if (process.env.NODE_ENV !== 'production') {
-          console.warn('[Middleware] Entitlements lookup failed:', e);
-        }
-      }
-    }
-  }
+  // NOTE: Entitlements are NOT set in middleware headers because the postgres
+  // driver requires Node.js runtime. Route handlers call getEntitlements directly.
+  // This is intentional - entitlement checks happen at the route level.
 
   return response;
 }
