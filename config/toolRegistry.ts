@@ -48,6 +48,7 @@ export type ToolCategory =
   | 'oracles'
   | 'reflection'
   | 'training'
+  | 'somatic'
   | 'library'
   | 'patterns'
   | 'settings'
@@ -132,53 +133,60 @@ export const CATEGORY_META: Record<ToolCategory, CategoryMeta> = {
     defaultOrder: 2,
     accentColor: 'from-emerald-500/20 to-green-600/20',
   },
+  somatic: {
+    label: 'Somatic',
+    emoji: '🫁',
+    description: 'Nervous system regulation & body intelligence',
+    defaultOrder: 3,
+    accentColor: 'from-teal-500/20 to-emerald-600/20',
+  },
   patterns: {
     label: 'Patterns',
     emoji: '🌀',
     description: 'Symbolic systems & cycles',
-    defaultOrder: 3,
+    defaultOrder: 4,
     accentColor: 'from-blue-500/20 to-indigo-600/20',
   },
   library: {
     label: 'Library',
     emoji: '📚',
     description: 'Your personal collection',
-    defaultOrder: 4,
+    defaultOrder: 5,
     accentColor: 'from-rose-500/20 to-pink-600/20',
   },
   community: {
     label: 'Community',
     emoji: '🌱',
     description: 'Shared spaces & connections',
-    defaultOrder: 5,
+    defaultOrder: 6,
     accentColor: 'from-teal-500/20 to-cyan-600/20',
   },
   settings: {
     label: 'Settings',
     emoji: '⚙️',
     description: 'Personalization & preferences',
-    defaultOrder: 6,
+    defaultOrder: 7,
     accentColor: 'from-slate-500/20 to-gray-600/20',
   },
   advanced: {
     label: 'Advanced',
     emoji: '🧪',
     description: 'Power tools & experiments',
-    defaultOrder: 7,
+    defaultOrder: 8,
     accentColor: 'from-fuchsia-500/20 to-purple-600/20',
   },
   developer: {
     label: 'Developer',
     emoji: '💻',
     description: 'Technical tools & diagnostics',
-    defaultOrder: 8,
+    defaultOrder: 9,
     accentColor: 'from-zinc-500/20 to-neutral-600/20',
   },
   admin: {
     label: 'Admin',
     emoji: '🔐',
     description: 'System administration',
-    defaultOrder: 9,
+    defaultOrder: 10,
     accentColor: 'from-red-500/20 to-rose-600/20',
   },
 };
@@ -410,6 +418,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     defaultEnabled: false,
     popularityRank: 12,
   },
+  // ---------------------------------------------------------------------------
+  // SOMATIC
+  // ---------------------------------------------------------------------------
   {
     id: 'regulation-minute',
     label: 'Regulation Minute',
@@ -419,12 +430,12 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '🫁',
     icon: Wind,
     path: '/labtools/regulation-minute',
-    category: 'training',
-    minTier: 'personal',
+    category: 'somatic',
+    minTier: 'free',
     tags: ['breath', 'regulation', 'somatic', 'nervous-system', 'calm', 'shift'],
-    defaultEnabled: false,
+    defaultEnabled: true,
     isNew: true,
-    popularityRank: 8,
+    popularityRank: 1,
   },
 
   // ---------------------------------------------------------------------------
