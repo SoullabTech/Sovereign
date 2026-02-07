@@ -25,7 +25,6 @@ import { decryptJoinedClientFields, decryptClientRow } from '@/lib/stellium/clie
 // SQL fragment for selecting encrypted client name columns in JOINs
 const CLIENT_NAME_JOIN_COLUMNS = `
   c.name as client_name,
-  c.preferred_name as client_preferred_name,
   c.name_enc as client_name_enc,
   c.name_enc_meta as client_name_enc_meta,
   c.preferred_name_enc as client_preferred_name_enc,
@@ -35,7 +34,6 @@ const CLIENT_NAME_JOIN_COLUMNS = `
 // SQL fragment for selecting encrypted client name columns directly
 const CLIENT_NAME_DIRECT_COLUMNS = `
   name,
-  preferred_name,
   name_enc,
   name_enc_meta,
   preferred_name_enc,
@@ -502,7 +500,7 @@ export async function getInbox(
     return {
       ...row,
       client_name: decrypted.client_name || row.client_name,
-      client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+      client_preferred_name: decrypted.client_preferred_name || null,
     };
   }) as MessageInboxItem[];
 }
@@ -610,7 +608,7 @@ export async function getMessage(
   return stripEncryptedColumns({
     ...row,
     client_name: decrypted.client_name || row.client_name,
-    client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+    client_preferred_name: decrypted.client_preferred_name || null,
   }) as ClientMessage;
 }
 
@@ -827,14 +825,14 @@ export async function getMessageDigest(
     client_name: rawClient.name,
     client_name_enc: rawClient.name_enc,
     client_name_enc_meta: rawClient.name_enc_meta,
-    client_preferred_name: rawClient.preferred_name,
+    client_preferred_name: undefined,
     client_preferred_name_enc: rawClient.preferred_name_enc,
     client_preferred_name_enc_meta: rawClient.preferred_name_enc_meta,
   }, practitionerId);
   const client = {
     ...rawClient,
     name: decrypted.client_name || rawClient.name,
-    preferred_name: decrypted.client_preferred_name || rawClient.preferred_name,
+    preferred_name: decrypted.client_preferred_name || null,
   };
   const lastSession = client.last_session;
 
@@ -970,7 +968,7 @@ export async function getUnreviewedSafetyConcerns(
     return stripEncryptedColumns({
       ...row,
       client_name: decrypted.client_name || row.client_name,
-      client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+      client_preferred_name: decrypted.client_preferred_name || null,
     }) as ClientMessage;
   });
 }
