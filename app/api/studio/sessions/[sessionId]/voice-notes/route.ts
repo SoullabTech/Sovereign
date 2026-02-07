@@ -100,6 +100,15 @@ export async function POST(
 
     const { sessionId } = await params;
 
+    // Guard: reject non-multipart requests with a clear 415 error
+    const contentType = request.headers.get('content-type') ?? '';
+    if (!contentType.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     // Validate session belongs to practitioner
     const sessionResult = await db.query(
       'SELECT id, client_id FROM sessions WHERE id = $1 AND practitioner_id = $2',
