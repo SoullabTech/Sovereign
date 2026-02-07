@@ -119,6 +119,10 @@ export async function POST(
       `status=${bookingRequest.status} success=${result.success} idempotent=${result.idempotent}`
     );
 
+    // Return with appropriate HTTP status
+    if (!result.success && !result.idempotent) {
+      return NextResponse.json(result, { status: 400 });
+    }
     return NextResponse.json(result);
   } catch (error) {
     console.error('[Studio Retry Notifications]', error);
