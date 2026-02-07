@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Feature gate: audio uploads disabled by default (local-only policy)
     if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     const entitlements = await getEntitlements(memberId);
 
     if (!entitlements.features.voiceTranscription) {
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     const estimatedSeconds = Math.ceil(file.size / 16000); // rough PCM estimate
 
     if (usage.seconds + estimatedSeconds > entitlements.limits.voiceSecondsPerDay) {
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
 
     // Validate file size (max 25MB for Whisper API)
     if (file.size > 25 * 1024 * 1024) {
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
       await incrementDailyUsage(memberId, "voice", durationSeconds);
 
       // Log "ok" event with final duration
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",
@@ -294,7 +294,7 @@ export async function POST(req: NextRequest) {
       const errorMessage = transcriptionError instanceof Error ? transcriptionError.message : String(transcriptionError);
 
       // Log "error" event
-      await logAudioUsageEvent({
+      logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
         kind: "transcription",

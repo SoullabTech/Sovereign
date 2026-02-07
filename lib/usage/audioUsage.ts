@@ -24,9 +24,10 @@ export type AudioUsageEvent = {
 
 /**
  * Log an audio usage event to the database.
- * Swallows errors to avoid breaking primary flows.
+ * Fire-and-forget: swallows errors to avoid breaking primary flows.
+ * Returns void (not Promise) to prevent accidental await.
  */
-export async function logAudioUsageEvent(evt: AudioUsageEvent): Promise<void> {
+export function logAudioUsageEvent(evt: AudioUsageEvent): void {
   const {
     memberId,
     route,
@@ -39,20 +40,18 @@ export async function logAudioUsageEvent(evt: AudioUsageEvent): Promise<void> {
   } = evt;
 
   // Don't let metering failures break primary flows
-  try {
-    await query(
-      `
-      INSERT INTO audio_usage_events
-        (member_id, route, kind, bytes, seconds, status, error_code, meta)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
-      `,
-      [memberId, route, kind, bytes, seconds, status, errorCode, JSON.stringify(meta)]
-    );
-  } catch (e) {
+  query(
+    `
+    INSERT INTO audio_usage_events
+      (member_id, route, kind, bytes, seconds, status, error_code, meta)
+    VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+    `,
+    [memberId, route, kind, bytes, seconds, status, errorCode, JSON.stringify(meta)]
+  ).catch((e) => {
     // Swallow - metering should never break the primary flow
     console.warn("[audioUsage] failed to log event:", e instanceof Error ? e.message : e);
-  }
+  });
 }
 
 /**
