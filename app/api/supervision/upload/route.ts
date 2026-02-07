@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   createSession,
   updateSession,
@@ -25,11 +26,34 @@ const ALLOWED_TYPES = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'au
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
+    // Guard: reject non-multipart requests with a clear 415 error
+    const ct = request.headers.get('content-type') ?? '';
+    if (!ct.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     const formData = await request.formData();
 
-    // Extract fields
+    // Extract fields — use authenticated member as practitioner identity
     const audioFile = formData.get('audio') as File | null;
-    const practitionerId = formData.get('practitionerId') as string | null;
+    const practitionerId = memberId;
     const caseId = formData.get('caseId') as string | null;
     const sessionType = formData.get('sessionType') as string | null;
     const title = formData.get('title') as string | null;

@@ -26,6 +26,7 @@ import {
   getMessageTypeConfig,
   validateMessageToken,
 } from '@/lib/practitioner/messages';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 // Re-export commonly used functions and types
 export {
@@ -83,7 +84,7 @@ export async function getPortalMessagingContext(
     return null;
   }
   const practitioner = practitionerResult.rows[0];
-  const practitionerName = practitioner.preferred_name || practitioner.name;
+  const practitionerName = resolveMemberDisplayName(practitioner);
 
   // Get effective policy
   const policyResult = await query(

@@ -197,7 +197,7 @@ describe('Trusted Colleagues', () => {
       id: 'connection-1',
       requester_id: 'practitioner-1',
       recipient_id: 'practitioner-2',
-      status: 'accepted',
+      status: 'active',
     };
 
     it('should default to de-identified', async () => {
@@ -341,7 +341,7 @@ describe('Trusted Colleagues', () => {
           to_practitioner_id: 'practitioner-2',
           requester_note: 'My private note',
           recipient_note: 'Their private response',
-          status: 'accepted',
+          status: 'active',
           presenting_themes: [],
           constraints: [],
         }],

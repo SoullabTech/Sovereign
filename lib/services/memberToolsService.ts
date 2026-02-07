@@ -4,6 +4,11 @@
  * Manages member's enabled lab tools and category preferences.
  * Tool definitions come from config/toolRegistry.ts - this service
  * only handles the member's personalization layer.
+ *
+ * Category resolution: when reading from the database, categories are
+ * resolved from the tool registry definition (source of truth), not from
+ * the stored DB value. This handles legacy category strings (e.g., 'oracles')
+ * transparently mapping to new consciousness domains (e.g., 'metaphysical').
  */
 
 import { query } from '@/lib/db/postgres';
@@ -12,8 +17,11 @@ import {
   CATEGORY_META,
   getDefaultEnabledTools,
   getToolById,
+  isConsciousnessDomain,
+  isUtilityCategory,
   type LabTool,
   type ToolCategory,
+  type ToolMode,
 } from '@/config/toolRegistry';
 
 // =============================================================================
@@ -45,6 +53,9 @@ export interface MemberToolsState {
 /**
  * Get all enabled tools for a member
  * If member has no tools yet, seeds with defaults
+ *
+ * Category is resolved from the tool registry definition, not from
+ * the stored DB value. This handles legacy→domain migration transparently.
  */
 export async function getMemberEnabledTools(
   memberId: string
@@ -63,12 +74,19 @@ export async function getMemberEnabledTools(
     return getMemberEnabledTools(memberId); // Recurse once
   }
 
-  return result.rows.map((row) => ({
-    toolId: row.tool_id,
-    category: row.category as ToolCategory,
-    displayOrder: row.display_order,
-    addedAt: new Date(row.added_at),
-  }));
+  return result.rows.map((row) => {
+    // Resolve category from tool definition (source of truth),
+    // falling back to stored value for unknown tools
+    const toolDef = getToolById(row.tool_id);
+    const resolvedCategory = toolDef?.category ?? (row.category as ToolCategory);
+
+    return {
+      toolId: row.tool_id,
+      category: resolvedCategory,
+      displayOrder: row.display_order,
+      addedAt: new Date(row.added_at),
+    };
+  });
 }
 
 /**
@@ -99,6 +117,7 @@ export async function getMemberCategoryPrefs(
   );
 
   // Build complete list with defaults for missing
+  // Utility categories default to collapsed so the consciousness map stays clean
   const allPrefs: CategoryPref[] = [];
   for (const [category, meta] of Object.entries(CATEGORY_META)) {
     const stored = storedPrefs.get(category);
@@ -106,7 +125,7 @@ export async function getMemberCategoryPrefs(
       stored || {
         category: category as ToolCategory,
         displayOrder: meta.defaultOrder,
-        collapsed: false,
+        collapsed: isUtilityCategory(category as ToolCategory),
       }
     );
   }
@@ -158,7 +177,7 @@ export async function addTool(
     `INSERT INTO member_enabled_tools (member_id, tool_id, category, display_order, enabled, added_at)
      VALUES ($1, $2, $3, $4, true, NOW())
      ON CONFLICT (member_id, tool_id)
-     DO UPDATE SET enabled = true, display_order = $4, added_at = NOW()`,
+     DO UPDATE SET enabled = true, category = $3, display_order = $4, added_at = NOW()`,
     [memberId, toolId, tool.category, nextOrder]
   );
 
@@ -312,6 +331,10 @@ export interface HydratedCategory {
   displayOrder: number;
   collapsed: boolean;
   tools: HydratedTool[];
+  /** Whether this is a utility category (not a consciousness domain) */
+  isUtility: boolean;
+  /** Cross-cutting modes available across tools in this category */
+  availableModes: ToolMode[];
 }
 
 /**
@@ -323,12 +346,15 @@ export async function getHydratedToolsState(
 ): Promise<HydratedCategory[]> {
   const { enabledTools, categoryPrefs } = await getMemberToolsState(memberId);
 
-  // Build a map of enabled tools by category
+  // Build a map of enabled tools by their resolved category
   const toolsByCategory = new Map<ToolCategory, HydratedTool[]>();
 
   for (const enabled of enabledTools) {
     const toolDef = getToolById(enabled.toolId);
     if (!toolDef) continue; // Tool was removed from registry
+
+    // Use the resolved category from enabledTools (already resolved from tool def)
+    const resolvedCategory = enabled.category;
 
     const hydrated: HydratedTool = {
       ...toolDef,
@@ -336,9 +362,9 @@ export async function getHydratedToolsState(
       addedAt: enabled.addedAt,
     };
 
-    const list = toolsByCategory.get(enabled.category) || [];
+    const list = toolsByCategory.get(resolvedCategory) || [];
     list.push(hydrated);
-    toolsByCategory.set(enabled.category, list);
+    toolsByCategory.set(resolvedCategory, list);
   }
 
   // Build hydrated categories
@@ -349,6 +375,17 @@ export async function getHydratedToolsState(
     if (tools.length === 0) continue; // Skip empty categories
 
     const meta = CATEGORY_META[pref.category];
+    if (!meta) continue; // Unknown category (legacy orphan)
+
+    // Collect all unique modes from tools in this category
+    const modesSet = new Set<ToolMode>();
+    for (const tool of tools) {
+      if (tool.modes) {
+        for (const mode of tool.modes) {
+          modesSet.add(mode);
+        }
+      }
+    }
 
     result.push({
       category: pref.category,
@@ -359,6 +396,8 @@ export async function getHydratedToolsState(
       displayOrder: pref.displayOrder,
       collapsed: pref.collapsed,
       tools: tools.sort((a, b) => a.displayOrder - b.displayOrder),
+      isUtility: !isConsciousnessDomain(pref.category),
+      availableModes: Array.from(modesSet),
     });
   }
 

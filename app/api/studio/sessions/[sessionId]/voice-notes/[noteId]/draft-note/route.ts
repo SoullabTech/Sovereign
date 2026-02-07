@@ -7,6 +7,7 @@ export const maxDuration = 60;
  * Takes a transcribed voice note and generates a structured session note
  * via Claude. The practitioner reviews/edits before saving.
  *
+ * Table: voice_notes
  * Sovereignty: Uses Anthropic API (Claude) — the only external AI call
  * permitted per CLAUDE.md. No OpenAI, no cloud transcription.
  */
@@ -15,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import Anthropic from '@anthropic-ai/sdk';
+import { writebackStudioSession, extractThemesFromNote } from '@/lib/practitioner/studioWriteback';
 
 async function getPractitionerId(): Promise<string | null> {
   const result = await db.query(
@@ -41,7 +43,7 @@ export async function POST(
 
     const { sessionId, noteId } = await params;
 
-    // Load voice note
+    // Load voice note from voice_notes
     const noteResult = await db.query(
       `SELECT id, transcript, transcription_status
        FROM voice_notes
@@ -58,7 +60,7 @@ export async function POST(
 
     const voiceNote = noteResult.rows[0];
 
-    if (voiceNote.transcription_status !== 'completed' || !voiceNote.transcript) {
+    if (!voiceNote.transcript || voiceNote.transcription_status !== 'completed') {
       return NextResponse.json(
         { success: false, error: 'Voice note has not been transcribed yet' },
         { status: 400 }
@@ -68,6 +70,7 @@ export async function POST(
     // Load session context (client name, service, date, duration)
     const sessionResult = await db.query(
       `SELECT s.scheduled_start, s.scheduled_end, s.notes,
+              s.client_id, s.location_type,
               c.name AS client_name,
               svc.name AS service_name
        FROM sessions s
@@ -89,7 +92,7 @@ export async function POST(
       ? Math.round((new Date(session.scheduled_end).getTime() - new Date(session.scheduled_start).getTime()) / 60000)
       : null;
 
-    console.log('📝 [DRAFT-NOTE] Generating for session:', sessionId, 'client:', clientName);
+    console.log('[DRAFT-NOTE] Generating for session:', sessionId, 'client:', clientName);
 
     // Build prompt
     const prompt = `You are a clinical session note assistant for a practitioner.
@@ -130,13 +133,34 @@ ${voiceNote.transcript}
       ? message.content[0].text
       : '';
 
-    console.log('📝 [DRAFT-NOTE] Generated:', draftedNote.length, 'chars');
-
-    // Save drafted note to voice_notes row
+    // Save drafted note back to voice_notes
     await db.query(
       `UPDATE voice_notes SET drafted_note = $1, updated_at = NOW() WHERE id = $2`,
       [draftedNote, noteId]
     );
+
+    console.log('[DRAFT-NOTE] Generated:', draftedNote.length, 'chars');
+
+    // Write back to practitioner_sessions so the briefing engine can see this
+    // session's data next time. Non-fatal — don't block the response.
+    if (session?.client_id && session?.scheduled_start && session?.scheduled_end) {
+      try {
+        const themes = extractThemesFromNote(draftedNote);
+        await writebackStudioSession({
+          studioSessionId: sessionId,
+          practitionerId,
+          clientId: session.client_id,
+          scheduledStart: session.scheduled_start,
+          scheduledEnd: session.scheduled_end,
+          locationType: session.location_type || 'video',
+          sessionNotes: draftedNote,
+          themes,
+          serviceName: serviceName || undefined,
+        });
+      } catch (writebackErr: any) {
+        console.error('[DRAFT-NOTE] Write-back failed (non-fatal):', writebackErr.message);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -144,7 +168,7 @@ ${voiceNote.transcript}
       voiceNoteId: noteId,
     });
   } catch (error: any) {
-    console.error('❌ [DRAFT-NOTE] Error:', error);
+    console.error('[DRAFT-NOTE] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to draft session note' },
       { status: 500 }

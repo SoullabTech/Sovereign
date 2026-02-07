@@ -474,7 +474,8 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
   console.log('[apiFetch/safari] Resolved URL:', url);
 
   // Ensure Content-Type is set for requests with body
-  // BUT skip for FormData - browser must set multipart boundary automatically
+  // IMPORTANT: Do NOT set Content-Type for FormData — the browser must set it
+  // automatically with the correct multipart boundary string
   if (options.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
@@ -644,7 +645,8 @@ async function apiFetchWeb(url: string, options: RequestInit): Promise<Response>
   const headers = new Headers(options.headers);
 
   // Ensure Content-Type is set for POST/PUT requests with body
-  // BUT skip for FormData - browser must set multipart boundary automatically
+  // IMPORTANT: Do NOT set Content-Type for FormData — the browser must set it
+  // automatically with the correct multipart boundary string
   if (options.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }

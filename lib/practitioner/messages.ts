@@ -20,11 +20,14 @@ import {
   verifyEncryptedBody,
 } from '@/lib/security/phiAccessors/clientMessages';
 import { stripEncryptedColumns } from '@/lib/security/phiEncryption';
-import { decryptJoinedClientFields, decryptClientRow } from '@/lib/stellium/clients';
+import { decryptJoinedClientFields, decryptClientRow, resolveClientDisplayName } from '@/lib/stellium/clients';
 
 // SQL fragment for selecting encrypted client name columns in JOINs
+// client_display_name is the canonical plaintext fallback (COALESCE)
 const CLIENT_NAME_JOIN_COLUMNS = `
   c.name as client_name,
+  c.preferred_name as client_preferred_name,
+  COALESCE(c.preferred_name, c.name) as client_display_name,
   c.name_enc as client_name_enc,
   c.name_enc_meta as client_name_enc_meta,
   c.preferred_name_enc as client_preferred_name_enc,
@@ -32,8 +35,11 @@ const CLIENT_NAME_JOIN_COLUMNS = `
 `;
 
 // SQL fragment for selecting encrypted client name columns directly
+// client_display_name is the canonical plaintext fallback (COALESCE)
 const CLIENT_NAME_DIRECT_COLUMNS = `
   name,
+  preferred_name,
+  COALESCE(preferred_name, name) as client_display_name,
   name_enc,
   name_enc_meta,
   preferred_name_enc,
@@ -500,7 +506,7 @@ export async function getInbox(
     return {
       ...row,
       client_name: decrypted.client_name || row.client_name,
-      client_preferred_name: decrypted.client_preferred_name || null,
+      client_preferred_name: resolveClientDisplayName(row, decrypted),
     };
   }) as MessageInboxItem[];
 }
@@ -608,7 +614,7 @@ export async function getMessage(
   return stripEncryptedColumns({
     ...row,
     client_name: decrypted.client_name || row.client_name,
-    client_preferred_name: decrypted.client_preferred_name || null,
+    client_preferred_name: resolveClientDisplayName(row, decrypted),
   }) as ClientMessage;
 }
 
@@ -808,7 +814,7 @@ export async function getMessageDigest(
 ): Promise<MessageDigest | null> {
   // Get client and last session date (including encrypted name columns)
   const clientResult = await query(
-    `SELECT id, ${CLIENT_NAME_DIRECT_COLUMNS}, last_session
+    `SELECT id, ${CLIENT_NAME_DIRECT_COLUMNS}, last_session_at
      FROM practitioner_clients
      WHERE id = $1 AND practitioner_id = $2`,
     [clientId, practitionerId]
@@ -825,16 +831,16 @@ export async function getMessageDigest(
     client_name: rawClient.name,
     client_name_enc: rawClient.name_enc,
     client_name_enc_meta: rawClient.name_enc_meta,
-    client_preferred_name: undefined,
+    client_preferred_name: rawClient.preferred_name,
     client_preferred_name_enc: rawClient.preferred_name_enc,
     client_preferred_name_enc_meta: rawClient.preferred_name_enc_meta,
   }, practitionerId);
   const client = {
     ...rawClient,
     name: decrypted.client_name || rawClient.name,
-    preferred_name: decrypted.client_preferred_name || null,
+    preferred_name: resolveClientDisplayName(rawClient, decrypted),
   };
-  const lastSession = client.last_session;
+  const lastSession = client.last_session_at;
 
   // Get messages since last session with safety log acknowledgment status
   const messagesResult = await query(
@@ -925,7 +931,7 @@ export async function getMessageDigest(
 
   return {
     client_id: client.id,
-    client_name: client.preferred_name || client.name,
+    client_name: client.preferred_name,
     messages_since_last_session: messages.length,
     has_safety_concerns: hasSafetyConcerns,
     has_time_sensitive: hasTimeSensitive,
@@ -968,7 +974,7 @@ export async function getUnreviewedSafetyConcerns(
     return stripEncryptedColumns({
       ...row,
       client_name: decrypted.client_name || row.client_name,
-      client_preferred_name: decrypted.client_preferred_name || null,
+      client_preferred_name: resolveClientDisplayName(row, decrypted),
     }) as ClientMessage;
   });
 }

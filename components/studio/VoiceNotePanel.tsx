@@ -9,7 +9,8 @@
  * - useAudioCapture (full mode) for recording
  * - /api/studio/sessions/{id}/voice-notes for upload + transcription
  * - /api/studio/sessions/{id}/voice-notes/{noteId}/draft-note for MAIA note drafting
- * - /api/studio/sessions PATCH for saving practitioner_notes
+ *
+ * Table: voice_notes (storage_path, duration_seconds, transcript, transcription_status, drafted_note)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -38,7 +39,6 @@ interface VoiceNote {
   durationSeconds: number | null;
   transcript: string | null;
   transcriptionStatus: string;
-  transcriptionError: string | null;
   draftedNote: string | null;
   createdAt: string;
 }
@@ -115,7 +115,8 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     try {
       const formData = new FormData();
       formData.append('file', blob, `voice-note-${Date.now()}.webm`);
-      formData.append('duration_seconds', String(duration));
+      // Send duration in seconds (duration from useAudioCapture is already in seconds)
+      formData.append('duration_seconds', String(Math.round(duration)));
 
       const res = await apiFetch(`/api/studio/sessions/${sessionId}/voice-notes`, {
         method: 'POST',
@@ -133,7 +134,7 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
       if (data.voiceNote.transcriptionStatus === 'completed' && data.voiceNote.transcript) {
         setPanelState('transcribed');
       } else {
-        setError(data.voiceNote.transcriptionError || 'Transcription failed');
+        setError('Transcription failed — audio saved, try again');
         setPanelState('idle');
       }
     } catch (err: any) {
@@ -188,7 +189,7 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: sessionId,
-          practitioner_notes: draftedNote,
+          practitionerNotes: draftedNote,
         }),
       });
 
@@ -204,6 +205,32 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     }
   }, [sessionId, draftedNote]);
 
+  // Draft from an existing note (not just the current recording)
+  const handleDraftFromExisting = useCallback(async (note: VoiceNote) => {
+    setCurrentNote(note);
+    setPanelState('drafting');
+    setError(null);
+
+    try {
+      const res = await apiFetch(
+        `/api/studio/sessions/${sessionId}/voice-notes/${note.id}/draft-note`,
+        { method: 'POST' }
+      );
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Draft failed');
+      }
+
+      setDraftedNote(data.draftedNote);
+      setPanelState('drafted');
+    } catch (err: any) {
+      setError(err.message || 'Failed to draft note');
+      setPanelState('idle');
+    }
+  }, [sessionId]);
+
   // Reset panel
   const handleNewRecording = useCallback(() => {
     setCurrentNote(null);
@@ -214,7 +241,7 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     setPanelState('idle');
   }, []);
 
-  // Format duration as mm:ss
+  // Format duration as mm:ss (from seconds)
   const formatDuration = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -470,19 +497,27 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
                     note.transcriptionStatus === 'failed' ? 'text-red-400' :
                     'text-slate-500'
                   }`}>
-                    {note.transcriptionStatus}
+                    {note.transcriptionStatus === 'completed' ? 'transcribed' :
+                     note.transcriptionStatus === 'failed' ? 'failed' :
+                     'pending'}
                   </span>
                 </div>
                 {note.transcript && (
-                  <p className="text-sm text-slate-400 line-clamp-2">{note.transcript}</p>
+                  <p className="text-sm text-slate-400 line-clamp-2 mb-2">{note.transcript}</p>
+                )}
+                {note.transcriptionStatus === 'completed' && note.transcript && !note.draftedNote && (
+                  <button
+                    onClick={() => handleDraftFromExisting(note)}
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded hover:bg-amber-500/20 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Draft Session Note
+                  </button>
                 )}
                 {note.draftedNote && (
-                  <div className="mt-2 pt-2 border-t border-slate-700/50">
-                    <div className="flex items-center gap-1 text-xs text-amber-400 mb-1">
-                      <Sparkles className="w-3 h-3" />
-                      Session Note
-                    </div>
-                    <p className="text-sm text-slate-300 line-clamp-3">{note.draftedNote}</p>
+                  <div className="text-xs text-emerald-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Note drafted
                   </div>
                 )}
               </div>

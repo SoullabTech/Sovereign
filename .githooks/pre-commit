@@ -7,21 +7,28 @@ echo "🔒 Sovereignty pre-commit check..."
 npm run check:no-supabase
 SUPABASE_EXIT=$?
 
-# 2. No PHI encryption columns in responses
+# 2. No inline name logic (preferred_name || name drift)
+npm run check:no-inline-names
+NAMES_EXIT=$?
+
+# 3. No PHI encryption columns in responses
 npm run check:no-phi-enc
 PHI_EXIT=$?
 
-# 3. PHI columns inventory check
+# 4. PHI columns inventory check
 npm run check:phi-inventory
 INVENTORY_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
+if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
   echo "❌ Sovereignty check failed - commit blocked"
   if [ $SUPABASE_EXIT -ne 0 ]; then
     echo "   - Supabase violations found"
+  fi
+  if [ $NAMES_EXIT -ne 0 ]; then
+    echo "   - Inline name logic found (use resolveClientDisplayName/resolveMemberDisplayName)"
   fi
   if [ $PHI_EXIT -ne 0 ]; then
     echo "   - PHI encryption leak risks found"

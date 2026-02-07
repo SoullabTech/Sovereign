@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const revalidate = false;
 import fs from "fs/promises";
@@ -11,6 +12,7 @@ import { logger } from "../../_backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 import { getEntitlements } from "@/lib/entitlements";
 import { getDailyUsage, incrementDailyUsage } from "@/lib/usage";
+import { logAudioUsageEvent } from "@/lib/usage/audioUsage";
 
 interface Memory {
   id: number | string;
@@ -39,35 +41,85 @@ const ensureUploadDir = async () => {
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth: require authenticated member (server-derived, never trust client)
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: 0,
+        status: "rejected",
+        errorCode: "FEATURE_DISABLED",
+        meta: { reason: "ALLOW_AUDIO_UPLOADS not enabled" },
+      });
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
+    // Guard: reject non-multipart requests with a clear 415 error
+    const ct = req.headers.get('content-type') ?? '';
+    if (!ct.includes('multipart/form-data')) {
+      return NextResponse.json(
+        { success: false, error: 'Expected multipart/form-data (FormData upload). Do not set Content-Type manually.' },
+        { status: 415 }
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const userId = formData.get("userId") as string;
 
-    if (!file || !userId) {
+    if (!file) {
       return NextResponse.json(
-        { success: false, error: "Missing file or userId" },
+        { success: false, error: "Missing file" },
         { status: 400 }
       );
     }
 
     // Entitlement checks
-    const entitlements = await getEntitlements(userId);
+    const entitlements = await getEntitlements(memberId);
 
     if (!entitlements.features.voiceTranscription) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "TIER_GATE",
+        meta: { tier: entitlements.tier, reason: "voiceTranscription not enabled" },
+      });
       return NextResponse.json(
         {
           success: false,
-          error: "Voice transcription requires Personal tier",
+          error: "Voice transcription requires Guardian tier or an Audio Minutes add-on.",
           upgradeRequired: true,
+          currentTier: entitlements.tier,
         },
         { status: 403 }
       );
     }
 
-    const usage = await getDailyUsage(userId, "voice");
+    const usage = await getDailyUsage(memberId, "voice");
     const estimatedSeconds = Math.ceil(file.size / 16000); // rough PCM estimate
 
     if (usage.seconds + estimatedSeconds > entitlements.limits.voiceSecondsPerDay) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "DAILY_LIMIT",
+        meta: { usedSeconds: usage.seconds, limitSeconds: entitlements.limits.voiceSecondsPerDay },
+      });
       return NextResponse.json(
         {
           success: false,
@@ -88,7 +140,7 @@ export async function POST(req: NextRequest) {
     }
 
     logger.info("Voice transcription request", {
-      userId: userId.substring(0, 8) + '...',
+      memberId: memberId.substring(0, 8) + '...',
       fileName: file.name,
       fileSize: file.size
     });
@@ -108,9 +160,18 @@ export async function POST(req: NextRequest) {
 
     // Validate file size (max 25MB for Whisper API)
     if (file.size > 25 * 1024 * 1024) {
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "SIZE_LIMIT",
+        meta: { maxBytes: 25 * 1024 * 1024 },
+      });
       return NextResponse.json(
         { success: false, error: "File too large. Maximum size is 25MB" },
-        { status: 400 }
+        { status: 413 }
       );
     }
 
@@ -155,7 +216,7 @@ export async function POST(req: NextRequest) {
 
       // Save to SQLite
       const voiceNoteId = await memoryStore.addVoiceNote(
-        userId,
+        memberId,
         transcript,
         filePath,
         durationSeconds
@@ -163,14 +224,14 @@ export async function POST(req: NextRequest) {
 
       // Add to memory table for general retrieval
       await memoryStore.addMemory(
-        userId,
+        memberId,
         'voice',
         Number(voiceNoteId),
         transcript
       );
 
       // Index in LlamaIndex for semantic search
-      await llamaService.addMemory(userId, {
+      await llamaService.addMemory(memberId, {
         id: `voice_${voiceNoteId}`,
         type: 'voice',
         content: transcript,
@@ -182,10 +243,24 @@ export async function POST(req: NextRequest) {
       });
 
       // Track usage for quota enforcement
-      await incrementDailyUsage(userId, "voice", durationSeconds);
+      await incrementDailyUsage(memberId, "voice", durationSeconds);
+
+      // Log "ok" event with final duration
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        seconds: durationSeconds,
+        status: "ok",
+        meta: {
+          engine: "whisper-1",
+          transcriptLength: transcript.length,
+        },
+      });
 
       logger.info("Voice transcription successful", {
-        userId: userId.substring(0, 8) + '...',
+        memberId: memberId.substring(0, 8) + '...',
         voiceNoteId,
         transcriptLength: transcript.length,
         durationSeconds
@@ -195,7 +270,7 @@ export async function POST(req: NextRequest) {
       setTimeout(async () => {
         try {
           await fs.unlink(filePath);
-        } catch (error) {
+        } catch {
           // File might already be deleted
         }
       }, 60000); // Delete after 1 minute
@@ -208,41 +283,58 @@ export async function POST(req: NextRequest) {
         message: "Voice note transcribed and saved successfully"
       });
 
-    } catch (transcriptionError: any) {
+    } catch (transcriptionError: unknown) {
       // Clean up file on error
       try {
         await fs.unlink(filePath);
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors
       }
 
+      const errorMessage = transcriptionError instanceof Error ? transcriptionError.message : String(transcriptionError);
+
+      // Log "error" event
+      logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        seconds: null,
+        status: "error",
+        errorCode: "TRANSCRIBE_FAILED",
+        meta: { message: errorMessage },
+      });
+
       logger.error("Whisper transcription failed", {
-        error: transcriptionError.message,
-        userId: userId.substring(0, 8) + '...'
+        error: errorMessage,
+        memberId: memberId.substring(0, 8) + '...'
       });
 
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: "Transcription failed. Please try again.",
-          details: transcriptionError.message 
-        }, 
+          details: errorMessage
+        },
         { status: 500 }
       );
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
     logger.error("Voice transcription error", {
-      error: error.message,
-      stack: error.stack
+      error: errorMessage,
+      stack: errorStack
     });
 
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "An unexpected error occurred",
-        details: error.message 
-      }, 
+        details: errorMessage
+      },
       { status: 500 }
     );
   }
@@ -258,14 +350,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(req);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');
     const voiceNoteId = pathParts[pathParts.length - 1];
-    const userId = url.searchParams.get('userId');
 
-    if (!voiceNoteId || !userId) {
+    if (!voiceNoteId) {
       return NextResponse.json(
-        { error: 'voiceNoteId and userId are required' },
+        { error: 'voiceNoteId is required' },
         { status: 400 }
       );
     }
@@ -277,7 +374,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Retrieve voice note from database
-    const voiceNotes = await memoryStore.getMemories(userId, 1000) as Memory[];
+    const voiceNotes = await memoryStore.getMemories(memberId, 1000) as Memory[];
     const voiceNote = voiceNotes.find(
       (note: Memory) => note.memory_type === 'voice' &&
       note.reference_id === parseInt(voiceNoteId.replace('voice_', ''))
@@ -299,9 +396,11 @@ export async function GET(req: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
     logger.error('Failed to retrieve voice note', {
-      error: error.message
+      error: errorMessage
     });
 
     return NextResponse.json(

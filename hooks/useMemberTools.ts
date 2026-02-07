@@ -7,7 +7,7 @@
  * member's enabled tools and category preferences.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { type HydratedCategory } from '@/lib/services/memberToolsService';
 import { type ToolCategory } from '@/config/toolRegistry';
@@ -15,6 +15,10 @@ import { type ToolCategory } from '@/config/toolRegistry';
 interface UseMemberToolsReturn {
   /** Hydrated categories with tools */
   categories: HydratedCategory[];
+  /** Consciousness domain categories only */
+  domainCategories: HydratedCategory[];
+  /** Utility categories only (library, settings, etc.) */
+  utilityCategories: HydratedCategory[];
   /** Loading state */
   isLoading: boolean;
   /** Error message if any */
@@ -39,6 +43,16 @@ export function useMemberTools(): UseMemberToolsReturn {
   // Build a set of enabled tool IDs for quick lookup
   const enabledToolIds = new Set(
     categories.flatMap((cat) => cat.tools.map((t) => t.id))
+  );
+
+  // Split categories into consciousness domains vs utility
+  const domainCategories = useMemo(
+    () => categories.filter((c) => !c.isUtility),
+    [categories]
+  );
+  const utilityCategories = useMemo(
+    () => categories.filter((c) => c.isUtility),
+    [categories]
   );
 
   // Fetch tools from API
@@ -159,6 +173,8 @@ export function useMemberTools(): UseMemberToolsReturn {
 
   return {
     categories,
+    domainCategories,
+    utilityCategories,
     isLoading,
     error,
     addTool,

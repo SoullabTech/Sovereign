@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
  * Reuses the existing session prep engine from lib/practitioner/sessionPrep.ts
  * which queries practitioner_sessions for clinical history, themes, and insights.
  *
- * SOVEREIGNTY: This endpoint is fully local — no external AI calls.
- * The prep engine queries practitioner_sessions for relationship history.
+ * The Studio `sessions` table holds the booking; the prep engine queries
+ * `practitioner_sessions` for the relationship history.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -66,24 +66,18 @@ export async function GET(
     // for clinical history, themes, insights, and flags
     const prep = await getSessionPrep(practitionerId, session.client_id);
 
-    // Stable response shape: hasHistory is the canonical signal
-    const hasHistory = !!prep?.last_session;
-
-    // Early return for no history — stable contract
-    if (!prep || !hasHistory) {
+    if (!prep) {
       return NextResponse.json({
-        ok: true,
-        hasHistory: false,
-        message: 'First session with this client',
-        note: 'No prior practitioner session history found yet.',
+        success: true,
         briefing: null,
+        message: 'No client history found',
       });
     }
 
     // Shape the response for the UI — keep it focused on what matters
     // before the session, not the full clinical data dump
     const briefing = {
-      client_name: prep.client?.name || prep.client?.preferred_name || null,
+      client_name: prep.client.preferred_name || prep.client.name || null,
 
       last_session: prep.last_session
         ? {
@@ -97,15 +91,15 @@ export async function GET(
         : null,
 
       journey: {
-        total_sessions: prep.journey?.total_sessions ?? 0,
-        months_together: prep.journey?.months_together ?? 0,
-        recurring_themes: prep.journey?.recurring_themes ?? [],
-        stated_goals: prep.journey?.stated_goals || null,
+        total_sessions: prep.journey.total_sessions,
+        months_together: prep.journey.months_together,
+        recurring_themes: prep.journey.recurring_themes,
+        stated_goals: prep.journey.stated_goals || null,
       },
 
-      flags: prep.flags ?? [],
+      flags: prep.flags,
 
-      recent_sessions: prep.recent_sessions ?? [],
+      recent_sessions: prep.recent_sessions,
 
       message_digest: prep.message_digest
         ? {
@@ -117,13 +111,7 @@ export async function GET(
         : null,
     };
 
-    return NextResponse.json({
-      ok: true,
-      hasHistory: true,
-      message: null,
-      note: null,
-      briefing,
-    });
+    return NextResponse.json({ success: true, briefing });
   } catch (error) {
     console.error('[studio][briefing] error:', error);
     return NextResponse.json(

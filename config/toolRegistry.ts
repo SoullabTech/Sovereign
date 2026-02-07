@@ -6,6 +6,26 @@
  *
  * Tools are NOT stored in the database. Only member preferences
  * (which tools they've enabled) live in PostgreSQL.
+ *
+ * === CONSCIOUSNESS DOMAIN MODEL ===
+ *
+ * Tools are organized into 8 primary domains of conscious experience,
+ * grouped into three natural tiers:
+ *
+ * FOUNDATION (horizontal life):
+ *   Somatic, Cognitive, Psychological, Relational
+ *
+ * MEANING LAYER:
+ *   Mythic & Archetypal, Philosophical
+ *
+ * VERTICAL / TRANSPERSONAL:
+ *   Spiritual, Metaphysical
+ *
+ * Non-consciousness tools (Library, Community, Settings, Developer, Admin)
+ * live in a separate utility layer.
+ *
+ * Cross-cutting MODES (reflect, regulate, train, track, interpret, create,
+ * connect, act) allow filtering across domains.
  */
 
 import {
@@ -44,19 +64,107 @@ import {
 // TYPES
 // =============================================================================
 
-export type ToolCategory =
-  | 'oracles'
-  | 'reflection'
-  | 'training'
+/** The 8 primary domains of conscious experience */
+export type ConsciousnessDomain =
+  | 'somatic'
+  | 'cognitive'
+  | 'psychological'
+  | 'relational'
+  | 'mythic'
+  | 'philosophical'
+  | 'spiritual'
+  | 'metaphysical';
+
+/** Utility categories (not consciousness domains) */
+export type UtilityCategory =
   | 'library'
-  | 'patterns'
-  | 'settings'
   | 'community'
-  | 'advanced'
+  | 'settings'
   | 'developer'
   | 'admin';
 
+/** All valid grouping categories — union of domains + utilities */
+export type ToolCategory = ConsciousnessDomain | UtilityCategory;
+
+/** Cross-cutting modes that apply across domains */
+export type ToolMode =
+  | 'reflect'
+  | 'regulate'
+  | 'train'
+  | 'track'
+  | 'interpret'
+  | 'create'
+  | 'connect'
+  | 'act';
+
+/**
+ * Simple View modes — three experiential groups
+ * that match how humans naturally think: Notice → Shift → Do
+ */
+export type SimpleMode = 'notice' | 'shift' | 'act-group';
+
+/** The experiential groups that organize the 8 modes */
+export type ModeGroup = 'awareness' | 'shift' | 'expression';
+
+/** Mapping from simple mode to the detailed modes it contains */
+export const SIMPLE_MODE_MAP: Record<SimpleMode, ToolMode[]> = {
+  'notice':    ['reflect', 'track', 'interpret'],
+  'shift':     ['regulate', 'train'],
+  'act-group': ['create', 'act', 'connect'],
+};
+
+/** The three natural tiers of the consciousness map */
+export type DomainTier = 'foundation' | 'meaning' | 'vertical';
+
 export type Tier = 'free' | 'personal' | 'pro';
+
+export interface CategoryMeta {
+  /** Display label */
+  label: string;
+  /** Emoji icon */
+  emoji: string;
+  /** Short description */
+  description: string;
+  /** Default sort order */
+  defaultOrder: number;
+  /** Color accent (Tailwind class) */
+  accentColor: string;
+}
+
+export interface DomainMeta extends CategoryMeta {
+  /** User-facing alias (e.g., "Body" for somatic) */
+  alias: string;
+  /** Which tier this domain belongs to */
+  tier: DomainTier;
+  /** 1-2 sentence domain introduction for discovery UI */
+  longDescription: string;
+  /** 3-5 common intents (chips) for this domain */
+  commonIntents: string[];
+  /** The default mode to auto-activate when a user clicks this domain */
+  defaultMode: SimpleMode;
+}
+
+export interface ModeMeta {
+  /** Display label (human-facing, e.g., "Make Meaning" not "Interpret") */
+  label: string;
+  /** Emoji icon */
+  emoji: string;
+  /** Short description */
+  description: string;
+  /** Which experiential group this mode belongs to */
+  group: ModeGroup;
+}
+
+export interface SimpleModeMeta {
+  /** Display label */
+  label: string;
+  /** Emoji icon */
+  emoji: string;
+  /** Short description */
+  description: string;
+  /** The detailed modes this simple mode expands to */
+  modes: ToolMode[];
+}
 
 export interface LabTool {
   /** Unique identifier (kebab-case) */
@@ -73,8 +181,12 @@ export interface LabTool {
   icon: LucideIcon;
   /** Route path */
   path: string;
-  /** Category grouping */
+  /** Category grouping (domain for consciousness tools, utility category otherwise) */
   category: ToolCategory;
+  /** Consciousness domain (set for consciousness tools, undefined for utilities) */
+  domain?: ConsciousnessDomain;
+  /** Cross-cutting modes this tool supports */
+  modes?: ToolMode[];
   /** Minimum tier required */
   minTier: Tier;
   /** Search/filter tags */
@@ -93,94 +205,275 @@ export interface LabTool {
   requiresRole?: 'admin' | 'practitioner' | 'curator';
 }
 
-export interface CategoryMeta {
-  /** Display label */
-  label: string;
-  /** Emoji icon */
-  emoji: string;
-  /** Short description */
-  description: string;
-  /** Default sort order */
-  defaultOrder: number;
-  /** Color accent (Tailwind class) */
-  accentColor: string;
-}
-
 // =============================================================================
-// CATEGORY DEFINITIONS
+// DOMAIN DEFINITIONS (8 Consciousness Domains)
 // =============================================================================
 
-export const CATEGORY_META: Record<ToolCategory, CategoryMeta> = {
-  oracles: {
-    label: 'Oracles',
-    emoji: '🔮',
-    description: 'Divination & wisdom systems',
+export const DOMAIN_META: Record<ConsciousnessDomain, DomainMeta> = {
+  // ---- FOUNDATION TIER (horizontal life) ----
+  somatic: {
+    label: 'Somatic',
+    alias: 'Body',
+    emoji: '🫀',
+    description: 'Body awareness, breath, sensation, movement',
+    longDescription:
+      'The body as field. Nervous system, breath, sensation, movement, regulation, sleep, energy. Ground of experience — without this, nothing stabilizes.',
+    tier: 'foundation',
     defaultOrder: 0,
-    accentColor: 'from-violet-500/20 to-purple-600/20',
+    accentColor: 'from-rose-500/20 to-red-600/20',
+    commonIntents: ['Breathwork', 'Body scan', 'Nervous system', 'Movement', 'Sleep'],
+    defaultMode: 'shift',
   },
-  reflection: {
-    label: 'Reflection',
-    emoji: '✍️',
-    description: 'Capture & process experience',
+  cognitive: {
+    label: 'Cognitive',
+    alias: 'Mind',
+    emoji: '🧠',
+    description: 'Attention, thinking, decisions, learning',
+    longDescription:
+      'The mind as instrument. Attention, thinking, decision-making, learning, beliefs, mental models. Clarity and orientation.',
+    tier: 'foundation',
     defaultOrder: 1,
-    accentColor: 'from-amber-500/20 to-orange-600/20',
-  },
-  training: {
-    label: 'Training',
-    emoji: '🧭',
-    description: 'Structured practices & protocols',
-    defaultOrder: 2,
-    accentColor: 'from-emerald-500/20 to-green-600/20',
-  },
-  patterns: {
-    label: 'Patterns',
-    emoji: '🌀',
-    description: 'Symbolic systems & cycles',
-    defaultOrder: 3,
     accentColor: 'from-blue-500/20 to-indigo-600/20',
+    commonIntents: ['Journal', 'Capture', 'Analyze', 'Research', 'Decide'],
+    defaultMode: 'notice',
   },
+  psychological: {
+    label: 'Psychological',
+    alias: 'Self',
+    emoji: '🪞',
+    description: 'Identity, shadow, patterns, development',
+    longDescription:
+      'The self as pattern. Identity, attachment, shadow, trauma, parts, defenses, development. The personal unconscious and personality structure.',
+    tier: 'foundation',
+    defaultOrder: 2,
+    accentColor: 'from-amber-500/20 to-orange-600/20',
+    commonIntents: ['Shadow work', 'Parts work', 'Attachment', 'Identity', 'Integration'],
+    defaultMode: 'notice',
+  },
+  relational: {
+    label: 'Relational',
+    alias: 'Relationships',
+    emoji: '🤝',
+    description: 'Connection, boundaries, repair, belonging',
+    longDescription:
+      'The self in connection. Boundaries, intimacy, conflict, repair, family systems, group dynamics, belonging. Most transformation actually happens here.',
+    tier: 'foundation',
+    defaultOrder: 3,
+    accentColor: 'from-teal-500/20 to-cyan-600/20',
+    commonIntents: ['Boundaries', 'Repair', 'Communication', 'Family', 'Belonging'],
+    defaultMode: 'act-group',
+  },
+
+  // ---- MEANING LAYER ----
+  mythic: {
+    label: 'Mythic & Archetypal',
+    alias: 'Story & Archetype',
+    emoji: '🐉',
+    description: 'Archetypes, dreams, symbols, life narrative',
+    longDescription:
+      'The psyche as story. Archetypes, dreams, symbols, life narratives, initiation, meaning-making through myth. The domain of soul-language.',
+    tier: 'meaning',
+    defaultOrder: 4,
+    accentColor: 'from-violet-500/20 to-purple-600/20',
+    commonIntents: ['Dream work', 'Archetypes', 'Story', 'Symbols', 'Initiation'],
+    defaultMode: 'notice',
+  },
+  philosophical: {
+    label: 'Philosophical',
+    alias: 'Meaning & Values',
+    emoji: '⚖️',
+    description: 'Ethics, worldview, sovereignty, truth',
+    longDescription:
+      'The mind confronting reality. Values, ethics, worldview, sovereignty, truth, responsibility, meaning of life. Where maturity and coherence form.',
+    tier: 'meaning',
+    defaultOrder: 5,
+    accentColor: 'from-emerald-500/20 to-green-600/20',
+    commonIntents: ['Values', 'Ethics', 'Worldview', 'Sovereignty', 'Meaning'],
+    defaultMode: 'notice',
+  },
+
+  // ---- VERTICAL / TRANSPERSONAL ----
+  spiritual: {
+    label: 'Spiritual',
+    alias: 'Spirit',
+    emoji: '🕊️',
+    description: 'Presence, contemplation, devotion, mystery',
+    longDescription:
+      'The vertical dimension. Presence, prayer, contemplation, devotion, guidance, grace, mystery, transcendence. Direct encounter with the sacred.',
+    tier: 'vertical',
+    defaultOrder: 6,
+    accentColor: 'from-sky-500/20 to-blue-600/20',
+    commonIntents: ['Meditation', 'Prayer', 'Contemplation', 'Devotion', 'Presence'],
+    defaultMode: 'notice',
+  },
+  metaphysical: {
+    label: 'Metaphysical',
+    alias: 'Cosmos & Patterns',
+    emoji: '✦',
+    description: 'Astrology, divination, synchronicity, ontology',
+    longDescription:
+      'The structure of reality itself. Time, synchronicity, astrology, divination systems, consciousness models, ontology. Where Spiralogic, I Ching, and field intelligence live.',
+    tier: 'vertical',
+    defaultOrder: 7,
+    accentColor: 'from-fuchsia-500/20 to-purple-600/20',
+    commonIntents: ['Astrology', 'Divination', 'Synchronicity', 'Cycles', 'Ontology'],
+    defaultMode: 'notice',
+  },
+};
+
+// =============================================================================
+// UTILITY CATEGORY DEFINITIONS
+// =============================================================================
+
+export const UTILITY_META: Record<UtilityCategory, CategoryMeta> = {
   library: {
     label: 'Library',
     emoji: '📚',
     description: 'Your personal collection',
-    defaultOrder: 4,
+    defaultOrder: 100,
     accentColor: 'from-rose-500/20 to-pink-600/20',
   },
   community: {
     label: 'Community',
     emoji: '🌱',
     description: 'Shared spaces & connections',
-    defaultOrder: 5,
+    defaultOrder: 101,
     accentColor: 'from-teal-500/20 to-cyan-600/20',
   },
   settings: {
     label: 'Settings',
     emoji: '⚙️',
     description: 'Personalization & preferences',
-    defaultOrder: 6,
+    defaultOrder: 102,
     accentColor: 'from-slate-500/20 to-gray-600/20',
-  },
-  advanced: {
-    label: 'Advanced',
-    emoji: '🧪',
-    description: 'Power tools & experiments',
-    defaultOrder: 7,
-    accentColor: 'from-fuchsia-500/20 to-purple-600/20',
   },
   developer: {
     label: 'Developer',
     emoji: '💻',
     description: 'Technical tools & diagnostics',
-    defaultOrder: 8,
+    defaultOrder: 103,
     accentColor: 'from-zinc-500/20 to-neutral-600/20',
   },
   admin: {
     label: 'Admin',
     emoji: '🔐',
     description: 'System administration',
-    defaultOrder: 9,
+    defaultOrder: 104,
     accentColor: 'from-red-500/20 to-rose-600/20',
   },
+};
+
+// =============================================================================
+// COMBINED CATEGORY META (domains + utilities, same shape all consumers expect)
+// =============================================================================
+
+export const CATEGORY_META: Record<ToolCategory, CategoryMeta> = {
+  ...DOMAIN_META,
+  ...UTILITY_META,
+};
+
+// =============================================================================
+// MODE DEFINITIONS
+// =============================================================================
+
+export const MODE_META: Record<ToolMode, ModeMeta> = {
+  // ---- AWARENESS GROUP (Notice → turn inward) ----
+  reflect: {
+    label: 'Reflect',
+    emoji: '🪞',
+    description: 'Turn inward, examine, review',
+    group: 'awareness',
+  },
+  track: {
+    label: 'Track Patterns',
+    emoji: '📈',
+    description: 'Record, measure, observe patterns',
+    group: 'awareness',
+  },
+  interpret: {
+    label: 'Make Meaning',
+    emoji: '🔍',
+    description: 'Decode symbols, find significance',
+    group: 'awareness',
+  },
+
+  // ---- SHIFT GROUP (Shift → adjust state) ----
+  regulate: {
+    label: 'Regulate',
+    emoji: '🌊',
+    description: 'Calm, ground, restore balance',
+    group: 'shift',
+  },
+  train: {
+    label: 'Practice',
+    emoji: '🏋️',
+    description: 'Structured practice, build capacity',
+    group: 'shift',
+  },
+
+  // ---- EXPRESSION GROUP (Act → move outward) ----
+  create: {
+    label: 'Create',
+    emoji: '✨',
+    description: 'Generate, express, imagine',
+    group: 'expression',
+  },
+  act: {
+    label: 'Take Action',
+    emoji: '⚡',
+    description: 'Decide, commit, move',
+    group: 'expression',
+  },
+  connect: {
+    label: 'Relate',
+    emoji: '🤝',
+    description: 'Relate, share, bridge',
+    group: 'expression',
+  },
+};
+
+// =============================================================================
+// SIMPLE MODE DEFINITIONS (3 experiential groups for beginners)
+// =============================================================================
+
+export const SIMPLE_MODE_META: Record<SimpleMode, SimpleModeMeta> = {
+  'notice': {
+    label: 'Notice',
+    emoji: '👁️',
+    description: 'I want to understand something',
+    modes: ['reflect', 'track', 'interpret'],
+  },
+  'shift': {
+    label: 'Shift',
+    emoji: '🌊',
+    description: 'I need to feel different',
+    modes: ['regulate', 'train'],
+  },
+  'act-group': {
+    label: 'Act',
+    emoji: '⚡',
+    description: 'I need to do something',
+    modes: ['create', 'act', 'connect'],
+  },
+};
+
+// =============================================================================
+// LEGACY CATEGORY MAP (for backward compatibility with DB rows)
+// =============================================================================
+
+/** Maps old operational category strings to their new domain/utility equivalents */
+export const LEGACY_CATEGORY_MAP: Record<string, ToolCategory> = {
+  oracles: 'metaphysical',
+  reflection: 'cognitive',
+  training: 'spiritual',
+  patterns: 'metaphysical',
+  advanced: 'cognitive',
+  // Utility categories map to themselves
+  library: 'library',
+  community: 'community',
+  settings: 'settings',
+  developer: 'developer',
+  admin: 'admin',
 };
 
 // =============================================================================
@@ -189,7 +482,7 @@ export const CATEGORY_META: Record<ToolCategory, CategoryMeta> = {
 
 export const TOOL_REGISTRY: LabTool[] = [
   // ---------------------------------------------------------------------------
-  // ORACLES
+  // METAPHYSICAL — Cosmos & Patterns
   // ---------------------------------------------------------------------------
   {
     id: 'oracle-iching',
@@ -200,7 +493,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '☯️',
     icon: Compass,
     path: '/oracle/iching',
-    category: 'oracles',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret'],
     minTier: 'personal',
     tags: ['divination', 'wisdom', 'chinese', 'hexagram', 'coins'],
     defaultEnabled: true,
@@ -215,7 +510,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '🎴',
     icon: Sparkles,
     path: '/oracle/tarot',
-    category: 'oracles',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret', 'reflect'],
     minTier: 'personal',
     tags: ['divination', 'cards', 'arcana', 'spread', 'symbolism'],
     defaultEnabled: true,
@@ -230,7 +527,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: 'ᛟ',
     icon: Compass,
     path: '/oracle/runes',
-    category: 'oracles',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret'],
     minTier: 'personal',
     tags: ['divination', 'norse', 'futhark', 'casting', 'viking'],
     defaultEnabled: false,
@@ -245,15 +544,51 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '🔮',
     icon: Compass,
     path: '/oracle',
-    category: 'oracles',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret'],
     minTier: 'personal',
     tags: ['divination', 'unified', 'all'],
     defaultEnabled: true,
     popularityRank: 3,
   },
+  {
+    id: 'astrology',
+    label: 'Astrology',
+    shortDescription: 'Birth chart & transits',
+    longDescription:
+      'Your natal chart and current transits. Western, Vedic, Chinese, and Mayan systems available.',
+    emoji: '✦',
+    icon: Sun,
+    path: '/astrology',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret'],
+    minTier: 'personal',
+    tags: ['astrology', 'chart', 'transits', 'planets', 'zodiac'],
+    defaultEnabled: true,
+    popularityRank: 4,
+  },
+  {
+    id: 'patterns-home',
+    label: 'Patterns',
+    shortDescription: 'Symbolic systems & cycles',
+    longDescription:
+      'Explore different lens systems for understanding time, personality, and cosmic rhythm.',
+    emoji: '🌀',
+    icon: Sparkles,
+    path: '/patterns',
+    category: 'metaphysical',
+    domain: 'metaphysical',
+    modes: ['interpret'],
+    minTier: 'personal',
+    tags: ['patterns', 'cycles', 'symbols', 'time'],
+    defaultEnabled: false,
+    popularityRank: 6,
+  },
 
   // ---------------------------------------------------------------------------
-  // REFLECTION
+  // COGNITIVE — Mind
   // ---------------------------------------------------------------------------
   {
     id: 'journal',
@@ -264,7 +599,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '📖',
     icon: BookOpen,
     path: '/labtools/journal',
-    category: 'reflection',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['reflect'],
     minTier: 'personal',
     tags: ['writing', 'daily', 'thoughts', 'voice', 'capture'],
     defaultEnabled: true,
@@ -279,7 +616,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '✨',
     icon: Sparkles,
     path: '/labtools/reflections',
-    category: 'reflection',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['reflect'],
     minTier: 'personal',
     tags: ['insights', 'highlights', 'conversation', 'distilled'],
     defaultEnabled: true,
@@ -294,7 +633,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '🧪',
     icon: FileText,
     path: '/labtools/lab-notes',
-    category: 'reflection',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['reflect', 'track'],
     minTier: 'personal',
     tags: ['research', 'notes', 'exploration', 'experiments'],
     defaultEnabled: false,
@@ -309,7 +650,9 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '📝',
     icon: Radio,
     path: '/capture',
-    category: 'reflection',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['reflect', 'track', 'connect'],
     minTier: 'personal',
     tags: ['capture', 'export', 'quick', 'obsidian'],
     defaultEnabled: false,
@@ -324,76 +667,13 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '🎙️',
     icon: Mic,
     path: '/labtools/scribe',
-    category: 'reflection',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['create'],
     minTier: 'pro',
     tags: ['voice', 'record', 'transcribe', 'audio'],
     defaultEnabled: false,
     popularityRank: 10,
-  },
-  {
-    id: 'dreams',
-    label: 'Dream Journal',
-    shortDescription: 'Track dream patterns',
-    longDescription:
-      'A dedicated space for recording dreams. Symbol tracking and pattern recognition over time.',
-    emoji: '🌙',
-    icon: Moon,
-    path: '/labtools/dreams',
-    category: 'reflection',
-    minTier: 'personal',
-    tags: ['dreams', 'symbols', 'sleep', 'unconscious'],
-    defaultEnabled: false,
-    comingSoon: true,
-    popularityRank: 15,
-  },
-
-  // ---------------------------------------------------------------------------
-  // TRAINING
-  // ---------------------------------------------------------------------------
-  {
-    id: 'navigator',
-    label: 'Navigator',
-    shortDescription: 'Spiralogic training',
-    longDescription:
-      'Structured practice with the Spiralogic framework. Track your position, work with elements, follow the spiral.',
-    emoji: '🧭',
-    icon: Compass,
-    path: '/labtools/navigator',
-    category: 'training',
-    minTier: 'personal',
-    tags: ['spiralogic', 'elements', 'practice', 'training'],
-    defaultEnabled: true,
-    popularityRank: 1,
-  },
-  {
-    id: 'journey',
-    label: 'Journey',
-    shortDescription: 'Archetypal mapping',
-    longDescription:
-      'Visualize your path through archetypal territory. Where have you been? Where are you going?',
-    emoji: '🗺️',
-    icon: Compass,
-    path: '/journey',
-    category: 'training',
-    minTier: 'personal',
-    tags: ['archetype', 'mapping', 'path', 'visualization'],
-    defaultEnabled: false,
-    popularityRank: 4,
-  },
-  {
-    id: 'story-creator',
-    label: 'Story Creator',
-    shortDescription: 'Narratives from 46+ traditions',
-    longDescription:
-      'Generate personalized stories drawing from world mythology, folklore, and wisdom traditions.',
-    emoji: '📜',
-    icon: Sparkles,
-    path: '/labtools/story-creator',
-    category: 'training',
-    minTier: 'personal',
-    tags: ['stories', 'mythology', 'narrative', 'traditions'],
-    defaultEnabled: false,
-    popularityRank: 7,
   },
   {
     id: 'field-protocol',
@@ -404,49 +684,234 @@ export const TOOL_REGISTRY: LabTool[] = [
     emoji: '📋',
     icon: Radio,
     path: '/labtools/field-protocol',
-    category: 'training',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['track'],
     minTier: 'pro',
     tags: ['protocol', 'exploration', 'documentation', 'field'],
     defaultEnabled: false,
     popularityRank: 12,
   },
+  {
+    id: 'brain-trust',
+    label: 'Brain Trust',
+    shortDescription: 'Multi-model orchestration',
+    longDescription:
+      'Engage multiple AI perspectives on complex questions. Claude, DeepSeek, and others weigh in together.',
+    emoji: '🧠',
+    icon: Brain,
+    path: '/labtools/brain-trust',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['create', 'connect'],
+    minTier: 'pro',
+    tags: ['ai', 'multi-model', 'orchestration', 'brain-trust'],
+    defaultEnabled: false,
+    popularityRank: 11,
+  },
+  {
+    id: 'field-analytics',
+    label: 'Field Analytics',
+    shortDescription: 'Observation & metrics',
+    longDescription:
+      'Quantified insights into your patterns, usage, and consciousness metrics.',
+    emoji: '📊',
+    icon: Eye,
+    path: '/labtools/field-analytics',
+    category: 'cognitive',
+    domain: 'cognitive',
+    modes: ['track'],
+    minTier: 'personal',
+    tags: ['analytics', 'metrics', 'patterns', 'data'],
+    defaultEnabled: false,
+    popularityRank: 9,
+  },
 
   // ---------------------------------------------------------------------------
-  // PATTERNS
+  // MYTHIC & ARCHETYPAL — Story & Archetype
   // ---------------------------------------------------------------------------
   {
-    id: 'astrology',
-    label: 'Astrology',
-    shortDescription: 'Birth chart & transits',
+    id: 'dreams',
+    label: 'Dream Journal',
+    shortDescription: 'Track dream patterns',
     longDescription:
-      'Your natal chart and current transits. Western, Vedic, Chinese, and Mayan systems available.',
-    emoji: '✦',
-    icon: Sun,
-    path: '/astrology',
-    category: 'patterns',
+      'A dedicated space for recording dreams. Symbol tracking and pattern recognition over time.',
+    emoji: '🌙',
+    icon: Moon,
+    path: '/labtools/dreams',
+    category: 'mythic',
+    domain: 'mythic',
+    modes: ['track', 'interpret'],
     minTier: 'personal',
-    tags: ['astrology', 'chart', 'transits', 'planets', 'zodiac'],
+    tags: ['dreams', 'symbols', 'sleep', 'unconscious'],
+    defaultEnabled: false,
+    comingSoon: true,
+    popularityRank: 3,
+  },
+  {
+    id: 'journey',
+    label: 'Journey',
+    shortDescription: 'Archetypal mapping',
+    longDescription:
+      'Visualize your path through archetypal territory. Where have you been? Where are you going?',
+    emoji: '🗺️',
+    icon: Compass,
+    path: '/journey',
+    category: 'mythic',
+    domain: 'mythic',
+    modes: ['track'],
+    minTier: 'personal',
+    tags: ['archetype', 'mapping', 'path', 'visualization'],
+    defaultEnabled: false,
+    popularityRank: 2,
+  },
+  {
+    id: 'story-creator',
+    label: 'Story Creator',
+    shortDescription: 'Narratives from 46+ traditions',
+    longDescription:
+      'Generate personalized stories drawing from world mythology, folklore, and wisdom traditions.',
+    emoji: '📜',
+    icon: Sparkles,
+    path: '/labtools/story-creator',
+    category: 'mythic',
+    domain: 'mythic',
+    modes: ['create', 'connect'],
+    minTier: 'personal',
+    tags: ['stories', 'mythology', 'narrative', 'traditions'],
+    defaultEnabled: false,
+    popularityRank: 1,
+  },
+
+  // ---------------------------------------------------------------------------
+  // SPIRITUAL — Spirit
+  // ---------------------------------------------------------------------------
+  {
+    id: 'navigator',
+    label: 'Navigator',
+    shortDescription: 'Spiralogic training',
+    longDescription:
+      'Structured practice with the Spiralogic framework. Track your position, work with elements, follow the spiral.',
+    emoji: '🧭',
+    icon: Compass,
+    path: '/labtools/navigator',
+    category: 'spiritual',
+    domain: 'spiritual',
+    modes: ['train'],
+    minTier: 'personal',
+    tags: ['spiralogic', 'elements', 'practice', 'training'],
     defaultEnabled: true,
     popularityRank: 1,
   },
+
+  // ---------------------------------------------------------------------------
+  // SOMATIC — Body (Orient -> Regulate -> Sense)
+  // ---------------------------------------------------------------------------
   {
-    id: 'patterns-home',
-    label: 'Patterns',
-    shortDescription: 'Symbolic systems & cycles',
+    id: 'orienting',
+    label: 'Orienting',
+    shortDescription: 'Expand your field, return to the room',
     longDescription:
-      'Explore different lens systems for understanding time, personality, and cosmic rhythm.',
-    emoji: '🌀',
-    icon: Sparkles,
-    path: '/patterns',
-    category: 'patterns',
-    minTier: 'personal',
-    tags: ['patterns', 'cycles', 'symbols', 'time'],
-    defaultEnabled: false,
-    popularityRank: 3,
+      'A 30-90s perceptual sequence that widens your sensory field through simple orientation prompts. Look, listen, touch, settle. The nervous system entry ramp.',
+    emoji: '👁',
+    icon: Eye,
+    path: '/labtools/orienting',
+    category: 'somatic',
+    domain: 'somatic',
+    modes: ['regulate'],
+    minTier: 'free',
+    tags: ['orient', 'grounding', 'somatic', 'nervous-system', 'safety', 'perception'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 1,
+  },
+  {
+    id: 'regulation-minute',
+    label: 'Regulation Minute',
+    shortDescription: 'Quick nervous system reset',
+    longDescription:
+      'A 60-120 second guided downshift. Three protocols — Downshift, Energize, Stabilize — with breath-synced visuals, haptics, and subtle tones.',
+    emoji: '🫁',
+    icon: Wind,
+    path: '/labtools/regulation-minute',
+    category: 'somatic',
+    domain: 'somatic',
+    modes: ['regulate'],
+    minTier: 'free',
+    tags: ['breath', 'nervous-system', 'regulation', 'grounding', 'reset', 'downshift', 'somatic'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 2,
   },
 
   // ---------------------------------------------------------------------------
-  // LIBRARY
+  // PSYCHOLOGICAL — Self
+  // ---------------------------------------------------------------------------
+  {
+    id: 'parts-check-in',
+    label: 'Parts Check-In',
+    shortDescription: 'Which part is up right now?',
+    longDescription:
+      'Three steps: Notice, Name, Need. A structured lens for seeing which part of you is active and what it wants. No advice, no interpretation \u2014 just a record.',
+    emoji: '🎭',
+    icon: Eye,
+    path: '/labtools/parts-check-in',
+    category: 'psychological',
+    domain: 'psychological',
+    modes: ['reflect'],
+    minTier: 'free',
+    tags: ['parts-work', 'ifs', 'shadow', 'self-awareness', 'inner-critic', 'noticing', 'psychological'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 1,
+  },
+
+  // ---------------------------------------------------------------------------
+  // RELATIONAL — Relationships
+  // ---------------------------------------------------------------------------
+  {
+    id: 'repair-script',
+    label: 'Repair Script',
+    shortDescription: 'Build a clean repair message',
+    longDescription:
+      'Four steps: Impact, Ownership, Request, Invitation. Three tones: Gentle, Direct, Neutral. No AI \u2014 just a scaffold for saying what\u2019s true.',
+    emoji: '🩹',
+    icon: Heart,
+    path: '/labtools/repair-script',
+    category: 'relational',
+    domain: 'relational',
+    modes: ['act', 'create', 'connect'],
+    minTier: 'free',
+    tags: ['repair', 'conflict', 'communication', 'boundaries', 'relationship', 'relational'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 1,
+  },
+
+  // ---------------------------------------------------------------------------
+  // PHILOSOPHICAL — Meaning & Values
+  // ---------------------------------------------------------------------------
+  {
+    id: 'values-compass',
+    label: 'Values Compass',
+    shortDescription: 'Clarify what matters in a dilemma',
+    longDescription:
+      'Present a dilemma and clarify the values at stake. Surfaces tradeoffs, proposes a coherent next step, and names the cost you accept.',
+    emoji: '🧭',
+    icon: Compass,
+    path: '/labtools/values-compass',
+    category: 'philosophical',
+    domain: 'philosophical',
+    modes: ['reflect', 'act'],
+    minTier: 'personal',
+    tags: ['values', 'ethics', 'dilemma', 'decision', 'integrity'],
+    defaultEnabled: false,
+    comingSoon: true,
+    popularityRank: 1,
+  },
+
+  // ---------------------------------------------------------------------------
+  // LIBRARY (utility)
   // ---------------------------------------------------------------------------
   {
     id: 'library',
@@ -508,7 +973,7 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // COMMUNITY
+  // COMMUNITY (utility)
   // ---------------------------------------------------------------------------
   {
     id: 'beads',
@@ -542,7 +1007,7 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // SETTINGS
+  // SETTINGS (utility)
   // ---------------------------------------------------------------------------
   {
     id: 'profile',
@@ -618,41 +1083,7 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // ADVANCED
-  // ---------------------------------------------------------------------------
-  {
-    id: 'brain-trust',
-    label: 'Brain Trust',
-    shortDescription: 'Multi-model orchestration',
-    longDescription:
-      'Engage multiple AI perspectives on complex questions. Claude, DeepSeek, and others weigh in together.',
-    emoji: '🧠',
-    icon: Brain,
-    path: '/labtools/brain-trust',
-    category: 'advanced',
-    minTier: 'pro',
-    tags: ['ai', 'multi-model', 'orchestration', 'brain-trust'],
-    defaultEnabled: false,
-    popularityRank: 1,
-  },
-  {
-    id: 'field-analytics',
-    label: 'Field Analytics',
-    shortDescription: 'Observation & metrics',
-    longDescription:
-      'Quantified insights into your patterns, usage, and consciousness metrics.',
-    emoji: '📊',
-    icon: Eye,
-    path: '/labtools/field-analytics',
-    category: 'advanced',
-    minTier: 'personal',
-    tags: ['analytics', 'metrics', 'patterns', 'data'],
-    defaultEnabled: false,
-    popularityRank: 3,
-  },
-
-  // ---------------------------------------------------------------------------
-  // DEVELOPER
+  // DEVELOPER (utility)
   // ---------------------------------------------------------------------------
   {
     id: 'claude-code',
@@ -703,7 +1134,7 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // ADMIN
+  // ADMIN (utility)
   // ---------------------------------------------------------------------------
   {
     id: 'admin-system',
@@ -741,41 +1172,90 @@ export const TOOL_REGISTRY: LabTool[] = [
 // HELPER FUNCTIONS
 // =============================================================================
 
-/**
- * Get all tools in a category
- */
+// -- Type guards --
+
+const CONSCIOUSNESS_DOMAINS = new Set<string>([
+  'somatic', 'cognitive', 'psychological', 'relational',
+  'mythic', 'philosophical', 'spiritual', 'metaphysical',
+]);
+
+const UTILITY_CATEGORIES = new Set<string>([
+  'library', 'community', 'settings', 'developer', 'admin',
+]);
+
+/** Check if a category is a consciousness domain */
+export function isConsciousnessDomain(cat: ToolCategory): cat is ConsciousnessDomain {
+  return CONSCIOUSNESS_DOMAINS.has(cat);
+}
+
+/** Check if a category is a utility category */
+export function isUtilityCategory(cat: ToolCategory): cat is UtilityCategory {
+  return UTILITY_CATEGORIES.has(cat);
+}
+
+// -- Domain helpers --
+
+/** Get all consciousness domains in display order */
+export function getDomainsInOrder(): ConsciousnessDomain[] {
+  return (Object.keys(DOMAIN_META) as ConsciousnessDomain[]).sort(
+    (a, b) => DOMAIN_META[a].defaultOrder - DOMAIN_META[b].defaultOrder
+  );
+}
+
+/** Get domains filtered by tier */
+export function getDomainsByTier(tier: DomainTier): ConsciousnessDomain[] {
+  return getDomainsInOrder().filter((d) => DOMAIN_META[d].tier === tier);
+}
+
+/** Get utility categories in display order */
+export function getUtilityCategoriesInOrder(): UtilityCategory[] {
+  return (Object.keys(UTILITY_META) as UtilityCategory[]).sort(
+    (a, b) => UTILITY_META[a].defaultOrder - UTILITY_META[b].defaultOrder
+  );
+}
+
+// -- Tool queries --
+
+/** Get all tools in a category */
 export function getToolsByCategory(category: ToolCategory): LabTool[] {
   return TOOL_REGISTRY.filter((tool) => tool.category === category).sort(
     (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
   );
 }
 
-/**
- * Get a tool by ID
- */
+/** Get all tools in a consciousness domain */
+export function getToolsByDomain(domain: ConsciousnessDomain): LabTool[] {
+  return TOOL_REGISTRY.filter((tool) => tool.domain === domain).sort(
+    (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
+  );
+}
+
+/** Get all tools matching a mode */
+export function getToolsByMode(mode: ToolMode): LabTool[] {
+  return TOOL_REGISTRY.filter((tool) => tool.modes?.includes(mode)).sort(
+    (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
+  );
+}
+
+/** Get a tool by ID */
 export function getToolById(id: string): LabTool | undefined {
   return TOOL_REGISTRY.find((tool) => tool.id === id);
 }
 
-/**
- * Get all categories in display order
- */
+/** Get all categories in display order (domains first, then utilities) */
 export function getCategoriesInOrder(): ToolCategory[] {
-  return (Object.keys(CATEGORY_META) as ToolCategory[]).sort(
-    (a, b) => CATEGORY_META[a].defaultOrder - CATEGORY_META[b].defaultOrder
-  );
+  return [
+    ...getDomainsInOrder(),
+    ...getUtilityCategoriesInOrder(),
+  ];
 }
 
-/**
- * Get default enabled tools (starter kit)
- */
+/** Get default enabled tools (starter kit) */
 export function getDefaultEnabledTools(): LabTool[] {
   return TOOL_REGISTRY.filter((tool) => tool.defaultEnabled);
 }
 
-/**
- * Get tools available for a given tier
- */
+/** Get tools available for a given tier */
 export function getToolsForTier(tier: Tier): LabTool[] {
   const tierRank: Record<Tier, number> = { free: 0, personal: 1, pro: 2 };
   const userRank = tierRank[tier];
@@ -786,9 +1266,7 @@ export function getToolsForTier(tier: Tier): LabTool[] {
   });
 }
 
-/**
- * Check if a tool is accessible for a given tier and role
- */
+/** Check if a tool is accessible for a given tier and role */
 export function isToolAccessible(
   tool: LabTool,
   tier: Tier,
@@ -796,12 +1274,10 @@ export function isToolAccessible(
 ): boolean {
   const tierRank: Record<Tier, number> = { free: 0, personal: 1, pro: 2 };
 
-  // Check tier
   if (tierRank[tier] < tierRank[tool.minTier]) {
     return false;
   }
 
-  // Check role if required
   if (tool.requiresRole && tool.requiresRole !== role) {
     return false;
   }
@@ -809,9 +1285,30 @@ export function isToolAccessible(
   return true;
 }
 
-/**
- * Search tools by query
- */
+/** Get the simple mode groups in display order */
+export function getSimpleModesInOrder(): SimpleMode[] {
+  return ['notice', 'shift', 'act-group'];
+}
+
+/** Get the detailed modes for a simple mode */
+export function getModesForSimpleMode(simpleMode: SimpleMode): ToolMode[] {
+  return SIMPLE_MODE_MAP[simpleMode];
+}
+
+/** Get the default simple mode for a domain */
+export function getDefaultModeForDomain(domain: ConsciousnessDomain): SimpleMode {
+  return DOMAIN_META[domain].defaultMode;
+}
+
+/** Get tools matching a simple mode (any of its constituent detailed modes) */
+export function getToolsBySimpleMode(simpleMode: SimpleMode): LabTool[] {
+  const modes = SIMPLE_MODE_MAP[simpleMode];
+  return TOOL_REGISTRY.filter(
+    (tool) => tool.modes?.some((m) => modes.includes(m))
+  ).sort((a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99));
+}
+
+/** Search tools by query (searches label, description, tags, domain, and modes) */
 export function searchTools(query: string): LabTool[] {
   const q = query.toLowerCase().trim();
   if (!q) return TOOL_REGISTRY;
@@ -821,14 +1318,14 @@ export function searchTools(query: string): LabTool[] {
       tool.label.toLowerCase().includes(q) ||
       tool.shortDescription.toLowerCase().includes(q) ||
       tool.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-      tool.category.toLowerCase().includes(q)
+      tool.category.toLowerCase().includes(q) ||
+      (tool.domain && tool.domain.toLowerCase().includes(q)) ||
+      (tool.modes && tool.modes.some((m) => m.toLowerCase().includes(q)))
     );
   });
 }
 
-/**
- * Get tool count by category
- */
+/** Get tool count by category */
 export function getToolCountByCategory(): Record<ToolCategory, number> {
   const counts = {} as Record<ToolCategory, number>;
 
@@ -839,4 +1336,200 @@ export function getToolCountByCategory(): Record<ToolCategory, number> {
   }
 
   return counts;
+}
+
+// =============================================================================
+// REGISTRY INVARIANT VALIDATION (dev-time safety net)
+// =============================================================================
+
+/**
+ * Validates the tool registry for structural integrity.
+ * Call this in dev/test to catch misconfigurations early.
+ *
+ * Invariants:
+ * - Every consciousness tool has a `domain` field
+ * - Every consciousness tool has at least one `mode`
+ * - Every tool's `category` resolves to a key in CATEGORY_META
+ * - No duplicate tool IDs
+ * - Domain tools have category === domain
+ */
+export function validateRegistry(): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const seenIds = new Set<string>();
+  const validModes = new Set<string>(Object.keys(MODE_META));
+
+  for (const tool of TOOL_REGISTRY) {
+    // Duplicate ID check
+    if (seenIds.has(tool.id)) {
+      errors.push(`Duplicate tool ID: "${tool.id}"`);
+    }
+    seenIds.add(tool.id);
+
+    // Category must exist in CATEGORY_META
+    if (!(tool.category in CATEGORY_META)) {
+      errors.push(`Tool "${tool.id}" has unknown category: "${tool.category}"`);
+    }
+
+    // Mode typo check: every mode must be a valid ToolMode key
+    if (tool.modes) {
+      for (const mode of tool.modes) {
+        if (!validModes.has(mode)) {
+          errors.push(`Tool "${tool.id}" has unknown mode: "${mode}"`);
+        }
+      }
+    }
+
+    // Consciousness tools must have domain and modes
+    if (isConsciousnessDomain(tool.category)) {
+      if (!tool.domain) {
+        errors.push(`Tool "${tool.id}" is in domain category "${tool.category}" but missing \`domain\` field`);
+      }
+      if (tool.domain && tool.domain !== tool.category) {
+        errors.push(`Tool "${tool.id}" has mismatched category="${tool.category}" and domain="${tool.domain}"`);
+      }
+      if (!tool.modes || tool.modes.length === 0) {
+        errors.push(`Tool "${tool.id}" is a consciousness tool but has no \`modes\``);
+      }
+    }
+
+    // Utility tools should NOT have domain
+    if (isUtilityCategory(tool.category) && tool.domain) {
+      errors.push(`Tool "${tool.id}" is a utility tool but has a \`domain\` field`);
+    }
+  }
+
+  // CATEGORY_META completeness: every domain must have all required DomainMeta fields
+  for (const domain of Object.keys(DOMAIN_META) as ConsciousnessDomain[]) {
+    const meta = DOMAIN_META[domain];
+    if (!meta.alias) errors.push(`Domain "${domain}" missing \`alias\``);
+    if (!meta.tier) errors.push(`Domain "${domain}" missing \`tier\``);
+    if (!meta.longDescription) errors.push(`Domain "${domain}" missing \`longDescription\``);
+    if (!meta.commonIntents || meta.commonIntents.length === 0) {
+      errors.push(`Domain "${domain}" missing or empty \`commonIntents\``);
+    }
+    if (!meta.defaultMode) errors.push(`Domain "${domain}" missing \`defaultMode\``);
+  }
+
+  // Simple mode map completeness: every mode must appear in exactly one simple mode
+  const mappedModes = new Set<string>();
+  for (const [simpleMode, modes] of Object.entries(SIMPLE_MODE_MAP)) {
+    for (const mode of modes) {
+      if (!validModes.has(mode)) {
+        errors.push(`SIMPLE_MODE_MAP["${simpleMode}"] references unknown mode: "${mode}"`);
+      }
+      if (mappedModes.has(mode)) {
+        errors.push(`Mode "${mode}" appears in multiple simple mode groups`);
+      }
+      mappedModes.add(mode);
+    }
+  }
+  for (const mode of validModes) {
+    if (!mappedModes.has(mode)) {
+      errors.push(`Mode "${mode}" is not mapped to any simple mode group`);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
+// =============================================================================
+// DEV-ONLY HEATMAP DIAGNOSTIC
+// =============================================================================
+
+/**
+ * Print a Domain x Mode heatmap to the console.
+ * Shows where the consciousness map is rich vs empty.
+ *
+ * Output format:
+ *   Domain       | Reflect | Track.. | Make M. | Regul. | Pract. | Create | Act    | Relate | TOTAL
+ *   -------------|---------|---------|--------|--------|--------|--------|--------|--------|------
+ *   somatic      |    0    |    0    |    0   |    1   |    0   |    0   |    0   |    0   |   1
+ *   ...
+ *   -------------|---------|---------|--------|--------|--------|--------|--------|--------|------
+ *   TOTAL        |    X    |    X    |    X   |    X   |    X   |    X   |    X   |    X   |  XX
+ *
+ * Call from browser console: `window.__registryHeatmap()`
+ */
+export function printRegistryHeatmap(): void {
+  const domains = getDomainsInOrder();
+  const modes = Object.keys(MODE_META) as ToolMode[];
+
+  // Build count matrix
+  const matrix: Record<string, Record<string, number>> = {};
+  const modeTotals: Record<string, number> = {};
+  for (const mode of modes) modeTotals[mode] = 0;
+
+  for (const domain of domains) {
+    matrix[domain] = {};
+    for (const mode of modes) {
+      const count = TOOL_REGISTRY.filter(
+        (t) => t.domain === domain && t.modes?.includes(mode)
+      ).length;
+      matrix[domain][mode] = count;
+      modeTotals[mode] += count;
+    }
+  }
+
+  // Format for console
+  const modeLabels = modes.map((m) => MODE_META[m].label.slice(0, 7).padEnd(7));
+  const divider = '-'.repeat(14) + '|' + modeLabels.map(() => '---------').join('|') + '|-------';
+
+  console.log('\n[ToolRegistry] Domain x Mode Heatmap\n');
+  console.log(
+    '  ' + 'Domain'.padEnd(13) + '| ' + modeLabels.join(' | ') + ' | TOTAL'
+  );
+  console.log('  ' + divider);
+
+  for (const domain of domains) {
+    const alias = DOMAIN_META[domain].alias.slice(0, 12).padEnd(13);
+    const tier = DOMAIN_META[domain].tier;
+    const cells = modes.map((m) => {
+      const count = matrix[domain][m];
+      return (count === 0 ? '  ·  ' : `  ${count}  `).padEnd(7);
+    });
+    const total = modes.reduce((sum, m) => sum + matrix[domain][m], 0);
+    const tierMark = tier === 'foundation' ? '' : tier === 'meaning' ? ' ~' : ' ^';
+    console.log(
+      '  ' + alias + '| ' + cells.join(' | ') + ' |  ' + String(total).padEnd(3) + tierMark
+    );
+  }
+
+  console.log('  ' + divider);
+  const totalCells = modes.map((m) => (`  ${modeTotals[m]}  `).padEnd(7));
+  const grandTotal = Object.values(modeTotals).reduce((a, b) => a + b, 0);
+  console.log(
+    '  ' + 'TOTAL'.padEnd(13) + '| ' + totalCells.join(' | ') + ' |  ' + grandTotal
+  );
+
+  // Summary
+  const emptyDomains = domains.filter(
+    (d) => modes.every((m) => matrix[d][m] === 0)
+  );
+  const emptyModes = modes.filter((m) => modeTotals[m] === 0);
+  const comingSoonCount = TOOL_REGISTRY.filter((t) => t.comingSoon).length;
+  const liveCount = TOOL_REGISTRY.filter((t) => t.domain && !t.comingSoon).length;
+
+  console.log('\n  Legend: · = empty  ~ = meaning tier  ^ = vertical tier');
+  console.log(`  Live tools: ${liveCount}  |  Coming soon: ${comingSoonCount}`);
+  if (emptyDomains.length > 0) {
+    console.log(`  Empty domains: ${emptyDomains.map((d) => DOMAIN_META[d].alias).join(', ')}`);
+  }
+  if (emptyModes.length > 0) {
+    console.log(`  Empty modes: ${emptyModes.map((m) => MODE_META[m].label).join(', ')}`);
+  }
+  console.log('');
+}
+
+// Run validation and heatmap in development
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const result = validateRegistry();
+  if (!result.valid) {
+    console.warn('[ToolRegistry] Invariant violations:', result.errors);
+  }
+}
+
+// Expose heatmap on window for browser console access
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).__registryHeatmap = printRegistryHeatmap;
 }
