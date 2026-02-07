@@ -45,7 +45,7 @@ export async function POST(
 
     if (sessionResult.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Booking not found' },
+        { success: false, error: 'Invalid or expired management link' },
         { status: 404 }
       );
     }
