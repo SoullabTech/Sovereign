@@ -46,16 +46,40 @@ interface SessionDetail {
   updated_at: string;
 }
 
-interface Briefing {
+interface BriefingLastSession {
+  date: string;
+  type: string;
+  notes: string | null;
+  themes: string[];
+  insights: string[];
+  days_ago: number;
+}
+
+interface BriefingJourney {
+  total_sessions: number;
+  months_together: number;
+  recurring_themes: string[];
+  stated_goals: string | null;
+}
+
+interface BriefingResponse {
+  ok: boolean;
   hasHistory: boolean;
-  clientName: string;
-  message?: string;
-  sessionCount?: number;
-  lastSessionDate?: string;
-  lastFocus?: string;
-  emotionalTone?: string;
-  followUp?: string;
-  pattern?: string | null;
+  message: string | null;
+  note: string | null;
+  briefing: {
+    client_name: string | null;
+    last_session: BriefingLastSession | null;
+    journey: BriefingJourney;
+    flags: unknown[];
+    recent_sessions: unknown[];
+    message_digest: {
+      messages_since_last_session: number;
+      has_safety_concerns: boolean;
+      has_time_sensitive: boolean;
+      synthesis: string | null;
+    } | null;
+  } | null;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -108,7 +132,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [voiceNotePanelOpen, setVoiceNotePanelOpen] = useState(false);
-  const [briefing, setBriefing] = useState<Briefing | null>(null);
+  const [briefingResponse, setBriefingResponse] = useState<BriefingResponse | null>(null);
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [briefingError, setBriefingError] = useState<string | null>(null);
 
@@ -141,14 +165,18 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
         const json = await res.json().catch(() => null);
         throw new Error(json?.error || 'Failed to load briefing');
       }
-      const json = await res.json();
-      setBriefing(json.briefing);
+      const json: BriefingResponse = await res.json();
+      setBriefingResponse(json);
     } catch (e: unknown) {
       setBriefingError(e instanceof Error ? e.message : 'Failed to load briefing');
     } finally {
       setBriefingLoading(false);
     }
   };
+
+  // Derived values for easier access
+  const hasHistory = briefingResponse?.hasHistory ?? false;
+  const briefing = briefingResponse?.briefing;
 
   // Auto-fetch briefing for upcoming sessions
   useEffect(() => {
@@ -306,7 +334,7 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
                 </button>
               </div>
 
-              {briefingLoading && !briefing && (
+              {briefingLoading && !briefingResponse && (
                 <div className="flex items-center gap-3 text-slate-400 text-sm">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Preparing briefing...
@@ -317,64 +345,100 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
                 <div className="text-red-400 text-sm">{briefingError}</div>
               )}
 
-              {briefing && !briefing.hasHistory && (
-                <p className="text-slate-400 text-sm">{briefing.message}</p>
+              {!hasHistory && briefingResponse && (
+                <div className="text-slate-400 text-sm">
+                  <p>{briefingResponse.message}</p>
+                  {briefingResponse.note && (
+                    <p className="text-xs text-slate-500 mt-1 italic">{briefingResponse.note}</p>
+                  )}
+                </div>
               )}
 
-              {briefing && briefing.hasHistory && (
+              {hasHistory && briefing && (
                 <div className="space-y-4">
-                  {/* Last Focus */}
-                  {briefing.lastFocus && (
+                  {/* Last Session */}
+                  {briefing.last_session && (
                     <div className="flex gap-3">
                       <MessageCircle className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
                       <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Last Focus</div>
-                        <p className="text-slate-200 text-sm">{briefing.lastFocus}</p>
+                        <div className="text-xs text-slate-500 mb-0.5">
+                          Last Session — {briefing.last_session.days_ago === 0 ? 'Today' :
+                            briefing.last_session.days_ago === 1 ? 'Yesterday' :
+                            `${briefing.last_session.days_ago} days ago`}
+                        </div>
+                        {briefing.last_session.themes.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-1">
+                            {briefing.last_session.themes.map((t) => (
+                              <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-slate-800/60 text-slate-300">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {briefing.last_session.notes && (
+                          <p className="text-slate-200 text-sm line-clamp-2">{briefing.last_session.notes}</p>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* Emotional Tone */}
-                  {briefing.emotionalTone && (
+                  {/* Insights */}
+                  {briefing.last_session?.insights && briefing.last_session.insights.length > 0 && (
                     <div className="flex gap-3">
                       <Heart className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
                       <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Emotional Tone</div>
-                        <p className="text-slate-200 text-sm">{briefing.emotionalTone}</p>
+                        <div className="text-xs text-slate-500 mb-0.5">Insights</div>
+                        <ul className="text-slate-200 text-sm space-y-0.5">
+                          {briefing.last_session.insights.slice(0, 3).map((insight, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <span className="text-amber-400">-</span>
+                              <span>{insight}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
                   )}
 
-                  {/* Follow-up */}
-                  {briefing.followUp && (
-                    <div className="flex gap-3">
-                      <CheckCircle2 className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Follow-up</div>
-                        <p className="text-slate-200 text-sm">{briefing.followUp}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Emerging Pattern */}
-                  {briefing.pattern && (
+                  {/* Recurring Themes */}
+                  {briefing.journey.recurring_themes.length > 0 && (
                     <div className="flex gap-3">
                       <TrendingUp className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
                       <div>
-                        <div className="text-xs text-slate-500 mb-0.5">Emerging Pattern</div>
-                        <p className="text-slate-200 text-sm">{briefing.pattern}</p>
+                        <div className="text-xs text-slate-500 mb-0.5">Recurring Themes</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {briefing.journey.recurring_themes.map((t) => (
+                            <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stated Goals */}
+                  {briefing.journey.stated_goals && (
+                    <div className="flex gap-3">
+                      <CheckCircle2 className="w-4 h-4 text-amber-500/70 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-xs text-slate-500 mb-0.5">Stated Goals</div>
+                        <p className="text-slate-200 text-sm">{briefing.journey.stated_goals}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Session count indicator */}
                   <div className="pt-2 border-t border-amber-500/10 text-xs text-slate-500">
-                    Based on {briefing.sessionCount} previous session{briefing.sessionCount !== 1 ? 's' : ''}
+                    {briefing.journey.total_sessions} session{briefing.journey.total_sessions !== 1 ? 's' : ''}
+                    {briefing.journey.months_together > 0 && (
+                      <> · {briefing.journey.months_together}mo together</>
+                    )}
                   </div>
                 </div>
               )}
 
-              {!briefing && !briefingLoading && !briefingError && (
+              {!briefingResponse && !briefingLoading && !briefingError && (
                 <button
                   onClick={fetchBriefing}
                   className="text-sm text-amber-400 hover:text-amber-300 transition-colors"

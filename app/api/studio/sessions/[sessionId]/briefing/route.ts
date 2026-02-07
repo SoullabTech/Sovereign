@@ -1,21 +1,20 @@
 export const dynamic = 'force-dynamic';
 
 /**
- * PRE-SESSION BRIEFING API
+ * STUDIO SESSION BRIEFING
  *
- * GET: Generate a briefing for an upcoming session based on client history
+ * GET: Returns a pre-session briefing payload for the session detail page.
+ * Reuses the existing session prep engine from lib/practitioner/sessionPrep.ts
+ * which queries practitioner_sessions for clinical history, themes, and insights.
  *
- * Returns structured intelligence:
- * - Last session themes
- * - Emotional tone
- * - Follow-up items
- * - Emerging patterns
+ * SOVEREIGNTY: This endpoint is fully local — no external AI calls.
+ * The prep engine queries practitioner_sessions for relationship history.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { generateWithClaude } from '@/lib/ai/claudeClient';
+import { getSessionPrep } from '@/lib/practitioner/sessionPrep';
 
 async function getPractitionerId(): Promise<string | null> {
   const result = await db.query(
@@ -23,21 +22,6 @@ async function getPractitionerId(): Promise<string | null> {
     ['stellium']
   );
   return result.rows[0]?.id || null;
-}
-
-interface SessionHistory {
-  id: string;
-  scheduled_start: string;
-  status: string;
-  notes: string | null;
-  practitioner_notes: string | null;
-  service_name: string | null;
-}
-
-interface VoiceNoteHistory {
-  session_id: string;
-  transcript: string | null;
-  created_at: string;
 }
 
 export async function GET(
@@ -57,161 +41,93 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
 
-    // Get the current session and its client
-    const sessionResult = await db.query(
-      `SELECT s.id, s.client_id, s.scheduled_start, c.name as client_name
-       FROM sessions s
-       LEFT JOIN practitioner_clients c ON s.client_id = c.id
-       WHERE s.id = $1 AND s.practitioner_id = $2`,
+    // Load the Studio session to get client_id
+    const sessionRes = await db.query(
+      `SELECT id, client_id, scheduled_start, status
+       FROM sessions
+       WHERE id = $1 AND practitioner_id = $2
+       LIMIT 1`,
       [sessionId, practitionerId]
     );
 
-    if (sessionResult.rows.length === 0) {
+    const session = sessionRes.rows[0];
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Session not found' }, { status: 404 });
     }
 
-    const currentSession = sessionResult.rows[0];
-    const clientId = currentSession.client_id;
-    const clientName = currentSession.client_name || 'Client';
+    if (!session.client_id) {
+      return NextResponse.json(
+        { success: false, error: 'No client linked to this session' },
+        { status: 400 }
+      );
+    }
 
-    if (!clientId) {
+    // Reuse the existing prep engine — it queries practitioner_sessions
+    // for clinical history, themes, insights, and flags
+    const prep = await getSessionPrep(practitionerId, session.client_id);
+
+    // Stable response shape: hasHistory is the canonical signal
+    const hasHistory = !!prep?.last_session;
+
+    // Early return for no history — stable contract
+    if (!prep || !hasHistory) {
       return NextResponse.json({
-        success: true,
-        briefing: {
-          hasHistory: false,
-          clientName,
-          message: 'No previous sessions with this client.',
-        },
+        ok: true,
+        hasHistory: false,
+        message: 'First session with this client',
+        note: 'No prior practitioner session history found yet.',
+        briefing: null,
       });
     }
 
-    // Get previous sessions with this client (completed, most recent first)
-    const historyResult = await db.query<SessionHistory>(
-      `SELECT s.id, s.scheduled_start, s.status, s.notes, s.practitioner_notes,
-              svc.name as service_name
-       FROM sessions s
-       LEFT JOIN services svc ON s.service_id = svc.id
-       WHERE s.client_id = $1
-         AND s.practitioner_id = $2
-         AND s.id != $3
-         AND s.status IN ('completed', 'confirmed', 'scheduled')
-       ORDER BY s.scheduled_start DESC
-       LIMIT 5`,
-      [clientId, practitionerId, sessionId]
-    );
+    // Shape the response for the UI — keep it focused on what matters
+    // before the session, not the full clinical data dump
+    const briefing = {
+      client_name: prep.client?.name || prep.client?.preferred_name || null,
 
-    if (historyResult.rows.length === 0) {
-      return NextResponse.json({
-        success: true,
-        briefing: {
-          hasHistory: false,
-          clientName,
-          message: 'First session with this client.',
-        },
-      });
-    }
+      last_session: prep.last_session
+        ? {
+            date: prep.last_session.date,
+            type: prep.last_session.type,
+            notes: prep.last_session.notes || null,
+            themes: prep.last_session.themes || [],
+            insights: prep.last_session.insights || [],
+            days_ago: prep.last_session.days_ago,
+          }
+        : null,
 
-    // Get voice note transcripts from previous sessions
-    const sessionIds = historyResult.rows.map(s => s.id);
-    const voiceNotesResult = await db.query<VoiceNoteHistory>(
-      `SELECT session_id, transcript, created_at
-       FROM voice_notes
-       WHERE session_id = ANY($1) AND practitioner_id = $2
-         AND transcription_status = 'completed'
-       ORDER BY created_at DESC`,
-      [sessionIds, practitionerId]
-    );
+      journey: {
+        total_sessions: prep.journey?.total_sessions ?? 0,
+        months_together: prep.journey?.months_together ?? 0,
+        recurring_themes: prep.journey?.recurring_themes ?? [],
+        stated_goals: prep.journey?.stated_goals || null,
+      },
 
-    // Build context for Claude
-    const sessionSummaries = historyResult.rows.map((session, i) => {
-      const date = new Date(session.scheduled_start).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-      const voiceNotes = voiceNotesResult.rows
-        .filter(vn => vn.session_id === session.id)
-        .map(vn => vn.transcript)
-        .filter(Boolean)
-        .join('\n');
+      flags: prep.flags ?? [],
 
-      return `
-Session ${i + 1} (${date}):
-- Service: ${session.service_name || 'Session'}
-- Status: ${session.status}
-${session.notes ? `- Client notes: ${session.notes}` : ''}
-${session.practitioner_notes ? `- Practitioner notes: ${session.practitioner_notes}` : ''}
-${voiceNotes ? `- Voice note transcript: ${voiceNotes}` : ''}
-`.trim();
-    }).join('\n\n');
+      recent_sessions: prep.recent_sessions ?? [],
 
-    // Generate briefing with Claude
-    const briefingPrompt = `You are a practitioner's assistant helping prepare for an upcoming session.
-
-Based on the session history below, create a brief, actionable pre-session briefing.
-
-CLIENT: ${clientName}
-UPCOMING SESSION: ${new Date(currentSession.scheduled_start).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-
-PREVIOUS SESSIONS:
-${sessionSummaries}
-
-Create a briefing with these sections (keep each section to 1-2 sentences max):
-
-1. LAST SESSION FOCUS: What was the main theme or topic?
-2. EMOTIONAL TONE: How was the client's emotional state?
-3. FOLLOW-UP: What was discussed that needs follow-up?
-4. EMERGING PATTERN: Any recurring theme across sessions?
-
-Format as JSON:
-{
-  "lastFocus": "...",
-  "emotionalTone": "...",
-  "followUp": "...",
-  "pattern": "..." or null if not enough data
-}
-
-Be concise and actionable. Speak directly to the practitioner.`;
-
-    const result = await generateWithClaude({
-      systemPrompt: 'You are a precise assistant that outputs only valid JSON. No markdown, no explanation, just the JSON object.',
-      userInput: briefingPrompt,
-      meta: { reasoningMode: 'analysis' },
-    });
-
-    // Parse the JSON response
-    let briefingData;
-    try {
-      // Handle potential markdown code blocks
-      let jsonText = result.text.trim();
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```json?\n?/g, '').replace(/```$/g, '').trim();
-      }
-      briefingData = JSON.parse(jsonText);
-    } catch {
-      console.error('[BRIEFING] Failed to parse Claude response:', result.text);
-      briefingData = {
-        lastFocus: 'Unable to generate summary',
-        emotionalTone: 'Review notes manually',
-        followUp: 'Check previous session notes',
-        pattern: null,
-      };
-    }
+      message_digest: prep.message_digest
+        ? {
+            messages_since_last_session: prep.message_digest.messages_since_last_session,
+            has_safety_concerns: prep.message_digest.has_safety_concerns,
+            has_time_sensitive: prep.message_digest.has_time_sensitive,
+            synthesis: prep.message_digest.synthesis || null,
+          }
+        : null,
+    };
 
     return NextResponse.json({
-      success: true,
-      briefing: {
-        hasHistory: true,
-        clientName,
-        sessionCount: historyResult.rows.length,
-        lastSessionDate: historyResult.rows[0].scheduled_start,
-        ...briefingData,
-      },
+      ok: true,
+      hasHistory: true,
+      message: null,
+      note: null,
+      briefing,
     });
   } catch (error) {
-    console.error('[Studio Briefing] GET error:', error);
+    console.error('[studio][briefing] error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to generate briefing' },
+      { success: false, error: 'Failed to build briefing' },
       { status: 500 }
     );
   }
