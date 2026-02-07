@@ -9,7 +9,7 @@
  * 5. Returns 400 when no audio file provided
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, beforeAll, afterAll } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 // Mock the database
@@ -32,8 +32,29 @@ jest.mock('fs/promises', () => ({
   mkdir: jest.fn<() => Promise<string | undefined>>().mockResolvedValue(undefined),
 }));
 
+// Mock entitlements
+jest.mock('@/lib/entitlements', () => ({
+  getEntitlements: jest.fn<() => Promise<{ features: { cloudAudioUploads: boolean } }>>().mockResolvedValue({
+    features: { cloudAudioUploads: true },
+  }),
+}));
+
+// Mock audio usage logging
+jest.mock('@/lib/usage/audioUsage', () => ({
+  logAudioUsageEvent: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+}));
+
 // Import after mocks
 import { POST } from '../route';
+
+// Set env var for feature flag
+const originalEnv = process.env.ALLOW_AUDIO_UPLOADS;
+beforeAll(() => {
+  process.env.ALLOW_AUDIO_UPLOADS = 'true';
+});
+afterAll(() => {
+  process.env.ALLOW_AUDIO_UPLOADS = originalEnv;
+});
 
 const createParams = (sessionId: string) => ({
   params: Promise.resolve({ sessionId }),

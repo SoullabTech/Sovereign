@@ -141,20 +141,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Log "accepted" event (bytes captured even if transcription fails later)
-    await logAudioUsageEvent({
-      memberId: userId,
-      route: "/api/voice/transcribe",
-      kind: "transcription",
-      bytes: file.size,
-      seconds: null,
-      status: "accepted",
-      meta: {
-        filename: file.name,
-        contentType: file.type,
-      },
-    });
-
     // Save file temporarily
     const buffer = Buffer.from(await file.arrayBuffer());
     const uploadDir = await ensureUploadDir();
