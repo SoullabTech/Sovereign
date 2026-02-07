@@ -94,6 +94,43 @@ function ManageBookingContent() {
     }
   };
 
+  /** Reusable retry CTA — compact variant for details, prominent for post-action screens */
+  const RetryCompletionCTA = ({ variant = 'prominent' }: { variant?: 'compact' | 'prominent' }) => {
+    const isCompact = variant === 'compact';
+    const textSize = isCompact ? 'text-xs' : 'text-sm';
+    const iconSize = isCompact ? 'w-3 h-3' : 'w-3.5 h-3.5';
+    const label = isCompact ? 'Resend confirmation email' : "Didn\u2019t receive a confirmation email? Resend";
+    const wrapperClass = isCompact
+      ? 'pt-4 text-center'
+      : 'mt-8 pt-6 border-t border-[#3A3347]/30';
+    const buttonClass = isCompact
+      ? `${textSize} text-[#6B6280] hover:text-[#A89FC4] transition-colors font-quicksand disabled:opacity-50 inline-flex items-center gap-1.5`
+      : `${textSize} text-[#6B6280] hover:text-[#A89FC4] transition-colors font-quicksand disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto gap-2`;
+
+    return (
+      <div className={wrapperClass}>
+        {retryMessage ? (
+          <p className={`${textSize} text-[#A89FC4] font-quicksand ${isCompact ? '' : 'text-center'}`}>{retryMessage}</p>
+        ) : (
+          <button
+            onClick={handleRetryCompletion}
+            disabled={retrying}
+            className={buttonClass}
+          >
+            {retrying ? (
+              <>
+                <RotateCw className={`${iconSize} animate-spin`} />
+                Resending...
+              </>
+            ) : (
+              <>{label}</>
+            )}
+          </button>
+        )}
+      </div>
+    );
+  };
+
   // Fetch session details on mount
   useEffect(() => {
     async function fetchSession() {
@@ -443,28 +480,7 @@ function ManageBookingContent() {
                 )
               )}
 
-              {/* Subtle resend link */}
-              <div className="pt-4 text-center">
-                {retryMessage ? (
-                  <p className="text-xs text-[#A89FC4] font-quicksand">{retryMessage}</p>
-                ) : (
-                  <button
-                    onClick={handleRetryCompletion}
-                    disabled={retrying}
-                    className="text-xs text-[#6B6280] hover:text-[#A89FC4] transition-colors font-quicksand
-                             disabled:opacity-50 inline-flex items-center gap-1.5"
-                  >
-                    {retrying ? (
-                      <>
-                        <RotateCw className="w-3 h-3 animate-spin" />
-                        Resending...
-                      </>
-                    ) : (
-                      <>Resend confirmation email</>
-                    )}
-                  </button>
-                )}
-              </div>
+              <RetryCompletionCTA variant="compact" />
             </div>
           </motion.div>
         )}
@@ -560,28 +576,7 @@ function ManageBookingContent() {
               Book a New Session
             </Link>
 
-            {/* Try Again — re-send confirmation emails */}
-            <div className="mt-8 pt-6 border-t border-[#3A3347]/30">
-              {retryMessage ? (
-                <p className="text-sm text-[#A89FC4] font-quicksand text-center">{retryMessage}</p>
-              ) : (
-                <button
-                  onClick={handleRetryCompletion}
-                  disabled={retrying}
-                  className="text-sm text-[#6B6280] hover:text-[#A89FC4] transition-colors font-quicksand
-                           disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto gap-2"
-                >
-                  {retrying ? (
-                    <>
-                      <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                      Resending...
-                    </>
-                  ) : (
-                    <>Didn&apos;t receive a confirmation email? Resend</>
-                  )}
-                </button>
-              )}
-            </div>
+            <RetryCompletionCTA />
           </motion.div>
         )}
 
@@ -789,28 +784,7 @@ function ManageBookingContent() {
               Done
             </button>
 
-            {/* Try Again — re-send confirmation emails */}
-            <div className="mt-8 pt-6 border-t border-[#3A3347]/30">
-              {retryMessage ? (
-                <p className="text-sm text-[#A89FC4] font-quicksand text-center">{retryMessage}</p>
-              ) : (
-                <button
-                  onClick={handleRetryCompletion}
-                  disabled={retrying}
-                  className="text-sm text-[#6B6280] hover:text-[#A89FC4] transition-colors font-quicksand
-                           disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto gap-2"
-                >
-                  {retrying ? (
-                    <>
-                      <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                      Resending...
-                    </>
-                  ) : (
-                    <>Didn&apos;t receive a confirmation email? Resend</>
-                  )}
-                </button>
-              )}
-            </div>
+            <RetryCompletionCTA />
           </motion.div>
         )}
       </div>
