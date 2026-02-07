@@ -186,8 +186,8 @@ export default function StudioLayout({
           <TeamSwitcher collapsed={collapsed} />
         </div>
 
-        {/* Nav Items */}
-        <nav className="flex-1 px-2 py-2 space-y-0.5">
+        {/* Nav Items - scrollable when content exceeds viewport */}
+        <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== '/studio' && pathname?.startsWith(item.href));
