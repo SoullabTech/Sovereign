@@ -17,6 +17,8 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { getEntitlements } from '@/lib/entitlements';
+import { logAudioUsageEvent } from '@/lib/usage/audioUsage';
 
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
 const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
@@ -105,6 +107,15 @@ export async function POST(
       return NextResponse.json(
         { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
         { status: 410 }
+      );
+    }
+
+    // Entitlement check: cloudAudioUploads feature flag
+    const entitlements = await getEntitlements(memberId);
+    if (!entitlements.features.cloudAudioUploads) {
+      return NextResponse.json(
+        { success: false, error: 'Cloud audio uploads are disabled for your tier', upgradeRequired: true },
+        { status: 403 }
       );
     }
 
@@ -246,6 +257,23 @@ export async function POST(
     }
 
     console.log('[VOICE-NOTES] Saved to DB:', noteId, transcriptionStatus, transcript ? `(${transcript.length} chars)` : '(no transcript)');
+
+    // Log audio usage for metering
+    await logAudioUsageEvent({
+      memberId,
+      route: '/api/studio/sessions/[sessionId]/voice-notes',
+      kind: 'upload',
+      bytes: file.size,
+      seconds: durationSeconds,
+      status: transcriptionStatus === 'completed' ? 'ok' : 'error',
+      errorCode: transcriptionStatus === 'failed' ? 'TRANSCRIBE_FAILED' : null,
+      meta: {
+        sessionId,
+        noteId,
+        mimeType: file.type,
+        transcriptLength: transcript?.length ?? 0,
+      },
+    });
 
     return NextResponse.json({
       success: true,

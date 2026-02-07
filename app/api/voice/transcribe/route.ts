@@ -83,8 +83,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Voice transcription requires Personal tier",
+          error: "Voice transcription requires Guardian tier or an Audio Minutes add-on.",
           upgradeRequired: true,
+          currentTier: entitlements.tier,
         },
         { status: 403 }
       );

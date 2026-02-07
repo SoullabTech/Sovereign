@@ -17,6 +17,8 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getEntitlements } from '@/lib/entitlements';
+import { logAudioUsageEvent } from '@/lib/usage/audioUsage';
 
 // Skip during static export (Capacitor builds)
 
@@ -44,6 +46,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
         { status: 410 }
+      );
+    }
+
+    // Entitlement check: cloudAudioUploads feature flag
+    const entitlements = await getEntitlements(memberId);
+    if (!entitlements.features.cloudAudioUploads) {
+      return NextResponse.json(
+        { success: false, error: 'Cloud audio uploads are disabled for your tier', upgradeRequired: true },
+        { status: 403 }
       );
     }
 
@@ -170,6 +181,21 @@ export async function POST(request: NextRequest) {
     );
 
     console.log(`🎙️ [VoiceJournal] Audio saved: ${relPath} (${Math.round(file.size / 1024)}KB, ${durationMs}ms)`);
+
+    // Log audio usage for metering
+    await logAudioUsageEvent({
+      memberId: userId,
+      route: '/api/journal/quick/audio',
+      kind: 'upload',
+      bytes: file.size,
+      seconds: durationMs ? Math.ceil(durationMs / 1000) : null,
+      status: 'ok',
+      meta: {
+        entryId,
+        audioMime,
+        transcriptSource,
+      },
+    });
 
     return NextResponse.json({
       success: true,
