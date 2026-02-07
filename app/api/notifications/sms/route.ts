@@ -69,12 +69,14 @@ export async function POST(request: NextRequest) {
       const accountSid = process.env.TWILIO_ACCOUNT_SID;
       const authToken = process.env.TWILIO_AUTH_TOKEN;
       const fromNumber = process.env.TWILIO_FROM_NUMBER;
+      const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 
-      if (accountSid && authToken && fromNumber) {
+      if (accountSid && authToken && (fromNumber || messagingServiceSid)) {
         credentials = {
           account_sid: accountSid,
           auth_token: authToken,
-          from_number: fromNumber,
+          from_number: fromNumber || '',
+          messaging_service_sid: messagingServiceSid,
         };
       }
     }

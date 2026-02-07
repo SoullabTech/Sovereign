@@ -86,6 +86,8 @@ export interface MaiaContext {
   captureContextAddendum?: string;
   // 👤 GUEST CONTEXT: Explicit messaging when user is anonymous/guest
   guestContextAddendum?: string;
+  // 🏢 STUDIO: Practitioner prompt cap when running in Studio
+  studioAddendum?: string;
 }
 
 /**
@@ -799,6 +801,13 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (scribeDiscussionSafe) {
     adaptedPrompt += `\n\n${scribeDiscussionSafe}`;
     console.log(`📝 [Scribe Discussion] Session context injected`);
+  }
+
+  // 1️⃣5️⃣ STUDIO: Practitioner prompt cap when running in Soullab Studio
+  const studioSafe = safeAddendum(context.studioAddendum);
+  if (studioSafe) {
+    adaptedPrompt += `\n\n${studioSafe}`;
+    console.log(`🏢 [Studio] Practitioner context injected`);
   }
 
   return adaptedPrompt.trim();

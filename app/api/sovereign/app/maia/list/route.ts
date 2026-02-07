@@ -488,6 +488,22 @@ Water = depth, reflection, wisdom`;
       }
     }
 
+    // 🏢 STUDIO SURFACE: Build prompt addendum when running inside Soullab Studio
+    const surfaceMode = (meta as any)?.surface as string | undefined;
+    const studioCtx = (meta as any)?.studioContext as { surface?: string; clientId?: string; pathname?: string } | undefined;
+    const studioAddendum = surfaceMode === 'studio'
+      ? `🏢 STUDIO MODE — PRACTITIONER CONTEXT:
+You are MAIA operating inside Soullab Studio for a practitioner (not a community member).
+Be concise, operational, and action-oriented. Keep responses tighter than normal.
+You may draft messages (SMS, email), checklists, plans, and session notes — but DO NOT send anything.
+When proposing outreach, produce a DRAFT and say "Ready to send — confirm in Studio."
+${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specific client selected.'}`
+      : undefined;
+
+    if (studioAddendum) {
+      console.log(`🏢 [Route] Studio surface detected — practitioner prompt cap applied`);
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -513,6 +529,7 @@ Water = depth, reflection, wisdom`;
           wuxingSnapshot, // 🌿 Raw Wu Xing data for downstream processing
           bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
           conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
+          studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
           ...meta,
         },
       }),
