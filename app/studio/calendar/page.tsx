@@ -51,6 +51,81 @@ type ViewType = 'month' | 'week' | 'day';
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
+/**
+ * Calculate overlap layout for events in a day column.
+ * Groups overlapping events and assigns each a column index + total columns
+ * so they can be rendered side-by-side instead of stacked on top of each other.
+ */
+function layoutOverlappingEvents(events: CalendarEvent[]): Map<string, { column: number; totalColumns: number }> {
+  const layout = new Map<string, { column: number; totalColumns: number }>();
+  if (events.length === 0) return layout;
+
+  // Sort by start time, then by duration (longer first)
+  const sorted = [...events].sort((a, b) => {
+    const diff = new Date(a.start).getTime() - new Date(b.start).getTime();
+    if (diff !== 0) return diff;
+    return differenceInMinutes(new Date(b.end), new Date(b.start)) -
+           differenceInMinutes(new Date(a.end), new Date(a.start));
+  });
+
+  // Group overlapping events into clusters
+  const clusters: CalendarEvent[][] = [];
+  let currentCluster: CalendarEvent[] = [];
+  let clusterEnd = 0;
+
+  for (const event of sorted) {
+    const eventStart = new Date(event.start).getTime();
+    const eventEnd = new Date(event.end).getTime();
+
+    if (currentCluster.length === 0 || eventStart < clusterEnd) {
+      // Overlaps with current cluster
+      currentCluster.push(event);
+      clusterEnd = Math.max(clusterEnd, eventEnd);
+    } else {
+      // New cluster
+      clusters.push(currentCluster);
+      currentCluster = [event];
+      clusterEnd = eventEnd;
+    }
+  }
+  if (currentCluster.length > 0) {
+    clusters.push(currentCluster);
+  }
+
+  // Assign columns within each cluster
+  for (const cluster of clusters) {
+    const columns: CalendarEvent[][] = [];
+
+    for (const event of cluster) {
+      const eventStart = new Date(event.start).getTime();
+      // Find first column where this event doesn't overlap
+      let placed = false;
+      for (let col = 0; col < columns.length; col++) {
+        const lastInCol = columns[col][columns[col].length - 1];
+        if (eventStart >= new Date(lastInCol.end).getTime()) {
+          columns[col].push(event);
+          layout.set(event.id, { column: col, totalColumns: 0 }); // totalColumns set after
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([event]);
+        layout.set(event.id, { column: columns.length - 1, totalColumns: 0 });
+      }
+    }
+
+    // Set totalColumns for all events in this cluster
+    const totalColumns = columns.length;
+    for (const event of cluster) {
+      const entry = layout.get(event.id)!;
+      entry.totalColumns = totalColumns;
+    }
+  }
+
+  return layout;
+}
+
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('month');
@@ -630,6 +705,7 @@ function WeekView({
           {/* Day columns */}
           {days.map(day => {
             const dayEvents = getEventsForDay(events, day);
+            const overlapLayout = layoutOverlappingEvents(dayEvents);
 
             return (
               <div key={day.toISOString()} className="relative border-r border-slate-800/30 last:border-r-0">
@@ -654,13 +730,22 @@ function WeekView({
                     return null;
                   }
 
+                  const overlap = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
+                  const widthPercent = 100 / overlap.totalColumns;
+                  const leftPercent = overlap.column * widthPercent;
+
                   return (
                     <button
                       key={event.id}
                       onClick={() => onEventClick(event)}
-                      style={{ top: `${top}px`, height: `${height}px` }}
+                      style={{
+                        top: `${top}px`,
+                        height: `${height}px`,
+                        left: `calc(${leftPercent}% + 1px)`,
+                        width: `calc(${widthPercent}% - 2px)`,
+                      }}
                       className={`
-                        absolute left-0.5 right-0.5 px-1 py-0.5 rounded text-xs overflow-hidden
+                        absolute px-1 py-0.5 rounded text-xs overflow-hidden
                         hover:opacity-80 transition-opacity text-left
                         ${event.source === 'maia'
                           ? 'bg-amber-500/30 text-amber-300 border-l-2 border-amber-500'
@@ -737,44 +822,56 @@ function DayView({
             ))}
 
             {/* Events */}
-            {events.map(event => {
-              const eventStart = new Date(event.start);
-              const eventEnd = new Date(event.end);
-              const startMinutes = getHours(eventStart) * 60 + getMinutes(eventStart);
-              const duration = differenceInMinutes(eventEnd, eventStart);
-              const top = ((startMinutes - startHour * 60) / 60) * 64;
-              const height = Math.max((duration / 60) * 64, 32);
+            {(() => {
+              const overlapLayout = layoutOverlappingEvents(events);
+              return events.map(event => {
+                const eventStart = new Date(event.start);
+                const eventEnd = new Date(event.end);
+                const startMinutes = getHours(eventStart) * 60 + getMinutes(eventStart);
+                const duration = differenceInMinutes(eventEnd, eventStart);
+                const top = ((startMinutes - startHour * 60) / 60) * 64;
+                const height = Math.max((duration / 60) * 64, 32);
 
-              if (getHours(eventStart) < startHour || getHours(eventStart) > endHour) {
-                return null;
-              }
+                if (getHours(eventStart) < startHour || getHours(eventStart) > endHour) {
+                  return null;
+                }
 
-              return (
-                <button
-                  key={event.id}
-                  onClick={() => onEventClick(event)}
-                  style={{ top: `${top}px`, height: `${height}px` }}
-                  className={`
-                    absolute left-2 right-2 px-3 py-2 rounded-lg text-left
-                    hover:opacity-80 transition-opacity
-                    ${event.source === 'maia'
-                      ? 'bg-amber-500/30 text-amber-300 border-l-4 border-amber-500'
-                      : 'bg-teal-500/20 text-teal-300 border-l-4 border-teal-500'}
-                  `}
-                >
-                  <div className="font-medium">{event.title}</div>
-                  <div className="text-sm opacity-70 mt-0.5">
-                    {formatEventTime(event.start)} - {formatEventTime(event.end)}
-                  </div>
-                  {event.clientName && (
-                    <div className="text-sm opacity-70 flex items-center gap-1 mt-1">
-                      <User className="w-3 h-3" />
-                      {event.clientName}
+                const overlap = overlapLayout.get(event.id) || { column: 0, totalColumns: 1 };
+                const widthPercent = 100 / overlap.totalColumns;
+                const leftPercent = overlap.column * widthPercent;
+
+                return (
+                  <button
+                    key={event.id}
+                    onClick={() => onEventClick(event)}
+                    style={{
+                      top: `${top}px`,
+                      height: `${height}px`,
+                      left: `calc(${leftPercent}% + 8px)`,
+                      width: `calc(${widthPercent}% - 16px)`,
+                    }}
+                    className={`
+                      absolute px-3 py-2 rounded-lg text-left
+                      hover:opacity-80 transition-opacity
+                      ${event.source === 'maia'
+                        ? 'bg-amber-500/30 text-amber-300 border-l-4 border-amber-500'
+                        : 'bg-teal-500/20 text-teal-300 border-l-4 border-teal-500'}
+                    `}
+                  >
+                    <div className="font-medium truncate">{event.title}</div>
+                    <div className="text-sm opacity-70 mt-0.5">
+                      {formatEventTime(event.start)} - {formatEventTime(event.end)}
                     </div>
-                  )}
-                </button>
-              );
-            })}
+                    {event.clientName && (
+                      <div className="text-sm opacity-70 flex items-center gap-1 mt-1 truncate">
+                        <User className="w-3 h-3 flex-shrink-0" />
+                        {event.clientName}
+                      </div>
+                    )}
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
