@@ -539,7 +539,7 @@ function NewTaskModal({ onClose, onSubmit, saving }: NewTaskModalProps) {
                 type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50 input-dark-native"
               />
             </div>
           </div>
