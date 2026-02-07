@@ -5,56 +5,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import {
-  LayoutGrid,
-  Users,
-  Calendar,
-  CalendarDays,
-  CheckSquare,
-  Package,
-  MessageSquare,
-  Lock,
-  MonitorPlay,
-  Code2,
-  Sparkles,
-  Settings,
-  ChevronLeft,
-  Camera,
-  Megaphone,
-  FolderOpen,
-  Loader2,
-  Briefcase,
-  Wrench,
-  Mic,
-  DoorOpen,
-} from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
-
-const navItems = [
-  { href: '/studio', icon: LayoutGrid, label: 'Command Center' },
-  { href: '/studio/threshold', icon: DoorOpen, label: 'Threshold' },
-  { href: '/studio/clients', icon: Users, label: 'Clients' },
-  { href: '/studio/groups', icon: FolderOpen, label: 'Groups' },
-  { href: '/studio/sessions', icon: Calendar, label: 'Sessions' },
-  { href: '/studio/caseload', icon: Briefcase, label: 'Caseload' },
-  { href: '/studio/services', icon: Package, label: 'Services' },
-  { href: '/studio/calendar', icon: CalendarDays, label: 'Calendar' },
-  { href: '/studio/tasks', icon: CheckSquare, label: 'Tasks' },
-  { href: '/studio/comms', icon: MessageSquare, label: 'Communications' },
-  { href: '/studio/marketing', icon: Megaphone, label: 'Marketing' },
-  { href: '/studio/vault', icon: Lock, label: 'Vault' },
-  { href: '/studio/media', icon: MonitorPlay, label: 'Media Studio' },
-  { href: '/studio/camera', icon: Camera, label: 'Live Camera' },
-  { href: '/studio/code', icon: Code2, label: 'Code Sessions' },
-  { href: '/studio/scribe', icon: Mic, label: 'Scribe' },
-  { href: '/studio/teams', icon: Users, label: 'Teams' },
-  { href: '/studio/maia', icon: Sparkles, label: 'MAIA' },
-  { href: '/studio/tools', icon: Wrench, label: 'Tools' },
-  { href: '/studio/settings', icon: Settings, label: 'Settings' },
-];
+import {
+  getVisibleModules,
+  MODULE_DEFINITIONS,
+  type PortalType,
+  type ModuleSlug,
+  type ModuleDefinition,
+} from '@/lib/studio/moduleDefinitions';
 
 export default function StudioLayout({
   children,
@@ -67,11 +29,12 @@ export default function StudioLayout({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [checkingPractitioner, setCheckingPractitioner] = useState(true);
   const [isPractitioner, setIsPractitioner] = useState(false);
+  const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>(MODULE_DEFINITIONS);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
 
-  // Check if user is a practitioner
+  // Check if user is a practitioner and load their modules
   useEffect(() => {
     if (isCreatePage) {
       setCheckingPractitioner(false);
@@ -80,7 +43,6 @@ export default function StudioLayout({
 
     const memberId = getLocalMemberId();
     if (!memberId) {
-      // No member ID - redirect to sign in
       router.replace('/signin');
       return;
     }
@@ -92,13 +54,16 @@ export default function StudioLayout({
 
         if (data.isPractitioner) {
           setIsPractitioner(true);
+
+          // Resolve visible modules from identity
+          const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
+          const enabledModules = data.identity?.enabledModules as ModuleSlug[] | null;
+          setVisibleModules(getVisibleModules(enabledModules, portalType));
         } else {
-          // Not a practitioner - redirect to create
           router.replace('/studio/create');
           return;
         }
       } catch {
-        // Error checking - assume not practitioner
         router.replace('/studio/create');
         return;
       } finally {
@@ -186,16 +151,16 @@ export default function StudioLayout({
           <TeamSwitcher collapsed={collapsed} />
         </div>
 
-        {/* Nav Items - scrollable when content exceeds viewport */}
+        {/* Nav Items - dynamically rendered from enabled modules */}
         <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href ||
-              (item.href !== '/studio' && pathname?.startsWith(item.href));
+          {visibleModules.map((mod) => {
+            const isActive = pathname === mod.href ||
+              (mod.href !== '/studio' && pathname?.startsWith(mod.href));
 
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={mod.href}
+                href={mod.href}
                 className={`
                   flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
                   ${isActive
@@ -203,8 +168,8 @@ export default function StudioLayout({
                     : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'}
                 `}
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                <mod.icon className="w-4 h-4 flex-shrink-0" />
+                {!collapsed && <span>{mod.label}</span>}
               </Link>
             );
           })}

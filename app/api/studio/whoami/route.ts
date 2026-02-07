@@ -57,6 +57,8 @@ export async function GET(request: NextRequest) {
         practitionerId: identity.practitionerId,
         slug: identity.practitionerSlug,
         name: identity.practitionerName,
+        portalType: identity.portalType,
+        enabledModules: identity.enabledModules,
       },
       authMethod,
     });

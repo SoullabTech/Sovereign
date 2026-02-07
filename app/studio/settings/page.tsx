@@ -29,9 +29,21 @@ import {
   Phone,
   Mail,
   ArrowRight,
+  LayoutGrid,
+  Check,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
+import {
+  MODULE_DEFINITIONS,
+  getModulesByCategory,
+  getDefaultModules,
+  CATEGORY_LABELS,
+  validateModuleSlugs,
+  type PortalType,
+  type ModuleSlug,
+  type ModuleCategory,
+} from '@/lib/studio/moduleDefinitions';
 
 interface SettingsSection {
   id: string;
@@ -41,6 +53,7 @@ interface SettingsSection {
 
 const sections: SettingsSection[] = [
   { id: 'profile', label: 'Profile', icon: User },
+  { id: 'modules', label: 'Modules', icon: LayoutGrid },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'time-tracking', label: 'Time Tracking', icon: Clock },
   { id: 'agents', label: 'Agent Defaults', icon: GitBranch },
@@ -324,6 +337,64 @@ function SettingsContent() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  // ─── Module Settings ────────────────────────────────────
+  const [modulePortalType, setModulePortalType] = useState<PortalType>('generalist');
+  const [enabledModules, setEnabledModules] = useState<Set<ModuleSlug>>(new Set());
+  const [modulesLoading, setModulesLoading] = useState(true);
+  const [modulesSaving, setModulesSaving] = useState(false);
+  const [modulesIsDefault, setModulesIsDefault] = useState(true);
+
+  useEffect(() => {
+    async function fetchModules() {
+      try {
+        const response = await apiFetch('/api/studio/modules');
+        const data = await response.json();
+        setModulePortalType(data.portalType ?? 'generalist');
+        setEnabledModules(new Set(data.resolvedModules ?? []));
+        setModulesIsDefault(data.isDefault ?? true);
+      } catch {
+        // fallback
+      } finally {
+        setModulesLoading(false);
+      }
+    }
+    fetchModules();
+  }, []);
+
+  function toggleSettingsModule(slug: ModuleSlug) {
+    const mod = MODULE_DEFINITIONS.find(m => m.slug === slug);
+    if (mod?.alwaysOn) return;
+    setEnabledModules(prev => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  }
+
+  async function saveModules() {
+    setModulesSaving(true);
+    try {
+      await apiFetch('/api/studio/modules', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabledModules: Array.from(enabledModules) }),
+      });
+      setModulesIsDefault(false);
+    } catch {
+      // handle error
+    } finally {
+      setModulesSaving(false);
+    }
+  }
+
+  function resetModulesToDefaults() {
+    const defaults = getDefaultModules(modulePortalType);
+    setEnabledModules(new Set(defaults));
+  }
+
+  const settingsModulesByCategory = getModulesByCategory();
+
   return (
     <div className="min-h-screen bg-slate-950 flex">
       {/* Settings Sidebar */}
@@ -447,6 +518,98 @@ function SettingsContent() {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {activeSection === 'modules' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-1">Modules</h2>
+              <p className="text-sm text-slate-400">
+                Choose which tools appear in your Studio sidebar.
+                Your practice style is <span className="text-amber-400">{modulePortalType}</span>.
+              </p>
+            </div>
+
+            {modulesLoading ? (
+              <div className="flex items-center gap-3 p-8 justify-center">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                <span className="text-slate-400">Loading modules...</span>
+              </div>
+            ) : (
+              <>
+                {(Object.entries(settingsModulesByCategory) as [ModuleCategory, typeof MODULE_DEFINITIONS][]).map(([category, modules]) => {
+                  if (modules.length === 0) return null;
+                  return (
+                    <div key={category}>
+                      <h3 className="text-xs uppercase tracking-wider text-slate-500 mb-3">
+                        {CATEGORY_LABELS[category]}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {modules.map((mod) => {
+                          const isEnabled = enabledModules.has(mod.slug);
+                          const isLocked = mod.alwaysOn;
+                          return (
+                            <button
+                              key={mod.slug}
+                              type="button"
+                              onClick={() => toggleSettingsModule(mod.slug)}
+                              disabled={isLocked}
+                              className={`
+                                flex items-center gap-3 p-3 rounded-lg border text-left transition-all
+                                ${isLocked
+                                  ? 'bg-slate-800/30 border-slate-800 cursor-default'
+                                  : isEnabled
+                                    ? 'bg-teal-500/10 border-teal-500/30 hover:bg-teal-500/15'
+                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700'}
+                              `}
+                            >
+                              <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${
+                                isEnabled || isLocked ? 'bg-teal-500/30' : 'bg-slate-800 border border-slate-600'
+                              }`}>
+                                {(isEnabled || isLocked) && <Check className="w-3 h-3 text-teal-400" />}
+                              </div>
+                              <mod.icon className={`w-4 h-4 flex-shrink-0 ${
+                                isEnabled || isLocked ? 'text-teal-400' : 'text-slate-500'
+                              }`} />
+                              <div className="min-w-0">
+                                <span className={`text-sm ${isEnabled || isLocked ? 'text-white' : 'text-slate-400'}`}>
+                                  {mod.label}
+                                </span>
+                                {isLocked && (
+                                  <span className="text-[10px] text-slate-600 ml-2">Always on</span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="flex items-center gap-3 pt-4">
+                  <button
+                    onClick={saveModules}
+                    disabled={modulesSaving}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors disabled:opacity-50"
+                  >
+                    {modulesSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save Modules
+                  </button>
+                  <button
+                    onClick={resetModulesToDefaults}
+                    className="px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    Reset to defaults
+                  </button>
+                </div>
+
+                <p className="text-xs text-slate-500">
+                  Changes take effect after saving. Reload Studio to see updated sidebar.
+                </p>
+              </>
+            )}
           </div>
         )}
 
