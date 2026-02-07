@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,20 @@ interface WhisperResponse {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
     // Guard: reject non-multipart requests with a clear 415 error
     const ct = request.headers.get('content-type') ?? '';
     if (!ct.includes('multipart/form-data')) {
@@ -168,6 +183,13 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return new Response('SSE not available in static export', { status: 200 });
   }
+
+  // Auth: require authenticated member
+  const memberId = await getMemberIdFromRequest(req);
+  if (!memberId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
   const url = new URL(req.url);
   const sessionId = url.searchParams.get('sessionId');
 

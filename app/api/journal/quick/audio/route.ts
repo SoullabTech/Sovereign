@@ -16,6 +16,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import { query } from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Skip during static export (Capacitor builds)
 
@@ -32,6 +33,20 @@ async function ensureDir(dir: string): Promise<void> {
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth: require authenticated member
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Feature gate: audio uploads disabled by default (local-only policy)
+    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      return NextResponse.json(
+        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { status: 410 }
+      );
+    }
+
     // Guard: reject non-multipart requests with a clear 415 error
     const ct = request.headers.get('content-type') ?? '';
     if (!ct.includes('multipart/form-data')) {
@@ -44,7 +59,8 @@ export async function POST(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const form: any = await request.formData();
 
-    const userId = String(form.get('userId') || '');
+    // Use server-derived identity (never trust client-sent userId)
+    const userId = memberId;
     const entryId = String(form.get('entryId') || '');
     const durationMs = Number(form.get('durationMs') || 0);
     const transcriptSource = String(form.get('transcriptSource') || 'none');
@@ -55,9 +71,9 @@ export async function POST(request: NextRequest) {
 
     const file = form.get('audio') as File | null;
 
-    if (!userId || !entryId || !file) {
+    if (!entryId || !file) {
       return NextResponse.json(
-        { success: false, error: 'Missing userId, entryId, or audio file' },
+        { success: false, error: 'Missing entryId or audio file' },
         { status: 400 }
       );
     }
