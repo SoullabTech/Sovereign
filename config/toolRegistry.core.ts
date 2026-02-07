@@ -1,11 +1,10 @@
 /**
- * Tool Registry - Single Source of Truth for Lab Tools
+ * Tool Registry Core - Pure Data Layer
  *
- * This config defines all available tools in the MAIA Lab.
- * Adding a new tool is a single PR - no database migration needed.
+ * This is the pure-data version of the tool registry with NO React/UI imports.
+ * It can be imported in validators, CI scripts, tests, and non-browser environments.
  *
- * Tools are NOT stored in the database. Only member preferences
- * (which tools they've enabled) live in PostgreSQL.
+ * The UI-enriched version with Lucide icons lives in `toolRegistry.ts`.
  *
  * === CONSCIOUSNESS DOMAIN MODEL ===
  *
@@ -27,38 +26,6 @@
  * Cross-cutting MODES (reflect, regulate, train, track, interpret, create,
  * connect, act) allow filtering across domains.
  */
-
-import {
-  Compass,
-  Sparkles,
-  BookOpen,
-  FileText,
-  Mic,
-  Library,
-  Heart,
-  Download,
-  Upload,
-  User,
-  Globe,
-  Shield,
-  Gift,
-  Brain,
-  Eye,
-  Radio,
-  Star,
-  Zap,
-  Search,
-  Activity,
-  Settings,
-  Users,
-  Moon,
-  Sun,
-  Flame,
-  Wind,
-  Waves,
-  Mountain,
-  type LucideIcon,
-} from 'lucide-react';
 
 // =============================================================================
 // TYPES
@@ -166,7 +133,11 @@ export interface SimpleModeMeta {
   modes: ToolMode[];
 }
 
-export interface LabTool {
+/**
+ * LabToolCore - Pure data version without UI dependencies
+ * Same as LabTool but without the `icon` field (no LucideIcon dependency)
+ */
+export interface LabToolCore {
   /** Unique identifier (kebab-case) */
   id: string;
   /** Display name */
@@ -177,8 +148,6 @@ export interface LabTool {
   longDescription?: string;
   /** Emoji icon (primary) */
   emoji: string;
-  /** Lucide icon (secondary, for consistency) */
-  icon: LucideIcon;
   /** Route path */
   path: string;
   /** Category grouping (domain for consciousness tools, utility category otherwise) */
@@ -477,10 +446,10 @@ export const LEGACY_CATEGORY_MAP: Record<string, ToolCategory> = {
 };
 
 // =============================================================================
-// TOOL REGISTRY
+// TOOL REGISTRY CORE
 // =============================================================================
 
-export const TOOL_REGISTRY: LabTool[] = [
+export const TOOL_REGISTRY_CORE: LabToolCore[] = [
   // ---------------------------------------------------------------------------
   // METAPHYSICAL — Cosmos & Patterns
   // ---------------------------------------------------------------------------
@@ -491,7 +460,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'The Book of Changes. Cast coins or yarrow stalks to receive ancient wisdom through 64 hexagrams, each a mirror for your situation.',
     emoji: '☯️',
-    icon: Compass,
     path: '/oracle/iching',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -508,7 +476,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Draw from the Major and Minor Arcana. Each card is a doorway into symbolic territory—not fortune-telling, but soul-telling.',
     emoji: '🎴',
-    icon: Sparkles,
     path: '/oracle/tarot',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -525,7 +492,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Ancient Norse letter-symbols. Cast runes to receive guidance from the Elder Futhark—24 symbols, each carrying ancestral wisdom.',
     emoji: 'ᛟ',
-    icon: Compass,
     path: '/oracle/runes',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -542,7 +508,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'The unified oracle interface. Choose your system or let MAIA suggest the right one for your question.',
     emoji: '🔮',
-    icon: Compass,
     path: '/oracle',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -559,7 +524,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Your natal chart and current transits. Western, Vedic, Chinese, and Mayan systems available.',
     emoji: '✦',
-    icon: Sun,
     path: '/astrology',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -576,7 +540,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Explore different lens systems for understanding time, personality, and cosmic rhythm.',
     emoji: '🌀',
-    icon: Sparkles,
     path: '/patterns',
     category: 'metaphysical',
     domain: 'metaphysical',
@@ -597,7 +560,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Your private writing space. Voice or text entries that become part of your continuity with MAIA.',
     emoji: '📖',
-    icon: BookOpen,
     path: '/labtools/journal',
     category: 'cognitive',
     domain: 'cognitive',
@@ -614,7 +576,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Key insights extracted from your conversations with MAIA. The signal without the noise.',
     emoji: '✨',
-    icon: Sparkles,
     path: '/labtools/reflections',
     category: 'cognitive',
     domain: 'cognitive',
@@ -631,7 +592,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'A space for longer-form exploration. Hypotheses, experiments, observations from your inner laboratory.',
     emoji: '🧪',
-    icon: FileText,
     path: '/labtools/lab-notes',
     category: 'cognitive',
     domain: 'cognitive',
@@ -648,7 +608,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Quick capture during sessions. Export to your notes app or Obsidian vault.',
     emoji: '📝',
-    icon: Radio,
     path: '/capture',
     category: 'cognitive',
     domain: 'cognitive',
@@ -665,7 +624,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Voice recording with transcription. Capture sessions, meetings, or thoughts in audio form.',
     emoji: '🎙️',
-    icon: Mic,
     path: '/labtools/scribe',
     category: 'cognitive',
     domain: 'cognitive',
@@ -682,7 +640,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Structured protocols for consciousness exploration. Document your findings in a rigorous format.',
     emoji: '📋',
-    icon: Radio,
     path: '/labtools/field-protocol',
     category: 'cognitive',
     domain: 'cognitive',
@@ -699,7 +656,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Engage multiple AI perspectives on complex questions. Claude, DeepSeek, and others weigh in together.',
     emoji: '🧠',
-    icon: Brain,
     path: '/labtools/brain-trust',
     category: 'cognitive',
     domain: 'cognitive',
@@ -716,7 +672,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Quantified insights into your patterns, usage, and consciousness metrics.',
     emoji: '📊',
-    icon: Eye,
     path: '/labtools/field-analytics',
     category: 'cognitive',
     domain: 'cognitive',
@@ -737,7 +692,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'A dedicated space for recording dreams. Symbol tracking and pattern recognition over time.',
     emoji: '🌙',
-    icon: Moon,
     path: '/labtools/dreams',
     category: 'mythic',
     domain: 'mythic',
@@ -755,7 +709,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Visualize your path through archetypal territory. Where have you been? Where are you going?',
     emoji: '🗺️',
-    icon: Compass,
     path: '/journey',
     category: 'mythic',
     domain: 'mythic',
@@ -772,7 +725,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Generate personalized stories drawing from world mythology, folklore, and wisdom traditions.',
     emoji: '📜',
-    icon: Sparkles,
     path: '/labtools/story-creator',
     category: 'mythic',
     domain: 'mythic',
@@ -793,7 +745,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Structured practice with the Spiralogic framework. Track your position, work with elements, follow the spiral.',
     emoji: '🧭',
-    icon: Compass,
     path: '/labtools/navigator',
     category: 'spiritual',
     domain: 'spiritual',
@@ -814,7 +765,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'A 60-120 second guided downshift. Three protocols — Downshift, Energize, Stabilize — with breath-synced visuals, haptics, and subtle tones.',
     emoji: '🫁',
-    icon: Wind,
     path: '/labtools/regulation-minute',
     category: 'somatic',
     domain: 'somatic',
@@ -836,7 +786,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Three steps: Notice, Name, Need. A structured lens for seeing which part of you is active and what it wants. No advice, no interpretation \u2014 just a record.',
     emoji: '🎭',
-    icon: Eye,
     path: '/labtools/parts-check-in',
     category: 'psychological',
     domain: 'psychological',
@@ -858,7 +807,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Four steps: Impact, Ownership, Request, Invitation. Three tones: Gentle, Direct, Neutral. No AI \u2014 just a scaffold for saying what\u2019s true.',
     emoji: '🩹',
-    icon: Heart,
     path: '/labtools/repair-script',
     category: 'relational',
     domain: 'relational',
@@ -880,7 +828,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Present a dilemma and clarify the values at stake. Surfaces tradeoffs, proposes a coherent next step, and names the cost you accept.',
     emoji: '🧭',
-    icon: Compass,
     path: '/labtools/values-compass',
     category: 'philosophical',
     domain: 'philosophical',
@@ -902,7 +849,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Everything you have saved, bookmarked, or created. Your sovereign archive.',
     emoji: '📚',
-    icon: Library,
     path: '/library',
     category: 'library',
     minTier: 'personal',
@@ -916,7 +862,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Saved items',
     longDescription: 'Quick access to your most valued content.',
     emoji: '❤️',
-    icon: Heart,
     path: '/labtools/favorites',
     category: 'library',
     minTier: 'personal',
@@ -930,7 +875,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Access your content',
     longDescription: 'Files and exports you have downloaded from MAIA.',
     emoji: '📥',
-    icon: Download,
     path: '/labtools/downloads',
     category: 'library',
     minTier: 'personal',
@@ -945,7 +889,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Upload documents, images, or data for MAIA to work with.',
     emoji: '📤',
-    icon: Upload,
     path: '/labtools/upload',
     category: 'library',
     minTier: 'personal',
@@ -964,7 +907,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Share invitation beads with people you trust. Each bead carries your endorsement.',
     emoji: '📿',
-    icon: Gift,
     path: '/labtools/beads',
     category: 'community',
     minTier: 'personal',
@@ -979,7 +921,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Early access to new features. Help shape MAIA development.',
     emoji: '⭐',
-    icon: Star,
     path: '/labtools/beta-testing',
     category: 'community',
     minTier: 'personal',
@@ -997,7 +938,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Account & preferences',
     longDescription: 'Your identity settings, avatar, and account details.',
     emoji: '👤',
-    icon: User,
     path: '/labtools/profile',
     category: 'settings',
     minTier: 'personal',
@@ -1011,7 +951,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'MAIA speaks 30+ languages',
     longDescription: 'Choose your preferred language for MAIA interactions.',
     emoji: '🌐',
-    icon: Globe,
     path: '/labtools/language',
     category: 'settings',
     minTier: 'personal',
@@ -1026,7 +965,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Configure MAIA voice, speech speed, and audio preferences.',
     emoji: '🔊',
-    icon: Mic,
     path: '/labtools/voice',
     category: 'settings',
     minTier: 'personal',
@@ -1041,7 +979,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Export, delete, or manage your data. Your sovereignty is not a feature—it is a right.',
     emoji: '🛡️',
-    icon: Shield,
     path: '/labtools/sovereignty',
     category: 'settings',
     minTier: 'personal',
@@ -1055,7 +992,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'App preferences',
     longDescription: 'Theme, notifications, and general application settings.',
     emoji: '⚙️',
-    icon: Settings,
     path: '/labtools/settings',
     category: 'settings',
     minTier: 'personal',
@@ -1074,7 +1010,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Direct access to Claude for coding assistance and technical work.',
     emoji: '⚡',
-    icon: Zap,
     path: '/labtools/claude-code',
     category: 'developer',
     minTier: 'pro',
@@ -1089,7 +1024,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Codebase exploration',
     longDescription: 'Navigate and explore the MAIA codebase structure.',
     emoji: '🔍',
-    icon: Search,
     path: '/labtools/rlm',
     category: 'developer',
     minTier: 'pro',
@@ -1105,7 +1039,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     longDescription:
       'Analyze the structure and patterns of MAIA responses.',
     emoji: '📡',
-    icon: Activity,
     path: '/labtools/ain',
     category: 'developer',
     minTier: 'pro',
@@ -1124,7 +1057,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Feature flags & controls',
     longDescription: 'System-wide configuration and feature toggles.',
     emoji: '🎛️',
-    icon: Settings,
     path: '/labtools/admin/system',
     category: 'admin',
     minTier: 'pro',
@@ -1139,7 +1071,6 @@ export const TOOL_REGISTRY: LabTool[] = [
     shortDescription: 'Manage beta access',
     longDescription: 'Manage beta tester accounts and access.',
     emoji: '👥',
-    icon: Users,
     path: '/labtools/admin/beta-testers',
     category: 'admin',
     minTier: 'pro',
@@ -1199,29 +1130,29 @@ export function getUtilityCategoriesInOrder(): UtilityCategory[] {
 // -- Tool queries --
 
 /** Get all tools in a category */
-export function getToolsByCategory(category: ToolCategory): LabTool[] {
-  return TOOL_REGISTRY.filter((tool) => tool.category === category).sort(
+export function getToolsByCategory(category: ToolCategory): LabToolCore[] {
+  return TOOL_REGISTRY_CORE.filter((tool) => tool.category === category).sort(
     (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
   );
 }
 
 /** Get all tools in a consciousness domain */
-export function getToolsByDomain(domain: ConsciousnessDomain): LabTool[] {
-  return TOOL_REGISTRY.filter((tool) => tool.domain === domain).sort(
+export function getToolsByDomain(domain: ConsciousnessDomain): LabToolCore[] {
+  return TOOL_REGISTRY_CORE.filter((tool) => tool.domain === domain).sort(
     (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
   );
 }
 
 /** Get all tools matching a mode */
-export function getToolsByMode(mode: ToolMode): LabTool[] {
-  return TOOL_REGISTRY.filter((tool) => tool.modes?.includes(mode)).sort(
+export function getToolsByMode(mode: ToolMode): LabToolCore[] {
+  return TOOL_REGISTRY_CORE.filter((tool) => tool.modes?.includes(mode)).sort(
     (a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)
   );
 }
 
 /** Get a tool by ID */
-export function getToolById(id: string): LabTool | undefined {
-  return TOOL_REGISTRY.find((tool) => tool.id === id);
+export function getToolById(id: string): LabToolCore | undefined {
+  return TOOL_REGISTRY_CORE.find((tool) => tool.id === id);
 }
 
 /** Get all categories in display order (domains first, then utilities) */
@@ -1233,16 +1164,16 @@ export function getCategoriesInOrder(): ToolCategory[] {
 }
 
 /** Get default enabled tools (starter kit) */
-export function getDefaultEnabledTools(): LabTool[] {
-  return TOOL_REGISTRY.filter((tool) => tool.defaultEnabled);
+export function getDefaultEnabledTools(): LabToolCore[] {
+  return TOOL_REGISTRY_CORE.filter((tool) => tool.defaultEnabled);
 }
 
 /** Get tools available for a given tier */
-export function getToolsForTier(tier: Tier): LabTool[] {
+export function getToolsForTier(tier: Tier): LabToolCore[] {
   const tierRank: Record<Tier, number> = { free: 0, personal: 1, pro: 2 };
   const userRank = tierRank[tier];
 
-  return TOOL_REGISTRY.filter((tool) => {
+  return TOOL_REGISTRY_CORE.filter((tool) => {
     const toolRank = tierRank[tool.minTier];
     return toolRank <= userRank;
   });
@@ -1250,7 +1181,7 @@ export function getToolsForTier(tier: Tier): LabTool[] {
 
 /** Check if a tool is accessible for a given tier and role */
 export function isToolAccessible(
-  tool: LabTool,
+  tool: LabToolCore,
   tier: Tier,
   role?: string
 ): boolean {
@@ -1283,19 +1214,19 @@ export function getDefaultModeForDomain(domain: ConsciousnessDomain): SimpleMode
 }
 
 /** Get tools matching a simple mode (any of its constituent detailed modes) */
-export function getToolsBySimpleMode(simpleMode: SimpleMode): LabTool[] {
+export function getToolsBySimpleMode(simpleMode: SimpleMode): LabToolCore[] {
   const modes = SIMPLE_MODE_MAP[simpleMode];
-  return TOOL_REGISTRY.filter(
+  return TOOL_REGISTRY_CORE.filter(
     (tool) => tool.modes?.some((m) => modes.includes(m))
   ).sort((a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99));
 }
 
 /** Search tools by query (searches label, description, tags, domain, and modes) */
-export function searchTools(query: string): LabTool[] {
+export function searchTools(query: string): LabToolCore[] {
   const q = query.toLowerCase().trim();
-  if (!q) return TOOL_REGISTRY;
+  if (!q) return TOOL_REGISTRY_CORE;
 
-  return TOOL_REGISTRY.filter((tool) => {
+  return TOOL_REGISTRY_CORE.filter((tool) => {
     return (
       tool.label.toLowerCase().includes(q) ||
       tool.shortDescription.toLowerCase().includes(q) ||
@@ -1312,7 +1243,7 @@ export function getToolCountByCategory(): Record<ToolCategory, number> {
   const counts = {} as Record<ToolCategory, number>;
 
   for (const category of Object.keys(CATEGORY_META) as ToolCategory[]) {
-    counts[category] = TOOL_REGISTRY.filter(
+    counts[category] = TOOL_REGISTRY_CORE.filter(
       (t) => t.category === category
     ).length;
   }
@@ -1340,7 +1271,7 @@ export function validateRegistry(): { valid: boolean; errors: string[] } {
   const seenIds = new Set<string>();
   const validModes = new Set<string>(Object.keys(MODE_META));
 
-  for (const tool of TOOL_REGISTRY) {
+  for (const tool of TOOL_REGISTRY_CORE) {
     // Duplicate ID check
     if (seenIds.has(tool.id)) {
       errors.push(`Duplicate tool ID: "${tool.id}"`);
@@ -1414,104 +1345,10 @@ export function validateRegistry(): { valid: boolean; errors: string[] } {
   return { valid: errors.length === 0, errors };
 }
 
-// =============================================================================
-// DEV-ONLY HEATMAP DIAGNOSTIC
-// =============================================================================
-
-/**
- * Print a Domain x Mode heatmap to the console.
- * Shows where the consciousness map is rich vs empty.
- *
- * Output format:
- *   Domain       | Reflect | Track.. | Make M. | Regul. | Pract. | Create | Act    | Relate | TOTAL
- *   -------------|---------|---------|--------|--------|--------|--------|--------|--------|------
- *   somatic      |    0    |    0    |    0   |    1   |    0   |    0   |    0   |    0   |   1
- *   ...
- *   -------------|---------|---------|--------|--------|--------|--------|--------|--------|------
- *   TOTAL        |    X    |    X    |    X   |    X   |    X   |    X   |    X   |    X   |  XX
- *
- * Call from browser console: `window.__registryHeatmap()`
- */
-export function printRegistryHeatmap(): void {
-  const domains = getDomainsInOrder();
-  const modes = Object.keys(MODE_META) as ToolMode[];
-
-  // Build count matrix
-  const matrix: Record<string, Record<string, number>> = {};
-  const modeTotals: Record<string, number> = {};
-  for (const mode of modes) modeTotals[mode] = 0;
-
-  for (const domain of domains) {
-    matrix[domain] = {};
-    for (const mode of modes) {
-      const count = TOOL_REGISTRY.filter(
-        (t) => t.domain === domain && t.modes?.includes(mode)
-      ).length;
-      matrix[domain][mode] = count;
-      modeTotals[mode] += count;
-    }
-  }
-
-  // Format for console
-  const modeLabels = modes.map((m) => MODE_META[m].label.slice(0, 7).padEnd(7));
-  const divider = '-'.repeat(14) + '|' + modeLabels.map(() => '---------').join('|') + '|-------';
-
-  console.log('\n[ToolRegistry] Domain x Mode Heatmap\n');
-  console.log(
-    '  ' + 'Domain'.padEnd(13) + '| ' + modeLabels.join(' | ') + ' | TOTAL'
-  );
-  console.log('  ' + divider);
-
-  for (const domain of domains) {
-    const alias = DOMAIN_META[domain].alias.slice(0, 12).padEnd(13);
-    const tier = DOMAIN_META[domain].tier;
-    const cells = modes.map((m) => {
-      const count = matrix[domain][m];
-      return (count === 0 ? '  ·  ' : `  ${count}  `).padEnd(7);
-    });
-    const total = modes.reduce((sum, m) => sum + matrix[domain][m], 0);
-    const tierMark = tier === 'foundation' ? '' : tier === 'meaning' ? ' ~' : ' ^';
-    console.log(
-      '  ' + alias + '| ' + cells.join(' | ') + ' |  ' + String(total).padEnd(3) + tierMark
-    );
-  }
-
-  console.log('  ' + divider);
-  const totalCells = modes.map((m) => (`  ${modeTotals[m]}  `).padEnd(7));
-  const grandTotal = Object.values(modeTotals).reduce((a, b) => a + b, 0);
-  console.log(
-    '  ' + 'TOTAL'.padEnd(13) + '| ' + totalCells.join(' | ') + ' |  ' + grandTotal
-  );
-
-  // Summary
-  const emptyDomains = domains.filter(
-    (d) => modes.every((m) => matrix[d][m] === 0)
-  );
-  const emptyModes = modes.filter((m) => modeTotals[m] === 0);
-  const comingSoonCount = TOOL_REGISTRY.filter((t) => t.comingSoon).length;
-  const liveCount = TOOL_REGISTRY.filter((t) => t.domain && !t.comingSoon).length;
-
-  console.log('\n  Legend: · = empty  ~ = meaning tier  ^ = vertical tier');
-  console.log(`  Live tools: ${liveCount}  |  Coming soon: ${comingSoonCount}`);
-  if (emptyDomains.length > 0) {
-    console.log(`  Empty domains: ${emptyDomains.map((d) => DOMAIN_META[d].alias).join(', ')}`);
-  }
-  if (emptyModes.length > 0) {
-    console.log(`  Empty modes: ${emptyModes.map((m) => MODE_META[m].label).join(', ')}`);
-  }
-  console.log('');
-}
-
-// Run validation and heatmap in development
+// Run validation in development
 if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
   const result = validateRegistry();
   if (!result.valid) {
-    console.warn('[ToolRegistry] Invariant violations:', result.errors);
+    console.warn('[ToolRegistry.Core] Invariant violations:', result.errors);
   }
-}
-
-// Expose heatmap on window for browser console access
-if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).__registryHeatmap = printRegistryHeatmap;
 }

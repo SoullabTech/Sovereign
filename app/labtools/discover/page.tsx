@@ -1,13 +1,13 @@
 'use client';
 
 /**
- * Discover Tools - The Catalog
+ * Discover Tools - The Consciousness Map
  *
- * This is browsing, not shopping. Exploring, not selecting.
- * Each tool is presented with enough context to spark curiosity.
+ * Tools organized by 8 domains of conscious experience,
+ * grouped into three tiers: Foundation, Meaning, Vertical.
  *
- * The vibe: wandering through a cabinet of curiosities.
- * Serious instruments, presented playfully.
+ * The vibe: a map of lived experience, not a feature catalog.
+ * Empty domains are inviting spaces, not missing features.
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
@@ -17,27 +17,57 @@ import { ArrowLeft, Search, X, Sparkles, Check, Lightbulb } from 'lucide-react';
 import { useMemberTools } from '@/hooks/useMemberTools';
 import { DiscoverCard } from '@/components/labtools/DiscoverCard';
 import { CategoryChips } from '@/components/labtools/CategoryChips';
+import { ModeChips, resolveModeFilter, type ModeFilterValue } from '@/components/labtools/ModeChips';
 import {
   TOOL_REGISTRY,
   CATEGORY_META,
+  DOMAIN_META,
+  UTILITY_META,
   searchTools,
   getToolsByCategory,
+  getDomainsInOrder,
+  getUtilityCategoriesInOrder,
+  getDomainsByTier,
+  isConsciousnessDomain,
   type ToolCategory,
+  type ToolMode,
+  type ConsciousnessDomain,
   type Tier,
 } from '@/config/toolRegistry';
 
+const TIER_LABELS: Record<string, { label: string; description: string }> = {
+  foundation: { label: 'Foundation', description: 'The ground of horizontal life' },
+  meaning: { label: 'Meaning', description: 'Where coherence forms' },
+  vertical: { label: 'Vertical', description: 'The transpersonal dimension' },
+};
+
 export default function DiscoverPage() {
   const router = useRouter();
-  const { isToolEnabled, addTool, removeTool, refresh } = useMemberTools();
+  const { isToolEnabled, addTool, removeTool } = useMemberTools();
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ToolCategory | 'all'>('all');
+  const [selectedMode, setSelectedMode] = useState<ModeFilterValue>('all');
   const [loadingToolId, setLoadingToolId] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
 
   // TODO: Get actual member tier from auth context
   const memberTier: Tier = 'personal';
+
+  // When a domain is selected, auto-activate its default mode
+  const handleCategorySelect = useCallback((cat: ToolCategory | 'all') => {
+    setSelectedCategory(cat);
+    if (cat !== 'all' && isConsciousnessDomain(cat)) {
+      const domain = cat as ConsciousnessDomain;
+      setSelectedMode(DOMAIN_META[domain].defaultMode);
+    } else {
+      setSelectedMode('all');
+    }
+  }, []);
+
+  // Resolve mode filter into concrete ToolMode[] (or null for 'all')
+  const resolvedModes = useMemo(() => resolveModeFilter(selectedMode), [selectedMode]);
 
   // Filtered tools
   const filteredTools = useMemo(() => {
@@ -47,6 +77,11 @@ export default function DiscoverPage() {
         ? TOOL_REGISTRY
         : getToolsByCategory(selectedCategory);
 
+    // Filter by mode(s) if selected
+    if (resolvedModes) {
+      tools = tools.filter((t) => t.modes?.some((m) => resolvedModes.includes(m)));
+    }
+
     // Sort: enabled first, then by popularity
     return tools.sort((a, b) => {
       const aEnabled = isToolEnabled(a.id);
@@ -54,28 +89,54 @@ export default function DiscoverPage() {
       if (aEnabled !== bEnabled) return aEnabled ? -1 : 1;
       return (a.popularityRank ?? 99) - (b.popularityRank ?? 99);
     });
-  }, [searchQuery, selectedCategory, isToolEnabled]);
+  }, [searchQuery, selectedCategory, resolvedModes, isToolEnabled]);
 
-  // Group tools by category for display
-  const toolsByCategory = useMemo(() => {
-    if (selectedCategory !== 'all' || searchQuery) {
-      // Show flat list when filtering
-      return null;
-    }
+  // Group tools by domain (for "all" view, no search/filter)
+  const showGroupedView = selectedCategory === 'all' && !searchQuery;
 
-    // Group by category
-    const groups = new Map<ToolCategory, typeof filteredTools>();
-    for (const tool of filteredTools) {
-      const list = groups.get(tool.category) || [];
-      list.push(tool);
-      groups.set(tool.category, list);
-    }
+  // Domain groups organized by tier
+  const domainGroups = useMemo(() => {
+    if (!showGroupedView) return null;
 
-    // Sort categories by default order
-    return Array.from(groups.entries()).sort(
-      (a, b) => CATEGORY_META[a[0]].defaultOrder - CATEGORY_META[b[0]].defaultOrder
-    );
-  }, [filteredTools, selectedCategory, searchQuery]);
+    const tiers = ['foundation', 'meaning', 'vertical'] as const;
+    return tiers.map((tier) => {
+      const domains = getDomainsByTier(tier);
+      return {
+        tier,
+        ...TIER_LABELS[tier],
+        domains: domains.map((domain) => {
+          let tools = TOOL_REGISTRY.filter((t) => t.domain === domain);
+          if (resolvedModes) {
+            tools = tools.filter((t) => t.modes?.some((m) => resolvedModes.includes(m)));
+          }
+          return {
+            domain,
+            meta: DOMAIN_META[domain],
+            tools: tools.sort((a, b) => {
+              const aEnabled = isToolEnabled(a.id);
+              const bEnabled = isToolEnabled(b.id);
+              if (aEnabled !== bEnabled) return aEnabled ? -1 : 1;
+              return (a.popularityRank ?? 99) - (b.popularityRank ?? 99);
+            }),
+          };
+        }),
+      };
+    });
+  }, [showGroupedView, resolvedModes, isToolEnabled]);
+
+  // Utility tools (for the bottom section)
+  const utilityGroups = useMemo(() => {
+    if (!showGroupedView) return null;
+
+    return getUtilityCategoriesInOrder().map((cat) => {
+      const tools = TOOL_REGISTRY.filter((t) => t.category === cat);
+      return {
+        category: cat,
+        meta: UTILITY_META[cat],
+        tools: tools.sort((a, b) => (a.popularityRank ?? 99) - (b.popularityRank ?? 99)),
+      };
+    }).filter((g) => g.tools.length > 0);
+  }, [showGroupedView]);
 
   // Handle tool toggle
   const handleToggle = useCallback(
@@ -105,16 +166,8 @@ export default function DiscoverPage() {
   // Count enabled tools
   const enabledCount = TOOL_REGISTRY.filter((t) => isToolEnabled(t.id)).length;
 
-  // Categories that have tools (for chips)
-  const categoriesWithTools = useMemo(() => {
-    const cats = new Set<ToolCategory>();
-    for (const tool of TOOL_REGISTRY) {
-      cats.add(tool.category);
-    }
-    return Array.from(cats).sort(
-      (a, b) => CATEGORY_META[a].defaultOrder - CATEGORY_META[b].defaultOrder
-    );
-  }, []);
+  // Domain categories for chips (only domains, not utilities)
+  const domainCategories = useMemo(() => getDomainsInOrder(), []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
@@ -162,7 +215,7 @@ export default function DiscoverPage() {
             Discover Tools
           </h1>
           <p className="text-white/50 text-sm">
-            Instruments for exploration, reflection, and transformation
+            Instruments for the 8 domains of conscious experience
           </p>
         </motion.div>
 
@@ -190,12 +243,20 @@ export default function DiscoverPage() {
           )}
         </div>
 
-        {/* Category Chips */}
-        <div className="mb-8">
+        {/* Domain Chips (primary filter) */}
+        <div className="mb-3">
           <CategoryChips
             selected={selectedCategory}
-            onSelect={setSelectedCategory}
-            categories={categoriesWithTools}
+            onSelect={handleCategorySelect}
+            categories={domainCategories}
+          />
+        </div>
+
+        {/* Mode Chips (cross-cutting filter) */}
+        <div className="mb-8">
+          <ModeChips
+            selected={selectedMode}
+            onSelect={setSelectedMode}
           />
         </div>
 
@@ -217,45 +278,133 @@ export default function DiscoverPage() {
           )}
         </AnimatePresence>
 
-        {/* Tools Grid */}
+        {/* Tools Display */}
         <LayoutGroup>
-          {toolsByCategory ? (
-            // Grouped by category
-            <div className="space-y-10">
-              {toolsByCategory.map(([category, tools]) => (
-                <motion.section
-                  key={category}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  {/* Category header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-xl">{CATEGORY_META[category].emoji}</span>
-                    <h2 className="text-sm font-medium text-white/70 uppercase tracking-wide">
-                      {CATEGORY_META[category].label}
+          {showGroupedView && domainGroups ? (
+            // Grouped by domain tiers
+            <div className="space-y-12">
+              {domainGroups.map(({ tier, label, description, domains }) => (
+                <div key={tier}>
+                  {/* Tier header */}
+                  <div className="mb-6">
+                    <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-1">
+                      {label}
                     </h2>
-                    <span className="text-xs text-white/30">{tools.length}</span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                    <p className="text-xs text-white/25">{description}</p>
                   </div>
 
-                  {/* Tools */}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {tools.map((tool) => (
-                      <DiscoverCard
-                        key={tool.id}
-                        tool={tool}
-                        isEnabled={isToolEnabled(tool.id)}
-                        memberTier={memberTier}
-                        onToggle={handleToggle}
-                        isLoading={loadingToolId === tool.id}
-                      />
+                  {/* Domains in this tier */}
+                  <div className="space-y-10">
+                    {domains.map(({ domain, meta, tools }) => (
+                      <motion.section
+                        key={domain}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {/* Domain header */}
+                        <div className="flex items-start gap-3 mb-2">
+                          <span className="text-2xl">{meta.emoji}</span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-sm font-medium text-white/80 uppercase tracking-wide">
+                                {meta.alias}
+                              </h3>
+                              <span className="text-xs text-white/30">
+                                {meta.label}
+                              </span>
+                              {tools.length > 0 && (
+                                <span className="text-xs text-white/20">{tools.length}</span>
+                              )}
+                              <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                            </div>
+                            <p className="text-xs text-white/25 mt-1 max-w-lg leading-relaxed">
+                              {meta.longDescription}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Tools or empty state */}
+                        {tools.length > 0 ? (
+                          <div className="grid gap-4 sm:grid-cols-2 ml-9">
+                            {tools.map((tool) => (
+                              <DiscoverCard
+                                key={tool.id}
+                                tool={tool}
+                                isEnabled={isToolEnabled(tool.id)}
+                                memberTier={memberTier}
+                                onToggle={handleToggle}
+                                isLoading={loadingToolId === tool.id}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="ml-9 py-6 px-4 rounded-xl bg-white/[0.01] border border-dashed border-white/[0.06] text-center">
+                            <p className="text-xs text-white/25">
+                              No tools here yet.
+                            </p>
+                            <button
+                              onClick={() => router.push('/labtools/suggest')}
+                              className="mt-2 text-xs text-[#D4B896]/50 hover:text-[#D4B896]/80 transition-colors"
+                            >
+                              Suggest one
+                            </button>
+                          </div>
+                        )}
+                      </motion.section>
                     ))}
                   </div>
-                </motion.section>
+                </div>
               ))}
+
+              {/* Utility section */}
+              {utilityGroups && utilityGroups.length > 0 && (
+                <div>
+                  {/* Utility header */}
+                  <div className="mb-6 pt-4 border-t border-white/[0.04]">
+                    <h2 className="text-xs font-medium text-white/30 uppercase tracking-widest mb-1">
+                      Lab Infrastructure
+                    </h2>
+                    <p className="text-xs text-white/20">Settings, collections, and system tools</p>
+                  </div>
+
+                  <div className="space-y-8">
+                    {utilityGroups.map(({ category, meta, tools }) => (
+                      <motion.section
+                        key={category}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {/* Category header */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <span className="text-xl">{meta.emoji}</span>
+                          <h3 className="text-sm font-medium text-white/50 uppercase tracking-wide">
+                            {meta.label}
+                          </h3>
+                          <span className="text-xs text-white/20">{tools.length}</span>
+                          <div className="flex-1 h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
+                        </div>
+
+                        {/* Tools */}
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {tools.map((tool) => (
+                            <DiscoverCard
+                              key={tool.id}
+                              tool={tool}
+                              isEnabled={isToolEnabled(tool.id)}
+                              memberTier={memberTier}
+                              onToggle={handleToggle}
+                              isLoading={loadingToolId === tool.id}
+                            />
+                          ))}
+                        </div>
+                      </motion.section>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            // Flat list (filtered)
+            // Flat list (filtered by search, category, or mode)
             <div className="grid gap-4 sm:grid-cols-2">
               <AnimatePresence mode="popLayout">
                 {filteredTools.map((tool) => (
@@ -274,7 +423,7 @@ export default function DiscoverPage() {
         </LayoutGroup>
 
         {/* Empty state */}
-        {filteredTools.length === 0 && (
+        {filteredTools.length === 0 && !showGroupedView && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -288,10 +437,11 @@ export default function DiscoverPage() {
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('all');
+                setSelectedMode('all');
               }}
               className="mt-4 text-sm text-[#D4B896]/70 hover:text-[#D4B896]"
             >
-              Clear filters
+              Clear all filters
             </button>
           </motion.div>
         )}
@@ -324,7 +474,7 @@ export default function DiscoverPage() {
               </div>
             </div>
             <div className="text-amber-400/50 group-hover:text-amber-400 transition-colors">
-              →
+              &rarr;
             </div>
           </button>
         </motion.div>
@@ -337,7 +487,7 @@ export default function DiscoverPage() {
           className="mt-8 text-center pb-8"
         >
           <p className="text-xs text-white/30 max-w-md mx-auto">
-            {TOOL_REGISTRY.length} tools available.
+            {TOOL_REGISTRY.length} tools across 8 domains of consciousness.
             Add what serves you. Remove what doesn't.
           </p>
         </motion.div>

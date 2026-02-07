@@ -24,15 +24,16 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { CATEGORY_META, type ToolCategory } from '@/config/toolRegistry';
 
-// Categories available for suggestions (exclude admin/developer)
+// Consciousness domains available for suggestions
 const SUGGESTION_CATEGORIES: ToolCategory[] = [
-  'oracles',
-  'reflection',
-  'training',
-  'patterns',
-  'library',
-  'community',
-  'advanced',
+  'somatic',
+  'cognitive',
+  'psychological',
+  'relational',
+  'mythic',
+  'philosophical',
+  'spiritual',
+  'metaphysical',
 ];
 
 interface FormData {
