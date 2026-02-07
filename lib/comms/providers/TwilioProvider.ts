@@ -125,7 +125,6 @@ export class TwilioProvider implements CommsProvider {
         Body: payload.bodyText,
       });
 
-      // Prefer Messaging Service SID for A2P 10DLC compliance, fall back to From number
       if (messaging_service_sid) {
         body.append('MessagingServiceSid', messaging_service_sid);
       } else {
