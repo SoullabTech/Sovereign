@@ -12,7 +12,7 @@ import { query } from '@/lib/db/postgres';
 import type { PractitionerClient, PractitionerSession } from '@/lib/stellium/types';
 import type { MessageDigest, ClientMessage } from '@/lib/practitioner/messages';
 import { getMessageDigest } from '@/lib/practitioner/messages';
-import { decryptJoinedClientFields } from '@/lib/stellium/clients';
+import { decryptJoinedClientFields, resolveClientDisplayName } from '@/lib/stellium/clients';
 import {
   encryptEmergencyInfoPatch,
   decryptEmergencyInfoRow,
@@ -20,9 +20,11 @@ import {
 } from '@/lib/security/phiAccessors/emergencyInfo';
 
 // SQL fragment for selecting encrypted client name columns in JOINs
+// client_display_name is the canonical plaintext fallback (COALESCE)
 const CLIENT_NAME_JOIN_COLUMNS = `
   c.name as client_name,
   c.preferred_name as client_preferred_name,
+  COALESCE(c.preferred_name, c.name) as client_display_name,
   c.name_enc as client_name_enc,
   c.name_enc_meta as client_name_enc_meta,
   c.preferred_name_enc as client_preferred_name_enc,
@@ -552,7 +554,7 @@ export async function getUpcomingSessionsWithPrep(
       client: {
         id: row.client_id,
         name: decrypted.client_name || row.client_name,
-        preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+        preferred_name: resolveClientDisplayName(row, decrypted),
         email: row.client_email,
         phone: row.client_phone,
         total_sessions: row.client_total_sessions,
