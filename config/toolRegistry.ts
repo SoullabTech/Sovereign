@@ -805,8 +805,26 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // SOMATIC — Body
+  // SOMATIC — Body (Orient -> Regulate -> Sense)
   // ---------------------------------------------------------------------------
+  {
+    id: 'orienting',
+    label: 'Orienting',
+    shortDescription: 'Expand your field, return to the room',
+    longDescription:
+      'A 30-90s perceptual sequence that widens your sensory field through simple orientation prompts. Look, listen, touch, settle. The nervous system entry ramp.',
+    emoji: '👁',
+    icon: Eye,
+    path: '/labtools/orienting',
+    category: 'somatic',
+    domain: 'somatic',
+    modes: ['regulate'],
+    minTier: 'free',
+    tags: ['orient', 'grounding', 'somatic', 'nervous-system', 'safety', 'perception'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 1,
+  },
   {
     id: 'regulation-minute',
     label: 'Regulation Minute',
@@ -823,7 +841,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     tags: ['breath', 'nervous-system', 'regulation', 'grounding', 'reset', 'downshift', 'somatic'],
     defaultEnabled: true,
     isNew: true,
-    popularityRank: 1,
+    popularityRank: 2,
   },
 
   // ---------------------------------------------------------------------------
