@@ -240,6 +240,7 @@ export default function SessionsPage() {
                       key={booking.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
+                      onClick={() => router.push(`/studio/sessions/${booking.id}`)}
                       className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 hover:border-slate-700/50 transition-colors cursor-pointer group"
                     >
                       <div className="flex items-start justify-between">
