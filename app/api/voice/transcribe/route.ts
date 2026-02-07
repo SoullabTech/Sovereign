@@ -49,6 +49,15 @@ export async function POST(req: NextRequest) {
 
     // Feature gate: audio uploads disabled by default (local-only policy)
     if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+      await logAudioUsageEvent({
+        memberId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: 0,
+        status: "rejected",
+        errorCode: "FEATURE_DISABLED",
+        meta: { reason: "ALLOW_AUDIO_UPLOADS not enabled" },
+      });
       return NextResponse.json(
         { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
         { status: 410 }
@@ -80,6 +89,15 @@ export async function POST(req: NextRequest) {
     const entitlements = await getEntitlements(userId);
 
     if (!entitlements.features.voiceTranscription) {
+      await logAudioUsageEvent({
+        memberId: userId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "TIER_GATE",
+        meta: { tier: entitlements.tier, reason: "voiceTranscription not enabled" },
+      });
       return NextResponse.json(
         {
           success: false,
@@ -95,6 +113,15 @@ export async function POST(req: NextRequest) {
     const estimatedSeconds = Math.ceil(file.size / 16000); // rough PCM estimate
 
     if (usage.seconds + estimatedSeconds > entitlements.limits.voiceSecondsPerDay) {
+      await logAudioUsageEvent({
+        memberId: userId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "DAILY_LIMIT",
+        meta: { usedSeconds: usage.seconds, limitSeconds: entitlements.limits.voiceSecondsPerDay },
+      });
       return NextResponse.json(
         {
           success: false,
@@ -135,6 +162,15 @@ export async function POST(req: NextRequest) {
 
     // Validate file size (max 25MB for Whisper API)
     if (file.size > 25 * 1024 * 1024) {
+      await logAudioUsageEvent({
+        memberId: userId,
+        route: "/api/voice/transcribe",
+        kind: "transcription",
+        bytes: file.size,
+        status: "rejected",
+        errorCode: "SIZE_LIMIT",
+        meta: { maxBytes: 25 * 1024 * 1024 },
+      });
       return NextResponse.json(
         { success: false, error: "File too large. Maximum size is 25MB" },
         { status: 413 }

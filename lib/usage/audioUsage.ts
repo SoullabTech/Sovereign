@@ -9,7 +9,7 @@
 
 import { query } from "@/lib/db/postgres";
 
-export type AudioUsageStatus = "accepted" | "ok" | "error" | "blocked";
+export type AudioUsageStatus = "accepted" | "ok" | "error" | "blocked" | "rejected";
 
 export type AudioUsageEvent = {
   memberId: string;
