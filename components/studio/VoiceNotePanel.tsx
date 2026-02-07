@@ -189,7 +189,7 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: sessionId,
-          practitioner_notes: draftedNote,
+          practitionerNotes: draftedNote,
         }),
       });
 
