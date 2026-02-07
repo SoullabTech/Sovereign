@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
+import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
 
 interface SessionDetail {
   id: string;
@@ -274,6 +275,11 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Pre-Session Briefing */}
+          {session.client_id && (
+            <SessionBriefingCard sessionId={sessionId} />
+          )}
+
           {/* Payment Info */}
           {session.price_cents !== null && (
             <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
