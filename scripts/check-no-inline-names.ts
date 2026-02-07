@@ -2,7 +2,7 @@
 /**
  * NO INLINE NAME LOGIC ENFORCEMENT
  *
- * Blocks scattered preferred_name || name patterns in tracked code.
+ * Blocks scattered preferred_name / name resolution patterns in tracked code.
  * All name resolution must go through the canonical resolvers:
  *   - resolveClientDisplayName()  (lib/stellium/clients.ts)
  *   - resolveMemberDisplayName()  (lib/stellium/clients.ts)
@@ -10,6 +10,8 @@
  * This prevents the "preferred_name drift" bug class where names
  * silently render as null/undefined because inline logic doesn't
  * handle missing columns, encryption fallbacks, or null chains.
+ *
+ * Catches all operator spellings: ||, ??, ternary (? :)
  *
  * @see CLAUDE.md - "Never render a name via inline logic"
  */
@@ -21,10 +23,17 @@ import path from "node:path";
 type Hit = { file: string; line: number; text: string };
 
 const BANNED_PATTERNS: Array<{ name: string; re: RegExp }> = [
-  // preferred_name || name (the classic drift pattern)
+  // --- || operator (the classic drift pattern) ---
   { name: "preferred_name || name", re: /\.preferred_name\s*\|\|\s*\S*\.?name/g },
-  // name || preferred_name (reversed — even more dangerous)
   { name: "name || preferred_name", re: /\.name\s*\|\|\s*\S*\.?preferred_name/g },
+
+  // --- ?? operator (nullish coalescing — same drift, different spelling) ---
+  { name: "preferred_name ?? name", re: /\.preferred_name\s*\?\?\s*\S*\.?name/g },
+  { name: "name ?? preferred_name", re: /\.name\s*\?\?\s*\S*\.?preferred_name/g },
+
+  // --- ternary (preferred_name ? preferred_name : name) ---
+  { name: "preferred_name ? ... : name", re: /\.preferred_name\s*\?\s*\S*\.?preferred_name\s*:\s*\S*\.?name/g },
+  { name: "name ? ... : preferred_name", re: /\.name\s*\?\s*\S*\.?name\s*:\s*\S*\.?preferred_name/g },
 ];
 
 // Only scan these extensions
