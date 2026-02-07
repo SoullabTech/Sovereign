@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { generateGenesisChapter, BirthChartData } from '@/lib/story/storyWeaver';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 export const dynamic = 'force-dynamic';
 
@@ -197,7 +198,7 @@ export async function POST(req: NextRequest) {
       `SELECT name, preferred_name FROM members WHERE id = $1`,
       [session.memberId]
     );
-    const memberName = member?.preferred_name || member?.name || 'Soul';
+    const memberName = resolveMemberDisplayName(member, 'Soul');
 
     // Extract key themes from chart
     const keyThemes = extractKeyThemes(chartData);

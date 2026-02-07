@@ -14,6 +14,7 @@ import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
 import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import {
   checkRateLimit,
   resetRateLimit,
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
         id: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         tier: member.tier || 'free',

@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getClientStats } from '@/lib/stellium/clients';
+import { getClientStats, resolveClientDisplayName } from '@/lib/stellium/clients';
 import {
   getSessionStats,
   getUpcomingSessions,
@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
       actionItems.push({
         type: 'follow_up',
         priority: 'high',
-        title: `Send follow-up to ${session.client?.preferred_name || session.client?.name || 'client'}`,
+        title: `Send follow-up to ${resolveClientDisplayName(session.client, null)}`,
         description: `Session completed - no follow-up sent yet`,
         data: {
           sessionId: session.id,
@@ -243,7 +243,7 @@ export async function GET(request: NextRequest) {
       actionItems.push({
         type: 'upcoming',
         priority: 'high',
-        title: `Session with ${session.client?.preferred_name || session.client?.name || 'client'} today`,
+        title: `Session with ${resolveClientDisplayName(session.client, null)} today`,
         description: new Date(session.scheduled_at!).toLocaleTimeString([], {
           hour: '2-digit',
           minute: '2-digit',

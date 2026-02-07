@@ -218,7 +218,7 @@ export function resolveClientDisplayName(
   row: Record<string, any> | null | undefined,
   decrypted: { client_preferred_name?: string | null; client_name?: string | null } | null | undefined
 ): string {
-  return (
+  const resolved =
     decrypted?.client_preferred_name ||
     decrypted?.client_name ||
     row?.client_display_name ||
@@ -226,7 +226,38 @@ export function resolveClientDisplayName(
     row?.client_name ||
     row?.preferred_name ||
     row?.name ||
-    'Client'
+    null;
+
+  if (!resolved && process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[resolveClientDisplayName] fell back to "Client" — missing name data for id=${row?.client_id || row?.id || 'unknown'}`
+    );
+  }
+
+  return resolved || 'Client';
+}
+
+/**
+ * Resolve a single canonical display name for a member.
+ *
+ * Priority chain:
+ *   1. preferred_name (members table, plaintext)
+ *   2. name (members table, plaintext)
+ *   3. username (members table, always populated)
+ *   4. fallback string (default: "Explorer")
+ *
+ * Use this for member-context name resolution (auth, oracle, profile).
+ * For practitioner-client contexts, use resolveClientDisplayName() instead.
+ */
+export function resolveMemberDisplayName(
+  member: Record<string, any> | null | undefined,
+  fallback = 'Explorer'
+): string {
+  return (
+    member?.preferred_name ||
+    member?.name ||
+    member?.username ||
+    fallback
   );
 }
 
