@@ -7,11 +7,8 @@
  * for conscious evolution and exploration—for discoveries
  * and advancements."
  *
- * This is not a settings page. It's a workshop.
- * Each tool is an instrument. Each category is a drawer
- * you can open to find what you need.
- *
- * The vibe: serious play. Soulful exploration.
+ * Tools are organized by consciousness domain (the map of
+ * lived experience), with utility infrastructure at the bottom.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -24,7 +21,7 @@ import { type ToolCategory } from '@/config/toolRegistry';
 
 export default function MyLabPage() {
   const router = useRouter();
-  const { categories, isLoading, error, toggleCategory } = useMemberTools();
+  const { categories, domainCategories, utilityCategories, isLoading, error, toggleCategory } = useMemberTools();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -158,7 +155,7 @@ export default function MyLabPage() {
                 Your workshop awaits
               </h2>
               <p className="text-white/50 mb-6 max-w-sm mx-auto">
-                Discover tools for reflection, divination, training, and more.
+                Discover tools across 8 domains of conscious experience.
               </p>
               <motion.button
                 onClick={handleDiscover}
@@ -178,21 +175,55 @@ export default function MyLabPage() {
               key="categories"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-8"
             >
-              {categories.map((category, idx) => (
-                <motion.div
-                  key={category.category}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                >
-                  <CategorySection
-                    category={category}
-                    onToggleCollapsed={handleToggleCategory}
-                  />
-                </motion.div>
-              ))}
+              {/* Consciousness Domain Tools */}
+              {domainCategories.length > 0 && (
+                <div className="space-y-8">
+                  {domainCategories.map((category, idx) => (
+                    <motion.div
+                      key={category.category}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <CategorySection
+                        category={category}
+                        onToggleCollapsed={handleToggleCategory}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* Utility / Infrastructure Tools */}
+              {utilityCategories.length > 0 && (
+                <div className="mt-12">
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 mb-6 pt-4 border-t border-white/[0.04]">
+                    <span className="text-xs font-medium text-white/25 uppercase tracking-widest">
+                      Lab Infrastructure
+                    </span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-white/[0.04] to-transparent" />
+                  </div>
+
+                  <div className="space-y-6">
+                    {utilityCategories.map((category, idx) => (
+                      <motion.div
+                        key={category.category}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (domainCategories.length + idx) * 0.05 }}
+                      >
+                        <CategorySection
+                          category={category}
+                          onToggleCollapsed={handleToggleCategory}
+                          compact
+                        />
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -222,7 +253,7 @@ export default function MyLabPage() {
                   Discover more tools
                 </div>
                 <div className="text-xs text-white/40">
-                  Explore oracles, training protocols, and more
+                  Explore all 8 domains of consciousness
                 </div>
               </div>
             </button>

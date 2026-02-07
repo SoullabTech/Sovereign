@@ -10,7 +10,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Check, Lock } from 'lucide-react';
-import { type LabTool, type Tier } from '@/config/toolRegistry';
+import { type LabTool, type Tier, CATEGORY_META, MODE_META } from '@/config/toolRegistry';
 
 interface DiscoverCardProps {
   tool: LabTool;
@@ -50,8 +50,8 @@ export function DiscoverCard({
         ${tool.comingSoon ? 'opacity-50' : ''}
       `}
     >
-      {/* Gradient background based on category */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${tool.category === 'oracles' ? 'from-violet-500/5' : ''} ${tool.category === 'reflection' ? 'from-amber-500/5' : ''} ${tool.category === 'training' ? 'from-emerald-500/5' : ''} to-transparent pointer-events-none`} />
+      {/* Gradient background based on domain/category */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${CATEGORY_META[tool.category]?.accentColor ?? ''} pointer-events-none opacity-30`} />
 
       <div className="relative p-5">
         {/* Header row */}
@@ -132,9 +132,23 @@ export function DiscoverCard({
           </p>
         )}
 
+        {/* Mode badges */}
+        {tool.modes && tool.modes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {tool.modes.map((mode) => (
+              <span
+                key={mode}
+                className="px-2 py-0.5 text-[10px] text-white/50 bg-white/[0.05] rounded-full"
+              >
+                {MODE_META[mode].emoji} {MODE_META[mode].label}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Tags */}
         {tool.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <div className="flex flex-wrap gap-1.5 mt-2">
             {tool.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
