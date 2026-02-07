@@ -7,6 +7,7 @@
 
 import db from '@/lib/db/postgres';
 import { safeParseMeta, dispatchHash } from './safeMeta';
+import { CALENDAR_DISPATCH_VERSION } from './constants';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 
 export interface CalendarRetryResult {
@@ -88,6 +89,7 @@ export async function retryCalendar(input: RetryCalendarInput): Promise<Calendar
     sessionId: session.session_id,
     googleEventId: session.google_event_id || null,
     calendarId: 'primary',
+    dispatchVersion: CALENDAR_DISPATCH_VERSION,
   };
   const dispatchKey = dispatchHash(dispatchPayload);
   const existingMeta = safeParseMeta(bookingRequest.error_meta);

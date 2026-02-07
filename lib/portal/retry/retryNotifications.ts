@@ -7,6 +7,7 @@
 
 import db from '@/lib/db/postgres';
 import { safeParseMeta, dispatchHash } from './safeMeta';
+import { NOTIFICATION_TEMPLATE_VERSION } from './constants';
 import {
   sendBookingConfirmation,
   sendBookingNotificationToPractitioner,
@@ -16,8 +17,6 @@ import {
   sendRescheduleNotificationToPractitioner,
 } from '@/lib/portal/notifications';
 import type { BookingDetails, PractitionerInfo } from '@/lib/portal/notifications';
-
-const TEMPLATE_VERSION = '1'; // bump when email templates change materially
 
 export interface NotificationRetryResult {
   success: boolean;
@@ -61,7 +60,7 @@ export async function retryNotifications(input: RetryNotificationsInput): Promis
     status: bookingRequest.status,
     sessionId: bookingRequest.session_id,
     recipients: ['client', 'practitioner'],
-    templateVersion: TEMPLATE_VERSION,
+    templateVersion: NOTIFICATION_TEMPLATE_VERSION,
   };
   const dispatchKey = dispatchHash(dispatchPayload);
   const existingMeta = safeParseMeta(bookingRequest.error_meta);

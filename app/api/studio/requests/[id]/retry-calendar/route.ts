@@ -105,6 +105,10 @@ export async function POST(
       `success=${result.success} idempotent=${result.idempotent} sync=${result.syncStatus}`
     );
 
+    // Return with appropriate HTTP status
+    if (!result.success && !result.idempotent) {
+      return NextResponse.json(result, { status: 400 });
+    }
     return NextResponse.json(result);
   } catch (error) {
     console.error('[Studio Retry Calendar]', error);
