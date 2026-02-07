@@ -9,7 +9,7 @@
 
 import { query } from "@/lib/db/postgres";
 
-export type AudioUsageStatus = "accepted" | "ok" | "error" | "blocked" | "rejected";
+export type AudioUsageStatus = "ok" | "rejected" | "error";
 
 export type AudioUsageEvent = {
   memberId: string;
@@ -17,7 +17,7 @@ export type AudioUsageEvent = {
   kind?: string; // 'audio' | 'transcription' | 'upload'
   bytes: number;
   seconds?: number | null;
-  status?: AudioUsageStatus;
+  status: AudioUsageStatus; // Required: 'ok' | 'rejected' | 'error'
   errorCode?: string | null;
   meta?: Record<string, unknown>;
 };
@@ -33,7 +33,7 @@ export async function logAudioUsageEvent(evt: AudioUsageEvent): Promise<void> {
     kind = "audio",
     bytes,
     seconds = null,
-    status = "accepted",
+    status,
     errorCode = null,
     meta = {},
   } = evt;
