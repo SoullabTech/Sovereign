@@ -371,11 +371,13 @@ export default function VedicAstrologyPage() {
               <div className="flex flex-wrap bg-stone-900/60 rounded-lg p-1 border border-stone-800/50">
                 {[
                   { id: 'profile', label: 'Profile', icon: Star },
-                  { id: 'dasha', label: 'Dasha', icon: Clock },
+                  { id: 'dasha', label: 'Dasha', icon: Clock, requiresDasha: true },
                   { id: 'chart', label: 'Planets', icon: Sun },
                   { id: 'gochara', label: 'Transits', icon: Moon },
                   { id: 'ashtakavarga', label: 'Strength', icon: Sparkles },
-                ].map(({ id, label, icon: Icon }) => (
+                ]
+                  .filter((tab) => !tab.requiresDasha || profile.dasha)
+                  .map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
                     onClick={() => setActiveView(id as ViewMode)}
@@ -453,19 +455,24 @@ export default function VedicAstrologyPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-indigo-200 mb-4 flex items-center gap-2">
                       <Clock className="w-5 h-5 text-indigo-400" />
-                      Current Dasha Period
+                      {profile.dasha ? 'Current Dasha Period' : 'Dasha Timeline'}
                     </h3>
-                    <DashaTimeline
-                      profile={profile.dasha}
-                      compact
-                    />
-                    <button
-                      onClick={() => setActiveView('dasha')}
-                      className="mt-3 text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
-                    >
-                      View full timeline
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                    {profile.dasha ? (
+                      <>
+                        <DashaTimeline profile={profile.dasha} compact />
+                        <button
+                          onClick={() => setActiveView('dasha')}
+                          className="mt-3 text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                        >
+                          View full timeline
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4 text-sm text-indigo-400/70">
+                        Dasha timeline requires birth time for accurate calculation.
+                      </div>
+                    )}
                   </div>
 
                   {/* Spiralogic Integration */}
@@ -495,7 +502,7 @@ export default function VedicAstrologyPage() {
               )}
 
               {/* Dasha View */}
-              {activeView === 'dasha' && (
+              {activeView === 'dasha' && profile.dasha && (
                 <motion.div
                   key="dasha"
                   initial={{ opacity: 0, y: 20 }}
