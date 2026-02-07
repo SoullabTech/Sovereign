@@ -10,7 +10,7 @@
  * - /api/studio/sessions/{id}/voice-notes for upload + transcription
  * - /api/studio/sessions/{id}/voice-notes/{noteId}/draft-note for MAIA note drafting
  *
- * Table: session_voice_notes (file_path, duration_ms, transcript, etc.)
+ * Table: voice_notes (storage_path, duration_seconds, transcript, transcription_status, drafted_note)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -36,8 +36,10 @@ interface VoiceNote {
   id: string;
   sessionId: string;
   clientId: string | null;
-  durationMs: number | null;
+  durationSeconds: number | null;
   transcript: string | null;
+  transcriptionStatus: string;
+  draftedNote: string | null;
   createdAt: string;
 }
 
@@ -113,8 +115,8 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     try {
       const formData = new FormData();
       formData.append('file', blob, `voice-note-${Date.now()}.webm`);
-      // Send duration in milliseconds (duration from useAudioCapture is in seconds)
-      formData.append('duration_ms', String(Math.round(duration * 1000)));
+      // Send duration in seconds (duration from useAudioCapture is already in seconds)
+      formData.append('duration_seconds', String(Math.round(duration)));
 
       const res = await apiFetch(`/api/studio/sessions/${sessionId}/voice-notes`, {
         method: 'POST',
@@ -129,7 +131,7 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
 
       setCurrentNote(data.voiceNote);
 
-      if (data.voiceNote.transcript) {
+      if (data.voiceNote.transcriptionStatus === 'completed' && data.voiceNote.transcript) {
         setPanelState('transcribed');
       } else {
         setError('Transcription failed — audio saved, try again');
@@ -203,6 +205,32 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     }
   }, [sessionId, draftedNote]);
 
+  // Draft from an existing note (not just the current recording)
+  const handleDraftFromExisting = useCallback(async (note: VoiceNote) => {
+    setCurrentNote(note);
+    setPanelState('drafting');
+    setError(null);
+
+    try {
+      const res = await apiFetch(
+        `/api/studio/sessions/${sessionId}/voice-notes/${note.id}/draft-note`,
+        { method: 'POST' }
+      );
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Draft failed');
+      }
+
+      setDraftedNote(data.draftedNote);
+      setPanelState('drafted');
+    } catch (err: any) {
+      setError(err.message || 'Failed to draft note');
+      setPanelState('idle');
+    }
+  }, [sessionId]);
+
   // Reset panel
   const handleNewRecording = useCallback(() => {
     setCurrentNote(null);
@@ -218,12 +246,6 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
-  // Format duration from milliseconds
-  const formatDurationMs = (ms: number) => {
-    const totalSecs = Math.round(ms / 1000);
-    return formatDuration(totalSecs);
   };
 
   if (!isOpen) return null;
@@ -330,9 +352,9 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
               <div className="flex items-center gap-2 mb-2 text-xs text-teal-400">
                 <FileText className="w-3 h-3" />
                 Transcript
-                {currentNote.durationMs && (
+                {currentNote.durationSeconds && (
                   <span className="text-slate-500">
-                    ({formatDurationMs(currentNote.durationMs)})
+                    ({formatDuration(currentNote.durationSeconds)})
                   </span>
                 )}
               </div>
@@ -468,14 +490,35 @@ export function VoiceNotePanel({ sessionId, clientName, isOpen, onClose }: Voice
                     {new Date(note.createdAt).toLocaleString('en-US', {
                       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                     })}
-                    {note.durationMs && ` (${formatDurationMs(note.durationMs)})`}
+                    {note.durationSeconds && ` (${formatDuration(note.durationSeconds)})`}
                   </span>
-                  <span className={`text-xs ${note.transcript ? 'text-teal-400' : 'text-slate-500'}`}>
-                    {note.transcript ? 'transcribed' : 'no transcript'}
+                  <span className={`text-xs ${
+                    note.transcriptionStatus === 'completed' ? 'text-teal-400' :
+                    note.transcriptionStatus === 'failed' ? 'text-red-400' :
+                    'text-slate-500'
+                  }`}>
+                    {note.transcriptionStatus === 'completed' ? 'transcribed' :
+                     note.transcriptionStatus === 'failed' ? 'failed' :
+                     'pending'}
                   </span>
                 </div>
                 {note.transcript && (
-                  <p className="text-sm text-slate-400 line-clamp-2">{note.transcript}</p>
+                  <p className="text-sm text-slate-400 line-clamp-2 mb-2">{note.transcript}</p>
+                )}
+                {note.transcriptionStatus === 'completed' && note.transcript && !note.draftedNote && (
+                  <button
+                    onClick={() => handleDraftFromExisting(note)}
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded hover:bg-amber-500/20 transition-colors"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Draft Session Note
+                  </button>
+                )}
+                {note.draftedNote && (
+                  <div className="text-xs text-emerald-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Note drafted
+                  </div>
                 )}
               </div>
             ))}
