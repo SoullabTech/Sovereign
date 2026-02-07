@@ -11,8 +11,6 @@ import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 async function getPractitionerId(): Promise<string | null> {
-  // TODO: Link members to practitioners properly
-  // For now, use hardcoded 'stellium' practitioner
   const result = await db.query(
     'SELECT id FROM practitioners WHERE slug = $1',
     ['stellium']
@@ -20,9 +18,12 @@ async function getPractitionerId(): Promise<string | null> {
   return result.rows[0]?.id || null;
 }
 
-export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ sessionId: string }> }
+) {
   try {
-    const { id: sessionId } = await ctx.params;
+    const { sessionId } = await params;
 
     const memberId = await getMemberIdFromRequest(req);
     if (!memberId) {
