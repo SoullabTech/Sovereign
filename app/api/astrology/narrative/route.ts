@@ -14,6 +14,7 @@ import {
 import { BirthChartData } from '@/lib/story/storyWeaver';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
-          serverUserName = member.preferred_name || member.name;
+          serverUserName = resolveMemberDisplayName(member);
         }
       }
     } catch (err) {

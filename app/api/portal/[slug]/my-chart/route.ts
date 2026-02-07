@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { requireClientSession } from '@/lib/auth/clientSession';
+import { resolveClientDisplayName } from '@/lib/stellium/clients';
 
 export async function GET(
   _request: NextRequest,
@@ -80,7 +81,7 @@ export async function GET(
     return NextResponse.json({
       client: {
         id: client.id,
-        name: client.preferred_name || client.name,
+        name: resolveClientDisplayName(client, null),
         portalClaimedAt: client.portal_claimed_at,
         birthData: client.birth_date ? {
           date: client.birth_date,

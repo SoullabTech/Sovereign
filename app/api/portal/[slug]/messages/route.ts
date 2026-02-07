@@ -22,6 +22,7 @@ import {
   type MessageUrgency,
 } from '@/lib/portal/messages';
 import { sendSafetyConcernNotification, logSafetyConcern } from '@/lib/notifications/safety';
+import { resolveClientDisplayName } from '@/lib/stellium/clients';
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           `SELECT name, preferred_name FROM practitioner_clients WHERE id = $1`,
           [access.clientId]
         );
-        const clientName = clientResult.rows[0]?.preferred_name || clientResult.rows[0]?.name || 'A client';
+        const clientName = resolveClientDisplayName(clientResult.rows[0], null);
 
         // Send email (best-effort, don't block response)
         // Pass logId so email status gets tracked in the log

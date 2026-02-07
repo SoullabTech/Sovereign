@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import { getThread, markMessagesRead } from '@/lib/comms/ThreadService';
+import { resolveClientDisplayName } from '@/lib/stellium/clients';
 
 interface RouteParams {
   params: Promise<{ threadId: string }>;
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         thread_type: threadData.thread.thread_type,
         client: threadData.context.client ? {
           id: threadData.context.client.id,
-          name: threadData.context.client.preferred_name || threadData.context.client.name,
+          name: resolveClientDisplayName(threadData.context.client, null),
           email: undefined, // Not fetched currently
           spiral_stage: threadData.context.client.spiral_stage,
           last_session: threadData.context.client.last_session,

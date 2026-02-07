@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 export async function POST(request: NextRequest) {
   try {
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
         id: member.id,
         username: member.username,
         name: member.name,
-        preferredName: member.preferred_name || member.name,
+        preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         tier: member.tier || 'free',
         hasWebauthn: member.has_webauthn || false,

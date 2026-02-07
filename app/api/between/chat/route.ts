@@ -75,6 +75,7 @@ import {
   type BridgedSnapshot,
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
+import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -899,7 +900,7 @@ export async function POST(req: NextRequest) {
         );
         if (memberResult.rows.length > 0) {
           const member = memberResult.rows[0];
-          serverUserName = member.preferred_name || member.name || 'Friend';
+          serverUserName = resolveMemberDisplayName(member, 'Friend');
         }
       }
     } catch (err) {
