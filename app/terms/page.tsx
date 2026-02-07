@@ -198,6 +198,49 @@ export default function TermsOfServicePage() {
           </div>
         </motion.section>
 
+        {/* SMS Communications */}
+        <motion.section
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.37 }}
+        >
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-white/80 uppercase">
+            SMS Communications
+          </h3>
+          <div className="p-6 rounded-xl border border-white/10 bg-white/5 space-y-4">
+            <p className="text-[14px] leading-relaxed text-white/70">
+              Soullab offers optional SMS notifications for appointment reminders and session
+              confirmations. By opting in during the booking process, you consent to receive
+              text messages from Soullab at the phone number you provide.
+            </p>
+            <ul className="space-y-2 text-[14px] text-white/70">
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                <span><strong className="text-white">Message frequency</strong> varies based on your session bookings</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                <span>Message and data rates may apply</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                <span>Reply <strong className="text-white">STOP</strong> to opt out at any time</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
+                <span>Reply <strong className="text-white">HELP</strong> for support information</span>
+              </li>
+            </ul>
+            <p className="text-[14px] leading-relaxed text-white/70">
+              For questions about SMS, contact{' '}
+              <a href="mailto:hello@soullab.life" className="text-amber-400 hover:underline">
+                hello@soullab.life
+              </a>.
+            </p>
+          </div>
+        </motion.section>
+
         {/* Limitations */}
         <motion.section
           className="mb-12"
