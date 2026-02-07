@@ -740,7 +740,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.warn('[Interrupt] Failed to load initial state:', e);
       }
     }
-    return false; // Default OFF - prevents jarring interruptions during beta
+    return true; // Default ON - natural conversation allows interruptions
   });
 
   const [interruptDebounceMs, setInterruptDebounceMs] = useState(() => {
@@ -2737,6 +2737,35 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  // 🔊 AUDIO UNLOCK RECOVERY: Listen for failed playback attempts from StreamingAudioQueue
+  // When all retry attempts fail (iOS NotAllowedError/AbortError), the queue dispatches
+  // 'maya-audio-unlock-needed'. We show a tap-to-unlock UI so the user can re-enable audio
+  // with a gesture, preventing the silent-freeze bug in listening mode.
+  useEffect(() => {
+    const handleAudioUnlockNeeded = () => {
+      console.warn('⚠️ [OracleConversation] Audio unlock needed - streaming playback failed');
+      setShowAudioUnlockUI(true);
+      // Reset voice state so the app doesn't appear frozen
+      setIsAudioPlaying(false);
+      setIsResponding(false);
+      setIsMicrophonePaused(false);
+      isProcessingRef.current = false;
+      isRespondingRef.current = false;
+      isAudioPlayingRef.current = false;
+      isMicrophonePausedRef.current = false;
+      toast('Audio playback interrupted — tap to re-enable', {
+        icon: '🔇',
+        duration: 5000,
+        position: 'top-center',
+      });
+    };
+
+    window.addEventListener('maya-audio-unlock-needed', handleAudioUnlockNeeded);
+    return () => {
+      window.removeEventListener('maya-audio-unlock-needed', handleAudioUnlockNeeded);
+    };
+  }, []);
+
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -4279,7 +4308,7 @@ I'm not sure what I'm feeling yet.`;
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
-        const streamingCooldownMs = 0; // Instant - demo mode with headphones
+        const streamingCooldownMs = 400; // Natural breathing space between turns
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
@@ -6109,6 +6138,54 @@ I'm not sure what I'm feeling yet.`;
               className="mt-6 text-amber-400/60 hover:text-amber-400 text-sm underline transition-colors"
             >
               Continue without audio (text chat only)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🔊 Audio Unlock Recovery UI - Shows when streaming audio fails (iOS NotAllowedError) */}
+      {showAudioUnlockUI && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="max-w-sm p-8 text-center">
+            <div className="text-4xl mb-4">🔇</div>
+            <h3 className="text-lg font-medium text-white mb-2">Audio Interrupted</h3>
+            <p className="text-sm text-white/60 mb-6">
+              Audio playback was blocked. Tap below to re-enable MAIA&apos;s voice.
+            </p>
+            <button
+              onClick={async () => {
+                console.log('🔓 [OracleConversation] User tapping to re-unlock audio');
+                setShowAudioUnlockUI(false);
+                await enableAudio();
+                // Re-unlock the streaming queue as well
+                if (currentAudioQueueRef.current) {
+                  currentAudioQueueRef.current.setAudioUnlocked(true);
+                  try {
+                    await currentAudioQueueRef.current.unlockSafariAudio();
+                    console.log('✅ [OracleConversation] StreamingAudioQueue re-unlocked');
+                  } catch (err) {
+                    console.warn('⚠️ [OracleConversation] StreamingAudioQueue re-unlock failed:', err);
+                  }
+                }
+                toast.success('Audio re-enabled', { duration: 2000, position: 'top-center' });
+              }}
+              className="px-8 py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl
+                       shadow-2xl transition-all transform hover:scale-105 flex items-center gap-3 mx-auto"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+              <span className="text-lg font-medium">Tap to Re-enable Audio</span>
+            </button>
+            <button
+              onClick={() => {
+                console.log('⏭️ User dismissing audio unlock prompt');
+                setShowAudioUnlockUI(false);
+              }}
+              className="mt-4 text-white/40 hover:text-white/60 text-sm underline transition-colors"
+            >
+              Dismiss
             </button>
           </div>
         </div>
