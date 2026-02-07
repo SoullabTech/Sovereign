@@ -41,7 +41,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
-import { TranslateMessageButton } from './wisdom/TranslateMessageButton';
+// TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
 import { formatMessageText } from '@/lib/text/formatMessageText';
@@ -7551,16 +7551,9 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
-                      {/* Wisdom Translation - translate MAIA responses through different wisdom systems */}
-                      {message.role === 'oracle' && (
-                        <div className="mt-2">
-                          <TranslateMessageButton
-                            messageContent={message.text ?? message.content ?? ''}
-                            messageId={message.id}
-                            sessionId={sessionId}
-                          />
-                        </div>
-                      )}
+                      {/* Wisdom Translation — removed from per-message rendering.
+                         TODO: Reintroduce as session-level action or long-press context option.
+                         Component preserved at: wisdom/TranslateMessageButton.tsx */}
 
                       {/* Studio Actions — Send as SMS (studio surface only) */}
                       {message.role === 'oracle' && surface === 'studio' && (
