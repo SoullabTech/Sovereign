@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getSessionPrep } from '@/lib/practitioner/sessionPrep';
+import { getLeadershipBriefingContext } from '@/lib/studio/leadership/briefing';
 
 async function getPractitionerId(): Promise<string | null> {
   const result = await db.query(
@@ -111,7 +112,21 @@ export async function GET(
         : null,
     };
 
-    return NextResponse.json({ success: true, briefing });
+    // Check for leadership-specific context
+    const clientCheck = await db.query(
+      `SELECT leadership_profile FROM practitioner_clients WHERE id = $1 AND leadership_profile IS NOT NULL`,
+      [session.client_id]
+    );
+    let leadershipContext = null;
+    if (clientCheck.rows.length > 0) {
+      leadershipContext = await getLeadershipBriefingContext(practitionerId, session.client_id);
+    }
+
+    return NextResponse.json({
+      success: true,
+      briefing,
+      ...(leadershipContext && { leadershipContext }),
+    });
   } catch (error) {
     console.error('[studio][briefing] error:', error);
     return NextResponse.json(

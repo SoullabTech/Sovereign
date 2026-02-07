@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const search = searchParams.get('search');
+    const clientType = searchParams.get('type');
     const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 200);
 
     // Query clients with computed session data from practitioner_sessions
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
         c.birth_location,
         c.internal_notes,
         c.chart_image_url,
+        c.leadership_profile,
+        c.client_types,
         c.created_at,
         c.updated_at,
         c.last_session_at,
@@ -80,6 +83,12 @@ export async function GET(request: NextRequest) {
       params.push(status);
     }
 
+    // Client type filter (e.g., ?type=leadership)
+    if (clientType) {
+      sql += ` AND $${params.length + 1} = ANY(c.client_types)`;
+      params.push(clientType);
+    }
+
     // Search filter
     if (search) {
       sql += ` AND (c.name ILIKE $${params.length + 1} OR c.email ILIKE $${params.length + 1})`;
@@ -106,6 +115,8 @@ export async function GET(request: NextRequest) {
       birthLocation: row.birth_location,
       internalNotes: row.internal_notes,
       chartImageUrl: row.chart_image_url,
+      leadershipProfile: row.leadership_profile,
+      clientTypes: row.client_types || [],
       lastSessionAt: row.last_session_at,
       nextSessionAt: row.next_session_at,
       totalSessions: parseInt(row.total_sessions) || 0,
@@ -144,6 +155,8 @@ export async function POST(request: NextRequest) {
       birthTime,
       birthLocation,
       internalNotes,
+      leadershipProfile,
+      clientTypes = [],
     } = body;
 
     if (!name?.trim()) {
@@ -177,8 +190,8 @@ export async function POST(request: NextRequest) {
     const clientId = randomUUID();
     const result = await db.query(
       `INSERT INTO practitioner_clients
-        (id, practitioner_id, name, email, phone, status, tier, tags, birth_date, birth_time, birth_location, internal_notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        (id, practitioner_id, name, email, phone, status, tier, tags, birth_date, birth_time, birth_location, internal_notes, leadership_profile, client_types)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
       [
         clientId,
@@ -193,6 +206,8 @@ export async function POST(request: NextRequest) {
         birthTime || null,
         birthLocation?.trim() || null,
         internalNotes?.trim() || null,
+        leadershipProfile ? JSON.stringify(leadershipProfile) : null,
+        clientTypes,
       ]
     );
 
@@ -210,6 +225,8 @@ export async function POST(request: NextRequest) {
         birthTime: client.birth_time,
         birthLocation: client.birth_location,
         internalNotes: client.internal_notes,
+        leadershipProfile: client.leadership_profile,
+        clientTypes: client.client_types || [],
         lastSessionAt: client.last_session_at,
         nextSessionAt: null,
         totalSessions: 0,
@@ -302,6 +319,16 @@ export async function PATCH(request: NextRequest) {
       params.push(updates.internalNotes?.trim() || null);
     }
 
+    if (updates.leadershipProfile !== undefined) {
+      updateFields.push(`leadership_profile = $${params.length + 1}`);
+      params.push(updates.leadershipProfile ? JSON.stringify(updates.leadershipProfile) : null);
+    }
+
+    if (updates.clientTypes !== undefined) {
+      updateFields.push(`client_types = $${params.length + 1}`);
+      params.push(updates.clientTypes);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
@@ -334,6 +361,8 @@ export async function PATCH(request: NextRequest) {
         birthTime: client.birth_time,
         birthLocation: client.birth_location,
         internalNotes: client.internal_notes,
+        leadershipProfile: client.leadership_profile,
+        clientTypes: client.client_types || [],
         lastSessionAt: client.last_session_at,
         createdAt: client.created_at,
         updatedAt: client.updated_at,

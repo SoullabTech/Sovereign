@@ -27,6 +27,7 @@ import {
   Wrench,
   Mic,
   DoorOpen,
+  Scale,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -36,6 +37,7 @@ import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 const navItems = [
   { href: '/studio', icon: LayoutGrid, label: 'Command Center' },
   { href: '/studio/threshold', icon: DoorOpen, label: 'Threshold' },
+  { href: '/studio/decisions', icon: Scale, label: 'Decisions' },
   { href: '/studio/clients', icon: Users, label: 'Clients' },
   { href: '/studio/groups', icon: FolderOpen, label: 'Groups' },
   { href: '/studio/sessions', icon: Calendar, label: 'Sessions' },
