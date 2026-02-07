@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ noteId: str
 
   // Lookup note (ensure practitioner owns it)
   const result = await query(
-    `SELECT file_path, mime_type FROM session_voice_notes WHERE id = $1 AND practitioner_id = $2`,
+    `SELECT storage_path, mime_type FROM voice_notes WHERE id = $1 AND practitioner_id = $2`,
     [noteId, practitionerId]
   );
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ noteId: str
   const row = result.rows[0];
 
   try {
-    const buf = await fs.readFile(row.file_path);
+    const buf = await fs.readFile(row.storage_path);
     return new NextResponse(buf, {
       headers: {
         'Content-Type': row.mime_type || 'application/octet-stream',
