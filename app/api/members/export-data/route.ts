@@ -1,23 +1,60 @@
 // Production requires force-dynamic for per-user database access
 export const dynamic = 'force-dynamic';
 
-
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+
+/** Whitelist settings fields for export (exclude internal id) */
+function pickSettingsForExport(row: Record<string, unknown>) {
+  if (!row) return null;
+  return {
+    defaultMemoryMode: row.default_memory_mode,
+    voiceModel: row.voice_model,
+    voiceSpeed: row.voice_speed,
+    memoryDepth: row.memory_depth,
+    archetype: row.archetype,
+    conversationMode: row.conversation_mode,
+    preferredAssistantName: row.preferred_assistant_name,
+    notifications: {
+      weeklyDigest: row.email_weekly_digest,
+      breakthroughMoments: row.email_breakthrough_moments,
+      communityUpdates: row.email_community_updates,
+      productUpdates: row.email_product_updates,
+    },
+    privacy: {
+      shareAnonymousInsights: row.share_anonymous_insights,
+      allowResearchParticipation: row.allow_research_participation,
+    },
+    membership: {
+      tier: row.circle_tier,
+      amount: row.circle_amount,
+      joinedAt: row.circle_joined_at,
+    },
+    wisdomSystems: row.wisdom_systems,
+    culturalLens: row.cultural_lens,
+    storageConsent: row.storage_consent,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 /**
  * POST /api/members/export-data
  * Export all member data (GDPR compliance)
+ *
+ * Authentication: Session cookie required - exports only the authenticated member's data
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { memberId } = body;
+    // Authenticate via session - user can only export their own data
+    const session = await getCurrentSession();
+    const memberId = session?.memberId ?? null;
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Authentication required. Please sign in to export your data.' },
+        { status: 401 }
       );
     }
 
@@ -75,7 +112,7 @@ export async function POST(request: NextRequest) {
     const exportData = {
       exportedAt: new Date().toISOString(),
       profile: memberResult.rows[0],
-      settings: settingsResult.rows[0] || null,
+      settings: pickSettingsForExport(settingsResult.rows[0]),
       sessions: sessionsResult.rows,
       memories: memoriesResult.rows,
       connectedServices: {
