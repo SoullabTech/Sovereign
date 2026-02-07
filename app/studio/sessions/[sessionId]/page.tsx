@@ -83,8 +83,8 @@ function formatDuration(start: string, end: string): string {
   return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
 }
 
-export default function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: sessionId } = use(params);
+export default function SessionDetailPage({ params }: { params: Promise<{ sessionId: string }> }) {
+  const { sessionId } = use(params);
   const router = useRouter();
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -261,10 +261,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
             </div>
           )}
 
-          {/* Voice Notes Panel */}
+          {/* Voice Notes Panel — always open on detail page */}
           <VoiceNotePanel
             sessionId={sessionId}
-            clientId={session.client_id || undefined}
+            clientName={session.client_name || null}
+            isOpen={true}
+            onClose={() => {}}
           />
         </div>
 
