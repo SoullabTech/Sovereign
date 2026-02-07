@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Camera,
+  Mic,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
@@ -83,12 +84,13 @@ function formatDuration(start: string, end: string): string {
   return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`;
 }
 
-export default function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: sessionId } = use(params);
+export default function SessionDetailPage({ params }: { params: Promise<{ sessionId: string }> }) {
+  const { sessionId } = use(params);
   const router = useRouter();
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [voiceNotePanelOpen, setVoiceNotePanelOpen] = useState(false);
 
   useEffect(() => {
     async function fetchSession() {
@@ -264,7 +266,9 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           {/* Voice Notes Panel */}
           <VoiceNotePanel
             sessionId={sessionId}
-            clientId={session.client_id || undefined}
+            clientName={session.client_name}
+            isOpen={voiceNotePanelOpen}
+            onClose={() => setVoiceNotePanelOpen(false)}
           />
         </div>
 
@@ -293,6 +297,13 @@ export default function SessionDetailPage({ params }: { params: Promise<{ id: st
           <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-medium text-white mb-3">Actions</h3>
             <div className="space-y-2">
+              <button
+                onClick={() => setVoiceNotePanelOpen(true)}
+                className="w-full px-4 py-2 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-colors text-left flex items-center gap-2"
+              >
+                <Mic className="w-4 h-4" />
+                Voice Notes
+              </button>
               <button className="w-full px-4 py-2 text-sm text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors text-left">
                 Edit Session
               </button>
