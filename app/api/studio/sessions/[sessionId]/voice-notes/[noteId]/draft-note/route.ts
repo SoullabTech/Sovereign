@@ -1,0 +1,153 @@
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+/**
+ * DRAFT SESSION NOTE FROM VOICE TRANSCRIPT
+ *
+ * Takes a transcribed voice note and generates a structured session note
+ * via Claude. The practitioner reviews/edits before saving.
+ *
+ * Sovereignty: Uses Anthropic API (Claude) — the only external AI call
+ * permitted per CLAUDE.md. No OpenAI, no cloud transcription.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import db from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import Anthropic from '@anthropic-ai/sdk';
+
+async function getPractitionerId(): Promise<string | null> {
+  const result = await db.query(
+    'SELECT id FROM practitioners WHERE slug = $1',
+    ['stellium']
+  );
+  return result.rows[0]?.id || null;
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ sessionId: string; noteId: string }> }
+) {
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const practitionerId = await getPractitionerId();
+    if (!practitionerId) {
+      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+    }
+
+    const { sessionId, noteId } = await params;
+
+    // Load voice note
+    const noteResult = await db.query(
+      `SELECT id, transcript, transcription_status
+       FROM voice_notes
+       WHERE id = $1 AND session_id = $2 AND practitioner_id = $3`,
+      [noteId, sessionId, practitionerId]
+    );
+
+    if (noteResult.rows.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Voice note not found' },
+        { status: 404 }
+      );
+    }
+
+    const voiceNote = noteResult.rows[0];
+
+    if (voiceNote.transcription_status !== 'completed' || !voiceNote.transcript) {
+      return NextResponse.json(
+        { success: false, error: 'Voice note has not been transcribed yet' },
+        { status: 400 }
+      );
+    }
+
+    // Load session context (client name, service, date, duration)
+    const sessionResult = await db.query(
+      `SELECT s.scheduled_start, s.scheduled_end, s.notes,
+              c.name AS client_name,
+              svc.name AS service_name
+       FROM sessions s
+       LEFT JOIN practitioner_clients c ON c.id = s.client_id
+       LEFT JOIN services svc ON svc.id = s.service_id
+       WHERE s.id = $1 AND s.practitioner_id = $2`,
+      [sessionId, practitionerId]
+    );
+
+    const session = sessionResult.rows[0];
+    const clientName = session?.client_name || 'Client';
+    const serviceName = session?.service_name || 'Session';
+    const sessionDate = session?.scheduled_start
+      ? new Date(session.scheduled_start).toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+        })
+      : 'Unknown date';
+    const durationMinutes = session?.scheduled_start && session?.scheduled_end
+      ? Math.round((new Date(session.scheduled_end).getTime() - new Date(session.scheduled_start).getTime()) / 60000)
+      : null;
+
+    console.log('📝 [DRAFT-NOTE] Generating for session:', sessionId, 'client:', clientName);
+
+    // Build prompt
+    const prompt = `You are a clinical session note assistant for a practitioner.
+
+Given the following voice transcript recorded after a session, draft a concise, structured session note.
+
+**Session context:**
+- Client: ${clientName}
+- Date: ${sessionDate}
+- Service: ${serviceName}${durationMinutes ? ` (${durationMinutes} min)` : ''}
+
+**Voice transcript:**
+${voiceNote.transcript}
+
+**Instructions:**
+- Draft a structured note with these sections: **Key Themes**, **Client Presentation**, **Observations**, **Next Steps**
+- Be concise and professional
+- Do not add information not present in the transcript
+- Use third person for the client
+- If the transcript is sparse, keep the note brief rather than embellishing
+- Format with markdown headers`;
+
+    // Call Claude
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      temperature: 0.3,
+      messages: [
+        { role: 'user', content: prompt },
+      ],
+    });
+
+    const draftedNote = message.content[0].type === 'text'
+      ? message.content[0].text
+      : '';
+
+    console.log('📝 [DRAFT-NOTE] Generated:', draftedNote.length, 'chars');
+
+    // Save drafted note to voice_notes row
+    await db.query(
+      `UPDATE voice_notes SET drafted_note = $1, updated_at = NOW() WHERE id = $2`,
+      [draftedNote, noteId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      draftedNote,
+      voiceNoteId: noteId,
+    });
+  } catch (error: any) {
+    console.error('❌ [DRAFT-NOTE] Error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to draft session note' },
+      { status: 500 }
+    );
+  }
+}
