@@ -71,6 +71,16 @@ import { persistDecision, type Candidate } from '../services/decisionPersistence
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
+import {
+  STATE_VECTOR_OUTPUT_CONTRACT,
+  isLikelyCheckin,
+  parseStateVector,
+  storeStateVector,
+  routePractice,
+  type StateVector,
+  type PracticeRecommendation,
+} from '../maia/state-vector';
+import { getAllPractices } from '../elemental-alchemy/practices';
 
 // =============================================================================
 // MEMORY AUTHORITY & IDENTITY PROTECTION
@@ -479,6 +489,8 @@ export type MaiaResponse = {
   processingTimeMs?: number;
   audio?: Buffer;
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  stateVector?: StateVector;                  // 🌀 State vector reading from this turn
+  practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
@@ -1103,6 +1115,9 @@ The person you are speaking with is named "${currentUserName}".
 The current user has not provided their name. Address them as "friend" or "there" when needed.
 - Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
 
+  // 🌀 STATE VECTOR: Inject estimation contract when input looks like a check-in
+  const stateVectorContract = isLikelyCheckin(input) ? '\n\n' + STATE_VECTOR_OUTPUT_CONTRACT : '';
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   // 🛡️ MEMORY AUTHORITY BLOCK MUST BE FIRST - prevents identity/memory disclaimers
   let baseSystemPrompt = `${MEMORY_AUTHORITY_BLOCK}
@@ -1113,7 +1128,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${stateVectorContract}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1390,6 +1405,12 @@ The current user has not provided their name. Address them as "friend" or "there
     adaptivePrompt = adaptivePrompt + '\n\n' + wisdomRoutingCore.promptInjection;
     // Store in meta for potential tool reveal in response
     (meta as any).wisdomRouting = wisdomRoutingCore;
+  }
+
+  // 🌀 STATE VECTOR: Inject estimation contract when input looks like a check-in
+  if (isLikelyCheckin(input)) {
+    console.log(`🌀 [CORE] State vector contract injected: check-in detected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + STATE_VECTOR_OUTPUT_CONTRACT;
   }
 
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
@@ -2416,6 +2437,56 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let text = sanitizeMaiaOutput(rawResponse);
     let audioResponse: Buffer | undefined;
 
+    // 🌀 STATE VECTOR: Parse, strip, store, and route practice
+    let parsedStateVector: StateVector | null = null;
+    let practiceRec: PracticeRecommendation | null = null;
+    const isSanctuaryEarly = (meta as any)?.sanctuary === true;
+
+    {
+      const parseResult = parseStateVector(
+        text,
+        effectiveUserId || 'anonymous',
+        'conversation',
+        sessionId
+      );
+
+      if (parseResult.vector) {
+        parsedStateVector = parseResult.vector;
+        text = parseResult.strippedText; // Strip vector from user-facing response
+
+        console.log(
+          `🌀 [State Vector] Parsed: ${parsedStateVector.primary.element}` +
+          `${parsedStateVector.secondary ? ' + ' + parsedStateVector.secondary.element : ''}` +
+          ` | kairos=${parsedStateVector.kairos.assessment}` +
+          ` | confidence=${parsedStateVector.confidence}`
+        );
+
+        // Persist (non-blocking, respects Sanctuary)
+        if (!isSanctuaryEarly && effectiveUserId) {
+          storeStateVector(parsedStateVector, input).catch(err => {
+            console.error('❌ [State Vector] Store failed (non-blocking):', err);
+          });
+        }
+
+        // Route practice recommendation (confidence-gated)
+        if (parsedStateVector.confidence >= 0.5) {
+          try {
+            const practices = getAllPractices();
+            practiceRec = routePractice(parsedStateVector, practices);
+            console.log(`🌿 [Practice Router] Recommended: ${practiceRec.primary.title} (${practiceRec.duration})`);
+          } catch (routeErr) {
+            console.warn('⚠️ [Practice Router] Routing failed (non-blocking):', routeErr);
+          }
+        } else {
+          console.log(`🌀 [State Vector] Confidence too low (${parsedStateVector.confidence}) — skipping practice routing`);
+        }
+      }
+
+      if (parseResult.errors.length > 0) {
+        console.warn('⚠️ [State Vector] Parse errors:', parseResult.errors);
+      }
+    }
+
     // 🌿 PRESENCE MODE: When recognition occurs, MAIA does not advance. She abides.
     // This is a mouth-layer constraint applied after mind state generation.
     const { mode: responseMode, recognition } = determineResponseMode(input);
@@ -3002,6 +3073,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingTimeMs,
       audio: audioResponse,
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      stateVector: parsedStateVector || undefined,
+      practiceRecommendation: practiceRec || undefined,
       metadata: hasMetadata ? responseMetadata : undefined
     };
 

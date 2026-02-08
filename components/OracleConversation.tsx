@@ -41,6 +41,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
+import { StateCard } from './maia/StateCard';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -419,6 +420,10 @@ interface ConversationMessage {
     blend: string;
     switchTo: string;
   } | null;
+  // 🌀 STATE VECTOR: Consciousness state reading for this turn
+  stateVector?: any;
+  // 🌿 PRACTICE: Recommended practice from state vector routing
+  practiceRecommendation?: any;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -4819,6 +4824,10 @@ I'm not sure what I'm feeling yet.`;
         // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
         integrity,
         lensSwitchOptions,
+        // 🌀 STATE VECTOR: Consciousness state reading for this turn
+        stateVector: responseData.stateVector || null,
+        // 🌿 PRACTICE: Recommended practice from state vector routing
+        practiceRecommendation: responseData.practiceRecommendation || null,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
@@ -7547,6 +7556,16 @@ I'm not sure what I'm feeling yet.`;
                             turnId={message.turnId}
                             opusAxioms={message.opusAxioms}
                             compact={false}
+                          />
+                        </div>
+                      )}
+
+                      {/* 🌀 STATE CARD: Consciousness state reading */}
+                      {message.role === 'oracle' && message.stateVector && (
+                        <div className="mt-3">
+                          <StateCard
+                            stateVector={message.stateVector}
+                            practice={message.practiceRecommendation}
                           />
                         </div>
                       )}
