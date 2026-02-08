@@ -274,11 +274,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   generalist: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'maia', 'vault'],
   astrology: ['clients', 'sessions', 'calendar', 'decisions', 'maia', 'vault'],
-  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'vault', 'comms'],
-  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'vault', 'comms'],
-  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'services'],
-  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'comms', 'marketing'],
-  consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'comms', 'teams'],
+  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'maia', 'services'],
+  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'maia', 'comms', 'teams'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
