@@ -272,12 +272,12 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'sessions', 'calendar', 'tasks', 'maia', 'vault'],
-  astrology: ['clients', 'sessions', 'calendar', 'maia', 'vault'],
-  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'vault', 'comms'],
-  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'vault', 'comms'],
-  bodywork: ['clients', 'sessions', 'calendar', 'services'],
-  groups: ['clients', 'groups', 'sessions', 'calendar', 'comms', 'marketing'],
+  generalist: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'maia', 'vault'],
+  astrology: ['clients', 'sessions', 'calendar', 'decisions', 'maia', 'vault'],
+  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'vault', 'comms'],
+  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'vault', 'comms'],
+  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'services'],
+  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'comms', 'marketing'],
   consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'comms', 'teams'],
 };
 
