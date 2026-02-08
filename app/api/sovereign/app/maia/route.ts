@@ -215,6 +215,10 @@ export async function POST(req: NextRequest) {
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: orchestratorResult.text,
+      // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
+      stateVector: orchestratorResult.stateVector || null,
+      // 🌿 PRACTICE: Recommended practice from state vector routing
+      practiceRecommendation: orchestratorResult.practiceRecommendation || null,
       route: {
         endpoint: '/api/sovereign/app/maia',
         type: 'Sovereign Consciousness Interface',

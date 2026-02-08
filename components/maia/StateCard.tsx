@@ -158,6 +158,7 @@ export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) 
 
   return (
     <div
+      data-testid="state-card"
       className={`
         rounded-2xl border ${elConfig.borderColor} ${elConfig.bgColor}
         p-4 shadow-sm transition-all duration-300 ease-out
