@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Plus, Scale, Clock, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DecisionRecord } from '@/lib/studio/leadership/types';
+import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Draft', color: 'text-slate-400 bg-slate-800' },
@@ -55,7 +56,7 @@ export default function DecisionsPage() {
               Decision Council
             </h1>
             <p className="text-sm text-slate-400 mt-1">
-              Multi-perspective analysis for leadership decisions
+              Multi-perspective reflection for practitioner decisions
             </p>
           </div>
           <Link
@@ -92,7 +93,7 @@ export default function DecisionsPage() {
             <Scale className="w-12 h-12 text-slate-700 mx-auto mb-4" />
             <p className="text-slate-400 mb-2">No decisions yet</p>
             <p className="text-sm text-slate-500 mb-6">
-              Capture a leadership decision and run the council for multi-perspective insight.
+              Capture a decision and run the council for multi-perspective insight.
             </p>
             <Link
               href="/studio/decisions/new"
@@ -154,6 +155,9 @@ export default function DecisionsPage() {
                         <Clock className="w-3 h-3" />
                         {new Date(d.createdAt).toLocaleDateString()}
                       </span>
+                      {d.situationType && (
+                        <span className="text-slate-500">{getSituationConfig(d.situationType).label}</span>
+                      )}
                       {d.councilResult && (
                         <span className="flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3 text-emerald-500" />

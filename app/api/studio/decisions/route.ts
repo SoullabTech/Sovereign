@@ -5,8 +5,8 @@ export async function generateStaticParams() { return []; }
  * STUDIO DECISIONS API
  *
  * List and create decision analysis records.
- * Part of the Leadership Domain Layer for consultants
- * working with executives and organizational leaders.
+ * Part of the Decision Council — a reflection engine
+ * for any practitioner working with relational complexity.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,6 +16,7 @@ import { randomUUID } from 'crypto';
 
 const VALID_STATUSES = ['draft', 'consulting', 'complete', 'archived'] as const;
 const VALID_TIME_PRESSURES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
+const VALID_SITUATION_TYPES = ['individual', 'relational', 'group', 'leadership', 'self'] as const;
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
         d.council_result,
         d.consultant_notes,
         d.questions_for_leader,
+        d.situation_type,
         d.status,
         d.consulted_at,
         d.created_at,
@@ -87,6 +89,7 @@ export async function GET(request: NextRequest) {
       councilResult: row.council_result,
       consultantNotes: row.consultant_notes,
       questionsForLeader: row.questions_for_leader || [],
+      situationType: row.situation_type,
       status: row.status,
       consultedAt: row.consulted_at,
       createdAt: row.created_at,
@@ -118,6 +121,7 @@ export async function POST(request: NextRequest) {
       stakes,
       timePressure = 'none',
       emotionalState,
+      situationType = 'individual',
     } = body;
 
     if (!title?.trim()) {
@@ -129,12 +133,15 @@ export async function POST(request: NextRequest) {
     if (!(VALID_TIME_PRESSURES as readonly string[]).includes(timePressure)) {
       return NextResponse.json({ error: 'Invalid time pressure value' }, { status: 400 });
     }
+    if (!(VALID_SITUATION_TYPES as readonly string[]).includes(situationType)) {
+      return NextResponse.json({ error: 'Invalid situation type' }, { status: 400 });
+    }
 
     const id = randomUUID();
     const result = await db.query(
       `INSERT INTO studio_decisions
-        (id, practitioner_id, client_id, team_id, title, context, stakes, time_pressure, emotional_state)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (id, practitioner_id, client_id, team_id, title, context, stakes, time_pressure, emotional_state, situation_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         id,
@@ -146,6 +153,7 @@ export async function POST(request: NextRequest) {
         stakes?.trim() || null,
         timePressure,
         emotionalState?.trim() || null,
+        situationType,
       ]
     );
 
@@ -164,6 +172,7 @@ export async function POST(request: NextRequest) {
         councilResult: row.council_result,
         consultantNotes: row.consultant_notes,
         questionsForLeader: row.questions_for_leader || [],
+        situationType: row.situation_type,
         status: row.status,
         consultedAt: row.consulted_at,
         createdAt: row.created_at,

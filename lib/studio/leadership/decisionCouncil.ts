@@ -1,98 +1,43 @@
 /**
- * Decision Council — Leadership Consultation Service
+ * Decision Council — Situation-Aware Consultation Service
  *
- * Wraps the AIN consultation engine for leadership decision analysis.
- * The consultant captures decision context, the council provides
- * multi-framing insight, and the consultant synthesizes questions
- * to bring back to the leader.
+ * Wraps the AIN consultation engine for practitioner decision support.
+ * The practitioner chooses a situation type (field orientation),
+ * and the council tunes its framings accordingly.
  *
- * This is a consultant-facing tool. The leader never sees the raw output.
+ * This is a practitioner-facing tool. The client never sees the raw output.
  */
 
 import { consult } from '@/lib/ain/consultation';
 import type { ConsultationRequest, ConsultationResult } from '@/lib/ain/types';
-import type { DecisionContext, TimePressure } from './types';
+import type { DecisionContext } from './types';
+import { getSituationConfig, buildSituationQuestion, mapTimePressure } from './situationTypes';
 
 /**
- * Run AIN consultation for a leadership decision.
+ * Run AIN consultation for a decision, tuned by situation type.
  *
- * Uses deliberation council with strategic + domain preferences.
- * Always includes leadership-power framing; selects others by question.
+ * Uses the situation type to select the right council, framings,
+ * and question structure. Falls back to 'individual' if no type specified.
  */
 export async function consultDecisionCouncil(
   decision: DecisionContext
 ): Promise<ConsultationResult> {
-  const question = buildDecisionQuestion(decision);
+  const config = getSituationConfig(decision.situationType);
+  const question = buildSituationQuestion(decision, config);
 
   const request: ConsultationRequest = {
-    council: 'deliberation',
+    council: config.council,
     question,
     context: {
       urgency: mapTimePressure(decision.timePressure),
-      topicHints: ['leadership', 'executive', 'organizational', 'decision'],
+      topicHints: config.topicHints,
     },
     constraints: {
-      maxFramings: 5,
-      preferDomains: ['strategic', 'domain'],
-      requireFramings: ['leadership-power'],
+      maxFramings: config.maxFramings,
+      preferDomains: config.preferDomains,
+      requireFramings: config.requireFramings,
     },
   };
 
   return consult(request);
-}
-
-/**
- * Build a structured question from decision context.
- * The question text is what each framing receives for analysis.
- */
-function buildDecisionQuestion(d: DecisionContext): string {
-  const parts: string[] = [
-    `DECISION: ${d.title}`,
-    '',
-    `CONTEXT: ${d.context}`,
-  ];
-
-  if (d.stakes) {
-    parts.push('', `STAKES: ${d.stakes}`);
-  }
-
-  if (d.timePressure && d.timePressure !== 'none') {
-    parts.push(`TIME PRESSURE: ${d.timePressure}`);
-  }
-
-  if (d.emotionalState) {
-    parts.push(`LEADER STATE: ${d.emotionalState}`);
-  }
-
-  if (d.leadershipProfile) {
-    const lp = d.leadershipProfile;
-    const profileParts: string[] = [];
-    if (lp.role) profileParts.push(`Role: ${lp.role}`);
-    if (lp.orgName) profileParts.push(`Organization: ${lp.orgName}`);
-    if (lp.authorityScope) profileParts.push(`Authority: ${lp.authorityScope}`);
-    if (lp.stakeholderComplexity) profileParts.push(`Stakeholder complexity: ${lp.stakeholderComplexity}`);
-    if (profileParts.length > 0) {
-      parts.push('', `LEADER PROFILE: ${profileParts.join(' | ')}`);
-    }
-  }
-
-  parts.push(
-    '',
-    'What perspectives, tensions, and risks should the consultant surface?',
-    'What questions should they bring back to the leader?'
-  );
-
-  return parts.join('\n');
-}
-
-function mapTimePressure(tp?: TimePressure): 'low' | 'medium' | 'high' {
-  switch (tp) {
-    case 'urgent':
-    case 'high':
-      return 'high';
-    case 'medium':
-      return 'medium';
-    default:
-      return 'low';
-  }
 }

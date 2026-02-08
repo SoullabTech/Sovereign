@@ -23,6 +23,7 @@ import {
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DecisionRecord } from '@/lib/studio/leadership/types';
+import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -36,6 +37,8 @@ const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label:
   'user-experience': { icon: Droplets, color: 'text-blue-300', label: 'Human Experience' },
   'phenomenology': { icon: Star, color: 'text-indigo-400', label: 'Phenomenology' },
   'jung-archetypal': { icon: Star, color: 'text-violet-400', label: 'Archetypal' },
+  'relationships': { icon: Droplets, color: 'text-rose-400', label: 'Relationships' },
+  'grief': { icon: Wind, color: 'text-slate-400', label: 'Grief' },
 };
 
 function getFramingConfig(id: string) {
@@ -147,6 +150,7 @@ export default function DecisionDetailPage() {
   }
 
   const council = decision.councilResult;
+  const situationConfig = getSituationConfig(decision.situationType);
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -178,6 +182,11 @@ export default function DecisionDetailPage() {
         <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4 mb-6">
           <p className="text-sm text-slate-300">{decision.context}</p>
           <div className="flex flex-wrap gap-3 mt-3">
+            {decision.situationType && (
+              <span className="text-xs px-2 py-0.5 rounded text-slate-300 bg-slate-800/80">
+                {situationConfig.label}
+              </span>
+            )}
             {decision.stakes && (
               <span className="text-xs text-slate-400">
                 <span className="text-slate-500">Stakes:</span> {decision.stakes}
@@ -194,7 +203,7 @@ export default function DecisionDetailPage() {
             )}
             {decision.emotionalState && (
               <span className="text-xs text-slate-400">
-                <span className="text-slate-500">Leader state:</span> {decision.emotionalState}
+                <span className="text-slate-500">{situationConfig.contextLabels.stateLabel}:</span> {decision.emotionalState}
               </span>
             )}
           </div>
@@ -330,7 +339,10 @@ export default function DecisionDetailPage() {
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="What patterns do you see? What would you surface to the leader?"
+              placeholder={decision.situationType === 'self'
+                ? 'What am I noticing? What patterns might be active in me?'
+                : 'What patterns do you see? What would you surface in the next session?'
+              }
               rows={4}
               className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none resize-none"
             />
@@ -338,7 +350,7 @@ export default function DecisionDetailPage() {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-slate-300">Questions for the Leader</label>
+              <label className="text-sm font-medium text-slate-300">{situationConfig.contextLabels.questionsLabel}</label>
               {questions.length > 0 && (
                 <button
                   onClick={copyQuestions}

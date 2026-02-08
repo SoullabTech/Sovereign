@@ -67,6 +67,7 @@ export async function POST(
       clientId: row.client_id || undefined,
       clientName: row.client_name || undefined,
       leadershipProfile: row.leadership_profile || undefined,
+      situationType: row.situation_type || undefined,
     };
 
     // Run AIN consultation
@@ -101,6 +102,7 @@ export async function POST(
         councilResult: updated.council_result,
         consultantNotes: updated.consultant_notes,
         questionsForLeader: updated.questions_for_leader || [],
+        situationType: updated.situation_type,
         status: updated.status,
         consultedAt: updated.consulted_at,
         createdAt: updated.created_at,
