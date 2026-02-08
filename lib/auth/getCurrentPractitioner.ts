@@ -7,6 +7,8 @@ export interface PractitionerIdentity {
   practitionerId: string;
   practitionerSlug: string;
   practitionerName: string;
+  portalType: string;
+  enabledModules: string[] | null;
 }
 
 /**
@@ -33,7 +35,9 @@ export async function getCurrentPractitioner(
     `SELECT
        p.id as practitioner_id,
        p.slug,
-       p.name
+       p.name,
+       p.portal_type,
+       p.enabled_modules
      FROM practitioners p
      WHERE p.member_id = $1
        AND p.status = 'active'
@@ -52,6 +56,8 @@ export async function getCurrentPractitioner(
     practitionerId: row.practitioner_id,
     practitionerSlug: row.slug,
     practitionerName: row.name,
+    portalType: row.portal_type ?? 'generalist',
+    enabledModules: row.enabled_modules ?? null,
   };
 }
 

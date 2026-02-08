@@ -8,16 +8,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';
 import { v4 as uuid } from 'uuid';
+import { validateModuleSlugs } from '@/lib/studio/moduleDefinitions';
 
 interface CreatePractitionerInput {
   memberId: string;
   practiceName: string;
   slug: string;
   email: string;
-  portalType?: 'generalist' | 'astrology' | 'therapy' | 'bodywork' | 'groups';
+  portalType?: string;
+  enabledModules?: string[];
+  consultantProfile?: {
+    subtypes?: string[];
+    industries?: string[];
+    modalities?: string[];
+    notes?: string;
+  };
 }
 
-const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician'] as const;
+const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician', 'consultant'] as const;
 type PortalType = typeof VALID_PORTAL_TYPES[number];
 
 function isValidPortalType(t: string): t is PortalType {
@@ -36,7 +44,15 @@ function isValidPortalType(t: string): t is PortalType {
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePractitionerInput = await request.json();
-    const { memberId, practiceName, slug, email, portalType = 'generalist' } = body;
+    const {
+      memberId,
+      practiceName,
+      slug,
+      email,
+      portalType = 'generalist',
+      enabledModules,
+      consultantProfile,
+    } = body;
 
     // Validate required fields
     if (!memberId || !practiceName || !slug || !email) {
@@ -50,6 +66,22 @@ export async function POST(request: NextRequest) {
     if (!isValidPortalType(portalType)) {
       return NextResponse.json(
         { error: `Invalid portal type. Must be one of: ${VALID_PORTAL_TYPES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate enabled modules (if provided)
+    if (enabledModules && !validateModuleSlugs(enabledModules)) {
+      return NextResponse.json(
+        { error: 'Invalid module slug in enabledModules' },
+        { status: 400 }
+      );
+    }
+
+    // Validate consultant profile (only allowed for consultant type)
+    if (consultantProfile && portalType !== 'consultant') {
+      return NextResponse.json(
+        { error: 'consultantProfile is only valid for consultant portal type' },
         { status: 400 }
       );
     }
@@ -107,12 +139,18 @@ export async function POST(request: NextRequest) {
       const practitionerId = uuid();
       const now = new Date().toISOString();
 
-      // Create practitioner record (status defaults to 'onboarding')
+      // Create practitioner record
       await client.query(
         `INSERT INTO practitioners (
-          id, member_id, slug, name, email, portal_type, status, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [practitionerId, memberId, slug, practiceName, email, portalType, 'active', now, now]
+          id, member_id, slug, name, email, portal_type, status,
+          enabled_modules, consultant_profile, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          practitionerId, memberId, slug, practiceName, email, portalType, 'active',
+          enabledModules ? JSON.stringify(enabledModules) : null,
+          consultantProfile ? JSON.stringify(consultantProfile) : null,
+          now, now,
+        ]
       );
 
       // Create initial practitioner_themes record with defaults
@@ -170,6 +208,8 @@ export async function POST(request: NextRequest) {
         name: practiceName,
         email,
         portal_type: portalType,
+        enabled_modules: enabledModules ?? null,
+        consultant_profile: consultantProfile ?? null,
         status: 'active',
         created_at: now,
         updated_at: now,
