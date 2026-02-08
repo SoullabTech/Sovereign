@@ -41,7 +41,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
-import { StateCard } from './maia/StateCard';
+import { StateCard, type StateCardDisplayMode } from './maia/StateCard';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -7560,12 +7560,20 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
-                      {/* 🌀 STATE CARD: Consciousness state reading */}
+                      {/* 🌀 STATE CARD: Consciousness state reading (mode-aware) */}
+                      {/* Care = full (element + kairos + movement + practice) */}
+                      {/* Talk = light (kairos + movement only — phenomenological, not prescriptive) */}
+                      {/* Scribe = structural (full data, framed as session metadata) */}
                       {message.role === 'oracle' && message.stateVector && (
                         <div className="mt-3">
                           <StateCard
                             stateVector={message.stateVector}
                             practice={message.practiceRecommendation}
+                            displayMode={
+                              maiaMode.mode === 'care' ? 'full' :
+                              maiaMode.mode === 'scribe' ? 'structural' :
+                              'light'
+                            }
                           />
                         </div>
                       )}

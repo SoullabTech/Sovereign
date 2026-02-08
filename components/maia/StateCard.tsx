@@ -12,6 +12,11 @@
  * - Expandable: confidence, evidence, and full vector available on tap.
  * - No ranking: no element is "better" than another.
  * - Sovereignty: the member can always dismiss or override.
+ *
+ * Display modes (mode-aware):
+ * - full:       Care mode — element, kairos, movement, practice, expand
+ * - light:      Talk mode — kairos, movement, description only (phenomenological)
+ * - structural: Scribe mode — full data, framed as session metadata
  */
 
 import React, { useState } from 'react';
@@ -25,6 +30,16 @@ import {
 type Element = 'earth' | 'water' | 'fire' | 'air' | 'aether';
 type Intensity = 'low' | 'medium' | 'high';
 type KairosAssessment = 'stable' | 'transition' | 'threshold' | 'integration' | 'collapse-risk';
+
+/**
+ * Display mode controls how much of the state vector is shown.
+ * Server always returns the full state; client decides the lens.
+ *
+ * full:       Care — element names, kairos, movement, practice, expandable detail
+ * light:      Talk — kairos + movement + description only (no element labels, no practice)
+ * structural: Scribe — full data with "Session State" framing for practitioners
+ */
+export type StateCardDisplayMode = 'full' | 'light' | 'structural';
 
 interface ElementalReading {
   element: Element;
@@ -69,6 +84,7 @@ interface PracticeData {
 interface StateCardProps {
   stateVector: StateVectorData | null;
   practice?: PracticeData | null;
+  displayMode?: StateCardDisplayMode;
   onDismiss?: () => void;
 }
 
@@ -146,7 +162,7 @@ const DURATION_LABELS: Record<string, string> = {
 
 // ── Component ──────────────────────────────────────────────────────────
 
-export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) {
+export function StateCard({ stateVector, practice, displayMode = 'full', onDismiss }: StateCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (!stateVector) return null;
@@ -156,35 +172,67 @@ export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) 
   const secConfig = secondary ? ELEMENT_CONFIG[secondary.element] : null;
   const kairosConfig = KAIROS_CONFIG[kairos.assessment];
 
+  // In light mode, use a neutral border/bg instead of element-colored
+  const isLight = displayMode === 'light';
+  const isStructural = displayMode === 'structural';
+  const showElements = !isLight;
+  const showPractice = !isLight; // Care + Structural get practice; Talk doesn't
+  const showExpandToggle = !isLight; // Light mode is compact, no expand
+
   return (
     <div
       data-testid="state-card"
+      data-display-mode={displayMode}
       className={`
-        rounded-2xl border ${elConfig.borderColor} ${elConfig.bgColor}
+        rounded-2xl border
+        ${isLight ? 'border-white/10 bg-white/5' : `${elConfig.borderColor} ${elConfig.bgColor}`}
         p-4 shadow-sm transition-all duration-300 ease-out
         backdrop-blur-sm
       `}
     >
-      {/* ── Header: Element + Kairos ── */}
+      {/* ── Structural label (Scribe mode) ── */}
+      {isStructural && (
+        <div className="text-[10px] uppercase tracking-widest text-white/30 mb-2">
+          Session State
+        </div>
+      )}
+
+      {/* ── Header ── */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className={elConfig.color}>{elConfig.icon}</span>
+          {/* Icon: always show in full/structural, use neutral in light */}
+          {showElements ? (
+            <span className={elConfig.color}>{elConfig.icon}</span>
+          ) : (
+            <Activity className="w-4 h-4 text-white/40" />
+          )}
           <div>
-            <div className={`text-lg font-semibold ${elConfig.color}`}>
-              {elConfig.label}
-              {secConfig && (
-                <span className={`text-sm font-normal ${secConfig.color} ml-1.5`}>
-                  + {secConfig.label}
-                </span>
-              )}
-            </div>
-            <div className="text-xs text-white/40 mt-0.5">
-              {POLARITY_LABELS[primary.polarity] || 'Balanced'}
-              {primary.intensity !== 'medium' && ` | ${primary.intensity} intensity`}
-            </div>
+            {showElements ? (
+              /* Full / Structural: show element names */
+              <>
+                <div className={`text-lg font-semibold ${elConfig.color}`}>
+                  {elConfig.label}
+                  {secConfig && (
+                    <span className={`text-sm font-normal ${secConfig.color} ml-1.5`}>
+                      + {secConfig.label}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-white/40 mt-0.5">
+                  {POLARITY_LABELS[primary.polarity] || 'Balanced'}
+                  {primary.intensity !== 'medium' && ` | ${primary.intensity} intensity`}
+                </div>
+              </>
+            ) : (
+              /* Light (Talk): "Current shift" header instead of element names */
+              <div className="text-sm font-medium text-white/60">
+                Current shift
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Kairos badge: always visible (all modes) */}
         <div className="flex items-center gap-2">
           <span className={`text-xs px-2 py-0.5 rounded-full ${kairosConfig.bgColor} ${kairosConfig.color}`}>
             {kairosConfig.label}
@@ -204,7 +252,7 @@ export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) 
         </p>
       )}
 
-      {/* ── Movement (when elements are entering/exiting) ── */}
+      {/* ── Movement (when elements are entering/exiting) — all modes ── */}
       {(movement.entering.length > 0 || movement.exiting.length > 0) && (
         <div className="mt-2 flex items-center gap-2 text-xs text-white/40">
           <Activity className="w-3 h-3" />
@@ -217,8 +265,8 @@ export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) 
         </div>
       )}
 
-      {/* ── One Move (practice recommendation) ── */}
-      {practice && practice.primary && (
+      {/* ── One Move (practice recommendation) — Care + Structural only ── */}
+      {showPractice && practice && practice.primary && (
         <div className="mt-3 rounded-xl bg-black/20 p-3">
           <div className="flex items-center justify-between">
             <span className="text-xs text-white/50">
@@ -241,17 +289,19 @@ export function StateCard({ stateVector, practice, onDismiss }: StateCardProps) 
         </div>
       )}
 
-      {/* ── Expand/Collapse toggle ── */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="mt-2 flex items-center gap-1 text-xs text-white/30 hover:text-white/50 transition-colors"
-      >
-        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        {expanded ? 'Less' : 'More'}
-      </button>
+      {/* ── Expand/Collapse toggle — Care + Structural only ── */}
+      {showExpandToggle && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-2 flex items-center gap-1 text-xs text-white/30 hover:text-white/50 transition-colors"
+        >
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {expanded ? 'Less' : 'More'}
+        </button>
+      )}
 
-      {/* ── Expanded detail ── */}
-      {expanded && (
+      {/* ── Expanded detail — Care + Structural only ── */}
+      {showExpandToggle && expanded && (
         <div className="mt-3 space-y-2 border-t border-white/5 pt-3">
           {/* Stability */}
           <div className="flex justify-between text-xs">
