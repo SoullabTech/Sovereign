@@ -572,6 +572,11 @@ export const PRACTICES: Practice[] = [
   }
 ];
 
+// Return all practices (used by state vector practice router)
+export function getAllPractices(): Practice[] {
+  return PRACTICES;
+}
+
 // Helper functions for filtering and organizing practices
 export function getPracticesByElement(element: ElementKey | 'all'): Practice[] {
   if (element === 'all') {

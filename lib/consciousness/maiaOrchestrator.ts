@@ -856,6 +856,10 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     },
     metadata: {
       ...maiaResult.metadata,
+      // 🌀 State vector reading from this turn (if detected as check-in)
+      stateVector: maiaResult.stateVector || null,
+      // 🌿 Practice recommendation from state vector routing
+      practiceRecommendation: maiaResult.practiceRecommendation || null,
       // 🔮 Sovereignty auditing: which provider served this response
       provider: maiaResult.provider,
       consciousnessLayers: {

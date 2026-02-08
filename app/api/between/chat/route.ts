@@ -2117,6 +2117,10 @@ This user is in guest mode (no authenticated identity).
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
+      // 🌀 STATE VECTOR: Current consciousness state reading (if check-in detected)
+      stateVector: orchestratorResult.metadata?.stateVector || null,
+      // 🌿 PRACTICE: Recommended practice from state vector routing
+      practiceRecommendation: orchestratorResult.metadata?.practiceRecommendation || null,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,
       // 🌀 INTEGRITY CHECK: Pass 3 result for client-side lens switching UI
