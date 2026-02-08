@@ -97,9 +97,13 @@ const CRISIS_PATTERNS = [
 ];
 
 const BURNOUT_PATTERNS = [
-  /\bcan'?t (do this|take it|handle|cope|keep going) anymore\b/i,
-  /\bso (exhausted|tired|burnt out|burned out|overwhelmed)\b/i,
-  /\b(everything|it all) (is|feels) (too much|pointless|hopeless)\b/i,
+  /\bcan'?t (do this|take it|handle|cope|keep going|keep up) anymore\b/i,
+  /\bcan'?t (keep up|keep going)\b/i,
+  /\b(so|really|completely|totally) (exhausted|tired|burnt out|burned out|overwhelmed|drained)\b/i,
+  /\b(exhausted|burned out|burnt out) (every|all the|all) (day|time|night)\b/i,
+  /\b(everything|it all|school|life) (is|feels) (too much|pointless|hopeless|overwhelming)\b/i,
+  /\btoo much (pressure|stress|work|homework)\b/i,
+  /\bnever have (time|energy|enough)\b/i,
   /\bhaven'?t slept\b/i,
   /\bcan'?t sleep\b/i,
   /\bfailing (everything|all my|school|classes)\b/i,
