@@ -2461,11 +2461,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           ` | confidence=${parsedStateVector.confidence}`
         );
 
-        // Persist (non-blocking, respects Sanctuary)
-        if (!isSanctuaryEarly && effectiveUserId) {
+        // Persist (non-blocking, respects Sanctuary, requires real member UUID)
+        const isRealMember = effectiveUserId && !effectiveUserId.startsWith('anon:') && /^[0-9a-f-]{36}$/i.test(effectiveUserId);
+        if (!isSanctuaryEarly && isRealMember) {
           storeStateVector(parsedStateVector, input).catch(err => {
             console.error('❌ [State Vector] Store failed (non-blocking):', err);
           });
+        } else if (!isRealMember) {
+          console.log('🌀 [State Vector] Skipping storage for anonymous user');
         }
 
         // Route practice recommendation (confidence-gated)
