@@ -41,6 +41,29 @@ export async function GET(
     }
 
     const row = result.rows[0];
+
+    // Fetch iteration history
+    const iterationsResult = await db.query(
+      `SELECT id, iteration_number, session_notes, updated_context, emotional_state,
+              council_result, consultant_notes, questions, consulted_at
+       FROM decision_iterations
+       WHERE decision_id = $1
+       ORDER BY iteration_number ASC`,
+      [id]
+    );
+
+    const iterations = iterationsResult.rows.map(r => ({
+      id: r.id,
+      iterationNumber: r.iteration_number,
+      sessionNotes: r.session_notes,
+      updatedContext: r.updated_context,
+      emotionalState: r.emotional_state,
+      councilResult: r.council_result,
+      consultantNotes: r.consultant_notes,
+      questions: r.questions || [],
+      consultedAt: r.consulted_at?.toISOString(),
+    }));
+
     return NextResponse.json({
       decision: {
         id: row.id,
@@ -58,10 +81,12 @@ export async function GET(
         consultantNotes: row.consultant_notes,
         questionsForLeader: row.questions_for_leader || [],
         situationType: row.situation_type,
+        iterationCount: row.iteration_count || 0,
         status: row.status,
         consultedAt: row.consulted_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        iterations,
       },
     });
   } catch (error) {
@@ -113,7 +138,7 @@ export async function PUT(
     }
 
     if (body.status !== undefined) {
-      const valid = ['draft', 'consulting', 'complete', 'archived'];
+      const valid = ['draft', 'consulting', 'active', 'complete', 'archived'];
       if (!valid.includes(body.status)) {
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
       }

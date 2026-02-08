@@ -26,7 +26,7 @@ export interface LeadershipProfile {
 // ─── Decision Council ────────────────────────────────────────────
 
 export type TimePressure = 'none' | 'low' | 'medium' | 'high' | 'urgent';
-export type DecisionStatus = 'draft' | 'consulting' | 'complete' | 'archived';
+export type DecisionStatus = 'draft' | 'consulting' | 'active' | 'complete' | 'archived';
 
 export interface DecisionContext {
   title: string;
@@ -56,9 +56,33 @@ export interface DecisionRecord {
   questionsForLeader: string[];
   situationType: string | null;
   status: DecisionStatus;
+  iterationCount: number;
   consultedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  iterations?: DecisionIteration[];
+}
+
+// ─── Iteration Support ──────────────────────────────────────────
+
+export interface DecisionIteration {
+  id: string;
+  iterationNumber: number;
+  sessionNotes: string | null;
+  updatedContext: string | null;
+  emotionalState: string | null;
+  councilResult: ConsultationResult;
+  consultantNotes: string | null;
+  questions: string[];
+  consultedAt: string;
+}
+
+export interface IterationContext {
+  iterationNumber: number;
+  priorTensions: string[];
+  priorRecommendation: string;
+  priorInsights: string[];
+  sessionNotes?: string;
 }
 
 // ─── Leadership Briefing ─────────────────────────────────────────
@@ -69,6 +93,7 @@ export interface LeadershipBriefingContext {
     title: string;
     date: string;
     status: DecisionStatus;
+    iterationCount?: number;
     keyTensions?: string[];
   }>;
   pressureSignals: string[];

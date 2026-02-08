@@ -8,7 +8,7 @@
  */
 
 import type { Council, FramingDomain } from '@/lib/ain/types';
-import type { DecisionContext, TimePressure } from './types';
+import type { DecisionContext, TimePressure, IterationContext } from './types';
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -151,8 +151,16 @@ export function getSituationConfig(type?: string | null): SituationConfig {
 /**
  * Build a structured question from decision context, oriented by situation type.
  * This replaces the leadership-only buildDecisionQuestion.
+ *
+ * When iterationContext is provided, the question includes the arc:
+ * prior tensions, recommendation, insights, and what happened since.
+ * The council sees the full trajectory, not just the current snapshot.
  */
-export function buildSituationQuestion(d: DecisionContext, config: SituationConfig): string {
+export function buildSituationQuestion(
+  d: DecisionContext,
+  config: SituationConfig,
+  iteration?: IterationContext
+): string {
   const parts: string[] = [
     `SITUATION: ${d.title}`,
     '',
@@ -185,7 +193,39 @@ export function buildSituationQuestion(d: DecisionContext, config: SituationConf
     }
   }
 
-  parts.push('', config.closingQuestion);
+  // Include iteration context — the council sees the arc
+  if (iteration && iteration.iterationNumber > 1) {
+    parts.push('', `--- PRIOR COUNCIL (iteration ${iteration.iterationNumber - 1}) ---`);
+
+    if (iteration.priorTensions.length > 0) {
+      parts.push(`Key tensions identified:`);
+      for (const t of iteration.priorTensions) {
+        parts.push(`  - ${t}`);
+      }
+    }
+
+    if (iteration.priorInsights.length > 0) {
+      parts.push(`Key insights:`);
+      for (const ins of iteration.priorInsights) {
+        parts.push(`  - ${ins}`);
+      }
+    }
+
+    if (iteration.priorRecommendation) {
+      parts.push(`Prior recommendation: ${iteration.priorRecommendation}`);
+    }
+
+    if (iteration.sessionNotes) {
+      parts.push('', `WHAT HAS HAPPENED SINCE:`, iteration.sessionNotes);
+    }
+
+    parts.push(
+      '',
+      `This is iteration ${iteration.iterationNumber}. What has shifted? What persists? What new questions emerge?`
+    );
+  } else {
+    parts.push('', config.closingQuestion);
+  }
 
   return parts.join('\n');
 }

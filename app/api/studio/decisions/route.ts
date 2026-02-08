@@ -14,7 +14,7 @@ import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { randomUUID } from 'crypto';
 
-const VALID_STATUSES = ['draft', 'consulting', 'complete', 'archived'] as const;
+const VALID_STATUSES = ['draft', 'consulting', 'active', 'complete', 'archived'] as const;
 const VALID_TIME_PRESSURES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 const VALID_SITUATION_TYPES = ['individual', 'relational', 'group', 'leadership', 'self'] as const;
 
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         d.consultant_notes,
         d.questions_for_leader,
         d.situation_type,
+        d.iteration_count,
         d.status,
         d.consulted_at,
         d.created_at,
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
       consultantNotes: row.consultant_notes,
       questionsForLeader: row.questions_for_leader || [],
       situationType: row.situation_type,
+      iterationCount: row.iteration_count || 0,
       status: row.status,
       consultedAt: row.consulted_at,
       createdAt: row.created_at,
@@ -173,6 +175,7 @@ export async function POST(request: NextRequest) {
         consultantNotes: row.consultant_notes,
         questionsForLeader: row.questions_for_leader || [],
         situationType: row.situation_type,
+        iterationCount: row.iteration_count || 0,
         status: row.status,
         consultedAt: row.consulted_at,
         createdAt: row.created_at,

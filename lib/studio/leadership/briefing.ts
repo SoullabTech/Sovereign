@@ -19,16 +19,24 @@ export async function getLeadershipBriefingContext(
   clientId: string
 ): Promise<LeadershipBriefingContext | null> {
   try {
-    // Fetch recent decisions for this client
+    // Fetch recent decisions for this client (with iteration context)
     const decisionsResult = await db.query(
       `SELECT
-        id, title, status, consulted_at, created_at,
-        council_result->'tensions' as tensions
-      FROM studio_decisions
-      WHERE practitioner_id = $1
-        AND client_id = $2
-        AND status != 'archived'
-      ORDER BY created_at DESC
+        d.id, d.title, d.status, d.consulted_at, d.created_at,
+        d.iteration_count,
+        d.council_result->'tensions' as tensions,
+        d.council_result->'recommendation' as recommendation,
+        (SELECT di.session_notes
+         FROM decision_iterations di
+         WHERE di.decision_id = d.id
+         ORDER BY di.iteration_number DESC
+         LIMIT 1
+        ) as latest_session_notes
+      FROM studio_decisions d
+      WHERE d.practitioner_id = $1
+        AND d.client_id = $2
+        AND d.status != 'archived'
+      ORDER BY d.created_at DESC
       LIMIT 5`,
       [practitionerId, clientId]
     );
@@ -38,6 +46,7 @@ export async function getLeadershipBriefingContext(
       title: row.title,
       date: (row.consulted_at || row.created_at)?.toISOString(),
       status: row.status,
+      iterationCount: row.iteration_count || 0,
       keyTensions: Array.isArray(row.tensions) ? row.tensions.slice(0, 3) : undefined,
     }));
 
@@ -75,6 +84,17 @@ export async function getLeadershipBriefingContext(
     for (const d of decisionsResult.rows) {
       if (d.status === 'draft') {
         pressureSignals.push(`Open decision: "${d.title}"`);
+      } else if (d.status === 'active' && d.iteration_count > 1) {
+        const roundLabel = d.iteration_count === 2 ? '2nd round' : `${d.iteration_count} rounds`;
+        let signal = `Active decision (${roundLabel}): "${d.title}"`;
+        if (d.latest_session_notes) {
+          // Include a brief excerpt of the latest session notes
+          const excerpt = d.latest_session_notes.length > 120
+            ? d.latest_session_notes.slice(0, 120) + '...'
+            : d.latest_session_notes;
+          signal += ` — last update: ${excerpt}`;
+        }
+        pressureSignals.push(signal);
       }
     }
 

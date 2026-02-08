@@ -11,7 +11,8 @@ import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
   draft: { label: 'Draft', color: 'text-slate-400 bg-slate-800' },
   consulting: { label: 'Consulting...', color: 'text-amber-300 bg-amber-900/40' },
-  complete: { label: 'Complete', color: 'text-emerald-300 bg-emerald-900/40' },
+  active: { label: 'Active', color: 'text-amber-200 bg-amber-900/30' },
+  complete: { label: 'Resolved', color: 'text-emerald-300 bg-emerald-900/40' },
   archived: { label: 'Archived', color: 'text-slate-500 bg-slate-800/50' },
 };
 
@@ -70,7 +71,7 @@ export default function DecisionsPage() {
 
         {/* Filters */}
         <div className="flex gap-2 mb-6">
-          {['', 'draft', 'complete'].map(s => (
+          {['', 'draft', 'active', 'complete'].map(s => (
             <button
               key={s}
               onClick={() => setFilter(s)}
@@ -80,7 +81,7 @@ export default function DecisionsPage() {
                   : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:border-slate-600'
               }`}
             >
-              {s === '' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === '' ? 'All' : s === 'complete' ? 'Resolved' : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
@@ -157,6 +158,11 @@ export default function DecisionsPage() {
                       </span>
                       {d.situationType && (
                         <span className="text-slate-500">{getSituationConfig(d.situationType).label}</span>
+                      )}
+                      {d.iterationCount > 1 && (
+                        <span className="text-amber-400/70">
+                          {d.iterationCount} rounds
+                        </span>
                       )}
                       {d.councilResult && (
                         <span className="flex items-center gap-1">

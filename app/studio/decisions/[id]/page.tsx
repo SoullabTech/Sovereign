@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   Scale,
@@ -19,10 +19,15 @@ import {
   X,
   Copy,
   Check,
+  ChevronDown,
+  ChevronRight,
+  CircleDot,
+  CheckCircle2,
+  RotateCcw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
-import type { DecisionRecord } from '@/lib/studio/leadership/types';
+import type { DecisionRecord, DecisionIteration } from '@/lib/studio/leadership/types';
 import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
@@ -44,6 +49,281 @@ const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label:
 function getFramingConfig(id: string) {
   return ELEMENT_CONFIG[id] || { icon: Sparkles, color: 'text-slate-400', label: id.replace(/-/g, ' ') };
 }
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ─── Council Result Display ─────────────────────────────────────
+
+function CouncilResultView({ council, animate = true }: { council: NonNullable<DecisionRecord['councilResult']>; animate?: boolean }) {
+  return (
+    <div className="space-y-6">
+      {/* Emergence Rating */}
+      {council.emergenceRating && (
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <span className="text-sm text-purple-300 capitalize">{council.emergenceRating}</span>
+          <span className="text-xs text-slate-500">
+            ({council.framingsUsed?.length || 0} perspectives, {((council.confidence || 0) * 100).toFixed(0)}% confidence)
+          </span>
+        </div>
+      )}
+
+      {/* Framing Responses */}
+      {council.rawResponses && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-medium text-slate-300 uppercase tracking-wider">Council Voices</h2>
+          {Object.entries(council.rawResponses).map(([framingId, response], i) => {
+            const config = getFramingConfig(framingId);
+            const Icon = config.icon;
+            const weight = council.framingWeights?.[framingId];
+            const Wrapper = animate ? motion.div : 'div';
+            const animProps = animate ? {
+              initial: { opacity: 0, x: -10 },
+              animate: { opacity: 1, x: 0 },
+              transition: { delay: i * 0.1 },
+            } : {};
+            return (
+              <Wrapper
+                key={framingId}
+                {...(animProps as any)}
+                className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-4"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className={`w-4 h-4 ${config.color}`} />
+                  <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
+                  {weight !== undefined && (
+                    <span className="text-xs text-slate-500 ml-auto">
+                      weight: {(weight * 100).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+                  {response as string}
+                </p>
+              </Wrapper>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Tensions */}
+      {council.tensions?.length > 0 && (
+        <div className="rounded-lg border border-amber-900/30 bg-amber-950/10 p-4">
+          <h3 className="text-sm font-medium text-amber-300 mb-2">Tensions</h3>
+          <ul className="space-y-1.5">
+            {council.tensions.map((t, i) => (
+              <li key={i} className="text-sm text-amber-200/70 flex items-start gap-2">
+                <span className="text-amber-500 mt-1">-</span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Risks */}
+      {council.risks?.length > 0 && (
+        <div className="rounded-lg border border-red-900/30 bg-red-950/10 p-4">
+          <h3 className="text-sm font-medium text-red-300 mb-2">Risks</h3>
+          <ul className="space-y-1.5">
+            {council.risks.map((r, i) => (
+              <li key={i} className="text-sm text-red-200/70 flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
+                <span>{r}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Insights */}
+      {council.insights?.length > 0 && (
+        <div className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-4">
+          <h3 className="text-sm font-medium text-slate-300 mb-2">Insights</h3>
+          <ul className="space-y-1.5">
+            {council.insights.map((ins, i) => (
+              <li key={i} className="text-sm text-slate-300/80">{ins}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Recommendation */}
+      {council.recommendation && (
+        <div className="rounded-lg border border-emerald-900/30 bg-emerald-950/10 p-4">
+          <h3 className="text-sm font-medium text-emerald-300 mb-2">Recommendation</h3>
+          <p className="text-sm text-emerald-200/70">{council.recommendation}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Iteration Timeline Item ────────────────────────────────────
+
+function IterationTimelineItem({ iteration, isLast }: { iteration: DecisionIteration; isLast: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="relative pl-8">
+      {/* Timeline line */}
+      {!isLast && (
+        <div className="absolute left-[11px] top-6 bottom-0 w-px bg-slate-800/60" />
+      )}
+      {/* Timeline dot */}
+      <div className="absolute left-0 top-1">
+        <CircleDot className="w-6 h-6 text-slate-600" />
+      </div>
+
+      <div className="pb-6">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-left w-full group"
+        >
+          {expanded ? (
+            <ChevronDown className="w-4 h-4 text-slate-500" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          )}
+          <span className="text-sm font-medium text-slate-300">
+            Round {iteration.iterationNumber}
+          </span>
+          <span className="text-xs text-slate-500">
+            {formatDate(iteration.consultedAt)}
+          </span>
+          {iteration.councilResult?.emergenceRating && (
+            <span className="text-xs text-purple-400 capitalize">
+              {iteration.councilResult.emergenceRating}
+            </span>
+          )}
+        </button>
+
+        {/* Session notes preview (always visible if present) */}
+        {iteration.sessionNotes && !expanded && (
+          <p className="text-xs text-slate-500 mt-1 ml-6 line-clamp-2 italic">
+            {iteration.sessionNotes}
+          </p>
+        )}
+
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 ml-6 space-y-4">
+                {/* Session notes */}
+                {iteration.sessionNotes && (
+                  <div className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-3">
+                    <h4 className="text-xs font-medium text-slate-400 mb-1">What happened since</h4>
+                    <p className="text-sm text-slate-300 whitespace-pre-line">{iteration.sessionNotes}</p>
+                  </div>
+                )}
+
+                {/* Consultant notes from this iteration */}
+                {iteration.consultantNotes && (
+                  <div className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-3">
+                    <h4 className="text-xs font-medium text-slate-400 mb-1">Notes</h4>
+                    <p className="text-sm text-slate-300 whitespace-pre-line">{iteration.consultantNotes}</p>
+                  </div>
+                )}
+
+                {/* Council result */}
+                {iteration.councilResult && (
+                  <CouncilResultView council={iteration.councilResult} animate={false} />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// ─── Continue Decision Form ─────────────────────────────────────
+
+function ContinueDecisionForm({
+  onSubmit,
+  consulting,
+  situationType,
+}: {
+  onSubmit: (sessionNotes: string, emotionalState?: string) => void;
+  consulting: boolean;
+  situationType: string | null;
+}) {
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [emotionalState, setEmotionalState] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const situationConfig = getSituationConfig(situationType);
+
+  if (!showForm) {
+    return (
+      <button
+        onClick={() => setShowForm(true)}
+        className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+      >
+        <RefreshCw className="w-4 h-4" />
+        Continue Decision
+      </button>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-lg border border-amber-900/30 bg-amber-950/10 p-4 space-y-3"
+    >
+      <h3 className="text-sm font-medium text-amber-300">What happened since last session?</h3>
+      <textarea
+        value={sessionNotes}
+        onChange={e => setSessionNotes(e.target.value)}
+        placeholder="What landed? What didn't? What emerged? What did the client reveal?"
+        rows={4}
+        autoFocus
+        className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none resize-none"
+      />
+      <div>
+        <label className="block text-xs text-slate-400 mb-1">
+          {situationConfig.contextLabels.stateLabel} (updated)
+        </label>
+        <input
+          type="text"
+          value={emotionalState}
+          onChange={e => setEmotionalState(e.target.value)}
+          placeholder="Optional — has their state shifted?"
+          className="w-full px-3 py-1.5 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none"
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => onSubmit(sessionNotes, emotionalState || undefined)}
+          disabled={consulting || !sessionNotes.trim()}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
+        >
+          {consulting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {consulting ? 'Consulting...' : 'Consult Council'}
+        </button>
+        <button
+          onClick={() => setShowForm(false)}
+          disabled={consulting}
+          className="px-3 py-2 text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Main Page ──────────────────────────────────────────────────
 
 export default function DecisionDetailPage() {
   const params = useParams();
@@ -79,14 +359,23 @@ export default function DecisionDetailPage() {
     }
   }
 
-  async function runCouncil() {
+  async function runCouncil(sessionNotes?: string, emotionalState?: string) {
     setConsulting(true);
     setConsultError(null);
     try {
-      const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult`, { method: 'POST' });
+      const body: Record<string, string> = {};
+      if (sessionNotes?.trim()) body.sessionNotes = sessionNotes.trim();
+      if (emotionalState?.trim()) body.emotionalState = emotionalState.trim();
+
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult`, {
+        method: 'POST',
+        body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
+      });
       if (res.ok) {
         const data = await res.json();
         setDecision(data.decision);
+        // Reload to get full iteration history
+        await loadDecision();
         setTimeout(() => councilRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       } else {
         const err = await res.json().catch(() => ({ error: 'Council consultation failed' }));
@@ -110,6 +399,21 @@ export default function DecisionDetailPage() {
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function updateStatus(status: 'complete' | 'active') {
+    try {
+      const res = await apiFetch(`/api/studio/decisions/${decisionId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDecision(data.decision);
+      }
+    } catch {
+      // Silently fail — user can try again
     }
   }
 
@@ -151,6 +455,9 @@ export default function DecisionDetailPage() {
 
   const council = decision.councilResult;
   const situationConfig = getSituationConfig(decision.situationType);
+  const hasIterations = (decision.iterations?.length || 0) > 1;
+  const priorIterations = decision.iterations?.slice(0, -1) || [];
+  const isResolved = decision.status === 'complete';
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
@@ -161,21 +468,37 @@ export default function DecisionDetailPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex-1">
-            <h1 className="text-xl font-light text-white">{decision.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-light text-white">{decision.title}</h1>
+              {decision.iterationCount > 1 && (
+                <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                  {decision.iterationCount} rounds
+                </span>
+              )}
+            </div>
             {decision.clientName && (
               <p className="text-sm text-slate-400 mt-0.5">{decision.clientName}</p>
             )}
           </div>
-          {decision.status !== 'complete' && (
-            <button
-              onClick={runCouncil}
-              disabled={consulting}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors"
-            >
-              {consulting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {consulting ? 'Consulting...' : 'Consult Council'}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Status badge */}
+            {isResolved && (
+              <span className="text-xs px-2 py-1 rounded bg-emerald-900/30 text-emerald-300 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Resolved
+              </span>
+            )}
+            {/* First consultation button (no prior result) */}
+            {!council && !consulting && decision.status === 'draft' && (
+              <button
+                onClick={() => runCouncil()}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                <Sparkles className="w-4 h-4" />
+                Consult Council
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Context */}
@@ -216,7 +539,7 @@ export default function DecisionDetailPage() {
             <div className="flex-1">
               <p className="text-sm text-red-300">{consultError}</p>
               <button
-                onClick={runCouncil}
+                onClick={() => runCouncil()}
                 disabled={consulting}
                 className="text-xs text-red-400 hover:text-red-300 mt-1 underline underline-offset-2"
               >
@@ -226,103 +549,10 @@ export default function DecisionDetailPage() {
           </div>
         )}
 
-        {/* Council Result */}
+        {/* Current Council Result */}
         {council ? (
-          <div ref={councilRef} className="space-y-6">
-            {/* Emergence Rating */}
-            {council.emergenceRating && (
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-purple-300 capitalize">{council.emergenceRating}</span>
-                <span className="text-xs text-slate-500">
-                  ({council.framingsUsed?.length || 0} perspectives, {((council.confidence || 0) * 100).toFixed(0)}% confidence)
-                </span>
-              </div>
-            )}
-
-            {/* Framing Responses */}
-            {council.rawResponses && (
-              <div className="space-y-4">
-                <h2 className="text-sm font-medium text-slate-300 uppercase tracking-wider">Council Voices</h2>
-                {Object.entries(council.rawResponses).map(([framingId, response], i) => {
-                  const config = getFramingConfig(framingId);
-                  const Icon = config.icon;
-                  const weight = council.framingWeights?.[framingId];
-                  return (
-                    <motion.div
-                      key={framingId}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-4"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon className={`w-4 h-4 ${config.color}`} />
-                        <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
-                        {weight !== undefined && (
-                          <span className="text-xs text-slate-500 ml-auto">
-                            weight: {(weight * 100).toFixed(0)}%
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
-                        {response as string}
-                      </p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Tensions */}
-            {council.tensions?.length > 0 && (
-              <div className="rounded-lg border border-amber-900/30 bg-amber-950/10 p-4">
-                <h3 className="text-sm font-medium text-amber-300 mb-2">Tensions</h3>
-                <ul className="space-y-1.5">
-                  {council.tensions.map((t, i) => (
-                    <li key={i} className="text-sm text-amber-200/70 flex items-start gap-2">
-                      <span className="text-amber-500 mt-1">-</span>
-                      <span>{t}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Risks */}
-            {council.risks?.length > 0 && (
-              <div className="rounded-lg border border-red-900/30 bg-red-950/10 p-4">
-                <h3 className="text-sm font-medium text-red-300 mb-2">Risks</h3>
-                <ul className="space-y-1.5">
-                  {council.risks.map((r, i) => (
-                    <li key={i} className="text-sm text-red-200/70 flex items-start gap-2">
-                      <AlertTriangle className="w-3.5 h-3.5 text-red-500 mt-0.5 flex-shrink-0" />
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Insights */}
-            {council.insights?.length > 0 && (
-              <div className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-4">
-                <h3 className="text-sm font-medium text-slate-300 mb-2">Insights</h3>
-                <ul className="space-y-1.5">
-                  {council.insights.map((ins, i) => (
-                    <li key={i} className="text-sm text-slate-300/80">{ins}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Recommendation */}
-            {council.recommendation && (
-              <div className="rounded-lg border border-emerald-900/30 bg-emerald-950/10 p-4">
-                <h3 className="text-sm font-medium text-emerald-300 mb-2">Recommendation</h3>
-                <p className="text-sm text-emerald-200/70">{council.recommendation}</p>
-              </div>
-            )}
+          <div ref={councilRef}>
+            <CouncilResultView council={council} />
           </div>
         ) : consulting ? (
           <div className="text-center py-16">
@@ -331,6 +561,55 @@ export default function DecisionDetailPage() {
             <p className="text-xs text-slate-500 mt-1">This may take 10-30 seconds</p>
           </div>
         ) : null}
+
+        {/* Continue / Status Actions */}
+        {council && !consulting && (
+          <div className="mt-6 flex items-center gap-3">
+            {!isResolved && (
+              <ContinueDecisionForm
+                onSubmit={(notes, state) => runCouncil(notes, state)}
+                consulting={consulting}
+                situationType={decision.situationType}
+              />
+            )}
+            {decision.status === 'active' && (
+              <button
+                onClick={() => updateStatus('complete')}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-400 hover:text-emerald-300 border border-slate-700 hover:border-emerald-700 rounded-lg transition-colors"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Mark Resolved
+              </button>
+            )}
+            {isResolved && (
+              <button
+                onClick={() => updateStatus('active')}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-400 hover:text-amber-300 border border-slate-700 hover:border-amber-700 rounded-lg transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Reopen
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Iteration Timeline (prior rounds) */}
+        {hasIterations && priorIterations.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-slate-800/60">
+            <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+              Prior Rounds
+            </h2>
+            <div>
+              {priorIterations.map((iter, i) => (
+                <IterationTimelineItem
+                  key={iter.id}
+                  iteration={iter}
+                  isLast={i === priorIterations.length - 1}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Consultant Notes & Questions */}
         <div className="mt-8 pt-6 border-t border-slate-800/60 space-y-5">

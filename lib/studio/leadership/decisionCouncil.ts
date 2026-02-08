@@ -10,7 +10,7 @@
 
 import { consult } from '@/lib/ain/consultation';
 import type { ConsultationRequest, ConsultationResult } from '@/lib/ain/types';
-import type { DecisionContext } from './types';
+import type { DecisionContext, IterationContext } from './types';
 import { getSituationConfig, buildSituationQuestion, mapTimePressure } from './situationTypes';
 
 /**
@@ -18,12 +18,16 @@ import { getSituationConfig, buildSituationQuestion, mapTimePressure } from './s
  *
  * Uses the situation type to select the right council, framings,
  * and question structure. Falls back to 'individual' if no type specified.
+ *
+ * When iterationContext is provided, the council sees the arc:
+ * prior tensions, recommendation, insights, and what happened since.
  */
 export async function consultDecisionCouncil(
-  decision: DecisionContext
+  decision: DecisionContext,
+  iterationContext?: IterationContext
 ): Promise<ConsultationResult> {
   const config = getSituationConfig(decision.situationType);
-  const question = buildSituationQuestion(decision, config);
+  const question = buildSituationQuestion(decision, config, iterationContext);
 
   const request: ConsultationRequest = {
     council: config.council,
