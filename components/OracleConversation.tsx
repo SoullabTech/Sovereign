@@ -189,6 +189,8 @@ import {
   type TeenSafetyCheck
 } from '@/lib/safety/teenSupportIntegration';
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
+// 🌱 YOUTH DEVELOPMENTAL TIER - age-based constraints and session limits
+import { computeTierFromAge, getTierConfig, isYouthTier, type DevelopmentalTier } from '@/lib/youth/ageTierEngine';
 
 // Time-aware greeting helper for welcome screen
 function getTimeGreeting(): string {
@@ -2688,6 +2690,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // 🌟 TEEN SUPPORT - Initialize teen profile for safety and support
     if (userAge !== null && userAge >= 13 && userAge <= 18) {
       setIsTeenUser(true);
+
+      // 🌱 Compute developmental tier for age-appropriate constraints
+      const tier = computeTierFromAge(userAge);
+      const tierConfig = getTierConfig(tier);
+      console.log(`🌱 Developmental tier: ${tier} (${tierConfig.label}), max session: ${tierConfig.maxSessionMinutes}min`);
 
       // Load teen profile from localStorage
       const userData = getUserData();

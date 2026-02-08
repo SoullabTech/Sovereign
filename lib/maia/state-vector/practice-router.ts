@@ -19,6 +19,7 @@
 
 import type { Practice, PracticeCategory } from '../../elemental-alchemy/practices';
 import type { StateVector, KairosAssessment, ElementalReading, Element } from './types';
+import type { DevelopmentalTier } from '../../youth/ageTierEngine';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -161,7 +162,8 @@ interface ScoredPractice {
 function scorePractice(
   practice: Practice,
   sv: StateVector,
-  duration: RecommendedDuration
+  duration: RecommendedDuration,
+  tier?: DevelopmentalTier
 ): ScoredPractice {
   const reasons: string[] = [];
   let score = 0;
@@ -186,6 +188,19 @@ function scorePractice(
   // ═══ STABILITY GATE ═══
   if (stability >= 4 && REQUIRES_STABILITY.includes(practice.category)) {
     return { practice, score: -1, reasons: ['Blocked: shadow-work requires more settled ground'] };
+  }
+
+  // ═══ DEVELOPMENTAL GATE ═══
+  if (tier === 'under13') {
+    if (!['movement', 'nature', 'creative'].includes(practice.category)) {
+      return { practice, score: -1, reasons: ['Blocked: only movement/nature/creative for guided exploration'] };
+    }
+  }
+  if (tier === 'tier2' && REQUIRES_STABILITY.includes(practice.category)) {
+    return { practice, score: -1, reasons: ['Blocked: shadow-work requires readiness assessment for supported sovereignty'] };
+  }
+  if ((tier === 'tier2' || tier === 'under13') && practice.category === 'ritual') {
+    return { practice, score: -1, reasons: ['Blocked: ritual practices require more developmental grounding'] };
   }
 
   // ═══ INTENSITY GATE ═══
@@ -329,13 +344,14 @@ function buildRationale(
  */
 export function routePractice(
   stateVector: StateVector,
-  practices: Practice[]
+  practices: Practice[],
+  tier?: DevelopmentalTier
 ): PracticeRecommendation {
   const duration = recommendDuration(stateVector);
   const contraindications = buildContraindications(stateVector);
 
   const scored: ScoredPractice[] = practices
-    .map(p => scorePractice(p, stateVector, duration))
+    .map(p => scorePractice(p, stateVector, duration, tier))
     .filter(sp => sp.score > -1)
     .sort((a, b) => b.score - a.score);
 

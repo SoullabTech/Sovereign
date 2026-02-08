@@ -1118,6 +1118,12 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 STATE VECTOR: Inject estimation contract when input looks like a check-in
   const stateVectorContract = isLikelyCheckin(input) ? '\n\n' + STATE_VECTOR_OUTPUT_CONTRACT : '';
 
+  // 🌱 YOUTH DEVELOPMENTAL CONTEXT: Inject teen safety system prompt when present
+  const teenSupportContext = (meta as any)?.teenSupportContext;
+  const youthPromptAddendum = teenSupportContext?.teenSystemPrompt
+    ? '\n\n' + teenSupportContext.teenSystemPrompt
+    : '';
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   // 🛡️ MEMORY AUTHORITY BLOCK MUST BE FIRST - prevents identity/memory disclaimers
   let baseSystemPrompt = `${MEMORY_AUTHORITY_BLOCK}
@@ -1128,7 +1134,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${stateVectorContract}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
