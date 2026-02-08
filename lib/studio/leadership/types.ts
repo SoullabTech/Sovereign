@@ -1,7 +1,7 @@
 /**
- * Leadership Domain Layer — Types
+ * Decision Council Domain Layer — Types
  *
- * Shared types for leadership consulting within Studio.
+ * Shared types for practitioner decision support within Studio.
  * These extend the existing client and session models
  * without replacing them.
  */
@@ -37,6 +37,7 @@ export interface DecisionContext {
   clientId?: string;
   clientName?: string;
   leadershipProfile?: LeadershipProfile;
+  situationType?: string;
 }
 
 export interface DecisionRecord {
@@ -53,6 +54,7 @@ export interface DecisionRecord {
   councilResult: ConsultationResult | null;
   consultantNotes: string | null;
   questionsForLeader: string[];
+  situationType: string | null;
   status: DecisionStatus;
   consultedAt: string | null;
   createdAt: string;

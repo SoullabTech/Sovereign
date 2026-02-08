@@ -2,9 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Scale, ArrowLeft, Sparkles, Save } from 'lucide-react';
+import {
+  Scale,
+  ArrowLeft,
+  Sparkles,
+  Save,
+  User,
+  Users,
+  Building,
+  Crown,
+  Eye,
+} from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  SITUATION_TYPE_LIST,
+  SITUATION_CONFIGS,
+  type SituationType,
+} from '@/lib/studio/leadership/situationTypes';
 
 interface ClientOption {
   id: string;
@@ -20,12 +35,17 @@ const TIME_PRESSURES = [
   { value: 'urgent', label: 'Urgent' },
 ];
 
+const SITUATION_ICONS: Record<string, typeof User> = {
+  User, Users, Building, Crown, Eye,
+};
+
 export default function NewDecisionPage() {
   const router = useRouter();
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [consulting, setConsulting] = useState(false);
 
+  const [situationType, setSituationType] = useState<SituationType>('individual');
   const [title, setTitle] = useState('');
   const [context, setContext] = useState('');
   const [clientId, setClientId] = useState('');
@@ -33,9 +53,21 @@ export default function NewDecisionPage() {
   const [timePressure, setTimePressure] = useState('none');
   const [emotionalState, setEmotionalState] = useState('');
 
+  const config = SITUATION_CONFIGS[situationType];
+
   useEffect(() => {
     loadClients();
   }, []);
+
+  // Auto-set situation type when a leadership client is selected
+  useEffect(() => {
+    if (clientId) {
+      const client = clients.find(c => c.id === clientId);
+      if (client?.clientTypes.includes('leadership') && situationType === 'individual') {
+        setSituationType('leadership');
+      }
+    }
+  }, [clientId, clients, situationType]);
 
   async function loadClients() {
     const res = await apiFetch('/api/studio/clients?limit=200');
@@ -61,7 +93,6 @@ export default function NewDecisionPage() {
     }
 
     try {
-      // Create the decision
       const createRes = await apiFetch('/api/studio/decisions', {
         method: 'POST',
         body: JSON.stringify({
@@ -71,6 +102,7 @@ export default function NewDecisionPage() {
           stakes: stakes.trim() || null,
           timePressure,
           emotionalState: emotionalState.trim() || null,
+          situationType,
         }),
       });
 
@@ -83,13 +115,11 @@ export default function NewDecisionPage() {
       const { decision } = await createRes.json();
 
       if (andConsult) {
-        // Run the council
         const consultRes = await apiFetch(`/api/studio/decisions/${decision.id}/consult`, {
           method: 'POST',
         });
 
         if (!consultRes.ok) {
-          // Council failed but decision was saved — redirect to detail
           router.push(`/studio/decisions/${decision.id}`);
           return;
         }
@@ -102,7 +132,6 @@ export default function NewDecisionPage() {
     }
   }
 
-  // Sort leadership clients first
   const sortedClients = [...clients].sort((a, b) => {
     const aLeader = a.clientTypes.includes('leadership') ? 0 : 1;
     const bLeader = b.clientTypes.includes('leadership') ? 0 : 1;
@@ -125,7 +154,37 @@ export default function NewDecisionPage() {
           </h1>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-6">
+          {/* Situation Type — The Quiet Decision Point */}
+          <div>
+            <label className="block text-sm text-slate-300 mb-3">What are you working with?</label>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {SITUATION_TYPE_LIST.map(type => {
+                const cfg = SITUATION_CONFIGS[type];
+                const Icon = SITUATION_ICONS[cfg.icon] || User;
+                const selected = situationType === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setSituationType(type)}
+                    className={`flex flex-col items-start gap-1 p-3 rounded-lg border text-left transition-colors ${
+                      selected
+                        ? 'border-amber-500/50 bg-amber-900/20 text-amber-100'
+                        : 'border-slate-800/60 bg-slate-900/30 text-slate-400 hover:border-slate-700 hover:text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Icon className={`w-3.5 h-3.5 ${selected ? 'text-amber-400' : 'text-slate-500'}`} />
+                      <span className="text-xs font-medium">{cfg.label}</span>
+                    </div>
+                    <span className="text-[10px] leading-tight text-slate-500">{cfg.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-slate-600 mt-2">This tunes the council&apos;s language and default lenses. You still decide what to keep.</p>
+          </div>
+
           {/* Client */}
           <div>
             <label className="block text-sm text-slate-300 mb-1.5">Client (optional)</label>
@@ -162,7 +221,7 @@ export default function NewDecisionPage() {
             <textarea
               value={context}
               onChange={e => setContext(e.target.value)}
-              placeholder="Describe the situation, background, and what the leader is facing..."
+              placeholder="Describe the situation, background, and what is being faced..."
               rows={5}
               className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none resize-none"
             />
@@ -174,7 +233,7 @@ export default function NewDecisionPage() {
             <textarea
               value={stakes}
               onChange={e => setStakes(e.target.value)}
-              placeholder="What could go wrong? What's the cost of inaction?"
+              placeholder={config.contextLabels.stakesPlaceholder}
               rows={2}
               className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none resize-none"
             />
@@ -195,14 +254,14 @@ export default function NewDecisionPage() {
               </select>
             </div>
 
-            {/* Emotional State */}
+            {/* Emotional State — label shifts per situation type */}
             <div>
-              <label className="block text-sm text-slate-300 mb-1.5">Leader&apos;s State</label>
+              <label className="block text-sm text-slate-300 mb-1.5">{config.contextLabels.stateLabel}</label>
               <input
                 type="text"
                 value={emotionalState}
                 onChange={e => setEmotionalState(e.target.value)}
-                placeholder="Anxious, overconfident, avoidant..."
+                placeholder={situationType === 'self' ? 'Activated, avoidant, pulled to rescue...' : 'Anxious, overconfident, avoidant...'}
                 className="w-full px-3 py-2 text-sm bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none"
               />
             </div>
