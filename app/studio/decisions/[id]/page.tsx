@@ -24,6 +24,7 @@ import {
   CircleDot,
   CheckCircle2,
   RotateCcw,
+  ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -53,6 +54,151 @@ function getFramingConfig(id: string) {
 function formatDate(iso: string | null): string {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// ─── What Changed (Iteration Diff) ──────────────────────────────
+
+type ChangeItem =
+  | { type: 'emotion'; from: string; to: string }
+  | { type: 'recommendation'; from: string; to: string }
+  | { type: 'emergence'; from: string; to: string }
+  | { type: 'tensions'; added: string[]; resolved: string[] }
+  | { type: 'framings'; added: string[]; removed: string[] };
+
+function firstSentence(text: string | undefined): string {
+  if (!text) return '';
+  const match = text.match(/^[^.!?]+[.!?]/);
+  return match ? match[0].trim() : text.slice(0, 120).trim();
+}
+
+function tensionKey(t: string): string {
+  return t.slice(0, 60).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function computeChanges(
+  current: DecisionIteration,
+  previous: DecisionIteration
+): ChangeItem[] {
+  const changes: ChangeItem[] = [];
+  const curr = current.councilResult;
+  const prev = previous.councilResult;
+
+  // Emotional state shift
+  if (current.emotionalState && previous.emotionalState &&
+      current.emotionalState !== previous.emotionalState) {
+    changes.push({ type: 'emotion', from: previous.emotionalState, to: current.emotionalState });
+  }
+
+  // Recommendation shift
+  if (curr?.recommendation && prev?.recommendation) {
+    const currFirst = firstSentence(curr.recommendation);
+    const prevFirst = firstSentence(prev.recommendation);
+    if (currFirst !== prevFirst) {
+      changes.push({ type: 'recommendation', from: prevFirst, to: currFirst });
+    }
+  }
+
+  // Emergence rating shift
+  if (curr?.emergenceRating && prev?.emergenceRating &&
+      curr.emergenceRating !== prev.emergenceRating) {
+    changes.push({ type: 'emergence', from: prev.emergenceRating, to: curr.emergenceRating });
+  }
+
+  // Tension evolution (fuzzy match on first 60 chars)
+  if (curr?.tensions && prev?.tensions) {
+    const prevKeys = new Set(prev.tensions.map(tensionKey));
+    const currKeys = new Set(curr.tensions.map(tensionKey));
+    const added = curr.tensions.filter(t => !prevKeys.has(tensionKey(t)));
+    const resolved = prev.tensions.filter(t => !currKeys.has(tensionKey(t)));
+    if (added.length > 0 || resolved.length > 0) {
+      changes.push({ type: 'tensions', added, resolved });
+    }
+  }
+
+  // Perspective shift (framings used)
+  if (curr?.framingsUsed && prev?.framingsUsed) {
+    const prevSet = new Set(prev.framingsUsed);
+    const currSet = new Set(curr.framingsUsed);
+    const added = curr.framingsUsed.filter(f => !prevSet.has(f));
+    const removed = prev.framingsUsed.filter(f => !currSet.has(f));
+    if (added.length > 0 || removed.length > 0) {
+      changes.push({ type: 'framings', added, removed });
+    }
+  }
+
+  return changes;
+}
+
+function WhatChanged({ current, previous }: { current: DecisionIteration; previous: DecisionIteration }) {
+  const changes = computeChanges(current, previous);
+  if (changes.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-indigo-900/30 bg-indigo-950/10 p-3">
+      <h4 className="text-xs font-medium text-indigo-300 mb-2">What shifted since Round {previous.iterationNumber}</h4>
+      <ul className="space-y-1.5">
+        {changes.map((change, i) => {
+          switch (change.type) {
+            case 'emotion':
+              return (
+                <li key={i} className="text-xs text-slate-300 flex items-center gap-1.5">
+                  <span className="text-indigo-400">State:</span>
+                  <span className="text-slate-500">{change.from}</span>
+                  <ArrowRight className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                  <span>{change.to}</span>
+                </li>
+              );
+            case 'recommendation':
+              return (
+                <li key={i} className="text-xs text-slate-300">
+                  <span className="text-indigo-400">Direction shifted:</span>{' '}
+                  <span className="text-slate-500 line-through">{change.from}</span>{' '}
+                  <span>{change.to}</span>
+                </li>
+              );
+            case 'emergence':
+              return (
+                <li key={i} className="text-xs text-slate-300 flex items-center gap-1.5">
+                  <span className="text-indigo-400">Emergence:</span>
+                  <span className="text-slate-500 capitalize">{change.from}</span>
+                  <ArrowRight className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                  <span className="capitalize">{change.to}</span>
+                </li>
+              );
+            case 'tensions':
+              return (
+                <li key={i} className="text-xs text-slate-300">
+                  {change.added.length > 0 && (
+                    <div><span className="text-amber-400">New tensions:</span> {change.added.map(t => firstSentence(t)).join('; ')}</div>
+                  )}
+                  {change.resolved.length > 0 && (
+                    <div><span className="text-emerald-400">Resolved:</span> {change.resolved.map(t => firstSentence(t)).join('; ')}</div>
+                  )}
+                </li>
+              );
+            case 'framings':
+              return (
+                <li key={i} className="text-xs text-slate-300">
+                  {change.added.length > 0 && (
+                    <span>
+                      <span className="text-indigo-400">Added:</span>{' '}
+                      {change.added.map(f => getFramingConfig(f).label).join(', ')}
+                    </span>
+                  )}
+                  {change.added.length > 0 && change.removed.length > 0 && ' · '}
+                  {change.removed.length > 0 && (
+                    <span>
+                      <span className="text-slate-500">Dropped:</span>{' '}
+                      {change.removed.map(f => getFramingConfig(f).label).join(', ')}
+                    </span>
+                  )}
+                </li>
+              );
+          }
+        })}
+      </ul>
+    </div>
+  );
 }
 
 // ─── Council Result Display ─────────────────────────────────────
@@ -164,7 +310,7 @@ function CouncilResultView({ council, animate = true }: { council: NonNullable<D
 
 // ─── Iteration Timeline Item ────────────────────────────────────
 
-function IterationTimelineItem({ iteration, isLast }: { iteration: DecisionIteration; isLast: boolean }) {
+function IterationTimelineItem({ iteration, previousIteration, isLast }: { iteration: DecisionIteration; previousIteration?: DecisionIteration; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -218,6 +364,11 @@ function IterationTimelineItem({ iteration, isLast }: { iteration: DecisionItera
               className="overflow-hidden"
             >
               <div className="mt-3 ml-6 space-y-4">
+                {/* What changed since previous round */}
+                {previousIteration && (
+                  <WhatChanged current={iteration} previous={previousIteration} />
+                )}
+
                 {/* Session notes */}
                 {iteration.sessionNotes && (
                   <div className="rounded-lg border border-slate-800/40 bg-slate-900/20 p-3">
@@ -552,6 +703,17 @@ export default function DecisionDetailPage() {
         {/* Current Council Result */}
         {council ? (
           <div ref={councilRef}>
+            {/* What changed since last round (current view) */}
+            {decision.iterations && decision.iterations.length >= 2 && (() => {
+              const iters = decision.iterations!;
+              const currentIter = iters[iters.length - 1];
+              const previousIter = iters[iters.length - 2];
+              return currentIter && previousIter ? (
+                <div className="mb-6">
+                  <WhatChanged current={currentIter} previous={previousIter} />
+                </div>
+              ) : null;
+            })()}
             <CouncilResultView council={council} />
           </div>
         ) : consulting ? (
@@ -604,6 +766,7 @@ export default function DecisionDetailPage() {
                 <IterationTimelineItem
                   key={iter.id}
                   iteration={iter}
+                  previousIteration={i > 0 ? priorIterations[i - 1] : undefined}
                   isLast={i === priorIterations.length - 1}
                 />
               ))}
