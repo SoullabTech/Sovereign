@@ -10,6 +10,102 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
+// =============================================================================
+// 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
+// =============================================================================
+// Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
+// Everything else (OracleConversation, StreamingVoice, etc.) emits events
+// that ContinuousConversation processes. No external code touches mic directly.
+
+export type ListeningMode = 'PUSH_TO_TALK' | 'HANDS_FREE' | 'OFF';
+
+export type MicState =
+  | 'IDLE'                  // Mic off, ready for user tap
+  | 'ARMING'                // Permissions/setup in progress
+  | 'LISTENING'             // Mic active, waiting for speech
+  | 'CAPTURING'             // User speaking, accumulating transcript
+  | 'SUBMITTING'            // Transcript sent, waiting for response
+  | 'WAITING_FOR_TTS'       // MAIA processing, mic paused
+  | 'PLAYING_TTS'           // MAIA speaking, mic off (native) or suppressed (web)
+  | 'INTERRUPTED'           // iOS audio interruption (phone call, Siri, etc.)
+  | 'ERROR';                // Recoverable error state
+
+/** Conversation-alive gate: is the conversation still active? */
+function isConversationAlive(ctx: {
+  lastTranscriptAt: number;
+  lastAudioEndAt: number;
+  lastMicTapAt: number;
+}): boolean {
+  const now = Date.now();
+  return (
+    (ctx.lastTranscriptAt > 0 && now - ctx.lastTranscriptAt < 30_000) ||
+    (ctx.lastAudioEndAt > 0 && now - ctx.lastAudioEndAt < 15_000) ||
+    (ctx.lastMicTapAt > 0 && now - ctx.lastMicTapAt < 10_000)
+  );
+}
+
+/**
+ * Authority guard: log + enforce single-conductor restart policy.
+ *
+ * This is the ONE function that decides whether a mic restart is allowed.
+ * Every restart path (listeningState:stopped, maia_stopped_speaking, user_tap,
+ * interruption_end) calls this. If it returns { allowed: false }, the restart
+ * does not happen. The structured log line is the single diagnostic artifact
+ * for every "why didn't mic restart?" question.
+ *
+ * Allowed overrides:
+ *   - user_tap (explicit user gesture — always allowed if mic is IDLE)
+ * Blocked conditions:
+ *   - restart already in flight (prevents overlapping timers)
+ *   - mic not IDLE or ERROR (can't start while already listening/arming/playing)
+ *   - iOS + PUSH_TO_TALK + non-user source (platform ontology)
+ *   - active audio playback / responding / processing (via caller gates)
+ *   - iOS permission failure (via ensureNativeSpeechReady, upstream)
+ */
+function authorityGuard(args: {
+  source: string;
+  micState: MicState;
+  listeningMode: ListeningMode;
+  restartInFlight: boolean;
+  lastSpeechAt: number;
+  backoffStep: number;
+  /** Extra context for structured logging */
+  isMuted?: boolean;
+  isResponding?: boolean;
+  isAudioPlaying?: boolean;
+  isProcessing?: boolean;
+}): { allowed: boolean; reason?: string } {
+  // 📊 STRUCTURED LOG: One line that tells you everything
+  const snapshot = {
+    voice_mode: args.listeningMode === 'HANDS_FREE' ? 'hands_free' : args.listeningMode === 'OFF' ? 'off' : 'push_to_talk',
+    source: args.source,
+    mic: args.micState,
+    inflight: args.restartInFlight,
+    speech: args.lastSpeechAt > 0 ? `${Math.round((Date.now() - args.lastSpeechAt) / 1000)}s` : 'never',
+    backoff: args.backoffStep,
+    muted: args.isMuted ?? null,
+    responding: args.isResponding ?? null,
+    audioPlaying: args.isAudioPlaying ?? null,
+    processing: args.isProcessing ?? null,
+  };
+
+  if (args.restartInFlight) {
+    console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: 'restart_in_flight' }));
+    return { allowed: false, reason: 'restart_in_flight' };
+  }
+  if (args.micState !== 'IDLE' && args.micState !== 'ERROR') {
+    console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: `mic_state_${args.micState}` }));
+    return { allowed: false, reason: `mic_state_${args.micState}` };
+  }
+  // On native iOS, only auto-restart in HANDS_FREE mode
+  if (Capacitor.isNativePlatform() && args.listeningMode !== 'HANDS_FREE' && args.source !== 'user_tap') {
+    console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: 'push_to_talk_no_auto_restart' }));
+    return { allowed: false, reason: 'push_to_talk_no_auto_restart' };
+  }
+  console.log('🛡️ [AUTHORITY] ALLOWED', JSON.stringify({ ...snapshot, decision: 'allowed', block_reason: null }));
+  return { allowed: true };
+}
+
 export interface ContinuousConversationProps {
   onTranscript: (text: string) => void;
   onInterimTranscript?: (text: string) => void;
@@ -30,15 +126,25 @@ export interface ContinuousConversationProps {
   interruptThresholdMultiplier?: number;
   /** Keep listening active even during silence - for Care/Scribe modes (default: false) */
   persistentListening?: boolean;
+  /** Called when hands-free mode auto-falls back to push-to-talk (e.g. after backoff exhaustion) */
+  onHandsFreeFallback?: () => void;
 }
 
 export interface ContinuousConversationRef {
-  startListening: () => void;
-  stopListening: () => void;
+  startListening: (options?: { forceOverride?: boolean }) => void;
+  stopListening: (options?: { userExitMode?: boolean }) => void;
   toggleListening: () => void;
   extendRecording: () => void; // Reset silence timer to keep recording longer
+  setHandsFree: (active: boolean) => void; // Toggle hands-free mode (auto-restart after MAIA speaks)
+  /** Notify CC that an iOS audio interruption occurred (phone call, Siri, BT, etc.) */
+  onInterruptionStart: () => void;
+  /** Notify CC that an iOS audio interruption ended */
+  onInterruptionEnd: () => void;
   isListening: boolean;
   isRecording: boolean;
+  isHandsFree: boolean;
+  micState: MicState;
+  listeningMode: ListeningMode;
 }
 
 export const ContinuousConversation = forwardRef<ContinuousConversationRef, ContinuousConversationProps>((props, ref) => {
@@ -57,6 +163,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     interruptDebounceMs = 200,
     interruptThresholdMultiplier = 1.2,
     persistentListening = false,
+    onHandsFreeFallback,
   } = props;
 
   const [isListening, setIsListening] = useState(false);
@@ -99,6 +206,30 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
   const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
   const wantsContinuousConversationRef = useRef(false); // 🔥 FIX: Track if user wants continuous conversation (persists through MAIA responses)
+  // ==========================================================================
+  // 🎙️ STATE MACHINE — Single source of truth for mic lifecycle
+  // ==========================================================================
+  const micStateRef = useRef<MicState>('IDLE');
+  const listeningModeRef = useRef<ListeningMode>('PUSH_TO_TALK');
+  const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
+  const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
+
+  // Convenience aliases (kept for backward compat with existing code)
+  const handsFreeActiveRef = useRef(false);
+  const lastSpeechHeardAtRef = useRef<number>(0);
+
+  // 🎯 CONVERSATION-ALIVE GATE — tracks whether the conversation is still active
+  const lastTranscriptSubmittedAtRef = useRef<number>(0);
+  const lastAudioEndAtRef = useRef<number>(0);
+  const lastMicTapAtRef = useRef<number>(0);
+
+  // Helper: set mic state with logging
+  const setMicState = useCallback((newState: MicState, source: string) => {
+    const prev = micStateRef.current;
+    if (prev === newState) return;
+    micStateRef.current = newState;
+    console.log(`🔄 [MicState] ${prev} → ${newState} (via ${source})`);
+  }, []);
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
@@ -139,23 +270,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Auto-restart listening when Maya stops speaking, but with timeout to stop if no response
   const conversationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Auto-restart listening when Maya stops speaking
-  // Uses 600ms delay for echo suppression (reduced from 1.5s for responsiveness)
+  // Auto-restart listening when Maya stops speaking (WEB path only)
+  // ONLY when handsFreeActive is true - default is push-to-talk
   const prevIsSpeakingRef = useRef(isSpeaking);
   useEffect(() => {
-    // Detect when MAIA stops speaking (was speaking, now not)
     const wasSpeak = prevIsSpeakingRef.current;
     prevIsSpeakingRef.current = isSpeaking;
 
     if (wasSpeak && !isSpeaking && isListening && !isRecording && !isProcessing) {
-      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - auto-resuming mic in 600ms');
+      // 🎙️ POLICY: Only auto-resume if hands-free is active
+      if (!handsFreeActiveRef.current) {
+        console.log('🎤 [ContinuousConversation] MAIA stopped speaking - push-to-talk mode, mic stays off');
+        return;
+      }
+
+      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
       setTimeout(() => {
-        // Re-check conditions after delay
-        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
           try {
             recognitionRef.current.start();
             setIsRecording(true);
-            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech');
+            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
           } catch (err: any) {
             if (!err?.message?.includes('already started')) {
               console.warn('⚠️ [ContinuousConversation] Error auto-resuming mic:', err);
@@ -164,7 +299,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         } else {
           console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
         }
-      }, 600); // 600ms delay for echo suppression (reduced for responsiveness)
+      }, 600);
     }
   }, [isSpeaking, isListening, isRecording, isProcessing]);
 
@@ -268,6 +403,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Update speech time on any speech
       if (interimTranscript || finalTranscript) {
         lastSpeechTime.current = Date.now();
+        lastSpeechHeardAtRef.current = Date.now(); // 🎙️ Track for hands-free staleness check
 
         // CRITICAL FIX: Accumulate final transcripts, but only show latest interim
         if (finalTranscript) {
@@ -550,6 +686,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         recognitionTimeoutRef.current = null;
       }
 
+      setMicState('PLAYING_TTS', 'maia_speaking');
+
       // 📱 iOS NATIVE: Must stop recognition (audio session conflict)
       if (useNativeSpeechRef.current) {
         console.log('🔇 [Native iOS] MAIA speaking - stopping recognition (audio session)');
@@ -578,32 +716,44 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         console.log('🎤 [PWA DUPLEX] MAIA stopped - clearing suppression, transcripts active');
         inputSuppressedRef.current = false;
       }
+      // Track audio end for conversation-alive gate
+      lastAudioEndAtRef.current = Date.now();
+      if (micStateRef.current === 'PLAYING_TTS') {
+        setMicState('IDLE', 'maia_stopped_speaking');
+        // Reset backoff when MAIA finishes a new turn — fresh set of attempts
+        backoffStepRef.current = 0;
+      }
     }
   }, [isSpeaking]);
 
   // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
-  // This ensures the mic comes back on automatically for continuous conversation
+  // ONLY when handsFreeActive is true AND user has spoken recently
+  // Default behavior (push-to-talk): mic stays off after MAIA responds, user taps to speak again
   useEffect(() => {
-    // 🔥 FIX: Use wantsContinuousConversationRef instead of isListeningRef
-    // isListeningRef gets set to false when we stop for MAIA to respond
-    // wantsContinuousConversationRef persists until user explicitly exits voice mode
     if (!isSpeaking && wantsContinuousConversationRef.current && useNativeSpeechRef.current) {
-      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 800ms...');
       isProcessingRef.current = false;
-      // 🔥 FIX: Reset restart counter when MAIA stops speaking - new conversational turn!
-      // This gives the user a fresh set of restart attempts to respond
       consecutiveRestartCount.current = 0;
 
+      // 🎙️ POLICY: Only auto-restart if hands-free is active AND user spoke recently
+      const recentSpeechWindow = 30000; // 30 seconds
+      const hasRecentSpeech = lastSpeechHeardAtRef.current > 0 && (Date.now() - lastSpeechHeardAtRef.current) < recentSpeechWindow;
+
+      if (!handsFreeActiveRef.current) {
+        console.log('🎤 [Native] MAIA stopped speaking - push-to-talk mode, mic stays off (user taps to speak)');
+        return;
+      }
+
+      if (!hasRecentSpeech) {
+        console.log('🎤 [Native] MAIA stopped speaking - hands-free active but no recent speech, mic stays off');
+        return;
+      }
+
+      console.log('🔄 [Native] MAIA stopped speaking - hands-free + recent speech, auto-restarting in 800ms...');
+
       const restartTimer = setTimeout(async () => {
-        // Double-check conditions before restart
-        // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
-        if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
+        if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
-            // NOTE: Do NOT call VoiceController.prepareForListening() here!
-            // The speech recognition plugin reconfigures audio session from .playback
-            // to .playAndRecord/.voiceChat internally when start() is called.
-            // Calling our AudioSessionManager causes a mode conflict (.measurement vs .voiceChat).
-            console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
+            console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
             await NativeSpeechRecognition.start({
               language: 'en-US',
               maxResults: 3,
@@ -611,14 +761,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               popup: false
             });
             console.log('✅ [Native] Auto-restart after speech successful');
-            // Note: setIsRecording will be updated by listeningState listener
           } catch (e: any) {
             console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
           }
         } else {
           console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
         }
-      }, 800); // 800ms delay for iOS audio session to release (reduced for responsiveness)
+      }, 800);
 
       return () => clearTimeout(restartTimer);
     }
@@ -732,6 +881,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Send transcript
     console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
+    setMicState('SUBMITTING', 'processAccumulatedTranscript');
+    lastTranscriptSubmittedAtRef.current = Date.now();
     onTranscript(transcript);
     console.log('✅ [ContinuousConversation] onTranscript callback completed');
 
@@ -1039,8 +1190,29 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log('🎤 [ContinuousConversation] startListening called', options?.forceOverride ? '(FORCE OVERRIDE)' : '');
     addDebug('🎤 startListening called');
 
+    // 🛡️ AUTHORITY GUARD: Single-conductor enforcement
+    // user_tap = user explicitly tapped mic (always allowed if IDLE)
+    // auto_restart = system trying to restart after MAIA speaks (gated by mode)
+    const source = options?.forceOverride ? 'user_tap' : 'user_tap';
+    const guard = authorityGuard({
+      source,
+      micState: micStateRef.current,
+      listeningMode: listeningModeRef.current,
+      restartInFlight: restartInFlightRef.current,
+      lastSpeechAt: lastSpeechHeardAtRef.current,
+      backoffStep: backoffStepRef.current,
+    });
+
+    // Force override bypasses authority guard (user is interrupting MAIA)
+    if (!guard.allowed && !options?.forceOverride) {
+      addDebug(`🛡️ BLOCKED: ${guard.reason}`);
+      return;
+    }
+
+    // Track user tap for conversation-alive gate
+    lastMicTapAtRef.current = Date.now();
+
     // 🛡️ CRASH PREVENTION: Debounce rapid taps (500ms minimum between attempts)
-    // Skip debounce for force overrides (user is interrupting MAIA)
     const now = Date.now();
     if (!options?.forceOverride && now - lastStartAttemptRef.current < 500) {
       console.log('⏳ [ContinuousConversation] Debounced - too soon after last attempt');
@@ -1054,6 +1226,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       return;
     }
     isStartingRef.current = true;
+    setMicState('ARMING', 'startListening');
 
     // 🔄 CRITICAL: Determine platform at START time
     const platform = Capacitor.getPlatform();
@@ -1162,6 +1335,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
             lastSpeechTime.current = Date.now();
             lastHighAudioTimeRef.current = Date.now(); // Also update for fallback silence detection
+            lastSpeechHeardAtRef.current = Date.now(); // 🎙️ Track for hands-free staleness check
             setIsRecording(true);
             isRecordingRef.current = true;
             hasSpokenRef.current = true;
@@ -1311,8 +1485,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (isNowRecording) {
             console.log('✅ [Native] Mic is LIVE - orange dot should be visible');
             addDebug('✅ MIC IS LIVE - orange dot visible!');
-            // 🔥 FIX: Mic is actually live — reset the "consecutive restart" counter
-            // This is the source of truth for "mic working" not "user spoke"
+            setMicState('LISTENING', 'listeningState:started');
+            restartInFlightRef.current = false; // Clear restart-in-flight flag
+            backoffStepRef.current = 0; // Reset backoff on successful start
             lastNativeStartAtRef.current = Date.now();
             consecutiveRestartCount.current = 0;
             console.log('🔄 [Native] Restart counter reset to 0 (mic is live)');
@@ -1363,17 +1538,76 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 return;
               }
 
-              // Auto-restart if user wants continuous conversation and MAIA isn't speaking
-              // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
-              if (!isSpeakingRef.current && !isProcessingRef.current) {
-                console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
+              // 🛡️ AUTHORITY GUARD: Only the state machine decides whether to restart
+              setMicState('IDLE', 'listeningState:stopped');
+
+              // Check conversation-alive gate for hands-free
+              const conversationAlive = isConversationAlive({
+                lastTranscriptAt: lastTranscriptSubmittedAtRef.current,
+                lastAudioEndAt: lastAudioEndAtRef.current,
+                lastMicTapAt: lastMicTapAtRef.current,
+              });
+
+              const restartGuard = authorityGuard({
+                source: 'listeningState_stopped',
+                micState: micStateRef.current,
+                listeningMode: listeningModeRef.current,
+                restartInFlight: restartInFlightRef.current,
+                lastSpeechAt: lastSpeechHeardAtRef.current,
+                backoffStep: backoffStepRef.current,
+              });
+
+              if (restartGuard.allowed && handsFreeActiveRef.current && conversationAlive && !isSpeakingRef.current && !isProcessingRef.current) {
+                // 🔥 EXPONENTIAL BACKOFF: 800ms → 1500ms → 2500ms → stop
+                const MAX_HANDS_FREE_RESTARTS = 3;
+                if (backoffStepRef.current >= MAX_HANDS_FREE_RESTARTS) {
+                  // 📊 SINGLE CANONICAL EVENT: Anchors all "why did hands-free stop?" queries
+                  console.log('🛑 [HandsFreeFallback]', JSON.stringify({
+                    event: 'handsfree_fallback',
+                    reason: 'backoff_exhausted',
+                    backoff_attempts: MAX_HANDS_FREE_RESTARTS,
+                    backoff_schedule_ms: [800, 1500, 2500],
+                    from: 'HANDS_FREE',
+                    to: 'PUSH_TO_TALK',
+                    mic: micStateRef.current,
+                    last_speech_ago: lastSpeechHeardAtRef.current > 0
+                      ? `${Math.round((Date.now() - lastSpeechHeardAtRef.current) / 1000)}s`
+                      : 'never',
+                  }));
+                  setIsListening(false);
+                  isListeningRef.current = false;
+                  wantsContinuousConversationRef.current = false;
+                  handsFreeActiveRef.current = false;
+                  listeningModeRef.current = 'PUSH_TO_TALK';
+                  setMicState('IDLE', 'backoff_exhausted');
+                  onRecordingStateChange?.(false);
+                  backoffStepRef.current = 0;
+                  // Notify parent so it can show toast + reset UI toggle
+                  onHandsFreeFallback?.();
+                  return;
+                }
+
+                const backoffDelays = [800, 1500, 2500];
+                const delay = backoffDelays[backoffStepRef.current];
+                backoffStepRef.current++;
+                restartInFlightRef.current = true;
+
+                console.log('🔄 [Native] stopped_backoff', JSON.stringify({
+                  event: 'stopped_backoff',
+                  attempt: backoffStepRef.current,
+                  delay_ms: delay,
+                  max_attempts: MAX_HANDS_FREE_RESTARTS,
+                  schedule_ms: [800, 1500, 2500],
+                  conversation_alive: true,
+                }));
+
                 setTimeout(async () => {
-                  // Double-check conditions before restart - use wantsContinuousConversationRef
-                  if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+                  restartInFlightRef.current = false;
+                  // Final guard check before actually restarting
+                  if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && micStateRef.current === 'IDLE') {
                     try {
-                      // NOTE: Do NOT call VoiceController.prepareForListening() here!
-                      // The speech recognition plugin manages its own audio session.
-                      console.log('🎙️ [Native] Restarting speech recognition...');
+                      setMicState('ARMING', 'hands_free_restart');
+                      console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
                       await NativeSpeechRecognition.start({
                         language: 'en-US',
                         maxResults: 3,
@@ -1381,22 +1615,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                         popup: false
                       });
                       console.log('✅ [Native] Restart successful');
-                      // Restore listening state
                       setIsListening(true);
                       isListeningRef.current = true;
-                      // 🔥 FIX: Don't reset counter here - iOS speech recognition times out
-                      // after ~8 seconds of silence regardless. The counter prevents infinite
-                      // loops but 15 attempts gives ~2 minutes for user to speak.
                     } catch (e: any) {
                       console.warn('⚠️ [Native] Restart failed:', e?.message || e);
-                      // Don't retry - let the next listeningState: stopped handle it
-                      // This prevents nested restart attempts
+                      setMicState('IDLE', 'restart_failed');
                     }
                   } else {
                     console.log('🚫 [Native] Conditions changed, not restarting');
-                    consecutiveRestartCount.current = 0; // Reset on intentional stop
+                    backoffStepRef.current = 0;
                   }
-                }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
+                }, delay);
+              } else if (!handsFreeActiveRef.current && !isSpeakingRef.current) {
+                // Push-to-talk mode: don't restart, just go idle
+                console.log('🎤 [Native] Push-to-talk mode - mic idle, user taps to speak');
+                setIsListening(false);
+                isListeningRef.current = false;
+                onRecordingStateChange?.(false);
+              } else if (!restartGuard.allowed) {
+                console.log(`🛡️ [Native] Authority guard blocked restart: ${restartGuard.reason}`);
               }
             }
           }
@@ -1719,15 +1956,79 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     extendRecordingFnRef.current = extendRecording;
   }, [startListening, stopListening, toggleListening, extendRecording]);
 
+  // 📱 iOS INTERRUPTION HANDLERS — phone calls, Siri, BT changes, etc.
+  const handleInterruptionStart = useCallback(async () => {
+    console.log('⚡ [INTERRUPT] iOS audio interruption started — stopping everything');
+    setMicState('INTERRUPTED', 'ios_interruption_start');
+
+    // Stop all recognition and playback
+    if (useNativeSpeechRef.current) {
+      try { await NativeSpeechRecognition.stop(); } catch {}
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+
+    setIsListening(false);
+    isListeningRef.current = false;
+    setIsRecording(false);
+    isRecordingRef.current = false;
+    onRecordingStateChange?.(false);
+
+    // Do NOT auto-restart — wait for interruptionEnd
+  }, [onRecordingStateChange]);
+
+  const handleInterruptionEnd = useCallback(() => {
+    console.log('⚡ [INTERRUPT] iOS audio interruption ended');
+
+    // Only auto-restart if hands-free + conversation alive
+    if (handsFreeActiveRef.current && isConversationAlive({
+      lastTranscriptAt: lastTranscriptSubmittedAtRef.current,
+      lastAudioEndAt: lastAudioEndAtRef.current,
+      lastMicTapAt: lastMicTapAtRef.current,
+    })) {
+      console.log('🔄 [INTERRUPT] Hands-free + conversation alive — restarting in 1s');
+      setMicState('IDLE', 'ios_interruption_end');
+      setTimeout(() => {
+        if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
+          startListeningFnRef.current?.();
+        }
+      }, 1000);
+    } else {
+      console.log('🎤 [INTERRUPT] Push-to-talk or stale conversation — staying idle');
+      setMicState('IDLE', 'ios_interruption_end');
+    }
+  }, []);
+
   // Expose methods to parent via refs (avoids temporal dead zone)
   useImperativeHandle(ref, () => ({
     startListening: (options?: { forceOverride?: boolean }) => startListeningFnRef.current?.(options),
     stopListening: (options?: { userExitMode?: boolean }) => stopListeningFnRef.current?.(options),
     toggleListening: () => toggleListeningFnRef.current?.(),
     extendRecording: () => extendRecordingFnRef.current?.(),
+    setHandsFree: (active: boolean) => {
+      const prev = listeningModeRef.current;
+      handsFreeActiveRef.current = active;
+      listeningModeRef.current = active ? 'HANDS_FREE' : 'PUSH_TO_TALK';
+      // Reset backoff when mode changes (fresh start)
+      backoffStepRef.current = 0;
+      // 📊 STRUCTURED LOG: Mode transition
+      console.log('🎙️ [MODE]', JSON.stringify({
+        voice_mode: active ? 'hands_free' : 'push_to_talk',
+        prev_mode: prev,
+        reason: 'user_toggle',
+        mic: micStateRef.current,
+        backoff: 0,
+      }));
+    },
+    onInterruptionStart: () => handleInterruptionStart(),
+    onInterruptionEnd: () => handleInterruptionEnd(),
     isListening,
-    isRecording
-  }), [isListening, isRecording]);
+    isRecording,
+    isHandsFree: handsFreeActiveRef.current,
+    micState: micStateRef.current,
+    listeningMode: listeningModeRef.current,
+  }), [isListening, isRecording, handleInterruptionStart, handleInterruptionEnd]);
 
   // DISABLED: Auto-start temporarily disabled to fix initialization issues
   // TODO: Re-enable with proper initialization order

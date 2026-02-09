@@ -632,6 +632,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
+  const [isHandsFreeMode, setIsHandsFreeMode] = useState(false); // UI state mirror for hands-free toggle
+  const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
@@ -2229,54 +2231,40 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       prevComplete: prevStreamingCompleteRef.current
     });
 
-    // Helper to restart mic with retry pattern
+    // Helper to restart mic after MAIA finishes speaking
+    // 🎙️ POLICY: Only auto-restart if ContinuousConversation is in hands-free mode
+    // Otherwise just clear the speaking state and let user tap to speak (push-to-talk default)
     const restartMicWithRetry = () => {
-      console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
+      console.log('🎤 [StreamingVoice] Audio finished - clearing speaking state');
       setIsResponding(false);
       setIsAudioPlaying(false);
       setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
 
-      // 🎤 OPTIMISTIC LISTENING: Show "Listening" immediately when MAIA stops
-      // This masks the iOS audio handoff delay - user sees responsive UI
-      // Real mic state will be confirmed by handleRecordingStateChange
-      if (!showChatInterface && streamingVoiceMode) {
-        setIsListening(true);
-        setIsActivating(false); // Never show "Activating..." in voice mode
-        console.log('✨ [Optimistic] Showing Listening immediately');
+      // Check if hands-free is active via the ContinuousConversation ref
+      const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+
+      if (!isHandsFree) {
+        // Push-to-talk (default): Just clear state, user taps mic to speak again
+        console.log('🎤 [StreamingVoice] Push-to-talk mode - mic idle, ready for user tap');
+        setIsListening(false);
+        return;
       }
 
-      const attemptMicRestart = (attempt: number) => {
-        if (attempt > 5) {
-          console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
-          setIsListening(false); // Clear optimistic state on failure
-          return;
-        }
+      // Hands-free mode: Try to restart mic (single attempt, not a retry loop)
+      // ContinuousConversation's own restart logic handles retries with proper backoff
+      if (!showChatInterface && streamingVoiceMode) {
+        console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
+        setIsListening(true);
+        setIsActivating(false);
 
-        console.log(`🎤 [StreamingVoice] Mic restart attempt ${attempt}...`);
-
-        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
-          setIsMuted(false);
-          // Optimistic listening already set above - don't show "Activating..."
-          // 🔥 FIX: Use forceOverride to bypass stale isSpeakingRef (React state is async)
-          voiceMicRef.current.startListening({ forceOverride: true });
-
-          setTimeout(() => {
-            if (voiceMicRef.current?.isListening) {
-              console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
-              // Optimistic listening already shown - handleRecordingStateChange confirms it
-            } else {
-              console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
-              // Keep optimistic listening, retry will handle it
-              setTimeout(() => attemptMicRestart(attempt + 1), 300);
-            }
-          }, 150);
-        } else {
-          console.log('⏸️ [StreamingVoice] Mic restart blocked - not in voice mode or ref unavailable');
-        }
-      };
-
-      setTimeout(() => attemptMicRestart(1), 300);
+        setTimeout(() => {
+          if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+            setIsMuted(false);
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
+        }, 300);
+      }
     };
 
     // Case 1: Audio was playing and just stopped, response is complete
@@ -3393,6 +3381,49 @@ I'm not sure what I'm feeling yet.`;
     };
   }, []);
 
+  // 📱 iOS INTERRUPTION ROUTING — phone calls, Siri, BT route changes, backgrounding
+  // Routes Capacitor app state events into ContinuousConversation's interruption handlers
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Capacitor App plugin for background/foreground
+    let appStateCleanup: (() => void) | undefined;
+    (async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        const listener = await App.addListener('appStateChange', (state: { isActive: boolean }) => {
+          if (!state.isActive) {
+            // App backgrounded — treat as interruption
+            console.log('📱 [AppState] App backgrounded — sending interruption start');
+            voiceMicRef.current?.onInterruptionStart?.();
+          } else {
+            // App foregrounded — interruption ended
+            console.log('📱 [AppState] App foregrounded — sending interruption end');
+            voiceMicRef.current?.onInterruptionEnd?.();
+          }
+        });
+        appStateCleanup = () => listener.remove();
+      } catch {
+        // Not on Capacitor — no-op
+      }
+    })();
+
+    // Browser visibilitychange fallback (handles PWA backgrounding on Safari)
+    const handleVisibilityInterrupt = () => {
+      if (document.visibilityState === 'hidden') {
+        voiceMicRef.current?.onInterruptionStart?.();
+      } else {
+        voiceMicRef.current?.onInterruptionEnd?.();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityInterrupt);
+
+    return () => {
+      appStateCleanup?.();
+      document.removeEventListener('visibilitychange', handleVisibilityInterrupt);
+    };
+  }, []);
+
   // Helper function to map element to facet ID (using SPIRALOGIC_FACETS IDs)
   const mapElementToFacetId = (element: string): string => {
     const elementToFacetMap: { [key: string]: string } = {
@@ -4436,77 +4467,31 @@ I'm not sure what I'm feeling yet.`;
                 console.log('🔓 [STREAM] Dispatched maya-voice-end');
               }
 
-              // Resume mic after cooldown with auto-restart
+              // Resume mic after cooldown — single clean attempt, no retry loop
+              // 🎙️ POLICY: ContinuousConversation owns restart logic (handsFree gating + backoff)
+              // OracleConversation just clears the blocking state and lets CC decide
               console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
               setTimeout(() => {
                 setIsMicrophonePaused(false);
+                isMicrophonePausedRef.current = false;
                 console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
 
-                // 🔥 FIX: Force React to flush state updates before attempting mic restart
-                // Using requestAnimationFrame ensures we're after the React render cycle
-                requestAnimationFrame(() => {
+                // Check if hands-free is active
+                const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+
+                if (isHandsFree && voiceMicRef.current?.startListening) {
+                  // Hands-free: single restart attempt after React flush
                   requestAnimationFrame(() => {
-                    // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
-                    const attemptMicRestart = (attempt: number) => {
-                      if (attempt > 8) {
-                        console.log('⚠️ [STREAM] Mic restart failed after 8 attempts - forcing state reset');
-                        // 🔥 RECOVERY: Force reset all blocking states and try one more time
-                        setIsProcessing(false);
-                        setIsResponding(false);
-                        setIsAudioPlaying(false);
-                        setIsMicrophonePaused(false);
-                        isProcessingRef.current = false;
-                        isRespondingRef.current = false;
-                        isAudioPlayingRef.current = false;
-                        isMicrophonePausedRef.current = false;
-                        // Final attempt after forced reset
-                        setTimeout(() => {
-                          if (voiceMicRef.current?.startListening) {
-                            console.log('🎤 [STREAM] Final attempt after state reset...');
-                            setIsMuted(false);
-                            voiceMicRef.current.startListening({ forceOverride: true });
-                          }
-                        }, 500);
-                        return;
-                      }
-
-                      if (voiceMicRef.current?.startListening) {
-                        // Check ALL blocking conditions including mic pause state
-                        const canRestart = !isProcessingRef.current &&
-                                           !isRespondingRef.current &&
-                                           !isAudioPlayingRef.current &&
-                                           !isMicrophonePausedRef.current;
-
-                        console.log(`🔍 [STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
-
-                        if (canRestart) {
-                          setIsMuted(false);
-                          console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
-                          voiceMicRef.current.startListening({ forceOverride: true });
-                          // Verify mic actually started after a brief delay
-                          setTimeout(() => {
-                            if (voiceMicRef.current?.isListening) {
-                              console.log('✅ [STREAM] Microphone auto-resumed successfully');
-                            } else {
-                              console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                              if (attempt < 8) {
-                                setTimeout(() => attemptMicRestart(attempt + 1), 400);
-                              }
-                            }
-                          }, 150);
-                        } else {
-                          console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
-                          setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                        }
-                      } else {
-                        console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
-                      }
-                    };
-
-                    // Start first attempt immediately after React render cycle
-                    attemptMicRestart(1);
+                    if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
+                      setIsMuted(false);
+                      console.log('🎤 [STREAM] Hands-free: requesting mic restart');
+                      voiceMicRef.current?.startListening({ forceOverride: true });
+                    }
                   });
-                });
+                } else {
+                  // Push-to-talk (default): just clear state, user taps when ready
+                  console.log('🎤 [STREAM] Push-to-talk mode - mic idle, ready for user tap');
+                }
               }, streamingCooldownMs);
             },
           });
@@ -6705,6 +6690,13 @@ I'm not sure what I'm feeling yet.`;
                     isInterrupt,
                   });
                   toast('🎤 Activating voice...', { duration: 2000 });
+                  // 📋 Once-per-session micro-toast: remind user of tap-to-talk default
+                  if (!hasShownVoiceReentryToastRef.current) {
+                    hasShownVoiceReentryToastRef.current = true;
+                    setTimeout(() => {
+                      toast('👆 Tap-to-talk · hands-free resets when you mute', { duration: 3000 });
+                    }, 2200); // Show after "Activating voice" toast fades
+                  }
                   setIsMuted(false);
                   setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
                   // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
@@ -6769,6 +6761,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
+                  setIsHandsFreeMode(false); // Reset hands-free when user exits voice
                   voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -7390,6 +7383,34 @@ I'm not sure what I'm feeling yet.`;
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* 🎙️ HANDS-FREE WALK MODE — Toggle below status text */}
+                {/* Only shows when voice is active (not muted) and not during MAIA response */}
+                {!isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.3, delay: 0.5 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const next = !isHandsFreeMode;
+                      voiceMicRef.current?.setHandsFree(next);
+                      setIsHandsFreeMode(next);
+                      toast(next ? '🎙️ Hands-free on — best effort on iPhone' : '🎤 Tap-to-talk', { duration: 2000 });
+                    }}
+                    className={`mt-3 px-4 py-1.5 rounded-full backdrop-blur-sm transition-all duration-300 pointer-events-auto
+                      ${isHandsFreeMode
+                        ? 'bg-emerald-500/25 border border-emerald-400/40 text-emerald-300/90 shadow-[0_0_12px_rgba(110,231,183,0.2)]'
+                        : 'bg-white/8 border border-white/15 text-white/50 hover:text-white/70 hover:bg-white/12'
+                      }`}
+                  >
+                    <span className="text-xs font-medium tracking-wide">
+                      {isHandsFreeMode ? '🎙️ Hands-Free' : '👆 Tap to Talk'}
+                    </span>
+                  </motion.button>
+                )}
               </div>
             )}
 
@@ -8025,6 +8046,11 @@ I'm not sure what I'm feeling yet.`;
               2000                                    // Talk mode: 2 seconds (natural conversation pace)
             }
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
+            onHandsFreeFallback={() => {
+              setIsHandsFreeMode(false);
+              toast('Hands-free paused — tap to talk', { duration: 2500 });
+              console.log('🔄 [HandsFree] Auto-fallback to push-to-talk (backoff exhausted)');
+            }}
           />
         </div>
       )}
