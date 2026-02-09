@@ -632,7 +632,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
-  const [isHandsFreeMode, setIsHandsFreeMode] = useState(false); // UI state mirror for hands-free toggle
+  const [isHandsFreeMode, setIsHandsFreeMode] = useState(true); // UI state mirror for hands-free toggle — default ON for natural conversation
   const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
@@ -6761,7 +6761,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
-                  setIsHandsFreeMode(false); // Reset hands-free when user exits voice
+                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
                   voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -7384,33 +7384,8 @@ I'm not sure what I'm feeling yet.`;
                   )}
                 </AnimatePresence>
 
-                {/* 🎙️ HANDS-FREE WALK MODE — Toggle below status text */}
-                {/* Only shows when voice is active (not muted) and not during MAIA response */}
-                {!isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.3, delay: 0.5 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const next = !isHandsFreeMode;
-                      voiceMicRef.current?.setHandsFree(next);
-                      setIsHandsFreeMode(next);
-                      toast(next ? '🎙️ Hands-free on — best effort on iPhone' : '🎤 Tap-to-talk', { duration: 2000 });
-                    }}
-                    className={`mt-3 px-4 py-1.5 rounded-full backdrop-blur-sm transition-all duration-300 pointer-events-auto
-                      ${isHandsFreeMode
-                        ? 'bg-emerald-500/25 border border-emerald-400/40 text-emerald-300/90 shadow-[0_0_12px_rgba(110,231,183,0.2)]'
-                        : 'bg-white/8 border border-white/15 text-white/50 hover:text-white/70 hover:bg-white/12'
-                      }`}
-                  >
-                    <span className="text-xs font-medium tracking-wide">
-                      {isHandsFreeMode ? '🎙️ Hands-Free' : '👆 Tap to Talk'}
-                    </span>
-                  </motion.button>
-                )}
+                {/* Hands-free toggle removed — holoflower IS the tap-to-talk affordance.
+                   Default is hands-free; user taps holoflower to mute/unmute. */}
               </div>
             )}
 

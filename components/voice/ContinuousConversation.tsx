@@ -210,12 +210,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🎙️ STATE MACHINE — Single source of truth for mic lifecycle
   // ==========================================================================
   const micStateRef = useRef<MicState>('IDLE');
-  const listeningModeRef = useRef<ListeningMode>('PUSH_TO_TALK');
+  const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
 
   // Convenience aliases (kept for backward compat with existing code)
-  const handsFreeActiveRef = useRef(false);
+  const handsFreeActiveRef = useRef(true);
   const lastSpeechHeardAtRef = useRef<number>(0);
 
   // 🎯 CONVERSATION-ALIVE GATE — tracks whether the conversation is still active
