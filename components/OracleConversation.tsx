@@ -43,6 +43,9 @@ import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { StateCard, type StateCardDisplayMode } from './maia/StateCard';
+import { SourceHalo } from './ain/SourceHalo';
+import { CouncilInsightPanel } from './ain/CouncilInsightPanel';
+import { FieldStateIndicator } from './ain/FieldStateIndicator';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -442,6 +445,23 @@ interface ConversationMessage {
       meta?: { agentName: string | null; patternType: string | null };
     };
   };
+  // 🚪 AIN: Knowledge Gate source well weighting for this turn
+  ainState?: {
+    sourceMix: Array<{ source: string; weight: number; notes?: string }>;
+    awarenessLevel: number;
+    awarenessConfidence: number;
+    awarenessDescription?: string;
+  } | null;
+  // 🏛️ AIN: Consultation council results for this turn
+  consultation?: {
+    council: string;
+    insights: string[];
+    tensions: string[];
+    recommendation: string;
+    framingsUsed: string[];
+    emergenceRating: 'recombination' | 'synthesis' | 'breakthrough';
+    framingWeights?: Record<string, number> | null;
+  } | null;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -1226,6 +1246,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [smoothedAudioLevel, setSmoothedAudioLevel] = useState(0);
   const [coherenceLevel, setCoherenceLevel] = useState(0.5);
   const [coherenceShift, setCoherenceShift] = useState<CoherenceShift>('stable');
+  const [fieldWisdomPresent, setFieldWisdomPresent] = useState(false);
   const [shadowPetals, setShadowPetals] = useState<string[]>([]);
   const [showBreakthrough, setShowBreakthrough] = useState(false);
 
@@ -4915,8 +4936,17 @@ I'm not sure what I'm feeling yet.`;
             tool: wisdomRouting.tool,
             meta: wisdomRouting.meta
           } : undefined
-        }
+        },
+        // 🚪 AIN: Knowledge Gate source well weighting
+        ainState: responseData.ainState || null,
+        // 🏛️ AIN: Consultation council results
+        consultation: responseData.consultation || null,
       };
+
+      // 🌀 AIN: Track field wisdom presence at conversation level
+      if (responseData.fieldState?.wisdomPresent) {
+        setFieldWisdomPresent(true);
+      }
 
       // Trigger wisdom tool reveal if activated
       if (wisdomRouting?.activated && wisdomRouting.tool) {
@@ -7575,6 +7605,12 @@ I'm not sure what I'm feeling yet.`;
                bottom: showChatInterface ? '220px' : '180px',
                overflow: 'hidden'
              }}>
+          {/* 🌀 AIN: Collective field indicator */}
+          {fieldWisdomPresent && (
+            <div className="flex justify-end pr-4 pb-1">
+              <FieldStateIndicator wisdomPresent={fieldWisdomPresent} />
+            </div>
+          )}
           <div className="h-full overflow-y-scroll overflow-x-hidden pr-2 mobile-scroll"
                style={{
                  scrollBehavior: 'smooth',
@@ -7625,8 +7661,18 @@ I'm not sure what I'm feeling yet.`;
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                          {message.role === 'user' ? (userName || 'You') : assistantName}
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                            {message.role === 'user' ? (userName || 'You') : assistantName}
+                          </div>
+                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
+                          {message.role === 'oracle' && message.ainState && (
+                            <SourceHalo
+                              sourceMix={message.ainState.sourceMix}
+                              awarenessLevel={message.ainState.awarenessLevel}
+                              awarenessDescription={message.ainState.awarenessDescription}
+                            />
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-maia-spice-400
                                       opacity-0 group-hover:opacity-100 group-active:opacity-100
@@ -7692,6 +7738,11 @@ I'm not sure what I'm feeling yet.`;
                             Send as SMS
                           </button>
                         </div>
+                      )}
+
+                      {/* 🏛️ AIN: Council consultation results panel */}
+                      {message.role === 'oracle' && message.consultation && (
+                        <CouncilInsightPanel consultation={message.consultation} />
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
