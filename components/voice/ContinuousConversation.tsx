@@ -338,14 +338,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         networkErrorCount.current++;
         lastNetworkErrorTime.current = Date.now();
 
-        if (networkErrorCount.current >= 5) {
-          console.error('🚫 Too many network errors (5+), stopping recognition');
+        // 🔥 FIX: Stop after just 2 network errors to prevent blinking
+        // Network errors often mean Google's speech API is unreachable - don't keep trying
+        if (networkErrorCount.current >= 2) {
+          console.error('🚫 Network errors detected (2+), stopping to prevent blink - user can tap mic to retry');
           setIsListening(false);
-          // TODO: Show user-friendly toast message
+          isListeningRef.current = false;
+          wantsContinuousConversationRef.current = false; // Prevent auto-restart
+          onRecordingStateChange?.(false);
           return;
         }
 
-        console.warn(`⚠️ Network error in speech recognition (${networkErrorCount.current}/5), will retry with backoff`);
+        console.warn(`⚠️ Network error in speech recognition (${networkErrorCount.current}/2), will retry once`);
         // Network errors will be retried by the auto-restart mechanism with exponential backoff
       } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         console.error('🚫 Microphone permission denied');

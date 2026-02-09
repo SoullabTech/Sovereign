@@ -49,6 +49,12 @@ export class NaturalResponseFlow {
       /^(That sounds|It sounds|This sounds)\s+(difficult|challenging|hard|tough)/i,
       /^(Thank you for sharing|I appreciate you sharing)/i,
       /^(Tell me more about|Can you tell me about)/i,
+      // Scripted rupture repair phrases that should sound more natural
+      /^You'?re right to call that out\.?\s*/i,
+      /^You'?re absolutely right to be angry\.?\s*/i,
+      /^I made that about me instead of you\.?\s*/i,
+      /^That response didn'?t meet you where you are\.?\s*/i,
+      /^You'?re completely right\.?\s*/i,
     ];
 
     let cleaned = text;
