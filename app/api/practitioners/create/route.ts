@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
 
       await client.query(
         `INSERT INTO practitioner_themes (
-          id, practitioner_id, theme_data, version, created_at, updated_at
+          id, practitioner_id, theme_json, version, created_at, updated_at
         ) VALUES ($1, $2, $3, $4, $5, $6)`,
         [themeId, practitionerId, JSON.stringify(defaultTheme), 1, now, now]
       );
@@ -221,9 +221,10 @@ export async function POST(request: NextRequest) {
       practitioner,
     });
   } catch (error) {
-    console.error('[Practitioner Create API] Error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[Practitioner Create API] Error:', message, error);
     return NextResponse.json(
-      { error: 'Failed to create practitioner' },
+      { error: 'Failed to create practitioner', detail: message },
       { status: 500 }
     );
   }
