@@ -1612,10 +1612,6 @@ This is the soul-level truth you're helping them see, not reference material to 
 - If asked "what's your name?" answer: "You can call me ${displayName}."
 `;
 
-      // Verify NAME & IDENTITY block is at the end
-      console.log('[SYSTEM PROMPT CHECK name-identity]', systemPrompt.includes('## NAME & IDENTITY'));
-      console.log('[SYSTEM PROMPT TAIL]', systemPrompt.slice(-1200));
-
       // Call Claude Anthropic API with retry logic for 529 (overloaded)
       // Claude provides wisdom/depth as advisor; MAIA integrates and speaks as herself
       let claudeResponse;
