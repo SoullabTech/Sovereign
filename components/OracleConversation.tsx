@@ -1242,6 +1242,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [teenProfile, setTeenProfile] = useState<TeenProfile | undefined>();
   const [isTeenUser, setIsTeenUser] = useState(false);
   const [lastSafetyCheck, setLastSafetyCheck] = useState<TeenSafetyCheck | null>(null);
+  const [youthMaxSessionMinutes, setYouthMaxSessionMinutes] = useState<number | undefined>();
+  const [youthTierLabel, setYouthTierLabel] = useState<string | undefined>();
 
   // Calculate user age and determine if teen
   const userAge = propUserAge || (userBirthDate ? calculateAge(userBirthDate) : null);
@@ -2695,6 +2697,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const tier = computeTierFromAge(userAge);
       const tierConfig = getTierConfig(tier);
       console.log(`🌱 Developmental tier: ${tier} (${tierConfig.label}), max session: ${tierConfig.maxSessionMinutes}min`);
+      setYouthMaxSessionMinutes(tierConfig.maxSessionMinutes);
+      setYouthTierLabel(tierConfig.label);
 
       // Load teen profile from localStorage
       const userData = getUserData();
@@ -4100,6 +4104,26 @@ I'm not sure what I'm feeling yet.`;
       if (supportResponse.crisisMode) {
         console.log('🚨 [CRISIS MODE] MAIA entering crisis companion mode - staying present with user');
 
+        // Show visible crisis resource card in chat
+        const crisisResourceMessage: ConversationMessage = {
+          id: `crisis-resources-${Date.now()}`,
+          role: 'oracle',
+          text: '---\n' +
+            '**You don\'t have to handle this alone.**\n\n' +
+            'Right now, you can reach someone who gets it:\n\n' +
+            '**988 Suicide & Crisis Lifeline** \u2014 Call or text 988 (24/7)\n\n' +
+            '**Crisis Text Line** \u2014 Text HOME to 741741 (24/7)\n\n' +
+            '**Trevor Project** (LGBTQ+) \u2014 Call 1-866-488-7386 or text START to 678678\n\n' +
+            (safetyCheck.isED ? '**NEDA Helpline** \u2014 Call 1-800-931-2237 or text NEDA to 741741\n\n' : '') +
+            'If someone is hurting you, tell a trusted adult. You can also call **Childhelp** at 1-800-422-4453.\n\n' +
+            '*I\'m still here. We can keep talking.*\n' +
+            '---',
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
+        onMessageAddedRef.current?.(crisisResourceMessage);
+
         // Alert team for human check-in
         if (userId) {
           const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
@@ -4125,10 +4149,22 @@ I'm not sure what I'm feeling yet.`;
         console.log('🌟 [CRISIS COMPANION] MAIA will respond with crisis-aware compassion');
       }
 
-      // If scaffolding suggestions available, log them (could be displayed in UI)
-      if (supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
+      // If scaffolding suggestions available, show them in chat
+      if (!supportResponse.crisisMode && supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
         console.log('🌟 [TEEN SUPPORT] Scaffolding suggestions:', supportResponse.scaffoldSuggestions);
-        // TODO: Could display these in the UI as helpful strategies
+        // Show scaffold suggestions as a gentle system message
+        const scaffoldText = supportResponse.scaffoldSuggestions
+          .map(s => `\u2022 ${s}`)
+          .join('\n');
+        const scaffoldMessage: ConversationMessage = {
+          id: `scaffold-${Date.now()}`,
+          role: 'oracle',
+          text: `*Some things that might help right now:*\n\n${scaffoldText}`,
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, scaffoldMessage));
+        onMessageAddedRef.current?.(scaffoldMessage);
       }
 
       // Log context that will be added to MAIA's system prompt
@@ -8405,7 +8441,9 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showSessionSelector}
         onClose={() => onCloseSessionSelector?.()}
         onSelect={handleDurationSelected}
-        defaultDuration={50}
+        defaultDuration={youthMaxSessionMinutes || 50}
+        maxDuration={isTeenUser ? youthMaxSessionMinutes : undefined}
+        tierLabel={isTeenUser ? youthTierLabel : undefined}
       />
 
       {/* 💾 Resume Session Prompt Modal */}

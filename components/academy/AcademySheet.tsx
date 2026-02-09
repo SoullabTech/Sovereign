@@ -167,6 +167,20 @@ export function AcademySheet({
   const hasStarted = false; // Would check localStorage/API
   const currentSequence = null; // Would show current prompt sequence
 
+  // Read developmental tier for Inner Lands gating
+  const [developmentalTier, setDevelopmentalTier] = useState<'under13' | 'tier2' | 'tier3' | 'adult' | undefined>();
+  useEffect(() => {
+    try {
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        const parsed = JSON.parse(betaUser);
+        if (parsed.developmentalTier) {
+          setDevelopmentalTier(parsed.developmentalTier);
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }, []);
+
   // Load trace store on mount and when domain/prompt changes
   useEffect(() => {
     setTraceStore(getDomainTraceStore());
@@ -502,6 +516,7 @@ export function AcademySheet({
         {showInnerLands && (
           <InnerLandsExplorer
             onClose={() => setShowInnerLands(false)}
+            developmentalTier={developmentalTier}
             onAskMaia={(content) => {
               setShowInnerLands(false);
               onClose();
