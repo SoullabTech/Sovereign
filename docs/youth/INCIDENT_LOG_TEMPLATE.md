@@ -1,5 +1,7 @@
 # Incident Log — MAIA Youth Pilot
 
+> **Do not paste journal text, chat transcripts, quotes, paraphrases, or identifying details into this log. Metadata only. If you're unsure whether something counts as content, it does. Leave it out.**
+
 ## Purpose
 
 This log records safety events detected by MAIA's teen safety pipeline.

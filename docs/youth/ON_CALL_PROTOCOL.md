@@ -1,5 +1,7 @@
 # On-Call Protocol — MAIA Youth Pilot
 
+> **Do not paste journal text, chat transcripts, quotes, paraphrases, or identifying details into any communication, log, or outreach. When contacting guardians, describe the signal type — never the content. If you're unsure whether something counts as content, it does. Leave it out.**
+
 ## Coverage
 
 - **Hours:** Mon-Fri, 9am-7pm local time
