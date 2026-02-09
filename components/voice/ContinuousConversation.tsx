@@ -2000,6 +2000,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, []);
 
+  // 📱 FOREGROUND RESUME SAFETY NET — catch edge cases where OracleConversation relay misses
+  // This is a belt-and-suspenders guard: if iOS killed SR while backgrounded and the
+  // parent's onInterruptionEnd relay didn't fire (or fired too early), this catches it.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cleanup: (() => void) | undefined;
+    (async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        const listener = await App.addListener('appStateChange', ({ isActive }) => {
+          if (!isActive) return;
+
+          // Only auto-resume if hands-free is actually enabled
+          if (listeningModeRef.current !== 'HANDS_FREE') return;
+          if (!handsFreeActiveRef.current) return;
+
+          // Don't fight the rest of the state machine
+          if (isSpeakingRef.current) return;
+          if (isProcessingRef.current) return;
+          if (restartInFlightRef.current) return;
+
+          // If iOS killed SR while backgrounding, we come back INTERRUPTED or IDLE
+          const ms = micStateRef.current;
+          if (ms !== 'INTERRUPTED' && ms !== 'IDLE') return;
+
+          // Extra safety: conversation must still be alive
+          if (!isConversationAlive({
+            lastTranscriptAt: lastTranscriptSubmittedAtRef.current,
+            lastAudioEndAt: lastAudioEndAtRef.current,
+            lastMicTapAt: lastMicTapAtRef.current,
+          })) return;
+
+          console.log('🔁 [AppState] Foregrounded — attempting hands-free resume');
+          setMicState('IDLE', 'app_foreground_resume');
+          setTimeout(() => {
+            if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
+              startListeningFnRef.current?.();
+            }
+          }, 800); // Slight delay for audio session to settle
+        });
+        cleanup = () => listener.remove();
+      } catch {
+        // Not on Capacitor — no-op
+      }
+    })();
+
+    return () => { cleanup?.(); };
+  }, []);
+
   // Expose methods to parent via refs (avoids temporal dead zone)
   useImperativeHandle(ref, () => ({
     startListening: (options?: { forceOverride?: boolean }) => startListeningFnRef.current?.(options),
