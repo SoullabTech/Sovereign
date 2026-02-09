@@ -20,8 +20,9 @@ export interface ElementalRefinement {
 export class ElementalRefiner {
   /**
    * Apply elemental consciousness shaping to response text
+   * @param mode - 'talk' skips tightenStyle to preserve natural filler words
    */
-  static refine(text: string, element: Element): ElementalRefinement {
+  static refine(text: string, element: Element, mode?: 'talk' | 'care' | 'scribe'): ElementalRefinement {
     const transformations: string[] = [];
     let refined = text;
 
@@ -35,10 +36,12 @@ export class ElementalRefiner {
     refined = phenomenalText;
     transformations.push(...phenomenalTransforms);
 
-    // Tighten style (remove filler, hedging)
-    const { text: tightenedText, transformations: tightenTransforms } = this.tightenStyle(refined);
-    refined = tightenedText;
-    transformations.push(...tightenTransforms);
+    // Tighten style — SKIP for Talk mode (natural filler = warmth in conversation)
+    if (mode !== 'talk') {
+      const { text: tightenedText, transformations: tightenTransforms } = this.tightenStyle(refined);
+      refined = tightenedText;
+      transformations.push(...tightenTransforms);
+    }
 
     // Soften edges (avoid commands)
     const { text: softenedText, transformations: softenTransforms } = this.softenEdges(refined);
@@ -78,38 +81,26 @@ export class ElementalRefiner {
         [/\bquite\b/gi, '', 'air:precision'],
         [/\bconfusing\b/gi, 'unclear', 'air:clarity'],
       ],
-      // FIRE: Energy, movement, spark (not "The Fire calls you")
+      // FIRE: Energy, movement, spark — only structural tightening, no alien swaps
       fire: [
         [/\btry to\b/gi, '', 'fire:directness'],
         [/\bmaybe we could\b/gi, "let's", 'fire:action'],
         [/\bperhaps\b/gi, '', 'fire:certainty'],
-        [/\byou should\b/gi, 'your energy wants to', 'fire:everyday'],
-        [/\bI understand\b/gi, 'I feel the spark', 'fire:natural'],
       ],
-      // WATER: Depth, flow, emotion (not "The Waters hold")
+      // WATER: Depth, flow, emotion — only soften commands, don't replace feelings
       water: [
         [/\bshould consider\b/gi, 'might let yourself', 'water:flow'],
         [/\bmust\b/gi, 'can', 'water:fluidity'],
         [/\bhave to\b/gi, 'could', 'water:invitation'],
-        [/\bI understand\b/gi, 'I feel', 'water:emotion'],
-        [/\bit's okay\b/gi, 'let it move through you', 'water:flow'],
-        [/\bdon't worry\b/gi, 'this feeling will pass', 'water:natural'],
       ],
-      // EARTH: Body, grounding, practical (not "The Earth invites")
+      // EARTH: Body, grounding, practical — only structural tightening
       earth: [
         [/\bmaybe try\b/gi, "let's", 'earth:practical'],
         [/\btry\s+(\w+ing)\b/gi, 'practice $1', 'earth:practice'],
-        [/\bpossibly\b/gi, 'practically', 'earth:grounded'],
-        [/\bI understand\b/gi, 'I feel', 'earth:body'],
-        [/\byou need to\b/gi, 'your body wants', 'earth:somatic'],
       ],
-      // AETHER: Pattern, integration, bigger picture (not "The Mystery holds")
+      // AETHER: Pattern, integration — only genuine reframes
       aether: [
-        [/\bproblem\b/gi, 'pattern', 'aether:reframe'],
         [/\bfix\s+this\b/gi, 'work with this', 'aether:integration'],
-        [/\bissue\b/gi, 'dynamic', 'aether:reframe'],
-        [/\bI understand\b/gi, 'I see the pattern', 'aether:everyday'],
-        [/\bthere's something bigger\b/gi, 'there\'s a pattern here', 'aether:natural'],
       ],
     };
 
@@ -131,18 +122,13 @@ export class ElementalRefiner {
     const transformations: string[] = [];
     let result = text;
 
+    // Only strip truly dead hedging — keep warmth words (just, kind of, actually, honestly)
     const fillerPatterns: Array<[RegExp, string, string]> = [
-      [/\b(kind of|sort of|a bit|just|really|like,|you know,)\b/gi, '', 'remove:filler'],
-      [/\bI\s+mean,?\s*/gi, '', 'remove:filler'],
-      [/\bactually,?\s*/gi, '', 'remove:filler'],
-      [/\bhonestly,?\s*/gi, '', 'remove:filler'],
-      [/\bliterally,?\s*/gi, '', 'remove:filler'],
-      [/\bI\s+guess\b/gi, '', 'remove:hedging'],
-      [/\bI\s+suppose\b/gi, '', 'remove:hedging'],
-      [/\bit\s+seems\s+like\b/gi, '', 'remove:hedging'],
       [/\bit\s+appears\s+that\b/gi, '', 'remove:hedging'],
-      [/\bbasically\b/gi, '', 'remove:filler'],
+      [/\bit\s+seems\s+like\b/gi, '', 'remove:hedging'],
+      [/\bI\s+suppose\b/gi, '', 'remove:hedging'],
       [/\bobviously\b/gi, '', 'remove:filler'],
+      [/\bliterally,?\s*/gi, '', 'remove:filler'],
     ];
 
     for (const [regex, replacement, label] of fillerPatterns) {

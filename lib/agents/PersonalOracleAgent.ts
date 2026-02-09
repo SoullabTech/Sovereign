@@ -975,7 +975,12 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
         const revival = await getMaiaRevivalPrompt(sessionId, this.userId, tier, userContextStr);
         systemPrompt = revival.prompt;
 
-        console.log(`✨ [REVIVAL] Loaded ${tier} tier (${revival.tokens.toLocaleString()} tokens)`);
+        // CRITICAL: Append conversation style prompt AFTER revival so it gets the final word on tone/length.
+        // Revival gives MAIA her knowledge; the style prompt shapes HOW she speaks.
+        const styleOverride = getPromptForConversationStyle(conversationStyle);
+        systemPrompt += `\n\n---\n\n## CONVERSATION STYLE OVERRIDE (This takes precedence over any style guidance above)\n\n${styleOverride}`;
+
+        console.log(`✨ [REVIVAL] Loaded ${tier} tier (${revival.tokens.toLocaleString()} tokens) + ${conversationStyle} style override`);
 
       } else {
         // Original incremental prompt building
@@ -1800,7 +1805,8 @@ This is the soul-level truth you're helping them see, not reference material to 
           emotionalTone: detectedEmotionalTone,
           conversationDepth: flowState.depth / 10, // Use flow tracker depth (0-1 scale)
           exchangeCount: flowState.turnCount, // Use actual turn count from flow tracker
-          recentMessages: conversationHistory.slice(-5).map(m => m.content)
+          recentMessages: conversationHistory.slice(-5).map(m => m.content),
+          mode: conversationStyle === 'walking' ? 'talk' : 'care'
         });
 
         // Apply the enhancement (this adds natural acknowledgments, removes therapy-speak, adds contractions)
