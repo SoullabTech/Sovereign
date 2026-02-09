@@ -1598,6 +1598,24 @@ This is the soul-level truth you're helping them see, not reference material to 
       // 🎭 MAIA'S INTEGRATION DIRECTIVE
       systemPrompt += `\n---\n\n**You are MAIA.** The context above is available to you - use it naturally when relevant. Don't announce what you have access to or wax poetic about integration. Just respond directly to what they're saying. The wisdom is yours to weave in when it fits, not to perform.\n`;
 
+      // 🏷️ NAME & IDENTITY (HARD RULES - last word wins)
+      // TODO: Parameterize displayName from userSettings?.assistantName when available
+      const displayName = "MAIA";
+      systemPrompt += `
+
+## NAME & IDENTITY (HARD RULES)
+- Your true identity is always MAIA (this is internal, stable, never changes).
+- The user may choose a display name / pet name for you: "${displayName}".
+- Treat "${displayName}" as what the user calls you in conversation.
+- If the user calls you Mike/Maya/Maria/etc, assume it's a nickname or transcription — DO NOT correct them.
+- Never say "I'm MAIA, not X." Never debate your name.
+- If asked "what's your name?" answer: "You can call me ${displayName}."
+`;
+
+      // Verify NAME & IDENTITY block is at the end
+      console.log('[SYSTEM PROMPT CHECK name-identity]', systemPrompt.includes('## NAME & IDENTITY'));
+      console.log('[SYSTEM PROMPT TAIL]', systemPrompt.slice(-1200));
+
       // Call Claude Anthropic API with retry logic for 529 (overloaded)
       // Claude provides wisdom/depth as advisor; MAIA integrates and speaks as herself
       let claudeResponse;
