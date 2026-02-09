@@ -145,7 +145,10 @@ export async function exchangeCodeForTokens(code: string): Promise<GoogleTokens 
 /**
  * Refresh an expired access token
  */
-export async function refreshAccessToken(refreshToken: string): Promise<GoogleTokens | null> {
+// Sentinel indicating the refresh token has been permanently revoked
+export const TOKEN_REVOKED = Symbol('TOKEN_REVOKED');
+
+export async function refreshAccessToken(refreshToken: string): Promise<GoogleTokens | null | typeof TOKEN_REVOKED> {
   const config = getConfig();
   if (!config) return null;
 
@@ -162,8 +165,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<GoogleTo
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('[GoogleCalendar] Token refresh failed:', error);
+      const errorText = await response.text();
+      // Detect permanently revoked tokens — stop retrying
+      if (errorText.includes('invalid_grant')) {
+        console.warn(`[GoogleCalendar] Token permanently revoked (invalid_grant). Will mark as disconnected.`);
+        return TOKEN_REVOKED;
+      }
+      console.error('[GoogleCalendar] Token refresh failed:', errorText);
       return null;
     }
 
@@ -231,14 +239,22 @@ export async function getValidAccessToken(userId: string): Promise<string | null
     if (creds.expiry_date < Date.now() + 5 * 60 * 1000) {
       console.log(`[GoogleCalendar] Refreshing expired token for user ${userId}`);
 
-      const newTokens = await refreshAccessToken(creds.refresh_token);
-      if (!newTokens) {
+      const result = await refreshAccessToken(creds.refresh_token);
+
+      // Token permanently revoked — delete credentials so isConnected() returns false
+      if (result === TOKEN_REVOKED) {
+        console.warn(`[GoogleCalendar] Marking user ${userId} as disconnected (token revoked). Removing credentials.`);
+        await query('DELETE FROM google_calendar_credentials WHERE id = $1', [creds.id]);
+        return null;
+      }
+
+      if (!result) {
         console.error(`[GoogleCalendar] Failed to refresh token for user ${userId}`);
         return null;
       }
 
-      await storeTokens(userId, newTokens);
-      return newTokens.access_token;
+      await storeTokens(userId, result);
+      return result.access_token;
     }
 
     return creds.access_token;
@@ -253,9 +269,7 @@ export async function getValidAccessToken(userId: string): Promise<string | null
  */
 export async function isConnected(userId: string): Promise<boolean> {
   try {
-    console.log('[GoogleCalendar] isConnected checking for userId:', userId);
     const creds = await findOne<StoredCredentials>('google_calendar_credentials', 'user_id', userId);
-    console.log('[GoogleCalendar] isConnected found creds:', !!creds, 'has refresh:', !!creds?.refresh_token);
     return !!creds?.refresh_token;
   } catch (error) {
     console.error('[GoogleCalendar] isConnected error:', error);
