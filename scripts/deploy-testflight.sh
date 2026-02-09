@@ -9,6 +9,10 @@
 
 set -e
 
+# CocoaPods requires UTF-8 encoding (Ruby 3.4 + macOS default locale can be ASCII-8BIT)
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 # App Store Connect API credentials
 ISSUER_ID="2f3ea491-8e65-4769-b503-3c50172f10ab"
 KEY_ID="36J9MBP9U6"
