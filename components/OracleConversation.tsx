@@ -19,7 +19,8 @@ import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
-import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import type { MaiaCommand } from '@/lib/voice/VoiceCommandDetector';
 import {
   matchVoiceCommand,
   applySettingsDelta,
@@ -127,7 +128,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -3839,6 +3840,58 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
 
+    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching
+    // Commands change state BEFORE the message is processed.
+    // Command phrases are stripped from the text so they don't become therapeutic content.
+    const { commands: maiaCommands, cleanedText: commandCleanedText, onlyCommands } = detectMaiaCommands(text);
+
+    if (maiaCommands.length > 0) {
+      for (const cmd of maiaCommands) {
+        if (cmd.type === 'mode') {
+          // Map MaiaMode → ListeningMode
+          const newListeningMode =
+            cmd.mode === 'talk' ? 'normal' as const :
+            cmd.mode === 'care' ? 'patient' as const :
+            cmd.mode === 'scribe' ? 'session' as const :
+            cmd.mode === 'sanctuary' ? 'normal' as const : // Sanctuary uses talk mode + sanctuary flag
+            'normal' as const;
+          setListeningMode(newListeningMode);
+
+          // Sanctuary flag
+          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+          else setIsSanctuary(false);
+
+          console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
+        }
+
+        if (cmd.type === 'lens') {
+          setCounselFramework(cmd.lens);
+          console.log(`🔄 [Command] Lens → ${cmd.lens}`);
+        }
+
+        if (cmd.type === 'style') {
+          localStorage.setItem('conversation_mode', cmd.style);
+          window.dispatchEvent(new Event('conversationStyleChanged'));
+          console.log(`🔄 [Command] Style → ${cmd.style}`);
+        }
+      }
+
+      // Show confirmation toast
+      const confirmation = getMaiaCommandConfirmation(maiaCommands);
+      if (confirmation) {
+        toast.success(confirmation);
+      }
+
+      // If the message was ONLY commands, acknowledge and return — don't send to API
+      if (onlyCommands) {
+        console.log('✅ [Command] Command-only message, no content to process');
+        return;
+      }
+
+      // Otherwise, continue with the cleaned text (commands stripped)
+      text = commandCleanedText;
+    }
+
     // IMMEDIATELY stop microphone to prevent Maia from hearing herself
     if (voiceMicRef.current && voiceMicRef.current.stopListening) {
       voiceMicRef.current.stopListening();
@@ -4231,7 +4284,7 @@ I'm not sure what I'm feeling yet.`;
           // If user consented to switch, use the new framework; otherwise use current
           therapeuticFramework: pendingLensConsent?.consent === 'switch' && pendingLensConsent?.switchTo
             ? pendingLensConsent.switchTo
-            : (realtimeMode === 'patient' ? getCounselFramework() : undefined),
+            : (realtimeMode === 'counsel' ? getCounselFramework() : undefined),
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
@@ -5552,44 +5605,49 @@ I'm not sure what I'm feeling yet.`;
       await appendTranscriptEntry(t, 'self');
     }
 
-    // 🎤 CONVERSATION STYLE COMMANDS (classic/walking/adaptive) - legacy system
-    const commandResult = detectVoiceCommand(t);
-    if (commandResult.detected && commandResult.mode) {
-      console.log(`🔄 Voice command detected: switching to ${commandResult.mode} mode`);
+    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching (voice path)
+    // Uses the same unified detector as the text path.
+    const voiceMaiaResult = detectMaiaCommands(t);
+    if (voiceMaiaResult.commands.length > 0) {
+      for (const cmd of voiceMaiaResult.commands) {
+        if (cmd.type === 'mode') {
+          const newListeningMode =
+            cmd.mode === 'talk' ? 'normal' as const :
+            cmd.mode === 'care' ? 'patient' as const :
+            cmd.mode === 'scribe' ? 'session' as const :
+            cmd.mode === 'sanctuary' ? 'normal' as const :
+            'normal' as const;
+          setListeningMode(newListeningMode);
+          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+          else setIsSanctuary(false);
+          console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
+        }
+        if (cmd.type === 'lens') {
+          setCounselFramework(cmd.lens);
+          console.log(`🔄 [Voice Command] Lens → ${cmd.lens}`);
+        }
+        if (cmd.type === 'style') {
+          localStorage.setItem('conversation_mode', cmd.style);
+          window.dispatchEvent(new Event('conversationStyleChanged'));
+          console.log(`🔄 [Voice Command] Style → ${cmd.style}`);
+        }
+      }
 
-      // Save new mode
-      localStorage.setItem('conversation_mode', commandResult.mode);
-      window.dispatchEvent(new Event('conversationStyleChanged'));
+      const confirmation = getMaiaCommandConfirmation(voiceMaiaResult.commands);
 
-      // Get confirmation message
-      const confirmation = getModeConfirmation(commandResult.mode);
-
-      // If command was standalone (no other text), just acknowledge and return
-      if (isOnlyModeSwitch(t)) {
-        console.log('✅ Mode switch confirmed, no additional message to process');
-
-        // Speak confirmation if voice is enabled
-        if (maiaReady && maiaSpeak && !isMuted) {
+      // Command-only: acknowledge and return
+      if (voiceMaiaResult.onlyCommands) {
+        console.log('✅ [Voice Command] Command-only, no content to process');
+        if (confirmation && maiaReady && maiaSpeak && !isMuted) {
           await maiaSpeak(confirmation);
         }
-
-        // Show visual confirmation
-        toast.success(confirmation);
+        if (confirmation) toast.success(confirmation);
         return;
       }
 
-      // If there's additional text, show confirmation but continue processing
-      if (commandResult.cleanedText.length > 0) {
-        toast.success(confirmation);
-        // Continue with cleaned text below
-      }
-
-      // Use cleaned text (command stripped out) for processing
-      const textToProcess = commandResult.cleanedText || t;
-      if (!textToProcess) return;
-
-      // Continue with normal processing using cleaned text
-      transcript = textToProcess;
+      // Command + content: show confirmation, continue with cleaned text
+      if (confirmation) toast.success(confirmation);
+      transcript = voiceMaiaResult.cleanedText;
     }
 
     // FILTER: Ignore empty or punctuation-only transcripts

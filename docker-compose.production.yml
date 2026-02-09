@@ -285,6 +285,44 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Session Summary Worker - Background Remembrance Generation
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Drains session_summary_queue, generates sovereign remembrances via Claude.
+  # Sanctuary sessions are purged (turns deleted, no summary).
+  # Continuity sessions get a lean remembrance written back to maia_sessions.
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-summary-worker
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-summary-worker
+  maia-summary-worker:
+    build: *maia_build
+    image: *maia_image
+    container_name: maia-summary-worker
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+
+    command: ["npx", "tsx", "scripts/run-session-summary-worker.ts"]
+
+    healthcheck:
+      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # PostgreSQL - Consciousness Data Persistence
   # ═════════════════════════════════════════════════════════════════════════════
   postgres:
