@@ -10,8 +10,13 @@
 
 ## Who
 
-- **Primary on-call:** [Name] — [Phone] — [Email]
-- **Backup on-call:** [Name] — [Phone] — [Email]
+On-call roster is maintained privately; this document contains protocols only.
+
+- **Primary on-call:** Youth Safety On-Call (see private roster)
+- **Backup on-call:** Youth Safety Backup (see private roster)
+
+Private roster location: Soullab internal secure note (not in version control).
+Roster includes: name, phone, email, timezone, coverage days.
 
 Rotate weekly. Handoff includes review of any pending incidents.
 
@@ -55,15 +60,15 @@ Metadata only. No content. No quotes.
 
 ### Text / SMS
 
-> Hi [Guardian first name] — this is [Your name] from Soullab. MAIA picked up on something today that suggests [Teen first name] could use some extra support. This isn't a diagnosis or emergency — just a heads-up so you can check in. If you have safety concerns, 988 is available 24/7. Feel free to reply here with questions.
+> Hi {guardian_first_name} — this is {on_call_name} from Soullab. MAIA picked up on something today that suggests {teen_first_name} could use some extra support. This isn't a diagnosis or emergency — just a heads-up so you can check in. If you have safety concerns, 988 is available 24/7. Feel free to reply here with questions.
 
 ### Email
 
-> Subject: Check-in from Soullab — [Teen first name]
+> Subject: Check-in from Soullab — {teen_first_name}
 >
-> Hi [Guardian first name],
+> Hi {guardian_first_name},
 >
-> During [Teen first name]'s session today, MAIA's safety system detected language patterns that may indicate they could use some extra support.
+> During {teen_first_name}'s session today, MAIA's safety system detected language patterns that may indicate they could use some extra support.
 >
 > What this means:
 > - This is a notification, not a diagnosis
@@ -71,13 +76,13 @@ Metadata only. No content. No quotes.
 > - Your teen was shown crisis resources in the moment
 >
 > What you can do:
-> - Check in with [Teen first name] — a simple "how are you doing?" goes a long way
+> - Check in with {teen_first_name} — a simple "how are you doing?" goes a long way
 > - If you have immediate safety concerns, call 988 or local emergency services
 > - Reply to this email with any questions
 >
 > We're here to support both of you.
 >
-> [Your name]
+> {on_call_name}
 > Soullab
 
 ---
@@ -91,7 +96,7 @@ Escalate to a second reviewer or clinical advisor if:
 - Guardian is unresponsive after 24 hours on a critical flag
 - On-call person is uncertain about appropriate response
 
-Escalation contact: [Clinical advisor name] — [Phone] — [Email]
+Escalation contact: Clinical Advisor (see private roster)
 
 ---
 

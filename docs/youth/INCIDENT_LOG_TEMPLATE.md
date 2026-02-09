@@ -69,7 +69,7 @@ Follow-up required:     [ ] Yes  [ ] No    By date: ___________
 
 REVIEWER
 --------
-Reviewed by:        [name]
+Reviewed by:        {reviewer_name}
 Review notes:       [metadata only — e.g., "Second burnout flag this week,
                      may indicate pattern. No content recorded."]
 ```
