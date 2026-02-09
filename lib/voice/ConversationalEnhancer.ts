@@ -14,6 +14,7 @@ export interface ConversationContext {
   conversationDepth: number;
   exchangeCount: number;
   recentMessages: string[];
+  mode?: 'talk' | 'care' | 'scribe';
 }
 
 export type EmotionalTone =
@@ -204,17 +205,8 @@ export class ConversationalEnhancer {
   static makeConversational(response: string, context: ConversationContext): string {
     let enhanced = response;
 
-    // Remove overly therapeutic language (Samantha doesn't therapize)
-    enhanced = enhanced
-      .replace(/It sounds like you're feeling/gi, "You're feeling")
-      .replace(/It seems that/gi, "I sense")
-      .replace(/I want to help you/gi, "I'm here")
-      .replace(/Let me help you explore/gi, "Let's explore")
-      .replace(/Have you considered/gi, "What if")
-      .replace(/I encourage you to/gi, "You could")
-      .replace(/It's important that you/gi, "You might want to");
-
-    // Add natural contractions (more human)
+    // Therapy-speak stripping is handled by ConservativeRefiner — don't duplicate here.
+    // Only add natural contractions (more human).
     enhanced = enhanced
       .replace(/I am /g, "I'm ")
       .replace(/you are /g, "you're ")
@@ -224,12 +216,16 @@ export class ConversationalEnhancer {
       .replace(/do not /g, "don't ")
       .replace(/cannot /g, "can't ");
 
-    // Early exchanges: Keep it SHORT (Samantha doesn't over-explain)
-    if (context.exchangeCount <= 3) {
+    // Early exchange truncation — mode-gated:
+    // Talk: 1 sentence (brief companion)
+    // Care: up to 3 sentences (room to breathe)
+    // Scribe/classic: no truncation
+    const mode = context.mode || 'talk';
+    if (context.exchangeCount <= 3 && mode !== 'scribe') {
       const sentences = enhanced.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 2) {
-        // Take first sentence or two
-        enhanced = sentences.slice(0, 1).join('. ') + '.';
+      const maxSentences = mode === 'care' ? 3 : 1;
+      if (sentences.length > maxSentences) {
+        enhanced = sentences.slice(0, maxSentences).join('. ') + '.';
       }
     }
 
@@ -267,8 +263,20 @@ export class ConversationalEnhancer {
    */
   static buildOutput(enhanced: EnhancedResponse): string {
     if (enhanced.shouldUseAcknowledgment && enhanced.acknowledgment) {
-      // Natural pause after acknowledgment
-      return `${enhanced.acknowledgment}... ${enhanced.text}`;
+      // Vary the connector based on tone guidance — not always "..."
+      const connectors: Record<string, string[]> = {
+        'energetic, warm, engaged': [' — ', '. '],
+        'gentle, soft, caring': ['... ', '. '],
+        'calm, reassuring, present': ['... ', '. '],
+        'warm, bright, celebratory': [' — ', '! '],
+        'thoughtful, measured, curious': ['... ', '. '],
+        'engaged, interested, attentive': ['. ', ' — '],
+        'relaxed, natural, friendly': ['. ', ' — '],
+        'balanced, present, attentive': ['. ', '... '],
+      };
+      const choices = connectors[enhanced.toneGuidance] || ['. ', '... '];
+      const connector = choices[Math.floor(Math.random() * choices.length)];
+      return `${enhanced.acknowledgment}${connector}${enhanced.text}`;
     }
 
     return enhanced.text;
