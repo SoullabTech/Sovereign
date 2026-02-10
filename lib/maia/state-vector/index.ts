@@ -67,6 +67,15 @@ export { STATE_VECTOR_OUTPUT_CONTRACT, isLikelyCheckin } from './prompt-contract
 export { routePractice } from './practice-router';
 export type { PracticeRecommendation, RecommendedDuration } from './practice-router';
 
+// State defaults & inference
+export {
+  detectStateFromText,
+  inferStateVector,
+  getDefaultStateVector,
+  getDefaultPracticeRecommendation,
+} from './stateDefaults';
+export type { LitePracticeRecommendation } from './stateDefaults';
+
 // Storage
 export {
   storeStateVector,
