@@ -53,13 +53,13 @@ CREATE TABLE IF NOT EXISTS threshold_passages (
 );
 
 -- One passage per member (they don't repeat this)
-CREATE UNIQUE INDEX idx_threshold_member ON threshold_passages(member_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_threshold_member ON threshold_passages(member_id);
 
 -- Cohort lookup
-CREATE INDEX idx_threshold_cohort ON threshold_passages(cohort_group_id);
+CREATE INDEX IF NOT EXISTS idx_threshold_cohort ON threshold_passages(cohort_group_id);
 
 -- State lookup (for facilitator dashboard)
-CREATE INDEX idx_threshold_state ON threshold_passages(current_week)
+CREATE INDEX IF NOT EXISTS idx_threshold_state ON threshold_passages(current_week)
     WHERE current_week NOT IN ('completed', 'withdrew', 'not_started');
 
 -- ============================================

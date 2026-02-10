@@ -48,9 +48,9 @@ CREATE TABLE IF NOT EXISTS client_groups (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_client_groups_practitioner ON client_groups(practitioner_id);
-CREATE INDEX idx_client_groups_status ON client_groups(practitioner_id, status);
-CREATE INDEX idx_client_groups_type ON client_groups(practitioner_id, group_type);
+CREATE INDEX IF NOT EXISTS idx_client_groups_practitioner ON client_groups(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_client_groups_status ON client_groups(practitioner_id, status);
+CREATE INDEX IF NOT EXISTS idx_client_groups_type ON client_groups(practitioner_id, group_type);
 
 -- ============================================
 -- CLIENT GROUP MEMBERSHIP (many-to-many)
@@ -77,9 +77,9 @@ CREATE TABLE IF NOT EXISTS client_group_members (
     UNIQUE(group_id, client_id)
 );
 
-CREATE INDEX idx_client_group_members_group ON client_group_members(group_id);
-CREATE INDEX idx_client_group_members_client ON client_group_members(client_id);
-CREATE INDEX idx_client_group_members_status ON client_group_members(group_id, status);
+CREATE INDEX IF NOT EXISTS idx_client_group_members_group ON client_group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_client_group_members_client ON client_group_members(client_id);
+CREATE INDEX IF NOT EXISTS idx_client_group_members_status ON client_group_members(group_id, status);
 
 -- ============================================
 -- GROUP SESSIONS (scheduled meetings for groups)
@@ -115,9 +115,9 @@ CREATE TABLE IF NOT EXISTS group_sessions (
     completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_group_sessions_group ON group_sessions(group_id);
-CREATE INDEX idx_group_sessions_scheduled ON group_sessions(group_id, scheduled_start);
-CREATE INDEX idx_group_sessions_status ON group_sessions(group_id, status);
+CREATE INDEX IF NOT EXISTS idx_group_sessions_group ON group_sessions(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_sessions_scheduled ON group_sessions(group_id, scheduled_start);
+CREATE INDEX IF NOT EXISTS idx_group_sessions_status ON group_sessions(group_id, status);
 
 -- ============================================
 -- GROUP SESSION ATTENDANCE
@@ -138,8 +138,8 @@ CREATE TABLE IF NOT EXISTS group_session_attendance (
     UNIQUE(session_id, client_id)
 );
 
-CREATE INDEX idx_group_attendance_session ON group_session_attendance(session_id);
-CREATE INDEX idx_group_attendance_client ON group_session_attendance(client_id);
+CREATE INDEX IF NOT EXISTS idx_group_attendance_session ON group_session_attendance(session_id);
+CREATE INDEX IF NOT EXISTS idx_group_attendance_client ON group_session_attendance(client_id);
 
 -- ============================================
 -- TRIGGERS

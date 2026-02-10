@@ -40,12 +40,12 @@ CREATE TABLE IF NOT EXISTS studio_tasks (
 );
 
 -- Indexes
-CREATE INDEX idx_studio_tasks_member ON studio_tasks(member_id);
-CREATE INDEX idx_studio_tasks_team ON studio_tasks(team_id);
-CREATE INDEX idx_studio_tasks_status ON studio_tasks(status);
-CREATE INDEX idx_studio_tasks_priority ON studio_tasks(priority);
-CREATE INDEX idx_studio_tasks_due ON studio_tasks(due_date) WHERE due_date IS NOT NULL;
-CREATE INDEX idx_studio_tasks_project ON studio_tasks(project) WHERE project IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_member ON studio_tasks(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_team ON studio_tasks(team_id);
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_status ON studio_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_priority ON studio_tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_due ON studio_tasks(due_date) WHERE due_date IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_studio_tasks_project ON studio_tasks(project) WHERE project IS NOT NULL;
 
 -- Updated_at trigger
 CREATE OR REPLACE FUNCTION update_studio_tasks_updated_at()
@@ -77,5 +77,5 @@ CREATE TABLE IF NOT EXISTS studio_projects (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_projects_member ON studio_projects(member_id);
-CREATE INDEX idx_studio_projects_team ON studio_projects(team_id);
+CREATE INDEX IF NOT EXISTS idx_studio_projects_member ON studio_projects(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_projects_team ON studio_projects(team_id);

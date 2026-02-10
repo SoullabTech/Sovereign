@@ -49,10 +49,10 @@ CREATE TABLE IF NOT EXISTS practitioner_files (
     deleted_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_practitioner_files_practitioner ON practitioner_files(practitioner_id);
-CREATE INDEX idx_practitioner_files_folder ON practitioner_files(practitioner_id, folder_path);
-CREATE INDEX idx_practitioner_files_type ON practitioner_files(practitioner_id, file_type);
-CREATE INDEX idx_practitioner_files_status ON practitioner_files(practitioner_id, status);
+CREATE INDEX IF NOT EXISTS idx_practitioner_files_practitioner ON practitioner_files(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_practitioner_files_folder ON practitioner_files(practitioner_id, folder_path);
+CREATE INDEX IF NOT EXISTS idx_practitioner_files_type ON practitioner_files(practitioner_id, file_type);
+CREATE INDEX IF NOT EXISTS idx_practitioner_files_status ON practitioner_files(practitioner_id, status);
 
 -- ============================================
 -- FILE FOLDERS (virtual folders)
@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS practitioner_file_folders (
     UNIQUE(practitioner_id, parent_path, name)
 );
 
-CREATE INDEX idx_file_folders_practitioner ON practitioner_file_folders(practitioner_id);
-CREATE INDEX idx_file_folders_parent ON practitioner_file_folders(practitioner_id, parent_path);
+CREATE INDEX IF NOT EXISTS idx_file_folders_practitioner ON practitioner_file_folders(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_file_folders_parent ON practitioner_file_folders(practitioner_id, parent_path);
 
 -- ============================================
 -- FILE SHARES (sharing with clients)
@@ -107,10 +107,10 @@ CREATE TABLE IF NOT EXISTS practitioner_file_shares (
     revoked_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_file_shares_file ON practitioner_file_shares(file_id);
-CREATE INDEX idx_file_shares_client ON practitioner_file_shares(client_id);
-CREATE INDEX idx_file_shares_colleague ON practitioner_file_shares(colleague_id);
-CREATE INDEX idx_file_shares_token ON practitioner_file_shares(access_token);
+CREATE INDEX IF NOT EXISTS idx_file_shares_file ON practitioner_file_shares(file_id);
+CREATE INDEX IF NOT EXISTS idx_file_shares_client ON practitioner_file_shares(client_id);
+CREATE INDEX IF NOT EXISTS idx_file_shares_colleague ON practitioner_file_shares(colleague_id);
+CREATE INDEX IF NOT EXISTS idx_file_shares_token ON practitioner_file_shares(access_token);
 
 -- ============================================
 -- FILE ACCESS LOG (audit trail)
@@ -131,8 +131,8 @@ CREATE TABLE IF NOT EXISTS practitioner_file_access_log (
     accessed_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_file_access_file ON practitioner_file_access_log(file_id);
-CREATE INDEX idx_file_access_time ON practitioner_file_access_log(accessed_at);
+CREATE INDEX IF NOT EXISTS idx_file_access_file ON practitioner_file_access_log(file_id);
+CREATE INDEX IF NOT EXISTS idx_file_access_time ON practitioner_file_access_log(accessed_at);
 
 -- ============================================
 -- TRIGGERS

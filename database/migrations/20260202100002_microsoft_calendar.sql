@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS calendar_credentials (
     UNIQUE(member_id, provider)
 );
 
-CREATE INDEX idx_calendar_credentials_member ON calendar_credentials(member_id);
-CREATE INDEX idx_calendar_credentials_provider ON calendar_credentials(provider);
+CREATE INDEX IF NOT EXISTS idx_calendar_credentials_member ON calendar_credentials(member_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_credentials_provider ON calendar_credentials(provider);
 
 -- ============================================
 -- ADD MICROSOFT CALENDAR FIELDS TO SESSIONS
