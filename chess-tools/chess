@@ -1,0 +1,61 @@
+#!/bin/bash
+# Chess Toolkit Launcher
+# Usage: ./chess <tool> [args...]
+#   ./chess repertoire --moves "e4 e5 Nf3 Nc6 Bc4" --side white -o italian.pgn
+#   ./chess review --lichess USERNAME --games 10
+#   ./chess coach --moves "e4 e5 Nf3 Nc6 Bc4 Bc5 c3"
+#   ./chess tactics --repertoire italian.pgn
+#   ./chess coach --interactive
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VENV="$SCRIPT_DIR/.venv/bin/python3"
+
+if [ ! -f "$VENV" ]; then
+    echo "Setting up virtual environment..."
+    python3 -m venv "$SCRIPT_DIR/.venv"
+    "$VENV" -m pip install -q python-chess requests
+fi
+
+TOOL="$1"
+shift
+
+case "$TOOL" in
+    repertoire|rep)
+        exec "$VENV" "$SCRIPT_DIR/repertoire_generator.py" "$@"
+        ;;
+    review|rev)
+        exec "$VENV" "$SCRIPT_DIR/game_reviewer.py" "$@"
+        ;;
+    coach|pos)
+        exec "$VENV" "$SCRIPT_DIR/position_coach.py" "$@"
+        ;;
+    tactics|tac)
+        exec "$VENV" "$SCRIPT_DIR/tactical_miner.py" "$@"
+        ;;
+    help|"")
+        echo ""
+        echo "  Chess Toolkit"
+        echo "  ============="
+        echo ""
+        echo "  Usage: chess <tool> [options]"
+        echo ""
+        echo "  Tools:"
+        echo "    repertoire   Build opening repertoire trees"
+        echo "    review       Analyze your games for mistakes"
+        echo "    coach        Get master-level position analysis"
+        echo "    tactics      Find puzzles from your repertoire"
+        echo ""
+        echo "  Examples:"
+        echo "    chess repertoire --moves \"e4 e5 Nf3 Nc6 Bc4\" --side white -o italian.pgn"
+        echo "    chess review --lichess YOUR_USERNAME --games 10"
+        echo "    chess coach --moves \"e4 e5 Nf3 Nc6 Bc4 Bc5 c3\""
+        echo "    chess coach --interactive"
+        echo "    chess tactics --repertoire italian.pgn --min-rating 800 --max-rating 1800"
+        echo ""
+        ;;
+    *)
+        echo "Unknown tool: $TOOL"
+        echo "Run 'chess help' for available tools."
+        exit 1
+        ;;
+esac
