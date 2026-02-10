@@ -157,6 +157,17 @@ export const TurnsStore = {
   },
 
   /**
+   * Delete all turns for a session (Sanctuary purge)
+   */
+  async deleteBySessionId(sessionId: string): Promise<number> {
+    const result = await query(
+      `DELETE FROM conversation_turns WHERE session_id = $1`,
+      [sessionId]
+    );
+    return result.rowCount ?? 0;
+  },
+
+  /**
    * Clean up old turns (keep last N per user)
    */
   async pruneOldTurns(userId: string, keepCount: number = 100): Promise<number> {

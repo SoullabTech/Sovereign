@@ -6276,8 +6276,24 @@ I'm not sure what I'm feeling yet.`;
     setSessionTimer(null);
     onSessionActiveChange?.(false); // Notify parent that session ended
 
-    // Could trigger post-session actions here (analytics, journaling prompt, etc.)
-  }, [onSessionActiveChange]);
+    // Finalize session: Sanctuary purge or Continuity summary pipeline
+    // Uses apiFetch for iOS/Capacitor compatibility (x-member-id header)
+    const memberId = getValidMemberId();
+    if (memberId && sessionId) {
+      apiFetch('/api/sovereign/session/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          sessionId,
+          isSanctuary,
+          endedAt: new Date().toISOString(),
+        }),
+      }).catch(err =>
+        console.warn('Session finalize failed (non-blocking):', err)
+      );
+    }
+  }, [onSessionActiveChange, sessionId, isSanctuary]);
 
   const handleClosingRitualSkip = useCallback(() => {
     setShowClosingRitual(false);
