@@ -460,30 +460,36 @@ COMMENT ON VIEW v_rl_pipeline_summary IS 'Labtools Dashboard: Pipeline stage sum
 -- Upcoming Business Meetings View
 -- =============================================================================
 
-CREATE OR REPLACE VIEW v_rl_upcoming_meetings AS
-SELECT
-  m.id as meeting_id,
-  m.practice_id,
-  m.title,
-  m.meeting_type,
-  m.scheduled_start_at,
-  m.scheduled_end_at,
-  m.location,
-  m.venture_id,
-  v.name as venture_name,
-  m.opportunity_id,
-  o.title as opportunity_title,
-  (
-    SELECT COUNT(*)
-    FROM rl_meeting_attendees ma
-    WHERE ma.meeting_id = m.id
-  ) as attendee_count
-FROM rl_meetings m
-LEFT JOIN rl_ventures v ON v.id = m.venture_id
-LEFT JOIN rl_opportunities o ON o.id = m.opportunity_id
-WHERE m.status = 'scheduled'
-  AND m.scheduled_start_at >= NOW()
-ORDER BY m.scheduled_start_at ASC;
+DO $$
+BEGIN
+  EXECUTE '
+  CREATE OR REPLACE VIEW v_rl_upcoming_meetings AS
+  SELECT
+    m.id as meeting_id,
+    m.practice_id,
+    m.title,
+    m.meeting_type,
+    m.scheduled_start_at,
+    m.scheduled_end_at,
+    m.location,
+    m.venture_id,
+    v.name as venture_name,
+    m.opportunity_id,
+    o.title as opportunity_title,
+    (
+      SELECT COUNT(*)
+      FROM rl_meeting_attendees ma
+      WHERE ma.meeting_id = m.id
+    ) as attendee_count
+  FROM rl_meetings m
+  LEFT JOIN rl_ventures v ON v.id = m.venture_id
+  LEFT JOIN rl_opportunities o ON o.id = m.opportunity_id
+  WHERE m.status = ''scheduled''
+    AND m.scheduled_start_at >= NOW()
+  ORDER BY m.scheduled_start_at ASC';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'v_rl_upcoming_meetings view creation skipped: %', SQLERRM;
+END $$;
 
 COMMENT ON VIEW v_rl_upcoming_meetings IS 'Labtools Dashboard: Upcoming business meetings.';
 
