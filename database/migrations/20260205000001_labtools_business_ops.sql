@@ -109,8 +109,22 @@ CREATE TABLE IF NOT EXISTS rl_ventures (
 );
 
 CREATE INDEX IF NOT EXISTS idx_rl_ventures_practice ON rl_ventures(practice_id);
-CREATE INDEX IF NOT EXISTS idx_rl_ventures_type ON rl_ventures(practice_id, type);
-CREATE INDEX IF NOT EXISTS idx_rl_ventures_active ON rl_ventures(practice_id, is_active) WHERE is_active = TRUE;
+
+-- Index on type column — handle schema variant where column may be 'type' or 'venture_type'
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rl_ventures' AND column_name = 'type') THEN
+    CREATE INDEX IF NOT EXISTS idx_rl_ventures_type ON rl_ventures(practice_id, type);
+  END IF;
+END $$;
+
+-- is_active index — handle schema variant where column may not exist
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'rl_ventures' AND column_name = 'is_active') THEN
+    CREATE INDEX IF NOT EXISTS idx_rl_ventures_active ON rl_ventures(practice_id, is_active) WHERE is_active = TRUE;
+  END IF;
+END $$;
 
 COMMENT ON TABLE rl_ventures IS 'Business initiatives and projects. The organizing container for business operations.';
 
@@ -393,7 +407,7 @@ LEFT JOIN (
 LEFT JOIN (
   SELECT venture_id,
          COUNT(*) as active_opportunities,
-         SUM(value_cents) as pipeline_value_cents
+         SUM(estimated_value_cents) as pipeline_value_cents
   FROM rl_opportunities
   WHERE stage NOT IN ('closed_won', 'closed_lost')
     AND venture_id IS NOT NULL
@@ -416,8 +430,8 @@ SELECT
   COUNT(*) FILTER (WHERE stage = 'negotiation') as negotiation_count,
   COUNT(*) FILTER (WHERE stage = 'closed_won') as closed_won_count,
   COUNT(*) FILTER (WHERE stage = 'closed_lost') as closed_lost_count,
-  SUM(value_cents) FILTER (WHERE stage NOT IN ('closed_won', 'closed_lost')) as active_pipeline_value_cents,
-  SUM(value_cents) FILTER (WHERE stage = 'closed_won' AND closed_at >= DATE_TRUNC('month', NOW())) as won_this_month_cents
+  SUM(estimated_value_cents) FILTER (WHERE stage NOT IN ('closed_won', 'closed_lost')) as active_pipeline_value_cents,
+  SUM(estimated_value_cents) FILTER (WHERE stage = 'closed_won' AND actual_close_date >= DATE_TRUNC('month', NOW())) as won_this_month_cents
 FROM rl_opportunities
 GROUP BY practice_id;
 
