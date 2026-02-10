@@ -850,7 +850,7 @@ export function AccountSettings() {
   const renderProfile = () => (
     <div className="space-y-6">
       <div>
-        <label className="text-sm text-stone-600 mb-2 block">Display Name</label>
+        <label className="text-sm text-stone-400 mb-2 block">Display Name</label>
         <input
           type="text"
           value={editName}
@@ -860,7 +860,7 @@ export function AccountSettings() {
         />
       </div>
       <div>
-        <label className="text-sm text-stone-600 mb-2 block">What should MAIA call you?</label>
+        <label className="text-sm text-stone-400 mb-2 block">What should MAIA call you?</label>
         <input
           type="text"
           value={editPreferredName}
@@ -871,7 +871,7 @@ export function AccountSettings() {
         <p className="text-xs text-stone-500 mt-2">Used in greetings and voice conversations</p>
       </div>
       <div>
-        <label className="text-sm text-stone-600 mb-2 block">Email</label>
+        <label className="text-sm text-stone-400 mb-2 block">Email</label>
         <input
           type="email"
           value={editEmail}
@@ -881,7 +881,7 @@ export function AccountSettings() {
         />
       </div>
       <div>
-        <label className="text-sm text-stone-600 mb-2 block">Bio</label>
+        <label className="text-sm text-stone-400 mb-2 block">Bio</label>
         <textarea
           value={editBio}
           onChange={(e) => setEditBio(e.target.value)}
@@ -909,7 +909,7 @@ export function AccountSettings() {
     <div className="space-y-6">
       {/* Passkey Display */}
       <div>
-        <label className="text-sm text-stone-600 mb-2 block">Your Passkey</label>
+        <label className="text-sm text-stone-400 mb-2 block">Your Passkey</label>
         <div className="flex items-center gap-2">
           <div className="flex-1 px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 font-mono text-sm">
             {showPasskey ? profile?.passkey : '••••••••••••••••'}
@@ -928,7 +928,7 @@ export function AccountSettings() {
 
       {/* Password Change */}
       <div className="pt-4 border-t border-[#D4B896]/30">
-        <h4 className="text-sm font-medium text-stone-700 mb-4">Change Password</h4>
+        <h4 className="text-sm font-medium text-stone-300 mb-4">Change Password</h4>
         <div className="space-y-3">
           {passwordError && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
@@ -1163,7 +1163,7 @@ export function AccountSettings() {
                 <div className={`text-sm font-medium ${
                   isSelected
                     ? mode === 'sanctuary' ? 'text-emerald-200' : 'text-amber-200'
-                    : mode === 'sanctuary' ? 'text-emerald-300' : 'text-stone-800'
+                    : mode === 'sanctuary' ? 'text-emerald-300' : 'text-stone-300'
                 }`}>
                   {mode === 'continuity' ? 'Continuity' : 'Sanctuary'}
                 </div>
@@ -1363,7 +1363,7 @@ export function AccountSettings() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{desc.icon}</span>
                   <div>
-                    <span className={`text-sm font-medium ${isSelected ? 'text-amber-200' : 'text-stone-800'}`}>{desc.title}</span>
+                    <span className={`text-sm font-medium ${isSelected ? 'text-amber-200' : 'text-stone-300'}`}>{desc.title}</span>
                     <p className="text-xs text-stone-500">{desc.description}</p>
                   </div>
                 </div>
@@ -1380,7 +1380,7 @@ export function AccountSettings() {
             <BookOpen size={18} />
           </div>
           <div>
-            <div className="text-sm font-medium text-stone-800">Vocabulary Tooltips</div>
+            <div className="text-sm font-medium text-stone-200">Vocabulary Tooltips</div>
             <div className="text-xs text-stone-500">
               Highlight soul vocabulary terms with hover definitions
             </div>
@@ -1667,8 +1667,8 @@ export function AccountSettings() {
                   <div key={id} className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="text-sm font-medium text-stone-800">{label}</div>
-                        <div className="text-xs text-stone-500">{desc}</div>
+                        <div className="text-sm font-medium text-stone-200">{label}</div>
+                        <div className="text-xs text-stone-400">{desc}</div>
                       </div>
                     </div>
                     <div className="flex gap-4">
@@ -1739,7 +1739,7 @@ export function AccountSettings() {
             <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
               <Brain size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="text-stone-700 font-medium">Continuity</span>
+                <span className="text-stone-200 font-medium">Continuity</span>
                 <p className="text-stone-500 text-xs mt-0.5">
                   MAIA remembers your patterns, preferences, and growth journey across sessions.
                 </p>
@@ -1748,7 +1748,7 @@ export function AccountSettings() {
             <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
               <Sparkles size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="text-stone-700 font-medium">Personalization</span>
+                <span className="text-stone-200 font-medium">Personalization</span>
                 <p className="text-stone-500 text-xs mt-0.5">
                   Your journals and conversations help MAIA understand what matters to you.
                 </p>
@@ -1757,7 +1757,7 @@ export function AccountSettings() {
             <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
               <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="text-stone-700 font-medium">Cross-device sync</span>
+                <span className="text-stone-200 font-medium">Cross-device sync</span>
                 <p className="text-stone-500 text-xs mt-0.5">
                   Server storage enables access from any device you sign into.
                 </p>
@@ -1785,8 +1785,8 @@ export function AccountSettings() {
       ].map(({ key, label, desc }) => (
         <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
           <div>
-            <div className="text-sm font-medium text-stone-800">{label}</div>
-            <div className="text-xs text-stone-500">{desc}</div>
+            <div className="text-sm font-medium text-stone-200">{label}</div>
+            <div className="text-xs text-stone-400">{desc}</div>
           </div>
           {renderToggle(
             memberSettings?.notifications[key as keyof typeof memberSettings.notifications] ?? false,
@@ -1808,8 +1808,8 @@ export function AccountSettings() {
       ].map(({ key, label, desc }) => (
         <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
           <div>
-            <div className="text-sm font-medium text-stone-800">{label}</div>
-            <div className="text-xs text-stone-500">{desc}</div>
+            <div className="text-sm font-medium text-stone-200">{label}</div>
+            <div className="text-xs text-stone-400">{desc}</div>
           </div>
           {renderToggle(
             memberSettings?.privacy[key as keyof typeof memberSettings.privacy] ?? false,
@@ -1848,7 +1848,7 @@ export function AccountSettings() {
 
         {/* Tier Benefits */}
         <div>
-          <h4 className="text-sm font-medium text-stone-700 mb-3">All Members Receive</h4>
+          <h4 className="text-sm font-medium text-stone-300 mb-3">All Members Receive</h4>
           <ul className="space-y-2 text-sm text-stone-500">
             <li className="flex items-center gap-2">
               <Check size={14} className="text-emerald-400" />
@@ -1950,8 +1950,8 @@ export function AccountSettings() {
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                             border border-[#D4B896]/40 text-sm text-stone-700
-                             hover:bg-white/50 transition-colors"
+                             border border-[#D4B896]/40 text-sm text-stone-300
+                             hover:bg-white/5 transition-colors"
                   >
                     <ExternalLink size={14} />
                     <span>Open</span>
@@ -1980,7 +1980,7 @@ export function AccountSettings() {
             href="/practitioner/dashboard"
             className="flex items-center justify-between p-4 bg-white/50 hover:bg-white/70 rounded-xl border border-[#D4B896]/30 transition-colors"
           >
-            <span className="text-stone-700">Go to Practitioner Dashboard</span>
+            <span className="text-stone-200">Go to Practitioner Dashboard</span>
             <ChevronRight size={18} className="text-stone-400" />
           </a>
         </div>
@@ -2079,7 +2079,7 @@ export function AccountSettings() {
                   }}
                   className="w-full px-4 py-3 text-left hover:bg-white/50 border-b border-[#D4B896]/20 last:border-0 transition-colors"
                 >
-                  <div className="text-sm text-stone-800 line-clamp-2">{loc.display_name}</div>
+                  <div className="text-sm text-stone-200 line-clamp-2">{loc.display_name}</div>
                   <div className="text-xs text-stone-500 mt-1">{loc.timezone}</div>
                 </button>
               ))}
@@ -2091,7 +2091,7 @@ export function AccountSettings() {
         {selectedLocation && (
           <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <div className="text-xs text-amber-300">Selected:</div>
-            <div className="text-sm text-stone-700 line-clamp-1">{selectedLocation.name}</div>
+            <div className="text-sm text-stone-200 line-clamp-1">{selectedLocation.name}</div>
             <div className="text-xs text-stone-500">{selectedLocation.timezone}</div>
           </div>
         )}
@@ -2202,7 +2202,7 @@ export function AccountSettings() {
                   <Icon size={20} className={currentMode === id && !comingSoon ? 'text-amber-400' : 'text-stone-400'} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-500' : 'text-stone-800'}`}>{label}</span>
+                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-500' : 'text-stone-200'}`}>{label}</span>
                       {comingSoon && (
                         <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-300 rounded">
                           Coming Soon
@@ -2231,7 +2231,7 @@ export function AccountSettings() {
                 <RefreshCw size={18} />
               </div>
               <div>
-                <div className="text-sm font-medium text-stone-800">Auto Sync</div>
+                <div className="text-sm font-medium text-stone-200">Auto Sync</div>
                 <div className="text-xs text-stone-500">
                   Automatically sync changes in the background
                 </div>
@@ -2248,7 +2248,7 @@ export function AccountSettings() {
         {(currentMode === 'both' || currentMode === 'server_only') && (
           <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-stone-700">Sync Status</span>
+              <span className="text-sm font-medium text-stone-300">Sync Status</span>
               <motion.button
                 onClick={handleManualSync}
                 disabled={syncState.isSyncing}
@@ -2261,11 +2261,11 @@ export function AccountSettings() {
             </div>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="p-2 bg-white/50 rounded-lg">
-                <div className="text-lg font-medium text-stone-800">{syncCounts.local}</div>
+                <div className="text-lg font-medium text-stone-200">{syncCounts.local}</div>
                 <div className="text-xs text-stone-500">Local</div>
               </div>
               <div className="p-2 bg-white/50 rounded-lg">
-                <div className="text-lg font-medium text-stone-800">{syncCounts.server}</div>
+                <div className="text-lg font-medium text-stone-200">{syncCounts.server}</div>
                 <div className="text-xs text-stone-500">Server</div>
               </div>
               <div className="p-2 bg-white/50 rounded-lg">
@@ -2295,7 +2295,7 @@ export function AccountSettings() {
                                  (decision as { saveLocal: boolean; saveServer: boolean }).saveServer;
                   return (
                     <div key={type} className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-[#D4B896]/30">
-                      <span className="text-sm text-stone-700 capitalize">{type.replace(/_/g, ' ')}</span>
+                      <span className="text-sm text-stone-300 capitalize">{type.replace(/_/g, ' ')}</span>
                       <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-stone-400'}`}>
                         {enabled ? 'Enabled' : 'Disabled'}
                       </span>
@@ -2366,7 +2366,7 @@ export function AccountSettings() {
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
-            <h4 className="text-sm font-medium text-stone-800">Export Your Data</h4>
+            <h4 className="text-sm font-medium text-stone-200">Export Your Data</h4>
             <p className="text-xs text-stone-500 mt-1 mb-3">
               Download all your data including profile, settings, and session history.
             </p>
@@ -2437,11 +2437,11 @@ export function AccountSettings() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-          className="p-2 -ml-2 rounded-lg hover:bg-white/50 transition-colors"
+          className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
         >
-          <ArrowLeft size={20} className="text-stone-500" />
+          <ArrowLeft size={20} className="text-stone-400" />
         </button>
-        <h1 className="text-xl font-medium text-stone-800">
+        <h1 className="text-xl font-medium text-stone-200">
           {activeSection
             ? SECTIONS.find(s => s.id === activeSection)?.label
             : 'Settings'}
@@ -2479,11 +2479,11 @@ export function AccountSettings() {
               <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/50 rounded-lg transition-colors"
+                className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
                 <Icon size={18} className="text-stone-400" />
-                <span className="flex-1 text-left text-stone-800">{label}</span>
-                <ChevronRight size={16} className="text-stone-300 group-hover:text-stone-400 transition-colors" />
+                <span className="flex-1 text-left text-stone-200">{label}</span>
+                <ChevronRight size={16} className="text-stone-500 group-hover:text-stone-300 transition-colors" />
               </button>
             ))}
           </motion.div>
