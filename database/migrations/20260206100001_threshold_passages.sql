@@ -120,4 +120,4 @@ CREATE TRIGGER threshold_updated_at
 COMMENT ON TABLE threshold_passages IS 'Tracks a helper''s passage through the Soullab Threshold — a discernment process, not a certification';
 COMMENT ON COLUMN threshold_passages.reflections IS 'JSONB of weekly reflections, owned by the member. Exportable and deletable at any time';
 COMMENT ON COLUMN threshold_passages.accountability_statement IS 'The helper''s own words about what they''re willing to be held accountable for. Written in week 6';
-COMMENT ON COLUMN threshold_passages.withdrew IS 'Withdrawal is a valid outcome. The passage did its job if someone decides this is not for them';
+COMMENT ON COLUMN threshold_passages.withdrew_at IS 'Withdrawal is a valid outcome. The passage did its job if someone decides this is not for them';
