@@ -4,10 +4,19 @@
 ALTER TABLE practitioners
 ADD COLUMN IF NOT EXISTS portal_type TEXT NOT NULL DEFAULT 'generalist';
 
--- Add check constraint for valid portal types
-ALTER TABLE practitioners
-ADD CONSTRAINT practitioners_portal_type_check
-CHECK (portal_type IN ('generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician'));
+-- Add check constraint for valid portal types (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'practitioners_portal_type_check'
+      AND table_name = 'practitioners'
+  ) THEN
+    ALTER TABLE practitioners
+    ADD CONSTRAINT practitioners_portal_type_check
+    CHECK (portal_type IN ('generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician'));
+  END IF;
+END $$;
 
 -- Index for filtering by portal type
 CREATE INDEX IF NOT EXISTS idx_practitioners_portal_type ON practitioners(portal_type);

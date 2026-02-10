@@ -91,6 +91,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
   const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [serverMember, setServerMember] = useState<{ id: string; username: string; name: string } | null>(null);
@@ -317,6 +318,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
           name: name.trim(),
           preferredName: preferredName.trim() || name.trim(),
           email: email.trim().toLowerCase() || undefined,
+          birthDate: birthDate || undefined,
         }),
       });
 
@@ -327,8 +329,18 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
         return;
       }
 
-      // Store member info locally for session
+      // Store member info locally for session (including tier if returned)
       setServerMember(data.member);
+
+      // Store birth date + tier in localStorage for client-side awareness
+      if (birthDate) {
+        const betaUser = JSON.parse(localStorage.getItem('beta_user') || '{}');
+        betaUser.birthDate = birthDate;
+        if (data.member?.developmentalTier) {
+          betaUser.developmentalTier = data.member.developmentalTier;
+        }
+        localStorage.setItem('beta_user', JSON.stringify(betaUser));
+      }
     } catch (err) {
       console.error('[SacredSoulInduction] Registration error:', err);
       // Continue anyway for graceful degradation
@@ -374,6 +386,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
             name: name.trim(),
             preferredName: preferredName.trim() || name.trim(),
             email: email.trim().toLowerCase() || undefined,
+            birthDate: birthDate || undefined,
           }),
         });
 
@@ -687,6 +700,22 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
 
                       <div>
                         <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Date of birth
+                        </label>
+                        <input
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                        <p className="text-white/60 text-xs mt-1">
+                          Helps us create the right experience for you
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
                           Password
                         </label>
                         <div className="relative">
@@ -835,6 +864,22 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           placeholder="your@email.com"
                           className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                          Date of birth
+                        </label>
+                        <input
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          max={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        />
+                        <p className="text-white/60 text-xs mt-1">
+                          Helps us create the right experience for you
+                        </p>
                       </div>
 
                       <div>

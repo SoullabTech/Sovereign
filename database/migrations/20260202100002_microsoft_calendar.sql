@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS calendar_credentials (
     UNIQUE(member_id, provider)
 );
 
-CREATE INDEX idx_calendar_credentials_member ON calendar_credentials(member_id);
-CREATE INDEX idx_calendar_credentials_provider ON calendar_credentials(provider);
+CREATE INDEX IF NOT EXISTS idx_calendar_credentials_member ON calendar_credentials(member_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_credentials_provider ON calendar_credentials(provider);
 
 -- ============================================
 -- ADD MICROSOFT CALENDAR FIELDS TO SESSIONS
@@ -46,9 +46,10 @@ BEGIN
         WHERE table_name = 'google_calendar_credentials'
     ) THEN
         -- Copy existing Google credentials to unified table
+        -- Cast user_id (TEXT) to UUID; only copy rows with valid UUID format
         INSERT INTO calendar_credentials (member_id, provider, access_token, refresh_token, token_expires_at, created_at, updated_at)
         SELECT
-            user_id,
+            user_id::uuid,
             'google',
             access_token,
             refresh_token,
@@ -56,6 +57,7 @@ BEGIN
             created_at,
             updated_at
         FROM google_calendar_credentials
+        WHERE user_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         ON CONFLICT (member_id, provider) DO NOTHING;
     END IF;
 END $$;

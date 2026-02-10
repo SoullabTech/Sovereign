@@ -213,6 +213,32 @@ function normalizeScores(raw: Record<KnowledgeSourceId, number>): SourceContribu
 }
 
 /**
+ * 🚪 Lightweight Knowledge Gate scoring (no LLM call)
+ *
+ * Use this when you only need source weighting + awareness detection
+ * without routing through the full ainKnowledgeGate → LLM pipeline.
+ * All computation is local regex — zero latency.
+ */
+export function scoreKnowledgeGate(input: KnowledgeGateInput): {
+  source_mix: SourceContribution[];
+  awarenessState: AwarenessState;
+  awarenessDescription: string;
+  rawScores: Record<KnowledgeSourceId, number>;
+} {
+  const awarenessDetection = detectAwarenessLevel(input.userMessage);
+  const awarenessState = awarenessDetection.awarenessState;
+  const rawScores = scoreSources(input, awarenessState);
+  const source_mix = normalizeScores(rawScores);
+
+  return {
+    source_mix,
+    awarenessState,
+    awarenessDescription: getAwarenessLevelDescription(awarenessState.level),
+    rawScores,
+  };
+}
+
+/**
  * 🚪 Enhanced AIN Knowledge Gate with Awareness Levels
  *
  * - Detects awareness level (vertical axis)

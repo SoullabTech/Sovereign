@@ -26,6 +26,11 @@ import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
 import { loadSignificantMoments, formatSignificantMomentsAddendum } from '@/lib/memory/SignificantMomentsService';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
+import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
+import { getAwarenessLevelDescription } from '@/lib/ain/awareness-levels';
+import { buildGateContext, recommendConsultation, type GateContext } from '@/lib/ain/gates';
+import { consult, type ConsultationResult } from '@/lib/ain/consultation';
+import type { ConsultationDecision } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
@@ -76,12 +81,6 @@ import {
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
-import {
-  ainKnowledgeGate,
-  type SourceContribution,
-  type KnowledgeGateResult,
-} from '@/lib/ain/knowledge-gate';
-import { type AwarenessState } from '@/lib/ain/awareness-levels';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -1047,40 +1046,6 @@ This user is in guest mode (no authenticated identity).
     console.log('[Chat API] Effective userId:', effectiveUserId);
     console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
-    // 🚪 AIN KNOWLEDGE GATE: Source scoring + awareness detection
-    // Gated by env var and suppressed in Sanctuary (no meta overlays in sacred space)
-    const KG_ENABLED = process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1';
-    let ainState: { sourceMix: SourceContribution[]; awarenessState: AwarenessState } | null = null;
-
-    if (KG_ENABLED && !isSanctuary) {
-      try {
-        // Lightweight scoring pass — no LLM call, just awareness detection + source weighting
-        const { detectAwarenessLevel } = await import('@/lib/ain/awareness-levels');
-        const awarenessDetection = detectAwarenessLevel(message);
-        const awarenessState = awarenessDetection.awarenessState;
-
-        // Score sources using the Knowledge Gate's scoring function
-        // We import and call the full gate but skip the LLM call by using a no-op caller
-        const kgResult = await ainKnowledgeGate(
-          { userId: effectiveUserId, userMessage: message, style: mode || undefined },
-          // No-op LLM caller — we only want source scoring, not a separate LLM response
-          async () => '',
-        );
-
-        ainState = {
-          sourceMix: kgResult.source_mix,
-          awarenessState: kgResult.awarenessState,
-        };
-        console.log('[Chat API] 🚪 AIN Knowledge Gate:', {
-          awarenessLevel: ainState.awarenessState.level,
-          topSource: ainState.sourceMix.reduce((a, b) => a.weight > b.weight ? a : b).source,
-        });
-      } catch (kgErr) {
-        console.error('[Chat API] 🚪 AIN Knowledge Gate error (non-fatal):', kgErr);
-        ainState = null;
-      }
-    }
-
     // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
     const decision = decisionPreflight(message);
     (normalizedMeta as Record<string, unknown>).decision = decision;
@@ -1154,6 +1119,49 @@ This user is in guest mode (no authenticated identity).
     }
     // Add awarenessLevel to meta for Opus/Sonnet routing
     (normalizedMeta as Record<string, unknown>).awarenessLevel = awarenessLevel;
+
+    // 🚪 AIN KNOWLEDGE GATE: Score 5 wells × awareness level (local regex, zero latency)
+    // Sanctuary suppression: no meta overlays in sanctuary for visual clarity
+    let knowledgeGateResult: { source_mix: SourceContribution[]; awarenessState: any; awarenessDescription: string } | null = null;
+    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
+      try {
+        const kgInput: KnowledgeGateInput = {
+          userId: effectiveUserId,
+          userMessage: message,
+          conversationHistory: conversationHistory.slice(-6).map((h: any) => ({
+            role: (h.role || 'user') as 'user' | 'assistant',
+            content: h.userMessage || h.maiaResponse || h.content || '',
+          })),
+          contextHint: mode === 'counsel' ? 'counsel' : mode === 'scribe' ? 'journal' : undefined,
+        };
+        knowledgeGateResult = scoreKnowledgeGate(kgInput);
+        console.log(`[AIN KG] 🚪 Source mix: ${knowledgeGateResult.source_mix.map(s => `${s.source}:${Math.round(s.weight * 100)}%`).join(' | ')} | Awareness: L${knowledgeGateResult.awarenessState.level} (${knowledgeGateResult.awarenessDescription})`);
+      } catch (err) {
+        console.warn('[AIN KG] Scoring failed (non-blocking):', err);
+      }
+    }
+
+    // 🏛️ AIN CONSULTATION GATE: Assess whether council input would be valuable
+    // All local regex scoring — zero latency. Actual consultation runs in parallel later.
+    let consultationDecision: ConsultationDecision | null = null;
+    if (process.env.AIN_CONSULTATION_ENABLED === '1' && !isSanctuary) {
+      try {
+        const gateContext = buildGateContext(
+          message,
+          conversationHistory.length,
+          0.7, // Default trust level — could be derived from relationship memory depth
+          undefined // element determined later
+        );
+        consultationDecision = recommendConsultation(gateContext);
+        if (consultationDecision.wantsCouncil) {
+          console.log(`[AIN Council] 🏛️ Consultation recommended: ${consultationDecision.council} council — ${consultationDecision.reason}`);
+        } else {
+          console.log(`[AIN Council] 🏛️ No consultation needed: ${consultationDecision.reason}`);
+        }
+      } catch (err) {
+        console.warn('[AIN Council] Gate assessment failed (non-blocking):', err);
+      }
+    }
 
     // 🔮 INJECT WISDOM FIELD: Load Spiralogic metaphysical canon
     let wisdomField: string | null = null;
@@ -1493,8 +1501,17 @@ This user is in guest mode (no authenticated identity).
 
       const response = NextResponse.json({
         message: outboundText,
-        // 🚪 AIN Knowledge Gate: source mix + awareness state (null in Sanctuary)
-        ainState,
+        // 🚪 AIN Knowledge Gate: source mix + awareness level (null in Sanctuary)
+        ainState: knowledgeGateResult ? {
+          sourceMix: knowledgeGateResult.source_mix.map(s => ({
+            source: s.source,
+            weight: s.weight,
+            notes: s.notes,
+          })),
+          awarenessLevel: knowledgeGateResult.awarenessState.level,
+          awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
+          awarenessDescription: knowledgeGateResult.awarenessDescription,
+        } : null,
         route: {
           endpoint: '/api/between/chat',
           type: 'Member Chat',
@@ -1562,6 +1579,23 @@ This user is in guest mode (no authenticated identity).
     console.log(`🌀 [SPIRAL SNAPSHOT] Phase: ${spiralSnapshot.primaryPhase.phase.name} (${spiralSnapshot.primaryPhase.phase.element}-${spiralSnapshot.primaryPhase.phase.refinement}), Confidence: ${(spiralSnapshot.primaryPhase.confidence * 100).toFixed(0)}%`);
     console.log(`🌀 [SPIRAL SNAPSHOT] State: NS=${spiralSnapshot.state.nervous_system}, Resources=${spiralSnapshot.state.resource_level}, Need=${spiralSnapshot.state.integration_need}`);
     console.log(`🌀 [SPIRAL SNAPSHOT] Wisest Move: ${spiralSnapshot.wisestMove}`);
+
+    // 🌀 AIN FIELD BRIDGE (Efferent): Fetch collective wisdom for system prompt
+    let fieldWisdomAddendum: string | null = null;
+    if (!isSanctuary && process.env.AIN_FIELD_BRIDGE_ENABLED === '1') {
+      try {
+        const { ainSpiralogicBridge } = await import('@/lib/ain/AINSpiralogicBridge');
+        const element = spiralSnapshot.primaryPhase.phase.element;
+        const phase = spiralSnapshot.primaryPhase.phase.refinement; // cardinal/fixed/mutable
+        fieldWisdomAddendum = await ainSpiralogicBridge.getWisdomForPrompt(element, phase);
+        if (fieldWisdomAddendum) {
+          fieldWisdomAddendum = `AIN COLLECTIVE FIELD (Background Wisdom)\n${fieldWisdomAddendum}\nUse as background intelligence. Do not quote this section directly.`;
+          console.log(`🌀 [AIN Bridge] Efferent wisdom injected: ${fieldWisdomAddendum.length} chars`);
+        }
+      } catch (err) {
+        console.warn('[AIN Bridge] Efferent fetch failed (non-blocking):', err);
+      }
+    }
 
     // 🌿 WU XING SNAPSHOT: Compute Five Element state from BaZi + temporal Qi
     // Fetch BaZi profile if exists (non-blocking - gracefully handle missing)
@@ -1687,6 +1721,16 @@ This user is in guest mode (no authenticated identity).
       return s;
     };
 
+    // 🚪 AIN KNOWLEDGE GATE ADDENDUM: Format source mix for system prompt
+    let knowledgeGateAddendum: string | null = null;
+    if (knowledgeGateResult) {
+      const sortedSources = [...knowledgeGateResult.source_mix].sort((a, b) => b.weight - a.weight);
+      const sourceLines = sortedSources.map(s =>
+        `- ${s.source} (${Math.round(s.weight * 100)}%): ${s.notes || ''}`
+      ).join('\n');
+      knowledgeGateAddendum = `AIN KNOWLEDGE GATE (Source Weighting)\nDraw from these knowledge wells in proportion:\n${sourceLines}\nAwareness depth: Level ${knowledgeGateResult.awarenessState.level} (${knowledgeGateResult.awarenessDescription})\nUse as background intelligence. Do not quote this section directly.`;
+    }
+
     const safeAddenda = {
       relationshipMode: asSafeAddendum(relationshipModeAddendum),
       governor: asSafeAddendum(governorAddendum),
@@ -1700,6 +1744,8 @@ This user is in guest mode (no authenticated identity).
       therapeuticFramework: asSafeAddendum(therapeuticFrameworkAddendum),
       reflectionLens: asSafeAddendum(reflectionLensAddendum),
       epistemicPath: asSafeAddendum(epistemicPathAddendum),
+      knowledgeGate: asSafeAddendum(knowledgeGateAddendum),
+      fieldWisdom: asSafeAddendum(fieldWisdomAddendum),
     };
 
     // 📊 DIAGNOSTIC: Context plumbing visibility (catches null/undefined instantly)
@@ -1739,40 +1785,69 @@ This user is in guest mode (no authenticated identity).
 
     // Note: warnings logged AFTER orchestratorResult for route context
 
-    // Use full fail-soft consciousness orchestrator
-    const orchestratorResult = await generateMaiaTurn({
-      message,
-      userId: effectiveUserId,
-      sessionId: safeSessionId,
-      conversationHistory, // ✅ Now loaded from database
-      meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
-      context: {
-        chatType: 'between-member',
-        endpoint: '/api/between/chat',
-        mode, // Pass mode (Talk/Care/Note) for appropriate system prompts — typed ConversationMode
-        userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
-        localHour, // Client's local hour (0-23) for correct time-of-day greetings
-        relationshipMemory, // ✅ Relational continuity
-        wisdomField, // ✅ Spiralogic metaphysical canon
-        selfletContext, // 🌀 Temporal identity awareness
-        // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence, safe-wrapped) ═══
-        relationshipModeAddendum: safeAddenda.relationshipMode || undefined,
-        governorAddendum: safeAddenda.governor || undefined,
-        guestContextAddendum: safeAddenda.guest || undefined,
-        journalContextAddendum: safeAddenda.journal || undefined,
-        captureContextAddendum: safeAddenda.capture || undefined,
-        astrologicalContextAddendum: safeAddenda.astro || undefined,
-        spiralSnapshotAddendum: safeAddenda.spiral || undefined,
-        wuxingSnapshotAddendum: safeAddenda.wuxing || undefined,
-        bridgeSnapshotAddendum: safeAddenda.bridge || undefined,
-        therapeuticFrameworkAddendum: safeAddenda.therapeuticFramework || undefined,
-        reflectionLensAddendum: safeAddenda.reflectionLens || undefined,
-        epistemicPathAddendum: safeAddenda.epistemicPath || undefined
-      },
-      // Route/profile tracing for corpus callosum filtering
-      originRoute: '/api/between/chat',
-      processingProfileOverride: 'BETWEEN',
-    });
+    // 🏛️ AIN CONSULTATION: Launch council deliberation in parallel (if gates opened)
+    // Consultation runs alongside primary response — zero latency impact.
+    // Failure is non-blocking: if consultation errors, primary response proceeds normally.
+    const consultationPromise: Promise<ConsultationResult | null> =
+      (consultationDecision?.wantsCouncil && !isSanctuary && process.env.AIN_CONSULTATION_ENABLED === '1')
+        ? consult({
+            council: (consultationDecision.council || 'deliberation') as any,
+            question: message,
+            context: {
+              conversationHistory: conversationHistory.slice(-6),
+              urgency: 'medium',
+            },
+          }).catch((err) => {
+            console.warn('[AIN Council] Consultation failed (non-blocking):', err);
+            return null;
+          })
+        : Promise.resolve(null);
+
+    // Use full fail-soft consciousness orchestrator — runs in parallel with consultation
+    const [orchestratorResult, consultationResult] = await Promise.all([
+      generateMaiaTurn({
+        message,
+        userId: effectiveUserId,
+        sessionId: safeSessionId,
+        conversationHistory, // ✅ Now loaded from database
+        meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
+        context: {
+          chatType: 'between-member',
+          endpoint: '/api/between/chat',
+          mode, // Pass mode (Talk/Care/Note) for appropriate system prompts — typed ConversationMode
+          userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
+          localHour, // Client's local hour (0-23) for correct time-of-day greetings
+          relationshipMemory, // ✅ Relational continuity
+          wisdomField, // ✅ Spiralogic metaphysical canon
+          selfletContext, // 🌀 Temporal identity awareness
+          // ═══ ADDENDA (ordered per maiaVoice.ts stable sequence, safe-wrapped) ═══
+          relationshipModeAddendum: safeAddenda.relationshipMode || undefined,
+          governorAddendum: safeAddenda.governor || undefined,
+          guestContextAddendum: safeAddenda.guest || undefined,
+          journalContextAddendum: safeAddenda.journal || undefined,
+          captureContextAddendum: safeAddenda.capture || undefined,
+          astrologicalContextAddendum: safeAddenda.astro || undefined,
+          spiralSnapshotAddendum: safeAddenda.spiral || undefined,
+          wuxingSnapshotAddendum: safeAddenda.wuxing || undefined,
+          bridgeSnapshotAddendum: safeAddenda.bridge || undefined,
+          therapeuticFrameworkAddendum: safeAddenda.therapeuticFramework || undefined,
+          reflectionLensAddendum: safeAddenda.reflectionLens || undefined,
+          epistemicPathAddendum: safeAddenda.epistemicPath || undefined,
+          // 🚪 AIN KNOWLEDGE GATE: Source well modulation (Phase 1)
+          knowledgeGateAddendum: safeAddenda.knowledgeGate || undefined,
+          // 🌀 AIN FIELD BRIDGE: Collective Spiralogic wisdom (Phase 3)
+          fieldWisdomAddendum: safeAddenda.fieldWisdom || undefined,
+        },
+        // Route/profile tracing for corpus callosum filtering
+        originRoute: '/api/between/chat',
+        processingProfileOverride: 'BETWEEN',
+      }),
+      consultationPromise,
+    ]);
+
+    if (consultationResult) {
+      console.log(`[AIN Council] 🏛️ Consultation complete: ${consultationResult.insights.length} insights, ${consultationResult.tensions.length} tensions, emergence: ${consultationResult.emergenceRating || 'recombination'}`);
+    }
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
     // Note: `mode` is the actual conversation mode (dialogue/counsel/scribe), not orchestrator.route.mode
@@ -2135,6 +2210,38 @@ This user is in guest mode (no authenticated identity).
       });
     }
 
+    // 🌀 AIN FIELD BRIDGE (Afferent): Send individual pattern to collective field
+    // Fire-and-forget — never blocks the response. Sanctuary sessions NEVER contribute.
+    if (!isSanctuary && process.env.AIN_FIELD_BRIDGE_ENABLED === '1') {
+      import('@/lib/ain/AINSpiralogicBridge').then(({ ainSpiralogicBridge }) => {
+        const c = orchestratorResult?.consciousness as any;
+        const element = c?.conversationalElemental?.dominant || spiralSnapshot.primaryPhase.phase.element || 'aether';
+        const phase = spiralSnapshot.primaryPhase.phase.refinement || 'cardinal';
+        const isBreakthrough = Boolean(c?.breakthrough) || inferBreakthroughFromText(message);
+
+        ainSpiralogicBridge.sendToField(
+          {
+            timestamp: new Date(),
+            element,
+            domain: 'conversation',
+            symbols: [],
+            breakthrough: isBreakthrough,
+          } as any,
+          {
+            phase,
+            state: spiralSnapshot.wisestMove || 'present',
+            confidence: spiralSnapshot.primaryPhase.confidence,
+          } as any,
+          {
+            userId: effectiveUserId,
+            sessionId: safeSessionId,
+            isBreakthrough,
+            consciousnessLevel: c?.consciousnessLevel || 0.5,
+          }
+        ).catch(err => console.error('[AIN Bridge] Afferent send failed:', err));
+      }).catch(err => console.error('[AIN Bridge] Import failed:', err));
+    }
+
     // 🌀 SELFLET PHASE 2H: Construct pastSelf payload for UI card
     const pastSelf = selfletContext?.surfacedMessageId ? {
       id: selfletContext.surfacedMessageId,
@@ -2159,8 +2266,6 @@ This user is in guest mode (no authenticated identity).
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
-      // 🚪 AIN Knowledge Gate: source mix + awareness state (null in Sanctuary)
-      ainState,
       // 🌀 STATE VECTOR: Current consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.metadata?.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
@@ -2180,6 +2285,31 @@ This user is in guest mode (no authenticated identity).
       session: {
         id: safeSessionId,
       },
+      // 🚪 AIN STATE: Knowledge Gate source mix + awareness level
+      ainState: knowledgeGateResult ? {
+        sourceMix: knowledgeGateResult.source_mix.map(s => ({
+          source: s.source,
+          weight: s.weight,
+          notes: s.notes,
+        })),
+        awarenessLevel: knowledgeGateResult.awarenessState.level,
+        awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
+        awarenessDescription: knowledgeGateResult.awarenessDescription,
+      } : null,
+      // 🏛️ AIN CONSULTATION: Council deliberation results (parallel, non-blocking)
+      consultation: consultationResult ? {
+        council: consultationDecision?.council || 'deliberation',
+        insights: consultationResult.insights,
+        tensions: consultationResult.tensions,
+        recommendation: consultationResult.recommendation,
+        framingsUsed: consultationResult.framingsUsed,
+        emergenceRating: consultationResult.emergenceRating || 'recombination',
+        framingWeights: consultationResult.framingWeights || null,
+      } : null,
+      // 🌀 AIN FIELD: Collective field state (Phase 3)
+      fieldState: fieldWisdomAddendum ? {
+        wisdomPresent: true,
+      } : null,
       metadata: {
         ...orchestratorResult.metadata,
         consciousnessLayers: orchestratorResult.metadata.consciousnessLayers,

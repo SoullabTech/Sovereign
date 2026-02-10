@@ -31,6 +31,21 @@ export default function OnboardingPage() {
           router.push('/maia');
           return;
         }
+
+        // YOUTH ROUTING: If user has a youth tier and hasn't completed youth onboarding,
+        // redirect to youth-specific flow first
+        const tier = userData.developmentalTier;
+        const isYouthTier = tier === 'tier2' || tier === 'tier3' || tier === 'under13';
+        if (isYouthTier && !userData.youthOnboarded && !userData.youthOnboardingSkipped) {
+          if (tier === 'under13') {
+            // Under-13 not supported yet
+            router.push('/onboarding/youth-coming-soon');
+            return;
+          }
+          router.push('/onboarding/youth');
+          return;
+        }
+
         setUserName(userData.name || userData.username || 'Explorer');
       } catch (e) {
         console.error('Error parsing user data:', e);

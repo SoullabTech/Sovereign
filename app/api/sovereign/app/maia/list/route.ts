@@ -89,6 +89,9 @@ import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
+// 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
+import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
+
 // 🌿 Wu Xing (Five Elements) integration
 import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
@@ -504,6 +507,38 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       console.log(`🏢 [Route] Studio surface detected — practitioner prompt cap applied`);
     }
 
+    // 🚪 AIN KNOWLEDGE GATE: Score 5 wells × awareness level (local regex, zero latency)
+    let knowledgeGateResult: { source_mix: SourceContribution[]; awarenessState: any; awarenessDescription: string } | null = null;
+    let knowledgeGateAddendum: string | null = null;
+    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
+      try {
+        const conversationHistory = ((meta as any)?.conversationHistory || []) as Array<{ role?: string; userMessage?: string; maiaResponse?: string; content?: string }>;
+        const kgInput: KnowledgeGateInput = {
+          userId: effectiveUserId,
+          userMessage: message,
+          conversationHistory: conversationHistory.slice(-6).map((h: any) => ({
+            role: (h.role || 'user') as 'user' | 'assistant',
+            content: h.userMessage || h.maiaResponse || h.content || '',
+          })),
+          contextHint: (meta as any)?.voiceSettings?.mode === 'counsel' ? 'counsel'
+            : (meta as any)?.voiceSettings?.mode === 'scribe' ? 'journal'
+            : undefined,
+        };
+        knowledgeGateResult = scoreKnowledgeGate(kgInput);
+
+        // Build addendum string for system prompt
+        const sortedSources = [...knowledgeGateResult.source_mix].sort((a, b) => b.weight - a.weight);
+        const sourceLines = sortedSources.map(s =>
+          `- ${s.source} (${Math.round(s.weight * 100)}%): ${s.notes || ''}`
+        ).join('\n');
+        knowledgeGateAddendum = `AIN KNOWLEDGE GATE (Source Weighting)\nDraw from these knowledge wells in proportion:\n${sourceLines}\nAwareness depth: Level ${knowledgeGateResult.awarenessState.level} (${knowledgeGateResult.awarenessDescription})\nUse as background intelligence. Do not quote this section directly.`;
+
+        console.log(`[AIN KG] 🚪 Source mix: ${knowledgeGateResult.source_mix.map(s => `${s.source}:${Math.round(s.weight * 100)}%`).join(' | ')} | Awareness: L${knowledgeGateResult.awarenessState.level} (${knowledgeGateResult.awarenessDescription})`);
+      } catch (err) {
+        console.warn('[AIN KG] Scoring failed (non-blocking):', err);
+      }
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -530,6 +565,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
           conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
+          knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           ...meta,
         },
       }),
@@ -582,6 +618,17 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing
       practiceRecommendation: orchestratorResult.practiceRecommendation || null,
+      // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
+      ainState: knowledgeGateResult ? {
+        sourceMix: knowledgeGateResult.source_mix.map(s => ({
+          source: s.source,
+          weight: s.weight,
+          notes: s.notes,
+        })),
+        awarenessLevel: knowledgeGateResult.awarenessState.level,
+        awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
+        awarenessDescription: knowledgeGateResult.awarenessDescription,
+      } : null,
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,

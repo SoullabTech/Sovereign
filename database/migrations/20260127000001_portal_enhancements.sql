@@ -17,14 +17,14 @@ BEGIN
   END IF;
 END $$;
 
--- Add specialties column (JSONB array)
+-- Add specialties column (text array — matches earlier migrations 20260118/20260122)
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'practitioners' AND column_name = 'specialties'
   ) THEN
-    ALTER TABLE practitioners ADD COLUMN specialties JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE practitioners ADD COLUMN specialties TEXT[] DEFAULT '{}';
   END IF;
 END $$;
 
@@ -157,7 +157,7 @@ Through natal charts, transits, and synastry, I help you understand your soul''s
 
 Whether you''re facing a Saturn return, exploring your life purpose, or seeking guidance through a challenging transit, I''m here to illuminate your path.',
   NULL, -- Photo URL to be added later
-  '["Evolutionary Astrology", "Natal Charts", "Transit Analysis", "Synastry", "Life Cycles"]'::jsonb,
+  ARRAY['Evolutionary Astrology', 'Natal Charts', 'Transit Analysis', 'Synastry', 'Life Cycles']::text[],
   15,
   'active',
   '{
@@ -198,7 +198,11 @@ BEGIN
     END IF;
 
     -- Insert lead magnet (if none exists)
-    IF NOT EXISTS (SELECT 1 FROM lead_magnets WHERE practitioner_id = loralee_id) THEN
+    -- Guard: lead_magnets FK was later changed to reference members(id),
+    -- so only insert if practitioner ID also exists in members table.
+    IF NOT EXISTS (SELECT 1 FROM lead_magnets WHERE practitioner_id = loralee_id)
+       AND EXISTS (SELECT 1 FROM members WHERE id = loralee_id)
+    THEN
       INSERT INTO lead_magnets (practitioner_id, name, description, type, is_active, is_featured) VALUES
         (loralee_id, 'Understanding Your Saturn Return', 'A free guide to navigating the most significant astrological transit of your late 20s. Learn what Saturn is asking of you and how to build a stronger foundation.', 'guide', true, true);
     END IF;

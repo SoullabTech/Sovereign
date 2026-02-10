@@ -9,15 +9,23 @@ interface SessionDurationSelectorProps {
   onClose: () => void;
   onSelect: (duration: number) => void;
   defaultDuration?: number;
+  maxDuration?: number; // Cap available durations for youth tiers
+  tierLabel?: string;   // e.g. "Supported Session" for tier context
 }
 
 export function SessionDurationSelector({
   isOpen,
   onClose,
   onSelect,
-  defaultDuration = 50
+  defaultDuration = 50,
+  maxDuration,
+  tierLabel
 }: SessionDurationSelectorProps) {
-  const durations = [15, 30, 45, 60, 90, 120];
+  const allDurations = [5, 15, 25, 30, 45, 50, 60, 90, 120];
+  // Filter to only show durations at or below the max, and include standard options
+  const durations = maxDuration
+    ? allDurations.filter(d => d <= maxDuration)
+    : [15, 30, 45, 60, 90, 120];
 
   const handleSelect = (duration: number) => {
     onSelect(duration);
@@ -53,7 +61,9 @@ export function SessionDurationSelector({
                 <Clock className="w-6 h-6 text-amber-400" />
                 <div>
                   <h3 className="text-lg font-medium text-white">Start Session</h3>
-                  <p className="text-sm text-stone-400">Choose your session duration</p>
+                  <p className="text-sm text-stone-400">
+                    {tierLabel ? `${tierLabel} \u2014 choose duration` : 'Choose your session duration'}
+                  </p>
                 </div>
               </div>
               <button

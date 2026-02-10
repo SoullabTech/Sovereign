@@ -230,6 +230,26 @@ export const SESSION_PRESETS = {
 } as const;
 
 /**
+ * Youth session presets — shorter containers for developing capacity.
+ * Matched to developmental tiers from ageTierEngine.ts.
+ */
+export const YOUTH_SESSION_PRESETS = {
+  under13: { minutes: 5, label: '5 min — Guided Check-in' },
+  tier2: { minutes: 25, label: '25 min — Supported Session' },
+  tier3: { minutes: 50, label: '50 min — Standard Session' },
+} as const;
+
+/**
+ * Youth-specific phase ratios for shorter sessions.
+ * Standard phases (20/50/15/15) don't work for 5-minute sessions.
+ */
+export const YOUTH_PHASE_RATIOS: Record<string, { opening: number; exploration: number; integration: number; closure: number }> = {
+  under13: { opening: 40, exploration: 40, integration: 0, closure: 20 },
+  tier2: { opening: 16, exploration: 52, integration: 16, closure: 16 },
+  tier3: { opening: 20, exploration: 50, integration: 15, closure: 15 },  // same as standard
+};
+
+/**
  * Format time remaining for display
  */
 export function formatTimeRemaining(minutes: number): string {

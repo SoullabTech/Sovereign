@@ -53,13 +53,13 @@ CREATE TABLE IF NOT EXISTS threshold_passages (
 );
 
 -- One passage per member (they don't repeat this)
-CREATE UNIQUE INDEX idx_threshold_member ON threshold_passages(member_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_threshold_member ON threshold_passages(member_id);
 
 -- Cohort lookup
-CREATE INDEX idx_threshold_cohort ON threshold_passages(cohort_group_id);
+CREATE INDEX IF NOT EXISTS idx_threshold_cohort ON threshold_passages(cohort_group_id);
 
 -- State lookup (for facilitator dashboard)
-CREATE INDEX idx_threshold_state ON threshold_passages(current_week)
+CREATE INDEX IF NOT EXISTS idx_threshold_state ON threshold_passages(current_week)
     WHERE current_week NOT IN ('completed', 'withdrew', 'not_started');
 
 -- ============================================
@@ -120,4 +120,4 @@ CREATE TRIGGER threshold_updated_at
 COMMENT ON TABLE threshold_passages IS 'Tracks a helper''s passage through the Soullab Threshold — a discernment process, not a certification';
 COMMENT ON COLUMN threshold_passages.reflections IS 'JSONB of weekly reflections, owned by the member. Exportable and deletable at any time';
 COMMENT ON COLUMN threshold_passages.accountability_statement IS 'The helper''s own words about what they''re willing to be held accountable for. Written in week 6';
-COMMENT ON COLUMN threshold_passages.withdrew IS 'Withdrawal is a valid outcome. The passage did its job if someone decides this is not for them';
+COMMENT ON COLUMN threshold_passages.withdrew_at IS 'Withdrawal is a valid outcome. The passage did its job if someone decides this is not for them';
