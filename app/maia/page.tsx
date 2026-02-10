@@ -422,12 +422,39 @@ function MAIAPageContent() {
       if (existingSessionId && !isNewDay) {
         setSessionId(existingSessionId);
         console.log('💫 [MAIA] Restored session:', existingSessionId);
+        // Touch the session to update last_activity_at (non-blocking)
+        apiFetch('/api/maia/session/start', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: existingSessionId,
+            memberId: initialData?.id,
+          }),
+        }).catch(() => {}); // Ignore errors for touch
       } else {
         // New day or no session - create fresh session and clear old conversation
         const newSessionId = `session_${Date.now()}`;
         localStorage.setItem('maia_session_id', newSessionId);
         localStorage.setItem('maia_session_date', todayDate);
         setSessionId(newSessionId);
+
+        // Register session with backend (non-blocking but important for finalize)
+        apiFetch('/api/maia/session/start', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: newSessionId,
+            memberId: initialData?.id,
+            privacyMode: 'standard',
+            maiaMode: 'normal',
+          }),
+        }).then((res) => {
+          if (res.ok) {
+            console.log('✅ [MAIA] Session registered with backend');
+          } else {
+            console.warn('⚠️ [MAIA] Session registration failed (will retry on finalize)');
+          }
+        }).catch((err) => {
+          console.warn('⚠️ [MAIA] Session registration error:', err);
+        });
 
         // Clear old conversation from localStorage for clean slate
         if (existingSessionId) {
