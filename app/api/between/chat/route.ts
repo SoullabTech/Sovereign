@@ -1501,6 +1501,17 @@ This user is in guest mode (no authenticated identity).
 
       const response = NextResponse.json({
         message: outboundText,
+        // 🚪 AIN Knowledge Gate: source mix + awareness level (null in Sanctuary)
+        ainState: knowledgeGateResult ? {
+          sourceMix: knowledgeGateResult.source_mix.map(s => ({
+            source: s.source,
+            weight: s.weight,
+            notes: s.notes,
+          })),
+          awarenessLevel: knowledgeGateResult.awarenessState.level,
+          awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
+          awarenessDescription: knowledgeGateResult.awarenessDescription,
+        } : null,
         route: {
           endpoint: '/api/between/chat',
           type: 'Member Chat',

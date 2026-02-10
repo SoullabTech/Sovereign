@@ -4930,6 +4930,8 @@ I'm not sure what I'm feeling yet.`;
         stateVector: responseData.stateVector || null,
         // 🌿 PRACTICE: Recommended practice from state vector routing
         practiceRecommendation: responseData.practiceRecommendation || null,
+        // 🚪 AIN Knowledge Gate: source mix + awareness state
+        ainState: responseData.ainState || null,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
@@ -7665,8 +7667,8 @@ I'm not sure what I'm feeling yet.`;
                           <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                             {message.role === 'user' ? (userName || 'You') : assistantName}
                           </div>
-                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
-                          {message.role === 'oracle' && message.ainState && (
+                          {/* 🚪 AIN: Knowledge Gate source well indicator (suppressed in Sanctuary) */}
+                          {message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
                               sourceMix={message.ainState.sourceMix}
                               awarenessLevel={message.ainState.awarenessLevel}
