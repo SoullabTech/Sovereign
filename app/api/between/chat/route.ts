@@ -76,6 +76,12 @@ import {
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import {
+  ainKnowledgeGate,
+  type SourceContribution,
+  type KnowledgeGateResult,
+} from '@/lib/ain/knowledge-gate';
+import { type AwarenessState } from '@/lib/ain/awareness-levels';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -1041,6 +1047,40 @@ This user is in guest mode (no authenticated identity).
     console.log('[Chat API] Effective userId:', effectiveUserId);
     console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
+    // 🚪 AIN KNOWLEDGE GATE: Source scoring + awareness detection
+    // Gated by env var and suppressed in Sanctuary (no meta overlays in sacred space)
+    const KG_ENABLED = process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1';
+    let ainState: { sourceMix: SourceContribution[]; awarenessState: AwarenessState } | null = null;
+
+    if (KG_ENABLED && !isSanctuary) {
+      try {
+        // Lightweight scoring pass — no LLM call, just awareness detection + source weighting
+        const { detectAwarenessLevel } = await import('@/lib/ain/awareness-levels');
+        const awarenessDetection = detectAwarenessLevel(message);
+        const awarenessState = awarenessDetection.awarenessState;
+
+        // Score sources using the Knowledge Gate's scoring function
+        // We import and call the full gate but skip the LLM call by using a no-op caller
+        const kgResult = await ainKnowledgeGate(
+          { userId: effectiveUserId, userMessage: message, style: mode || undefined },
+          // No-op LLM caller — we only want source scoring, not a separate LLM response
+          async () => '',
+        );
+
+        ainState = {
+          sourceMix: kgResult.source_mix,
+          awarenessState: kgResult.awarenessState,
+        };
+        console.log('[Chat API] 🚪 AIN Knowledge Gate:', {
+          awarenessLevel: ainState.awarenessState.level,
+          topSource: ainState.sourceMix.reduce((a, b) => a.weight > b.weight ? a : b).source,
+        });
+      } catch (kgErr) {
+        console.error('[Chat API] 🚪 AIN Knowledge Gate error (non-fatal):', kgErr);
+        ainState = null;
+      }
+    }
+
     // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
     const decision = decisionPreflight(message);
     (normalizedMeta as Record<string, unknown>).decision = decision;
@@ -1453,6 +1493,8 @@ This user is in guest mode (no authenticated identity).
 
       const response = NextResponse.json({
         message: outboundText,
+        // 🚪 AIN Knowledge Gate: source mix + awareness state (null in Sanctuary)
+        ainState,
         route: {
           endpoint: '/api/between/chat',
           type: 'Member Chat',
@@ -2117,6 +2159,8 @@ This user is in guest mode (no authenticated identity).
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
+      // 🚪 AIN Knowledge Gate: source mix + awareness state (null in Sanctuary)
+      ainState,
       // 🌀 STATE VECTOR: Current consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.metadata?.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing

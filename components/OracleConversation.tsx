@@ -43,6 +43,7 @@ import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { StateCard, type StateCardDisplayMode } from './maia/StateCard';
+import { SourceHalo } from './ain/SourceHalo';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -425,6 +426,11 @@ interface ConversationMessage {
   stateVector?: any;
   // 🌿 PRACTICE: Recommended practice from state vector routing
   practiceRecommendation?: any;
+  // 🚪 AIN Knowledge Gate: source scoring + awareness level
+  ainState?: {
+    sourceMix: Array<{ source: string; weight: number; notes?: string }>;
+    awarenessState: { level: number; confidence: number; depth_markers: Record<string, number> };
+  } | null;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -4866,6 +4872,8 @@ I'm not sure what I'm feeling yet.`;
         stateVector: responseData.stateVector || null,
         // 🌿 PRACTICE: Recommended practice from state vector routing
         practiceRecommendation: responseData.practiceRecommendation || null,
+        // 🚪 AIN Knowledge Gate: source mix + awareness state
+        ainState: responseData.ainState || null,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
@@ -7630,6 +7638,11 @@ I'm not sure what I'm feeling yet.`;
                             }
                           />
                         </div>
+                      )}
+
+                      {/* 🚪 AIN KNOWLEDGE GATE: Source mix visualization (suppressed in Sanctuary) */}
+                      {message.role === 'oracle' && !isSanctuary && message.ainState && (
+                        <SourceHalo ainState={message.ainState} />
                       )}
 
                       {/* Wisdom Translation — removed from per-message rendering.
