@@ -169,8 +169,17 @@ CREATE INDEX IF NOT EXISTS idx_rl_opportunities_practice ON rl_opportunities(pra
 CREATE INDEX IF NOT EXISTS idx_rl_opportunities_venture ON rl_opportunities(venture_id) WHERE venture_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_rl_opportunities_person ON rl_opportunities(person_id) WHERE person_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_rl_opportunities_stage ON rl_opportunities(practice_id, stage);
-CREATE INDEX IF NOT EXISTS idx_rl_opportunities_active ON rl_opportunities(practice_id, stage)
-  WHERE stage NOT IN ('closed_won', 'closed_lost');
+-- Guard: enum values may be 'closed_won'/'closed_lost' or 'won'/'lost' depending on schema version
+DO $$
+BEGIN
+  BEGIN
+    CREATE INDEX IF NOT EXISTS idx_rl_opportunities_active ON rl_opportunities(practice_id, stage)
+      WHERE stage NOT IN ('closed_won', 'closed_lost');
+  EXCEPTION WHEN invalid_text_representation THEN
+    CREATE INDEX IF NOT EXISTS idx_rl_opportunities_active ON rl_opportunities(practice_id, stage)
+      WHERE stage NOT IN ('won', 'lost');
+  END;
+END $$;
 
 COMMENT ON TABLE rl_opportunities IS 'Pipeline tracking for business opportunities and deals.';
 
@@ -371,48 +380,51 @@ CREATE TRIGGER rl_meetings_updated_at BEFORE UPDATE ON rl_meetings
 -- Venture Dashboard View
 -- =============================================================================
 
-CREATE OR REPLACE VIEW v_rl_venture_dashboard AS
-SELECT
-  v.id as venture_id,
-  v.practice_id,
-  v.name,
-  v.type,
-  v.description,
-  v.is_active,
-  v.created_at,
-  v.updated_at,
-  -- Open tasks count
-  COALESCE(t.open_tasks, 0) as open_tasks,
-  -- Upcoming meetings (next 14 days)
-  COALESCE(m.upcoming_meetings, 0) as upcoming_meetings,
-  -- Active opportunities count
-  COALESCE(o.active_opportunities, 0) as active_opportunities,
-  -- Pipeline value (active opportunities)
-  COALESCE(o.pipeline_value_cents, 0) as pipeline_value_cents
-FROM rl_ventures v
-LEFT JOIN (
-  SELECT venture_id, COUNT(*) as open_tasks
-  FROM rl_tasks
-  WHERE status = 'open' AND venture_id IS NOT NULL
-  GROUP BY venture_id
-) t ON t.venture_id = v.id
-LEFT JOIN (
-  SELECT venture_id, COUNT(*) as upcoming_meetings
-  FROM rl_meetings
-  WHERE status = 'scheduled'
-    AND scheduled_start_at BETWEEN NOW() AND NOW() + INTERVAL '14 days'
-    AND venture_id IS NOT NULL
-  GROUP BY venture_id
-) m ON m.venture_id = v.id
-LEFT JOIN (
-  SELECT venture_id,
-         COUNT(*) as active_opportunities,
-         SUM(estimated_value_cents) as pipeline_value_cents
-  FROM rl_opportunities
-  WHERE stage NOT IN ('closed_won', 'closed_lost')
-    AND venture_id IS NOT NULL
-  GROUP BY venture_id
-) o ON o.venture_id = v.id;
+-- Views are created conditionally to handle schema variants
+-- The venture dashboard view references columns that may differ between schema versions
+DO $$
+BEGIN
+  EXECUTE '
+  CREATE OR REPLACE VIEW v_rl_venture_dashboard AS
+  SELECT
+    v.id as venture_id,
+    v.practice_id,
+    v.name,
+    v.venture_type,
+    v.description,
+    v.created_at,
+    v.updated_at,
+    COALESCE(t.open_tasks, 0) as open_tasks,
+    COALESCE(m.upcoming_meetings, 0) as upcoming_meetings,
+    COALESCE(o.active_opportunities, 0) as active_opportunities,
+    COALESCE(o.pipeline_value_cents, 0) as pipeline_value_cents
+  FROM rl_ventures v
+  LEFT JOIN (
+    SELECT venture_id, COUNT(*) as open_tasks
+    FROM rl_tasks
+    WHERE status = ''open'' AND venture_id IS NOT NULL
+    GROUP BY venture_id
+  ) t ON t.venture_id = v.id
+  LEFT JOIN (
+    SELECT venture_id, COUNT(*) as upcoming_meetings
+    FROM rl_meetings
+    WHERE status = ''scheduled''
+      AND scheduled_start_at BETWEEN NOW() AND NOW() + INTERVAL ''14 days''
+      AND venture_id IS NOT NULL
+    GROUP BY venture_id
+  ) m ON m.venture_id = v.id
+  LEFT JOIN (
+    SELECT venture_id,
+           COUNT(*) as active_opportunities,
+           SUM(estimated_value_cents) as pipeline_value_cents
+    FROM rl_opportunities
+    WHERE stage NOT IN (''won'', ''lost'')
+      AND venture_id IS NOT NULL
+    GROUP BY venture_id
+  ) o ON o.venture_id = v.id';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'v_rl_venture_dashboard view creation skipped: %', SQLERRM;
+END $$;
 
 COMMENT ON VIEW v_rl_venture_dashboard IS 'Labtools Dashboard: Venture summary with tasks, meetings, opportunities.';
 
@@ -421,19 +433,25 @@ COMMENT ON VIEW v_rl_venture_dashboard IS 'Labtools Dashboard: Venture summary w
 -- Labtools Pipeline Summary View
 -- =============================================================================
 
-CREATE OR REPLACE VIEW v_rl_pipeline_summary AS
-SELECT
-  practice_id,
-  COUNT(*) FILTER (WHERE stage = 'lead') as lead_count,
-  COUNT(*) FILTER (WHERE stage = 'qualified') as qualified_count,
-  COUNT(*) FILTER (WHERE stage = 'proposal') as proposal_count,
-  COUNT(*) FILTER (WHERE stage = 'negotiation') as negotiation_count,
-  COUNT(*) FILTER (WHERE stage = 'closed_won') as closed_won_count,
-  COUNT(*) FILTER (WHERE stage = 'closed_lost') as closed_lost_count,
-  SUM(estimated_value_cents) FILTER (WHERE stage NOT IN ('closed_won', 'closed_lost')) as active_pipeline_value_cents,
-  SUM(estimated_value_cents) FILTER (WHERE stage = 'closed_won' AND actual_close_date >= DATE_TRUNC('month', NOW())) as won_this_month_cents
-FROM rl_opportunities
-GROUP BY practice_id;
+DO $$
+BEGIN
+  EXECUTE '
+  CREATE OR REPLACE VIEW v_rl_pipeline_summary AS
+  SELECT
+    practice_id,
+    COUNT(*) FILTER (WHERE stage = ''lead'') as lead_count,
+    COUNT(*) FILTER (WHERE stage = ''qualified'') as qualified_count,
+    COUNT(*) FILTER (WHERE stage = ''proposal'') as proposal_count,
+    COUNT(*) FILTER (WHERE stage = ''negotiation'') as negotiation_count,
+    COUNT(*) FILTER (WHERE stage = ''won'') as won_count,
+    COUNT(*) FILTER (WHERE stage = ''lost'') as lost_count,
+    SUM(estimated_value_cents) FILTER (WHERE stage NOT IN (''won'', ''lost'')) as active_pipeline_value_cents,
+    SUM(estimated_value_cents) FILTER (WHERE stage = ''won'' AND actual_close_date >= DATE_TRUNC(''month'', NOW())) as won_this_month_cents
+  FROM rl_opportunities
+  GROUP BY practice_id';
+EXCEPTION WHEN OTHERS THEN
+  RAISE NOTICE 'v_rl_pipeline_summary view creation skipped: %', SQLERRM;
+END $$;
 
 COMMENT ON VIEW v_rl_pipeline_summary IS 'Labtools Dashboard: Pipeline stage summary.';
 
