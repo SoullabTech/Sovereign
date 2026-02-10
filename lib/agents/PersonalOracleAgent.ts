@@ -975,7 +975,12 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
         const revival = await getMaiaRevivalPrompt(sessionId, this.userId, tier, userContextStr);
         systemPrompt = revival.prompt;
 
-        console.log(`✨ [REVIVAL] Loaded ${tier} tier (${revival.tokens.toLocaleString()} tokens)`);
+        // CRITICAL: Append conversation style prompt AFTER revival so it gets the final word on tone/length.
+        // Revival gives MAIA her knowledge; the style prompt shapes HOW she speaks.
+        const styleOverride = getPromptForConversationStyle(conversationStyle);
+        systemPrompt += `\n\n---\n\n## CONVERSATION STYLE OVERRIDE (This takes precedence over any style guidance above)\n\n${styleOverride}`;
+
+        console.log(`✨ [REVIVAL] Loaded ${tier} tier (${revival.tokens.toLocaleString()} tokens) + ${conversationStyle} style override`);
 
       } else {
         // Original incremental prompt building
@@ -1593,6 +1598,20 @@ This is the soul-level truth you're helping them see, not reference material to 
       // 🎭 MAIA'S INTEGRATION DIRECTIVE
       systemPrompt += `\n---\n\n**You are MAIA.** The context above is available to you - use it naturally when relevant. Don't announce what you have access to or wax poetic about integration. Just respond directly to what they're saying. The wisdom is yours to weave in when it fits, not to perform.\n`;
 
+      // 🏷️ NAME & IDENTITY (HARD RULES - last word wins)
+      // TODO: Parameterize displayName from userSettings?.assistantName when available
+      const displayName = "MAIA";
+      systemPrompt += `
+
+## NAME & IDENTITY (HARD RULES)
+- Your true identity is always MAIA (this is internal, stable, never changes).
+- The user may choose a display name / pet name for you: "${displayName}".
+- Treat "${displayName}" as what the user calls you in conversation.
+- If the user calls you Mike/Maya/Maria/etc, assume it's a nickname or transcription — DO NOT correct them.
+- Never say "I'm MAIA, not X." Never debate your name.
+- If asked "what's your name?" answer: "You can call me ${displayName}."
+`;
+
       // Call Claude Anthropic API with retry logic for 529 (overloaded)
       // Claude provides wisdom/depth as advisor; MAIA integrates and speaks as herself
       let claudeResponse;
@@ -1800,7 +1819,8 @@ This is the soul-level truth you're helping them see, not reference material to 
           emotionalTone: detectedEmotionalTone,
           conversationDepth: flowState.depth / 10, // Use flow tracker depth (0-1 scale)
           exchangeCount: flowState.turnCount, // Use actual turn count from flow tracker
-          recentMessages: conversationHistory.slice(-5).map(m => m.content)
+          recentMessages: conversationHistory.slice(-5).map(m => m.content),
+          mode: conversationStyle === 'walking' ? 'talk' : 'care'
         });
 
         // Apply the enhancement (this adds natural acknowledgments, removes therapy-speak, adds contractions)

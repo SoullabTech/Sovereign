@@ -27,6 +27,8 @@ Available perspectives for multi-framing deliberation. Select based on what woul
 - **relationships** — Connection, rupture, repair, attachment
 - **creativity** — Generativity, constraints, flow, blocks
 - **grief** — Loss, transition, holding, release
+- **leadership-power** — Authority, influence, political terrain, visibility risk
+- **organizational-field** — Culture currents, elemental balance, collective shadow
 
 ---
 

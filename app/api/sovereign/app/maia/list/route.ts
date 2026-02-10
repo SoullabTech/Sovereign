@@ -578,6 +578,10 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: orchestratorResult.text,
+      // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
+      stateVector: orchestratorResult.stateVector || null,
+      // 🌿 PRACTICE: Recommended practice from state vector routing
+      practiceRecommendation: orchestratorResult.practiceRecommendation || null,
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,

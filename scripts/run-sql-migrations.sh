@@ -1,15 +1,12 @@
 #!/bin/sh
 # SQL Migration Runner for MAIA Production
 # Called by: docker compose --profile migrate run --rm migrate
-<<<<<<< HEAD
-=======
 #
 # Only runs migrations not yet recorded in schema_migrations table.
 # Records each successful migration to prevent re-runs.
 #
 # ROBUST: Works regardless of how schema_migrations was originally created.
 # Uses filename as the canonical identifier.
->>>>>>> ecstatic-brown
 
 set -eu
 
@@ -17,17 +14,6 @@ set -eu
 
 echo "=== SQL migrations ==="
 
-<<<<<<< HEAD
-count=0
-for f in /app/database/migrations/*.sql; do
-  [ -e "$f" ] || continue  # handles empty-glob case
-  echo "→ $(basename "$f")"
-  psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$f"
-  count=$((count + 1))
-done
-
-echo "=== $count migrations complete ==="
-=======
 # Ensure schema_migrations table exists with filename as primary identifier
 # This is idempotent - won't fail if table already exists with different schema
 psql "$DATABASE_URL" -X -q -c "
@@ -112,4 +98,3 @@ if [ "$applied_now" -eq 0 ]; then
 else
   echo "=== Applied $applied_now new migrations ($applied_before were already applied, $total total) ==="
 fi
->>>>>>> ecstatic-brown

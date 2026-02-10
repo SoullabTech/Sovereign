@@ -20,6 +20,8 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
+import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
   id: string;
@@ -36,6 +38,8 @@ interface Client {
   birthDate: string | null;
   birthTime: string | null;
   birthLocation: string | null;
+  leadershipProfile: LeadershipProfile | null;
+  clientTypes: string[];
   createdAt: string;
 }
 
@@ -263,6 +267,17 @@ export default function ClientDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Leadership Profile */}
+        {(client.clientTypes?.includes('leadership') || client.leadershipProfile) && (
+          <div className="mb-6">
+            <LeadershipProfileSection
+              clientId={client.id}
+              profile={client.leadershipProfile}
+              onUpdate={(profile) => setClient(prev => prev ? { ...prev, leadershipProfile: profile } : null)}
+            />
+          </div>
+        )}
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

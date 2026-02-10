@@ -73,14 +73,14 @@ COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@
 COPY --from=builder --chown=node:node /app/database ./database
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 
-# Scripts + tsx for embedding worker
+# Scripts for workers (summary, comms, embedding)
 COPY --from=builder --chown=node:node /app/scripts ./scripts
 RUN chmod +x ./scripts/entrypoint.sh ./scripts/ensure-migrations.sh
-COPY --from=builder --chown=node:node /app/node_modules/.bin ./node_modules/.bin
-COPY --from=builder --chown=node:node /app/node_modules/tsx ./node_modules/tsx
-COPY --from=builder --chown=node:node /app/node_modules/esbuild ./node_modules/esbuild
-COPY --from=builder --chown=node:node /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
-COPY --from=builder --chown=node:node /app/node_modules/resolve-pkg-maps ./node_modules/resolve-pkg-maps
+
+# Full node_modules for worker scripts (tsx, Anthropic SDK, pg, etc.)
+# Workers run via `npx tsx` and need the full dependency tree.
+# Next.js standalone bundles its own deps, so this doesn't conflict.
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 
 # Lib dependencies for worker scripts
 COPY --from=builder --chown=node:node /app/lib ./lib

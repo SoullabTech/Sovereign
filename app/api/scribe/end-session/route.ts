@@ -1,25 +1,16 @@
 export const dynamic = 'force-dynamic';
 // app/api/scribe/end-session/route.ts
-// API endpoint to end a session and generate summary
+// Closes a session: queues summary for continuity, purges turns for sanctuary.
 
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
-import {
-  generateSessionSummary,
-  storeSessionSummary,
-} from '@/lib/scribe/sessionSummaryGenerator';
-import { getConversationHistory } from '@/lib/sovereign/sessionManager';
 import { query } from '@/lib/db/postgres';
 
-// Skip during static export (Capacitor builds)
-
+export const revalidate = false;
 export const runtime = 'nodejs';
-export const maxDuration = 60; // Allow up to 60 seconds for summary generation
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, userId } = await req.json();
+    const { sessionId, userId, sanctuary } = await req.json();
 
     if (!sessionId) {
       return NextResponse.json(
@@ -30,11 +21,15 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔄 Ending session ${sessionId}...`);
 
-    // 1. Load session data
-    const conversationHistory = await getConversationHistory(sessionId);
-
-    const result = await query(
-      'SELECT * FROM maia_sessions WHERE id = $1',
+    // 1. Load session
+    const result = await query<{
+      id: string;
+      mode: string;
+      status: string;
+      summary: any;
+      member_id: string | null;
+    }>(
+      'SELECT id, mode, status, summary, member_id FROM maia_sessions WHERE id = $1',
       [sessionId]
     );
 
@@ -47,45 +42,83 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Check if session already completed
+    // 2. Already completed?
     if (session.status === 'completed') {
       console.log(`⚠️  Session ${sessionId} already completed`);
       return NextResponse.json({
         success: true,
         sessionId,
-        summary: session.session_summary,
+        summary: session.summary,
         message: 'Session was already completed',
       });
     }
 
-    // 3. Calculate duration
-    const startTime = new Date(session.created_at);
-    const endTime = new Date();
-    const duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+    // Determine mode: trust DB first, then request body, then default
+    const mode = session.mode || (sanctuary ? 'sanctuary' : 'continuity');
 
-    // 4. Generate summary
-    console.log(`🔄 Generating summary for session ${sessionId}...`);
-    const summary = await generateSessionSummary({
-      sessionId,
-      conversationHistory,
-      userId: userId || session.user_id,
-      duration,
-      startTime,
-      endTime,
-    });
+    // Update session mode if it wasn't set at creation time
+    if (!session.mode || session.mode === 'continuity') {
+      await query(
+        `UPDATE maia_sessions SET mode = $1, updated_at = NOW() WHERE id = $2`,
+        [mode, sessionId]
+      );
+    }
 
-    // 5. Store summary and mark session as completed
-    await storeSessionSummary(sessionId, summary);
+    // 3. SANCTUARY: purge turns, mark completed, no summary
+    if (mode === 'sanctuary') {
+      console.log(`🔒 Session ${sessionId} is sanctuary — purging turns`);
 
-    console.log(`✅ Session ${sessionId} ended successfully`);
+      // Delete conversation turns for this session
+      const purged = await query(
+        `DELETE FROM conversation_turns WHERE session_id = $1`,
+        [sessionId]
+      );
 
-    // 6. Return summary
+      // Mark completed with no summary
+      await query(
+        `UPDATE maia_sessions
+         SET status = 'completed', completed_at = NOW(), updated_at = NOW()
+         WHERE id = $1`,
+        [sessionId]
+      );
+
+      console.log(`🔒 Session ${sessionId} closed — ${purged.rowCount ?? 0} turns purged`);
+
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        mode: 'sanctuary',
+        message: 'Sanctuary session closed. No summary generated. Turns purged.',
+      });
+    }
+
+    // 4. CONTINUITY: queue for background summarization
+    console.log(`📝 Session ${sessionId} queued for summary`);
+
+    // Mark session as closing
+    await query(
+      `UPDATE maia_sessions
+       SET status = 'closing', member_id = COALESCE(member_id, $2), updated_at = NOW()
+       WHERE id = $1`,
+      [sessionId, userId || null]
+    );
+
+    // Enqueue for the summary worker
+    await query(
+      `INSERT INTO session_summary_queue (session_id, member_id)
+       VALUES ($1, $2)
+       ON CONFLICT (session_id) DO NOTHING`,
+      [sessionId, userId || session.member_id || null]
+    );
+
     return NextResponse.json({
       success: true,
       sessionId,
-      summary,
-      duration,
+      mode: 'continuity',
+      message: 'Session closing. Summary will be generated in the background.',
+      status: 'closing',
     });
+
   } catch (error: any) {
     console.error('❌ Error ending session:', error);
     return NextResponse.json(
@@ -98,12 +131,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Allow GET to check session status
+// Check session summary status (polling endpoint)
 export async function GET(req: NextRequest) {
-  // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
+
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');
@@ -115,8 +148,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const result = await query(
-      'SELECT id, status, completed_at, session_summary FROM maia_sessions WHERE id = $1',
+    const result = await query<{
+      id: string;
+      status: string;
+      mode: string;
+      completed_at: string | null;
+      summary: any;
+    }>(
+      'SELECT id, status, mode, completed_at, summary FROM maia_sessions WHERE id = $1',
       [sessionId]
     );
 
@@ -132,8 +171,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       sessionId: session.id,
       status: session.status,
+      mode: session.mode,
       completedAt: session.completed_at,
-      hasSummary: !!session.session_summary,
+      hasSummary: !!session.summary,
+      summary: session.status === 'completed' ? session.summary : undefined,
     });
   } catch (error: any) {
     console.error('❌ Error checking session status:', error);

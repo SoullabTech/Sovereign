@@ -55,7 +55,8 @@ if [ -f "ios/App/App/Info.plist" ]; then
     /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" ios/App/App/Info.plist 2>/dev/null || true
 
     # Also increment build number
-    BUILD_NUMBER=$((/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist 2>/dev/null || echo 0) + 1)
+    CURRENT_BUILD=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist 2>/dev/null || echo 0)
+    BUILD_NUMBER=$((CURRENT_BUILD + 1))
     /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/App/App/Info.plist 2>/dev/null || true
     echo "  → iOS build number: $BUILD_NUMBER"
 fi

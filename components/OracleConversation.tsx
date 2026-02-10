@@ -19,7 +19,8 @@ import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
-import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation, detectMaiaCommands, getMaiaCommandConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import type { MaiaCommand } from '@/lib/voice/VoiceCommandDetector';
 import {
   matchVoiceCommand,
   applySettingsDelta,
@@ -41,6 +42,10 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
+import { StateCard, type StateCardDisplayMode } from './maia/StateCard';
+import { SourceHalo } from './ain/SourceHalo';
+import { CouncilInsightPanel } from './ain/CouncilInsightPanel';
+import { FieldStateIndicator } from './ain/FieldStateIndicator';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -126,7 +131,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -187,6 +192,8 @@ import {
   type TeenSafetyCheck
 } from '@/lib/safety/teenSupportIntegration';
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
+// 🌱 YOUTH DEVELOPMENTAL TIER - age-based constraints and session limits
+import { computeTierFromAge, getTierConfig, isYouthTier, type DevelopmentalTier } from '@/lib/youth/ageTierEngine';
 
 // Time-aware greeting helper for welcome screen
 function getTimeGreeting(): string {
@@ -419,6 +426,10 @@ interface ConversationMessage {
     blend: string;
     switchTo: string;
   } | null;
+  // 🌀 STATE VECTOR: Consciousness state reading for this turn
+  stateVector?: any;
+  // 🌿 PRACTICE: Recommended practice from state vector routing
+  practiceRecommendation?: any;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -434,6 +445,23 @@ interface ConversationMessage {
       meta?: { agentName: string | null; patternType: string | null };
     };
   };
+  // 🚪 AIN: Knowledge Gate source well weighting for this turn
+  ainState?: {
+    sourceMix: Array<{ source: string; weight: number; notes?: string }>;
+    awarenessLevel: number;
+    awarenessConfidence: number;
+    awarenessDescription?: string;
+  } | null;
+  // 🏛️ AIN: Consultation council results for this turn
+  consultation?: {
+    council: string;
+    insights: string[];
+    tensions: string[];
+    recommendation: string;
+    framingsUsed: string[];
+    emergenceRating: 'recombination' | 'synthesis' | 'breakthrough';
+    framingWeights?: Record<string, number> | null;
+  } | null;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -627,6 +655,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
+  const [isHandsFreeMode, setIsHandsFreeMode] = useState(true); // UI state mirror for hands-free toggle — default ON for natural conversation
+  const hasShownVoiceReentryToastRef = useRef(false); // Show once per session on re-enter voice
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
@@ -1216,6 +1246,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [smoothedAudioLevel, setSmoothedAudioLevel] = useState(0);
   const [coherenceLevel, setCoherenceLevel] = useState(0.5);
   const [coherenceShift, setCoherenceShift] = useState<CoherenceShift>('stable');
+  const [fieldWisdomPresent, setFieldWisdomPresent] = useState(false);
   const [shadowPetals, setShadowPetals] = useState<string[]>([]);
   const [showBreakthrough, setShowBreakthrough] = useState(false);
 
@@ -1232,6 +1263,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [teenProfile, setTeenProfile] = useState<TeenProfile | undefined>();
   const [isTeenUser, setIsTeenUser] = useState(false);
   const [lastSafetyCheck, setLastSafetyCheck] = useState<TeenSafetyCheck | null>(null);
+  const [youthMaxSessionMinutes, setYouthMaxSessionMinutes] = useState<number | undefined>();
+  const [youthTierLabel, setYouthTierLabel] = useState<string | undefined>();
 
   // Calculate user age and determine if teen
   const userAge = propUserAge || (userBirthDate ? calculateAge(userBirthDate) : null);
@@ -2224,54 +2257,40 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       prevComplete: prevStreamingCompleteRef.current
     });
 
-    // Helper to restart mic with retry pattern
+    // Helper to restart mic after MAIA finishes speaking
+    // 🎙️ POLICY: Only auto-restart if ContinuousConversation is in hands-free mode
+    // Otherwise just clear the speaking state and let user tap to speak (push-to-talk default)
     const restartMicWithRetry = () => {
-      console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
+      console.log('🎤 [StreamingVoice] Audio finished - clearing speaking state');
       setIsResponding(false);
       setIsAudioPlaying(false);
       setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
 
-      // 🎤 OPTIMISTIC LISTENING: Show "Listening" immediately when MAIA stops
-      // This masks the iOS audio handoff delay - user sees responsive UI
-      // Real mic state will be confirmed by handleRecordingStateChange
-      if (!showChatInterface && streamingVoiceMode) {
-        setIsListening(true);
-        setIsActivating(false); // Never show "Activating..." in voice mode
-        console.log('✨ [Optimistic] Showing Listening immediately');
+      // Check if hands-free is active via the ContinuousConversation ref
+      const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+
+      if (!isHandsFree) {
+        // Push-to-talk (default): Just clear state, user taps mic to speak again
+        console.log('🎤 [StreamingVoice] Push-to-talk mode - mic idle, ready for user tap');
+        setIsListening(false);
+        return;
       }
 
-      const attemptMicRestart = (attempt: number) => {
-        if (attempt > 5) {
-          console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
-          setIsListening(false); // Clear optimistic state on failure
-          return;
-        }
+      // Hands-free mode: Try to restart mic (single attempt, not a retry loop)
+      // ContinuousConversation's own restart logic handles retries with proper backoff
+      if (!showChatInterface && streamingVoiceMode) {
+        console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
+        setIsListening(true);
+        setIsActivating(false);
 
-        console.log(`🎤 [StreamingVoice] Mic restart attempt ${attempt}...`);
-
-        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
-          setIsMuted(false);
-          // Optimistic listening already set above - don't show "Activating..."
-          // 🔥 FIX: Use forceOverride to bypass stale isSpeakingRef (React state is async)
-          voiceMicRef.current.startListening({ forceOverride: true });
-
-          setTimeout(() => {
-            if (voiceMicRef.current?.isListening) {
-              console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
-              // Optimistic listening already shown - handleRecordingStateChange confirms it
-            } else {
-              console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
-              // Keep optimistic listening, retry will handle it
-              setTimeout(() => attemptMicRestart(attempt + 1), 300);
-            }
-          }, 150);
-        } else {
-          console.log('⏸️ [StreamingVoice] Mic restart blocked - not in voice mode or ref unavailable');
-        }
-      };
-
-      setTimeout(() => attemptMicRestart(1), 300);
+        setTimeout(() => {
+          if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+            setIsMuted(false);
+            voiceMicRef.current.startListening({ forceOverride: true });
+          }
+        }, 300);
+      }
     };
 
     // Case 1: Audio was playing and just stopped, response is complete
@@ -2694,6 +2713,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // 🌟 TEEN SUPPORT - Initialize teen profile for safety and support
     if (userAge !== null && userAge >= 13 && userAge <= 18) {
       setIsTeenUser(true);
+
+      // 🌱 Compute developmental tier for age-appropriate constraints
+      const tier = computeTierFromAge(userAge);
+      const tierConfig = getTierConfig(tier);
+      console.log(`🌱 Developmental tier: ${tier} (${tierConfig.label}), max session: ${tierConfig.maxSessionMinutes}min`);
+      setYouthMaxSessionMinutes(tierConfig.maxSessionMinutes);
+      setYouthTierLabel(tierConfig.label);
 
       // Load teen profile from localStorage
       const userData = getUserData();
@@ -3388,6 +3414,49 @@ I'm not sure what I'm feeling yet.`;
     };
   }, []);
 
+  // 📱 iOS INTERRUPTION ROUTING — phone calls, Siri, BT route changes, backgrounding
+  // Routes Capacitor app state events into ContinuousConversation's interruption handlers
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Capacitor App plugin for background/foreground
+    let appStateCleanup: (() => void) | undefined;
+    (async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        const listener = await App.addListener('appStateChange', (state: { isActive: boolean }) => {
+          if (!state.isActive) {
+            // App backgrounded — treat as interruption
+            console.log('📱 [AppState] App backgrounded — sending interruption start');
+            voiceMicRef.current?.onInterruptionStart?.();
+          } else {
+            // App foregrounded — interruption ended
+            console.log('📱 [AppState] App foregrounded — sending interruption end');
+            voiceMicRef.current?.onInterruptionEnd?.();
+          }
+        });
+        appStateCleanup = () => listener.remove();
+      } catch {
+        // Not on Capacitor — no-op
+      }
+    })();
+
+    // Browser visibilitychange fallback (handles PWA backgrounding on Safari)
+    const handleVisibilityInterrupt = () => {
+      if (document.visibilityState === 'hidden') {
+        voiceMicRef.current?.onInterruptionStart?.();
+      } else {
+        voiceMicRef.current?.onInterruptionEnd?.();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityInterrupt);
+
+    return () => {
+      appStateCleanup?.();
+      document.removeEventListener('visibilitychange', handleVisibilityInterrupt);
+    };
+  }, []);
+
   // Helper function to map element to facet ID (using SPIRALOGIC_FACETS IDs)
   const mapElementToFacetId = (element: string): string => {
     const elementToFacetMap: { [key: string]: string } = {
@@ -3803,6 +3872,58 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
 
+    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching
+    // Commands change state BEFORE the message is processed.
+    // Command phrases are stripped from the text so they don't become therapeutic content.
+    const { commands: maiaCommands, cleanedText: commandCleanedText, onlyCommands } = detectMaiaCommands(text);
+
+    if (maiaCommands.length > 0) {
+      for (const cmd of maiaCommands) {
+        if (cmd.type === 'mode') {
+          // Map MaiaMode → ListeningMode
+          const newListeningMode =
+            cmd.mode === 'talk' ? 'normal' as const :
+            cmd.mode === 'care' ? 'patient' as const :
+            cmd.mode === 'scribe' ? 'session' as const :
+            cmd.mode === 'sanctuary' ? 'normal' as const : // Sanctuary uses talk mode + sanctuary flag
+            'normal' as const;
+          setListeningMode(newListeningMode);
+
+          // Sanctuary flag
+          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+          else setIsSanctuary(false);
+
+          console.log(`🔄 [Command] Mode → ${cmd.mode} (listeningMode: ${newListeningMode})`);
+        }
+
+        if (cmd.type === 'lens') {
+          setCounselFramework(cmd.lens);
+          console.log(`🔄 [Command] Lens → ${cmd.lens}`);
+        }
+
+        if (cmd.type === 'style') {
+          localStorage.setItem('conversation_mode', cmd.style);
+          window.dispatchEvent(new Event('conversationStyleChanged'));
+          console.log(`🔄 [Command] Style → ${cmd.style}`);
+        }
+      }
+
+      // Show confirmation toast
+      const confirmation = getMaiaCommandConfirmation(maiaCommands);
+      if (confirmation) {
+        toast.success(confirmation);
+      }
+
+      // If the message was ONLY commands, acknowledge and return — don't send to API
+      if (onlyCommands) {
+        console.log('✅ [Command] Command-only message, no content to process');
+        return;
+      }
+
+      // Otherwise, continue with the cleaned text (commands stripped)
+      text = commandCleanedText;
+    }
+
     // IMMEDIATELY stop microphone to prevent Maia from hearing herself
     if (voiceMicRef.current && voiceMicRef.current.stopListening) {
       voiceMicRef.current.stopListening();
@@ -4004,6 +4125,26 @@ I'm not sure what I'm feeling yet.`;
       if (supportResponse.crisisMode) {
         console.log('🚨 [CRISIS MODE] MAIA entering crisis companion mode - staying present with user');
 
+        // Show visible crisis resource card in chat
+        const crisisResourceMessage: ConversationMessage = {
+          id: `crisis-resources-${Date.now()}`,
+          role: 'oracle',
+          text: '---\n' +
+            '**You don\'t have to handle this alone.**\n\n' +
+            'Right now, you can reach someone who gets it:\n\n' +
+            '**988 Suicide & Crisis Lifeline** \u2014 Call or text 988 (24/7)\n\n' +
+            '**Crisis Text Line** \u2014 Text HOME to 741741 (24/7)\n\n' +
+            '**Trevor Project** (LGBTQ+) \u2014 Call 1-866-488-7386 or text START to 678678\n\n' +
+            (safetyCheck.isED ? '**NEDA Helpline** \u2014 Call 1-800-931-2237 or text NEDA to 741741\n\n' : '') +
+            'If someone is hurting you, tell a trusted adult. You can also call **Childhelp** at 1-800-422-4453.\n\n' +
+            '*I\'m still here. We can keep talking.*\n' +
+            '---',
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
+        onMessageAddedRef.current?.(crisisResourceMessage);
+
         // Alert team for human check-in
         if (userId) {
           const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
@@ -4029,10 +4170,22 @@ I'm not sure what I'm feeling yet.`;
         console.log('🌟 [CRISIS COMPANION] MAIA will respond with crisis-aware compassion');
       }
 
-      // If scaffolding suggestions available, log them (could be displayed in UI)
-      if (supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
+      // If scaffolding suggestions available, show them in chat
+      if (!supportResponse.crisisMode && supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
         console.log('🌟 [TEEN SUPPORT] Scaffolding suggestions:', supportResponse.scaffoldSuggestions);
-        // TODO: Could display these in the UI as helpful strategies
+        // Show scaffold suggestions as a gentle system message
+        const scaffoldText = supportResponse.scaffoldSuggestions
+          .map(s => `\u2022 ${s}`)
+          .join('\n');
+        const scaffoldMessage: ConversationMessage = {
+          id: `scaffold-${Date.now()}`,
+          role: 'oracle',
+          text: `*Some things that might help right now:*\n\n${scaffoldText}`,
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, scaffoldMessage));
+        onMessageAddedRef.current?.(scaffoldMessage);
       }
 
       // Log context that will be added to MAIA's system prompt
@@ -4195,7 +4348,7 @@ I'm not sure what I'm feeling yet.`;
           // If user consented to switch, use the new framework; otherwise use current
           therapeuticFramework: pendingLensConsent?.consent === 'switch' && pendingLensConsent?.switchTo
             ? pendingLensConsent.switchTo
-            : (realtimeMode === 'patient' ? getCounselFramework() : undefined),
+            : (realtimeMode === 'counsel' ? getCounselFramework() : undefined),
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
@@ -4431,77 +4584,31 @@ I'm not sure what I'm feeling yet.`;
                 console.log('🔓 [STREAM] Dispatched maya-voice-end');
               }
 
-              // Resume mic after cooldown with auto-restart
+              // Resume mic after cooldown — single clean attempt, no retry loop
+              // 🎙️ POLICY: ContinuousConversation owns restart logic (handsFree gating + backoff)
+              // OracleConversation just clears the blocking state and lets CC decide
               console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
               setTimeout(() => {
                 setIsMicrophonePaused(false);
+                isMicrophonePausedRef.current = false;
                 console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
 
-                // 🔥 FIX: Force React to flush state updates before attempting mic restart
-                // Using requestAnimationFrame ensures we're after the React render cycle
-                requestAnimationFrame(() => {
+                // Check if hands-free is active
+                const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+
+                if (isHandsFree && voiceMicRef.current?.startListening) {
+                  // Hands-free: single restart attempt after React flush
                   requestAnimationFrame(() => {
-                    // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
-                    const attemptMicRestart = (attempt: number) => {
-                      if (attempt > 8) {
-                        console.log('⚠️ [STREAM] Mic restart failed after 8 attempts - forcing state reset');
-                        // 🔥 RECOVERY: Force reset all blocking states and try one more time
-                        setIsProcessing(false);
-                        setIsResponding(false);
-                        setIsAudioPlaying(false);
-                        setIsMicrophonePaused(false);
-                        isProcessingRef.current = false;
-                        isRespondingRef.current = false;
-                        isAudioPlayingRef.current = false;
-                        isMicrophonePausedRef.current = false;
-                        // Final attempt after forced reset
-                        setTimeout(() => {
-                          if (voiceMicRef.current?.startListening) {
-                            console.log('🎤 [STREAM] Final attempt after state reset...');
-                            setIsMuted(false);
-                            voiceMicRef.current.startListening({ forceOverride: true });
-                          }
-                        }, 500);
-                        return;
-                      }
-
-                      if (voiceMicRef.current?.startListening) {
-                        // Check ALL blocking conditions including mic pause state
-                        const canRestart = !isProcessingRef.current &&
-                                           !isRespondingRef.current &&
-                                           !isAudioPlayingRef.current &&
-                                           !isMicrophonePausedRef.current;
-
-                        console.log(`🔍 [STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
-
-                        if (canRestart) {
-                          setIsMuted(false);
-                          console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
-                          voiceMicRef.current.startListening({ forceOverride: true });
-                          // Verify mic actually started after a brief delay
-                          setTimeout(() => {
-                            if (voiceMicRef.current?.isListening) {
-                              console.log('✅ [STREAM] Microphone auto-resumed successfully');
-                            } else {
-                              console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                              if (attempt < 8) {
-                                setTimeout(() => attemptMicRestart(attempt + 1), 400);
-                              }
-                            }
-                          }, 150);
-                        } else {
-                          console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
-                          setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                        }
-                      } else {
-                        console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
-                      }
-                    };
-
-                    // Start first attempt immediately after React render cycle
-                    attemptMicRestart(1);
+                    if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
+                      setIsMuted(false);
+                      console.log('🎤 [STREAM] Hands-free: requesting mic restart');
+                      voiceMicRef.current?.startListening({ forceOverride: true });
+                    }
                   });
-                });
+                } else {
+                  // Push-to-talk (default): just clear state, user taps when ready
+                  console.log('🎤 [STREAM] Push-to-talk mode - mic idle, ready for user tap');
+                }
               }, streamingCooldownMs);
             },
           });
@@ -4819,14 +4926,27 @@ I'm not sure what I'm feeling yet.`;
         // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
         integrity,
         lensSwitchOptions,
+        // 🌀 STATE VECTOR: Consciousness state reading for this turn
+        stateVector: responseData.stateVector || null,
+        // 🌿 PRACTICE: Recommended practice from state vector routing
+        practiceRecommendation: responseData.practiceRecommendation || null,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
             tool: wisdomRouting.tool,
             meta: wisdomRouting.meta
           } : undefined
-        }
+        },
+        // 🚪 AIN: Knowledge Gate source well weighting
+        ainState: responseData.ainState || null,
+        // 🏛️ AIN: Consultation council results
+        consultation: responseData.consultation || null,
       };
+
+      // 🌀 AIN: Track field wisdom presence at conversation level
+      if (responseData.fieldState?.wisdomPresent) {
+        setFieldWisdomPresent(true);
+      }
 
       // Trigger wisdom tool reveal if activated
       if (wisdomRouting?.activated && wisdomRouting.tool) {
@@ -5558,44 +5678,49 @@ I'm not sure what I'm feeling yet.`;
       await appendTranscriptEntry(t, 'self');
     }
 
-    // 🎤 CONVERSATION STYLE COMMANDS (classic/walking/adaptive) - legacy system
-    const commandResult = detectVoiceCommand(t);
-    if (commandResult.detected && commandResult.mode) {
-      console.log(`🔄 Voice command detected: switching to ${commandResult.mode} mode`);
+    // 🎯 MAIA COMMAND DETECTION: mode/lens/style switching (voice path)
+    // Uses the same unified detector as the text path.
+    const voiceMaiaResult = detectMaiaCommands(t);
+    if (voiceMaiaResult.commands.length > 0) {
+      for (const cmd of voiceMaiaResult.commands) {
+        if (cmd.type === 'mode') {
+          const newListeningMode =
+            cmd.mode === 'talk' ? 'normal' as const :
+            cmd.mode === 'care' ? 'patient' as const :
+            cmd.mode === 'scribe' ? 'session' as const :
+            cmd.mode === 'sanctuary' ? 'normal' as const :
+            'normal' as const;
+          setListeningMode(newListeningMode);
+          if (cmd.mode === 'sanctuary') setIsSanctuary(true);
+          else setIsSanctuary(false);
+          console.log(`🔄 [Voice Command] Mode → ${cmd.mode}`);
+        }
+        if (cmd.type === 'lens') {
+          setCounselFramework(cmd.lens);
+          console.log(`🔄 [Voice Command] Lens → ${cmd.lens}`);
+        }
+        if (cmd.type === 'style') {
+          localStorage.setItem('conversation_mode', cmd.style);
+          window.dispatchEvent(new Event('conversationStyleChanged'));
+          console.log(`🔄 [Voice Command] Style → ${cmd.style}`);
+        }
+      }
 
-      // Save new mode
-      localStorage.setItem('conversation_mode', commandResult.mode);
-      window.dispatchEvent(new Event('conversationStyleChanged'));
+      const confirmation = getMaiaCommandConfirmation(voiceMaiaResult.commands);
 
-      // Get confirmation message
-      const confirmation = getModeConfirmation(commandResult.mode);
-
-      // If command was standalone (no other text), just acknowledge and return
-      if (isOnlyModeSwitch(t)) {
-        console.log('✅ Mode switch confirmed, no additional message to process');
-
-        // Speak confirmation if voice is enabled
-        if (maiaReady && maiaSpeak && !isMuted) {
+      // Command-only: acknowledge and return
+      if (voiceMaiaResult.onlyCommands) {
+        console.log('✅ [Voice Command] Command-only, no content to process');
+        if (confirmation && maiaReady && maiaSpeak && !isMuted) {
           await maiaSpeak(confirmation);
         }
-
-        // Show visual confirmation
-        toast.success(confirmation);
+        if (confirmation) toast.success(confirmation);
         return;
       }
 
-      // If there's additional text, show confirmation but continue processing
-      if (commandResult.cleanedText.length > 0) {
-        toast.success(confirmation);
-        // Continue with cleaned text below
-      }
-
-      // Use cleaned text (command stripped out) for processing
-      const textToProcess = commandResult.cleanedText || t;
-      if (!textToProcess) return;
-
-      // Continue with normal processing using cleaned text
-      transcript = textToProcess;
+      // Command + content: show confirmation, continue with cleaned text
+      if (confirmation) toast.success(confirmation);
+      transcript = voiceMaiaResult.cleanedText;
     }
 
     // FILTER: Ignore empty or punctuation-only transcripts
@@ -6696,6 +6821,13 @@ I'm not sure what I'm feeling yet.`;
                     isInterrupt,
                   });
                   toast('🎤 Activating voice...', { duration: 2000 });
+                  // 📋 Once-per-session micro-toast: remind user of tap-to-talk default
+                  if (!hasShownVoiceReentryToastRef.current) {
+                    hasShownVoiceReentryToastRef.current = true;
+                    setTimeout(() => {
+                      toast('👆 Tap-to-talk · hands-free resets when you mute', { duration: 3000 });
+                    }, 2200); // Show after "Activating voice" toast fades
+                  }
                   setIsMuted(false);
                   setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
                   // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
@@ -6760,6 +6892,7 @@ I'm not sure what I'm feeling yet.`;
                   // Stop listening - user explicitly exiting voice mode
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
+                  // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
                   voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
@@ -7381,6 +7514,9 @@ I'm not sure what I'm feeling yet.`;
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Hands-free toggle removed — holoflower IS the tap-to-talk affordance.
+                   Default is hands-free; user taps holoflower to mute/unmute. */}
               </div>
             )}
 
@@ -7469,6 +7605,12 @@ I'm not sure what I'm feeling yet.`;
                bottom: showChatInterface ? '220px' : '180px',
                overflow: 'hidden'
              }}>
+          {/* 🌀 AIN: Collective field indicator */}
+          {fieldWisdomPresent && (
+            <div className="flex justify-end pr-4 pb-1">
+              <FieldStateIndicator wisdomPresent={fieldWisdomPresent} />
+            </div>
+          )}
           <div className="h-full overflow-y-scroll overflow-x-hidden pr-2 mobile-scroll"
                style={{
                  scrollBehavior: 'smooth',
@@ -7519,8 +7661,18 @@ I'm not sure what I'm feeling yet.`;
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                          {message.role === 'user' ? (userName || 'You') : assistantName}
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                            {message.role === 'user' ? (userName || 'You') : assistantName}
+                          </div>
+                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
+                          {message.role === 'oracle' && message.ainState && (
+                            <SourceHalo
+                              sourceMix={message.ainState.sourceMix}
+                              awarenessLevel={message.ainState.awarenessLevel}
+                              awarenessDescription={message.ainState.awarenessDescription}
+                            />
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-maia-spice-400
                                       opacity-0 group-hover:opacity-100 group-active:opacity-100
@@ -7551,6 +7703,24 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
+                      {/* 🌀 STATE CARD: Consciousness state reading (mode-aware) */}
+                      {/* Care = full (element + kairos + movement + practice) */}
+                      {/* Talk = light (kairos + movement only — phenomenological, not prescriptive) */}
+                      {/* Scribe = structural (full data, framed as session metadata) */}
+                      {message.role === 'oracle' && message.stateVector && (
+                        <div className="mt-3">
+                          <StateCard
+                            stateVector={message.stateVector}
+                            practice={message.practiceRecommendation}
+                            displayMode={
+                              maiaMode.mode === 'care' ? 'full' :
+                              maiaMode.mode === 'scribe' ? 'structural' :
+                              'light'
+                            }
+                          />
+                        </div>
+                      )}
+
                       {/* Wisdom Translation — removed from per-message rendering.
                          TODO: Reintroduce as session-level action or long-press context option.
                          Component preserved at: wisdom/TranslateMessageButton.tsx */}
@@ -7568,6 +7738,11 @@ I'm not sure what I'm feeling yet.`;
                             Send as SMS
                           </button>
                         </div>
+                      )}
+
+                      {/* 🏛️ AIN: Council consultation results panel */}
+                      {message.role === 'oracle' && message.consultation && (
+                        <CouncilInsightPanel consultation={message.consultation} />
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
@@ -7998,6 +8173,11 @@ I'm not sure what I'm feeling yet.`;
               2000                                    // Talk mode: 2 seconds (natural conversation pace)
             }
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
+            onHandsFreeFallback={() => {
+              setIsHandsFreeMode(false);
+              toast('Hands-free paused — tap to talk', { duration: 2500 });
+              console.log('🔄 [HandsFree] Auto-fallback to push-to-talk (backoff exhausted)');
+            }}
           />
         </div>
       )}
@@ -8312,7 +8492,9 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showSessionSelector}
         onClose={() => onCloseSessionSelector?.()}
         onSelect={handleDurationSelected}
-        defaultDuration={50}
+        defaultDuration={youthMaxSessionMinutes || 50}
+        maxDuration={isTeenUser ? youthMaxSessionMinutes : undefined}
+        tierLabel={isTeenUser ? youthTierLabel : undefined}
       />
 
       {/* 💾 Resume Session Prompt Modal */}
