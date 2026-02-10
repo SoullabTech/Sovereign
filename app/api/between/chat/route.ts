@@ -1121,8 +1121,9 @@ This user is in guest mode (no authenticated identity).
     (normalizedMeta as Record<string, unknown>).awarenessLevel = awarenessLevel;
 
     // 🚪 AIN KNOWLEDGE GATE: Score 5 wells × awareness level (local regex, zero latency)
+    // Sanctuary suppression: no meta overlays in sanctuary for visual clarity
     let knowledgeGateResult: { source_mix: SourceContribution[]; awarenessState: any; awarenessDescription: string } | null = null;
-    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1') {
+    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
       try {
         const kgInput: KnowledgeGateInput = {
           userId: effectiveUserId,
