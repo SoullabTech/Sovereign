@@ -12,6 +12,63 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { VectorEmbeddingService } from '@/lib/vector-embeddings';
+import crypto from 'crypto';
+
+// Map quick journal entry types to episodic memory content types
+const JOURNAL_TO_MEMORY_TYPE: Record<string, string> = {
+  dream: 'Dream',
+  day: 'Journal',
+  handwriting: 'Journal',
+};
+
+// Fire-and-forget: write to episodic_memories for resonance search
+async function bridgeToEpisodicMemory(
+  userId: string,
+  entryType: string,
+  content: string
+) {
+  try {
+    const prefix = JOURNAL_TO_MEMORY_TYPE[entryType] || 'Journal';
+    const firstLine = content.trim().split(/[\n.!?]/)[0].slice(0, 80);
+    const title = `${prefix}: ${firstLine}`;
+    const episodeId = `quick-${entryType}-${crypto.randomUUID()}`;
+
+    let semanticVector: number[] | null = null;
+    try {
+      const embedder = new VectorEmbeddingService({
+        openaiApiKey: process.env.OPENAI_API_KEY,
+        dimension: 768,
+      });
+      semanticVector = await embedder.getEmbedding(`${title} ${content}`);
+    } catch {
+      // Non-fatal: text fallback still works for resonance
+    }
+
+    await query(
+      `INSERT INTO episodic_memories
+        (user_id, episode_id, experience_title, experience_description,
+         experience_context, significance, emotional_intensity,
+         semantic_vector, timestamp)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW())`,
+      [
+        userId,
+        episodeId,
+        title,
+        content.trim(),
+        `quick_journal_${entryType}`,
+        entryType === 'dream' ? 7 : 5,
+        0.5,
+        semanticVector ? JSON.stringify(semanticVector) : '[]',
+      ]
+    );
+
+    console.log(`[QuickJournal→Memory] Bridged ${entryType} → ${episodeId}`);
+  } catch (err) {
+    // Non-fatal: journal save already succeeded
+    console.error('[QuickJournal→Memory] Bridge failed (journal still saved):', err);
+  }
+}
 
 // Skip during static export (Capacitor builds)
 
@@ -128,6 +185,11 @@ export async function POST(request: NextRequest) {
     const entry = result.rows[0];
 
     console.log(`✅ [QuickJournal] ${entryType} entry saved for user ${userId}`);
+
+    // Bridge to episodic memory for resonance search (fire-and-forget)
+    if (content.trim().length >= 10) {
+      bridgeToEpisodicMemory(userId, entryType, content).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,
