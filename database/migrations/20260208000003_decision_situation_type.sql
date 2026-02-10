@@ -3,7 +3,7 @@
 -- its framings to the practitioner's field of responsibility.
 
 ALTER TABLE studio_decisions
-  ADD COLUMN situation_type TEXT DEFAULT 'leadership';
+  ADD COLUMN IF NOT EXISTS situation_type TEXT DEFAULT 'leadership';
 
 COMMENT ON COLUMN studio_decisions.situation_type IS
   'Field orientation: individual, relational, group, leadership, self';
