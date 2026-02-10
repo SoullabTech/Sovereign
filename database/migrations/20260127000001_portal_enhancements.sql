@@ -17,14 +17,14 @@ BEGIN
   END IF;
 END $$;
 
--- Add specialties column (JSONB array)
+-- Add specialties column (text array — matches earlier migrations 20260118/20260122)
 DO $$
 BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'practitioners' AND column_name = 'specialties'
   ) THEN
-    ALTER TABLE practitioners ADD COLUMN specialties JSONB DEFAULT '[]'::jsonb;
+    ALTER TABLE practitioners ADD COLUMN specialties TEXT[] DEFAULT '{}';
   END IF;
 END $$;
 
@@ -157,7 +157,7 @@ Through natal charts, transits, and synastry, I help you understand your soul''s
 
 Whether you''re facing a Saturn return, exploring your life purpose, or seeking guidance through a challenging transit, I''m here to illuminate your path.',
   NULL, -- Photo URL to be added later
-  '["Evolutionary Astrology", "Natal Charts", "Transit Analysis", "Synastry", "Life Cycles"]'::jsonb,
+  ARRAY['Evolutionary Astrology', 'Natal Charts', 'Transit Analysis', 'Synastry', 'Life Cycles']::text[],
   15,
   'active',
   '{
