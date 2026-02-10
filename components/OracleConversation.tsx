@@ -451,6 +451,8 @@ interface ConversationMessage {
     awarenessLevel: number;
     awarenessConfidence: number;
     awarenessDescription?: string;
+    rawScores?: Record<string, number> | null;
+    derived?: 'gate' | 'fallback';
   } | null;
   // 🏛️ AIN: Consultation council results for this turn
   consultation?: {
@@ -7665,12 +7667,14 @@ I'm not sure what I'm feeling yet.`;
                           <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                             {message.role === 'user' ? (userName || 'You') : assistantName}
                           </div>
-                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
-                          {message.role === 'oracle' && message.ainState && (
+                          {/* 🚪 AIN: Knowledge Gate source well indicator (never silently disappears) */}
+                          {message.role === 'oracle' && (
                             <SourceHalo
-                              sourceMix={message.ainState.sourceMix}
-                              awarenessLevel={message.ainState.awarenessLevel}
-                              awarenessDescription={message.ainState.awarenessDescription}
+                              sourceMix={message.ainState?.sourceMix ?? [{ source: 'LLM_CORE', weight: 1 }]}
+                              awarenessLevel={message.ainState?.awarenessLevel ?? 1}
+                              awarenessDescription={message.ainState?.awarenessDescription}
+                              rawScores={message.ainState?.rawScores}
+                              derived={message.ainState?.derived}
                             />
                           )}
                         </div>

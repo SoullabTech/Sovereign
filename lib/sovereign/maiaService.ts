@@ -77,6 +77,7 @@ import {
   parseStateVector,
   storeStateVector,
   routePractice,
+  enforceStateVectorPresence,
   type StateVector,
   type PracticeRecommendation,
 } from '../maia/state-vector';
@@ -491,6 +492,8 @@ export type MaiaResponse = {
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
   stateVector?: StateVector;                  // 🌀 State vector reading from this turn
   practiceRecommendation?: PracticeRecommendation;  // 🌿 Practice recommendation from state vector
+  stateVectorDerived?: 'model' | 'fallback';  // 🌀 QA: was stateVector from LLM or fallback builder?
+  practiceDerived?: 'model' | 'fallback';      // 🌿 QA: was practiceRec from LLM routing or fallback?
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
@@ -3100,14 +3103,26 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       responseMetadata.decisionId ||
       responseMetadata.deliberationId;
 
+    // 🌀 STATE VECTOR NEVER NULL: Enforce presence before returning
+    // If model didn't produce a STATE_VECTOR block, build a fallback from user input
+    const enforced = enforceStateVectorPresence({
+      parsedStateVector,
+      practiceRec,
+      userInput: input,
+      memberId: effectiveUserId || undefined,
+      sessionId,
+    });
+
     return {
       text,
       processingProfile,
       processingTimeMs,
       audio: audioResponse,
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
-      stateVector: parsedStateVector || undefined,
-      practiceRecommendation: practiceRec || undefined,
+      stateVector: enforced.stateVector,
+      practiceRecommendation: enforced.practiceRecommendation,
+      stateVectorDerived: enforced.stateVectorDerived,
+      practiceDerived: enforced.practiceDerived,
       metadata: hasMetadata ? responseMetadata : undefined
     };
 

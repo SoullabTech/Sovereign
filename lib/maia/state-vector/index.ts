@@ -67,6 +67,13 @@ export { STATE_VECTOR_OUTPUT_CONTRACT, isLikelyCheckin } from './prompt-contract
 export { routePractice } from './practice-router';
 export type { PracticeRecommendation, RecommendedDuration } from './practice-router';
 
+// Fallback builder (StateVector Never Null)
+export {
+  buildFallbackStateVector,
+  buildFallbackPractice,
+  enforceStateVectorPresence,
+} from './fallback-builder';
+
 // Storage
 export {
   storeStateVector,

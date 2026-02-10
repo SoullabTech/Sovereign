@@ -2274,7 +2274,7 @@ This user is in guest mode (no authenticated identity).
       session: {
         id: safeSessionId,
       },
-      // 🚪 AIN STATE: Knowledge Gate source mix + awareness level
+      // 🚪 AIN STATE: Safe default — SourceHalo never silently disappears
       ainState: knowledgeGateResult ? {
         sourceMix: knowledgeGateResult.source_mix.map(s => ({
           source: s.source,
@@ -2284,7 +2284,16 @@ This user is in guest mode (no authenticated identity).
         awarenessLevel: knowledgeGateResult.awarenessState.level,
         awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
         awarenessDescription: knowledgeGateResult.awarenessDescription,
-      } : null,
+        rawScores: knowledgeGateResult.rawScores || null,
+        derived: 'gate',
+      } : {
+        sourceMix: [{ source: 'LLM_CORE', weight: 1.0, notes: 'Knowledge Gate unavailable (disabled, error, or sanctuary). Defaulting to LLM_CORE.' }],
+        awarenessLevel: 1,
+        awarenessConfidence: 0.2,
+        awarenessDescription: '🌑 Baseline: Knowledge Gate inactive',
+        rawScores: null,
+        derived: 'fallback',
+      },
       // 🏛️ AIN CONSULTATION: Council deliberation results (parallel, non-blocking)
       consultation: consultationResult ? {
         council: consultationDecision?.council || 'deliberation',

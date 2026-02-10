@@ -162,12 +162,36 @@ const DURATION_LABELS: Record<string, string> = {
 
 // ── Component ──────────────────────────────────────────────────────────
 
+// Minimal fallback state vector when data is missing but we still want to render
+const FALLBACK_STATE_VECTOR: StateVectorData = {
+  primary: {
+    element: 'aether',
+    intensity: 'low',
+    polarity: 3,
+    stability: 2,
+  },
+  confidence: 0.3,
+  kairos: {
+    assessment: 'stable',
+    confidence: 0.3,
+    description: 'Stabilizing. Seeking ground.',
+  },
+  movement: {
+    entering: [],
+    exiting: [],
+    trajectory: 'still',
+    velocity: 0.1,
+  },
+};
+
 export function StateCard({ stateVector, practice, displayMode = 'full', onDismiss }: StateCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!stateVector) return null;
+  // UI guard: never blank. Use fallback if stateVector is null/undefined.
+  const sv = stateVector || FALLBACK_STATE_VECTOR;
+  const isFallback = !stateVector;
 
-  const { primary, secondary, confidence, kairos, movement } = stateVector;
+  const { primary, secondary, confidence, kairos, movement } = sv;
   const elConfig = ELEMENT_CONFIG[primary.element];
   const secConfig = secondary ? ELEMENT_CONFIG[secondary.element] : null;
   const kairosConfig = KAIROS_CONFIG[kairos.assessment];

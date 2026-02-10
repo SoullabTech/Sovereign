@@ -614,11 +614,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: orchestratorResult.text,
-      // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
+      // 🌀 STATE VECTOR: Always present (model or fallback). Never null.
       stateVector: orchestratorResult.stateVector || null,
-      // 🌿 PRACTICE: Recommended practice from state vector routing
+      stateVectorDerived: orchestratorResult.stateVectorDerived || 'model',
+      // 🌿 PRACTICE: Always present (model-routed or fallback). Never null.
       practiceRecommendation: orchestratorResult.practiceRecommendation || null,
+      practiceDerived: orchestratorResult.practiceDerived || 'model',
       // 🚪 AIN KNOWLEDGE GATE: Source well scoring (Phase 1)
+      // Safe default: SourceHalo NEVER silently disappears. If KG unavailable, show LLM_CORE baseline.
       ainState: knowledgeGateResult ? {
         sourceMix: knowledgeGateResult.source_mix.map(s => ({
           source: s.source,
@@ -628,7 +631,16 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         awarenessLevel: knowledgeGateResult.awarenessState.level,
         awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
         awarenessDescription: knowledgeGateResult.awarenessDescription,
-      } : null,
+        rawScores: knowledgeGateResult.rawScores || null,
+        derived: 'gate',
+      } : {
+        sourceMix: [{ source: 'LLM_CORE', weight: 1.0, notes: 'Knowledge Gate unavailable (disabled, error, or sanctuary). Defaulting to LLM_CORE.' }],
+        awarenessLevel: 1,
+        awarenessConfidence: 0.2,
+        awarenessDescription: '🌑 Baseline: Knowledge Gate inactive',
+        rawScores: null,
+        derived: 'fallback',
+      },
       // 🔮 Top-level provider info for easy screenshot verification
       providerUsed,
       model: modelUsed,

@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  *
  * Arc length proportional to weight. Awareness level shown as glow intensity.
  * Tap/hover reveals tooltip with well names + percentages.
+ * Dev mode: hover shows rawScores + derivation source.
  *
  * Design: Compact, ambient, non-intrusive. Sits alongside MAIA responses.
  */
@@ -30,6 +31,9 @@ interface SourceHaloProps {
   awarenessLevel: number;
   awarenessDescription?: string;
   className?: string;
+  // Dev/QA fields
+  rawScores?: Record<string, number> | null;
+  derived?: 'gate' | 'fallback';
 }
 
 // Well color mapping — matches the AIN knowledge well semantics
@@ -55,6 +59,8 @@ export function SourceHalo({
   awarenessLevel,
   awarenessDescription,
   className = '',
+  rawScores,
+  derived,
 }: SourceHaloProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -89,7 +95,7 @@ export function SourceHalo({
           width: '48px',
           boxShadow: `0 0 ${8 * glowIntensity}px ${4 * glowIntensity}px rgba(167, 139, 250, ${0.15 * glowIntensity})`,
         }}
-        title={`Awareness: L${awarenessLevel}${awarenessDescription ? ` (${awarenessDescription})` : ''}`}
+        title={`Awareness: L${awarenessLevel}${awarenessDescription ? ` (${awarenessDescription})` : ''}${derived === 'fallback' ? ' [fallback]' : ''}`}
         aria-label={`Source wells: ${significantSources.map(s => {
           const well = WELL_COLORS[s.source];
           return `${well?.label || s.source} ${Math.round(s.weight * 100)}%`;
@@ -104,7 +110,9 @@ export function SourceHalo({
               style={{
                 width: `${source.weight * 100}%`,
                 backgroundColor: well.color,
-                opacity: 0.6 + (0.4 * glowIntensity),
+                opacity: derived === 'fallback'
+                  ? 0.3 + (0.2 * glowIntensity)  // dimmer for fallback
+                  : 0.6 + (0.4 * glowIntensity),
               }}
               className="h-full transition-all duration-500"
             />
@@ -128,15 +136,26 @@ export function SourceHalo({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -4 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-0 top-full mt-2 z-50 min-w-[200px]
+            className="absolute left-0 top-full mt-2 z-50 min-w-[220px]
                        bg-[#1a1512]/95 backdrop-blur-sm border border-dune-amber/20
                        rounded-lg p-3 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="text-[10px] uppercase tracking-widest text-dune-amber/60 mb-2"
-                 style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-              Knowledge Wells
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] uppercase tracking-widest text-dune-amber/60"
+                   style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                Knowledge Wells
+              </div>
+              {derived && (
+                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full ${
+                  derived === 'gate'
+                    ? 'bg-emerald-400/10 text-emerald-400/60'
+                    : 'bg-amber-400/10 text-amber-400/60'
+                }`}>
+                  {derived}
+                </span>
+              )}
             </div>
 
             {/* Source breakdown */}
@@ -173,6 +192,28 @@ export function SourceHalo({
                 );
               })}
             </div>
+
+            {/* Raw scores (dev detail — shows "why" behind the mix) */}
+            {rawScores && Object.keys(rawScores).length > 0 && (
+              <div className="mt-2 pt-2 border-t border-dune-amber/10">
+                <div className="text-[9px] uppercase tracking-widest text-white/30 mb-1">
+                  Raw Scores (pre-normalization)
+                </div>
+                <div className="space-y-0.5">
+                  {Object.entries(rawScores)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([source, score]) => {
+                      const well = WELL_COLORS[source];
+                      return (
+                        <div key={source} className="flex items-center gap-2 text-[10px]">
+                          <span className="text-white/40 flex-1">{well?.label || source}</span>
+                          <span className="font-mono text-white/50">{typeof score === 'number' ? score.toFixed(2) : score}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {/* Awareness footer */}
             <div className="mt-2 pt-2 border-t border-dune-amber/10">
