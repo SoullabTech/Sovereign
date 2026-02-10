@@ -1102,6 +1102,18 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🏢 [FAST] Studio addendum applied: practitioner context injected`);
   }
 
+  // 🚪 KNOWLEDGE GATE: AIN source well modulation
+  const knowledgeGateAddendum = (meta as any)?.knowledgeGateAddendum as string | undefined;
+  if (knowledgeGateAddendum) {
+    console.log(`🚪 [FAST] Knowledge Gate addendum applied: source well modulation injected`);
+  }
+
+  // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
+  const fieldWisdomAddendum = (meta as any)?.fieldWisdomAddendum as string | undefined;
+  if (fieldWisdomAddendum) {
+    console.log(`🌀 [FAST] Field Wisdom addendum applied: collective intelligence injected`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -1118,6 +1130,12 @@ The current user has not provided their name. Address them as "friend" or "there
   // 🌀 STATE VECTOR: Inject estimation contract when input looks like a check-in
   const stateVectorContract = isLikelyCheckin(input) ? '\n\n' + STATE_VECTOR_OUTPUT_CONTRACT : '';
 
+  // 🌱 YOUTH DEVELOPMENTAL CONTEXT: Inject teen safety system prompt when present
+  const teenSupportContext = (meta as any)?.teenSupportContext;
+  const youthPromptAddendum = teenSupportContext?.teenSystemPrompt
+    ? '\n\n' + teenSupportContext.teenSystemPrompt
+    : '';
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   // 🛡️ MEMORY AUTHORITY BLOCK MUST BE FIRST - prevents identity/memory disclaimers
   let baseSystemPrompt = `${MEMORY_AUTHORITY_BLOCK}
@@ -1128,7 +1146,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${stateVectorContract}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1334,6 +1352,12 @@ async function corePathResponse(
     maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
     // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
     scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
+    // 🚪 KNOWLEDGE GATE: AIN source well modulation
+    knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+    // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
+    consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
+    // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
+    fieldWisdomAddendum: (meta as any)?.fieldWisdomAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -1854,6 +1878,12 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         wuxingSnapshotAddendum: (meta as any)?.wuxingSnapshotAddendum as string | undefined,
         // 🏢 STUDIO: Practitioner prompt cap
         studioAddendum: (meta as any)?.studioAddendum as string | undefined,
+        // 🚪 KNOWLEDGE GATE: AIN source well modulation
+        knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+        // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
+        consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
+        // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
+        fieldWisdomAddendum: (meta as any)?.fieldWisdomAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

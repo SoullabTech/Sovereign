@@ -88,6 +88,12 @@ export interface MaiaContext {
   guestContextAddendum?: string;
   // 🏢 STUDIO: Practitioner prompt cap when running in Studio
   studioAddendum?: string;
+  // 🚪 KNOWLEDGE GATE: AIN source well modulation
+  knowledgeGateAddendum?: string;
+  // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
+  consultationAddendum?: string;
+  // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
+  fieldWisdomAddendum?: string;
 }
 
 /**
@@ -808,6 +814,27 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (studioSafe) {
     adaptedPrompt += `\n\n${studioSafe}`;
     console.log(`🏢 [Studio] Practitioner context injected`);
+  }
+
+  // 1️⃣6️⃣ KNOWLEDGE GATE: AIN source well modulation
+  const knowledgeGateSafe = safeAddendum(context.knowledgeGateAddendum);
+  if (knowledgeGateSafe) {
+    adaptedPrompt += `\n\n${knowledgeGateSafe}`;
+    console.log(`🚪 [Knowledge Gate] Source well modulation injected`);
+  }
+
+  // 1️⃣7️⃣ CONSULTATION: AIN council multi-perspective synthesis
+  const consultationSafe = safeAddendum(context.consultationAddendum);
+  if (consultationSafe) {
+    adaptedPrompt += `\n\n${consultationSafe}`;
+    console.log(`🏛️ [Consultation] Council insights injected`);
+  }
+
+  // 1️⃣8️⃣ FIELD WISDOM: Collective Spiralogic field intelligence
+  const fieldWisdomSafe = safeAddendum(context.fieldWisdomAddendum);
+  if (fieldWisdomSafe) {
+    adaptedPrompt += `\n\n${fieldWisdomSafe}`;
+    console.log(`🌀 [Field Wisdom] Collective intelligence injected`);
   }
 
   return adaptedPrompt.trim();

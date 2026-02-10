@@ -12,7 +12,7 @@ import { query } from '@/lib/db/postgres';
 
 export async function POST(request: NextRequest) {
   try {
-    const { memberId, step, complete } = await request.json();
+    const { memberId, step, complete, youthOnboarded } = await request.json();
 
     if (!memberId) {
       return NextResponse.json(
@@ -22,10 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (complete) {
-      // Mark onboarding as complete
+      // Mark onboarding as complete (optionally including youth onboarding)
+      const youthClause = youthOnboarded ? ', youth_onboarded = true' : '';
       await query(
         `UPDATE members
-         SET onboarded = true, onboarding_step = 'complete'
+         SET onboarded = true, onboarding_step = 'complete'${youthClause}
          WHERE id = $1`,
         [memberId]
       );
@@ -33,8 +34,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         onboarded: true,
+        youthOnboarded: youthOnboarded || false,
         step: 'complete'
       });
+    }
+
+    // Mark youth onboarding complete (separate from main onboarding)
+    if (youthOnboarded) {
+      await query(
+        'UPDATE members SET youth_onboarded = true WHERE id = $1',
+        [memberId]
+      );
+      return NextResponse.json({ success: true, youthOnboarded: true });
     }
 
     if (step) {

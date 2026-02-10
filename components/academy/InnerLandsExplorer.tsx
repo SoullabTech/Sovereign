@@ -37,6 +37,7 @@ import {
 interface InnerLandsExplorerProps {
   onClose: () => void;
   onAskMaia?: (content: string) => void;
+  developmentalTier?: 'under13' | 'tier2' | 'tier3' | 'adult';
 }
 
 type LandId = 'map' | 'watchtower' | 'furnace' | 'undercroft' | 'well' | 'crossroads' | 'forge';
@@ -343,12 +344,31 @@ function TraceMark({ color }: { color: string }) {
   );
 }
 
-export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerProps) {
+export function InnerLandsExplorer({ onClose, onAskMaia, developmentalTier }: InnerLandsExplorerProps) {
   const [currentView, setCurrentView] = useState<LandId>('map');
   const [selectedEncounter, setSelectedEncounter] = useState<number | null>(null);
   const [traceStore, setTraceStore] = useState<InnerLandsTraceStore>({ version: 1, entries: {} });
 
   const currentLand = LANDS.find(l => l.id === currentView);
+
+  // Determine which territories are locked based on developmental tier
+  const isLandLocked = (landId: LandId): boolean => {
+    if (!developmentalTier || developmentalTier === 'adult') return false;
+    if (landId === 'map') return false;
+    if (landId === 'undercroft') {
+      // Under13 + tier2: undercroft locked (not ready)
+      // Tier3: accessible
+      return developmentalTier === 'under13' || developmentalTier === 'tier2';
+    }
+    return false;
+  };
+
+  const getLockMessage = (landId: LandId): string => {
+    if (landId === 'undercroft') {
+      return 'This territory isn\'t open to you yet. It takes time to be ready for what\'s down here \u2014 and that\'s not a weakness.';
+    }
+    return 'Not available yet.';
+  };
 
   // Load trace store on mount
   useEffect(() => {
@@ -438,21 +458,30 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
               {LANDS.map((land) => {
                 const Icon = land.icon;
                 const touched = landHasTrace(land.id);
+                const locked = isLandLocked(land.id);
                 return (
                   <motion.button
                     key={land.id}
-                    onClick={() => setCurrentView(land.id)}
-                    className={`p-4 rounded-xl bg-gradient-to-br ${land.bgGradient} border border-white/10
-                             hover:border-white/20 transition-all text-left relative`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (locked) return; // Don't navigate to locked lands
+                      setCurrentView(land.id);
+                    }}
+                    className={`p-4 rounded-xl bg-gradient-to-br ${land.bgGradient} border ${
+                      locked
+                        ? 'border-white/5 opacity-50 cursor-not-allowed'
+                        : 'border-white/10 hover:border-white/20'
+                    } transition-all text-left relative`}
+                    whileHover={locked ? {} : { scale: 1.02 }}
+                    whileTap={locked ? {} : { scale: 0.98 }}
                   >
-                    <Icon className={`w-6 h-6 ${land.color} mb-2`} />
+                    <Icon className={`w-6 h-6 ${locked ? 'text-stone-600' : land.color} mb-2`} />
                     <div className="flex items-center gap-1.5">
-                      {touched && <TraceMark color={land.color} />}
-                      <span className="text-white font-medium text-sm">{land.name}</span>
+                      {touched && !locked && <TraceMark color={land.color} />}
+                      <span className={`font-medium text-sm ${locked ? 'text-stone-500' : 'text-white'}`}>{land.name}</span>
                     </div>
-                    <div className="text-stone-400 text-xs mt-0.5">{land.tagline}</div>
+                    <div className={`text-xs mt-0.5 ${locked ? 'text-stone-600' : 'text-stone-400'}`}>
+                      {locked ? 'Not yet' : land.tagline}
+                    </div>
                   </motion.button>
                 );
               })}

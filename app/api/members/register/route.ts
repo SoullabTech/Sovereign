@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { passkey, username, password, name, email, preferredName } = body;
+    const { passkey, username, password, name, email, preferredName, birthDate } = body;
 
     console.log(`[MEMBERS] Registration attempt: passkey=${passkey}, username=${username}`);
 
@@ -196,13 +196,14 @@ export async function POST(request: NextRequest) {
     const displayName = name || username;
 
     // Try full insert first (with all columns)
+    // birth_date triggers auto-computation of developmental_tier via DB trigger
     let result = await safeQuery(
       `INSERT INTO members (
-         passkey, username, password_hash, name, email, onboarding_step
+         passkey, username, password_hash, name, email, onboarding_step, birth_date
        )
-       VALUES ($1, $2, $3, $4, $5, 'test-elemental')
-       RETURNING id, username, name, onboarded, onboarding_step, created_at`,
-      [normalizedPasskey, cleanUsername, passwordHash, displayName, email]
+       VALUES ($1, $2, $3, $4, $5, 'test-elemental', $6)
+       RETURNING id, username, name, onboarded, onboarding_step, created_at, developmental_tier, guardian_required`,
+      [normalizedPasskey, cleanUsername, passwordHash, displayName, email, birthDate || null]
     );
 
     if (result.error) {
@@ -254,6 +255,8 @@ export async function POST(request: NextRequest) {
         name: member.name,
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
+        developmentalTier: member.developmental_tier || null,
+        guardianRequired: member.guardian_required || false,
       }
     }, { headers: corsHeaders });
 

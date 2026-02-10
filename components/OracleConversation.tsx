@@ -43,6 +43,9 @@ import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { StateCard, type StateCardDisplayMode } from './maia/StateCard';
+import { SourceHalo } from './ain/SourceHalo';
+import { CouncilInsightPanel } from './ain/CouncilInsightPanel';
+import { FieldStateIndicator } from './ain/FieldStateIndicator';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
@@ -189,6 +192,8 @@ import {
   type TeenSafetyCheck
 } from '@/lib/safety/teenSupportIntegration';
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
+// 🌱 YOUTH DEVELOPMENTAL TIER - age-based constraints and session limits
+import { computeTierFromAge, getTierConfig, isYouthTier, type DevelopmentalTier } from '@/lib/youth/ageTierEngine';
 
 // Time-aware greeting helper for welcome screen
 function getTimeGreeting(): string {
@@ -440,6 +445,23 @@ interface ConversationMessage {
       meta?: { agentName: string | null; patternType: string | null };
     };
   };
+  // 🚪 AIN: Knowledge Gate source well weighting for this turn
+  ainState?: {
+    sourceMix: Array<{ source: string; weight: number; notes?: string }>;
+    awarenessLevel: number;
+    awarenessConfidence: number;
+    awarenessDescription?: string;
+  } | null;
+  // 🏛️ AIN: Consultation council results for this turn
+  consultation?: {
+    council: string;
+    insights: string[];
+    tensions: string[];
+    recommendation: string;
+    framingsUsed: string[];
+    emergenceRating: 'recombination' | 'synthesis' | 'breakthrough';
+    framingWeights?: Record<string, number> | null;
+  } | null;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -1224,6 +1246,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [smoothedAudioLevel, setSmoothedAudioLevel] = useState(0);
   const [coherenceLevel, setCoherenceLevel] = useState(0.5);
   const [coherenceShift, setCoherenceShift] = useState<CoherenceShift>('stable');
+  const [fieldWisdomPresent, setFieldWisdomPresent] = useState(false);
   const [shadowPetals, setShadowPetals] = useState<string[]>([]);
   const [showBreakthrough, setShowBreakthrough] = useState(false);
 
@@ -1240,6 +1263,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [teenProfile, setTeenProfile] = useState<TeenProfile | undefined>();
   const [isTeenUser, setIsTeenUser] = useState(false);
   const [lastSafetyCheck, setLastSafetyCheck] = useState<TeenSafetyCheck | null>(null);
+  const [youthMaxSessionMinutes, setYouthMaxSessionMinutes] = useState<number | undefined>();
+  const [youthTierLabel, setYouthTierLabel] = useState<string | undefined>();
 
   // Calculate user age and determine if teen
   const userAge = propUserAge || (userBirthDate ? calculateAge(userBirthDate) : null);
@@ -2689,6 +2714,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (userAge !== null && userAge >= 13 && userAge <= 18) {
       setIsTeenUser(true);
 
+      // 🌱 Compute developmental tier for age-appropriate constraints
+      const tier = computeTierFromAge(userAge);
+      const tierConfig = getTierConfig(tier);
+      console.log(`🌱 Developmental tier: ${tier} (${tierConfig.label}), max session: ${tierConfig.maxSessionMinutes}min`);
+      setYouthMaxSessionMinutes(tierConfig.maxSessionMinutes);
+      setYouthTierLabel(tierConfig.label);
+
       // Load teen profile from localStorage
       const userData = getUserData();
       if (userData) {
@@ -4093,6 +4125,26 @@ I'm not sure what I'm feeling yet.`;
       if (supportResponse.crisisMode) {
         console.log('🚨 [CRISIS MODE] MAIA entering crisis companion mode - staying present with user');
 
+        // Show visible crisis resource card in chat
+        const crisisResourceMessage: ConversationMessage = {
+          id: `crisis-resources-${Date.now()}`,
+          role: 'oracle',
+          text: '---\n' +
+            '**You don\'t have to handle this alone.**\n\n' +
+            'Right now, you can reach someone who gets it:\n\n' +
+            '**988 Suicide & Crisis Lifeline** \u2014 Call or text 988 (24/7)\n\n' +
+            '**Crisis Text Line** \u2014 Text HOME to 741741 (24/7)\n\n' +
+            '**Trevor Project** (LGBTQ+) \u2014 Call 1-866-488-7386 or text START to 678678\n\n' +
+            (safetyCheck.isED ? '**NEDA Helpline** \u2014 Call 1-800-931-2237 or text NEDA to 741741\n\n' : '') +
+            'If someone is hurting you, tell a trusted adult. You can also call **Childhelp** at 1-800-422-4453.\n\n' +
+            '*I\'m still here. We can keep talking.*\n' +
+            '---',
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, crisisResourceMessage));
+        onMessageAddedRef.current?.(crisisResourceMessage);
+
         // Alert team for human check-in
         if (userId) {
           const { alertSoullabTeam } = await import('@/lib/safety/teenSupportIntegration');
@@ -4118,10 +4170,22 @@ I'm not sure what I'm feeling yet.`;
         console.log('🌟 [CRISIS COMPANION] MAIA will respond with crisis-aware compassion');
       }
 
-      // If scaffolding suggestions available, log them (could be displayed in UI)
-      if (supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
+      // If scaffolding suggestions available, show them in chat
+      if (!supportResponse.crisisMode && supportResponse.scaffoldSuggestions && supportResponse.scaffoldSuggestions.length > 0) {
         console.log('🌟 [TEEN SUPPORT] Scaffolding suggestions:', supportResponse.scaffoldSuggestions);
-        // TODO: Could display these in the UI as helpful strategies
+        // Show scaffold suggestions as a gentle system message
+        const scaffoldText = supportResponse.scaffoldSuggestions
+          .map(s => `\u2022 ${s}`)
+          .join('\n');
+        const scaffoldMessage: ConversationMessage = {
+          id: `scaffold-${Date.now()}`,
+          role: 'oracle',
+          text: `*Some things that might help right now:*\n\n${scaffoldText}`,
+          timestamp: new Date(),
+          source: 'system'
+        };
+        setMessages(prev => appendMessageCapped(prev, scaffoldMessage));
+        onMessageAddedRef.current?.(scaffoldMessage);
       }
 
       // Log context that will be added to MAIA's system prompt
@@ -4872,8 +4936,17 @@ I'm not sure what I'm feeling yet.`;
             tool: wisdomRouting.tool,
             meta: wisdomRouting.meta
           } : undefined
-        }
+        },
+        // 🚪 AIN: Knowledge Gate source well weighting
+        ainState: responseData.ainState || null,
+        // 🏛️ AIN: Consultation council results
+        consultation: responseData.consultation || null,
       };
+
+      // 🌀 AIN: Track field wisdom presence at conversation level
+      if (responseData.fieldState?.wisdomPresent) {
+        setFieldWisdomPresent(true);
+      }
 
       // Trigger wisdom tool reveal if activated
       if (wisdomRouting?.activated && wisdomRouting.tool) {
@@ -7532,6 +7605,12 @@ I'm not sure what I'm feeling yet.`;
                bottom: showChatInterface ? '220px' : '180px',
                overflow: 'hidden'
              }}>
+          {/* 🌀 AIN: Collective field indicator */}
+          {fieldWisdomPresent && (
+            <div className="flex justify-end pr-4 pb-1">
+              <FieldStateIndicator wisdomPresent={fieldWisdomPresent} />
+            </div>
+          )}
           <div className="h-full overflow-y-scroll overflow-x-hidden pr-2 mobile-scroll"
                style={{
                  scrollBehavior: 'smooth',
@@ -7582,8 +7661,18 @@ I'm not sure what I'm feeling yet.`;
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                          {message.role === 'user' ? (userName || 'You') : assistantName}
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                            {message.role === 'user' ? (userName || 'You') : assistantName}
+                          </div>
+                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
+                          {message.role === 'oracle' && message.ainState && (
+                            <SourceHalo
+                              sourceMix={message.ainState.sourceMix}
+                              awarenessLevel={message.ainState.awarenessLevel}
+                              awarenessDescription={message.ainState.awarenessDescription}
+                            />
+                          )}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-maia-spice-400
                                       opacity-0 group-hover:opacity-100 group-active:opacity-100
@@ -7649,6 +7738,11 @@ I'm not sure what I'm feeling yet.`;
                             Send as SMS
                           </button>
                         </div>
+                      )}
+
+                      {/* 🏛️ AIN: Council consultation results panel */}
+                      {message.role === 'oracle' && message.consultation && (
+                        <CouncilInsightPanel consultation={message.consultation} />
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
@@ -8398,7 +8492,9 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showSessionSelector}
         onClose={() => onCloseSessionSelector?.()}
         onSelect={handleDurationSelected}
-        defaultDuration={50}
+        defaultDuration={youthMaxSessionMinutes || 50}
+        maxDuration={isTeenUser ? youthMaxSessionMinutes : undefined}
+        tierLabel={isTeenUser ? youthTierLabel : undefined}
       />
 
       {/* 💾 Resume Session Prompt Modal */}
