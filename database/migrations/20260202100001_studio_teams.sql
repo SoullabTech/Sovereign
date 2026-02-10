@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS studio_teams (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_teams_owner ON studio_teams(owner_id);
+CREATE INDEX IF NOT EXISTS idx_studio_teams_owner ON studio_teams(owner_id);
 
 -- ============================================
 -- TEAM MEMBERSHIP (with roles)
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS studio_team_members (
     UNIQUE(team_id, member_id)
 );
 
-CREATE INDEX idx_studio_team_members_team ON studio_team_members(team_id);
-CREATE INDEX idx_studio_team_members_member ON studio_team_members(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_team_members_team ON studio_team_members(team_id);
+CREATE INDEX IF NOT EXISTS idx_studio_team_members_member ON studio_team_members(member_id);
 
 -- ============================================
 -- ADD TEAM_ID TO EXISTING STUDIO TABLES
@@ -73,5 +73,5 @@ CREATE TABLE IF NOT EXISTS studio_team_invites (
     UNIQUE(team_id, email)
 );
 
-CREATE INDEX idx_studio_team_invites_token ON studio_team_invites(token);
-CREATE INDEX idx_studio_team_invites_email ON studio_team_invites(email);
+CREATE INDEX IF NOT EXISTS idx_studio_team_invites_token ON studio_team_invites(token);
+CREATE INDEX IF NOT EXISTS idx_studio_team_invites_email ON studio_team_invites(email);

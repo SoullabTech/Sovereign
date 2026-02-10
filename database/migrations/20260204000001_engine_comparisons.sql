@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS maia_engine_comparisons (
 );
 
 -- Indexes for common queries
-CREATE INDEX idx_engine_comparisons_turn ON maia_engine_comparisons(turn_id);
-CREATE INDEX idx_engine_comparisons_engine ON maia_engine_comparisons(engine_name);
-CREATE INDEX idx_engine_comparisons_unreviewed ON maia_engine_comparisons(reviewed_at) WHERE reviewed_at IS NULL;
-CREATE INDEX idx_engine_comparisons_created ON maia_engine_comparisons(created_at);
+CREATE INDEX IF NOT EXISTS idx_engine_comparisons_turn ON maia_engine_comparisons(turn_id);
+CREATE INDEX IF NOT EXISTS idx_engine_comparisons_engine ON maia_engine_comparisons(engine_name);
+CREATE INDEX IF NOT EXISTS idx_engine_comparisons_unreviewed ON maia_engine_comparisons(reviewed_at) WHERE reviewed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_engine_comparisons_created ON maia_engine_comparisons(created_at);
 
 -- Engine performance view
 CREATE OR REPLACE VIEW maia_engine_performance AS
