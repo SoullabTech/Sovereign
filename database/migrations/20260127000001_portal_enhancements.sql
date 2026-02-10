@@ -198,7 +198,11 @@ BEGIN
     END IF;
 
     -- Insert lead magnet (if none exists)
-    IF NOT EXISTS (SELECT 1 FROM lead_magnets WHERE practitioner_id = loralee_id) THEN
+    -- Guard: lead_magnets FK was later changed to reference members(id),
+    -- so only insert if practitioner ID also exists in members table.
+    IF NOT EXISTS (SELECT 1 FROM lead_magnets WHERE practitioner_id = loralee_id)
+       AND EXISTS (SELECT 1 FROM members WHERE id = loralee_id)
+    THEN
       INSERT INTO lead_magnets (practitioner_id, name, description, type, is_active, is_featured) VALUES
         (loralee_id, 'Understanding Your Saturn Return', 'A free guide to navigating the most significant astrological transit of your late 20s. Learn what Saturn is asking of you and how to build a stronger foundation.', 'guide', true, true);
     END IF;

@@ -32,6 +32,7 @@ import { buildGateContext, recommendConsultation, type GateContext } from '@/lib
 import { consult, type ConsultationResult } from '@/lib/ain/consultation';
 import type { ConsultationDecision } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
+import { inferStateVector, getDefaultStateVector, getDefaultPracticeRecommendation } from '@/lib/maia/state-vector/stateDefaults';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
@@ -1121,8 +1122,9 @@ This user is in guest mode (no authenticated identity).
     (normalizedMeta as Record<string, unknown>).awarenessLevel = awarenessLevel;
 
     // 🚪 AIN KNOWLEDGE GATE: Score 5 wells × awareness level (local regex, zero latency)
+    // Sanctuary suppression: no meta overlays in sanctuary for visual clarity
     let knowledgeGateResult: { source_mix: SourceContribution[]; awarenessState: any; awarenessDescription: string } | null = null;
-    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1') {
+    if (process.env.AIN_KNOWLEDGE_GATE_ENABLED === '1' && !isSanctuary) {
       try {
         const kgInput: KnowledgeGateInput = {
           userId: effectiveUserId,
@@ -1488,6 +1490,14 @@ This user is in guest mode (no authenticated identity).
         path: 'simple',
       });
 
+      // 🌀 STATE VECTOR SAFETY NET: Ensure every response carries a stateVector
+      // If the simple orchestrator didn't produce one, infer locally from user text
+      const simpleStateVector = isSanctuary ? null : inferStateVector(message, effectiveUserId, safeSessionId);
+      const simplePracticeRec = isSanctuary ? null : getDefaultPracticeRecommendation(simpleStateVector?.primary.element);
+      if (simpleStateVector) {
+        console.log(`[Chat API] 🌀 State Vector (inferred/simple): ${simpleStateVector.primary.element} | kairos: ${simpleStateVector.kairos.assessment} | confidence: ${simpleStateVector.confidence.toFixed(2)}`);
+      }
+
       // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
       const canonHeaders = makeCanonHeaders({
         requestId: reqId,
@@ -1500,6 +1510,21 @@ This user is in guest mode (no authenticated identity).
 
       const response = NextResponse.json({
         message: outboundText,
+        // 🌀 STATE VECTOR: Always present (inferred if not from orchestrator)
+        stateVector: simpleStateVector,
+        // 🌿 PRACTICE: Element-aware recommendation
+        practiceRecommendation: simplePracticeRec,
+        // 🚪 AIN Knowledge Gate: source mix + awareness level (null in Sanctuary)
+        ainState: knowledgeGateResult ? {
+          sourceMix: knowledgeGateResult.source_mix.map(s => ({
+            source: s.source,
+            weight: s.weight,
+            notes: s.notes,
+          })),
+          awarenessLevel: knowledgeGateResult.awarenessState.level,
+          awarenessConfidence: knowledgeGateResult.awarenessState.confidence,
+          awarenessDescription: knowledgeGateResult.awarenessDescription,
+        } : null,
         route: {
           endpoint: '/api/between/chat',
           type: 'Member Chat',
@@ -2251,13 +2276,24 @@ This user is in guest mode (no authenticated identity).
       repaired: false,
     });
 
+    // 🌀 STATE VECTOR SAFETY NET: Guarantee stateVector is never null
+    const orchestratorStateVector = orchestratorResult.metadata?.stateVector || null;
+    const orchestratorPractice = orchestratorResult.metadata?.practiceRecommendation || null;
+    const finalStateVector = isSanctuary ? null
+      : orchestratorStateVector || inferStateVector(message, effectiveUserId, safeSessionId);
+    const finalPracticeRec = isSanctuary ? null
+      : orchestratorPractice || getDefaultPracticeRecommendation(finalStateVector?.primary?.element);
+    if (finalStateVector && !orchestratorStateVector) {
+      console.log(`[Chat API] 🌀 State Vector (inferred/full): ${finalStateVector.primary.element} | kairos: ${finalStateVector.kairos.assessment} | confidence: ${finalStateVector.confidence.toFixed(2)}`);
+    }
+
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
-      // 🌀 STATE VECTOR: Current consciousness state reading (if check-in detected)
-      stateVector: orchestratorResult.metadata?.stateVector || null,
-      // 🌿 PRACTICE: Recommended practice from state vector routing
-      practiceRecommendation: orchestratorResult.metadata?.practiceRecommendation || null,
+      // 🌀 STATE VECTOR: Always present — from orchestrator or inferred (null in Sanctuary)
+      stateVector: finalStateVector,
+      // 🌿 PRACTICE: Element-aware recommendation — from orchestrator or default
+      practiceRecommendation: finalPracticeRec,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,
       // 🌀 INTEGRITY CHECK: Pass 3 result for client-side lens switching UI

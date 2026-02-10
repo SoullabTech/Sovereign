@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS studio_triage (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_triage_member ON studio_triage(member_id);
-CREATE INDEX idx_studio_triage_status ON studio_triage(status);
-CREATE INDEX idx_studio_triage_priority ON studio_triage(priority);
+CREATE INDEX IF NOT EXISTS idx_studio_triage_member ON studio_triage(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_triage_status ON studio_triage(status);
+CREATE INDEX IF NOT EXISTS idx_studio_triage_priority ON studio_triage(priority);
 
 -- ============================================
 -- AGENT TASKS (delegated work)
@@ -59,9 +59,9 @@ CREATE TABLE IF NOT EXISTS studio_agent_tasks (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_agent_tasks_member ON studio_agent_tasks(member_id);
-CREATE INDEX idx_studio_agent_tasks_status ON studio_agent_tasks(status);
-CREATE INDEX idx_studio_agent_tasks_review ON studio_agent_tasks(review_status);
+CREATE INDEX IF NOT EXISTS idx_studio_agent_tasks_member ON studio_agent_tasks(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_agent_tasks_status ON studio_agent_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_studio_agent_tasks_review ON studio_agent_tasks(review_status);
 
 -- ============================================
 -- SHIPMENTS (things that went live)
@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS studio_shipments (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_shipments_member ON studio_shipments(member_id);
-CREATE INDEX idx_studio_shipments_type ON studio_shipments(type);
+CREATE INDEX IF NOT EXISTS idx_studio_shipments_member ON studio_shipments(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_shipments_type ON studio_shipments(type);
 
 -- ============================================
 -- DAILY LOG (operator time tracking)
@@ -124,8 +124,8 @@ CREATE TABLE IF NOT EXISTS studio_daily_log (
     UNIQUE(member_id, log_date)
 );
 
-CREATE INDEX idx_studio_daily_log_member ON studio_daily_log(member_id);
-CREATE INDEX idx_studio_daily_log_date ON studio_daily_log(log_date);
+CREATE INDEX IF NOT EXISTS idx_studio_daily_log_member ON studio_daily_log(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_daily_log_date ON studio_daily_log(log_date);
 
 -- ============================================
 -- PROOF SIGNALS (weekly/monthly aggregates)
@@ -153,8 +153,8 @@ CREATE TABLE IF NOT EXISTS studio_proof_signals (
     UNIQUE(member_id, period_type, period_start)
 );
 
-CREATE INDEX idx_studio_proof_signals_member ON studio_proof_signals(member_id);
-CREATE INDEX idx_studio_proof_signals_period ON studio_proof_signals(period_start);
+CREATE INDEX IF NOT EXISTS idx_studio_proof_signals_member ON studio_proof_signals(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_proof_signals_period ON studio_proof_signals(period_start);
 
 -- ============================================
 -- CLARITY GATE ARTIFACTS (saved orchestration plans)
@@ -179,5 +179,5 @@ CREATE TABLE IF NOT EXISTS studio_clarity_artifacts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_studio_clarity_artifacts_member ON studio_clarity_artifacts(member_id);
-CREATE INDEX idx_studio_clarity_artifacts_status ON studio_clarity_artifacts(status);
+CREATE INDEX IF NOT EXISTS idx_studio_clarity_artifacts_member ON studio_clarity_artifacts(member_id);
+CREATE INDEX IF NOT EXISTS idx_studio_clarity_artifacts_status ON studio_clarity_artifacts(status);

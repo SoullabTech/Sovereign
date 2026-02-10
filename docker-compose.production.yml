@@ -95,6 +95,8 @@ services:
       MAIA_SELFLET_ALLOW_ANON: "0"
       # AIN Shape Telemetry: Enable quality monitoring in production
       AIN_SHAPE_TELEMETRY: "1"
+      # AIN Phase 1: Knowledge Gate — awareness-modulated source well scoring
+      AIN_KNOWLEDGE_GATE_ENABLED: "1"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
       # WebAuthn/Passkey configuration - must match the domain users access

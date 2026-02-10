@@ -4930,6 +4930,8 @@ I'm not sure what I'm feeling yet.`;
         stateVector: responseData.stateVector || null,
         // 🌿 PRACTICE: Recommended practice from state vector routing
         practiceRecommendation: responseData.practiceRecommendation || null,
+        // 🚪 AIN Knowledge Gate: source mix + awareness state
+        ainState: responseData.ainState || null,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
@@ -6274,8 +6276,24 @@ I'm not sure what I'm feeling yet.`;
     setSessionTimer(null);
     onSessionActiveChange?.(false); // Notify parent that session ended
 
-    // Could trigger post-session actions here (analytics, journaling prompt, etc.)
-  }, [onSessionActiveChange]);
+    // Finalize session: Sanctuary purge or Continuity summary pipeline
+    // Uses apiFetch for iOS/Capacitor compatibility (x-member-id header)
+    const memberId = getValidMemberId();
+    if (memberId && sessionId) {
+      apiFetch('/api/sovereign/session/finalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId,
+          sessionId,
+          isSanctuary,
+          endedAt: new Date().toISOString(),
+        }),
+      }).catch(err =>
+        console.warn('Session finalize failed (non-blocking):', err)
+      );
+    }
+  }, [onSessionActiveChange, sessionId, isSanctuary]);
 
   const handleClosingRitualSkip = useCallback(() => {
     setShowClosingRitual(false);
@@ -7665,8 +7683,8 @@ I'm not sure what I'm feeling yet.`;
                           <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                             {message.role === 'user' ? (userName || 'You') : assistantName}
                           </div>
-                          {/* 🚪 AIN: Knowledge Gate source well indicator */}
-                          {message.role === 'oracle' && message.ainState && (
+                          {/* 🚪 AIN: Knowledge Gate source well indicator (suppressed in Sanctuary) */}
+                          {message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
                               sourceMix={message.ainState.sourceMix}
                               awarenessLevel={message.ainState.awarenessLevel}

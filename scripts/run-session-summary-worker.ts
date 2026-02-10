@@ -18,11 +18,14 @@
  */
 
 import os from 'node:os';
+import crypto from 'node:crypto';
 import { query, queryOne, closePool } from '../lib/db/postgres';
 import {
   generateSessionRemembrance,
   storeRemembrance,
+  SessionRemembrance,
 } from '../lib/scribe/sovereignSummarizer';
+import { VectorEmbeddingService } from '../lib/vector-embeddings';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURATION
@@ -93,6 +96,72 @@ async function markJobFailed(jobId: string, error: unknown): Promise<void> {
 }
 
 /**
+ * Bridge session remembrance into episodic_memories for resonance search.
+ * Non-fatal: if this fails, the summary is still stored normally.
+ */
+async function bridgeRemembranceToEpisodicMemory(
+  sessionId: string,
+  memberId: string,
+  remembrance: SessionRemembrance
+): Promise<void> {
+  try {
+    const episodeId = `session-${crypto.randomUUID()}`;
+    const title = `Session note: ${remembrance.essence.slice(0, 80)}`;
+
+    // Combine essence + open loops into a searchable description
+    const parts = [remembrance.essence];
+    if (remembrance.openLoops.length > 0) {
+      parts.push(`Open threads: ${remembrance.openLoops.join('. ')}`);
+    }
+    if (remembrance.nextStep) {
+      parts.push(`Next: ${remembrance.nextStep}`);
+    }
+    const description = parts.join('\n\n');
+
+    // Significance: sessions with open loops or next steps score higher
+    const sig = Math.min(
+      5 + (remembrance.openLoops.length > 0 ? 2 : 0) + (remembrance.nextStep ? 1 : 0),
+      10
+    );
+
+    // Generate embedding for semantic resonance search
+    let semanticVector: number[] | null = null;
+    try {
+      const embedder = new VectorEmbeddingService({
+        openaiApiKey: process.env.OPENAI_API_KEY,
+        dimension: 768,
+      });
+      semanticVector = await embedder.getEmbedding(`${title} ${description}`);
+    } catch {
+      // Non-fatal: text fallback still works
+    }
+
+    await query(
+      `INSERT INTO episodic_memories
+        (user_id, episode_id, experience_title, experience_description,
+         experience_context, significance, emotional_intensity,
+         semantic_vector, archetypal_resonances, timestamp)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, NOW())`,
+      [
+        memberId,
+        episodeId,
+        title,
+        description,
+        `session_summary:${sessionId}`,
+        sig,
+        0.5,
+        semanticVector ? JSON.stringify(semanticVector) : '[]',
+        JSON.stringify(remembrance.themes.slice(0, 5)),
+      ]
+    );
+
+    console.log(`[Summary→Memory] Bridged session ${sessionId} → ${episodeId}`);
+  } catch (err) {
+    console.error('[Summary→Memory] Bridge failed (summary still stored):', err);
+  }
+}
+
+/**
  * Process a single summary job.
  */
 async function processJob(job: SummaryJob): Promise<void> {
@@ -120,6 +189,12 @@ async function processJob(job: SummaryJob): Promise<void> {
 
   // Write remembrance to maia_sessions
   await storeRemembrance(job.session_id, remembrance);
+
+  // Bridge to episodic memory for resonance search (non-fatal)
+  if (job.member_id) {
+    await bridgeRemembranceToEpisodicMemory(job.session_id, job.member_id, remembrance);
+  }
+
   await markJobDone(job.id);
 
   console.log(`[Summary] 📝 Session ${job.session_id}: "${remembrance.essence.slice(0, 80)}..."`);

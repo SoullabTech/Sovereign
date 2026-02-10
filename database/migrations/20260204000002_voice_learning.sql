@@ -42,11 +42,11 @@ CREATE TABLE IF NOT EXISTS maia_voice_feedback (
 );
 
 -- Indexes
-CREATE INDEX idx_voice_turns_session ON maia_voice_turns(session_id);
-CREATE INDEX idx_voice_turns_mode ON maia_voice_turns(mode);
-CREATE INDEX idx_voice_turns_provider ON maia_voice_turns(tts_provider);
-CREATE INDEX idx_voice_turns_created ON maia_voice_turns(created_at);
-CREATE INDEX idx_voice_feedback_turn ON maia_voice_feedback(turn_id);
+CREATE INDEX IF NOT EXISTS idx_voice_turns_session ON maia_voice_turns(session_id);
+CREATE INDEX IF NOT EXISTS idx_voice_turns_mode ON maia_voice_turns(mode);
+CREATE INDEX IF NOT EXISTS idx_voice_turns_provider ON maia_voice_turns(tts_provider);
+CREATE INDEX IF NOT EXISTS idx_voice_turns_created ON maia_voice_turns(created_at);
+CREATE INDEX IF NOT EXISTS idx_voice_feedback_turn ON maia_voice_feedback(turn_id);
 
 -- Voice performance summary view
 CREATE OR REPLACE VIEW maia_voice_performance AS
