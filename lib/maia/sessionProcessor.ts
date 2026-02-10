@@ -456,7 +456,7 @@ async function persistStateVector(
   try {
     const primary = analysis.primary;
     const sv: StateVector = {
-      id: `sv-session-${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       memberId,
       timestamp: new Date(),
       source: 'conversation',
