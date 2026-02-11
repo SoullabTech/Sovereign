@@ -28,8 +28,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
-import type { DecisionRecord, DecisionIteration } from '@/lib/studio/leadership/types';
+import type { DecisionRecord, DecisionIteration, DecisionExperience, MentorReflection } from '@/lib/studio/leadership/types';
 import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
+import MentorPanel from '@/components/studio/MentorPanel';
+import DecisionChain from '@/components/studio/DecisionChain';
+import ExperienceTimeline from '@/components/studio/ExperienceTimeline';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -723,6 +726,49 @@ export default function DecisionDetailPage() {
             <p className="text-xs text-slate-500 mt-1">This may take 10-30 seconds</p>
           </div>
         ) : null}
+
+        {/* MAIA Mentor Panel (after council result) */}
+        {council && (
+          <div className="mt-6">
+            <MentorPanel
+              decisionId={decisionId}
+              council={council}
+              situationType={decision.situationType}
+              timePressure={decision.timePressure}
+              emotionalState={decision.emotionalState}
+              mentorReflection={decision.mentorReflection}
+              followUpIntention={decision.followUpIntention}
+              onReflectionGenerated={(reflection) => {
+                setDecision(prev => prev ? { ...prev, mentorReflection: reflection } : prev);
+              }}
+              onIntentionSaved={(intention) => {
+                setDecision(prev => prev ? { ...prev, followUpIntention: intention } : prev);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Spiral Path: Decision Chain + Experiences */}
+        {council && (
+          <div className="mt-6 space-y-6">
+            <DecisionChain
+              decisionId={decisionId}
+              decisionTitle={decision.title}
+              parentDecision={decision.parentDecision || null}
+              childDecisions={decision.childDecisions || []}
+            />
+            <ExperienceTimeline
+              decisionId={decisionId}
+              experiences={decision.experiences || []}
+              onExperienceAdded={(experience) => {
+                setDecision(prev => prev ? {
+                  ...prev,
+                  experiences: [experience, ...(prev.experiences || [])],
+                } : prev);
+              }}
+            />
+          </div>
+        )}
 
         {/* Continue / Status Actions */}
         {council && !consulting && (

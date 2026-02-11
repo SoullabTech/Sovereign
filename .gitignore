@@ -390,3 +390,6 @@ public/audiobook/
 clients/runtime/
 scripts/maia-cli/node_modules/
 .local/
+
+# Claude worktrees (never track)
+.claude/worktrees/
