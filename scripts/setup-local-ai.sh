@@ -282,10 +282,29 @@ export OLLAMA_CONTEXT_LENGTH="65536"
 
 # Quick aliases
 alias maia-code='ANTHROPIC_BASE_URL="http://localhost:11434" ANTHROPIC_AUTH_TOKEN="ollama" ANTHROPIC_API_KEY="" claude --model maia-coder'
-alias maia-cloud='ANTHROPIC_BASE_URL="" ANTHROPIC_AUTH_TOKEN="" claude'
 
-# Escalation reminder
-alias maia-escalate='echo "Switching to cloud. Use maia-cloud for Opus-level reasoning." && maia-cloud'
+# Cloud Decision Test — 5-second gate before spending money
+maia-cloud() {
+  echo ""
+  echo "  ┌─────────────────────────────────────┐"
+  echo "  │  CLOUD DECISION TEST                 │"
+  echo "  │                                      │"
+  echo "  │  Is this task:                        │"
+  echo "  │    • Architecture or system design?   │"
+  echo "  │    • Cross-stack debugging?           │"
+  echo "  │    • Security / data integrity?       │"
+  echo "  │    • Something local failed twice?    │"
+  echo "  │                                      │"
+  echo "  │  If not → use maia-code instead.     │"
+  echo "  └─────────────────────────────────────┘"
+  echo ""
+  read -r "reply?  Proceed to cloud? (y/n) "
+  if [[ "$reply" =~ ^[Yy]$ ]]; then
+    ANTHROPIC_BASE_URL="" ANTHROPIC_AUTH_TOKEN="" claude "$@"
+  else
+    echo "  → Staying local. Use: maia-code"
+  fi
+}
 
 # ── END MAIA Local AI ──
 ZSHRC
