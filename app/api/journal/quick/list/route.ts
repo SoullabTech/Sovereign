@@ -93,6 +93,9 @@ interface QuickJournalEntry {
     hasImage?: boolean;
     imageSize?: number;
   };
+  // Image fields (optional - present for handwriting entries with uploaded images)
+  image_path?: string;
+  image_mime?: string;
 }
 
 // Ensure table exists (runs once on first request)
@@ -130,6 +133,19 @@ async function ensureTableExists() {
         CHECK (entry_type IN ('dream', 'day', 'handwriting'));
     EXCEPTION WHEN others THEN
       NULL;
+    END $$;
+  `);
+
+  // Add image columns if they don't exist (for handwriting entries)
+  await query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'quick_journal_entries' AND column_name = 'image_path') THEN
+        ALTER TABLE quick_journal_entries
+          ADD COLUMN image_path TEXT,
+          ADD COLUMN image_mime TEXT;
+      END IF;
     END $$;
   `);
 

@@ -367,6 +367,9 @@ pyvenv.cfg
 # Voice journal audio files
 storage/audio/
 
+# Handwriting journal image files
+storage/images/
+
 # Local AIN sources (do not commit)
 data/ain/source/
 

@@ -134,6 +134,25 @@ export function HandwritingUploadSheet({
     }
   };
 
+  // Upload handwriting image after text entry is saved
+  const uploadImage = async (entryId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!selectedFile) return { success: false, error: 'No image to upload' };
+
+    const fd = new FormData();
+    fd.append('entryId', entryId);
+    fd.append('image', selectedFile);
+
+    const res = await fetch(apiUrl('/api/journal/quick/image'), { method: 'POST', body: fd });
+    const j = await res.json();
+
+    if (!j.success) {
+      throw new Error(j.error || 'Image upload failed');
+    }
+
+    console.log('[InkJournal] Image uploaded:', j.imagePath);
+    return { success: true };
+  };
+
   // Save journal entry
   const handleSave = async (askMaia: boolean = false) => {
     if (!extractedText.trim()) return;
@@ -163,7 +182,22 @@ export function HandwritingUploadSheet({
       const data = await response.json();
 
       if (data.success) {
-        setSavedMessage('Journal entry saved ✓');
+        // Upload image if available
+        if (selectedFile && data.entryId) {
+          try {
+            const imgResult = await uploadImage(data.entryId);
+            if (imgResult.success) {
+              setSavedMessage('Journal + image saved ✓');
+            } else {
+              setSavedMessage('Journal saved ✓ (image pending)');
+            }
+          } catch (e) {
+            console.error('Image upload failed:', e);
+            setSavedMessage('Journal saved ✓ (image pending)');
+          }
+        } else {
+          setSavedMessage('Journal entry saved ✓');
+        }
         onSaved?.(data.entryId);
 
         if (askMaia) {

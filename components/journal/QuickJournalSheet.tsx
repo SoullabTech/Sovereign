@@ -16,6 +16,7 @@ interface JournalEntry {
   created_at: string;
   audio_path?: string;
   audio_duration_ms?: number;
+  image_path?: string;
 }
 
 type JournalType = 'dream' | 'day' | 'handwriting';
@@ -292,6 +293,19 @@ export function QuickJournalSheet({
             // Audio saved locally only
             setSavedMessage(baseMessage.replace('✓', '+ audio ✓'));
           }
+        } else if (isHandwriting && selectedFile && result.id) {
+          // Upload handwriting image to server
+          try {
+            const imgResult = await uploadImage(result.id);
+            if (imgResult.success) {
+              setSavedMessage(baseMessage.replace('✓', '+ image ✓'));
+            } else {
+              setSavedMessage(baseMessage + ' (image pending)');
+            }
+          } catch (e: unknown) {
+            console.error('Image upload to server failed:', e);
+            setSavedMessage(baseMessage + ' (image pending)');
+          }
         } else {
           setSavedMessage(baseMessage);
         }
@@ -481,6 +495,25 @@ export function QuickJournalSheet({
     }
 
     console.log('🎙️ Audio uploaded:', j.audioPath);
+    return { success: true };
+  };
+
+  // Upload handwriting image after text entry is saved
+  const uploadImage = async (entryId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!selectedFile) return { success: false, error: 'No image to upload' };
+
+    const fd = new FormData();
+    fd.append('entryId', entryId);
+    fd.append('image', selectedFile);
+
+    const res = await fetch(apiUrl('/api/journal/quick/image'), { method: 'POST', body: fd });
+    const j = await res.json();
+
+    if (!j.success) {
+      throw new Error(j.error || 'Image upload failed');
+    }
+
+    console.log('[InkJournal] Image uploaded:', j.imagePath);
     return { success: true };
   };
 
@@ -858,6 +891,17 @@ export function QuickJournalSheet({
                               <p className="text-stone-300 line-clamp-2">
                                 {entry.content}
                               </p>
+                              {/* Handwriting image thumbnail */}
+                              {entry.image_path && (
+                                <div className="mt-2">
+                                  <img
+                                    src={`/api/journal/quick/image-file?entryId=${encodeURIComponent(entry.id)}`}
+                                    alt="Handwritten page"
+                                    className="w-full max-h-24 object-contain rounded-lg border border-stone-700"
+                                    loading="lazy"
+                                  />
+                                </div>
+                              )}
                               {/* Audio playback if entry has audio */}
                               {entry.audio_path && (
                                 <div className="mt-2 flex items-center gap-2">

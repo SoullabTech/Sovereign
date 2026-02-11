@@ -6,6 +6,10 @@ export const dynamic = 'force-dynamic';
  *
  * Serves stored audio files for playback in the journal UI.
  * Includes path traversal protection.
+ *
+ * TODO: Migrate to DB-bound lookup pattern (entryId, not raw path)
+ * and add auth via getMemberIdFromRequest() — see image-file/route.ts
+ * for the hardened pattern. Currently unauthenticated.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

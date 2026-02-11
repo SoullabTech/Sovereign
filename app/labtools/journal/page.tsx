@@ -41,6 +41,7 @@ interface JournalEntry {
   tags: string[];
   createdAt: string;
   audioPath?: string;
+  imagePath?: string;
 }
 
 interface ScribeSession {
@@ -151,6 +152,7 @@ export default function UnifiedJournalPage() {
             tags: e.tags || [],
             createdAt: e.created_at || e.createdAt,
             audioPath: e.audio_path || e.audioPath,
+            imagePath: e.image_path || e.imagePath,
           }))
         );
       }
@@ -604,8 +606,21 @@ export default function UnifiedJournalPage() {
                           {entry.data.audioPath && (
                             <span className="text-xs text-stone-500">🎙️</span>
                           )}
+                          {entry.data.imagePath && (
+                            <PenTool className="w-3 h-3 text-[#C4A07A]" />
+                          )}
                         </div>
                         <p className="text-sm text-stone-700 line-clamp-2">{entry.data.content}</p>
+                        {entry.data.imagePath && (
+                          <div className="mt-2">
+                            <img
+                              src={`/api/journal/quick/image-file?entryId=${encodeURIComponent(entry.data.id)}`}
+                              alt="Handwritten page"
+                              className="w-full max-h-20 object-contain rounded-lg border border-stone-200"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
                         {entry.data.tags.length > 0 && (
                           <div className="flex items-center gap-1 mt-2">
                             {entry.data.tags.slice(0, 3).map((tag, i) => (
