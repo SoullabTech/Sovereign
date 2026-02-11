@@ -14,11 +14,18 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { randomUUID } from 'crypto';
 
 // DB supports more statuses, but UI uses these
-const VALID_STATUSES = ['todo', 'pending', 'in_progress', 'delegated', 'blocked', 'completed', 'cancelled'] as const;
+const VALID_STATUSES = ['todo', 'pending', 'in_progress', 'delegated', 'blocked', 'completed', 'cancelled', 'released'] as const;
 const VALID_PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
 
 type TaskStatus = typeof VALID_STATUSES[number];
 type TaskPriority = typeof VALID_PRIORITIES[number];
+
+const VALID_ENERGIES = ['fire', 'water', 'earth', 'air', 'aether'] as const;
+type EnergyState = typeof VALID_ENERGIES[number];
+
+function isValidEnergy(e: string): e is EnergyState {
+  return VALID_ENERGIES.includes(e as EnergyState);
+}
 
 // Map DB status to UI status
 function mapDbStatusToUi(dbStatus: string): string {
@@ -42,6 +49,33 @@ function isValidPriority(p: string): p is TaskPriority {
   return VALID_PRIORITIES.includes(p as TaskPriority);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapTaskRow(row: any) {
+  return {
+    id: row.id,
+    memberId: row.member_id,
+    teamId: row.team_id,
+    title: row.title,
+    description: row.description,
+    status: mapDbStatusToUi(row.status),
+    priority: row.priority,
+    dueDate: row.due_date,
+    dueTime: row.due_time,
+    project: row.project,
+    tags: row.tags || [],
+    assignee: row.assignee,
+    subtasks: row.subtasks || [],
+    completedAt: row.completed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    energyMatch: row.energy_match || null,
+    feltTimeMinutes: row.felt_time_minutes || null,
+    nextStep: row.next_step || null,
+    releasedAt: row.released_at || null,
+    releaseReason: row.release_reason || null,
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     let memberId = await getMemberIdFromRequest(request);
@@ -60,14 +94,21 @@ export async function GET(request: NextRequest) {
     const project = searchParams.get('project');
     const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 200);
 
+    const includeReleased = searchParams.get('includeReleased') === 'true';
+
     let sql = `
       SELECT
         id, member_id, team_id, title, description,
         status, priority, due_date, due_time, project,
-        tags, assignee, subtasks, completed_at, created_at, updated_at
+        tags, assignee, subtasks, completed_at, created_at, updated_at,
+        energy_match, felt_time_minutes, next_step, released_at, release_reason
       FROM studio_tasks
       WHERE (member_id = $1 OR member_id IS NULL)
     `;
+    // Exclude released tasks unless explicitly requested
+    if (!includeReleased) {
+      sql += ` AND status != 'released'`;
+    }
     const params: (string | number | null)[] = [memberId];
 
     // Team filtering
@@ -107,24 +148,7 @@ export async function GET(request: NextRequest) {
 
     const result = await db.query(sql, params);
 
-    const tasks = result.rows.map(row => ({
-      id: row.id,
-      memberId: row.member_id,
-      teamId: row.team_id,
-      title: row.title,
-      description: row.description,
-      status: mapDbStatusToUi(row.status),
-      priority: row.priority,
-      dueDate: row.due_date,
-      dueTime: row.due_time,
-      project: row.project,
-      tags: row.tags || [],
-      assignee: row.assignee,
-      subtasks: row.subtasks || [],
-      completedAt: row.completed_at,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    const tasks = result.rows.map(row => mapTaskRow(row));
 
     return NextResponse.json({ tasks });
   } catch (error) {
@@ -160,6 +184,9 @@ export async function POST(request: NextRequest) {
       assignee,
       subtasks = [],
       teamId,
+      energyMatch,
+      feltTimeMinutes,
+      nextStep,
     } = body;
 
     if (!title?.trim()) {
@@ -187,11 +214,19 @@ export async function POST(request: NextRequest) {
       done: st.done || false,
     }));
 
+    // Validate energy match if provided
+    if (energyMatch && !isValidEnergy(energyMatch)) {
+      return NextResponse.json(
+        { error: `Invalid energy. Must be one of: ${VALID_ENERGIES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     const dbStatus = mapUiStatusToDb(status);
     const result = await db.query(
       `INSERT INTO studio_tasks
-        (member_id, team_id, title, description, status, priority, due_date, due_time, project, tags, assignee, subtasks)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        (member_id, team_id, title, description, status, priority, due_date, due_time, project, tags, assignee, subtasks, energy_match, felt_time_minutes, next_step)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
         memberId,
@@ -206,30 +241,14 @@ export async function POST(request: NextRequest) {
         tags,
         assignee?.trim() || null,
         JSON.stringify(processedSubtasks),
+        energyMatch || null,
+        feltTimeMinutes || null,
+        nextStep?.trim() || null,
       ]
     );
 
     const task = result.rows[0];
-    return NextResponse.json({
-      task: {
-        id: task.id,
-        memberId: task.member_id,
-        teamId: task.team_id,
-        title: task.title,
-        description: task.description,
-        status: mapDbStatusToUi(task.status),
-        priority: task.priority,
-        dueDate: task.due_date,
-        dueTime: task.due_time,
-        project: task.project,
-        tags: task.tags || [],
-        assignee: task.assignee,
-        subtasks: task.subtasks || [],
-        completedAt: task.completed_at,
-        createdAt: task.created_at,
-        updatedAt: task.updated_at,
-      },
-    });
+    return NextResponse.json({ task: mapTaskRow(task) });
   } catch (error) {
     console.error('[Studio Tasks] POST error:', error);
     return NextResponse.json(
@@ -336,6 +355,38 @@ export async function PATCH(request: NextRequest) {
       params.push(JSON.stringify(processedSubtasks));
     }
 
+    // ADHD support fields
+    if (updates.energyMatch !== undefined) {
+      if (updates.energyMatch && !isValidEnergy(updates.energyMatch)) {
+        return NextResponse.json(
+          { error: `Invalid energy. Must be one of: ${VALID_ENERGIES.join(', ')}` },
+          { status: 400 }
+        );
+      }
+      updateFields.push(`energy_match = $${params.length + 1}`);
+      params.push(updates.energyMatch || null);
+    }
+
+    if (updates.feltTimeMinutes !== undefined) {
+      updateFields.push(`felt_time_minutes = $${params.length + 1}`);
+      params.push(updates.feltTimeMinutes || null);
+    }
+
+    if (updates.nextStep !== undefined) {
+      updateFields.push(`next_step = $${params.length + 1}`);
+      params.push(updates.nextStep?.trim() || null);
+    }
+
+    if (updates.releaseReason !== undefined) {
+      updateFields.push(`release_reason = $${params.length + 1}`);
+      params.push(updates.releaseReason?.trim() || null);
+    }
+
+    // Auto-set released_at when releasing
+    if (updates.status === 'released') {
+      updateFields.push(`released_at = NOW()`);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
@@ -355,26 +406,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const task = result.rows[0];
-    return NextResponse.json({
-      task: {
-        id: task.id,
-        memberId: task.member_id,
-        teamId: task.team_id,
-        title: task.title,
-        description: task.description,
-        status: mapDbStatusToUi(task.status),
-        priority: task.priority,
-        dueDate: task.due_date,
-        dueTime: task.due_time,
-        project: task.project,
-        tags: task.tags || [],
-        assignee: task.assignee,
-        subtasks: task.subtasks || [],
-        completedAt: task.completed_at,
-        createdAt: task.created_at,
-        updatedAt: task.updated_at,
-      },
-    });
+    return NextResponse.json({ task: mapTaskRow(task) });
   } catch (error) {
     console.error('[Studio Tasks] PATCH error:', error);
     return NextResponse.json(
