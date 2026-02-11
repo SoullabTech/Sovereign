@@ -160,24 +160,44 @@ export default function PoweredByPage() {
             Current Work
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* MAIA — Flagship */}
+          <ClientCard
+            name="MAIA"
+            tagline="Sovereign Consciousness Companion"
+            description="Our flagship build. Powered by the AIN relational intelligence engine &mdash; voice dialogue, consciousness mapping, elemental orientation, dream work, astrological integration, sanctuary mode, and sovereign memory. Self-hosted, consent-first, no cloud lock-in."
+            href="https://soullab.life/maia"
+            flagship
+          />
+
+          {/* Client Sites */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
             <ClientCard
               name="Old Head Plaster"
+              tagline="Decorative Plaster Specialist"
               description="Venetian plaster & decorative finishes"
               location="Madison, CT"
-              href="https://oldheadplaster.com"
+              href="https://oldhead.soullab.life"
             />
             <ClientCard
-              name="Rudeboy Plastering"
-              description="High-end residential plastering"
+              name="Rudeboy Baking Co."
+              tagline="Small Batches. Big Reactions."
+              description="Full brand site with AI kitchen companion"
               location="Connecticut"
-              comingSoon
+              href="https://rudeboy.soullab.life"
             />
             <ClientCard
               name="Jeremy&#39;s Handyman"
-              description="Residential maintenance & repair"
+              tagline="Residential Maintenance & Repair"
+              description="Service site for residential handyman"
               location="Connecticut"
-              comingSoon
+              href="https://jeremy.soullab.life"
+            />
+            <ClientCard
+              name="Loralee Stellium Astrology"
+              tagline="Astrological Guidance"
+              description="Natal readings & astrological consultation"
+              location="Connecticut"
+              href="https://loralee.soullab.life"
             />
           </div>
 
@@ -300,20 +320,44 @@ function Pillar({
 
 function ClientCard({
   name,
+  tagline,
   description,
   location,
   href,
+  flagship,
   comingSoon,
 }: {
   name: string;
+  tagline?: string;
   description: string;
-  location: string;
+  location?: string;
   href?: string;
+  flagship?: boolean;
   comingSoon?: boolean;
 }) {
+  if (flagship) {
+    return (
+      <a
+        href={href}
+        className="block p-8 rounded-lg border border-amber-500/20 bg-amber-500/[0.03] hover:border-amber-500/40 transition-colors"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <h3 className="text-amber-400 text-xl font-medium">{name}</h3>
+          <span className="text-[10px] text-amber-500/50 tracking-[0.2em] uppercase border border-amber-500/20 px-2 py-0.5 rounded">
+            Flagship
+          </span>
+        </div>
+        {tagline && (
+          <p className="text-amber-500/70 text-sm mb-3 italic">{tagline}</p>
+        )}
+        <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
+      </a>
+    );
+  }
+
   const content = (
     <>
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2">
         <h3 className="text-slate-200 text-base">{name}</h3>
         {comingSoon && (
           <span className="text-[10px] text-slate-600 tracking-widest uppercase">
@@ -321,8 +365,11 @@ function ClientCard({
           </span>
         )}
       </div>
+      {tagline && (
+        <p className="text-amber-500/50 text-xs mb-2 italic">{tagline}</p>
+      )}
       <p className="text-slate-500 text-sm mb-2">{description}</p>
-      <p className="text-slate-600 text-xs">{location}</p>
+      {location && <p className="text-slate-600 text-xs">{location}</p>}
     </>
   );
 
