@@ -3,6 +3,10 @@
 > What every model — local or cloud — reads before touching this codebase.
 > This is the cognitive environment that makes model IQ matter less.
 
+- **Default:** local-first via `maia-code` (free, sovereign, private)
+- **Cloud only:** when the task is THINKING, not TYPING (architecture, debugging, security)
+- **Emergency:** `maia-cloud-now` skips the gate
+
 ---
 
 ## Identity

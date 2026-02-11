@@ -286,25 +286,23 @@ alias maia-code='ANTHROPIC_BASE_URL="http://localhost:11434" ANTHROPIC_AUTH_TOKE
 # Cloud Decision Test — 5-second gate before spending money
 maia-cloud() {
   echo ""
-  echo "  ┌─────────────────────────────────────┐"
-  echo "  │  CLOUD DECISION TEST                 │"
-  echo "  │                                      │"
-  echo "  │  Is this task:                        │"
-  echo "  │    • Architecture or system design?   │"
-  echo "  │    • Cross-stack debugging?           │"
-  echo "  │    • Security / data integrity?       │"
-  echo "  │    • Something local failed twice?    │"
-  echo "  │                                      │"
-  echo "  │  If not → use maia-code instead.     │"
-  echo "  └─────────────────────────────────────┘"
+  echo "  Is this THINKING or TYPING?"
+  echo ""
+  echo "  THINKING = architecture, cross-stack debugging, security, complex reasoning"
+  echo "  TYPING   = components, styling, CRUD, refactors, docs, copy"
+  echo ""
+  echo "  If TYPING → Ctrl+C and use: maia-code"
   echo ""
   read -r "reply?  Proceed to cloud? (y/n) "
   if [[ "$reply" =~ ^[Yy]$ ]]; then
     ANTHROPIC_BASE_URL="" ANTHROPIC_AUTH_TOKEN="" claude "$@"
   else
-    echo "  → Staying local. Use: maia-code"
+    echo "  Staying local. Use: maia-code"
   fi
 }
+
+# Emergency bypass — skip the gate when mid-firefight
+alias maia-cloud-now='ANTHROPIC_BASE_URL="" ANTHROPIC_AUTH_TOKEN="" claude'
 
 # ── END MAIA Local AI ──
 ZSHRC
