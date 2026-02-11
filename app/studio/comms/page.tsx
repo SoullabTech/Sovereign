@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Panel, Group, Separator } from 'react-resizable-panels';
 import {
   MessageSquare,
   Mail,
@@ -26,7 +25,6 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  GripVertical,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -215,11 +213,12 @@ export default function CommsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Group orientation="horizontal" className="h-screen">
-        {/* Message List Panel */}
-        <Panel defaultSize={30} minSize={15} maxSize={50}>
-          <div className="h-full border-r border-slate-800 flex flex-col">
+    <div className="min-h-screen bg-slate-950 flex">
+      {/* Message List - Resizable */}
+      <div
+        className="min-w-[280px] max-w-[600px] border-r border-slate-800 flex flex-col resize-x overflow-auto"
+        style={{ width: '400px' }}
+      >
         {/* Header */}
         <div className="p-4 border-b border-slate-800">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
@@ -375,17 +374,10 @@ export default function CommsPage() {
             );
           })}
         </div>
-          </div>
-        </Panel>
+      </div>
 
-        {/* Resize Handle */}
-        <Separator className="w-2 bg-slate-800 hover:bg-teal-500/50 transition-colors flex items-center justify-center group cursor-col-resize">
-          <GripVertical className="w-3 h-3 text-slate-600 group-hover:text-teal-400 transition-colors" />
-        </Separator>
-
-        {/* Message Detail Panel */}
-        <Panel defaultSize={70} minSize={30}>
-          <div className="h-full flex flex-col">
+      {/* Message Detail */}
+      <div className="flex-1 flex flex-col">
         {selected ? (
           <>
             {/* Message Header */}
@@ -468,9 +460,7 @@ export default function CommsPage() {
             </div>
           </div>
         )}
-          </div>
-        </Panel>
-      </Group>
+      </div>
 
       {/* SMS Compose Modal */}
       <AnimatePresence>
