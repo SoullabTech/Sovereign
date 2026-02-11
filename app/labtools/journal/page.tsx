@@ -338,8 +338,8 @@ export default function UnifiedJournalPage() {
   const totalCount = journalEntries.length + capsules.length + scribeSessions.length;
 
   return (
-    <div className="min-h-screen bg-[#EAE5DF]">
-      <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="h-screen overflow-y-auto bg-[#EAE5DF]">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
