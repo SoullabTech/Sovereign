@@ -195,29 +195,50 @@ pull_models() {
         echo ""
     done
 
-    # Create coding model variant with extended context
-    log "Creating $CODING_MODEL with ${CONTEXT_LENGTH} context window..."
+    # Create coding model variant with extended context + system prompt
+    log "Creating $CODING_MODEL with ${CONTEXT_LENGTH} context + work habits..."
     local modelfile_path="/tmp/maia-coder-modelfile"
-    cat > "$modelfile_path" << EOF
-FROM $CODING_MODEL
-PARAMETER num_ctx $CONTEXT_LENGTH
+    cat > "$modelfile_path" << 'MODELFILE'
+FROM qwen3-coder:30b
+PARAMETER num_ctx 65536
 PARAMETER temperature 0.3
-EOF
+
+SYSTEM """You are a careful coding assistant for the MAIA-SOVEREIGN project (Next.js 16, TypeScript, Tailwind, PostgreSQL, Docker, Caddy).
+
+WORK HABITS (follow every time):
+
+1. PLAN BEFORE EDITING: Before touching any file, list every file you will modify and why. Wait for confirmation before proceeding.
+
+2. VERIFY AFTER EDITING: After completing changes, run the project's checks:
+   - npm run typecheck
+   - npm run check:no-supabase
+   - npm run smoke (if tests exist)
+   Summarize results before declaring done.
+
+3. ESCALATION RULE: If you have attempted the same fix twice and it is still failing, say "This needs cloud-level reasoning" and stop. Do not keep guessing.
+
+4. SOVEREIGNTY: Never introduce Supabase, OpenAI, Vercel, or any cloud dependency. Use local PostgreSQL via lib/db/postgres.ts. Use Anthropic Claude or local Ollama only.
+
+5. NO OVERENGINEERING: Only change what was asked. Do not add docstrings, comments, or refactors beyond the request.
+"""
+MODELFILE
     ollama create maia-coder -f "$modelfile_path"
     rm -f "$modelfile_path"
-    log "Created 'maia-coder' (qwen3-coder + 64K context + low temp for precision)"
+    log "Created 'maia-coder' (qwen3-coder + 64K context + work habits)"
 
     # Create content model variant
     log "Creating content model with extended context..."
     local content_modelfile="/tmp/maia-content-modelfile"
-    cat > "$content_modelfile" << EOF
-FROM $CONTENT_MODEL
-PARAMETER num_ctx $CONTEXT_LENGTH
+    cat > "$content_modelfile" << 'CONTENTFILE'
+FROM qwen3:32b
+PARAMETER num_ctx 65536
 PARAMETER temperature 0.7
-EOF
+
+SYSTEM """You are a content writer for Soullab — a sovereign consciousness platform. Write with clarity, warmth, and zero hype. No emojis unless asked. No corporate buzzwords. Speak like a thoughtful human, not a marketing bot. Match the tone of the existing site: grounded, intelligent, direct."""
+CONTENTFILE
     ollama create maia-content -f "$content_modelfile"
     rm -f "$content_modelfile"
-    log "Created 'maia-content' (qwen3 + 64K context + creative temp)"
+    log "Created 'maia-content' (qwen3 + 64K context + Soullab voice)"
 
     echo ""
     log "All models installed. Current inventory:"
@@ -261,7 +282,10 @@ export OLLAMA_CONTEXT_LENGTH="65536"
 
 # Quick aliases
 alias maia-code='ANTHROPIC_BASE_URL="http://localhost:11434" ANTHROPIC_AUTH_TOKEN="ollama" ANTHROPIC_API_KEY="" claude --model maia-coder'
-alias maia-cloud='unset ANTHROPIC_BASE_URL && unset ANTHROPIC_AUTH_TOKEN && claude'
+alias maia-cloud='ANTHROPIC_BASE_URL="" ANTHROPIC_AUTH_TOKEN="" claude'
+
+# Escalation reminder
+alias maia-escalate='echo "Switching to cloud. Use maia-cloud for Opus-level reasoning." && maia-cloud'
 
 # ── END MAIA Local AI ──
 ZSHRC
