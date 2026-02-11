@@ -283,7 +283,7 @@
   /* Smooth momentum scrolling on iOS */
   .scroll-container {
     -webkit-overflow-scrolling: touch;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   /* Fix for iOS keyboard pushing content up */

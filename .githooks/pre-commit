@@ -19,7 +19,11 @@ PHI_EXIT=$?
 npm run check:phi-inventory
 INVENTORY_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
+# 5. No forced scrollbars (overflow-y-scroll causes white strip on Mac)
+npm run check:no-scroll-force
+SCROLL_EXIT=$?
+
+if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ] && [ $SCROLL_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
@@ -35,6 +39,9 @@ else
   fi
   if [ $INVENTORY_EXIT -ne 0 ]; then
     echo "   - PHI inventory inconsistent"
+  fi
+  if [ $SCROLL_EXIT -ne 0 ]; then
+    echo "   - Forced scrollbar (overflow-y-scroll) found — use overflow-y-auto"
   fi
   exit 1
 fi
