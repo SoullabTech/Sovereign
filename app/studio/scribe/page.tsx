@@ -403,8 +403,8 @@ ${insightsSection}
           >
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-                <Mic className="w-8 h-8 text-amber-400" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <Mic className="w-8 h-8 text-red-500" />
               </div>
               <h1 className="text-2xl font-semibold text-white">Scribe</h1>
               <p className="text-slate-400 text-sm mt-1">
@@ -429,7 +429,7 @@ ${insightsSection}
             {/* Start button */}
             <button
               onClick={startSession}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 transition-all text-base font-medium"
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all text-base font-medium"
             >
               <Mic className="w-5 h-5" />
               Start Session
