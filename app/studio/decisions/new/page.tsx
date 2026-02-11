@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Scale,
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import { GitBranch } from 'lucide-react';
 import {
   SITUATION_TYPE_LIST,
   SITUATION_CONFIGS,
@@ -41,9 +42,12 @@ const SITUATION_ICONS: Record<string, typeof User> = {
 
 export default function NewDecisionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const parentId = searchParams?.get('parent') || null;
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [consulting, setConsulting] = useState(false);
+  const [parentTitle, setParentTitle] = useState<string | null>(null);
 
   const [situationType, setSituationType] = useState<SituationType>('individual');
   const [title, setTitle] = useState('');
@@ -57,7 +61,27 @@ export default function NewDecisionPage() {
 
   useEffect(() => {
     loadClients();
+    if (parentId) loadParent(parentId);
   }, []);
+
+  async function loadParent(pid: string) {
+    try {
+      const res = await apiFetch(`/api/studio/decisions/${pid}`);
+      if (res.ok) {
+        const { decision } = await res.json();
+        setParentTitle(decision.title);
+        // Pre-fill from parent
+        if (decision.situationType) setSituationType(decision.situationType);
+        if (decision.clientId) setClientId(decision.clientId);
+        // Pre-fill context with parent's recommendation
+        if (decision.councilResult?.recommendation) {
+          setContext(`Continuing from: "${decision.title}"\n\nPrior recommendation: ${decision.councilResult.recommendation}\n\n`);
+        }
+      }
+    } catch {
+      // Parent not found — proceed as standalone
+    }
+  }
 
   // Auto-set situation type when a leadership client is selected
   useEffect(() => {
@@ -103,6 +127,7 @@ export default function NewDecisionPage() {
           timePressure,
           emotionalState: emotionalState.trim() || null,
           situationType,
+          parentDecisionId: parentId || undefined,
         }),
       });
 
@@ -155,6 +180,16 @@ export default function NewDecisionPage() {
         </div>
 
         <div className="space-y-6">
+          {/* Parent Decision Banner */}
+          {parentTitle && (
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-amber-800/30 bg-amber-950/10">
+              <GitBranch className="w-4 h-4 text-amber-400/70 flex-shrink-0" />
+              <p className="text-sm text-amber-200/70">
+                Continuing from: <Link href={`/studio/decisions/${parentId}`} className="text-amber-300 hover:underline underline-offset-2">{parentTitle}</Link>
+              </p>
+            </div>
+          )}
+
           {/* Situation Type — The Quiet Decision Point */}
           <div>
             <label className="block text-sm text-slate-300 mb-3">What are you working with?</label>

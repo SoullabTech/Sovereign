@@ -51,7 +51,11 @@ export async function GET(request: NextRequest) {
         d.consulted_at,
         d.created_at,
         d.updated_at,
-        c.name as client_name
+        d.parent_decision_id,
+        d.root_decision_id,
+        c.name as client_name,
+        (SELECT COUNT(*)::int FROM studio_decisions child WHERE child.parent_decision_id = d.id) as child_count,
+        (SELECT COUNT(*)::int FROM decision_experiences e WHERE e.decision_id = d.id) as experience_count
       FROM studio_decisions d
       LEFT JOIN practitioner_clients c ON c.id = d.client_id
       WHERE d.practitioner_id = $1
@@ -96,6 +100,10 @@ export async function GET(request: NextRequest) {
       consultedAt: row.consulted_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      parentDecisionId: row.parent_decision_id,
+      rootDecisionId: row.root_decision_id,
+      childCount: row.child_count || 0,
+      experienceCount: row.experience_count || 0,
     }));
 
     return NextResponse.json({ decisions });
@@ -124,6 +132,7 @@ export async function POST(request: NextRequest) {
       timePressure = 'none',
       emotionalState,
       situationType = 'individual',
+      parentDecisionId,
     } = body;
 
     if (!title?.trim()) {
@@ -139,11 +148,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid situation type' }, { status: 400 });
     }
 
+    // Compute root_decision_id for decision chain
+    let rootDecisionId: string | null = null;
+    if (parentDecisionId) {
+      const parentResult = await db.query(
+        `SELECT id, root_decision_id, practitioner_id
+         FROM studio_decisions WHERE id = $1`,
+        [parentDecisionId]
+      );
+      if (parentResult.rows.length === 0) {
+        return NextResponse.json({ error: 'Parent decision not found' }, { status: 400 });
+      }
+      if (parentResult.rows[0].practitioner_id !== practitionerId) {
+        return NextResponse.json({ error: 'Parent decision not owned by you' }, { status: 403 });
+      }
+      // Root is the parent's root, or the parent itself if it has no root
+      rootDecisionId = parentResult.rows[0].root_decision_id || parentDecisionId;
+    }
+
     const id = randomUUID();
     const result = await db.query(
       `INSERT INTO studio_decisions
-        (id, practitioner_id, client_id, team_id, title, context, stakes, time_pressure, emotional_state, situation_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        (id, practitioner_id, client_id, team_id, title, context, stakes, time_pressure, emotional_state, situation_type, parent_decision_id, root_decision_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         id,
@@ -156,6 +183,8 @@ export async function POST(request: NextRequest) {
         timePressure,
         emotionalState?.trim() || null,
         situationType,
+        parentDecisionId || null,
+        rootDecisionId,
       ]
     );
 
@@ -180,6 +209,10 @@ export async function POST(request: NextRequest) {
         consultedAt: row.consulted_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        parentDecisionId: row.parent_decision_id,
+        rootDecisionId: row.root_decision_id,
+        mentorReflection: row.mentor_reflection,
+        followUpIntention: row.follow_up_intention,
       },
     });
   } catch (error) {

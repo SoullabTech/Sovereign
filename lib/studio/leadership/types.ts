@@ -61,6 +61,16 @@ export interface DecisionRecord {
   createdAt: string;
   updatedAt: string;
   iterations?: DecisionIteration[];
+  // Spiral path — decision chain
+  parentDecisionId: string | null;
+  rootDecisionId: string | null;
+  parentDecision?: DecisionChainNode | null;
+  childDecisions?: DecisionChainNode[];
+  // Mentor
+  mentorReflection: MentorReflection | null;
+  followUpIntention: string | null;
+  // Experiences
+  experiences?: DecisionExperience[];
 }
 
 // ─── Iteration Support ──────────────────────────────────────────
@@ -83,6 +93,60 @@ export interface IterationContext {
   priorRecommendation: string;
   priorInsights: string[];
   sessionNotes?: string;
+}
+
+// ─── Decision Chain ──────────────────────────────────────────────
+
+export interface DecisionChainNode {
+  id: string;
+  title: string;
+  status: DecisionStatus;
+  iterationCount: number;
+  createdAt: string;
+}
+
+// ─── Experience Entries ─────────────────────────────────────────
+
+export type ExperienceType = 'field_event' | 'reflection' | 'breakthrough' | 'setback';
+
+export interface DecisionExperience {
+  id: string;
+  decisionId: string;
+  occurredAt: string;
+  experienceType: ExperienceType;
+  content: string;
+  element?: string;
+  tags: string[];
+  createdAt: string;
+}
+
+// ─── Mentor Reflection ──────────────────────────────────────────
+
+export interface MentorReflection {
+  questions: string[];
+  sovereigntyCheck: string;
+  nextExperiment: string;
+  generatedAt: string;
+  model?: string;            // e.g. 'claude-haiku-4-5-20251001'
+  templateVersion?: number;  // tracks which template engine version produced this
+}
+
+// ─── Decision Posture (inferred from council result) ────────────
+
+export type DecisionPosture =
+  | 'stuck'
+  | 'polarized'
+  | 'high_stakes'
+  | 'avoidant'
+  | 'overresponsible'
+  | 'clear_but_afraid'
+  | 'emerging';
+
+export interface MentorTemplate {
+  posture: DecisionPosture;
+  reflections: string[];
+  microPractice: string;
+  sovereigntyCheck: string;
 }
 
 // ─── Leadership Briefing ─────────────────────────────────────────

@@ -1,0 +1,44 @@
+{
+  "member": {
+    "name": "{{MEMBER_NAME}}",
+    "tagline": "Your tagline here",
+    "bio": "A short paragraph about who you are and what you offer.",
+    "contactMethod": "email",
+    "contactValue": "you@example.com"
+  },
+  "hero": {
+    "heading": "Welcome",
+    "subheading": "Your tagline here",
+    "ctaText": "Begin",
+    "ctaLink": "#contact"
+  },
+  "features": [
+    {
+      "title": "Feature One",
+      "description": "What you offer or how you help.",
+      "icon": "fire"
+    },
+    {
+      "title": "Feature Two",
+      "description": "Another aspect of your work.",
+      "icon": "water"
+    },
+    {
+      "title": "Feature Three",
+      "description": "What makes your approach unique.",
+      "icon": "earth"
+    }
+  ],
+  "testimonial": {
+    "quote": "A testimonial from someone you've worked with.",
+    "author": "Name",
+    "role": "Their context"
+  },
+  "theme": {
+    "primary": "#0b0f1c",
+    "accent": "#fbbf24",
+    "sage": "#5eead4",
+    "headingFont": "Crimson Pro",
+    "bodyFont": "Source Sans Pro"
+  }
+}
