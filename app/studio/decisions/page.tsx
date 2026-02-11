@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Plus, Scale, Clock, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Plus, Scale, Clock, CheckCircle2, AlertTriangle, Sparkles, GitBranch, Compass } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { DecisionRecord } from '@/lib/studio/leadership/types';
 import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
@@ -172,6 +172,18 @@ export default function DecisionsPage() {
                       )}
                       {d.questionsForLeader?.length > 0 && (
                         <span>{d.questionsForLeader.length} questions prepared</span>
+                      )}
+                      {((d as any).childCount > 0 || (d as any).parentDecisionId) && (
+                        <span className="flex items-center gap-1 text-amber-400/50">
+                          <GitBranch className="w-3 h-3" />
+                          {(d as any).childCount > 0 ? `${(d as any).childCount} spawned` : 'child'}
+                        </span>
+                      )}
+                      {(d as any).experienceCount > 0 && (
+                        <span className="flex items-center gap-1 text-blue-400/50">
+                          <Compass className="w-3 h-3" />
+                          {(d as any).experienceCount}
+                        </span>
                       )}
                     </div>
                   </div>

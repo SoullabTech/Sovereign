@@ -42,15 +42,41 @@ export async function GET(
 
     const row = result.rows[0];
 
-    // Fetch iteration history
-    const iterationsResult = await db.query(
-      `SELECT id, iteration_number, session_notes, updated_context, emotional_state,
-              council_result, consultant_notes, questions, consulted_at
-       FROM decision_iterations
-       WHERE decision_id = $1
-       ORDER BY iteration_number ASC`,
-      [id]
-    );
+    // Fetch iteration history, chain data, and experiences in parallel
+    const [iterationsResult, parentResult, childrenResult, experiencesResult] = await Promise.all([
+      db.query(
+        `SELECT id, iteration_number, session_notes, updated_context, emotional_state,
+                council_result, consultant_notes, questions, consulted_at
+         FROM decision_iterations
+         WHERE decision_id = $1
+         ORDER BY iteration_number ASC`,
+        [id]
+      ),
+      // Parent decision (if part of a chain)
+      row.parent_decision_id
+        ? db.query(
+            `SELECT id, title, status, iteration_count, created_at
+             FROM studio_decisions WHERE id = $1`,
+            [row.parent_decision_id]
+          )
+        : Promise.resolve({ rows: [] }),
+      // Child decisions
+      db.query(
+        `SELECT id, title, status, iteration_count, created_at
+         FROM studio_decisions
+         WHERE parent_decision_id = $1
+         ORDER BY created_at ASC`,
+        [id]
+      ),
+      // Experiences
+      db.query(
+        `SELECT id, decision_id, occurred_at, experience_type, content, element, tags, created_at
+         FROM decision_experiences
+         WHERE decision_id = $1
+         ORDER BY occurred_at DESC`,
+        [id]
+      ),
+    ]);
 
     const iterations = iterationsResult.rows.map(r => ({
       id: r.id,
@@ -62,6 +88,35 @@ export async function GET(
       consultantNotes: r.consultant_notes,
       questions: r.questions || [],
       consultedAt: r.consulted_at?.toISOString(),
+    }));
+
+    const parentDecision = parentResult.rows[0]
+      ? {
+          id: parentResult.rows[0].id,
+          title: parentResult.rows[0].title,
+          status: parentResult.rows[0].status,
+          iterationCount: parentResult.rows[0].iteration_count || 0,
+          createdAt: parentResult.rows[0].created_at?.toISOString(),
+        }
+      : null;
+
+    const childDecisions = childrenResult.rows.map(r => ({
+      id: r.id,
+      title: r.title,
+      status: r.status,
+      iterationCount: r.iteration_count || 0,
+      createdAt: r.created_at?.toISOString(),
+    }));
+
+    const experiences = experiencesResult.rows.map(r => ({
+      id: r.id,
+      decisionId: r.decision_id,
+      occurredAt: r.occurred_at?.toISOString(),
+      experienceType: r.experience_type,
+      content: r.content,
+      element: r.element,
+      tags: r.tags || [],
+      createdAt: r.created_at?.toISOString(),
     }));
 
     return NextResponse.json({
@@ -87,6 +142,16 @@ export async function GET(
         createdAt: row.created_at,
         updatedAt: row.updated_at,
         iterations,
+        // Spiral path
+        parentDecisionId: row.parent_decision_id,
+        rootDecisionId: row.root_decision_id,
+        parentDecision,
+        childDecisions,
+        // Mentor
+        mentorReflection: row.mentor_reflection,
+        followUpIntention: row.follow_up_intention,
+        // Experiences
+        experiences,
       },
     });
   } catch (error) {
@@ -154,6 +219,15 @@ export async function PUT(
     if (body.timePressure !== undefined) {
       updateFields.push(`time_pressure = $${queryParams.length + 1}`);
       queryParams.push(body.timePressure);
+    }
+
+    if (body.followUpIntention !== undefined) {
+      const intention = body.followUpIntention?.trim() || null;
+      if (intention && intention.length > 500) {
+        return NextResponse.json({ error: 'Follow-up intention must be 500 characters or fewer' }, { status: 400 });
+      }
+      updateFields.push(`follow_up_intention = $${queryParams.length + 1}`);
+      queryParams.push(intention);
     }
 
     if (updateFields.length === 0) {
