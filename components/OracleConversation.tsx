@@ -7629,7 +7629,7 @@ I'm not sure what I'm feeling yet.`;
               <FieldStateIndicator wisdomPresent={fieldWisdomPresent} />
             </div>
           )}
-          <div className="h-full overflow-y-scroll overflow-x-hidden pr-2 mobile-scroll"
+          <div className="h-full overflow-y-auto overflow-x-hidden pr-2 mobile-scroll scrollbar-hide"
                style={{
                  scrollBehavior: 'smooth',
                  WebkitOverflowScrolling: 'touch',
