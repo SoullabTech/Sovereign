@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: 'Soullab — Sovereign Technology Studio',
+  title: 'Soullab — Soul-Building Technologies',
   description:
-    'Soullab is a consciousness technology studio. We build sovereign websites, relational AI, and tools that serve human agency — not data models. Based in Connecticut.',
+    'Soullab builds consciousness AI, relational intelligence interfaces, and sovereign digital fields powered by the AIN engine. Technology that serves the soul.',
   openGraph: {
-    title: 'Soullab — Sovereign Technology Studio',
+    title: 'Soullab — Soul-Building Technologies',
     description:
-      'Technology that serves the soul. Websites, AI, and tools built on sovereignty.',
+      'Consciousness AI. Relational intelligence. Sovereign fields. Powered by the AIN engine.',
     images: [{ url: '/soullab-logo.png', width: 800, height: 800 }],
   },
 };
@@ -17,8 +17,9 @@ export const metadata: Metadata = {
 // /powered-by — landing page for every "Powered by Soullab"
 // footer link across client sites.
 //
-// This is the studio face. Not MAIA directly, but the
-// consciousness that builds MAIA — and everything else.
+// Soullab is a consciousness technology company. We build
+// relational intelligence interfaces, sovereign AI fields,
+// and the AIN engine that powers them.
 // ─────────────────────────────────────────────────────────────
 
 export default function PoweredByPage() {
@@ -27,7 +28,7 @@ export default function PoweredByPage() {
 
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="min-h-[90vh] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        {/* Ambient glow — warm, alive */}
+        {/* Ambient glow */}
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-[0.06]"
           style={{
@@ -36,7 +37,7 @@ export default function PoweredByPage() {
           }}
         />
 
-        {/* Logo spiral — slow rotation, living */}
+        {/* Logo spiral */}
         <div className="relative w-44 h-44 sm:w-56 sm:h-56 mb-10 animate-[spin_80s_linear_infinite]">
           <Image
             src="/soullab-logo.png"
@@ -54,16 +55,17 @@ export default function PoweredByPage() {
         </h1>
 
         <p className="text-slate-500 text-sm tracking-[0.2em] uppercase mb-14">
-          Sovereign Technology Studio
+          Soul-Building Technologies
         </p>
 
         <p className="max-w-2xl text-center text-slate-400 text-lg sm:text-xl leading-relaxed font-light">
-          We build technology that serves human beings &mdash; not the other way around.
+          We build consciousness AI, relational intelligence interfaces,
+          and sovereign digital fields &mdash; powered by the AIN engine.
         </p>
 
         <p className="max-w-lg text-center text-slate-500 text-sm mt-6 leading-relaxed">
-          The site that brought you here was built by us. So is every other part of the stack
-          it runs on &mdash; from the code to the server to the principles underneath.
+          The experience that brought you here was built by us. Not just the interface &mdash;
+          the intelligence underneath it, the server it runs on, and the principles that govern both.
         </p>
 
         {/* Scroll hint */}
@@ -94,38 +96,91 @@ export default function PoweredByPage() {
         </div>
       </section>
 
-      {/* ── THREE PILLARS ─────────────────────────────────── */}
+      {/* ── THE AIN ENGINE ────────────────────────────────── */}
       <section className="py-24 sm:py-32 px-6 bg-[#0d1120] border-t border-white/5">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-16 text-center">
-            What We Build
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-6 text-center">
+            The Engine
           </h2>
+          <h3 className="text-2xl sm:text-3xl font-light text-slate-200 text-center mb-6">
+            AIN &mdash; Adaptive Intelligence Network
+          </h3>
+          <p className="text-slate-400 text-center max-w-2xl mx-auto mb-16 leading-relaxed">
+            AIN is the relational intelligence engine that powers everything we build.
+            It treats intelligence as participatory, distributed, and meaning-bearing &mdash;
+            not purely instrumental. Every Soullab field runs on AIN.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Pillar
               number="01"
-              title="Sovereign Websites"
-              body="Purpose-built sites for craftspeople, tradespeople, and independent businesses. Every site runs on infrastructure we own and control. No platforms, no subscriptions, no middlemen between you and your customers."
-              accent="Your site. Your server. Your data."
+              title="Consciousness AI"
+              body="AI that orients toward the person, not the prompt. Elemental mapping, state awareness, depth-responsive dialogue, dream integration, and sovereign memory &mdash; all governed by consent."
+              accent="Intelligence that deepens, not extracts."
             />
             <Pillar
               number="02"
-              title="Relational Intelligence"
-              body="We&rsquo;re building MAIA &mdash; a consciousness companion that supports human coherence without eroding agency. Not a chatbot. Not an assistant. A mirror that helps people think more clearly, feel more honestly, and choose more freely."
-              accent="AI that serves the person, not the data model."
+              title="Relational Intelligence Interfaces"
+              body="Not websites. Not apps. Fields &mdash; interactive digital environments powered by relational AI. Each one alive with its own voice, personality, and intelligence tuned to the business it serves."
+              accent="Every field has a soul."
             />
             <Pillar
               number="03"
-              title="Consciousness Architecture"
-              body="Everything we build is governed by a set of vows: consent, sovereignty, non-manipulation. We don&rsquo;t track. We don&rsquo;t profile. We don&rsquo;t optimize for engagement. We build tools that make people more themselves &mdash; not more dependent."
-              accent="Technology with an oath."
+              title="Sovereign Infrastructure"
+              body="Self-hosted, self-owned, self-governed. No cloud lock-in, no third-party dependencies, no platform middlemen. Your field, your data, your server. We build the whole stack."
+              accent="No one sits between you and your people."
             />
           </div>
         </div>
       </section>
 
-      {/* ── THE DEEPER THREAD ────────────────────────────── */}
+      {/* ── FOR PLATFORM BUILDERS ─────────────────────────── */}
       <section className="py-24 sm:py-32 px-6 border-t border-white/5">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-6 text-center">
+            For Platform Builders
+          </h2>
+          <h3 className="text-2xl sm:text-3xl font-light text-slate-200 text-center mb-6">
+            Bring consciousness to your platform
+          </h3>
+          <p className="text-slate-400 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+            Already have an AI platform? Building one? The AIN engine can be integrated
+            into existing systems to add relational depth, sovereignty principles,
+            and consciousness-aware intelligence to any digital experience.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="p-6 rounded-lg border border-white/5 bg-white/[0.02]">
+              <h4 className="text-slate-200 text-base mb-3">AIN Integration</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                Plug the AIN relational intelligence layer into your existing AI stack.
+                Add elemental orientation, state-aware dialogue, consent architecture,
+                and depth-responsive processing to any platform.
+              </p>
+            </div>
+            <div className="p-6 rounded-lg border border-white/5 bg-white/[0.02]">
+              <h4 className="text-slate-200 text-base mb-3">Sovereignty Consulting</h4>
+              <p className="text-slate-500 text-sm leading-relaxed">
+                We help teams design AI systems that respect human agency.
+                Consent frameworks, ethical architecture, self-hosted infrastructure,
+                and the principles that make technology trustworthy.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href="mailto:contact@soullab.life?subject=AIN%20Engine%20Inquiry"
+              className="inline-block px-8 py-4 border border-amber-500/30 text-amber-400 text-sm tracking-[0.15em] uppercase hover:bg-amber-500/10 hover:border-amber-500/50 transition-colors"
+            >
+              Inquire About AIN
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY IT MATTERS ───────────────────────────────── */}
+      <section className="py-24 sm:py-32 px-6 bg-[#0d1120] border-t border-white/5">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-12 text-center">
             Why It Matters
@@ -141,117 +196,123 @@ export default function PoweredByPage() {
               We don&rsquo;t think it has to be that way.
             </p>
             <p>
-              Soullab exists at the intersection of <span className="text-slate-300">craft</span>,{' '}
-              <span className="text-slate-300">consciousness</span>, and{' '}
+              Soullab exists at the intersection of <span className="text-slate-300">consciousness</span>,{' '}
+              <span className="text-slate-300">craft</span>, and{' '}
               <span className="text-slate-300">technology</span>.
               We believe that how something is built matters as much as what it does.
-              That a website can be an act of sovereignty. That an AI can be an act of care.
-              That the people who build real things with their hands deserve technology built
-              with the same integrity.
+              That a digital field can be an act of sovereignty. That an AI can be an act of care.
+              That intelligence should make people more themselves &mdash; not more dependent.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── CURRENT WORK ─────────────────────────────────── */}
-      <section className="py-24 sm:py-32 px-6 bg-[#0d1120] border-t border-white/5">
+      {/* ── LIVE FIELDS ──────────────────────────────────── */}
+      <section className="py-24 sm:py-32 px-6 border-t border-white/5">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-12 text-center">
-            Current Work
+            Live Fields
           </h2>
 
           {/* MAIA — Flagship */}
-          <ClientCard
+          <FieldCard
             name="MAIA"
             tagline="Sovereign Consciousness Companion"
-            description="Our flagship build. Powered by the AIN relational intelligence engine &mdash; voice dialogue, consciousness mapping, elemental orientation, dream work, astrological integration, sanctuary mode, and sovereign memory. Self-hosted, consent-first, no cloud lock-in."
+            description="The flagship. Voice dialogue, consciousness mapping, elemental orientation, dream work, astrological integration, sanctuary mode, sovereign memory &mdash; all powered by AIN. Self-hosted, consent-first."
             href="https://soullab.life/maia"
             flagship
           />
 
-          {/* Client Sites */}
+          {/* Client Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-            <ClientCard
+            <FieldCard
               name="Old Head Plaster"
               tagline="Decorative Plaster Specialist"
-              description="Venetian plaster & decorative finishes"
+              description="AI-powered craft field for venetian plaster and decorative finishes"
               location="Madison, CT"
               href="https://oldhead.soullab.life"
             />
-            <ClientCard
+            <FieldCard
               name="Rudeboy Baking Co."
               tagline="Small Batches. Big Reactions."
-              description="Full brand site with AI kitchen companion"
+              description="Full brand field with AI kitchen companion"
               location="Connecticut"
               href="https://rudeboy.soullab.life"
             />
-            <ClientCard
+            <FieldCard
               name="Jeremy&#39;s Handyman"
               tagline="Residential Maintenance & Repair"
-              description="Service site for residential handyman"
+              description="Relational intelligence field for residential services"
               location="Connecticut"
               href="https://jeremy.soullab.life"
             />
-            <ClientCard
+            <FieldCard
               name="Loralee Stellium Astrology"
               tagline="Astrological Guidance"
-              description="Natal readings & astrological consultation"
+              description="Consciousness field for natal readings and astrological consultation"
               location="Connecticut"
               href="https://loralee.soullab.life"
             />
           </div>
-
-          <p className="text-center text-slate-600 text-sm mt-10">
-            We take on a small number of client projects at a time.
-          </p>
         </div>
       </section>
 
       {/* ── PRINCIPLES ───────────────────────────────────── */}
-      <section className="py-24 sm:py-32 px-6 border-t border-white/5">
+      <section className="py-24 sm:py-32 px-6 bg-[#0d1120] border-t border-white/5">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-xs text-amber-500/80 tracking-[0.3em] uppercase mb-12 text-center">
-            How We Work
+            Our Vows
           </h2>
 
           <div className="space-y-10">
             <Principle
-              label="You own everything"
-              detail="Your domain, your server, your code, your data. If we part ways, you keep it all. Sovereignty isn't a feature — it's the foundation."
-            />
-            <Principle
-              label="No platforms, no lock-in"
-              detail="We don't put your business on Squarespace or Wix. Every site runs on infrastructure we control — a self-hosted stack with no third party sitting between you and your customers."
-            />
-            <Principle
-              label="Built with the same care you bring to your craft"
-              detail="Every site is designed from scratch for the specific business. We don't reskin themes. We don't cut corners. We build like the tradespeople we serve."
+              label="Sovereignty first"
+              detail="Human agency always outweighs engagement, retention, or performance metrics. We build tools that make people more free, not more dependent."
             />
             <Principle
               label="Consent, not capture"
-              detail="We don't install trackers. We don't harvest analytics to sell. Your visitors get what they came for — information about your business — without being profiled."
+              detail="No stealth memory. No hidden tracking. No data harvesting. Every piece of information held is held with explicit permission and can be revoked."
+            />
+            <Principle
+              label="Self-hosted by design"
+              detail="No cloud lock-in. No third-party platforms between you and your people. Your field, your server, your data. We build the whole stack and you own all of it."
+            />
+            <Principle
+              label="Intelligence that serves"
+              detail="AI should support human coherence, not erode it. We don't optimize for engagement. We don't manufacture dependency. We build mirrors, not traps."
             />
           </div>
         </div>
       </section>
 
       {/* ── CTA ──────────────────────────────────────────── */}
-      <section className="py-24 sm:py-32 px-6 bg-[#0d1120] border-t border-white/5">
+      <section className="py-24 sm:py-32 px-6 border-t border-white/5">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl font-light text-slate-200 mb-6 leading-snug">
-            Need a website built with the same integrity you bring to your&nbsp;work?
+            Ready to build something with a&nbsp;soul?
           </h2>
           <p className="text-slate-400 mb-10 leading-relaxed">
-            Tell us about your business. We&apos;ll tell you honestly if we&apos;re the right fit.
+            Whether you need a sovereign digital field for your business,
+            want to integrate the AIN engine into your platform,
+            or just want to talk about what conscious technology looks like &mdash;
+            we&apos;re here.
           </p>
-          <a
-            href="mailto:daragh@soullab.life"
-            className="inline-block px-8 py-4 bg-amber-500 text-[#0b0f1c] text-sm font-medium tracking-[0.15em] uppercase hover:bg-amber-400 transition-colors"
-          >
-            Get in Touch
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="mailto:contact@soullab.life"
+              className="inline-block px-8 py-4 bg-amber-500 text-[#0b0f1c] text-sm font-medium tracking-[0.15em] uppercase hover:bg-amber-400 transition-colors"
+            >
+              Get in Touch
+            </a>
+            <a
+              href="mailto:kelly@soullab.life"
+              className="inline-block px-8 py-4 border border-white/10 text-slate-400 text-sm tracking-[0.15em] uppercase hover:border-white/20 hover:text-slate-300 transition-colors"
+            >
+              Talk to Kelly
+            </a>
+          </div>
           <p className="mt-6 text-slate-600 text-sm">
-            daragh@soullab.life
+            contact@soullab.life
           </p>
         </div>
       </section>
@@ -302,15 +363,12 @@ function Pillar({
   accent: string;
 }) {
   return (
-    <div className="p-8 rounded-lg border border-white/5 bg-white/[0.02] hover:border-amber-500/15 transition-colors group">
+    <div className="p-8 rounded-lg border border-white/5 bg-white/[0.02] hover:border-amber-500/15 transition-colors">
       <span className="text-amber-500/30 text-xs tracking-widest font-mono">
         {number}
       </span>
       <h3 className="text-slate-200 text-lg mt-3 mb-4">{title}</h3>
-      <p
-        className="text-slate-500 text-sm leading-relaxed mb-5"
-        dangerouslySetInnerHTML={{ __html: body }}
-      />
+      <p className="text-slate-500 text-sm leading-relaxed mb-5">{body}</p>
       <p className="text-amber-500/60 text-xs tracking-wide italic">
         {accent}
       </p>
@@ -318,22 +376,20 @@ function Pillar({
   );
 }
 
-function ClientCard({
+function FieldCard({
   name,
   tagline,
   description,
   location,
   href,
   flagship,
-  comingSoon,
 }: {
   name: string;
   tagline?: string;
   description: string;
   location?: string;
-  href?: string;
+  href: string;
   flagship?: boolean;
-  comingSoon?: boolean;
 }) {
   if (flagship) {
     return (
@@ -350,36 +406,11 @@ function ClientCard({
         {tagline && (
           <p className="text-amber-500/70 text-sm mb-3 italic">{tagline}</p>
         )}
-        <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
+        <p
+          className="text-slate-400 text-sm leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
       </a>
-    );
-  }
-
-  const content = (
-    <>
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="text-slate-200 text-base">{name}</h3>
-        {comingSoon && (
-          <span className="text-[10px] text-slate-600 tracking-widest uppercase">
-            Soon
-          </span>
-        )}
-      </div>
-      {tagline && (
-        <p className="text-amber-500/50 text-xs mb-2 italic">{tagline}</p>
-      )}
-      <p className="text-slate-500 text-sm mb-2">{description}</p>
-      {location && <p className="text-slate-600 text-xs">{location}</p>}
-    </>
-  );
-
-  const baseClass = 'block p-6 rounded-lg border transition-colors';
-
-  if (comingSoon) {
-    return (
-      <div className={`${baseClass} border-white/5 bg-white/[0.01] opacity-50`}>
-        {content}
-      </div>
     );
   }
 
@@ -388,9 +419,14 @@ function ClientCard({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`${baseClass} border-white/5 bg-white/[0.02] hover:border-amber-500/20`}
+      className="block p-6 rounded-lg border border-white/5 bg-white/[0.02] hover:border-amber-500/20 transition-colors"
     >
-      {content}
+      <h3 className="text-slate-200 text-base mb-2">{name}</h3>
+      {tagline && (
+        <p className="text-amber-500/50 text-xs mb-2 italic">{tagline}</p>
+      )}
+      <p className="text-slate-500 text-sm mb-2">{description}</p>
+      {location && <p className="text-slate-600 text-xs">{location}</p>}
     </a>
   );
 }
