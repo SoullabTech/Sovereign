@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2, Sparkles, User } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -174,6 +174,24 @@ export default function StudioLayout({
             );
           })}
         </nav>
+
+        {/* Footer Navigation */}
+        <div className="mt-auto border-t border-slate-800/50 px-2 py-3 space-y-1">
+          <Link
+            href="/maia"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+          >
+            <Sparkles className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Back to MAIA</span>}
+          </Link>
+          <Link
+            href="/account"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+          >
+            <User className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Account</span>}
+          </Link>
+        </div>
 
         {/* Expand button when collapsed */}
         {collapsed && (
