@@ -312,14 +312,35 @@ function IChingOracleContent() {
         reading.hexagram.transformed ? `hexagram-${reading.hexagram.transformed.number}` : null,
       ].filter(Boolean) as string[];
 
+      // Structured reference for echo detection
+      // Trigram → element mapping (Wu Xing)
+      const trigramElement: Record<string, string> = {
+        heaven: 'metal', lake: 'metal',
+        fire: 'fire', thunder: 'wood',
+        wind: 'wood', water: 'water',
+        mountain: 'earth', earth: 'earth',
+      };
+      const lowerTrigram = reading.hexagram.trigrams.lower?.toLowerCase() || '';
+      const elementHint = trigramElement[lowerTrigram] || undefined;
+
       const response = await apiFetch('/api/field/records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source: 'iching',
           phenomena,
-          tags,
+          tags: elementHint ? [...tags, elementHint] : tags,
           triggerEvent: question || undefined,
+          sourceRef: {
+            oracleType: 'iching',
+            oracleKey: String(reading.hexagram.number),
+            oracleName: reading.hexagram.name,
+            relatingKey: reading.hexagram.transformed
+              ? String(reading.hexagram.transformed.number)
+              : undefined,
+            elementHint,
+            keyword: reading.hexagram.keyword?.toLowerCase(),
+          },
         }),
       });
 

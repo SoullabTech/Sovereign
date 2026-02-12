@@ -26,11 +26,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { source, phenomena, tags, triggerEvent } = body as {
+    const { source, phenomena, tags, triggerEvent, sourceRef } = body as {
       source: string;       // e.g. 'iching', 'tarot', 'dream', 'session'
       phenomena: string;    // The raw description of what happened
       tags?: string[];      // e.g. ['iching', 'hexagram-29', 'water']
       triggerEvent?: string; // What prompted this (the question asked)
+      sourceRef?: {         // Structured reference for echo detection
+        oracleType?: string;  // 'iching' | 'tarot' | 'runes'
+        oracleKey?: string;   // e.g. '29' (hexagram number)
+        oracleName?: string;  // e.g. 'The Abysmal'
+        relatingKey?: string; // e.g. '7' (transformed hexagram)
+        elementHint?: string; // e.g. 'water' (dominant element)
+        keyword?: string;     // e.g. 'danger' (hexagram keyword)
+      };
     };
 
     if (!source || !phenomena) {
@@ -47,9 +55,12 @@ export async function POST(request: NextRequest) {
         observation: {
           timestamp: new Date(),
           phenomena,
-          sensoryData: {},
+          sensoryData: sourceRef ? { energetic: JSON.stringify(sourceRef) } : {},
           triggerEvent: triggerEvent || undefined,
           precedingActivity: source,
+          // Store sourceRef in environmentalFactors as structured JSON
+          // This enables echo detection without parsing free text
+          environmentalFactors: sourceRef ? JSON.stringify(sourceRef) : undefined,
         },
         tags: [source, ...(tags || [])],
         privacyLevel: 'private',
