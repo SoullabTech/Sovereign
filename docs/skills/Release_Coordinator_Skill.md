@@ -28,6 +28,7 @@ Before generating the full output, run the gate. Output as a table:
 | Canon Compliance | Pass / Warning / Block | One-line finding |
 | Sovereignty Check | Pass / Warning / Block | One-line finding |
 | Field Signals prediction | Pass / Warning / Block | Expected friction + what to watch |
+| Reversibility | Pass / Warning / Block | Rollback path or risk |
 
 **Failsafe**: If any check returns Warning or Block, default rollout to beta-only, feature-flag, or silent release. Never ship to full audience with unresolved warnings.
 
@@ -86,6 +87,14 @@ If user-facing:
 - Short release note (calm, transparent, no hype)
 - Beta tester message (optional)
 - Internal summary (optional)
+
+### 9. Aftercare prompt
+Include a reminder to run aftercare within 48 hours:
+- What actually happened in the field?
+- Did the Field Signals prediction match reality?
+- One-sentence learning for the system
+
+See `RELEASE_REQUIRED_CHECKS.md` aftercare section for the full protocol.
 
 ## Tone
 - Calm
