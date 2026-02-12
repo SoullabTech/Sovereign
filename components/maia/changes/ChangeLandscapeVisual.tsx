@@ -31,7 +31,7 @@ const CHANGE_TYPES = [
     type: 'threshold',
     icon: DoorOpen,
     label: 'Threshold',
-    description: 'You're at a crossing point',
+    description: "You're at a crossing point",
     color: 'from-purple-500/20 to-purple-600/20',
     borderColor: 'border-purple-500/40',
     iconColor: 'text-purple-400',
