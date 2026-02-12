@@ -174,7 +174,7 @@ export default function ChangesPage() {
                         {hexagram && (
                           <span className="flex items-center gap-1.5">
                             <HexagramGlyph
-                              lines={hexagram.lines}
+                              lines={hexagram.lines.map(l => l.isYang)}
                               size="sm"
                               className="opacity-70"
                             />

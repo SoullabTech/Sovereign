@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from './getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 
+export type StudioMode = 'personal' | 'practice';
+
 export interface PractitionerIdentity {
   memberId: string;
   practitionerId: string;
@@ -9,6 +11,7 @@ export interface PractitionerIdentity {
   practitionerName: string;
   portalType: string;
   enabledModules: string[] | null;
+  studioMode: StudioMode;
 }
 
 /**
@@ -37,7 +40,8 @@ export async function getCurrentPractitioner(
        p.slug,
        p.name,
        p.portal_type,
-       p.enabled_modules
+       p.enabled_modules,
+       p.studio_mode
      FROM practitioners p
      WHERE p.member_id = $1
        AND p.status = 'active'
@@ -58,6 +62,7 @@ export async function getCurrentPractitioner(
     practitionerName: row.name,
     portalType: row.portal_type ?? 'generalist',
     enabledModules: row.enabled_modules ?? null,
+    studioMode: (row.studio_mode === 'personal' ? 'personal' : 'practice') as StudioMode,
   };
 }
 

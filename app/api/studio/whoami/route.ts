@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
         name: identity.practitionerName,
         portalType: identity.portalType,
         enabledModules: identity.enabledModules,
+        studioMode: identity.studioMode,
       },
       authMethod,
     });
