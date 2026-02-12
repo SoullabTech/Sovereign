@@ -39,7 +39,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
 
   // Landing & Marketing
-  { exact: '/', public: true, notes: 'Landing page' },
+  { exact: '/', public: true, notes: 'Studio landing page' },
+  { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
   { exact: '/patrons', public: true, notes: 'Patrons page' },
@@ -295,6 +296,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
 
   // Public API
+  { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
