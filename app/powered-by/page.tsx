@@ -64,8 +64,8 @@ export default function PoweredByPage() {
         </p>
 
         <p className="max-w-lg text-center text-slate-500 text-sm mt-6 leading-relaxed">
-          The experience that brought you here was built by us. Not just the interface &mdash;
-          the intelligence underneath it, the server it runs on, and the principles that govern both.
+          What you saw wasn&rsquo;t just a site &mdash; it was a field:
+          design, intelligence, and ethics working as one.
         </p>
 
         {/* Scroll hint */}
