@@ -175,9 +175,9 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
         {
           icon: Hexagon,
-          label: 'Consult the Changes',
-          action: () => onNavigate('/oracle/iching'),
-          description: 'I Ching — the book of change and timing'
+          label: 'I Ching — Consult the Changes',
+          action: () => onNavigate('/oracle/iching?return=/maia'),
+          description: 'The book of change and timing'
         },
       ],
     },

@@ -13,9 +13,9 @@
  * - Changing lines and transformation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
@@ -116,7 +116,19 @@ interface IChingReading {
 }
 
 export default function IChingOraclePage() {
+  return (
+    <Suspense fallback={null}>
+      <IChingOracleContent />
+    </Suspense>
+  );
+}
+
+function IChingOracleContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Return path: if user came from MAIA (or anywhere), back buttons honor it
+  const returnTo = searchParams.get('return') || '/oracle';
+  const returnLabel = returnTo === '/maia' ? 'Return to MAIA' : 'Back to Oracle';
   const [phase, setPhase] = useState<ReadingPhase>('question');
   const [question, setQuestion] = useState('');
   const [reading, setReading] = useState<IChingReading | null>(null);
@@ -307,11 +319,11 @@ export default function IChingOraclePage() {
             className="flex items-center justify-between mb-12"
           >
             <button
-              onClick={() => router.push('/oracle')}
+              onClick={() => router.push(returnTo)}
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Oracle</span>
+              <span className="text-sm">{returnLabel}</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -772,10 +784,10 @@ export default function IChingOraclePage() {
                         New Reading
                       </button>
                       <button
-                        onClick={() => router.push('/oracle')}
+                        onClick={() => router.push(returnTo)}
                         className="px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/20 text-white font-semibold rounded-lg transition-all duration-300"
                       >
-                        Back to Oracle
+                        {returnLabel}
                       </button>
                     </div>
                   </motion.div>
