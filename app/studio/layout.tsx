@@ -8,6 +8,9 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
+import { RecordingContextProvider } from '@/lib/studio/RecordingContext';
+import { RecordingBanner } from '@/components/studio/RecordingBanner';
+import { NavigationGuard } from '@/components/studio/NavigationGuard';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import {
@@ -109,6 +112,8 @@ export default function StudioLayout({
 
   return (
     <TeamContextProvider>
+    <RecordingContextProvider>
+    <NavigationGuard />
     <div className="min-h-screen bg-[#1a1a2e] flex">
       {/* Sidebar */}
       <motion.aside
@@ -193,9 +198,11 @@ export default function StudioLayout({
         className="flex-1 transition-all duration-300"
         style={{ marginLeft: collapsed ? 64 : 200 }}
       >
+        <RecordingBanner />
         {children}
       </main>
     </div>
+    </RecordingContextProvider>
     </TeamContextProvider>
   );
 }
