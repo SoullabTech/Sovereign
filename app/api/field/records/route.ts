@@ -50,17 +50,21 @@ export async function POST(request: NextRequest) {
 
     // Create a Stage 1 (Observation) field record
     // Naming, interpretation, integration come later — at the member's pace
+    //
+    // sourceRef is the canonical structured reference for echo detection.
+    // Stored as a real JSON object (not a string) so Postgres JSONB
+    // operators work without casting. One location only.
     const record = await FieldRecordsRepo.upsert(
       {
         observation: {
           timestamp: new Date(),
           phenomena,
-          sensoryData: sourceRef ? { energetic: JSON.stringify(sourceRef) } : {},
+          sensoryData: sourceRef ? { energetic: sourceRef } : {},
           triggerEvent: triggerEvent || undefined,
           precedingActivity: source,
-          // Store sourceRef in environmentalFactors as structured JSON
-          // This enables echo detection without parsing free text
-          environmentalFactors: sourceRef ? JSON.stringify(sourceRef) : undefined,
+          // sourceRef lives here — canonical location for echo queries:
+          //   observation->'sourceRef'->>'oracleKey'
+          sourceRef: sourceRef || undefined,
         },
         tags: [source, ...(tags || [])],
         privacyLevel: 'private',
