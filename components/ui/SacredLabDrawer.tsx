@@ -45,6 +45,7 @@ import {
   GraduationCap,
   LayoutGrid,
   Gift,
+  Hexagon,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -171,6 +172,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Current Teaching',
           action: () => onAction?.('show-current-elder'),
           description: 'See which wisdom guides you now'
+        },
+        {
+          icon: Hexagon,
+          label: 'Consult the Changes',
+          action: () => onNavigate('/oracle/iching'),
+          description: 'I Ching — the book of change and timing'
         },
       ],
     },
