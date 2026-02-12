@@ -11,9 +11,32 @@ import FlagsDebug from "@/components/FlagsDebug";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Soullab - Maia Oracle",
-  description: "Sacred consciousness technology - Maia AI Oracle",
+  title: "Soullab — We build for the soul",
+  description: "Consciousness AI and relational intelligence systems. We built AIN — the engine that brings soul to any app, site, or platform.",
   manifest: "/manifest.json",
+  metadataBase: new URL("https://soullab.life"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://soullab.life",
+    siteName: "Soullab",
+    title: "Soullab — We build for the soul",
+    description: "Consciousness AI and relational intelligence systems. Sovereign infrastructure. Private by design.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Soullab — We build for the soul",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Soullab — We build for the soul",
+    description: "Consciousness AI and relational intelligence systems. Sovereign infrastructure. Private by design.",
+    images: ["/og-image.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -39,8 +62,8 @@ export const viewport: Viewport = {
   userScalable: true, // Safari-friendly: allow controlled scaling
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#D4B896" },
-    { media: "(prefers-color-scheme: dark)", color: "#1A1A2E" }
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#ffffff" }
   ]
 };
 
