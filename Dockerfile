@@ -25,6 +25,9 @@ ENV SKIP_AETHERIC_CHECK=${SKIP_AETHERIC_CHECK}
 ENV OPENAI_API_KEY=dummy-build-key
 ENV ANTHROPIC_API_KEY=dummy-build-key
 ENV MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
+# Feature flags (NEXT_PUBLIC_* must be set at build time for Next.js inlining)
+ARG NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=true
+ENV NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=${NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS}
 
 # Install psql for SQL migrations (used by migrate service)
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*

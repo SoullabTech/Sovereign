@@ -843,6 +843,21 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
   // LIBRARY (utility)
   // ---------------------------------------------------------------------------
   {
+    id: 'guides',
+    label: 'Guides',
+    shortDescription: 'Video guides to help you explore Soullab',
+    longDescription:
+      'Short explainer videos about MAIA, the Lab, Studio, and more. Watch to get oriented or deepen your understanding.',
+    emoji: '🎬',
+    path: '/labtools/guides',
+    category: 'library',
+    minTier: 'personal',
+    tags: ['video', 'guides', 'learning', 'explainer', 'help'],
+    defaultEnabled: false, // Beta-only until aftercare complete
+    isNew: true,
+    popularityRank: 0,
+  },
+  {
     id: 'library',
     label: 'Library',
     shortDescription: 'Your personal collection',
@@ -1046,6 +1061,41 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     defaultEnabled: false,
     requiresRole: 'admin',
     popularityRank: 3,
+  },
+
+  // ---------------------------------------------------------------------------
+  // DEVELOPER (utility) - Content Creation Tools
+  // ---------------------------------------------------------------------------
+  {
+    id: 'explainer-scripts',
+    label: 'Explainer Scripts',
+    shortDescription: 'Generate a 60–90s script to paste into HeyGen',
+    longDescription:
+      'Create short explainer video scripts with MAIA. Copy the generated script and paste it into HeyGen to produce your video.',
+    emoji: '📝',
+    path: '/labtools/explainer-scripts',
+    category: 'admin',
+    minTier: 'personal',
+    tags: ['video', 'scripts', 'heygen', 'content', 'explainer'],
+    defaultEnabled: false,
+    isNew: true,
+    requiresRole: 'admin',
+    popularityRank: 3,
+  },
+  {
+    id: 'video-publisher',
+    label: 'Video Publisher',
+    shortDescription: 'Publish videos to the Guides library',
+    longDescription:
+      'Admin tool for publishing videos to the member-facing Guides library. Paste HeyGen URLs and manage visibility.',
+    emoji: '📺',
+    path: '/labtools/admin/videos',
+    category: 'admin',
+    minTier: 'pro',
+    tags: ['video', 'publish', 'admin', 'library'],
+    defaultEnabled: false,
+    requiresRole: 'admin',
+    popularityRank: 4,
   },
 
   // ---------------------------------------------------------------------------
