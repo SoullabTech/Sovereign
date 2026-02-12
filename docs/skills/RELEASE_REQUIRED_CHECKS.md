@@ -38,4 +38,19 @@ Within 48 hours of any user-facing release, answer:
 2. **Field Signals accuracy** — Did the prediction match reality? What was missed?
 3. **One-sentence learning** — What does this release teach us about the system or our users?
 
-Log aftercare in the release thread or commit history. This is how Field Signals becomes a living intelligence.
+### Required decision
+
+Aftercare must result in exactly one of:
+
+- **No change** — prediction matched, no update needed
+- **Update Field Signals pattern** — add or refine a known friction/trust/confusion pattern
+- **Update Release Coordinator guidance** — adjust rollout defaults, scope criteria, or monitoring focus
+- **Add a new risk pattern to the gate** — a new tripwire for future releases
+
+Without a decision, aftercare is incomplete.
+
+### Enforcement
+
+If aftercare is not completed within 48 hours, the feature defaults to beta-only status until review is logged.
+
+Log aftercare in the release thread or commit history. This is how Field Signals becomes institutional intelligence.

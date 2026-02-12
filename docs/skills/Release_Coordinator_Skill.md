@@ -89,10 +89,14 @@ If user-facing:
 - Internal summary (optional)
 
 ### 9. Aftercare prompt
-Include a reminder to run aftercare within 48 hours:
+Include a reminder: within 48 hours, run aftercare or this feature reverts to beta-only.
+
+Aftercare answers three questions and forces one decision:
 - What actually happened in the field?
 - Did the Field Signals prediction match reality?
-- One-sentence learning for the system
+- One-sentence learning
+
+Then choose exactly one: no change / update Field Signals pattern / update Release Coordinator guidance / add new risk pattern to gate.
 
 See `RELEASE_REQUIRED_CHECKS.md` aftercare section for the full protocol.
 
