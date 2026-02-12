@@ -46,7 +46,8 @@ export default function HexagramCaster({ changeId, onCast }: HexagramCasterProps
       });
 
       if (res.ok) {
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.cast ?? json; // API wraps in { cast: { ... } }
         setResult({
           hexagramNumber: data.hexagramNumber,
           changingLines: data.changingLines || [],

@@ -42,7 +42,7 @@ export default function HexagramDisplay({
     <div className="space-y-4">
       {/* Glyph and Header */}
       <div className="flex items-start gap-4">
-        <HexagramGlyph lines={hexagram.lines} changingLines={changingLines} size={size} />
+        <HexagramGlyph lines={hexagram.lines.map(l => l.isYang)} changingLines={changingLines} size={size} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="text-lg text-slate-500">{hexagram.number}.</span>
@@ -109,7 +109,7 @@ export default function HexagramDisplay({
             Relating Hexagram
           </h4>
           <div className="flex items-center gap-2">
-            <HexagramGlyph lines={relatingHexagram.lines} size="sm" />
+            <HexagramGlyph lines={relatingHexagram.lines.map(l => l.isYang)} size="sm" />
             <div>
               <p className="text-sm text-slate-300">
                 {relatingHexagram.number}. {relatingHexagram.english}

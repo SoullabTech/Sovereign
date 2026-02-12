@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Wind, Save, Sparkles } from 'lucide-react';
+import { ArrowLeft, Wind, Save, Sparkles, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
 import ChangeLandscape from '@/components/studio/changes/ChangeLandscape';
@@ -184,7 +184,7 @@ export default function NewChangePage() {
                 }`}
                 disabled={s === 'context' && !changeType}
               >
-                {i + 1}. {s === 'type' ? 'Type' : s === 'context' ? 'Context' : 'I Ching'}
+                {i + 1}. {s === 'type' ? 'Type' : s === 'context' ? 'Context' : 'I Ching (Book of Changes)'}
               </button>
               {i < 2 && <div className="w-4 h-px bg-slate-800" />}
             </div>
@@ -276,8 +276,8 @@ export default function NewChangePage() {
                 </div>
               </div>
 
-              {/* Navigation */}
-              <div className="flex gap-3 pt-4 border-t border-slate-800">
+              {/* Actions */}
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-800">
                 <button
                   onClick={() => setStep('type')}
                   className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
@@ -285,11 +285,28 @@ export default function NewChangePage() {
                   Back
                 </button>
                 <button
+                  onClick={() => handleSave(false)}
+                  disabled={!isValid || saving || consulting}
+                  className="flex items-center gap-2 px-4 py-2 text-sm border border-slate-600 text-slate-300 rounded-lg hover:border-cyan-500/50 hover:text-cyan-200 disabled:opacity-50 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={() => handleSave(true)}
+                  disabled={!isValid || saving || consulting}
+                  className="flex items-center gap-2 px-4 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white font-medium rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {consulting ? 'Consulting...' : 'Consult Council'}
+                </button>
+                <button
                   onClick={() => setStep('hexagram')}
                   disabled={!isValid}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm border border-amber-700/50 text-amber-300 rounded-lg hover:border-amber-500/60 hover:bg-amber-950/20 disabled:opacity-50 transition-colors"
                 >
-                  Continue to I Ching
+                  <BookOpen className="w-4 h-4" />
+                  I Ching (Book of Changes)
                 </button>
               </div>
             </>

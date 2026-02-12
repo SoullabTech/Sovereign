@@ -30,6 +30,8 @@ export default function StudioLayout({
   const [checkingPractitioner, setCheckingPractitioner] = useState(true);
   const [isPractitioner, setIsPractitioner] = useState(false);
   const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>(MODULE_DEFINITIONS);
+  const [studioMode, setStudioMode] = useState<'personal' | 'practice'>('practice');
+  const [switchingMode, setSwitchingMode] = useState(false);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -59,6 +61,12 @@ export default function StudioLayout({
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
           const enabledModules = data.identity?.enabledModules as ModuleSlug[] | null;
           setVisibleModules(getVisibleModules(enabledModules, portalType));
+
+          // Load studio mode
+          const mode = data.identity?.studioMode;
+          if (mode === 'personal' || mode === 'practice') {
+            setStudioMode(mode);
+          }
         } else {
           router.replace('/studio/create');
           return;
@@ -78,6 +86,23 @@ export default function StudioLayout({
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const switchMode = async (mode: 'personal' | 'practice') => {
+    if (switchingMode || mode === studioMode) return;
+    setSwitchingMode(true);
+    try {
+      await apiFetch('/api/studio/mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studioMode: mode }),
+      });
+      const target = mode === 'personal' ? '/studio/field' : '/studio';
+      window.location.href = target;
+    } catch (e) {
+      console.error('[StudioMode] switch error:', e);
+      setSwitchingMode(false);
+    }
+  };
 
   const dayName = currentTime.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const timeStr = currentTime.toLocaleTimeString('en-US', {
@@ -145,6 +170,36 @@ export default function StudioLayout({
             </div>
           )}
         </div>
+
+        {/* Mode Toggle: Field ↔ Practice */}
+        {!collapsed && (
+          <div className="px-3 pb-3">
+            <div className="flex items-center gap-1 rounded-xl bg-white/5 p-1 border border-white/10">
+              <button
+                disabled={switchingMode}
+                onClick={() => switchMode('personal')}
+                className={`flex-1 text-sm px-3 py-1.5 rounded-lg transition ${
+                  studioMode === 'personal'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Field
+              </button>
+              <button
+                disabled={switchingMode}
+                onClick={() => switchMode('practice')}
+                className={`flex-1 text-sm px-3 py-1.5 rounded-lg transition ${
+                  studioMode === 'practice'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                Practice
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Team Switcher */}
         <div className="px-2 pb-2">
