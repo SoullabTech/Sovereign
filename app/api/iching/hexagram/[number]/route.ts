@@ -6,8 +6,6 @@ export const dynamic = 'force-dynamic';
  * Returns full hexagram data including judgment, image, lines, and metadata.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getHexagram } from '@/lib/iching/lookup';

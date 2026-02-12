@@ -8,8 +8,6 @@ export const dynamic = 'force-dynamic';
  * Does not require authentication — the oracle is available to all.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cast } from '@/lib/iching/casting';

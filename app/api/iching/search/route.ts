@@ -7,8 +7,6 @@ export const dynamic = 'force-dynamic';
  * Also supports filtering by change type.
  */
 
-export const dynamic = 'force-dynamic';
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { searchHexagrams, getHexagramsByChangeType, getAllHexagrams } from '@/lib/iching/lookup';
