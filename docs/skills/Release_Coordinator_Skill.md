@@ -21,12 +21,17 @@ If information is missing, ask briefly before proceeding.
 
 ## Required Checks (mandatory — every release)
 
-Before generating the full output, always include:
-1. **Canon Compliance** — Does this change align with the oath and canon?
-2. **Sovereignty Check** — Does this preserve user agency, consent, and reversibility?
-3. **Field Signals prediction** — What friction or confusion is most likely from this change? What should we watch for?
+Before generating the full output, run the gate. Output as a table:
 
-If any check surfaces a block, stop and name it before proceeding.
+| Check | Status | Detail |
+|---|---|---|
+| Canon Compliance | Pass / Warning / Block | One-line finding |
+| Sovereignty Check | Pass / Warning / Block | One-line finding |
+| Field Signals prediction | Pass / Warning / Block | Expected friction + what to watch |
+
+**Failsafe**: If any check returns Warning or Block, default rollout to beta-only, feature-flag, or silent release. Never ship to full audience with unresolved warnings.
+
+If any check returns Block, stop and name it before proceeding.
 
 See `RELEASE_REQUIRED_CHECKS.md` for the gate specification.
 
