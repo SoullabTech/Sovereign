@@ -53,4 +53,4 @@ Without a decision, aftercare is incomplete.
 
 If aftercare is not completed within 48 hours, the feature defaults to beta-only status until review is logged.
 
-Log aftercare in the release thread or commit history. This is how Field Signals becomes institutional intelligence.
+Log aftercare as a row in `docs/releases/RELEASE_LEDGER.md`. This is how Field Signals becomes institutional intelligence.
