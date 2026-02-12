@@ -33,7 +33,7 @@ export async function getCurrentPractitioner(
     return null;
   }
 
-  // Look up practitioner by member_id
+  // Look up practitioner by member_id, join members for studio_mode
   const result = await query(
     `SELECT
        p.id as practitioner_id,
@@ -41,8 +41,9 @@ export async function getCurrentPractitioner(
        p.name,
        p.portal_type,
        p.enabled_modules,
-       p.studio_mode
+       m.studio_mode
      FROM practitioners p
+     JOIN members m ON m.id = p.member_id
      WHERE p.member_id = $1
        AND p.status = 'active'
      LIMIT 1`,
