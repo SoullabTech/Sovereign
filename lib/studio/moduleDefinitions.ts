@@ -224,11 +224,11 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   },
   {
     slug: 'scribe',
-    label: 'Scribe',
+    label: 'Session Room',
     icon: Mic,
-    href: '/studio/scribe',
+    href: '/studio/session-room',
     category: 'tools',
-    description: 'Voice transcription and notes',
+    description: 'Live session companion with recording, transcript, and MAIA',
     alwaysOn: false,
   },
   {
