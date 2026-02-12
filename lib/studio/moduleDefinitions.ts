@@ -26,6 +26,7 @@ import {
   Mic,
   DoorOpen,
   Scale,
+  Wind,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -58,6 +59,7 @@ export type ModuleSlug =
   | 'code'
   | 'scribe'
   | 'decisions'
+  | 'changes'
   | 'teams'
   | 'maia'
   | 'tools'
@@ -187,6 +189,15 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     alwaysOn: false,
   },
   {
+    slug: 'changes',
+    label: 'Changes',
+    icon: Wind,
+    href: '/studio/changes',
+    category: 'tools',
+    description: 'Navigate life transitions with I Ching wisdom',
+    alwaysOn: false,
+  },
+  {
     slug: 'vault',
     label: 'Vault',
     icon: Lock,
@@ -272,13 +283,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'maia', 'vault'],
-  astrology: ['clients', 'sessions', 'calendar', 'decisions', 'maia', 'vault'],
-  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'maia', 'services'],
-  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'maia', 'comms', 'teams'],
+  generalist: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
