@@ -26,6 +26,18 @@ export default function PoweredByPage() {
   return (
     <div className="min-h-screen bg-[#0b0f1c] text-white selection:bg-amber-500/30 selection:text-white">
 
+      {/* ── Fade-in keyframes ─────────────────────────────── */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: var(--target-opacity, 1); transform: translateY(0); }
+        }
+        .hero-fade {
+          opacity: 0;
+          animation: fadeIn 1.2s ease-out forwards;
+        }
+      `}</style>
+
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="min-h-[90vh] flex flex-col items-center justify-center px-6 relative overflow-hidden">
         {/* Ambient glow */}
@@ -37,8 +49,26 @@ export default function PoweredByPage() {
           }}
         />
 
+        {/* Clarke epigraph — quiet threshold */}
+        <p
+          className="hero-fade max-w-lg text-center font-serif italic leading-loose mb-14 text-sm sm:text-base"
+          style={{
+            '--target-opacity': '0.4',
+            animationDelay: '0s',
+            color: 'rgba(255, 255, 255, 0.4)',
+          } as React.CSSProperties}
+        >
+          Any sufficiently advanced technology is indistinguishable from magic.
+          <span className="block mt-2 text-xs not-italic tracking-wider" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
+            &mdash; Arthur C. Clarke
+          </span>
+        </p>
+
         {/* Logo spiral */}
-        <div className="relative w-44 h-44 sm:w-56 sm:h-56 mb-10 animate-[spin_80s_linear_infinite]">
+        <div
+          className="hero-fade relative w-44 h-44 sm:w-56 sm:h-56 mb-10 animate-[spin_80s_linear_infinite]"
+          style={{ animationDelay: '0.3s' }}
+        >
           <Image
             src="/soullab-logo.png"
             alt="Soullab spiral"
@@ -49,21 +79,33 @@ export default function PoweredByPage() {
         </div>
 
         {/* Wordmark */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-light tracking-[0.15em] mb-3 text-center">
+        <h1
+          className="hero-fade text-4xl sm:text-5xl md:text-6xl font-light tracking-[0.15em] mb-3 text-center"
+          style={{ animationDelay: '0.5s' }}
+        >
           <span className="text-amber-400">SOUL</span>
           <span className="text-slate-300">LAB</span>
         </h1>
 
-        <p className="text-slate-500 text-sm tracking-[0.2em] uppercase mb-14">
+        <p
+          className="hero-fade text-slate-500 text-sm tracking-[0.2em] uppercase mb-14"
+          style={{ animationDelay: '0.9s' }}
+        >
           Soul-Building Technologies
         </p>
 
-        <p className="max-w-2xl text-center text-slate-400 text-lg sm:text-xl leading-relaxed font-light">
+        <p
+          className="hero-fade max-w-2xl text-center text-slate-400 text-lg sm:text-xl leading-relaxed font-light"
+          style={{ animationDelay: '1.1s' }}
+        >
           We build consciousness AI, relational intelligence interfaces,
           and sovereign digital fields &mdash; powered by the AIN engine.
         </p>
 
-        <p className="max-w-lg text-center text-slate-500 text-sm mt-6 leading-relaxed">
+        <p
+          className="hero-fade max-w-lg text-center text-slate-500 text-sm mt-6 leading-relaxed"
+          style={{ animationDelay: '1.4s' }}
+        >
           What you saw wasn&rsquo;t just a site &mdash; it was a field:
           design, intelligence, and ethics working as one.
         </p>
