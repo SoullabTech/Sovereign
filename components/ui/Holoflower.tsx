@@ -45,7 +45,7 @@ export function Holoflower({
 }: HoloflowerProps) {
   const sizes = sizeMap[size];
   const glow = glowMap[glowIntensity];
-  const svgPath = '/holoflower.svg';
+  const svgPath = variant === 'spectrum' ? '/holoflower-studio-transparent.png' : '/holoflower.svg';
 
   // Determine the color to use - custom color takes precedence
   const glowColor = customColor || colorMap.default;
