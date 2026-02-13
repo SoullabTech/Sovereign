@@ -4,11 +4,15 @@
  * Same interface as /api/voice/openai-tts but routes through
  * the local TTS provider (Kokoro) when MAIA_LOCAL_VOICE_ENABLED=1.
  *
- * Falls back to OpenAI TTS if local provider is unavailable.
+ * Falls back to OpenAI TTS only if:
+ *   1. Local provider is unavailable, AND
+ *   2. Cloud consent allows it (per-member + global)
  *
  * SOVEREIGNTY: When this route succeeds via Kokoro, no audio data
- * leaves the machine. The response header X-TTS-Provider indicates
- * which engine was used.
+ * leaves the machine. Headers tell the truth about what happened:
+ *   X-TTS-Provider  — which engine generated the audio
+ *   X-TTS-Fallback  — 1 if local failed and cloud was used
+ *   X-Voice-Policy   — the sovereignty policy in effect
  */
 
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -17,6 +21,7 @@ import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -89,10 +94,24 @@ export async function POST(req: NextRequest) {
 
     console.log(`[local-tts:${requestId}] starting provider=${ttsRouter.getConfiguredProvider()} voice=${voice} chars=${text.length}`);
 
+    // ═══ CONSENT RESOLUTION ═══
+    const localOnlyHeader = req.headers.get('x-voice-local-only') === '1';
+    const cloudConsent = await checkCloudConsent({
+      memberId: memberId || undefined,
+      localOnlyHeader,
+    });
+
+    const voicePolicy = resolveVoicePolicy({
+      localVoiceEnabled: ttsRouter.isLocalVoiceEnabled(),
+      configuredProvider: ttsRouter.getConfiguredProvider(),
+      cloudConsentAllowed: cloudConsent.allowed,
+    });
+
     let audioBuffer: Buffer;
     let contentType: string;
     let provider: string;
     let fallback = false;
+    let fallbackReason: string | undefined;
 
     try {
       const result = await ttsRouter.synthesize({ text, voice, format, speed });
@@ -102,15 +121,45 @@ export async function POST(req: NextRequest) {
       fallback = result.fallback;
     } catch (err) {
       if (err instanceof TTSFallbackToOpenAI) {
-        // Use existing OpenAI path
         fallback = err.isFallback;
+        fallbackReason = err.reason;
+
+        // ═══ CONSENT GATE ═══
+        // If cloud is not allowed, fail closed — truth over convenience
+        if (fallback && !cloudConsent.allowed) {
+          // Log the blocked fallback for sovereignty accounting
+          logFallbackEvent({
+            requestId,
+            memberId: memberId || undefined,
+            anonId,
+            intendedProvider: ttsRouter.getConfiguredProvider(),
+            actualProvider: 'none',
+            isFallback: true,
+            reason: `consent_denied:${cloudConsent.reason}`,
+            textLength: text.length,
+          });
+
+          return jsonError(
+            'Local voice unavailable and cloud fallback is not permitted',
+            503,
+            {
+              requestId,
+              policy: voicePolicy,
+              consentReason: cloudConsent.reason,
+              hint: voicePolicy === 'local-only'
+                ? 'Local TTS is down. Enable cloud fallback or wait for local recovery.'
+                : 'Cloud voice consent is disabled for this account.',
+            }
+          );
+        }
+
         provider = 'openai';
 
         if (!process.env.OPENAI_API_KEY) {
           return jsonError('Local TTS unavailable and no OpenAI API key configured', 503, { requestId });
         }
 
-        console.log(`[local-tts:${requestId}] ${fallback ? 'falling back' : 'routing'} to OpenAI TTS`);
+        console.log(`[local-tts:${requestId}] ${fallback ? 'falling back' : 'routing'} to OpenAI TTS (reason=${fallbackReason})`);
         const speech = await synthesizeSpeech({ text, voice, format, speed });
         audioBuffer = Buffer.from(await speech.arrayBuffer());
         contentType = format === 'mp3' ? 'audio/mpeg'
@@ -123,7 +172,21 @@ export async function POST(req: NextRequest) {
     }
 
     const ms = Date.now() - t0;
-    console.log(`[local-tts:${requestId}] ok provider=${provider} fallback=${fallback} voice=${voice} bytes=${audioBuffer.length} ms=${ms}`);
+    console.log(`[local-tts:${requestId}] ok provider=${provider} fallback=${fallback} policy=${voicePolicy} voice=${voice} bytes=${audioBuffer.length} ms=${ms}`);
+
+    // ═══ SOVEREIGNTY AUDIT (fire-and-forget) ═══
+    logFallbackEvent({
+      requestId,
+      memberId: memberId || undefined,
+      anonId,
+      intendedProvider: ttsRouter.getConfiguredProvider() === 'auto' ? 'kokoro' : ttsRouter.getConfiguredProvider(),
+      actualProvider: provider,
+      isFallback: fallback,
+      reason: fallback ? fallbackReason : 'local_success',
+      latencyMs: ms,
+      audioBytes: audioBuffer.length,
+      textLength: text.length,
+    });
 
     // Record usage (non-blocking)
     const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
@@ -135,7 +198,7 @@ export async function POST(req: NextRequest) {
       amount: actualSeconds,
     }).catch(err => console.error(`[local-tts:${requestId}] Usage recording failed:`, err));
 
-    return new Response(audioBuffer, {
+    return new Response(new Uint8Array(audioBuffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
@@ -144,6 +207,7 @@ export async function POST(req: NextRequest) {
         'X-Request-Id': requestId,
         'X-TTS-Provider': provider,
         'X-TTS-Fallback': fallback ? '1' : '0',
+        'X-Voice-Policy': voicePolicy,
       },
     });
   } catch (err: any) {

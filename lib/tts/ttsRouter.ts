@@ -2,18 +2,18 @@
  * TTS Router — sovereign provider selection with fallback chain.
  *
  * Routes TTS requests to the configured provider, falling back gracefully
- * if local services are unavailable.
+ * if local services are unavailable — but only with consent.
  *
  * Provider chain (when MAIA_LOCAL_VOICE_ENABLED=1):
  *   1. Kokoro (local) → fastest, sovereign
- *   2. OpenAI TTS (cloud) → fallback if local is down
+ *   2. OpenAI TTS (cloud) → fallback if local is down AND consent allows
  *   3. Browser Web Speech API → ultimate fallback (client-side only)
  *
  * When MAIA_LOCAL_VOICE_ENABLED=0 (default):
  *   Existing behavior unchanged. OpenAI TTS as primary.
  *
  * SOVEREIGNTY: When local voice is enabled and healthy, no audio data
- * leaves the machine. Fallback to cloud is logged and visible.
+ * leaves the machine. Fallback to cloud is logged and audited.
  *
  * Env flags:
  *   MAIA_LOCAL_VOICE_ENABLED — "0" (default) or "1"
@@ -37,6 +37,8 @@ interface TTSResult {
   contentType: string;
   provider: string;
   fallback: boolean;
+  /** Why the provider was chosen (for audit trail) */
+  reason?: string;
 }
 
 /**
@@ -86,23 +88,25 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         format: params.format,
         speed: params.speed,
       });
-      return { ...result, fallback: false };
+      return { ...result, fallback: false, reason: 'kokoro_healthy' };
     } catch (err: any) {
-      console.warn(`[tts-router] Kokoro failed, falling back to OpenAI: ${err.message}`);
-      // Fall through to OpenAI
+      const reason = err.message?.includes('timeout') ? 'kokoro_timeout'
+        : err.message?.includes('ECONNREFUSED') ? 'kokoro_unreachable'
+        : 'kokoro_error';
+      console.warn(`[tts-router] Kokoro failed (${reason}), falling back to OpenAI: ${err.message}`);
+      // Fall through to OpenAI with reason
+      throw new TTSFallbackToOpenAI(true, reason);
     }
   }
 
   if (primary === 'sesame') {
     // Sesame integration is Phase 2 — for now, fall through to OpenAI
     console.warn('[tts-router] Sesame provider selected but not yet integrated. Falling back to OpenAI.');
+    throw new TTSFallbackToOpenAI(true, 'sesame_not_integrated');
   }
 
-  // OpenAI fallback (or primary if configured)
-  // Return null to signal the caller should use the existing OpenAI route.
-  // This avoids duplicating the OpenAI TTS logic (which has its own rate limiting,
-  // member tier checks, etc.)
-  throw new TTSFallbackToOpenAI(primary !== 'openai');
+  // OpenAI as primary (not a fallback)
+  throw new TTSFallbackToOpenAI(false, 'openai_primary');
 }
 
 /**
@@ -111,11 +115,14 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
  */
 export class TTSFallbackToOpenAI extends Error {
   public readonly isFallback: boolean;
+  /** Why the fallback happened (for audit logging) */
+  public readonly reason: string;
 
-  constructor(isFallback: boolean) {
+  constructor(isFallback: boolean, reason: string = 'unknown') {
     super('Falling back to OpenAI TTS');
     this.name = 'TTSFallbackToOpenAI';
     this.isFallback = isFallback;
+    this.reason = reason;
   }
 }
 

@@ -1,8 +1,15 @@
 // backend: app/api/voice/openai-tts/route.ts
+//
+// SOVEREIGNTY: When MAIA_LOCAL_VOICE_ENABLED=1, this route tries Kokoro (local)
+// first before falling back to OpenAI. The frontend doesn't need to change —
+// all existing calls to /api/voice/openai-tts automatically get local voice.
+//
 import OpenAI from "openai";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { NextRequest } from 'next/server';
+import * as ttsRouter from '@/lib/tts/ttsRouter';
+import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -29,14 +36,8 @@ export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
-    }
-
     // ═══ IDENTITY RESOLUTION ═══
     const memberId = await getMemberIdFromRequest(req);
-    // Use stable anon ID from client header (persisted in localStorage) instead of random per-request ID
-    // This ensures Free tier usage actually accumulates across requests
     const headerAnonId = req.headers.get('x-maia-anon-id') ?? undefined;
     const isAnon = !memberId;
     if (isAnon && !headerAnonId) {
@@ -47,8 +48,6 @@ export async function POST(req: NextRequest) {
     // ═══ TIER-BASED LIMITS CHECK ═══
     const memberTier: MemberTier = isAnon ? 'free' : memberId ? await getMemberTier(memberId) : 'free';
 
-    // Estimate TTS duration: ~150 words/min at average pace, ~5 chars/word
-    // So roughly 750 chars/min → ~12.5 chars/sec → estimate seconds from text length
     const body = await req.json().catch(() => null) as null | {
       text?: string;
       voice?: string;
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
     const text = body?.text?.trim();
     if (!text) return jsonError("Missing 'text' in request body", 400, { requestId });
 
-    // Estimate duration for pre-check (refine after actual synthesis)
     const estimatedSeconds = Math.ceil(text.length / 12.5);
 
     const limitsCheck = await LimitsEnforcer.checkUsage({
@@ -84,18 +82,122 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Default to tts-1 for stability; can use tts-1-hd or gpt-4o-mini-tts if desired
-    const model = body?.model ?? "tts-1";
     const voice = body?.voice ?? "alloy";
     const format = body?.format ?? "mp3";
     const speed = body?.speed ?? 1.0;
 
-    // OpenAI audio/speech supports max 4096 chars
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
     }
 
     const t0 = Date.now();
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SOVEREIGN LOCAL VOICE INTERCEPT
+    // When local voice is enabled, try Kokoro first. If it succeeds,
+    // the audio never leaves the machine. All existing frontend calls
+    // to this endpoint automatically get local voice — zero UI changes.
+    // ═══════════════════════════════════════════════════════════════════
+    if (ttsRouter.isLocalVoiceEnabled()) {
+      try {
+        const result = await ttsRouter.synthesize({ text, voice, format: format as any, speed });
+        const ms = Date.now() - t0;
+
+        console.log(`[openai-tts:${requestId}] LOCAL provider=${result.provider} voice=${voice} bytes=${result.audioBuffer.length} ms=${ms}`);
+
+        // Audit: log the successful local synthesis
+        logFallbackEvent({
+          requestId,
+          memberId: memberId || undefined,
+          anonId,
+          intendedProvider: 'kokoro',
+          actualProvider: result.provider,
+          isFallback: false,
+          reason: 'local_success',
+          latencyMs: ms,
+          audioBytes: result.audioBuffer.length,
+          textLength: text.length,
+        });
+
+        // Record usage
+        const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
+        LimitsEnforcer.recordUsage({
+          memberId: memberId || undefined,
+          anonId,
+          tier: memberTier,
+          resource: 'voice_tts',
+          amount: actualSeconds,
+        }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
+
+        const localPolicy = resolveVoicePolicy({
+          localVoiceEnabled: true,
+          configuredProvider: ttsRouter.getConfiguredProvider(),
+          cloudConsentAllowed: true,
+        });
+
+        return new Response(new Uint8Array(result.audioBuffer), {
+          status: 200,
+          headers: {
+            "Content-Type": result.contentType,
+            "Content-Length": result.audioBuffer.length.toString(),
+            "Cache-Control": "no-store",
+            "X-Request-Id": requestId,
+            "X-TTS-Provider": result.provider,
+            "X-TTS-Fallback": "0",
+            "X-Voice-Policy": localPolicy,
+          },
+        });
+      } catch (localErr: any) {
+        // Local failed — check consent before falling through to OpenAI
+        const localOnlyHeader = req.headers.get('x-voice-local-only') === '1';
+        const cloudConsent = await checkCloudConsent({
+          memberId: memberId || undefined,
+          localOnlyHeader,
+        });
+
+        if (!cloudConsent.allowed) {
+          logFallbackEvent({
+            requestId,
+            memberId: memberId || undefined,
+            anonId,
+            intendedProvider: 'kokoro',
+            actualProvider: 'none',
+            isFallback: true,
+            reason: `consent_denied:${cloudConsent.reason}`,
+            textLength: text.length,
+          });
+
+          return jsonError('Local voice unavailable and cloud fallback is not permitted', 503, {
+            requestId,
+            policy: 'local-only',
+          });
+        }
+
+        // Log the fallback
+        logFallbackEvent({
+          requestId,
+          memberId: memberId || undefined,
+          anonId,
+          intendedProvider: 'kokoro',
+          actualProvider: 'openai',
+          isFallback: true,
+          reason: localErr?.reason || 'kokoro_error',
+          textLength: text.length,
+        });
+
+        console.warn(`[openai-tts:${requestId}] Local TTS failed, falling through to OpenAI: ${localErr?.message}`);
+        // Fall through to existing OpenAI logic below
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // OPENAI TTS (original path, or fallback from local)
+    // ═══════════════════════════════════════════════════════════════════
+    if (!process.env.OPENAI_API_KEY) {
+      return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
+    }
+
+    const model = body?.model ?? "tts-1";
 
     console.log(`[openai-tts:${requestId}] starting model=${model} voice=${voice} format=${format} chars=${text.length}`);
 
@@ -110,11 +212,9 @@ export async function POST(req: NextRequest) {
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
 
-    // Helpful server logs (you'll see these in Docker/server logs)
     console.log(`[openai-tts:${requestId}] ok model=${model} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
 
     // ═══ RECORD VOICE USAGE (non-blocking) ═══
-    // Use actual synthesis time as a proxy for audio duration
     const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
     LimitsEnforcer.recordUsage({
       memberId: memberId || undefined,
@@ -132,13 +232,18 @@ export async function POST(req: NextRequest) {
       : format === "flac" ? "audio/flac"
       : "application/octet-stream";
 
-    return new Response(audioBuffer, {
+    const isFallbackFromLocal = ttsRouter.isLocalVoiceEnabled();
+
+    return new Response(new Uint8Array(audioBuffer), {
       status: 200,
       headers: {
         "Content-Type": contentType,
         "Content-Length": audioBuffer.length.toString(),
         "Cache-Control": "no-store",
         "X-Request-Id": requestId,
+        "X-TTS-Provider": "openai",
+        "X-TTS-Fallback": isFallbackFromLocal ? "1" : "0",
+        "X-Voice-Policy": isFallbackFromLocal ? "local-prefer" : "cloud-primary",
       },
     });
   } catch (err: any) {
