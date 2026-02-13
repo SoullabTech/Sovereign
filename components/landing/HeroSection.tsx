@@ -72,9 +72,9 @@ export function HeroSection() {
             `}</style>
           </div>
 
-          {/* Outer holoflower layer */}
+          {/* Single translucent holoflower — slow rotation */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative h-[88%] w-[88%] animate-[spin_36s_linear_infinite] motion-reduce:animate-none opacity-40">
+            <div className="relative h-[92%] w-[92%] animate-[spin_48s_linear_infinite] motion-reduce:animate-none opacity-60">
               <Image
                 src="/holoflower.png"
                 alt="Holoflower"
@@ -85,29 +85,6 @@ export function HeroSection() {
               />
             </div>
           </div>
-
-          {/* Inner holoflower layer — golden ratio */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative h-[55.6%] w-[55.6%] animate-[spin_44s_linear_infinite_reverse] motion-reduce:animate-none opacity-70">
-              <Image
-                src="/holoflower.png"
-                alt="Holoflower inner"
-                fill
-                sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 230px"
-                className="object-contain"
-                priority
-              />
-            </div>
-          </div>
-
-          {/* Center light point */}
-          <div
-            className="absolute left-1/2 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.30) 45%, rgba(255,255,255,0.00) 70%)',
-            }}
-          />
         </motion.div>
 
         {/* Descriptor */}
