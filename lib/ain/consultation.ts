@@ -19,6 +19,9 @@ import type {
   FramingResponse,
   EmergenceRating,
 } from './types';
+
+// Re-export for consumers that import from this module
+export type { ConsultationResult };
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import {
   isSinkhornEnabled,
