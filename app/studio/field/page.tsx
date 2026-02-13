@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Wind, Scale, BookOpen, Calendar, CheckSquare, Mic } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import { InsightTrigger } from '@/components/guidance/InsightTrigger';
 
 interface FieldStats {
   activeChanges: number;
@@ -53,7 +54,10 @@ export default function FieldPage() {
         {/* Greeting */}
         <div className="mb-12">
           <p className="text-slate-500 text-sm tracking-wider uppercase mb-2">{greeting.label}</p>
-          <h1 className="text-3xl font-light text-white mb-2">Field</h1>
+          <h1 className="text-3xl font-light text-white mb-2 flex items-center gap-2">
+            Field
+            <InsightTrigger featureKey="studio.field" />
+          </h1>
           <p className="text-slate-400">Your personal orientation space. What wants attention?</p>
         </div>
 

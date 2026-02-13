@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Plus, Wind, Clock, Droplets, Sprout, DoorOpen, Merge, Zap, Sun } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { InsightTrigger } from '@/components/guidance/InsightTrigger';
 import type { ChangeRecord } from '@/lib/studio/changes/types';
 import { getChangeTypeConfig } from '@/lib/studio/changes/changeTypes';
 import HexagramGlyph from '@/components/iching/HexagramGlyph';
@@ -71,6 +72,7 @@ export default function ChangesPage() {
             <h1 className="text-2xl font-light text-white flex items-center gap-3">
               <Wind className="w-6 h-6 text-cyan-400" />
               Change Navigation
+              <InsightTrigger featureKey="oracle.iching" />
             </h1>
             <p className="text-sm text-slate-400 mt-1">
               Life transitions enriched with I Ching wisdom
