@@ -9,10 +9,11 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, RefreshCw, Save, Check, Leaf } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, RefreshCw, Save, Check, Leaf, MessageCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getChangeMentorTemplateForChange } from '@/lib/studio/changes/mentorTemplates';
+import MentorChat from '@/components/studio/changes/MentorChat';
 import type { ConsultationResult } from '@/lib/ain/types';
 import type { ChangeMentorReflection } from '@/lib/studio/changes/types';
 
@@ -56,6 +57,7 @@ export default function ChangeMentorPanel({
   const [intention, setIntention] = useState(followUpIntention || '');
   const [savingIntention, setSavingIntention] = useState(false);
   const [intentionSaved, setIntentionSaved] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   if (!council) return null;
 
@@ -99,6 +101,20 @@ export default function ChangeMentorPanel({
       setTimeout(() => setIntentionSaved(false), 2000);
     } finally {
       setSavingIntention(false);
+    }
+  }
+
+  async function saveInsightFromChat(text: string) {
+    // Save the mentor's insight as follow-up intention
+    setIntention(text.slice(0, 500));
+    try {
+      await apiFetch(`/api/studio/changes/${changeId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ followUpIntention: text.slice(0, 500).trim() }),
+      });
+      onIntentionSaved(text.slice(0, 500).trim());
+    } catch {
+      // Silently fail — the local state is already updated
     }
   }
 
@@ -254,6 +270,34 @@ export default function ChangeMentorPanel({
             )}
           </div>
         )}
+
+        {/* Talk to MAIA Mentor */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-jade-sage/30 to-transparent" />
+        </div>
+
+        <AnimatePresence mode="wait">
+          {chatOpen ? (
+            <MentorChat
+              key="mentor-chat"
+              changeId={changeId}
+              onSaveInsight={saveInsightFromChat}
+              onClose={() => setChatOpen(false)}
+            />
+          ) : (
+            <motion.button
+              key="mentor-chat-btn"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setChatOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-jade-forest/15 hover:bg-jade-forest/25 border border-jade-malachite/20 hover:border-jade-malachite/40 text-jade-sage text-sm font-light rounded-lg transition-all"
+            >
+              <MessageCircle className="w-4 h-4 text-jade-malachite" />
+              Talk to MAIA Mentor
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <p className="text-xs text-jade-mineral/50 text-center font-light">

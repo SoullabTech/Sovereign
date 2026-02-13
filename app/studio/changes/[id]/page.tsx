@@ -33,6 +33,8 @@ import type { ChangeRecord, ChangeIteration, ChangeExperience } from '@/lib/stud
 import { getChangeTypeConfig } from '@/lib/studio/changes/changeTypes';
 import HexagramDisplay from '@/components/studio/changes/HexagramDisplay';
 import HexagramCaster from '@/components/studio/changes/HexagramCaster';
+import ChangeMentorPanelComponent from '@/components/studio/changes/ChangeMentorPanel';
+import ChangeExperienceTimelineComponent from '@/components/studio/changes/ChangeExperienceTimeline';
 
 const CHANGE_TYPE_ICONS: Record<string, typeof Wind> = {
   dissolution: Droplets,
@@ -435,15 +437,6 @@ function ContinueChangeForm({
   );
 }
 
-// ─── Placeholder Components (to be implemented separately) ─────
-
-function ChangeMentorPanel({ changeId, council, changeType }: { changeId: string; council: any; changeType: string | null }) {
-  return (
-    <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4">
-      <p className="text-xs text-slate-500 italic">Mentor Panel — coming soon</p>
-    </div>
-  );
-}
 
 function ChangeChain({ changeId, parentChange, childChanges }: { changeId: string; parentChange: any; childChanges: any[] }) {
   if (!parentChange && (!childChanges || childChanges.length === 0)) return null;
@@ -456,14 +449,6 @@ function ChangeChain({ changeId, parentChange, childChanges }: { changeId: strin
   );
 }
 
-function ChangeExperienceTimeline({ changeId, experiences }: { changeId: string; experiences: ChangeExperience[] }) {
-  return (
-    <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4">
-      <h3 className="text-xs text-slate-400 uppercase tracking-wider mb-2">Experiences</h3>
-      <p className="text-xs text-slate-500 italic">Experience timeline — coming soon</p>
-    </div>
-  );
-}
 
 // ─── Main Page ──────────────────────────────────────────────────
 
@@ -766,10 +751,21 @@ export default function ChangeDetailPage() {
         {/* Mentor Panel */}
         {council && (
           <div className="mt-6">
-            <ChangeMentorPanel
+            <ChangeMentorPanelComponent
               changeId={changeId}
               council={council}
               changeType={change.changeType}
+              urgency={change.urgency}
+              emotionalState={change.emotionalState}
+              hexagramNumber={change.hexagramNumber}
+              mentorReflection={change.mentorReflection}
+              followUpIntention={change.followUpIntention}
+              onReflectionGenerated={(reflection) => {
+                setChange(prev => prev ? { ...prev, mentorReflection: reflection } : prev);
+              }}
+              onIntentionSaved={(intention) => {
+                setChange(prev => prev ? { ...prev, followUpIntention: intention } : prev);
+              }}
             />
           </div>
         )}
@@ -782,9 +778,15 @@ export default function ChangeDetailPage() {
               parentChange={change.parentChange || null}
               childChanges={change.childChanges || []}
             />
-            <ChangeExperienceTimeline
+            <ChangeExperienceTimelineComponent
               changeId={changeId}
               experiences={change.experiences || []}
+              onExperienceAdded={(experience) => {
+                setChange(prev => prev ? {
+                  ...prev,
+                  experiences: [experience, ...(prev.experiences || [])],
+                } : prev);
+              }}
             />
           </div>
         )}
