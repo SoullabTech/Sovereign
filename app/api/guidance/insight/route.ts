@@ -209,10 +209,13 @@ async function generateWhisper(
       ],
     });
 
-    const text = response.content
+    let text = response.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
       .map((b) => b.text)
       .join('');
+
+    // Strip markdown code fences if Haiku wraps the JSON
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
 
     const parsed = JSON.parse(text);
 
