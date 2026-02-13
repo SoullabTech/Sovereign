@@ -34,6 +34,7 @@ import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useS
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
 import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase } from 'lucide-react';
+import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -946,229 +947,253 @@ function MAIAPageContent() {
               <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setShowChatInterface(!showChatInterface)}
-                    className="px-3 py-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
-                  >
-                    <span className="text-xs text-maia-ink-80 font-light">
-                      {showChatInterface ? '💬 Text' : '🎤 Voice'}
-                    </span>
-                  </button>
+                  <FeatureTooltip featureId="voice-text-toggle" side="bottom">
+                    <button
+                      onClick={() => setShowChatInterface(!showChatInterface)}
+                      className="px-3 py-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
+                    >
+                      <span className="text-xs text-maia-ink-80 font-light">
+                        {showChatInterface ? '💬 Text' : '🎤 Voice'}
+                      </span>
+                    </button>
+                  </FeatureTooltip>
                 </div>
 
                 {/* Mode Selector */}
                 <div className="flex items-center gap-1 bg-maia-navy-900/60 rounded-lg p-0.5">
-                  <motion.button
-                    onClick={() => setMaiaMode('normal')}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
-                      maiaMode === 'normal'
-                        ? 'bg-maia-navy-800/80 border border-maia-spice-500/50 text-maia-ink-100 font-medium'
-                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {maiaMode === 'normal' && (
-                      <div className="w-2 h-2 rounded-full bg-maia-spice-400" />
-                    )}
-                    Talk
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setMaiaMode('patient')}
-                    onTouchStart={(e) => {
-                      const timer = setTimeout(() => {
-                        if ('vibrate' in navigator) navigator.vibrate(10);
-                        setFrameworkSelectorMode('counsel');
-                        setShowFrameworkSelector(true);
-                      }, 500);
-                      (e.currentTarget as any)._longPressTimer = timer;
-                    }}
-                    onTouchEnd={(e) => {
-                      clearTimeout((e.currentTarget as any)._longPressTimer);
-                    }}
-                    onTouchMove={(e) => {
-                      clearTimeout((e.currentTarget as any)._longPressTimer);
-                    }}
-                    onDoubleClick={() => {
-                      if ('vibrate' in navigator) navigator.vibrate(10);
-                      setFrameworkSelectorMode('counsel');
-                      setShowFrameworkSelector(true);
-                    }}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
-                      maiaMode === 'patient'
-                        ? 'bg-maia-navy-800/80 border border-maia-sage-500/50 text-maia-ink-100 font-medium'
-                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="Click to switch • Double-click for framework options (Jungian, Somatic, IFS, etc.)"
-                  >
-                    {maiaMode === 'patient' && (
-                      <div className="w-2 h-2 rounded-full bg-maia-sage-400" />
-                    )}
-                    Care
-                    {currentCounselFramework !== 'auto' ? (
-                      <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
-                    ) : (
-                      <span className="text-[10px] opacity-40">▾</span>
-                    )}
-                  </motion.button>
-                  <motion.button
-                    onClick={() => setMaiaMode('session')}
-                    onTouchStart={(e) => {
-                      const timer = setTimeout(() => {
-                        if ('vibrate' in navigator) navigator.vibrate(10);
-                        setFrameworkSelectorMode('scribe');
-                        setShowFrameworkSelector(true);
-                      }, 500);
-                      (e.currentTarget as any)._longPressTimer = timer;
-                    }}
-                    onTouchEnd={(e) => {
-                      clearTimeout((e.currentTarget as any)._longPressTimer);
-                    }}
-                    onTouchMove={(e) => {
-                      clearTimeout((e.currentTarget as any)._longPressTimer);
-                    }}
-                    onDoubleClick={() => {
-                      if ('vibrate' in navigator) navigator.vibrate(10);
-                      setFrameworkSelectorMode('scribe');
-                      setShowFrameworkSelector(true);
-                    }}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
-                      maiaMode === 'session'
-                        ? 'bg-maia-navy-800/80 border border-blue-500/50 text-maia-ink-100 font-medium'
-                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="Click to switch • Double-click for lens options (Jungian, Somatic, Archetypal, etc.)"
-                  >
-                    {maiaMode === 'session' && (
-                      <div className="w-2 h-2 rounded-full bg-blue-400" />
-                    )}
-                    Scribe
-                    {currentScribeLens !== 'auto' ? (
-                      <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
-                    ) : (
-                      <span className="text-[10px] opacity-40">▾</span>
-                    )}
-                  </motion.button>
-
-                  {/* ✨ Capture Button - Desktop (after Scribe, before Session) */}
-                  <motion.button
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('labAction', {
-                        detail: { action: 'capture-spirit' }
-                      }));
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
-                             border border-[#D4B896]/30 hover:border-[#D4B896]/50
-                             text-[#D4B896] text-xs font-light transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="Capture the spirit of the last few turns"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Capture
-                  </motion.button>
-
-                  {/* Session Button - Desktop (after Capture) */}
-                  {!hasActiveSession ? (
+                  <FeatureTooltip featureId="mode-talk" side="bottom">
                     <motion.button
-                      onClick={() => setShowSessionSelector(true)}
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                               bg-maia-navy-800/40 hover:bg-maia-navy-800
-                               border border-maia-success/30 hover:border-maia-success/50
-                               text-maia-success text-xs font-light transition-all"
+                      onClick={() => setMaiaMode('normal')}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                        maiaMode === 'normal'
+                          ? 'bg-maia-navy-800/80 border border-maia-spice-500/50 text-maia-ink-100 font-medium'
+                          : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                      }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <Clock className="w-4 h-4" />
-                      <span className="hidden sm:inline">Start Session</span>
+                      {maiaMode === 'normal' && (
+                        <div className="w-2 h-2 rounded-full bg-maia-spice-400" />
+                      )}
+                      Talk
                     </motion.button>
+                  </FeatureTooltip>
+                  <FeatureTooltip featureId="mode-care" side="bottom">
+                    <motion.button
+                      onClick={() => setMaiaMode('patient')}
+                      onTouchStart={(e) => {
+                        const timer = setTimeout(() => {
+                          if ('vibrate' in navigator) navigator.vibrate(10);
+                          setFrameworkSelectorMode('counsel');
+                          setShowFrameworkSelector(true);
+                        }, 500);
+                        (e.currentTarget as any)._longPressTimer = timer;
+                      }}
+                      onTouchEnd={(e) => {
+                        clearTimeout((e.currentTarget as any)._longPressTimer);
+                      }}
+                      onTouchMove={(e) => {
+                        clearTimeout((e.currentTarget as any)._longPressTimer);
+                      }}
+                      onDoubleClick={() => {
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('counsel');
+                        setShowFrameworkSelector(true);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                        maiaMode === 'patient'
+                          ? 'bg-maia-navy-800/80 border border-maia-sage-500/50 text-maia-ink-100 font-medium'
+                          : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      title="Click to switch • Double-click for framework options (Jungian, Somatic, IFS, etc.)"
+                    >
+                      {maiaMode === 'patient' && (
+                        <div className="w-2 h-2 rounded-full bg-maia-sage-400" />
+                      )}
+                      Care
+                      {currentCounselFramework !== 'auto' ? (
+                        <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
+                      ) : (
+                        <span className="text-[10px] opacity-40">▾</span>
+                      )}
+                    </motion.button>
+                  </FeatureTooltip>
+                  <FeatureTooltip featureId="mode-scribe" side="bottom">
+                    <motion.button
+                      onClick={() => setMaiaMode('session')}
+                      onTouchStart={(e) => {
+                        const timer = setTimeout(() => {
+                          if ('vibrate' in navigator) navigator.vibrate(10);
+                          setFrameworkSelectorMode('scribe');
+                          setShowFrameworkSelector(true);
+                        }, 500);
+                        (e.currentTarget as any)._longPressTimer = timer;
+                      }}
+                      onTouchEnd={(e) => {
+                        clearTimeout((e.currentTarget as any)._longPressTimer);
+                      }}
+                      onTouchMove={(e) => {
+                        clearTimeout((e.currentTarget as any)._longPressTimer);
+                      }}
+                      onDoubleClick={() => {
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('scribe');
+                        setShowFrameworkSelector(true);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                        maiaMode === 'session'
+                          ? 'bg-maia-navy-800/80 border border-blue-500/50 text-maia-ink-100 font-medium'
+                          : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      title="Click to switch • Double-click for lens options (Jungian, Somatic, Archetypal, etc.)"
+                    >
+                      {maiaMode === 'session' && (
+                        <div className="w-2 h-2 rounded-full bg-blue-400" />
+                      )}
+                      Scribe
+                      {currentScribeLens !== 'auto' ? (
+                        <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
+                      ) : (
+                        <span className="text-[10px] opacity-40">▾</span>
+                      )}
+                    </motion.button>
+                  </FeatureTooltip>
+
+                  {/* Capture Button - Desktop (after Scribe, before Session) */}
+                  <FeatureTooltip featureId="capture" side="bottom">
+                    <motion.button
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('labAction', {
+                          detail: { action: 'capture-spirit' }
+                        }));
+                      }}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                               bg-[#D4B896]/10 hover:bg-[#D4B896]/20
+                               border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                               text-[#D4B896] text-xs font-light transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      title="Capture the spirit of the last few turns"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Capture
+                    </motion.button>
+                  </FeatureTooltip>
+
+                  {/* Session Button - Desktop (after Capture) */}
+                  {!hasActiveSession ? (
+                    <FeatureTooltip featureId="session-start" side="bottom">
+                      <motion.button
+                        onClick={() => setShowSessionSelector(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                 bg-maia-navy-800/40 hover:bg-maia-navy-800
+                                 border border-maia-success/30 hover:border-maia-success/50
+                                 text-maia-success text-xs font-light transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Clock className="w-4 h-4" />
+                        <span className="hidden sm:inline">Start Session</span>
+                      </motion.button>
+                    </FeatureTooltip>
                   ) : (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                                 bg-maia-navy-800/60 border border-maia-success/40 text-maia-success text-xs">
-                      <div className="w-2 h-2 rounded-full bg-maia-success animate-pulse" />
-                      <span className="hidden sm:inline">Session Active</span>
-                    </div>
+                    <FeatureTooltip featureId="session-end" side="bottom">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                   bg-maia-navy-800/60 border border-maia-success/40 text-maia-success text-xs">
+                        <div className="w-2 h-2 rounded-full bg-maia-success animate-pulse" />
+                        <span className="hidden sm:inline">Session Active</span>
+                      </div>
+                    </FeatureTooltip>
                   )
                 }
                 </div>
 
                 {/* Guide Button - Desktop */}
-                <motion.button
-                  onClick={() => router.push('/maia/guide')}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="User Guide"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span className="hidden sm:inline">Guide</span>
-                </motion.button>
+                <FeatureTooltip featureId="guide" side="bottom">
+                  <motion.button
+                    onClick={() => router.push('/maia/guide')}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="User Guide"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span className="hidden sm:inline">Guide</span>
+                  </motion.button>
+                </FeatureTooltip>
 
                 {/* Help Hub Button - Desktop */}
-                <motion.button
-                  onClick={() => setShowHelpHub(true)}
-                  className="flex items-center justify-center w-8 h-8 rounded-full
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Help"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                </motion.button>
+                <FeatureTooltip featureId="help" side="bottom">
+                  <motion.button
+                    onClick={() => setShowHelpHub(true)}
+                    className="flex items-center justify-center w-8 h-8 rounded-full
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Help"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </motion.button>
+                </FeatureTooltip>
 
                 {/* Journal Button - Desktop */}
-                <motion.button
-                  onClick={() => setShowJournalSheet(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Quick Journal"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Journal</span>
-                </motion.button>
+                <FeatureTooltip featureId="journal" side="bottom">
+                  <motion.button
+                    onClick={() => setShowJournalSheet(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Quick Journal"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="hidden sm:inline">Journal</span>
+                  </motion.button>
+                </FeatureTooltip>
 
                 {/* Feedback Button - Desktop */}
-                <motion.button
-                  onClick={() => setShowFeedbackSheet(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Send Feedback"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                </motion.button>
+                <FeatureTooltip featureId="feedback" side="bottom">
+                  <motion.button
+                    onClick={() => setShowFeedbackSheet(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Send Feedback"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </motion.button>
+                </FeatureTooltip>
 
                 {/* Account Button - Desktop (opens bottom sheet) */}
-                <motion.button
-                  onClick={() => setShowAccountMenu(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Account Menu"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">Account</span>
-                </motion.button>
+                <FeatureTooltip featureId="account" side="bottom">
+                  <motion.button
+                    onClick={() => setShowAccountMenu(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Account Menu"
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="hidden sm:inline">Account</span>
+                  </motion.button>
+                </FeatureTooltip>
               </div>
             </div>
           </div>
