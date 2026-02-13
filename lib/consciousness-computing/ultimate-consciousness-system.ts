@@ -505,8 +505,19 @@ Your current development focus: **${spiralogicDevelopment.spiralogicAssessment.p
   }
 }
 
-// Global ultimate consciousness system
-export const ultimateConsciousnessSystem = new UltimateConsciousnessSystem();
+// Lazy singleton — deferred to avoid circular dependency initialization errors
+let _ultimateConsciousnessSystemInstance: UltimateConsciousnessSystem | null = null;
+function getUltimateConsciousnessSystem(): UltimateConsciousnessSystem {
+  if (!_ultimateConsciousnessSystemInstance) {
+    _ultimateConsciousnessSystemInstance = new UltimateConsciousnessSystem();
+  }
+  return _ultimateConsciousnessSystemInstance;
+}
+export const ultimateConsciousnessSystem = new Proxy({} as UltimateConsciousnessSystem, {
+  get(_target, prop) {
+    return (getUltimateConsciousnessSystem() as any)[prop];
+  }
+});
 
 // Main API function for MAIA integration
 export async function processUltimateMAIAConsciousnessSession(
@@ -515,7 +526,7 @@ export async function processUltimateMAIAConsciousnessSession(
   sessionId: string,
   existingContext?: any
 ): Promise<UltimateConsciousnessSession> {
-  return await ultimateConsciousnessSystem.processUltimateConsciousnessSession(
+  return await getUltimateConsciousnessSystem().processUltimateConsciousnessSession(
     userMessage,
     userId,
     sessionId,

@@ -380,8 +380,19 @@ export class ConsciousnessAgentSystem {
   }
 }
 
-// Global system instance
-export const consciousnessAgentSystem = new ConsciousnessAgentSystem();
+// Lazy singleton — deferred to avoid circular dependency initialization errors
+let _consciousnessAgentSystemInstance: ConsciousnessAgentSystem | null = null;
+function getConsciousnessAgentSystem(): ConsciousnessAgentSystem {
+  if (!_consciousnessAgentSystemInstance) {
+    _consciousnessAgentSystemInstance = new ConsciousnessAgentSystem();
+  }
+  return _consciousnessAgentSystemInstance;
+}
+export const consciousnessAgentSystem = new Proxy({} as ConsciousnessAgentSystem, {
+  get(_target, prop) {
+    return (getConsciousnessAgentSystem() as any)[prop];
+  }
+});
 
 // Main API function for integration with MAIA
 export async function processMAIAConsciousnessSession(
@@ -390,7 +401,7 @@ export async function processMAIAConsciousnessSession(
   sessionId: string,
   existingContext?: any
 ): Promise<ConsciousnessSessionResult> {
-  return await consciousnessAgentSystem.processConsciousnessSession(
+  return await getConsciousnessAgentSystem().processConsciousnessSession(
     userMessage,
     userId,
     sessionId,

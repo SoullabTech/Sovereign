@@ -65,6 +65,7 @@ export default function NavigatorLabPage() {
   const [labNotes, setLabNotes] = useState('');
   const [humanRating, setHumanRating] = useState<number | null>(null);
   const [sessionHistory, setSessionHistory] = useState<any[]>([]);
+  const [serviceError, setServiceError] = useState<string | null>(null);
 
   // Archetypal test scenarios
   const archetypeScenarios: LabScenario[] = [
@@ -140,6 +141,7 @@ export default function NavigatorLabPage() {
     setNavigatorDecision(null);
     setHumanRating(null);
     setLabNotes('');
+    setServiceError(null);
 
     try {
       console.log('🧭 Running Navigator Lab scenario:', scenario.name);
@@ -182,6 +184,12 @@ export default function NavigatorLabPage() {
 
     } catch (error) {
       console.error('❌ Navigator Lab error:', error);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg.includes('503')) {
+        setServiceError('Navigator consciousness server is offline. Start the beta server (port 3008) or check BETA_SERVER_URL.');
+      } else {
+        setServiceError(`Navigator Lab unavailable: ${msg}`);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -392,7 +400,17 @@ export default function NavigatorLabPage() {
               </div>
             )}
 
-            {!isProcessing && !navigatorDecision && (
+            {!isProcessing && serviceError && (
+              <div className="bg-red-900/20 rounded-xl border border-red-500/30 p-8">
+                <div className="text-center">
+                  <Compass className="w-12 h-12 text-red-400/50 mx-auto mb-4" />
+                  <div className="text-red-300 text-sm font-medium mb-2">Service Unavailable</div>
+                  <div className="text-red-200/60 text-xs">{serviceError}</div>
+                </div>
+              </div>
+            )}
+
+            {!isProcessing && !navigatorDecision && !serviceError && (
               <div className="bg-white/5 rounded-xl border border-[#D4B896]/10 p-8">
                 <div className="text-center">
                   <Compass className="w-12 h-12 text-[#D4B896]/30 mx-auto mb-4" />

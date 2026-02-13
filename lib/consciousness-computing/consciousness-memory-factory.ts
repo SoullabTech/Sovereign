@@ -323,8 +323,20 @@ export class ConsciousnessMemoryFactory implements ConsciousnessMemoryDB {
   }
 }
 
-// Global instance - ensures all agents use the same memory factory
-export const consciousnessMemory = new ConsciousnessMemoryFactory();
+// Lazy singleton — deferred to avoid circular dependency initialization errors
+let _consciousnessMemoryInstance: ConsciousnessMemoryFactory | null = null;
+export function getConsciousnessMemory(): ConsciousnessMemoryFactory {
+  if (!_consciousnessMemoryInstance) {
+    _consciousnessMemoryInstance = new ConsciousnessMemoryFactory();
+  }
+  return _consciousnessMemoryInstance;
+}
+// Backward-compat: proxy that defers instantiation
+export const consciousnessMemory = new Proxy({} as ConsciousnessMemoryFactory, {
+  get(_target, prop) {
+    return (getConsciousnessMemory() as any)[prop];
+  }
+});
 
 // Bootstrap function to ensure memory tables exist
 export async function ensureConsciousnessMemoryTables(): Promise<void> {

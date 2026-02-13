@@ -260,7 +260,7 @@ export function WisdomJourneyDashboard({
                       </p>
                       <div className="flex items-center gap-3 text-xs">
                         <span className="text-stone-500">
-                          {new Date(moment.timestamp).toLocaleDateString()}
+                          {moment.timestamp && !isNaN(new Date(moment.timestamp).getTime()) ? new Date(moment.timestamp).toLocaleDateString() : '—'}
                         </span>
                         <span className="text-amber-400">
                           {moment.elementalSignature}

@@ -419,7 +419,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         formData.append('speaker', 'Speaker 1');
 
         try {
-          await fetch(apiUrl('/api/supervision/transcript/stream'), {
+          await apiFetch('/api/supervision/transcript/stream', {
             method: 'POST',
             body: formData,
           });

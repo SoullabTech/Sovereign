@@ -297,7 +297,7 @@ export class PremiumStorageService {
 
   private analyzeConsciousnessProgression(analyses: any[]): any[] {
     return analyses.map(a => ({
-      timestamp: a.createdAt,
+      timestamp: a.analyzedAt || a.createdAt,
       level: a.consciousnessLevel,
       stage: a.developmentalStage,
     }));
@@ -310,7 +310,7 @@ export class PremiumStorageService {
       Object.keys(a.archetypePatterns || {}).forEach(archetype => {
         if (!evolution[archetype]) evolution[archetype] = [];
         evolution[archetype].push({
-          timestamp: a.createdAt,
+          timestamp: a.analyzedAt || a.createdAt,
           strength: a.archetypePatterns[archetype],
         });
       });
@@ -320,7 +320,7 @@ export class PremiumStorageService {
 
   private analyzeShadowIntegration(analyses: any[]): any[] {
     return analyses.map(a => ({
-      timestamp: a.createdAt,
+      timestamp: a.analyzedAt || a.createdAt,
       insights: a.shadowWorkInsights || [],
       integration_depth: (a.shadowWorkInsights || []).length,
     }));
@@ -348,7 +348,7 @@ export class PremiumStorageService {
       if (curr.consciousnessLevel > prev.consciousnessLevel + 10) {
         milestones.push({
           type: 'consciousness_breakthrough',
-          timestamp: curr.createdAt,
+          timestamp: curr.analyzedAt || curr.createdAt,
           from_level: prev.consciousnessLevel,
           to_level: curr.consciousnessLevel,
           associated_insights: curr.shadowWorkInsights,

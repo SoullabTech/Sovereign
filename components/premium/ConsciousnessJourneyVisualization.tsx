@@ -64,6 +64,18 @@ interface ConsciousnessJourneyVisualizationProps {
   className?: string;
 }
 
+function safeDate(ts: string | undefined | null): string {
+  if (!ts) return 'Unknown';
+  const d = new Date(ts);
+  return isNaN(d.getTime()) ? 'Unknown' : d.toLocaleDateString();
+}
+
+function safeShortDate(ts: string | undefined | null): string {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export function ConsciousnessJourneyVisualization({
   journeyData,
   userId,
@@ -75,8 +87,8 @@ export function ConsciousnessJourneyVisualization({
   // Process data for different visualization views
   const progressionData = journeyData.consciousness_progression.map(point => ({
     ...point,
-    date: new Date(point.timestamp).toLocaleDateString(),
-    shortDate: new Date(point.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: safeDate(point.timestamp),
+    shortDate: safeShortDate(point.timestamp),
   }));
 
   const archetypeData = Object.entries(journeyData.archetype_evolution).map(([archetype, evolution]) => ({
@@ -85,14 +97,14 @@ export function ConsciousnessJourneyVisualization({
     peakStrength: Math.max(...evolution.map(e => e.strength)),
     evolution: evolution.map(e => ({
       ...e,
-      date: new Date(e.timestamp).toLocaleDateString(),
+      date: safeDate(e.timestamp),
     })),
   }));
 
   const shadowIntegrationData = journeyData.shadow_integration.map(point => ({
     ...point,
-    date: new Date(point.timestamp).toLocaleDateString(),
-    shortDate: new Date(point.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: safeDate(point.timestamp),
+    shortDate: safeShortDate(point.timestamp),
   }));
 
   const geometryData = Object.entries(journeyData.sacred_geometry_patterns).map(([pattern, frequency]) => ({
@@ -103,7 +115,7 @@ export function ConsciousnessJourneyVisualization({
 
   const milestoneData = journeyData.transformation_milestones.map(milestone => ({
     ...milestone,
-    date: new Date(milestone.timestamp).toLocaleDateString(),
+    date: safeDate(milestone.timestamp),
     growth: milestone.to_level - milestone.from_level,
   }));
 
