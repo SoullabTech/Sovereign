@@ -36,82 +36,88 @@ export default function PoweredByPage() {
           opacity: 0;
           animation: fadeIn 1.2s ease-out forwards;
         }
+        @keyframes aura-pulse {
+          0% { transform: scale(0.92); opacity: 0.65; }
+          50% { transform: scale(1.05); opacity: 0.90; }
+          100% { transform: scale(0.92); opacity: 0.65; }
+        }
       `}</style>
 
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="min-h-[90vh] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        {/* Ambient glow */}
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-[0.06]"
-          style={{
-            background:
-              'radial-gradient(circle, #f59e0b 0%, #d97706 25%, #0d9488 60%, transparent 75%)',
-          }}
-        />
-
-        {/* Clarke epigraph — quiet threshold */}
-        <p
-          className="hero-fade max-w-lg text-center font-serif italic leading-loose mb-14 text-sm sm:text-base"
-          style={{
-            '--target-opacity': '0.4',
-            animationDelay: '0s',
-            color: 'rgba(255, 255, 255, 0.4)',
-          } as React.CSSProperties}
-        >
-          Any sufficiently advanced technology is indistinguishable from magic.
-          <span className="block mt-2 text-xs not-italic tracking-wider" style={{ color: 'rgba(255, 255, 255, 0.25)' }}>
-            &mdash; Arthur C. Clarke
-          </span>
-        </p>
-
-        {/* Logo spiral */}
-        <div
-          className="hero-fade relative w-44 h-44 sm:w-56 sm:h-56 mb-10 animate-[spin_80s_linear_infinite]"
-          style={{ animationDelay: '0.3s' }}
-        >
-          <Image
-            src="/soullab-logo.png"
-            alt="Soullab spiral"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
-
-        {/* Wordmark */}
+      <section
+        className="min-h-[90vh] flex flex-col items-center justify-center px-6 relative overflow-hidden"
+        style={{
+          background: 'radial-gradient(ellipse at center, #111827 0%, #0b0f1c 70%)',
+        }}
+      >
+        {/* Headline */}
         <h1
-          className="hero-fade text-4xl sm:text-5xl md:text-6xl font-light tracking-[0.15em] mb-3 text-center"
-          style={{ animationDelay: '0.5s' }}
+          className="hero-fade text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extralight tracking-[0.25em] sm:tracking-[0.3em] uppercase text-white text-center"
+          style={{ fontFamily: "'Crimson Pro', serif", animationDelay: '0.2s' }}
         >
-          <span className="text-amber-400">SOUL</span>
-          <span className="text-slate-300">LAB</span>
+          Soullab
         </h1>
 
+        {/* Tagline */}
         <p
-          className="hero-fade text-slate-500 text-sm tracking-[0.2em] uppercase mb-14"
-          style={{ animationDelay: '0.9s' }}
+          className="hero-fade mt-4 text-lg sm:text-xl md:text-2xl font-light text-white/60 text-center"
+          style={{ fontFamily: "'Source Sans Pro', sans-serif", animationDelay: '0.5s' }}
         >
-          Soul-Building Technologies
+          We build for the soul.
+        </p>
+
+        {/* Holoflower with violet aura */}
+        <div
+          className="hero-fade relative mt-12 sm:mt-16 mb-10 sm:mb-14 w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] flex items-center justify-center"
+          style={{ animationDelay: '0.8s' }}
+        >
+          {/* Violet aura */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="absolute h-[130%] w-[130%] rounded-full"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(139,92,246,0.45) 0%, rgba(139,92,246,0.15) 40%, rgba(139,92,246,0.00) 70%)',
+                filter: 'blur(40px)',
+                animation: 'aura-pulse 6.5s ease-in-out infinite',
+              }}
+            />
+          </div>
+
+          {/* Single holoflower — slow rotation */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-60">
+              <Image
+                src="/holoflower.png"
+                alt="Holoflower"
+                fill
+                sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
+                className="object-contain"
+                priority
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Descriptor — hybridized copy */}
+        <p
+          className="hero-fade text-sm sm:text-base text-white/35 max-w-lg mx-auto text-center"
+          style={{ fontFamily: "'Source Sans Pro', sans-serif", animationDelay: '1.2s' }}
+        >
+          Consciousness AI, relational intelligence, and sovereign digital fields &mdash;
+          powered by the AIN engine.
         </p>
 
         <p
-          className="hero-fade max-w-2xl text-center text-slate-400 text-lg sm:text-xl leading-relaxed font-light"
-          style={{ animationDelay: '1.1s' }}
-        >
-          We build consciousness AI, relational intelligence interfaces,
-          and sovereign digital fields &mdash; powered by the AIN engine.
-        </p>
-
-        <p
-          className="hero-fade max-w-lg text-center text-slate-500 text-sm mt-6 leading-relaxed"
-          style={{ animationDelay: '1.4s' }}
+          className="hero-fade max-w-lg text-center text-white/25 text-sm mt-5 leading-relaxed"
+          style={{ animationDelay: '1.5s' }}
         >
           What you saw wasn&rsquo;t just a site &mdash; it was a field:
           design, intelligence, and ethics working as one.
         </p>
 
         {/* Scroll hint */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/20">
           <svg
             className="w-4 h-4 animate-bounce"
             fill="none"
