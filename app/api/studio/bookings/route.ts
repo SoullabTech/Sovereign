@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, status, practitionerNotes } = body;
+    const { id, status, practitionerNotes, scribeSessionId } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Booking ID required' }, { status: 400 });
@@ -143,6 +143,11 @@ export async function PATCH(request: NextRequest) {
     if (practitionerNotes !== undefined) {
       updates.push(`practitioner_notes = $${params.length + 1}`);
       params.push(practitionerNotes);
+    }
+
+    if (scribeSessionId) {
+      updates.push(`scribe_session_id = $${params.length + 1}`);
+      params.push(scribeSessionId);
     }
 
     if (updates.length === 0) {

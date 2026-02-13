@@ -42,7 +42,10 @@ import {
   Lock,
   Unlock,
   Monitor,
+  Calendar,
+  LinkIcon,
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import {
   useRecordingContext,
@@ -59,6 +62,14 @@ import {
 // ---------------------------------------------------------------------------
 
 type RailTab = 'markers' | 'maia' | 'insights';
+
+interface BookingOption {
+  id: string;
+  clientName: string;
+  serviceName: string | null;
+  startAt: string;
+  status: string;
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -153,6 +164,11 @@ export default function SessionRoomPage() {
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
 
+  // Booking picker (practitioner only)
+  const [bookings, setBookings] = useState<BookingOption[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+
   // Interactive rail
   const [activeTab, setActiveTab] = useState<RailTab>('markers');
   const [markerNote, setMarkerNote] = useState('');
@@ -181,6 +197,48 @@ export default function SessionRoomPage() {
   const canStart = !needsConsent || consentConfirmed;
   const containerMarkers = CONTAINER_CONFIG[container].markers;
 
+  // Fetch bookings when practitioner container is selected
+  useEffect(() => {
+    if (localContainer !== 'practitioner' || phase !== 'idle') return;
+    let cancelled = false;
+    setBookingsLoading(true);
+
+    const fetchBookings = async () => {
+      try {
+        // Fetch today's and upcoming bookings (within next 7 days)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekAhead = new Date(today);
+        weekAhead.setDate(weekAhead.getDate() + 7);
+
+        const res = await apiFetch(
+          `/api/studio/bookings?from=${today.toISOString()}&to=${weekAhead.toISOString()}&limit=20`
+        );
+        const data = await res.json();
+        if (!cancelled && data.bookings) {
+          setBookings(
+            data.bookings
+              .filter((b: any) => b.status !== 'cancelled' && b.status !== 'completed')
+              .map((b: any) => ({
+                id: b.id,
+                clientName: b.clientName || 'Unknown Client',
+                serviceName: b.serviceName,
+                startAt: b.startAt,
+                status: b.status,
+              }))
+          );
+        }
+      } catch (err) {
+        console.error('[SessionRoom] Failed to fetch bookings:', err);
+      } finally {
+        if (!cancelled) setBookingsLoading(false);
+      }
+    };
+
+    fetchBookings();
+    return () => { cancelled = true; };
+  }, [localContainer, phase]);
+
   // Auto-scroll transcript
   useEffect(() => {
     if (transcriptEndRef.current && phase === 'recording') {
@@ -198,11 +256,23 @@ export default function SessionRoomPage() {
   // ── Session lifecycle (delegates to context) ──────────────────────────
 
   const handleStartSession = async () => {
+    // For practitioner sessions, auto-set title from booking if not custom
+    let title = localSessionTitle;
+    if (localContainer === 'practitioner' && selectedBookingId && !title) {
+      const booking = bookings.find(b => b.id === selectedBookingId);
+      if (booking) {
+        title = `${booking.clientName} — ${booking.serviceName || 'Session'}`;
+      }
+    }
+
     await ctx.startSession({
       container: localContainer,
       memoryPolicy: localMemoryPolicy,
-      title: localSessionTitle,
+      title,
       captureTabAudio,
+      ...(localContainer === 'practitioner' && selectedBookingId
+        ? { bookingId: selectedBookingId }
+        : {}),
     });
   };
 
@@ -214,6 +284,7 @@ export default function SessionRoomPage() {
     ctx.resetSession();
     setConsentConfirmed(false);
     setLocalSessionTitle('');
+    setSelectedBookingId(null);
     setTranscriptExpanded(false);
   };
 
@@ -445,6 +516,73 @@ ${insightsSection}
               )}
             </AnimatePresence>
 
+            {/* Booking picker (practitioner only) */}
+            <AnimatePresence>
+              {localContainer === 'practitioner' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden mb-4"
+                >
+                  <label className="text-xs text-slate-500 uppercase tracking-wider block mb-2">
+                    <LinkIcon className="w-3 h-3 inline mr-1" />
+                    Link to booking
+                  </label>
+                  {bookingsLoading ? (
+                    <div className="text-xs text-slate-600 py-3 text-center">Loading bookings...</div>
+                  ) : bookings.length === 0 ? (
+                    <div className="text-xs text-slate-600 py-2">
+                      No upcoming bookings found. Recording will be unlinked.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {bookings.map(b => {
+                        const selected = selectedBookingId === b.id;
+                        const time = new Date(b.startAt).toLocaleTimeString('en-US', {
+                          hour: 'numeric', minute: '2-digit', hour12: true,
+                        });
+                        const day = new Date(b.startAt).toLocaleDateString('en-US', {
+                          weekday: 'short', month: 'short', day: 'numeric',
+                        });
+                        return (
+                          <button
+                            key={b.id}
+                            onClick={() => setSelectedBookingId(selected ? null : b.id)}
+                            className={`w-full flex items-center gap-3 p-2.5 rounded-xl border text-left transition-all ${
+                              selected
+                                ? 'bg-amber-500/15 border-amber-500/40'
+                                : 'bg-[#1e1e38] border-slate-800/50 hover:border-slate-700'
+                            }`}
+                          >
+                            <Calendar className={`w-4 h-4 shrink-0 ${selected ? 'text-amber-400' : 'text-slate-600'}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${selected ? 'text-amber-300' : 'text-slate-300'}`}>
+                                {b.clientName}
+                              </div>
+                              <div className="text-[10px] text-slate-500">
+                                {day} at {time}{b.serviceName ? ` · ${b.serviceName}` : ''}
+                              </div>
+                            </div>
+                            {selected && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 shrink-0">
+                                Linked
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                      <p className="text-[10px] text-slate-600 mt-1">
+                        {selectedBookingId
+                          ? 'Recording will auto-save to this booking\'s session notes.'
+                          : 'Select a booking to link, or leave unlinked for ad-hoc sessions.'}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Session title */}
             <div className="mb-4">
               <label className="text-xs text-slate-500 uppercase tracking-wider block mb-2">
@@ -454,7 +592,13 @@ ${insightsSection}
                 type="text"
                 value={localSessionTitle}
                 onChange={(e) => setLocalSessionTitle(e.target.value)}
-                placeholder={`Session — ${new Date().toLocaleDateString()}`}
+                placeholder={
+                  localContainer === 'practitioner' && selectedBookingId
+                    ? bookings.find(b => b.id === selectedBookingId)
+                      ? `${bookings.find(b => b.id === selectedBookingId)!.clientName} — ${bookings.find(b => b.id === selectedBookingId)!.serviceName || 'Session'}`
+                      : `Session — ${new Date().toLocaleDateString()}`
+                    : `Session — ${new Date().toLocaleDateString()}`
+                }
                 className="w-full bg-[#1e1e38] border border-slate-800/50 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50 text-sm"
               />
             </div>

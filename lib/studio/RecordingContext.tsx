@@ -69,6 +69,7 @@ export interface StartSessionConfig {
   memoryPolicy: MemoryPolicy;
   title?: string;
   captureTabAudio?: boolean;
+  bookingId?: string;
 }
 
 export interface AudioLevels {
@@ -86,6 +87,7 @@ interface RecordingContextValue {
   phase: RecordingPhase;
   sessionId: string | null;
   scribeSessionId: string | null;
+  bookingId: string | null;
   container: SessionContainer;
   memoryPolicy: MemoryPolicy;
   sessionTitle: string;
@@ -144,6 +146,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   // Session IDs
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [scribeSessionId, setScribeSessionId] = useState<string | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
 
   // Recording state
   const [isPaused, setIsPaused] = useState(false);
@@ -169,6 +172,8 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const startTimeRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const scribeSessionIdRef = useRef<string | null>(null);
+  const bookingIdRef = useRef<string | null>(null);
+  const containerRef = useRef<SessionContainer>('solo');
   const isRecordingRef = useRef(false);
   const chunkIndexRef = useRef(0);
   const chunkStartTimeRef = useRef(0);
@@ -181,6 +186,8 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   useEffect(() => { scribeSessionIdRef.current = scribeSessionId; }, [scribeSessionId]);
+  useEffect(() => { bookingIdRef.current = bookingId; }, [bookingId]);
+  useEffect(() => { containerRef.current = container; }, [container]);
 
   // ── Audio level analysis ────────────────────────────────────────────────
 
@@ -344,7 +351,11 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       const scribeResp = await apiFetch('/api/scribe/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ container: config.container, memoryPolicy: config.memoryPolicy }),
+        body: JSON.stringify({
+          container: config.container,
+          memoryPolicy: config.memoryPolicy,
+          ...(config.bookingId ? { bookingId: config.bookingId } : {}),
+        }),
       });
       const scribeData = await scribeResp.json();
       if (!scribeData.success || !scribeData.session?.id) {
@@ -423,6 +434,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       // 7. Update state
       setSessionId(audioSessionId);
       setScribeSessionId(newScribeSessionId);
+      setBookingId(config.bookingId || null);
       setContainer(config.container);
       setMemoryPolicy(config.memoryPolicy);
       setSessionTitle(title);
@@ -502,6 +514,41 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       console.error('[RecordingContext] Failed to stop session on server:', err);
     }
 
+    // Write back to booking (practitioner sessions only)
+    const currentBookingId = bookingIdRef.current;
+    const currentContainer = containerRef.current;
+    const currentScribeSessionId = scribeSessionIdRef.current;
+    if (currentContainer === 'practitioner' && currentBookingId && currentScribeSessionId) {
+      try {
+        const segCount = segments.length;
+        const markerCount = markers.length;
+        const insightCount = insights.length;
+        const durMins = Math.ceil(duration / 60);
+        const topMarkers = markers.slice(0, 3).map(m => m.markerType.replace(/_/g, ' ')).join(', ');
+
+        const summary = [
+          `Session Room recording: ${durMins}min`,
+          segCount > 0 ? `${segCount} transcript segments` : null,
+          markerCount > 0 ? `${markerCount} markers (${topMarkers})` : null,
+          insightCount > 0 ? `${insightCount} insights` : null,
+        ].filter(Boolean).join(' · ');
+
+        await apiFetch('/api/studio/bookings', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: currentBookingId,
+            status: 'completed',
+            practitionerNotes: summary,
+            scribeSessionId: currentScribeSessionId,
+          }),
+        });
+        console.log('[RecordingContext] Booking updated:', currentBookingId);
+      } catch (err) {
+        console.error('[RecordingContext] Failed to update booking:', err);
+      }
+    }
+
     // Reset refs
     mediaRecorderRef.current = null;
     micStreamRef.current = null;
@@ -516,7 +563,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     setPhase('review');
 
     console.log('[RecordingContext] Session stopped');
-  }, [duration]);
+  }, [duration, segments, markers, insights]);
 
   const pauseSession = useCallback(() => {
     if (mediaRecorderRef.current?.state === 'recording') {
@@ -537,6 +584,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const resetSession = useCallback(() => {
     setSessionId(null);
     setScribeSessionId(null);
+    setBookingId(null);
     setSessionTitle('');
     setSegments([]);
     setInsights([]);
@@ -620,6 +668,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     phase,
     sessionId,
     scribeSessionId,
+    bookingId,
     container,
     memoryPolicy,
     sessionTitle,
