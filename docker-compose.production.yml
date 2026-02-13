@@ -553,12 +553,9 @@ services:
   # Palisades Master Handyman - Jeremy Larson's Business Site
   # ═════════════════════════════════════════════════════════════════════════════
   # Handyman business website with admin dashboard + invoicing
-  # Build: docker compose -f docker-compose.production.yml build palisades
+  # Uses pre-built image (source: /Users/soullab/PalisadesHandyman)
   # Deploy: docker compose -f docker-compose.production.yml up -d palisades
   palisades:
-    build:
-      context: /Users/soullab/PalisadesHandyman
-      dockerfile: /Users/soullab/MAIA-SOVEREIGN/services/palisades/Dockerfile
     image: palisades-handyman:prod
     container_name: palisades-handyman
     restart: unless-stopped
