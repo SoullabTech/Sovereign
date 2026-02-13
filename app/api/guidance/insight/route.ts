@@ -62,14 +62,14 @@ async function buildContextSnapshot(
          EXTRACT(DAY FROM NOW() - created_at)::int AS days_ago
        FROM process_items
        WHERE member_id = $1
-         AND state NOT IN ('composted', 'integrated', 'grounded', 'answered_for_now')
+         AND status = 'alive'
        ORDER BY created_at DESC
        LIMIT 5`,
       [memberId],
     ),
     // Field captures count
     query(
-      `SELECT COUNT(*)::int AS count FROM field_records WHERE user_id = $1`,
+      `SELECT COUNT(*)::int AS count FROM field_records WHERE user_id = $1::text`,
       [memberId],
     ),
     // Trigger open signals for this feature (last 30d)
@@ -209,10 +209,13 @@ async function generateWhisper(
       ],
     });
 
-    const text = response.content
+    let text = response.content
       .filter((b): b is Anthropic.TextBlock => b.type === 'text')
       .map((b) => b.text)
       .join('');
+
+    // Strip markdown code fences if Haiku wraps the JSON
+    text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
 
     const parsed = JSON.parse(text);
 
