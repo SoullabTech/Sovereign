@@ -69,6 +69,9 @@ Thumbs.db
 .git
 .gitignore
 
+# Claude worktrees (contain full project copies with iOS pods, node_modules, etc.)
+.claude/
+
 # Documentation and docs
 *.md
 docs/
