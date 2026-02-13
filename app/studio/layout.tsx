@@ -113,6 +113,13 @@ export default function StudioLayout({
     if (moduleNeedsMode !== studioMode) {
       const modeLabel = moduleNeedsMode === 'personal' ? 'Field' : 'Practice';
       setModeMismatch({ targetMode: moduleNeedsMode, label: modeLabel });
+
+      // Telemetry: track how often users hit the wrong mode
+      console.info('[StudioMode] mismatch', {
+        fromMode: studioMode,
+        suggestedMode: moduleNeedsMode,
+        route: pathname,
+      });
     } else {
       setModeMismatch(null);
     }
