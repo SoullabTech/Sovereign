@@ -1,0 +1,38 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Staging - Lightweight Caddy (HTTP only, port 8090)
+# ═══════════════════════════════════════════════════════════════════════════════
+# No TLS — this is for local branch testing only.
+# Access: http://staging.soullab.life:8090 (requires /etc/hosts entry)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+:8090 {
+    # SSE/Streaming endpoints
+    @streaming {
+        path /api/voice/stream-conversation
+        path /api/*/stream*
+    }
+    handle @streaming {
+        reverse_proxy maia-staging:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto http
+            flush_interval -1
+        }
+    }
+
+    # All other requests
+    reverse_proxy maia-staging:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto http
+    }
+
+    header {
+        X-MAIA-Origin "caddy-staging"
+        X-MAIA-Env "staging"
+    }
+
+    encode gzip zstd
+}
