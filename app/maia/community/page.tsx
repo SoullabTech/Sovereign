@@ -283,8 +283,8 @@ export default function CommunityBBSPage() {
               </button>
               <div className="w-px h-6 bg-white/10" />
               <div>
-                <h1 className="text-2xl font-medium text-white">Sacred Territories</h1>
-                <p className="text-white/50 text-sm">Community wisdom exchange</p>
+                <h1 className="text-2xl font-medium text-white">Repository</h1>
+                <p className="text-white/50 text-sm">Wisdom library &amp; community exchange</p>
               </div>
             </div>
 
@@ -495,13 +495,13 @@ export default function CommunityBBSPage() {
             <SustainingTransparency />
           </div>
 
-          {/* Main Content - Sacred Territories */}
+          {/* Main Content - Repository */}
           <div className="lg:col-span-3">
             <div className="space-y-6">
 
               {/* Welcome Message */}
               <div className="bg-[#2a2a2a] border border-white/10 rounded-xl p-6">
-                <h2 className="text-xl font-medium text-white mb-2">Welcome to the Sacred Territories</h2>
+                <h2 className="text-xl font-medium text-white mb-2">Welcome to the Repository</h2>
                 <p className="text-white/60 leading-relaxed">
                   Navigate the universal wisdom journey—from crossing the Threshold to sharing your Offerings.
                   Each territory holds space for seekers at every stage of transformation, drawing from
@@ -574,7 +574,7 @@ export default function CommunityBBSPage() {
                 </div>
               )}
 
-              {/* Sacred Territories Grid - Wisdom Section */}
+              {/* Repository Grid - Wisdom Section */}
               <div className="space-y-4">
                 <h2 className="text-lg font-medium text-white flex items-center gap-2">
                   <Compass className="w-5 h-5 text-orange-500" />
