@@ -74,7 +74,7 @@ export function HeroSection() {
 
           {/* Single translucent holoflower — slow rotation */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative h-[92%] w-[92%] animate-[spin_120s_linear_infinite] motion-reduce:animate-none opacity-60">
+            <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-60">
               <Image
                 src="/holoflower.png"
                 alt="Holoflower"
