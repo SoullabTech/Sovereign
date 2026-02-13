@@ -1543,12 +1543,24 @@ function MAIAPageContent() {
                 <button
                   onClick={() => {
                     setShowAccountMenu(false);
-                    router.push('/maia/community');
+                    router.push('/commons/circles');
                   }}
                   className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
                 >
                   <Users className="w-5 h-5" />
-                  <span className="text-base">Community Commons</span>
+                  <span className="text-base">Commons</span>
+                </button>
+
+                {/* Library - Wisdom library */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/maia/community');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  <span className="text-base">Library</span>
                 </button>
 
                 {/* Labtools - Full access for everyone */}
