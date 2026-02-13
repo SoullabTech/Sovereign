@@ -86,9 +86,9 @@ export default function PoweredByPage() {
 
           {/* Single holoflower — slow rotation */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-60">
+            <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-75">
               <Image
-                src="/holoflower.png"
+                src="/holoflower-studio-transparent.png"
                 alt="Holoflower"
                 fill
                 sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
