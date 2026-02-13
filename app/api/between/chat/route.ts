@@ -29,8 +29,8 @@ import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consc
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
 import { getAwarenessLevelDescription } from '@/lib/ain/awareness-levels';
 import { buildGateContext, recommendConsultation, type GateContext } from '@/lib/ain/gates';
-import { consult, type ConsultationResult } from '@/lib/ain/consultation';
-import type { ConsultationDecision } from '@/lib/ain/types';
+import { consult } from '@/lib/ain/consultation';
+import type { ConsultationDecision, ConsultationResult } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { inferStateVector, getDefaultStateVector, getDefaultPracticeRecommendation } from '@/lib/maia/state-vector/stateDefaults';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';

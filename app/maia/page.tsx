@@ -30,10 +30,11 @@ import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
+import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -369,6 +370,7 @@ function MAIAPageContent() {
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
   const [showFeedbackSheet, setShowFeedbackSheet] = useState(false);
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
+  const [showChangesSheet, setShowChangesSheet] = useState(false);
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
@@ -422,12 +424,39 @@ function MAIAPageContent() {
       if (existingSessionId && !isNewDay) {
         setSessionId(existingSessionId);
         console.log('💫 [MAIA] Restored session:', existingSessionId);
+        // Touch the session to update last_activity_at (non-blocking)
+        apiFetch('/api/maia/session/start', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: existingSessionId,
+            memberId: initialData?.id,
+          }),
+        }).catch(() => {}); // Ignore errors for touch
       } else {
         // New day or no session - create fresh session and clear old conversation
         const newSessionId = `session_${Date.now()}`;
         localStorage.setItem('maia_session_id', newSessionId);
         localStorage.setItem('maia_session_date', todayDate);
         setSessionId(newSessionId);
+
+        // Register session with backend (non-blocking but important for finalize)
+        apiFetch('/api/maia/session/start', {
+          method: 'POST',
+          body: JSON.stringify({
+            sessionId: newSessionId,
+            memberId: initialData?.id,
+            privacyMode: 'standard',
+            maiaMode: 'normal',
+          }),
+        }).then((res) => {
+          if (res.ok) {
+            console.log('✅ [MAIA] Session registered with backend');
+          } else {
+            console.warn('⚠️ [MAIA] Session registration failed (will retry on finalize)');
+          }
+        }).catch((err) => {
+          console.warn('⚠️ [MAIA] Session registration error:', err);
+        });
 
         // Clear old conversation from localStorage for clean slate
         if (existingSessionId) {
@@ -871,6 +900,19 @@ function MAIAPageContent() {
                 >
                   <Sparkles className="w-3 h-3" />
                   <span className="text-xs">Guide</span>
+                </motion.button>
+
+                {/* Changes Button - Mobile */}
+                <motion.button
+                  onClick={() => setShowChangesSheet(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
+                  title="Changes"
+                >
+                  <Wind className="w-3 h-3" />
+                  <span className="text-xs">Changes</span>
                 </motion.button>
 
                 {/* Shadow Work Button - Mobile */}
@@ -1444,6 +1486,14 @@ function MAIAPageContent() {
           onClose={() => setShowFeedbackSheet(false)}
           userName={explorerName}
           userId={explorerId}
+        />
+
+        {/* Changes Sheet (Book of Changes) */}
+        <ChangesSheet
+          isOpen={showChangesSheet}
+          onClose={() => setShowChangesSheet(false)}
+          memberId={explorerId}
+          memberName={explorerName}
         />
 
         {/* Password Change Sheet (beta tester upgrade) */}

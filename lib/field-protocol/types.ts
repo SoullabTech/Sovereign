@@ -20,6 +20,20 @@ export type PrivacyLevel = 'private' | 'commons' | 'public';
  * Stage 1: Observation - The Raw Experience
  * Captured without interpretation
  */
+/**
+ * Structured reference for echo detection across field records.
+ * Stored as real JSON (not stringified) so Postgres JSONB operators
+ * work without casting: observation->'sourceRef'->>'oracleKey'
+ */
+export interface SourceRef {
+  oracleType?: string;  // 'iching' | 'tarot' | 'runes' | 'dream' | 'session'
+  oracleKey?: string;   // e.g. '29' (hexagram number), 'the-tower' (tarot)
+  oracleName?: string;  // e.g. 'The Abysmal', 'The Tower'
+  relatingKey?: string; // e.g. '7' (transformed hexagram)
+  elementHint?: string; // e.g. 'water', 'fire' (Wu Xing / Spiralogic element)
+  keyword?: string;     // e.g. 'danger', 'liberation'
+}
+
 export interface ObservationRecord {
   // When
   timestamp: Date;
@@ -33,13 +47,16 @@ export interface ObservationRecord {
     auditory?: string;
     somatic?: string;
     emotional?: string;
-    energetic?: string;
+    energetic?: string | Record<string, unknown>;
   };
 
   // Context
   triggerEvent?: string;
   precedingActivity?: string;
   environmentalFactors?: string;
+
+  // Structured reference for echo detection (canonical location)
+  sourceRef?: SourceRef;
 }
 
 /**

@@ -456,7 +456,7 @@ async function persistStateVector(
   try {
     const primary = analysis.primary;
     const sv: StateVector = {
-      id: `sv-session-${crypto.randomUUID()}`,
+      id: crypto.randomUUID(),
       memberId,
       timestamp: new Date(),
       source: 'conversation',
@@ -496,21 +496,25 @@ async function persistStateVector(
           strength: o.strength as 1 | 2 | 3,
           informs: o.informs as Evidence['informs'],
         })),
-        contradictions: (analysis.evidence.contradictions || []).map(c => ({
-          evidenceA: {
-            category: c.evidenceA.category as Evidence['category'],
-            signal: c.evidenceA.signal,
-            strength: c.evidenceA.strength as 1 | 2 | 3,
-            informs: c.evidenceA.informs as Evidence['informs'],
-          },
-          evidenceB: {
-            category: c.evidenceB.category as Evidence['category'],
-            signal: c.evidenceB.signal,
-            strength: c.evidenceB.strength as 1 | 2 | 3,
-            informs: c.evidenceB.informs as Evidence['informs'],
-          },
-          interpretation: c.interpretation,
-        })),
+        // Claude sometimes returns contradictions as simple strings instead of
+        // the full {evidenceA, evidenceB, interpretation} structure. Handle both.
+        contradictions: (analysis.evidence.contradictions || [])
+          .filter((c: any) => c && typeof c === 'object' && c.evidenceA && c.evidenceB)
+          .map((c: any) => ({
+            evidenceA: {
+              category: (c.evidenceA?.category || 'cognitive') as Evidence['category'],
+              signal: c.evidenceA?.signal || '',
+              strength: (c.evidenceA?.strength || 1) as 1 | 2 | 3,
+              informs: (c.evidenceA?.informs || ['element']) as Evidence['informs'],
+            },
+            evidenceB: {
+              category: (c.evidenceB?.category || 'cognitive') as Evidence['category'],
+              signal: c.evidenceB?.signal || '',
+              strength: (c.evidenceB?.strength || 1) as 1 | 2 | 3,
+              informs: (c.evidenceB?.informs || ['element']) as Evidence['informs'],
+            },
+            interpretation: c.interpretation || String(c),
+          })),
         gaps: analysis.evidence.gaps as EvidenceModel['gaps'],
       },
     };
@@ -653,6 +657,7 @@ async function searchResonance(
     });
     const queryVector = await embedder.getEmbedding(searchQuery);
 
+    // semantic_vector is JSONB — cast through text to pgvector for distance ops
     const result = await query<{
       id: string;
       experience_title: string;
@@ -665,11 +670,12 @@ async function searchResonance(
         experience_title,
         experience_description,
         experience_context,
-        1 - (semantic_vector <=> $2::vector) as similarity
+        1 - ((semantic_vector::text)::vector(768) <=> $2::vector(768)) as similarity
        FROM episodic_memories
        WHERE user_id = $1
          AND semantic_vector IS NOT NULL
-       ORDER BY semantic_vector <=> $2::vector
+         AND jsonb_array_length(semantic_vector) > 0
+       ORDER BY (semantic_vector::text)::vector(768) <=> $2::vector(768)
        LIMIT 5`,
       [memberId, `[${queryVector.join(',')}]`]
     );
