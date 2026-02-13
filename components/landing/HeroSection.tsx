@@ -1,8 +1,13 @@
 'use client';
 
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useId } from 'react';
+
 export function HeroSection() {
+  const auraId = useId().replace(/:/g, '');
+
   const scrollToContact = () => {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -15,36 +20,15 @@ export function HeroSection() {
         background: 'radial-gradient(ellipse at center, #111827 0%, #0b0f1c 70%)',
       }}
     >
-      {/* Background logo watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.07]">
-        <motion.img
-          src="/holoflower.png"
-          alt=""
-          className="w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[800px] lg:h-[800px] object-contain"
-          animate={{ scale: [1, 1.03, 1], rotate: [0, 3, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 text-center max-w-4xl">
-        {/* Opening line — the pull */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, ease: 'easeOut' }}
-          className="text-base sm:text-lg italic text-white/50 mb-8 tracking-wide"
-          style={{ fontFamily: "'Crimson Pro', serif" }}
-        >
-          Do you believe in magic?
-        </motion.p>
+      {/* Content — text above, holoflower below */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-4xl w-full">
 
         {/* SOULLAB */}
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, ease: 'easeOut' }}
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extralight tracking-[0.25em] sm:tracking-[0.3em] uppercase mb-6 text-white"
+          transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extralight tracking-[0.25em] sm:tracking-[0.3em] uppercase text-white"
           style={{ fontFamily: "'Crimson Pro', serif" }}
         >
           Soullab
@@ -52,39 +36,97 @@ export function HeroSection() {
 
         {/* Tagline */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7, ease: 'easeOut' }}
-          className="text-xl sm:text-2xl md:text-3xl font-light text-white/70 mb-4"
+          transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
+          className="mt-4 text-lg sm:text-xl md:text-2xl font-light text-white/60"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
           We build for the soul.
         </motion.p>
 
+        {/* Luminous holoflower — focal centerpiece */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, delay: 0.8, ease: 'easeOut' }}
+          className="relative mt-12 sm:mt-16 mb-10 sm:mb-14 w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] lg:w-[400px] lg:h-[400px] flex items-center justify-center"
+        >
+          {/* Violet aura */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="absolute h-[130%] w-[130%] rounded-full"
+              style={{
+                background:
+                  'radial-gradient(circle, rgba(139,92,246,0.45) 0%, rgba(139,92,246,0.15) 40%, rgba(139,92,246,0.00) 70%)',
+                filter: 'blur(40px)',
+                animation: `${auraId} 6.5s ease-in-out infinite`,
+              }}
+            />
+            <style>{`
+              @keyframes ${auraId} {
+                0% { transform: scale(0.92); opacity: 0.65; }
+                50% { transform: scale(1.05); opacity: 0.90; }
+                100% { transform: scale(0.92); opacity: 0.65; }
+              }
+            `}</style>
+          </div>
+
+          {/* Outer holoflower layer */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative h-[88%] w-[88%] animate-[spin_36s_linear_infinite] motion-reduce:animate-none opacity-40">
+              <Image
+                src="/holoflower.png"
+                alt="Holoflower"
+                fill
+                sizes="(max-width: 640px) 280px, (max-width: 1024px) 340px, 400px"
+                className="object-contain"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Inner holoflower layer — golden ratio */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative h-[55.6%] w-[55.6%] animate-[spin_44s_linear_infinite_reverse] motion-reduce:animate-none opacity-70">
+              <Image
+                src="/holoflower.png"
+                alt="Holoflower inner"
+                fill
+                sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 230px"
+                className="object-contain"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Center light point */}
+          <div
+            className="absolute left-1/2 top-1/2 h-4 w-4 sm:h-5 sm:w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.30) 45%, rgba(255,255,255,0.00) 70%)',
+            }}
+          />
+        </motion.div>
+
+        {/* Descriptor */}
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.9, ease: 'easeOut' }}
-          className="text-base sm:text-lg text-white/40 mb-12 max-w-2xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
+          className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
           Consciousness AI &amp; relational intelligence systems.
-          We built AIN — the engine that brings soul to any app, site, or platform.
+          The engine that brings soul to any app, site, or platform.
         </motion.p>
-
-        {/* Accent line */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.6, delay: 1.1, ease: 'easeOut' }}
-          className="w-16 h-[2px] bg-maia-spice-500 mx-auto mb-12"
-        />
 
         {/* CTAs */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 1.3, ease: 'easeOut' }}
+          transition={{ duration: 0.8, delay: 1.4, ease: 'easeOut' }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
@@ -95,28 +137,18 @@ export function HeroSection() {
           </Link>
           <button
             onClick={scrollToContact}
-            className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/20 hover:border-white/40 text-white/80 hover:text-white font-medium text-base transition-colors"
+            className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
             Work with Soullab
           </button>
         </motion.div>
 
-        {/* Context line */}
+        {/* Trust line */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.7 }}
-          className="mt-16 text-white/30 text-sm font-light max-w-md mx-auto"
-        >
-          Consciousness AI &middot; Relational Intelligence &middot; Sovereign Infrastructure
-        </motion.p>
-
-        {/* Trust anchor — safety as aftertaste */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 2.1 }}
-          className="mt-3 text-white/20 text-xs tracking-widest uppercase"
+          transition={{ duration: 0.8, delay: 1.8 }}
+          className="mt-14 text-white/20 text-xs tracking-widest uppercase"
         >
           Private by design &middot; Your data never leaves your hands
         </motion.p>
