@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
@@ -25,6 +25,7 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  GripVertical,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -136,6 +137,40 @@ export default function CommsPage() {
   const [smsError, setSmsError] = useState<string | null>(null);
   const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
 
+  // Resizable panel state
+  const [panelWidth, setPanelWidth] = useState(420);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return;
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth = e.clientX - containerRect.left;
+      // Clamp between 280 and 600
+      setPanelWidth(Math.min(600, Math.max(280, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
   const unreadCount = messages.filter(m => m.status === 'unread').length;
   const starredCount = messages.filter(m => m.starred).length;
   const smsCount = messages.filter(m => m.type === 'sms').length;
@@ -213,9 +248,12 @@ export default function CommsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex">
-      {/* Message List */}
-      <div className="w-96 border-r border-slate-800 flex flex-col">
+    <div ref={containerRef} className="min-h-screen bg-slate-950 flex">
+      {/* Message List Panel */}
+      <div
+        className="flex-shrink-0 border-r border-slate-800 flex flex-col overflow-hidden"
+        style={{ width: panelWidth }}
+      >
         {/* Header */}
         <div className="p-4 border-b border-slate-800">
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
@@ -373,8 +411,18 @@ export default function CommsPage() {
         </div>
       </div>
 
+      {/* Drag Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        className={`w-2 flex-shrink-0 cursor-col-resize flex items-center justify-center transition-colors ${
+          isDragging ? 'bg-teal-500' : 'bg-slate-800 hover:bg-teal-500/50'
+        }`}
+      >
+        <GripVertical className={`w-3 h-3 ${isDragging ? 'text-white' : 'text-slate-600'}`} />
+      </div>
+
       {/* Message Detail */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {selected ? (
           <>
             {/* Message Header */}

@@ -407,6 +407,36 @@ demo.soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Palisades Master Handyman - Jeremy Larson's Business Site
+# ═══════════════════════════════════════════════════════════════════════════════
+palisades.soullab.life {
+    # Reverse proxy to Palisades Handyman container
+    reverse_proxy palisades:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/palisades-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIA API Service - Multi-tenant Backend
 # ═══════════════════════════════════════════════════════════════════════════════
 # All API requests from frontends route here.

@@ -17,12 +17,20 @@
   --android-chrome-bottom: 56px;
 }
 
-/* Prevent scrolling issues on mobile */
-html, body {
+/* Prevent scrolling issues on mobile + kill scrollbar gutter on desktop */
+html {
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
+  background-color: #0c0a09; /* stone-950 — matches app gradient base */
+}
+
+body {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  background-color: #0c0a09;
 }
 
 /* Use dynamic viewport height (dvh) for mobile browsers */

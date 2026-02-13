@@ -6497,8 +6497,8 @@ I'm not sure what I'm feeling yet.`;
             lastConversationTheme,
           });
 
-          // Debug: verify one-signal principle
-          console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
+          // Debug log removed - was causing console spam on every re-render
+          // To debug greeting logic, use: console.log('[WELCOME GREETING]', { hourLocal, memberStyleProfile, lastConversationTheme, welcomeGreeting });
 
           return (
           <motion.div
@@ -7629,7 +7629,7 @@ I'm not sure what I'm feeling yet.`;
               <FieldStateIndicator wisdomPresent={fieldWisdomPresent} />
             </div>
           )}
-          <div className="h-full overflow-y-scroll overflow-x-hidden pr-2 mobile-scroll"
+          <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-hide"
                style={{
                  scrollBehavior: 'smooth',
                  WebkitOverflowScrolling: 'touch',

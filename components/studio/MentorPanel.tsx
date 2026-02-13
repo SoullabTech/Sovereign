@@ -102,52 +102,52 @@ export default function MentorPanel({
   }
 
   return (
-    <div className="rounded-xl border border-maia-ink-40/30 bg-gradient-to-br from-maia-navy-850/40 via-maia-navy-900/30 to-maia-navy-850/40 overflow-hidden">
-      {/* Sage accent bar */}
-      <div className="h-1 bg-gradient-to-r from-maia-sage-600 via-maia-sage-400 to-maia-sage-600" />
+    <div className="rounded-xl border border-jade-sage/30 bg-gradient-to-br from-jade-shadow/40 via-jade-night/30 to-jade-dusk/40 overflow-hidden">
+      {/* Jade accent bar */}
+      <div className="h-1 bg-gradient-to-r from-jade-forest via-jade-malachite to-jade-forest" />
 
       <div className="p-5 space-y-5">
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="relative w-7 h-7">
-            <div className="absolute inset-0 bg-maia-sage-500/20 rounded-full" />
-            <div className="absolute top-1 left-1 bottom-1 right-1 bg-maia-sage-500/40 rounded-full" />
-            <div className="absolute top-1.5 left-1.5 bottom-1.5 right-1.5 bg-maia-sage-400 rounded-full" />
+            <div className="absolute inset-0 bg-jade-sage/20 rounded-full" />
+            <div className="absolute top-1 left-1 bottom-1 right-1 bg-jade-malachite/40 rounded-full" />
+            <div className="absolute top-1.5 left-1.5 bottom-1.5 right-1.5 bg-jade-jade rounded-full" />
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-maia-sage-400 tracking-wide">MAIA Mentor</h3>
-            <p className="text-xs text-maia-ink-60">
-              Posture detected: <span className="text-maia-ink-80 capitalize">{POSTURE_LABELS[posture] || posture}</span>
+            <h3 className="text-sm font-medium text-jade-jade tracking-wide">MAIA Mentor</h3>
+            <p className="text-xs text-jade-mineral">
+              Posture detected: <span className="text-jade-sage capitalize">{POSTURE_LABELS[posture] || posture}</span>
             </p>
           </div>
         </div>
 
         {/* Template Reflections (always visible) */}
         <div className="space-y-3">
-          <p className="text-xs text-maia-ink-60 uppercase tracking-wider">Reflections</p>
+          <p className="text-xs text-jade-mineral uppercase tracking-wider">Reflections</p>
           {template.reflections.map((reflection, i) => (
             <div key={i} className="flex items-start gap-2.5">
-              <div className="w-1.5 h-1.5 bg-maia-sage-600/60 rounded-full mt-2 flex-shrink-0" />
-              <p className="text-sm text-maia-ink-80 font-light leading-relaxed">{reflection}</p>
+              <div className="w-1.5 h-1.5 bg-jade-forest/60 rounded-full mt-2 flex-shrink-0" />
+              <p className="text-sm text-jade-sage/90 font-light leading-relaxed">{reflection}</p>
             </div>
           ))}
         </div>
 
         {/* Micro-practice */}
-        <div className="bg-maia-navy-800/30 border border-maia-ink-40/20 rounded-lg p-3">
-          <p className="text-xs text-maia-spice-500 uppercase tracking-wider mb-1.5">Micro-Practice</p>
-          <p className="text-sm text-maia-ink-80 font-light leading-relaxed">{template.microPractice}</p>
+        <div className="bg-jade-forest/10 border border-jade-sage/20 rounded-lg p-3">
+          <p className="text-xs text-jade-copper uppercase tracking-wider mb-1.5">Micro-Practice</p>
+          <p className="text-sm text-jade-sage font-light leading-relaxed">{template.microPractice}</p>
         </div>
 
         {/* Sovereignty Check */}
-        <div className="bg-maia-navy-800/30 border border-maia-ink-40/20 rounded-lg p-3">
-          <p className="text-xs text-amber-400 uppercase tracking-wider mb-1.5">Sovereignty Check</p>
-          <p className="text-sm text-maia-ink-80 font-light leading-relaxed italic">{template.sovereigntyCheck}</p>
+        <div className="bg-jade-forest/10 border border-jade-sage/20 rounded-lg p-3">
+          <p className="text-xs text-amber-400/80 uppercase tracking-wider mb-1.5">Sovereignty Check</p>
+          <p className="text-sm text-jade-sage font-light leading-relaxed italic">{template.sovereigntyCheck}</p>
         </div>
 
         {/* Follow-up Intention */}
         <div>
-          <label className="block text-xs text-maia-ink-60 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs text-jade-mineral uppercase tracking-wider mb-1.5">
             Follow-up Intention
           </label>
           <div className="flex gap-2">
@@ -156,7 +156,7 @@ export default function MentorPanel({
               value={intention}
               onChange={e => setIntention(e.target.value)}
               placeholder="What's the next checkpoint? What will you look for?"
-              className="flex-1 px-3 py-1.5 text-sm bg-maia-navy-850/60 border border-maia-ink-40/20 rounded-lg text-maia-ink-80 placeholder-maia-ink-40 focus:border-maia-sage-500/50 focus:outline-none"
+              className="flex-1 px-3 py-1.5 text-sm bg-jade-shadow/60 border border-jade-sage/20 rounded-lg text-jade-sage placeholder-jade-mineral/50 focus:border-jade-malachite/50 focus:outline-none"
             />
             <button
               onClick={saveIntention}
@@ -164,7 +164,7 @@ export default function MentorPanel({
               className={`px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-40 ${
                 intentionSaved
                   ? 'bg-emerald-800/40 text-emerald-300 border border-emerald-700/40'
-                  : 'bg-maia-navy-800/20 text-maia-ink-80 border border-maia-ink-40/20 hover:border-maia-sage-500/40'
+                  : 'bg-jade-forest/20 text-jade-sage border border-jade-sage/20 hover:border-jade-malachite/40'
               }`}
             >
               {intentionSaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
@@ -174,7 +174,7 @@ export default function MentorPanel({
 
         {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-maia-ink-40/30 to-transparent" />
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-jade-sage/30 to-transparent" />
         </div>
 
         {/* AI Reflection (opt-in) */}
@@ -185,37 +185,37 @@ export default function MentorPanel({
             className="space-y-4"
           >
             <div className="flex items-center gap-2">
-              <Leaf className="w-4 h-4 text-maia-sage-400" />
-              <p className="text-xs text-maia-sage-400 uppercase tracking-wider">Deeper Reflection</p>
+              <Leaf className="w-4 h-4 text-jade-malachite" />
+              <p className="text-xs text-jade-malachite uppercase tracking-wider">Deeper Reflection</p>
             </div>
 
             {/* AI Questions */}
             <div className="space-y-2">
               {mentorReflection.questions.map((q, i) => (
                 <div key={i} className="flex items-start gap-2.5">
-                  <span className="text-maia-sage-400 text-xs mt-0.5">{i + 1}.</span>
-                  <p className="text-sm text-maia-ink-80 font-light leading-relaxed">{q}</p>
+                  <span className="text-jade-malachite text-xs mt-0.5">{i + 1}.</span>
+                  <p className="text-sm text-jade-sage font-light leading-relaxed">{q}</p>
                 </div>
               ))}
             </div>
 
             {/* AI Sovereignty Check */}
-            <div className="bg-maia-navy-800/30 border border-maia-sage-500/20 rounded-lg p-3">
-              <p className="text-xs text-amber-400 uppercase tracking-wider mb-1">Agency Check</p>
-              <p className="text-sm text-maia-ink-80 font-light italic">{mentorReflection.sovereigntyCheck}</p>
+            <div className="bg-jade-forest/10 border border-jade-malachite/20 rounded-lg p-3">
+              <p className="text-xs text-amber-400/80 uppercase tracking-wider mb-1">Agency Check</p>
+              <p className="text-sm text-jade-sage font-light italic">{mentorReflection.sovereigntyCheck}</p>
             </div>
 
             {/* AI Next Experiment */}
-            <div className="bg-maia-navy-800/30 border border-maia-sage-500/20 rounded-lg p-3">
-              <p className="text-xs text-maia-spice-500 uppercase tracking-wider mb-1">Next Experiment</p>
-              <p className="text-sm text-maia-ink-80 font-light">{mentorReflection.nextExperiment}</p>
+            <div className="bg-jade-forest/10 border border-jade-malachite/20 rounded-lg p-3">
+              <p className="text-xs text-jade-copper uppercase tracking-wider mb-1">Next Experiment</p>
+              <p className="text-sm text-jade-sage font-light">{mentorReflection.nextExperiment}</p>
             </div>
 
             {/* Regenerate */}
             <button
               onClick={generateReflection}
               disabled={generating}
-              className="text-xs text-maia-ink-60 hover:text-maia-ink-80 transition-colors flex items-center gap-1"
+              className="text-xs text-jade-mineral hover:text-jade-sage transition-colors flex items-center gap-1"
             >
               <RefreshCw className={`w-3 h-3 ${generating ? 'animate-spin' : ''}`} />
               Regenerate
@@ -226,7 +226,7 @@ export default function MentorPanel({
             <button
               onClick={generateReflection}
               disabled={generating}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-maia-navy-800/20 hover:bg-maia-navy-800/30 border border-maia-ink-40/20 hover:border-maia-sage-500/40 text-maia-ink-80 text-sm font-light rounded-lg transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-jade-forest/20 hover:bg-jade-forest/30 border border-jade-sage/20 hover:border-jade-malachite/40 text-jade-sage text-sm font-light rounded-lg transition-all disabled:opacity-50"
             >
               {generating ? (
                 <>
@@ -235,7 +235,7 @@ export default function MentorPanel({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-maia-sage-400" />
+                  <Sparkles className="w-4 h-4 text-jade-malachite" />
                   Go deeper with MAIA
                 </>
               )}
@@ -247,7 +247,7 @@ export default function MentorPanel({
         )}
 
         {/* Footer */}
-        <p className="text-xs text-maia-ink-40 text-center font-light">
+        <p className="text-xs text-jade-mineral/50 text-center font-light">
           Sovereignty first. Take only what serves.
         </p>
       </div>

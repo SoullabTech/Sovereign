@@ -39,7 +39,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
 
   // Landing & Marketing
-  { exact: '/', public: true, notes: 'Landing page' },
+  { exact: '/', public: true, notes: 'Studio landing page' },
+  { exact: '/enter', public: true, notes: 'Smart routing entry point (MAIA/onboarding)' },
   { exact: '/faq', public: true, notes: 'Public FAQ' },
   { exact: '/downloads', public: true, notes: 'Downloads page' },
   { exact: '/patrons', public: true, notes: 'Patrons page' },
@@ -142,6 +143,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/community/new-post', minTier: 'personal', notes: 'Create post' },
   { exact: '/maia/community/chat', minTier: 'personal', notes: 'Community chat' },
   { exact: '/maia/community/reality-check', minTier: 'personal', notes: 'Reality check' },
+
+  // Circles Commons (Phase 1)
+  { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons - all authenticated members' },
+  { exact: '/commons/join', minTier: 'free', notes: 'Join circle via invite' },
 
   // Elemental Alchemy
   { prefix: '/maia/community/elemental-alchemy', minTier: 'personal', notes: 'Elemental alchemy system' },
@@ -295,6 +300,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
 
   // Public API
+  { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
@@ -307,6 +313,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'personal', notes: 'Contribution detail' },
   { exact: '/api/commons/contributions/my-offerings', minTier: 'personal', notes: 'User offerings' },
   { exact: '/api/stripe/membership/checkout', minTier: 'free', notes: 'Create checkout' },
+
+  // Circles API (Phase 1)
+  { prefix: '/api/circles', minTier: 'free', notes: 'Circles API - all authenticated members' },
 
   // Pro API
   { exact: '/api/practitioners/create', minTier: 'pro', notes: 'Create practitioner' },

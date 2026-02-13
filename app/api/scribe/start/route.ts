@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
       container = 'solo',
       participants = [],
       memoryPolicy = 'sealed',
+      bookingId,
     } = body;
 
     // Validate container
@@ -49,9 +50,10 @@ export async function POST(request: NextRequest) {
       consent_status: 'pending',
       is_active: true,
       transcript_enabled: false,
+      ...(bookingId ? { booking_id: bookingId } : {}),
     });
 
-    console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}`);
+    console.log(`[Scribe] Started ${container} session: ${session.id} for member ${memberId}${bookingId ? ` (booking: ${bookingId})` : ''}`);
 
     return NextResponse.json({
       success: true,

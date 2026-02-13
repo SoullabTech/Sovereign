@@ -13,9 +13,9 @@
  * - Changing lines and transformation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
@@ -116,7 +116,19 @@ interface IChingReading {
 }
 
 export default function IChingOraclePage() {
+  return (
+    <Suspense fallback={null}>
+      <IChingOracleContent />
+    </Suspense>
+  );
+}
+
+function IChingOracleContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Return path: if user came from MAIA (or anywhere), back buttons honor it
+  const returnTo = searchParams.get('return') || '/oracle';
+  const returnLabel = returnTo === '/maia' ? 'Return to MAIA' : 'Back to Oracle';
   const [phase, setPhase] = useState<ReadingPhase>('question');
   const [question, setQuestion] = useState('');
   const [reading, setReading] = useState<IChingReading | null>(null);
@@ -127,6 +139,9 @@ export default function IChingOraclePage() {
   const [isSaved, setIsSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [expandedLines, setExpandedLines] = useState<Set<number>>(new Set());
+  // "Bring to Field" — the offering bowl
+  const [isBringing, setIsBringing] = useState(false);
+  const [isBrought, setIsBrought] = useState(false);
 
   // Yarrow stalk casting simulation - builds hexagram line by line
   const castYarrowStalks = async () => {
@@ -266,6 +281,80 @@ export default function IChingOraclePage() {
     }
   };
 
+  // "Bring to Field" — capture this reading as a Stage 1 field record
+  const handleBringToField = async () => {
+    if (!reading || isBringing || isBrought) return;
+
+    setIsBringing(true);
+    try {
+      // Compose a quiet, readable summary of what happened
+      const hexName = `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name}`;
+      const transformed = reading.hexagram.transformed
+        ? ` → Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}`
+        : '';
+      const changingCount = reading.hexagram.changingLines?.length || 0;
+      const changingNote = changingCount > 0
+        ? ` (${changingCount} changing line${changingCount > 1 ? 's' : ''})`
+        : '';
+
+      const phenomena = [
+        `I Ching consultation: ${hexName}${transformed}${changingNote}`,
+        '',
+        reading.hexagram.interpretation,
+        '',
+        reading.guidance ? `Guidance: ${reading.guidance}` : '',
+      ].filter(Boolean).join('\n');
+
+      const tags = [
+        'iching',
+        `hexagram-${reading.hexagram.number}`,
+        reading.hexagram.keyword?.toLowerCase(),
+        reading.hexagram.transformed ? `hexagram-${reading.hexagram.transformed.number}` : null,
+      ].filter(Boolean) as string[];
+
+      // Structured reference for echo detection
+      // Trigram → element mapping (Wu Xing)
+      const trigramElement: Record<string, string> = {
+        heaven: 'metal', lake: 'metal',
+        fire: 'fire', thunder: 'wood',
+        wind: 'wood', water: 'water',
+        mountain: 'earth', earth: 'earth',
+      };
+      const lowerTrigram = reading.hexagram.trigrams.lower?.toLowerCase() || '';
+      const elementHint = trigramElement[lowerTrigram] || undefined;
+
+      const response = await apiFetch('/api/field/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'iching',
+          phenomena,
+          tags: elementHint ? [...tags, elementHint] : tags,
+          triggerEvent: question || undefined,
+          sourceRef: {
+            oracleType: 'iching',
+            oracleKey: String(reading.hexagram.number),
+            oracleName: reading.hexagram.name,
+            relatingKey: reading.hexagram.transformed
+              ? String(reading.hexagram.transformed.number)
+              : undefined,
+            elementHint,
+            keyword: reading.hexagram.keyword?.toLowerCase(),
+          },
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsBrought(true);
+      }
+    } catch (error) {
+      console.error('Failed to bring to field:', error);
+    } finally {
+      setIsBringing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] relative overflow-hidden">
       {/* Atmospheric Particles */}
@@ -307,11 +396,11 @@ export default function IChingOraclePage() {
             className="flex items-center justify-between mb-12"
           >
             <button
-              onClick={() => router.push('/oracle')}
+              onClick={() => router.push(returnTo)}
               className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Oracle</span>
+              <span className="text-sm">{returnLabel}</span>
             </button>
 
             <div className="flex items-center gap-2">
@@ -743,40 +832,67 @@ export default function IChingOraclePage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-4">
-                      <button
-                        onClick={handleSaveReading}
-                        disabled={isSaving || isSaved}
-                        className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-                          isSaved
-                            ? 'bg-green-600/80 text-white cursor-default'
-                            : saveError
-                            ? 'bg-red-700 hover:bg-red-600 text-white'
-                            : 'bg-gradient-to-r from-[#D4B896] to-[#B49876] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white'
-                        }`}
-                      >
-                        {isSaving ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : isSaved ? (
-                          <Check className="w-5 h-5" />
-                        ) : (
-                          <Save className="w-5 h-5" />
-                        )}
-                        {isSaved ? 'Saved to Reflections' : saveError ? 'Retry Save' : 'Save Reading'}
-                      </button>
-                      <button
-                        onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#D4B896] to-[#C4A886] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <RefreshCw className="w-5 h-5" />
-                        New Reading
-                      </button>
-                      <button
-                        onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/20 text-white font-semibold rounded-lg transition-all duration-300"
-                      >
-                        Back to Oracle
-                      </button>
+                    <div className="space-y-3">
+                      {/* Primary: Save + Bring to Field */}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleSaveReading}
+                          disabled={isSaving || isSaved}
+                          className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                            isSaved
+                              ? 'bg-green-600/80 text-white cursor-default'
+                              : saveError
+                              ? 'bg-red-700 hover:bg-red-600 text-white'
+                              : 'bg-gradient-to-r from-[#D4B896] to-[#B49876] hover:from-[#E4C8A6] hover:to-[#D4B896] text-white'
+                          }`}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : isSaved ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <Save className="w-5 h-5" />
+                          )}
+                          {isSaved ? 'Saved to Reflections' : saveError ? 'Retry Save' : 'Save Reading'}
+                        </button>
+
+                        {/* Bring to Field — the offering bowl */}
+                        <button
+                          onClick={handleBringToField}
+                          disabled={isBringing || isBrought}
+                          className={`px-6 py-3 rounded-lg transition-all duration-500 flex items-center justify-center gap-2 text-sm ${
+                            isBrought
+                              ? 'bg-[#D4B896]/10 text-[#D4B896]/70 cursor-default border border-[#D4B896]/20'
+                              : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 border border-white/10 hover:border-[#D4B896]/30'
+                          }`}
+                        >
+                          {isBringing ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : isBrought ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <Sparkles className="w-4 h-4" />
+                          )}
+                          {isBrought ? 'Captured' : 'Bring to Field'}
+                        </button>
+                      </div>
+
+                      {/* Secondary: New Reading + Return */}
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleNewReading}
+                          className="flex-1 px-6 py-3 bg-[#D4B896]/15 hover:bg-[#D4B896]/25 text-white/80 font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          New Reading
+                        </button>
+                        <button
+                          onClick={() => router.push(returnTo)}
+                          className="flex-1 px-6 py-3 bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white/80 rounded-lg transition-all duration-300 text-sm"
+                        >
+                          {returnLabel}
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 )}

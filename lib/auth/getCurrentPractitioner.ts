@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from './getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 
+export type StudioMode = 'personal' | 'practice';
+
 export interface PractitionerIdentity {
   memberId: string;
   practitionerId: string;
@@ -9,6 +11,7 @@ export interface PractitionerIdentity {
   practitionerName: string;
   portalType: string;
   enabledModules: string[] | null;
+  studioMode: StudioMode;
 }
 
 /**
@@ -30,15 +33,17 @@ export async function getCurrentPractitioner(
     return null;
   }
 
-  // Look up practitioner by member_id
+  // Look up practitioner by member_id, join members for studio_mode
   const result = await query(
     `SELECT
        p.id as practitioner_id,
        p.slug,
        p.name,
        p.portal_type,
-       p.enabled_modules
+       p.enabled_modules,
+       m.studio_mode
      FROM practitioners p
+     JOIN members m ON m.id = p.member_id
      WHERE p.member_id = $1
        AND p.status = 'active'
      LIMIT 1`,
@@ -58,6 +63,7 @@ export async function getCurrentPractitioner(
     practitionerName: row.name,
     portalType: row.portal_type ?? 'generalist',
     enabledModules: row.enabled_modules ?? null,
+    studioMode: (row.studio_mode === 'personal' ? 'personal' : 'practice') as StudioMode,
   };
 }
 
