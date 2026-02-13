@@ -66,10 +66,9 @@ export function MaiaSection() {
               <div className="relative mx-auto mt-2 flex h-[340px] w-full max-w-[420px] items-center justify-center">
                 {/* Outer layer */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-[88%] w-[88%] animate-[spin_36s_linear_infinite] motion-reduce:animate-none opacity-40">
-                    {/* NOTE: requires public/holoflower.png */}
+                  <div className="relative h-[88%] w-[88%] animate-[spin_36s_linear_infinite] motion-reduce:animate-none opacity-60">
                     <Image
-                      src="/holoflower.png"
+                      src="/holoflower-studio-transparent.png"
                       alt="Holoflower"
                       fill
                       sizes="(max-width: 1024px) 420px, 420px"
@@ -81,9 +80,9 @@ export function MaiaSection() {
 
                 {/* Inner layer (golden ratio ~ 0.618 of outer; 55.6% to match /maia) */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-[55.6%] w-[55.6%] animate-[spin_44s_linear_infinite_reverse] motion-reduce:animate-none opacity-70">
+                  <div className="relative h-[55.6%] w-[55.6%] animate-[spin_44s_linear_infinite_reverse] motion-reduce:animate-none opacity-85">
                     <Image
-                      src="/holoflower.png"
+                      src="/holoflower-studio-transparent.png"
                       alt="Holoflower inner"
                       fill
                       sizes="(max-width: 1024px) 260px, 260px"
