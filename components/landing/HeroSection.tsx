@@ -18,7 +18,7 @@ export function HeroSection() {
       {/* Background logo watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.07]">
         <motion.img
-          src="/holoflower-studio.png"
+          src="/holoflower.png"
           alt=""
           className="w-[500px] h-[500px] sm:w-[600px] sm:h-[600px] lg:w-[800px] lg:h-[800px] object-contain"
           animate={{ scale: [1, 1.03, 1], rotate: [0, 3, 0] }}
