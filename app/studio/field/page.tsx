@@ -1,695 +1,391 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Shield,
-  Wind,
-  Scale,
-  Zap,
-  HelpCircle,
-  Compass,
-  Plus,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  X,
+  Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
+  ArrowRight, Sparkles, ChevronRight, RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
-import { InsightTrigger } from '@/components/guidance/InsightTrigger';
+import { NameActionModal } from '@/components/studio/NameActionModal';
 
+// ─────────────────────────────────────────────────────────────────────────────
 // Types
+// ─────────────────────────────────────────────────────────────────────────────
 
-type ProcessItemType = 'challenge' | 'change' | 'decision' | 'breakthrough' | 'question' | 'next_edge';
-type ProcessItemStatus = 'alive' | 'resolved' | 'released' | 'archived';
-type Element = 'fire' | 'water' | 'earth' | 'air' | 'aether';
-
-interface ProcessItem {
+interface PulseQuestion {
   id: string;
-  type: ProcessItemType;
-  title: string;
-  body?: string;
-  element?: Element;
-  status: ProcessItemStatus;
+  source: 'change' | 'decision' | 'threshold';
+  sourceId: string;
+  sourceTitle: string;
+  text: string;
   urgency?: string;
-  tags: string[];
-  createdAt: string;
-  occurredAt?: string;
-  resolvedAt?: string;
-}
-
-interface ActiveChange {
-  id: string;
-  title: string;
-  status: string;
-  urgency?: string;
-  createdAt: string;
-}
-
-interface ActiveDecision {
-  id: string;
-  title: string;
   status: string;
   createdAt: string;
 }
 
-interface FieldData {
-  items: ProcessItem[];
-  changes: ActiveChange[];
-  decisions: ActiveDecision[];
+interface EdgeItem {
+  id: string;
+  type: 'change' | 'decision';
+  title: string;
+  description: string;
+  reason: string;
+  urgency?: string;
+  status: string;
+  createdAt: string;
 }
 
-// Helper functions
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 6) return 'Still night';
-  if (hour < 12) return 'Morning';
-  if (hour < 17) return 'Afternoon';
-  if (hour < 21) return 'Evening';
-  return 'Night';
+interface FieldPulse {
+  stillAlive: {
+    questions: PulseQuestion[];
+  };
+  nextEdge: {
+    item: EdgeItem | null;
+    alternatives: EdgeItem[];
+  };
 }
 
-function getRelativeTime(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+// ─────────────────────────────────────────────────────────────────────────────
+// Source badge styles
+// ─────────────────────────────────────────────────────────────────────────────
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return 'yesterday';
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
-  return `${Math.floor(diffDays / 365)}y ago`;
-}
-
-function getTypeIcon(type: ProcessItemType) {
-  switch (type) {
-    case 'challenge':
-      return Shield;
-    case 'change':
-      return Wind;
-    case 'decision':
-      return Scale;
-    case 'breakthrough':
-      return Zap;
-    case 'question':
-      return HelpCircle;
-    case 'next_edge':
-      return Compass;
-  }
-}
-
-const elementColors: Record<Element, string> = {
-  fire: 'text-red-400 bg-red-950/30 border-red-900/50',
-  water: 'text-blue-400 bg-blue-950/30 border-blue-900/50',
-  earth: 'text-emerald-400 bg-emerald-950/30 border-emerald-900/50',
-  air: 'text-sky-400 bg-sky-950/30 border-sky-900/50',
-  aether: 'text-purple-400 bg-purple-950/30 border-purple-900/50',
+const SOURCE_BADGE: Record<string, { label: string; cls: string }> = {
+  change:    { label: 'Change',    cls: 'bg-amber-500/10 text-amber-400/80 border-amber-500/20' },
+  decision:  { label: 'Decision',  cls: 'bg-blue-500/10 text-blue-400/80 border-blue-500/20' },
+  threshold: { label: 'Threshold', cls: 'bg-purple-500/10 text-purple-400/80 border-purple-500/20' },
 };
 
-const typeColors: Record<ProcessItemType, string> = {
-  challenge: 'text-orange-400 bg-orange-950/30 border-orange-900/50',
-  change: 'text-cyan-400 bg-cyan-950/30 border-cyan-900/50',
-  decision: 'text-amber-400 bg-amber-950/30 border-amber-900/50',
-  breakthrough: 'text-purple-400 bg-purple-950/30 border-purple-900/50',
-  question: 'text-sky-400 bg-sky-950/30 border-sky-900/50',
-  next_edge: 'text-emerald-400 bg-emerald-950/30 border-emerald-900/50',
-};
-
-// Main component
+// ─────────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function FieldPage() {
-  const [data, setData] = useState<FieldData | null>(null);
+  const [pulse, setPulse] = useState<FieldPulse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedItem, setExpandedItem] = useState<string | null>(null);
-  const [showCaptureModal, setShowCaptureModal] = useState(false);
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [captureRecordId, setCaptureRecordId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [nameModalOpen, setNameModalOpen] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<EdgeItem | null>(null);
+  const [serviceCreatedName, setServiceCreatedName] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    loadField();
+  const fetchPulse = useCallback(async (isRefresh = false) => {
+    // Abort any in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    if (isRefresh) setRefreshing(true);
+
+    try {
+      const res = await apiFetch('/api/studio/field/pulse', {
+        signal: controller.signal,
+      });
+      if (res.ok && !controller.signal.aborted) {
+        const data = await res.json();
+        setPulse(data);
+      }
+    } catch (err) {
+      // Ignore aborts; silently fail others (orientation, not critical)
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    }
   }, []);
 
-  async function loadField() {
-    try {
-      setLoading(true);
-      const response = await apiFetch('/api/studio/field');
-      const json = await response.json();
-      setData(json);
-    } catch (error) {
-      console.error('Failed to load field:', error);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    fetchPulse();
+    return () => { abortRef.current?.abort(); };
+  }, [fetchPulse]);
+
+  function handleNameAction(item: EdgeItem) {
+    setSelectedEdge(item);
+    setNameModalOpen(true);
+  }
+
+  function handleServiceCreated() {
+    const createdName = selectedEdge?.title || 'Service';
+    setNameModalOpen(false);
+    setSelectedEdge(null);
+    setServiceCreatedName(createdName);
+    // Auto-dismiss toast after 4s
+    setTimeout(() => setServiceCreatedName(null), 4000);
+    // Refresh pulse — the edge may no longer qualify
+    fetchPulse(true);
   }
 
   const greeting = getGreeting();
-
-  // Separate items by band
-  const stillAlive = data?.items.filter(
-    (item) =>
-      item.status === 'alive' &&
-      (item.type === 'question' || item.type === 'next_edge')
-  ) || [];
-
-  const whatMoved = data?.items.filter(
-    (item) =>
-      item.type === 'challenge' ||
-      item.type === 'change' ||
-      item.type === 'decision' ||
-      item.type === 'breakthrough'
-  ) || [];
-
-  const hasActiveItems = (data?.changes?.length ?? 0) > 0 || (data?.decisions?.length ?? 0) > 0;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
-        <div className="text-slate-400">Loading field...</div>
-      </div>
-    );
-  }
+  const hasQuestions = (pulse?.stillAlive.questions.length ?? 0) > 0;
+  const hasEdge = pulse?.nextEdge.item !== null;
+  const hasContent = hasQuestions || hasEdge;
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] p-6 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-[#1a1a2e] p-8">
+      <div className="max-w-2xl mx-auto">
+        {/* Greeting + Refresh */}
         <div className="mb-12">
-          <p className="text-slate-500 text-xs tracking-widest uppercase mb-2">{greeting}</p>
-          <h1 className="text-4xl font-light text-white mb-3 flex items-center gap-2">
-            Field
-            <InsightTrigger featureKey="studio.field" />
-          </h1>
-          <p className="text-slate-400 text-lg">What wants attention?</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 mb-12">
-          <button
-            onClick={() => setShowCaptureModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
-          >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-medium">Capture</span>
-          </button>
-          <button
-            onClick={() => setShowNameModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
-          >
-            <Plus className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-medium">Name</span>
-          </button>
-        </div>
-
-        {/* Band 1: Still Alive */}
-        {stillAlive.length > 0 && (
-          <div className="mb-16">
-            <h2 className="text-xl font-light text-white mb-6">Still Alive</h2>
-            <div className="space-y-3">
-              {stillAlive.map((item) => (
-                <ProcessItemCard
-                  key={item.id}
-                  item={item}
-                  expanded={expandedItem === item.id}
-                  onToggle={() =>
-                    setExpandedItem(expandedItem === item.id ? null : item.id)
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Band 3: Active (Changes & Decisions) */}
-        {hasActiveItems && (
-          <div className="mb-16">
-            <h2 className="text-xl font-light text-white mb-6">Active</h2>
-            <div className="space-y-3">
-              {data?.changes?.map((change) => (
-                <ActiveChangeCard key={change.id} change={change} />
-              ))}
-              {data?.decisions?.map((decision) => (
-                <ActiveDecisionCard key={decision.id} decision={decision} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Band 2: What Moved */}
-        {whatMoved.length > 0 && (
-          <div className="mb-16">
-            <h2 className="text-xl font-light text-white mb-6">What Moved</h2>
-            <div className="space-y-3">
-              {whatMoved.map((item) => (
-                <WhatMovedCard key={item.id} item={item} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading &&
-          stillAlive.length === 0 &&
-          whatMoved.length === 0 &&
-          !hasActiveItems && (
-            <div className="text-center py-16">
-              <p className="text-slate-400 text-lg mb-4">
-                Your field is quiet.
-              </p>
-              <p className="text-slate-500 text-sm">
-                Capture something, or name what&apos;s alive.
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-slate-500 text-sm tracking-wider uppercase mb-2">{greeting.label}</p>
+              <h1 className="text-3xl font-light text-white mb-2">Field</h1>
+              <p className="text-slate-400">
+                {hasContent ? 'What is alive right now.' : 'Your personal orientation space. What wants attention?'}
               </p>
             </div>
-          )}
-      </div>
-
-      {/* Modals */}
-      <AnimatePresence>
-        {showCaptureModal && (
-          <CaptureModal
-            onClose={() => {
-              setShowCaptureModal(false);
-              setCaptureRecordId(null);
-            }}
-            onSaved={(recordId) => {
-              setCaptureRecordId(recordId);
-              setShowCaptureModal(false);
-              setShowNameModal(true);
-            }}
-          />
-        )}
-        {showNameModal && (
-          <NameModal
-            onClose={() => {
-              setShowNameModal(false);
-              setCaptureRecordId(null);
-            }}
-            onSaved={() => {
-              setShowNameModal(false);
-              setCaptureRecordId(null);
-              loadField();
-            }}
-            captureRecordId={captureRecordId}
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// Sub-components
-
-function ProcessItemCard({
-  item,
-  expanded,
-  onToggle,
-}: {
-  item: ProcessItem;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const Icon = getTypeIcon(item.type);
-  return (
-    <motion.div
-      layout
-      className="rounded-lg bg-slate-900/50 border border-slate-800/60 overflow-hidden"
-    >
-      <button
-        onClick={onToggle}
-        className="w-full flex items-start gap-3 p-4 text-left hover:bg-white/5 transition"
-      >
-        <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${typeColors[item.type]}`} />
-        <div className="flex-1 min-w-0">
-          <div className="text-white text-sm font-medium mb-1">{item.title}</div>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            {item.element && (
-              <span
-                className={`px-2 py-0.5 rounded-full border ${elementColors[item.element]}`}
+            {!loading && (
+              <button
+                onClick={() => fetchPulse(true)}
+                disabled={refreshing}
+                className="p-2 rounded-lg text-slate-600 hover:text-slate-400 hover:bg-white/5 transition disabled:opacity-50"
+                title="Refresh pulse"
               >
-                {item.element}
-              </span>
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
             )}
-            <span>{getRelativeTime(item.createdAt)}</span>
           </div>
         </div>
-        {expanded ? (
-          <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" />
+
+        {/* Service created toast */}
+        {serviceCreatedName && (
+          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm">
+            <span className="text-emerald-400">Service created</span>
+            <span className="text-slate-500">&middot;</span>
+            <span className="text-white/80 truncate">{serviceCreatedName}</span>
+            <Link
+              href="/studio/services"
+              className="ml-auto text-emerald-400/80 hover:text-emerald-300 text-xs whitespace-nowrap transition"
+            >
+              View Services
+            </Link>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+          </div>
         ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <>
+            {/* ── Still Alive ──────────────────────────────────────── */}
+            {hasQuestions && (
+              <section className="mb-12">
+                <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Still Alive
+                </h2>
+                <div className="space-y-2">
+                  {pulse!.stillAlive.questions.slice(0, 5).map((q) => (
+                    <QuestionCard key={q.id} question={q} />
+                  ))}
+                </div>
+                {pulse!.stillAlive.questions.length > 5 && (
+                  <p className="text-xs text-slate-600 mt-3 pl-1">
+                    +{pulse!.stillAlive.questions.length - 5} more questions alive
+                  </p>
+                )}
+              </section>
+            )}
+
+            {/* ── Next Edge ────────────────────────────────────────── */}
+            {hasEdge && pulse?.nextEdge.item && (
+              <section className="mb-12">
+                <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <ArrowRight className="w-4 h-4 text-blue-400" />
+                  Next Edge
+                </h2>
+                <NextEdgeCard
+                  item={pulse.nextEdge.item}
+                  onNameAction={handleNameAction}
+                />
+                {pulse.nextEdge.alternatives.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {pulse.nextEdge.alternatives.map((alt) => (
+                      <Link
+                        key={alt.id}
+                        href={alt.type === 'change' ? `/studio/changes` : `/studio/decisions`}
+                        className="flex items-center gap-3 px-4 py-2 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 transition text-sm"
+                      >
+                        <span className="text-slate-400 truncate flex-1">{alt.title}</span>
+                        <span className="text-[10px] text-slate-600 uppercase">{alt.type}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* ── Navigate ─────────────────────────────────────────── */}
+            <section>
+              <h2 className="text-sm text-slate-500 uppercase tracking-wider mb-3">
+                Navigate
+              </h2>
+              <div className="space-y-2">
+                <FieldCard href="/studio/changes" icon={Wind} title="Changes" subtitle="Navigate what is shifting" accent="amber" />
+                <FieldCard href="/studio/decisions" icon={Scale} title="Decisions" subtitle="Clarify what needs choosing" accent="blue" />
+                <FieldCard href="/studio/scribe" icon={Mic} title="Scribe" subtitle="Speak what needs to be heard" accent="emerald" />
+                <FieldCard href="/studio/vault" icon={BookOpen} title="Vault" subtitle="Private notes and reflections" accent="purple" />
+                <FieldCard href="/studio/calendar" icon={Calendar} title="Calendar" subtitle="What is coming" accent="slate" />
+                <FieldCard href="/studio/tasks" icon={CheckSquare} title="Tasks" subtitle="What needs doing" accent="slate" />
+              </div>
+            </section>
+          </>
         )}
-      </button>
-      <AnimatePresence>
-        {expanded && item.body && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="border-t border-slate-800/60"
-          >
-            <div className="p-4 text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
-              {item.body}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      </div>
+
+      {/* Name Action Modal */}
+      {nameModalOpen && selectedEdge && (
+        <NameActionModal
+          isOpen={nameModalOpen}
+          onClose={() => {
+            setNameModalOpen(false);
+            setSelectedEdge(null);
+          }}
+          edgeItem={selectedEdge}
+          onSuccess={handleServiceCreated}
+        />
+      )}
+    </div>
   );
 }
 
-function WhatMovedCard({ item }: { item: ProcessItem }) {
-  const Icon = getTypeIcon(item.type);
+// ─────────────────────────────────────────────────────────────────────────────
+// Question Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+function QuestionCard({ question }: { question: PulseQuestion }) {
+  const sourceStyles: Record<string, string> = {
+    change: 'border-l-amber-500/40',
+    decision: 'border-l-blue-500/40',
+    threshold: 'border-l-purple-500/40',
+  };
+
+  const sourceHref =
+    question.source === 'change' ? '/studio/changes'
+    : question.source === 'decision' ? '/studio/decisions'
+    : null;
+
+  const badge = SOURCE_BADGE[question.source];
+
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg bg-slate-900/50 border border-slate-800/60">
-      <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${typeColors[item.type]}`} />
-      <div className="flex-1 min-w-0">
-        <div className="text-white text-sm font-medium mb-1">{item.title}</div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className={`px-2 py-0.5 rounded-full border ${typeColors[item.type]}`}>
-            {item.type}
+    <div
+      className={`pl-4 pr-4 py-3 rounded-lg bg-white/[0.03] border border-white/5 border-l-2 ${sourceStyles[question.source] || ''}`}
+    >
+      <p className="text-white/90 text-sm leading-relaxed mb-1.5">{question.text}</p>
+      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+        {badge && (
+          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${badge.cls}`}>
+            {badge.label}
           </span>
-          {item.element && (
-            <span
-              className={`px-2 py-0.5 rounded-full border ${elementColors[item.element]}`}
-            >
-              {item.element}
-            </span>
-          )}
-          <span>{getRelativeTime(item.occurredAt || item.createdAt)}</span>
-        </div>
+        )}
+        <span className="text-slate-700">&middot;</span>
+        {sourceHref ? (
+          <Link href={sourceHref} className="hover:text-slate-300 transition truncate">
+            {question.sourceTitle}
+          </Link>
+        ) : (
+          <span className="truncate">{question.sourceTitle}</span>
+        )}
       </div>
     </div>
   );
 }
 
-function ActiveChangeCard({ change }: { change: ActiveChange }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Next Edge Card
+// ─────────────────────────────────────────────────────────────────────────────
+
+function NextEdgeCard({
+  item,
+  onNameAction,
+}: {
+  item: EdgeItem;
+  onNameAction: (item: EdgeItem) => void;
+}) {
+  const typeHref = item.type === 'change' ? '/studio/changes' : '/studio/decisions';
+
+  return (
+    <div className="rounded-xl bg-gradient-to-br from-blue-500/[0.07] to-purple-500/[0.07] border border-blue-500/20 p-5">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <Link
+            href={typeHref}
+            className="text-white font-medium hover:text-blue-300 transition"
+          >
+            {item.title}
+          </Link>
+          {item.description && (
+            <p className="text-sm text-slate-400 mt-1 line-clamp-2">{item.description}</p>
+          )}
+        </div>
+        <span className="text-[10px] text-blue-400/70 uppercase tracking-wider flex-shrink-0">
+          {item.type}
+        </span>
+      </div>
+
+      <p className="text-xs text-blue-300/60 italic mb-4">{item.reason}</p>
+
+      <button
+        onClick={() => onNameAction(item)}
+        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded-lg text-sm text-white/80 hover:text-white transition"
+      >
+        <Sparkles className="w-4 h-4 text-amber-400" />
+        Name this as a service
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Navigation Card (demoted, simplified)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FieldCard({
+  href,
+  icon: Icon,
+  title,
+  subtitle,
+  accent = 'slate',
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle: string;
+  accent?: string;
+}) {
+  const accentColors: Record<string, string> = {
+    amber: 'text-amber-400',
+    blue: 'text-blue-400',
+    emerald: 'text-emerald-400',
+    purple: 'text-purple-400',
+    slate: 'text-slate-400',
+  };
+
   return (
     <Link
-      href={`/studio/changes/${change.id}`}
-      className="flex items-start gap-3 p-4 rounded-lg bg-slate-900/50 border border-slate-800/60 hover:bg-white/5 hover:border-white/10 transition group"
+      href={href}
+      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/5 hover:border-white/10 transition group"
     >
-      <Wind className="w-4 h-4 mt-0.5 flex-shrink-0 text-cyan-400" />
+      <Icon className={`w-4 h-4 ${accentColors[accent] ?? 'text-slate-400'}`} />
       <div className="flex-1 min-w-0">
-        <div className="text-white text-sm font-medium mb-1 group-hover:text-cyan-400 transition">
-          {change.title}
-        </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="px-2 py-0.5 rounded-full border text-cyan-400 bg-cyan-950/30 border-cyan-900/50">
-            Change
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-white/5">{change.status}</span>
-          <span>{getRelativeTime(change.createdAt)}</span>
-        </div>
+        <div className="text-white/80 text-sm">{title}</div>
+        <div className="text-slate-600 text-xs">{subtitle}</div>
       </div>
+      <ChevronRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-slate-500 transition" />
     </Link>
   );
 }
 
-function ActiveDecisionCard({ decision }: { decision: ActiveDecision }) {
-  return (
-    <Link
-      href={`/studio/decisions/${decision.id}`}
-      className="flex items-start gap-3 p-4 rounded-lg bg-slate-900/50 border border-slate-800/60 hover:bg-white/5 hover:border-white/10 transition group"
-    >
-      <Scale className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-400" />
-      <div className="flex-1 min-w-0">
-        <div className="text-white text-sm font-medium mb-1 group-hover:text-amber-400 transition">
-          {decision.title}
-        </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="px-2 py-0.5 rounded-full border text-amber-400 bg-amber-950/30 border-amber-900/50">
-            Decision
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-white/5">{decision.status}</span>
-          <span>{getRelativeTime(decision.createdAt)}</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Greeting
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Modals
-
-function CaptureModal({
-  onClose,
-  onSaved,
-}: {
-  onClose: () => void;
-  onSaved: (recordId: string) => void;
-}) {
-  const [observation, setObservation] = useState('');
-  const [element, setElement] = useState<Element | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  async function handleSave() {
-    if (!observation.trim()) return;
-
-    try {
-      setSaving(true);
-      const response = await apiFetch('/api/studio/field/capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ observation, element }),
-      });
-      const json = await response.json();
-      if (json.record?.id) {
-        onSaved(json.record.id);
-      } else {
-        onClose();
-      }
-    } catch (error) {
-      console.error('Failed to capture:', error);
-      alert('Failed to save. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-xl p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-light text-white">Capture</h3>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <textarea
-          value={observation}
-          onChange={(e) => setObservation(e.target.value)}
-          placeholder="What wants to be noticed?"
-          className="w-full h-40 px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 resize-none"
-          autoFocus
-        />
-        <div className="mt-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-            Element (optional)
-          </p>
-          <div className="flex gap-2">
-            {(['fire', 'water', 'earth', 'air', 'aether'] as Element[]).map((el) => (
-              <button
-                key={el}
-                onClick={() => setElement(element === el ? null : el)}
-                className={`px-3 py-1.5 rounded-lg text-xs border transition ${
-                  element === el
-                    ? elementColors[el]
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                }`}
-              >
-                {el}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={handleSave}
-            disabled={!observation.trim() || saving}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function NameModal({
-  onClose,
-  onSaved,
-  captureRecordId,
-}: {
-  onClose: () => void;
-  onSaved: () => void;
-  captureRecordId?: string | null;
-}) {
-  const [type, setType] = useState<ProcessItemType | null>(null);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [element, setElement] = useState<Element | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  async function handleSave() {
-    if (!type || !title.trim()) return;
-
-    try {
-      setSaving(true);
-      const response = await apiFetch('/api/studio/field', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, title, body, element }),
-      });
-      if (response.ok) {
-        onSaved();
-      } else {
-        alert('Failed to save. Please try again.');
-      }
-    } catch (error) {
-      console.error('Failed to name:', error);
-      alert('Failed to save. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const typeOptions: { type: ProcessItemType; label: string; icon: any }[] = [
-    { type: 'challenge', label: 'Challenge', icon: Shield },
-    { type: 'change', label: 'Change', icon: Wind },
-    { type: 'decision', label: 'Decision', icon: Scale },
-    { type: 'breakthrough', label: 'Breakthrough', icon: Zap },
-    { type: 'question', label: 'Question', icon: HelpCircle },
-    { type: 'next_edge', label: 'Next Edge', icon: Compass },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-xl p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-light text-white">Name</h3>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {captureRecordId && (
-          <p className="text-sm text-slate-400 mb-4">Name this offering?</p>
-        )}
-
-        {/* Type selector */}
-        <div className="mb-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Type</p>
-          <div className="grid grid-cols-3 gap-2">
-            {typeOptions.map(({ type: t, label, icon: Icon }) => (
-              <button
-                key={t}
-                onClick={() => setType(t)}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition ${
-                  type === t
-                    ? typeColors[t]
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="text-xs">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="mb-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Title</p>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What is this?"
-            className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-700"
-          />
-        </div>
-
-        {/* Body */}
-        <div className="mb-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-            Body (optional)
-          </p>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Additional context..."
-            className="w-full h-24 px-4 py-3 bg-slate-950/50 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-slate-700 resize-none"
-          />
-        </div>
-
-        {/* Element */}
-        <div className="mb-4">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-            Element (optional)
-          </p>
-          <div className="flex gap-2">
-            {(['fire', 'water', 'earth', 'air', 'aether'] as Element[]).map((el) => (
-              <button
-                key={el}
-                onClick={() => setElement(element === el ? null : el)}
-                className={`px-3 py-1.5 rounded-lg text-xs border transition ${
-                  element === el
-                    ? elementColors[el]
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                }`}
-              >
-                {el}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={handleSave}
-            disabled={!type || !title.trim() || saving}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition"
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+function getGreeting(): { label: string } {
+  const hour = new Date().getHours();
+  if (hour < 6) return { label: 'Still night' };
+  if (hour < 12) return { label: 'Morning' };
+  if (hour < 17) return { label: 'Afternoon' };
+  if (hour < 21) return { label: 'Evening' };
+  return { label: 'Night' };
 }

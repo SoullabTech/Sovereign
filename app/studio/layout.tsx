@@ -5,12 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Loader2, Sparkles, User } from 'lucide-react';
+import { ChevronLeft, Loader2, Sparkles } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
 import { RecordingContextProvider } from '@/lib/studio/RecordingContext';
 import { RecordingBanner } from '@/components/studio/RecordingBanner';
 import { NavigationGuard } from '@/components/studio/NavigationGuard';
+import { AccountPopover } from '@/components/studio/AccountPopover';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import {
@@ -291,13 +292,7 @@ export default function StudioLayout({
             <Sparkles className="w-4 h-4 flex-shrink-0" />
             {!collapsed && <span>Back to MAIA</span>}
           </Link>
-          <Link
-            href="/account"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
-          >
-            <User className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Account</span>}
-          </Link>
+          <AccountPopover collapsed={collapsed} studioMode={studioMode} />
         </div>
 
         {/* Expand button when collapsed */}
