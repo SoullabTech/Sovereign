@@ -67,7 +67,16 @@ export type ModuleSlug =
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
-/** Which studio mode a module appears in: field (personal), practice (operations), or both */
+/**
+ * Which studio mode a module appears in.
+ *
+ * Naming convention (keep these layers separate):
+ *   DB / API state:  'personal' | 'practice'  (members.studio_mode)
+ *   Module tag:      'field' | 'practice' | 'both'  (this type)
+ *   UI label:        "Field" | "Practice"
+ *
+ * Translation: personal (state) → shows field + both modules → labeled "Field"
+ */
 export type ModuleMode = 'field' | 'practice' | 'both';
 
 export interface ModuleDefinition {
