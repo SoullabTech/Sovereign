@@ -283,8 +283,8 @@ export default function CommunityBBSPage() {
               </button>
               <div className="w-px h-6 bg-white/10" />
               <div>
-                <h1 className="text-2xl font-medium text-white">Repository</h1>
-                <p className="text-white/50 text-sm">Wisdom library &amp; community exchange</p>
+                <h1 className="text-2xl font-medium text-white">Library</h1>
+                <p className="text-white/50 text-sm">Wisdom, practices &amp; shared knowledge</p>
               </div>
             </div>
 
@@ -501,7 +501,7 @@ export default function CommunityBBSPage() {
 
               {/* Welcome Message */}
               <div className="bg-[#2a2a2a] border border-white/10 rounded-xl p-6">
-                <h2 className="text-xl font-medium text-white mb-2">Welcome to the Repository</h2>
+                <h2 className="text-xl font-medium text-white mb-2">Welcome to the Library</h2>
                 <p className="text-white/60 leading-relaxed">
                   Navigate the universal wisdom journey—from crossing the Threshold to sharing your Offerings.
                   Each territory holds space for seekers at every stage of transformation, drawing from
