@@ -67,6 +67,9 @@ export type ModuleSlug =
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
+/** Which studio mode a module appears in: field (personal), practice (operations), or both */
+export type ModuleMode = 'field' | 'practice' | 'both';
+
 export interface ModuleDefinition {
   slug: ModuleSlug;
   label: string;
@@ -75,11 +78,14 @@ export interface ModuleDefinition {
   category: ModuleCategory;
   description: string;
   alwaysOn: boolean;
+  /** Which mode this module appears in. Defaults to 'both' if omitted. */
+  mode: ModuleMode;
 }
 
 // ─── All Modules (ordered as they appear in nav) ────────
 
 export const MODULE_DEFINITIONS: ModuleDefinition[] = [
+  // ── Core (both modes) ──
   {
     slug: 'command_center',
     label: 'Command Center',
@@ -88,6 +94,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Your daily dashboard and triage queue',
     alwaysOn: true,
+    mode: 'practice',
   },
   {
     slug: 'threshold',
@@ -97,7 +104,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Six-week passage for practitioners',
     alwaysOn: false,
+    mode: 'both',
   },
+
+  // ── Practice modules (client-facing, operational) ──
   {
     slug: 'clients',
     label: 'Clients',
@@ -106,6 +116,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'clients',
     description: 'Manage your client relationships',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'groups',
@@ -115,6 +126,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'clients',
     description: 'Group programs, circles, and cohorts',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'sessions',
@@ -124,6 +136,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Session scheduling and notes',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'caseload',
@@ -133,6 +146,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Active caseload management',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'services',
@@ -142,6 +156,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Service offerings and packages',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'calendar',
@@ -151,6 +166,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Availability and booking calendar',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'tasks',
@@ -160,6 +176,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Task delegation and tracking',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'comms',
@@ -169,6 +186,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Client messaging and notifications',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'marketing',
@@ -178,7 +196,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'operations',
     description: 'Outreach, campaigns, and content',
     alwaysOn: false,
+    mode: 'practice',
   },
+
+  // ── Field modules (personal orientation) ──
   {
     slug: 'decisions',
     label: 'Decisions',
@@ -187,6 +208,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Leadership decision logs and frameworks',
     alwaysOn: false,
+    mode: 'field',
   },
   {
     slug: 'changes',
@@ -196,7 +218,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Navigate life transitions with I Ching wisdom',
     alwaysOn: false,
+    mode: 'field',
   },
+
+  // ── Shared tools (both modes) ──
   {
     slug: 'vault',
     label: 'Vault',
@@ -205,6 +230,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Secure document and note storage',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'media',
@@ -214,6 +240,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Media production and editing',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'camera',
@@ -223,6 +250,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Live video and streaming tools',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'code',
@@ -232,6 +260,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'AI agent code sessions',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'scribe',
@@ -241,7 +270,10 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Voice transcription and notes',
     alwaysOn: false,
+    mode: 'both',
   },
+
+  // ── Collaboration ──
   {
     slug: 'teams',
     label: 'Teams',
@@ -250,6 +282,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'collaboration',
     description: 'Team collaboration and delegation',
     alwaysOn: false,
+    mode: 'practice',
   },
   {
     slug: 'maia',
@@ -259,6 +292,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Your sovereign AI companion',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'tools',
@@ -268,6 +302,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'tools',
     description: 'Integrations and utilities',
     alwaysOn: false,
+    mode: 'both',
   },
   {
     slug: 'settings',
@@ -277,6 +312,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Studio configuration',
     alwaysOn: true,
+    mode: 'both',
   },
 ];
 
@@ -306,12 +342,24 @@ export function getDefaultModules(portalType: PortalType): ModuleSlug[] {
 /** Get visible modules for a practitioner (resolved from enabled_modules or defaults) */
 export function getVisibleModules(
   enabledModules: ModuleSlug[] | null,
-  portalType: PortalType
+  portalType: PortalType,
+  /** Optional mode filter: 'personal' shows field + both, 'practice' shows practice + both */
+  studioMode?: 'personal' | 'practice'
 ): ModuleDefinition[] {
   const slugs = enabledModules ?? getDefaultModules(portalType);
   const alwaysOn = MODULE_DEFINITIONS.filter(m => m.alwaysOn).map(m => m.slug);
   const all = new Set([...alwaysOn, ...slugs]);
-  return MODULE_DEFINITIONS.filter(m => all.has(m.slug));
+
+  let modules = MODULE_DEFINITIONS.filter(m => all.has(m.slug));
+
+  // Filter by studio mode if provided
+  if (studioMode === 'personal') {
+    modules = modules.filter(m => m.mode === 'field' || m.mode === 'both');
+  } else if (studioMode === 'practice') {
+    modules = modules.filter(m => m.mode === 'practice' || m.mode === 'both');
+  }
+
+  return modules;
 }
 
 /** All known module slugs (for validation) */
