@@ -15,7 +15,6 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import {
   getVisibleModules,
-  MODULE_DEFINITIONS,
   type PortalType,
   type ModuleSlug,
   type ModuleDefinition,
@@ -32,7 +31,9 @@ export default function StudioLayout({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [checkingPractitioner, setCheckingPractitioner] = useState(true);
   const [isPractitioner, setIsPractitioner] = useState(false);
-  const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>(MODULE_DEFINITIONS);
+  const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>([]);
+  const [portalTypeRef, setPortalTypeRef] = useState<PortalType>('generalist');
+  const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
   const [studioMode, setStudioMode] = useState<'personal' | 'practice'>('practice');
   const [switchingMode, setSwitchingMode] = useState(false);
 
@@ -60,16 +61,17 @@ export default function StudioLayout({
         if (data.isPractitioner) {
           setIsPractitioner(true);
 
-          // Resolve visible modules from identity
+          // Resolve visible modules from identity, filtered by mode
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
           const enabledModules = data.identity?.enabledModules as ModuleSlug[] | null;
-          setVisibleModules(getVisibleModules(enabledModules, portalType));
+          const mode = (data.identity?.studioMode === 'personal' || data.identity?.studioMode === 'practice')
+            ? data.identity.studioMode
+            : 'practice';
 
-          // Load studio mode
-          const mode = data.identity?.studioMode;
-          if (mode === 'personal' || mode === 'practice') {
-            setStudioMode(mode);
-          }
+          setPortalTypeRef(portalType);
+          setEnabledModulesRef(enabledModules);
+          setStudioMode(mode);
+          setVisibleModules(getVisibleModules(enabledModules, portalType, mode));
         } else {
           router.replace('/studio/create');
           return;
@@ -94,6 +96,10 @@ export default function StudioLayout({
     if (switchingMode || mode === studioMode) return;
     setSwitchingMode(true);
     try {
+      // Update modules immediately for visual feedback
+      setStudioMode(mode);
+      setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, mode));
+
       await apiFetch('/api/studio/mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,6 +109,9 @@ export default function StudioLayout({
       window.location.href = target;
     } catch (e) {
       console.error('[StudioMode] switch error:', e);
+      // Revert on failure
+      setStudioMode(studioMode);
+      setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, studioMode));
       setSwitchingMode(false);
     }
   };
