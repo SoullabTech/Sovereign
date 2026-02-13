@@ -12,6 +12,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import {
   getVisibleModules,
+  MODULE_DEFINITIONS,
   type PortalType,
   type ModuleSlug,
   type ModuleDefinition,
@@ -33,6 +34,7 @@ export default function StudioLayout({
   const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
   const [studioMode, setStudioMode] = useState<'personal' | 'practice'>('practice');
   const [switchingMode, setSwitchingMode] = useState(false);
+  const [modeMismatch, setModeMismatch] = useState<{ targetMode: 'personal' | 'practice'; label: string } | null>(null);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -83,6 +85,35 @@ export default function StudioLayout({
 
     checkPractitioner();
   }, [isCreatePage, router]);
+
+  // Detect mode mismatch: current route belongs to a module in the other mode
+  useEffect(() => {
+    if (checkingPractitioner || !isPractitioner || !pathname) {
+      setModeMismatch(null);
+      return;
+    }
+
+    // Find if the current path matches a module that's exclusive to the other mode
+    const matchedModule = MODULE_DEFINITIONS.find(
+      (m) => pathname === m.href || (m.href !== '/studio' && pathname.startsWith(m.href))
+    );
+
+    if (!matchedModule || matchedModule.mode === 'both') {
+      setModeMismatch(null);
+      return;
+    }
+
+    // Module is mode-exclusive. Check if it matches the current mode.
+    const moduleNeedsMode: 'personal' | 'practice' =
+      matchedModule.mode === 'field' ? 'personal' : 'practice';
+
+    if (moduleNeedsMode !== studioMode) {
+      const modeLabel = moduleNeedsMode === 'personal' ? 'Field' : 'Practice';
+      setModeMismatch({ targetMode: moduleNeedsMode, label: modeLabel });
+    } else {
+      setModeMismatch(null);
+    }
+  }, [pathname, studioMode, checkingPractitioner, isPractitioner]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -275,6 +306,21 @@ export default function StudioLayout({
         className="flex-1 transition-all duration-300"
         style={{ marginLeft: collapsed ? 64 : 200 }}
       >
+        {/* Mode mismatch banner */}
+        {modeMismatch && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 flex items-center justify-between">
+            <span className="text-sm text-amber-400">
+              This page is part of <strong>{modeMismatch.label}</strong> mode.
+            </span>
+            <button
+              onClick={() => switchMode(modeMismatch.targetMode)}
+              disabled={switchingMode}
+              className="text-sm px-3 py-1 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition disabled:opacity-50"
+            >
+              Switch to {modeMismatch.label}
+            </button>
+          </div>
+        )}
         {children}
       </main>
     </div>
