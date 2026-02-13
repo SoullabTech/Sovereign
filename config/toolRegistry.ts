@@ -1132,6 +1132,22 @@ export const TOOL_REGISTRY: LabTool[] = [
     requiresRole: 'admin',
     popularityRank: 3,
   },
+  {
+    id: 'guidance-signals',
+    label: 'Guidance Signals',
+    shortDescription: 'Where members need guidance',
+    longDescription:
+      'Aggregate confusion signals by feature. Shows what content to create next based on real member behavior — no content captured, structural only.',
+    emoji: '🔦',
+    icon: Eye,
+    path: '/labtools/guidance-signals',
+    category: 'developer',
+    minTier: 'pro',
+    tags: ['guidance', 'signals', 'content', 'tooltips', 'confusion'],
+    defaultEnabled: false,
+    requiresRole: 'admin',
+    popularityRank: 4,
+  },
 
   // ---------------------------------------------------------------------------
   // ADMIN (utility)

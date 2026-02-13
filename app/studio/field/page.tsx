@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import { InsightTrigger } from '@/components/guidance/InsightTrigger';
 
 // Types
 
@@ -182,7 +183,10 @@ export default function FieldPage() {
         {/* Header */}
         <div className="mb-12">
           <p className="text-slate-500 text-xs tracking-widest uppercase mb-2">{greeting}</p>
-          <h1 className="text-4xl font-light text-white mb-3">Field</h1>
+          <h1 className="text-4xl font-light text-white mb-3 flex items-center gap-2">
+            Field
+            <InsightTrigger featureKey="studio.field" />
+          </h1>
           <p className="text-slate-400 text-lg">What wants attention?</p>
         </div>
 

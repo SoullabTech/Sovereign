@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
+import { InsightTrigger } from '@/components/guidance/InsightTrigger';
 // import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 
 interface QuickSettingsSheetProps {
@@ -348,10 +349,11 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                           <Shield size={20} />
                         </motion.div>
                         <div className="text-left">
-                          <div className={`text-sm font-medium ${
+                          <div className={`text-sm font-medium flex items-center gap-1.5 ${
                             settings.sanctuary ? 'text-emerald-300' : 'text-white/80'
                           }`}>
                             Sanctuary Session
+                            <InsightTrigger featureKey="maia.sanctuary" />
                           </div>
                           <div className="text-xs text-white/50 mt-0.5">
                             {settings.sanctuary
