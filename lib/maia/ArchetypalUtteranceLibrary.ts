@@ -8,7 +8,7 @@
  */
 
 export interface ArchetypalUtterance {
-  text: string;
+  text: string | null;  // null represents actual silence (no utterance)
   element: 'earth' | 'water' | 'air' | 'fire' | 'aether';
   consciousness: 'conscious' | 'unconscious' | 'higherSelf' | 'lowerSelf';
   intimacyRange: [number, number]; // [min, max] 0-1

@@ -52,6 +52,11 @@ import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } fr
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
 import { consult } from '@/lib/ain/consultation';
 
+/** Living Library — wisdom corpus consultation */
+import { libraryService } from '@/lib/library/LibraryService';
+import { calculateDynamicRange } from '@/lib/library/dynamicRange';
+import { emitWisdomEvents, ensureSourceNode } from '@/lib/wisdom/wisdomGraphService';
+
 /** AIN Collective Breakthrough (afferent/efferent wisdom flow) */
 import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
@@ -535,6 +540,17 @@ export async function POST(request: NextRequest) {
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
 
+    // DISTRESS DOORWAY: Detect distress signals at conversation start
+    const distressSignal = detectDistressSignals(message, conversationDepth);
+    if (distressSignal) {
+      console.log(JSON.stringify({
+        tag: 'distress_doorway',
+        intensity: distressSignal.intensity,
+        tone: distressSignal.dominantTone,
+        depth: conversationDepth,
+      }));
+    }
+
     // Generate disposable pixel configuration with spiralogic enhancements
     const disposablePixels = PanconsciousFieldService.generateDisposablePixels(
       symbolPatterns,
@@ -592,7 +608,7 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
-    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
+    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -608,7 +624,10 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      distressSignal,
+      sessionId,
+      voicePrefs.intent
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -657,7 +676,8 @@ export async function POST(request: NextRequest) {
             memoryContext,
             anamnesisPrompt,
             astrologyContext,
-            preferredAssistantName
+            preferredAssistantName,
+            distressSignal
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -1379,6 +1399,97 @@ function detectInterventionTriggers(
   return interventions;
 }
 
+// =============================================================================
+// DISTRESS SIGNAL DETECTION
+// =============================================================================
+
+interface DistressSignal {
+  isDistressed: boolean;
+  intensity: 'low' | 'medium' | 'high';
+  dominantTone: 'water' | 'aether' | 'earth' | 'air';
+  suggestedBeats: string[];
+}
+
+/**
+ * Detect distress signals by message signature, not clock time.
+ *
+ * When someone arrives in distress — "I can't sleep", "everything is too much" —
+ * MAIA's normal 8-15 word greeting is wrong. This detection enables the
+ * 3-beat doorway: Permission → Contact → Gentle Question.
+ *
+ * Returns null for non-distress messages. Normal path is zero-cost.
+ */
+function detectDistressSignals(message: string, conversationDepth: number): DistressSignal | null {
+  // Only activate at conversation start (depth 0-1)
+  // After depth 1, normal conversation dynamics take over
+  if (conversationDepth > 1) return null;
+
+  const msg = message.toLowerCase();
+  const wordCount = msg.split(/\s+/).length;
+
+  // ─── Explicit distress patterns (high confidence) ───
+  const explicitDistress = [
+    /can'?t sleep/i, /it'?s late and/i, /i'?m spiraling/i,
+    /i don'?t know what to do/i, /i feel stuck/i, /everything is too much/i,
+    /i can'?t breathe/i, /i'?m falling apart/i, /i need help/i,
+    /i'?m scared/i, /i can'?t stop (crying|thinking|shaking)/i,
+    /i'?m losing it/i, /i'?m in a dark place/i, /make it stop/i,
+    /i feel like i'?m drowning/i, /i don'?t want to be here/i,
+    /everything feels wrong/i, /i'?m so alone/i, /nobody understands/i,
+    /i can'?t do this anymore/i, /i feel broken/i, /i'?m overwhelmed/i,
+    /i don'?t know who to talk to/i, /i feel like giving up/i,
+  ];
+
+  const hasExplicit = explicitDistress.some(pattern => pattern.test(message));
+
+  // ─── Implicit distress signals (medium confidence) ───
+  // Short, raw, low-context messages with distress markers
+  const implicitMarkers = ['help', 'scared', 'alone', 'lost', 'hurting', 'drowning', 'suffocating', 'numb', 'empty'];
+  const hasImplicit = wordCount < 20 && implicitMarkers.some(m => msg.includes(m));
+
+  // Raw urgency signals: all lowercase, minimal punctuation, fragment-like
+  const isRawFragment = wordCount < 12 && message === message.toLowerCase() && !/[.!?]$/.test(message.trim());
+  const hasDistressWord = /\b(help|scared|alone|can'?t|panic|anxiety|hurting|pain|afraid|desperate)\b/i.test(msg);
+  const isRawDistress = isRawFragment && hasDistressWord;
+
+  if (!hasExplicit && !hasImplicit && !isRawDistress) return null;
+
+  // ─── Intensity classification ───
+  const intensity: 'low' | 'medium' | 'high' = hasExplicit
+    ? (explicitDistress.filter(p => p.test(message)).length >= 2 ? 'high' : 'medium')
+    : 'low';
+
+  // ─── Tone inference (which element does the distress point toward?) ───
+  const waterSignals = /\b(grief|shame|tears?|cry|afraid|feel|heart|hurt|wound|abandon|lonely|sad|guilt|sorrow)\b/i;
+  const airSignals = /\b(spinning|can'?t think|confused|mind|thoughts?|racing|overthink|spiral|obsess|loop)\b/i;
+  const earthSignals = /\b(breathe|body|chest|tight|stomach|shake|trembl|exhaust|collapse|heavy|weight)\b/i;
+  const aetherSignals = /\b(empty|numb|nothing|meaningless|void|hollow|disappear|gone|lost\s+myself)\b/i;
+
+  const toneScores = {
+    water: (msg.match(waterSignals) || []).length,
+    air: (msg.match(airSignals) || []).length,
+    earth: (msg.match(earthSignals) || []).length,
+    aether: (msg.match(aetherSignals) || []).length,
+  };
+
+  // Pick dominant tone; default to water (safest landing)
+  const dominantTone = (Object.entries(toneScores)
+    .sort((a, b) => b[1] - a[1])[0][1] > 0
+    ? Object.entries(toneScores).sort((a, b) => b[1] - a[1])[0][0]
+    : 'water') as DistressSignal['dominantTone'];
+
+  return {
+    isDistressed: true,
+    intensity,
+    dominantTone,
+    suggestedBeats: [
+      'Permission: remove shame, lower cognitive load',
+      'Contact: name the felt sense, not the story',
+      'Question: invite self-contact — thoughts, feelings, or body?',
+    ],
+  };
+}
+
 /**
  * Generate enhanced MAIA response with spiralogic guidance using LLM
  * Sacred attending: Spiralogic patterns inform the response implicitly, not explicitly
@@ -1398,7 +1509,10 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  distressSignal?: DistressSignal | null,
+  sessionId?: string,
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1414,7 +1528,7 @@ async function generateSpiralogicResponseWithLLM(
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
-  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
+  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology + voice prefs
   const systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
@@ -1429,7 +1543,9 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    distressSignal,
+    voiceOffsets
   );
 
   // Format conversation history for LLM
@@ -1442,7 +1558,10 @@ async function generateSpiralogicResponseWithLLM(
     : message;
 
   // Determine max tokens based on conversation depth (MAIA-PAI pattern)
-  const maxTokens = conversationDepth === 0
+  // DISTRESS OVERRIDE: 3-beat script needs ~40 words (not 15)
+  const maxTokens = (distressSignal?.isDistressed && conversationDepth <= 1)
+    ? 200  // ~40 words for 3-beat distress doorway
+    : conversationDepth === 0
     ? 100  // ~15 words for first greeting
     : conversationDepth <= 3
     ? 150  // ~40-60 words for early conversation
@@ -1518,8 +1637,95 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
+  // ------------------------------------------------------------
+  // LIVING LIBRARY: Consult the wisdom corpus (Jeeves pattern)
+  // Surfaces wisdom dynamically based on member's spiral state.
+  // The Library is invisible — MAIA never says "I searched the Library."
+  // ------------------------------------------------------------
+  let libraryWisdom = '';
+  try {
+    const rangeDecision = calculateDynamicRange(message, {
+      element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
+      phase: voiceHint?.phase || spiralogicCell?.phase,
+      motion: voiceHint?.motion,
+      relationalPhase: spiralState?.relational_phase,
+      conversationDepth,
+      distress: distressSignal || undefined,
+    });
+
+    if (rangeDecision.shouldConsult) {
+      const libraryContext = await libraryService.search(message, {
+        limit: rangeDecision.retrievalLimit,
+        mode: rangeDecision.includeDistillate ? 'fast' : 'deep',
+        memberId: userId,
+        spiralContext: {
+          element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
+          phase: voiceHint?.phase || spiralogicCell?.phase,
+          motion: voiceHint?.motion,
+          relationalPhase: spiralState?.relational_phase,
+          conversationDepth,
+        },
+      });
+
+      if (libraryContext.chunks.length > 0) {
+        libraryWisdom = libraryService.formatForPrompt(libraryContext);
+
+        // Structured telemetry — one line, no content leakage
+        const topScore = Math.max(...libraryContext.chunks.map(c => c.score));
+        const minScore = Math.min(...libraryContext.chunks.map(c => c.score));
+        console.log(JSON.stringify({
+          tag: 'library_consult',
+          query_len: message.length,
+          hits: libraryContext.chunks.length,
+          sources: libraryContext.total_sources_consulted,
+          score_range: [+minScore.toFixed(3), +topScore.toFixed(3)],
+          element_boost: rangeDecision.elementBoost || null,
+          distillate: rangeDecision.includeDistillate,
+          framing: rangeDecision.framingLevel,
+          reason: rangeDecision.reason,
+          depth: conversationDepth,
+        }));
+
+        // WISDOM GRAPH: Emit retrieval events (fire-and-forget)
+        // Feeds the Wisdom Explorer substrate — no content stored, only refs.
+        // Uses sessionId (conversation-scoped), not requestId (per-request UUID).
+        emitWisdomEvents(
+          libraryContext.chunks.map((chunk: any) => ({
+            memberId: userId,
+            eventType: 'retrieved' as const,
+            refType: 'library_chunk',
+            refId: chunk.chunk_id,
+            sourceId: chunk.source_id,
+            element: chunk.meta?.element || rangeDecision.elementBoost || undefined,
+            phase: chunk.meta?.phase || undefined,
+            sessionId: sessionId,
+            meta: { score: chunk.score, reason: rangeDecision.reason },
+          }))
+        );
+
+        // Ensure source nodes exist for each unique source touched
+        const seenSources = new Set<string>();
+        for (const chunk of libraryContext.chunks as any[]) {
+          if (chunk.source_id && !seenSources.has(chunk.source_id)) {
+            seenSources.add(chunk.source_id);
+            ensureSourceNode(
+              userId,
+              chunk.source_id,
+              chunk.title || 'Unknown Source',
+              chunk.meta?.element,
+              chunk.meta?.phase
+            );
+          }
+        }
+      }
+    }
+  } catch (libraryError) {
+    console.warn('[Library] Consultation failed (non-critical):', libraryError);
+    // Non-blocking — MAIA proceeds without Library
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
+    ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
@@ -1628,12 +1834,25 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  distressSignal?: DistressSignal | null,
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
     ? `\nThis member calls you "${preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n`
     : '';
+
+  // Build voice preference guidance (language-level, not audio)
+  const band = (x: number) => x < -0.10 ? 'low' : x > 0.10 ? 'high' : 'mid';
+  const voiceSection = voiceOffsets ? `
+# Voice Preferences (IMPLICIT — follow gently, do not mention sliders or settings)
+This person has chosen these language-level preferences:
+- Warmth: ${band(voiceOffsets.warmth)} ${voiceOffsets.warmth < -0.10 ? '(crisp, clear, matter-of-fact)' : voiceOffsets.warmth > 0.10 ? '(tender, holding, gentle)' : '(present, grounded)'}
+- Poetry: ${band(voiceOffsets.poetry)} ${voiceOffsets.poetry < -0.10 ? '(plain language, concrete, no metaphor)' : voiceOffsets.poetry > 0.10 ? '(mythic, evocative, symbolic imagery welcome)' : '(natural, occasional imagery)'}
+- Directiveness: ${band(voiceOffsets.directiveness)} ${voiceOffsets.directiveness < -0.10 ? '(inviting, open questions, minimal guidance)' : voiceOffsets.directiveness > 0.10 ? '(clear guidance, direct framing, decisive)' : '(balanced guidance and open inquiry)'}
+- Energy: ${band(voiceOffsets.energy)} ${voiceOffsets.energy < -0.10 ? '(soft, quiet, close — like a late-night conversation)' : voiceOffsets.energy > 0.10 ? '(bright, alive, engaged — like morning light)' : '(steady, calm presence)'}
+` : '';
 
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
 ${nameInstruction}
@@ -1649,7 +1868,7 @@ ${nameInstruction}
 - Cringey spiritual phrases like "beloved soul", "sacred witnessing", "I am sensing turbulence in the field"
 - Guru/therapist stereotypes or self-help influencer language
 - Diagnoses or promises of outcomes
-
+${voiceSection}
 # Sacred Attending Stance
 
 Sacred attending means:
@@ -1764,7 +1983,24 @@ The person seems to be experiencing shame about a parenting moment. This is an o
   }
 
   // Add depth-calibrated response guidelines
-  const responseCalibration = conversationDepth === 0
+  // DISTRESS DOORWAY: Override normal greeting with 3-beat script
+  const responseCalibration = (distressSignal?.isDistressed && conversationDepth <= 1)
+    ? `You are meeting someone in distress. Use exactly 3 beats:
+
+Beat 1 — Permission (one sentence, remove shame, lower cognitive load):
+Example: "You don't have to make this coherent right now."
+
+Beat 2 — Contact (one sentence, name the felt sense, NOT the story):
+Example: "Something's been hard to hold alone."
+
+Beat 3 — One gentle question (invite self-contact, not analysis):
+Example: "What's the sharpest edge tonight: your thoughts, your feelings, or your body?"
+
+CRITICAL: Do NOT give advice. Do NOT be clinical. Do NOT ask multiple questions.
+The third beat's question gives you a direction for the next turn.
+Match your words to a ${distressSignal.dominantTone} register.
+Total response: 3 sentences maximum. These are examples — generate your own words that match the person's specific situation.`
+    : conversationDepth === 0
     ? '8-15 words maximum. Simple, warm greeting only.'
     : conversationDepth <= 3
     ? '2-3 sentences maximum (~40-60 words). Stay close to what they said. Ask one gentle question if relevant.'
