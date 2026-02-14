@@ -52,6 +52,10 @@ import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } fr
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
 import { consult } from '@/lib/ain/consultation';
 
+/** Living Library — wisdom corpus consultation */
+import { libraryService } from '@/lib/library/LibraryService';
+import { calculateDynamicRange } from '@/lib/library/dynamicRange';
+
 /** AIN Collective Breakthrough (afferent/efferent wisdom flow) */
 import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
@@ -1518,8 +1522,62 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
+  // ------------------------------------------------------------
+  // LIVING LIBRARY: Consult the wisdom corpus (Jeeves pattern)
+  // Surfaces wisdom dynamically based on member's spiral state.
+  // The Library is invisible — MAIA never says "I searched the Library."
+  // ------------------------------------------------------------
+  let libraryWisdom = '';
+  try {
+    const rangeDecision = calculateDynamicRange(message, {
+      element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
+      phase: voiceHint?.phase || spiralogicCell?.phase,
+      motion: voiceHint?.motion,
+      relationalPhase: spiralState?.relational_phase,
+      conversationDepth,
+    });
+
+    if (rangeDecision.shouldConsult) {
+      const libraryContext = await libraryService.search(message, {
+        limit: rangeDecision.retrievalLimit,
+        mode: rangeDecision.includeDistillate ? 'fast' : 'deep',
+        memberId: userId,
+        spiralContext: {
+          element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
+          phase: voiceHint?.phase || spiralogicCell?.phase,
+          motion: voiceHint?.motion,
+          relationalPhase: spiralState?.relational_phase,
+          conversationDepth,
+        },
+      });
+
+      if (libraryContext.chunks.length > 0) {
+        libraryWisdom = libraryService.formatForPrompt(libraryContext);
+
+        // Structured telemetry — one line, no content leakage
+        const topScore = Math.max(...libraryContext.chunks.map(c => c.score));
+        const minScore = Math.min(...libraryContext.chunks.map(c => c.score));
+        console.log(JSON.stringify({
+          tag: 'library_consult',
+          query_len: message.length,
+          hits: libraryContext.chunks.length,
+          sources: libraryContext.total_sources_consulted,
+          score_range: [+minScore.toFixed(3), +topScore.toFixed(3)],
+          element_boost: rangeDecision.elementBoost || null,
+          distillate: rangeDecision.includeDistillate,
+          framing: rangeDecision.framingLevel,
+          reason: rangeDecision.reason,
+          depth: conversationDepth,
+        }));
+      }
+    }
+  } catch (libraryError) {
+    console.warn('[Library] Consultation failed (non-critical):', libraryError);
+    // Non-blocking — MAIA proceeds without Library
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
+    ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
