@@ -177,6 +177,9 @@ function findFiles(dir: string, basePath: string = dir): FileInfo[] {
           console.warn(`   ⚠️  Stripped ${originalLength - content.length} null bytes from ${entry.name}`);
         }
 
+        // Strip BOM (byte order mark) if present
+        content = content.replace(/^\uFEFF/, '');
+
         const checksum = crypto.createHash('sha256').update(content).digest('hex');
 
         // Extract title from filename or first heading
