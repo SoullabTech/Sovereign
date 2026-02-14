@@ -29,7 +29,7 @@ set -euo pipefail
 echo "🔍 Checking for dark-text opacity footguns..."
 
 # Scoped paths: only check UI surfaces with dark panels
-SCOPED_DIRS="components/settings/ components/account/ app/account/ app/model-studio/"
+SCOPED_DIRS="components/settings/ components/account/ app/account/ app/model-studio/ app/studio/ components/studio/"
 
 # In pre-commit context, scan only staged files in scoped dirs
 if [ "${GIT_PRE_COMMIT:-0}" = "1" ]; then
