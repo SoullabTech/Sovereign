@@ -33,6 +33,7 @@ export default function VoiceSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
 
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
@@ -90,6 +91,42 @@ export default function VoiceSettingsPanel() {
     setVoiceIdOverride(null);
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
+  };
+
+  const onPreview = async () => {
+    setPreviewing(true);
+    try {
+      const sampleText =
+        "Here is a quick voice preview. I will keep a steady pace, warmth, and clarity so you can feel what changes.";
+
+      // Map pace offset to speed within the same clamp range as the conductor
+      const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
+
+      // /api/voice/local-tts expects: { text, voice, format?, speed? }
+      const res = await apiFetch('/api/voice/local-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: sampleText,
+          voice: 'af_heart', // default MAIA voice (Kokoro)
+          format: 'mp3',
+          speed,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Preview TTS failed');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const audio = new Audio(url);
+      audio.onended = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch (e) {
+      console.warn('[voice-settings] Preview failed:', e);
+    } finally {
+      setPreviewing(false);
+    }
   };
 
   if (loading) {
@@ -159,6 +196,14 @@ export default function VoiceSettingsPanel() {
           disabled={saving}
         >
           {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
+        </button>
+
+        <button
+          className="ml-auto rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/15 disabled:opacity-50 transition-colors"
+          onClick={onPreview}
+          disabled={previewing || saving}
+        >
+          {previewing ? 'Playing...' : 'Preview'}
         </button>
       </div>
     </div>
