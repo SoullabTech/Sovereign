@@ -22,6 +22,8 @@
  */
 
 import * as kokoro from './providers/kokoro';
+import type { VoiceIntent } from '@/lib/types/voiceIntent';
+import { resolveKokoroVoice, resolveSpeed } from '@/lib/voice/voiceMap';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
 
@@ -30,6 +32,7 @@ interface TTSRequest {
   voice?: string;
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
+  voiceHint?: VoiceIntent;
 }
 
 interface TTSResult {
@@ -82,11 +85,28 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   // Try primary
   if (primary === 'kokoro') {
     try {
+      // Bridge B: Use Conductor's VoiceIntent for voice selection
+      const kokoroVoice = params.voiceHint
+        ? resolveKokoroVoice(params.voiceHint.element)
+        : params.voice;
+      const kokoroSpeed = params.voiceHint
+        ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
+        : params.speed;
+
+      // Voice identity logging — watch the body learn
+      console.info('[voice]', {
+        element: params.voiceHint?.element,
+        phase: params.voiceHint?.phase,
+        voice: kokoroVoice,
+        speed: kokoroSpeed,
+        provider: 'kokoro',
+      });
+
       const result = await kokoro.synthesize({
         text: params.text,
-        voice: params.voice,
+        voice: kokoroVoice,
         format: params.format,
-        speed: params.speed,
+        speed: kokoroSpeed,
       });
       return { ...result, fallback: false, reason: 'kokoro_healthy' };
     } catch (err: any) {
@@ -106,6 +126,16 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   }
 
   // OpenAI as primary (not a fallback)
+  // Log voice intent even on cloud path — see what the body would have chosen
+  if (params.voiceHint) {
+    console.info('[voice]', {
+      element: params.voiceHint.element,
+      phase: params.voiceHint.phase,
+      voice: `openai:${params.voice || 'default'}`,
+      speed: params.speed,
+      provider: 'openai',
+    });
+  }
   throw new TTSFallbackToOpenAI(false, 'openai_primary');
 }
 

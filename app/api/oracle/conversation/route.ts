@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { PanconsciousFieldService } from '@/lib/consciousness/panconscious-field';
+import { createVoiceIntent } from '@/lib/voice/conductor';
 import {
   inferSpiralogicCell,
   chooseFrameworksForCell,
@@ -42,6 +43,10 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
+import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import type { RelationalHint } from '@/lib/types/relationalHint';
+import { decideRelationalHint } from '@/lib/relational/relationalStance';
+import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -408,6 +413,16 @@ export async function POST(request: NextRequest) {
     // Calculate conversation depth and trust level (needed throughout the request)
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
+
+    // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
+    const spiralState = await loadSpiralState(userId);
+
+    // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
+    const [systemVoice, memberVoice] = await Promise.all([
+      getSystemVoiceProfile(),
+      getMemberVoicePreferences(userId),
+    ]);
+    const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
     let cognitiveProfile: CognitiveProfile | null = null;
@@ -1036,6 +1051,56 @@ export async function POST(request: NextRequest) {
     fieldEvent.aiResponseType = 'spiralogic_guided';
     fieldEvent.contextDomain = spiralogicCell.context;
 
+    // BRIDGE A: Conductor creates VoiceIntent from oracle state + member voice preferences
+    const voiceHint = createVoiceIntent({
+      spiralogicCell: spiralogicCell,
+      memberVoicePrefs: {
+        speed: voicePrefs.intent.pace !== 0 ? 1.0 + voicePrefs.intent.pace * 0.15 : undefined,
+        timbre: voicePrefs.intent.warmth > 0.1 ? 'warm' : voicePrefs.intent.warmth < -0.1 ? 'bright' : undefined,
+      },
+      memberId: userId,
+      persistedState: spiralState ? {
+        dominant_element: spiralState.dominant_element,
+        phase: spiralState.phase,
+      } : null,
+    });
+
+    // Voice identity trace — oracle → conductor → body
+    const rawElement = String(spiralogicCell.element || '').toLowerCase();
+    console.info('[voice:conductor]', {
+      element: voiceHint.element,
+      phase: voiceHint.phase,
+      archetype: voiceHint.archetype,
+      sourceElement: rawElement,
+      sourcePhase: spiralogicCell.phase,
+      hysteresis: rawElement !== voiceHint.element ? 'held' : 'passed',
+    });
+
+    // BRIDGE D: Persist spiral state (fire-and-forget, never blocks response)
+    upsertSpiralState(userId, {
+      dominant_element: voiceHint.element,
+      phase: voiceHint.phase,
+      motion: voiceHint.motion,
+      intensity: voiceHint.intensity,
+    });
+
+    // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
+    const relationalHint: RelationalHint = decideRelationalHint({
+      memberId: userId,
+      message,
+      conversationDepth,
+      voiceHint,
+      persistedState: spiralState ?? null,
+    });
+
+    console.info('[relational]', {
+      stance: relationalHint.stance,
+      holdLevel: relationalHint.holdLevel,
+      returnPowerLevel: relationalHint.returnPowerLevel,
+      brevityLevel: relationalHint.brevityLevel,
+      signals: relationalHint.signals,
+    });
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
@@ -1088,7 +1153,9 @@ export async function POST(request: NextRequest) {
         spiralogicCell: fieldEvent.spiralogic
       },
       responseId: `maia_hybrid_${Date.now()}`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      voiceHint,
+      relationalHint,
     };
 
     // Log successful oracle usage
