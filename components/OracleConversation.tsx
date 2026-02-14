@@ -8092,54 +8092,18 @@ I'm not sure what I'm feeling yet.`;
             transition={{ duration: 0.2 }}
             className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-maia-navy-850/98 to-maia-navy-900/98 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
           >
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-maia-spice-500/20">
-                <svg className="w-5 h-5 text-maia-spice-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <h3 className="text-base font-semibold text-maia-spice-500">Choose MAIA's Voice</h3>
-              </div>
-              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                {[
-                  { id: 'shimmer', name: 'Shimmer', description: 'Gentle & soothing • Feminine', emoji: '✨' },
-                  { id: 'fable', name: 'Fable', description: 'Storytelling • Feminine', emoji: '📖' },
-                  { id: 'nova', name: 'Nova', description: 'Bright & energetic • Feminine', emoji: '⭐' },
-                  { id: 'alloy', name: 'Alloy', description: 'Neutral & balanced • Gender-neutral', emoji: '🔘' },
-                  { id: 'echo', name: 'Echo', description: 'Warm & expressive • Masculine', emoji: '🌊' },
-                  { id: 'onyx', name: 'Onyx', description: 'Deep & resonant • Masculine', emoji: '🖤' },
-                ].map((voiceOption) => (
-                  <motion.button
-                    key={voiceOption.id}
-                    onClick={() => {
-                      if (onVoiceChange) {
-                        onVoiceChange(voiceOption.id as any);
-                      }
-                      setShowVoiceMenu(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                      voice === voiceOption.id
-                        ? 'bg-maia-spice-500/20 border border-maia-spice-500/50 text-maia-spice-500'
-                        : 'bg-maia-navy-800/50 border border-maia-navy-700/30 text-maia-ink-80 hover:bg-maia-spice-500/10 hover:border-maia-spice-500/30'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <span className="text-2xl">{voiceOption.emoji}</span>
-                    <div className="flex-1 text-left">
-                      <div className="text-sm font-medium">{voiceOption.name}</div>
-                      <div className="text-xs opacity-70">{voiceOption.description}</div>
-                    </div>
-                    {voice === voiceOption.id && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="w-2.5 h-2.5 rounded-full bg-maia-spice-500 shadow-maia-spice-glow"
-                      />
-                    )}
-                  </motion.button>
-                ))}
-              </div>
+            <div className="p-5">
+              <h3 className="text-base font-semibold text-maia-spice-500 mb-2">MAIA&apos;s Voice</h3>
+              <p className="text-sm text-stone-300 mb-3">
+                Voice adapts to MAIA&apos;s elemental state &mdash; fire, water, earth, air, aether.
+                Fine-tune pace, warmth, and energy in Settings &rarr; Voice.
+              </p>
+              <button
+                onClick={() => setShowVoiceMenu(false)}
+                className="text-xs text-stone-400 hover:text-stone-200 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </motion.div>
         </>

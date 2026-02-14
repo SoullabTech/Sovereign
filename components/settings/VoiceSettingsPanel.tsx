@@ -138,8 +138,12 @@ export default function VoiceSettingsPanel() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setPreviewError(data?.error ?? `Preview failed (${res.status})`);
+        if (res.status === 503) {
+          setPreviewError('Voice engine is offline. Start the Kokoro TTS service to preview.');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setPreviewError(data?.error ?? `Preview failed (${res.status})`);
+        }
         return;
       }
 
@@ -152,12 +156,21 @@ export default function VoiceSettingsPanel() {
 
       // Cache-bust so iOS doesn't serve stale audio
       audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
-      await audioRef.current.play().catch(() => {
-        setPreviewError('Audio couldn\u2019t play. Try unmute or tap again.');
-      });
-    } catch (e) {
+      try {
+        await audioRef.current.play();
+      } catch (playErr: any) {
+        // iOS WKWebView rejects play() if not user-gesture-initiated or muted
+        console.warn('[voice-settings] play() rejected:', playErr);
+        setPreviewError('Audio blocked. Tap Preview again or check your mute switch.');
+        return;
+      }
+    } catch (e: any) {
       console.warn('[voice-settings] Preview failed:', e);
-      setPreviewError('Preview failed \u2014 network error');
+      if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
+        setPreviewError('Session expired. Sign in again to preview.');
+      } else {
+        setPreviewError('Preview failed unexpectedly.');
+      }
     } finally {
       setPreviewing(false);
     }

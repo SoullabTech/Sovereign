@@ -14,6 +14,7 @@ export const runtime = "nodejs";
 type VoiceRequestBody = {
   text: string;
   format?: "mp3" | "opus";
+  voice?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -28,7 +29,8 @@ export async function POST(req: NextRequest) {
     }
 
     const format = body.format ?? "mp3";
-    const audioBuffer = await synthesizeMaiaVoice(body.text, { format });
+    const voice = body.voice;
+    const audioBuffer = await synthesizeMaiaVoice(body.text, { format, voice });
 
     const contentType =
       format === "opus" ? "audio/ogg; codecs=opus" : "audio/mpeg";
