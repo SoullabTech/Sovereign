@@ -48,6 +48,16 @@ import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
+/** Pattern Pipe (Narrative Wiring) */
+import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
+import { getPatternOffer, buildPatternOfferPromptSection } from '@/lib/patterns/PatternOfferingService';
+import {
+  getPendingOffer,
+  recordPendingOffer,
+  clearPendingOffer,
+  processPatternResponse,
+} from '@/lib/patterns/PatternResponseService';
+
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
 import { consult } from '@/lib/ain/consultation';
@@ -540,6 +550,14 @@ export async function POST(request: NextRequest) {
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
 
+    // PATTERN RESPONSE CAPTURE (Wire 3): Check if previous turn offered a pattern
+    // If so, classify this message as the member's response
+    const pendingPatternOffer = getPendingOffer(sessionId, conversationDepth);
+    if (pendingPatternOffer) {
+      processPatternResponse(pendingPatternOffer, userId, message, sessionId);
+      clearPendingOffer(sessionId);
+    }
+
     // DISTRESS DOORWAY: Detect distress signals at conversation start
     const distressSignal = detectDistressSignals(message, conversationDepth);
     if (distressSignal) {
@@ -608,6 +626,30 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
+    // PATTERN OFFERING (Wire 2): Check for eligible pattern to offer
+    let patternOffer: Awaited<ReturnType<typeof getPatternOffer>> = null;
+    try {
+      patternOffer = await getPatternOffer({
+        memberId: userId,
+        sessionId,
+        conversationDepth,
+        element: spiralogicCell.element,
+        distressIntensity: distressSignal?.intensity ?? null,
+      });
+
+      if (patternOffer) {
+        console.log('📋 [Pattern Offer] Offering pattern:', {
+          patternId: patternOffer.patternId.substring(0, 8) + '...',
+          statement: patternOffer.statement,
+          confidence: patternOffer.confidence,
+        });
+        // Record the pending offer for response capture on next turn
+        recordPendingOffer(sessionId, patternOffer.patternId, conversationDepth);
+      }
+    } catch (offerError) {
+      console.warn('⚠️ [Pattern Offer] Failed (non-critical):', offerError);
+    }
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -626,7 +668,8 @@ export async function POST(request: NextRequest) {
       astrologyContext,
       preferredAssistantName,
       distressSignal,
-      sessionId
+      sessionId,
+      buildPatternOfferPromptSection(patternOffer)
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1103,6 +1146,21 @@ export async function POST(request: NextRequest) {
       intensity: voiceHint.intensity,
     });
 
+    // PATTERN DETECTION (Wire 1): Detect structural patterns from this turn
+    // Fire-and-forget — never blocks oracle response (same pattern as Bridge D)
+    processPatternSignal({
+      memberId: userId,
+      sessionId,
+      turnIndex: conversationDepth,
+      userText: message,
+      maiaText: maiaResponse.coreMessage,
+      element: spiralogicCell.element,
+      phase: spiralogicCell.phase,
+      motion: voiceHint.motion,
+      intensity: voiceHint.intensity,
+      insights: extractedInsights,
+    });
+
     // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
     const relationalHint: RelationalHint = decideRelationalHint({
       memberId: userId,
@@ -1510,7 +1568,8 @@ async function generateSpiralogicResponseWithLLM(
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
   distressSignal?: DistressSignal | null,
-  sessionId?: string
+  sessionId?: string,
+  patternOfferSection?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1527,7 +1586,7 @@ async function generateSpiralogicResponseWithLLM(
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
   // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
-  const systemPrompt = buildSacredAttendingPrompt(
+  let systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
     canonicalQuestion,
@@ -1544,6 +1603,11 @@ async function generateSpiralogicResponseWithLLM(
     preferredAssistantName,
     distressSignal
   );
+
+  // PATTERN OFFERING: Append pattern offer section if available
+  if (patternOfferSection) {
+    systemPrompt += '\n' + patternOfferSection;
+  }
 
   // Format conversation history for LLM
   const conversationContext = conversationHistory
