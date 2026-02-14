@@ -24,6 +24,8 @@
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { resolveOpenAIVoice } from '@/lib/voice/voiceMap';
+import type { Element } from '@/lib/types/voiceIntent';
 import {
   processThreshold,
   createInitialThresholdState,
@@ -111,8 +113,14 @@ async function synthesizeWithFallback(
   }
 
   try {
-    console.log('[TTS] Falling back to OpenAI TTS...');
-    const openaiVoice = options.voice === 'maya' ? 'nova' : (options.voice || 'nova');
+    // Voice resolution: element map → explicit override → default
+    // 'maya' is a legacy client value — resolve it properly
+    const elementKey = (options.element ?? '').toLowerCase() as Element;
+    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
+    const openaiVoice = (options.voice && options.voice !== 'maya')
+      ? options.voice
+      : elementVoice ?? 'nova';
+    console.log(`[TTS] OpenAI: element=${elementKey || 'none'} → voice=${openaiVoice}`);
     const response = await synthesizeSpeech({
       text,
       voice: openaiVoice,
@@ -339,12 +347,16 @@ interface StreamRequest {
 async function synthesizeSentence(
   text: string,
   voice: string = 'nova',
-  speed: number = 1.0
+  speed: number = 1.0,
+  element?: string | null
 ): Promise<{ audio: string; format: string } | null> {
   try {
-    // Map voice parameter to OpenAI voices (nova is warm and natural)
-    // If voice is 'maya' (legacy), use nova; otherwise use the specified OpenAI voice
-    const openaiVoice = voice === 'maya' ? 'nova' : (voice || 'nova');
+    // Voice resolution: element map → explicit override → default
+    const elementKey = (element ?? '').toLowerCase() as Element;
+    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
+    const openaiVoice = (voice && voice !== 'maya')
+      ? voice
+      : elementVoice ?? 'nova';
 
     const response = await synthesizeSpeech({
       text,

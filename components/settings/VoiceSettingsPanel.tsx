@@ -34,6 +34,7 @@ export default function VoiceSettingsPanel() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
@@ -116,6 +117,7 @@ export default function VoiceSettingsPanel() {
 
   const onPreview = async () => {
     setPreviewing(true);
+    setPreviewError(null);
     try {
       const sampleText =
         "Here is a quick voice preview. I will keep a steady pace, warmth, and clarity so you can feel what changes.";
@@ -135,7 +137,14 @@ export default function VoiceSettingsPanel() {
         }),
       });
 
-      if (!res.ok) throw new Error('Preview TTS failed');
+      if (!res.ok) {
+        if (res.status === 503) {
+          setPreviewError('Voice engine is offline. Start the Kokoro TTS service to preview.');
+        } else {
+          setPreviewError('Preview failed. Try again later.');
+        }
+        return;
+      }
 
       const { audioUrl } = await res.json();
       if (!audioRef.current || !audioUrl) return;
@@ -146,24 +155,36 @@ export default function VoiceSettingsPanel() {
 
       // Cache-bust so iOS doesn't serve stale audio
       audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
-      await audioRef.current.play();
-    } catch (e) {
+      try {
+        await audioRef.current.play();
+      } catch (playErr: any) {
+        // iOS WKWebView rejects play() if not user-gesture-initiated or muted
+        console.warn('[voice-settings] play() rejected:', playErr);
+        setPreviewError('Audio blocked. Tap Preview again or check your mute switch.');
+        return;
+      }
+    } catch (e: any) {
       console.warn('[voice-settings] Preview failed:', e);
+      if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
+        setPreviewError('Session expired. Sign in again to preview.');
+      } else {
+        setPreviewError('Preview failed unexpectedly.');
+      }
     } finally {
       setPreviewing(false);
     }
   };
 
   if (loading) {
-    return <div className="text-sm opacity-70">Loading voice settings...</div>;
+    return <div className="text-sm text-stone-400">Loading voice settings...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-sm opacity-80">Voice</div>
-        <div className="mt-1 text-lg font-semibold">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs opacity-70">
+        <div className="text-sm text-stone-400">Voice</div>
+        <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
+        <div className="mt-2 text-xs text-stone-400">
           Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
         </div>
       </div>
@@ -206,14 +227,14 @@ export default function VoiceSettingsPanel() {
         />
       </div>
 
-      <p className="text-xs opacity-50 px-1">
+      <p className="text-xs text-stone-500 px-1">
         Offsets are bounded (&plusmn;0.30) and combined with MAIA&apos;s current elemental pacing.
         Changes are gentle &mdash; sovereignty means the system breathes, not obeys.
       </p>
 
       <div className="flex gap-3">
         <button
-          className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/15 disabled:opacity-50 transition-colors"
+          className="rounded-xl bg-white/10 px-4 py-2 text-sm text-stone-200 hover:bg-white/15 disabled:opacity-50 transition-colors"
           onClick={onReset}
           disabled={saving || previewing}
         >
@@ -221,7 +242,7 @@ export default function VoiceSettingsPanel() {
         </button>
 
         <button
-          className="rounded-xl bg-amber-600/80 px-4 py-2 text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 transition-colors"
+          className="rounded-xl bg-amber-600/80 px-4 py-2 text-sm font-semibold text-stone-100 hover:bg-amber-600 disabled:opacity-50 transition-colors"
           onClick={onSave}
           disabled={saving}
         >
@@ -229,13 +250,17 @@ export default function VoiceSettingsPanel() {
         </button>
 
         <button
-          className="ml-auto rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/15 disabled:opacity-50 transition-colors"
+          className="ml-auto rounded-xl bg-white/10 px-4 py-2 text-sm text-stone-200 hover:bg-white/15 disabled:opacity-50 transition-colors"
           onClick={onPreview}
           disabled={previewing || saving}
         >
           {previewing ? 'Playing...' : 'Preview'}
         </button>
       </div>
+
+      {previewError && (
+        <p className="text-xs text-amber-400/80 px-1">{previewError}</p>
+      )}
 
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}
       <audio ref={audioRef} className="hidden" />
@@ -266,8 +291,8 @@ function VoiceSlider({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs tabular-nums opacity-70">
+        <div className="text-sm font-medium text-stone-200">{label}</div>
+        <div className="text-xs tabular-nums text-stone-400">
           {value > 0 ? '+' : ''}{value.toFixed(2)}
         </div>
       </div>
@@ -283,7 +308,7 @@ function VoiceSlider({
           onChange(Math.round(v * 100) / 100); // round to 2 decimal places
         }}
       />
-      <div className="mt-1 flex justify-between text-xs opacity-60">
+      <div className="mt-1 flex justify-between text-xs text-stone-500">
         <span>{left}</span>
         <span>{right}</span>
       </div>
