@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireMemberId } from '@/lib/auth/session';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   getSystemVoiceProfile,
   getMemberVoicePreferences,
@@ -50,9 +50,12 @@ function validateOffsets(obj: unknown): { pace: number; warmth: number; poetry: 
 // GET — Load system + member + effective
 // ===================================================================
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const memberId = await requireMemberId();
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const [system, member] = await Promise.all([
       getSystemVoiceProfile(),
@@ -62,10 +65,7 @@ export async function GET(_request: NextRequest) {
     const effective = mergeVoiceIntent(system, member);
 
     return NextResponse.json({ system, member, effective });
-  } catch (error: any) {
-    if (error?.message === 'AUTH_REQUIRED') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  } catch (error) {
     console.error('[voice-settings] GET error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -77,7 +77,10 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await requireMemberId();
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const body = await request.json();
 
@@ -99,10 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ ok: true });
-  } catch (error: any) {
-    if (error?.message === 'AUTH_REQUIRED') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  } catch (error) {
     console.error('[voice-settings] POST error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
