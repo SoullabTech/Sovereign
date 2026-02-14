@@ -103,15 +103,6 @@ interface PractitionerProject {
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VOICE_OPTIONS = [
-  { id: 'shimmer', name: 'Shimmer', emoji: '💧', gender: 'Female' },
-  { id: 'nova', name: 'Nova', emoji: '⭐', gender: 'Female' },
-  { id: 'alloy', name: 'Alloy', emoji: '🌍', gender: 'Neutral' },
-  { id: 'echo', name: 'Echo', emoji: '🎙️', gender: 'Male' },
-  { id: 'fable', name: 'Fable', emoji: '📖', gender: 'Male' },
-  { id: 'onyx', name: 'Onyx', emoji: '🗣️', gender: 'Male' },
-];
-
 const SUGGESTED_NAMES = [
   { name: 'MAIA', description: 'Original name (default)' },
   { name: 'Maya', description: 'Softer, more intimate' },
@@ -1180,94 +1171,25 @@ export function AccountSettings() {
         </div>
       </div>
 
-      {/* Voice Settings - Web/PWA only, not available on native iOS */}
-      {!Capacitor.isNativePlatform() && (
-        <>
-          {/* Voice Model */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
-              <Mic size={16} />
-              Voice Model
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {VOICE_OPTIONS.map((voice) => {
-                const isSelected = maiaSettings.voice?.openaiVoice === voice.id;
-                return (
-                  <motion.button
-                    key={voice.id}
-                    onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
-                    className={`py-3 px-3 rounded-xl border transition-all active:scale-95 relative ${
-                      isSelected
-                        ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                        : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
-                    }`}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-1 right-1 text-amber-300">
-                        <Check size={12} />
-                      </div>
-                    )}
-                    <div className="text-lg mb-1">{voice.emoji}</div>
-                    <div className="text-xs font-medium">{voice.name}</div>
-                  </motion.button>
-                );
-              })}
+      {/* Voice — sovereign controls live in the dedicated Voice section */}
+      <motion.button
+        onClick={() => setActiveSection('voice')}
+        className="w-full flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30 active:bg-white/60 transition-colors"
+        whileTap={{ scale: 0.98 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+            <Mic size={18} />
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-medium text-stone-200">Voice Preferences</div>
+            <div className="text-xs text-stone-500">
+              Pace, warmth, clarity, guidance style, energy
             </div>
           </div>
-
-          {/* Voice Speed */}
-          <div>
-            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
-              Voice Speed: {maiaSettings.voice.speed.toFixed(2)}x
-            </label>
-            <input
-              type="range"
-              min="0.75"
-              max="1.25"
-              step="0.05"
-              value={maiaSettings.voice.speed}
-              onChange={(e) => updateNestedMaiaSetting('voice.speed', parseFloat(e.target.value))}
-              className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500"
-            />
-          </div>
-
-          {/* Voice Quality */}
-          <div>
-            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
-              Voice Quality
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {([
-                { id: 'tts-1', name: 'Standard', desc: 'Faster response' },
-                { id: 'tts-1-hd', name: 'HD', desc: 'Richer, more natural' }
-              ] as const).map((quality) => {
-                const isSelected = maiaSettings.voice.model === quality.id;
-                return (
-                  <motion.button
-                    key={quality.id}
-                    onClick={() => updateNestedMaiaSetting('voice.model', quality.id)}
-                    className={`py-3 px-2 rounded-xl border transition-all active:scale-95 relative ${
-                      isSelected
-                        ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
-                        : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60'
-                    }`}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-1 right-1 text-amber-300">
-                        <Check size={12} />
-                      </div>
-                    )}
-                    <div className="text-sm font-medium">{quality.name}</div>
-                    <div className="text-xs text-stone-500">{quality.desc}</div>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
+        </div>
+        <ChevronRight size={16} className="text-stone-500" />
+      </motion.button>
 
       {/* Memory Depth */}
       <div>
