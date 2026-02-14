@@ -264,6 +264,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   // Audio queue and playback management
   const audioQueueRef = useRef<AudioQueueItem[]>([]);
   const isPlayingRef = useRef(false);
+  const nextExpectedIndexRef = useRef(0); // Enforce strict playback order
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -359,10 +360,23 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       return;
     }
 
+    // Sort by index and enforce strict order — only play the next expected index.
+    // If chunks arrive out of order (e.g. index 1 before 0), wait for the earlier
+    // one to arrive. This preserves prosodic arcs across sentence boundaries.
     audioQueueRef.current.sort((a, b) => a.index - b.index);
+
+    const nextChunk = audioQueueRef.current[0];
+    if (!nextChunk) return;
+
+    // Wait for the expected index — don't play out of order
+    if (nextChunk.index > nextExpectedIndexRef.current) {
+      console.log(`[StreamingVoice] ⏳ Waiting for index ${nextExpectedIndexRef.current}, have ${nextChunk.index}`);
+      return; // Will be retried when the missing chunk arrives
+    }
 
     const chunk = audioQueueRef.current.shift();
     if (!chunk) return;
+    nextExpectedIndexRef.current = chunk.index + 1;
 
     isPlayingRef.current = true;
     setState(prev => ({
@@ -517,6 +531,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     // Clear previous state
     // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
     audioQueueRef.current = [];
+    nextExpectedIndexRef.current = 0; // Reset ordering for new message
     if (currentAudioRef.current) {
       // Clear handlers before clearing src to prevent stale error callbacks
       currentAudioRef.current.onerror = null;

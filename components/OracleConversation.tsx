@@ -2246,6 +2246,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   });
 
+  // 🌊 STREAMING VOICE: Sync isAudioPlaying with actual playback state
+  // isStreamingPlaying comes from useStreamingVoice and is true ONLY when
+  // audio is actually playing through the Audio element — not during LLM
+  // processing or TTS generation. This prevents the watchdog from firing
+  // during the TTS generation gap (can be 60+ seconds with Kokoro).
+  useEffect(() => {
+    if (isStreamingPlaying && streamingVoiceMode) {
+      isAudioPlayingRef.current = true;
+      setIsAudioPlaying(true);
+    }
+  }, [isStreamingPlaying, streamingVoiceMode]);
+
   // 🌊 STREAMING VOICE: Resume mic when audio playback finishes
   const prevStreamingPlayingRef = useRef(isStreamingPlaying);
   const prevStreamingCompleteRef = useRef(streamingResponseComplete);
@@ -2336,8 +2348,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [stopStreamingVoice]);
 
   // 🛡️ VOICE WATCHDOG - Automatic recovery from stuck states
-  // If we're in "speaking" state (isAudioPlaying || isMicrophonePaused) for too long
-  // without any audio progress, force reset to listening. Prevents "stuck speaking" forever.
+  // Two-tier timeout:
+  //   - AUDIO tier (90s): If isAudioPlaying is true but no audio progress
+  //     for 90s, audio pipeline is broken. Kokoro TTS can take 60+ seconds
+  //     for long responses, so 15s was far too aggressive.
+  //   - PROCESSING tier (120s): If isResponding/isMicrophonePaused but NOT
+  //     isAudioPlaying for 120s, the LLM or TTS generation is stuck.
   const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioProgressRef = useRef<number>(Date.now());
 
@@ -2351,46 +2367,59 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       return;
     }
 
-    // Update last audio progress when audio is playing
+    // Update last audio progress when audio is actually playing
     if (isAudioPlaying) {
       lastAudioProgressRef.current = Date.now();
     }
 
-    // Check every 3 seconds if we're stuck
-    const WATCHDOG_TIMEOUT_MS = 15000; // 15 seconds max stuck in speaking
-    const WATCHDOG_CHECK_MS = 3000; // Check every 3 seconds
+    const AUDIO_STUCK_TIMEOUT_MS = 90000;    // 90s — audio playing but no progress
+    const PROCESSING_STUCK_TIMEOUT_MS = 120000; // 120s — waiting for TTS/LLM
+    const WATCHDOG_CHECK_MS = 5000;            // Check every 5 seconds
 
     if (!voiceWatchdogRef.current) {
       voiceWatchdogRef.current = setInterval(() => {
-        const isSpeakingStuck = isAudioPlayingRef.current || isMicrophonePausedRef.current;
+        const audioPlaying = isAudioPlayingRef.current;
+        const processingOrPaused = isRespondingRef.current || isMicrophonePausedRef.current;
         const timeSinceProgress = Date.now() - lastAudioProgressRef.current;
 
-        if (isSpeakingStuck && timeSinceProgress > WATCHDOG_TIMEOUT_MS) {
-          console.warn('🐕 [WATCHDOG] Voice state stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+        // Tier 1: Audio is "playing" but no progress for 90s — pipeline broken
+        if (audioPlaying && timeSinceProgress > AUDIO_STUCK_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Audio stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+          forceWatchdogReset('audio_stuck');
+          return;
+        }
 
-          // Force reset all voice state
-          isAudioPlayingRef.current = false;
-          isRespondingRef.current = false;
-          isMicrophonePausedRef.current = false;
-
-          setIsAudioPlaying(false);
-          setIsResponding(false);
-          setIsMicrophonePaused(false);
-          setIsListening(true);
-          setIsActivating(false);
-
-          // Reset the progress timer
-          lastAudioProgressRef.current = Date.now();
-
-          // 🔥 CRITICAL: Actually restart the mic - not just UI state!
-          if (voiceMicRef.current?.startListening) {
-            console.log('🐕 [WATCHDOG] Force-restarting microphone...');
-            voiceMicRef.current.startListening({ forceOverride: true });
-          }
-
-          toast('⚠️ Voice recovered', { duration: 2000 });
+        // Tier 2: Processing/paused but no audio started for 120s — LLM/TTS stuck
+        if (processingOrPaused && !audioPlaying && timeSinceProgress > PROCESSING_STUCK_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset');
+          forceWatchdogReset('processing_stuck');
+          return;
         }
       }, WATCHDOG_CHECK_MS);
+    }
+
+    function forceWatchdogReset(reason: string) {
+      // Force reset all voice state
+      isAudioPlayingRef.current = false;
+      isRespondingRef.current = false;
+      isMicrophonePausedRef.current = false;
+
+      setIsAudioPlaying(false);
+      setIsResponding(false);
+      setIsMicrophonePaused(false);
+      setIsListening(true);
+      setIsActivating(false);
+
+      // Reset the progress timer
+      lastAudioProgressRef.current = Date.now();
+
+      // Actually restart the mic
+      if (voiceMicRef.current?.startListening) {
+        console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
+        voiceMicRef.current.startListening({ forceOverride: true });
+      }
+
+      toast('⚠️ Voice recovered', { duration: 2000 });
     }
 
     return () => {
@@ -5876,9 +5905,13 @@ I'm not sure what I'm feeling yet.`;
         setMessages(nextMessagesForApi);
 
         // Set processing states
+        // NOTE: Do NOT set isAudioPlaying(true) here — it should only be true
+        // when audio is actually playing (see isStreamingPlaying sync below).
+        // Setting it prematurely triggers the watchdog (15s timeout) during
+        // TTS generation which can take 60+ seconds with Kokoro.
         setIsProcessing(true);
         setIsResponding(true);
-        setIsAudioPlaying(true);
+        setIsMicrophonePaused(true); // Signal ContinuousConversation to suppress mic
         setIsMuted(true); // Mute while MAIA speaks
 
         // Stop mic while processing
