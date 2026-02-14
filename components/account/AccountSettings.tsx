@@ -39,6 +39,7 @@ import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
+import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -87,7 +88,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
 
 interface PractitionerProject {
   id: string;
@@ -151,6 +152,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'portals', label: 'Client Portals', icon: Globe, practitionerOnly: true },
   { id: 'astrology', label: 'Birth Chart', icon: Star },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
+  { id: 'voice', label: 'Voice', icon: Mic },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -1488,6 +1490,22 @@ export function AccountSettings() {
     </div>
   );
 
+  const renderVoice = () => (
+    <div className="space-y-6">
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+          <Mic size={16} />
+          Voice Preferences
+        </label>
+        <p className="text-xs text-stone-500 mb-4">
+          Gently bias MAIA&apos;s vocal tone. These are offsets, not overrides &mdash;
+          MAIA can still self-regulate during HOLD states.
+        </p>
+      </div>
+      <VoiceSettingsPanel />
+    </div>
+  );
+
   // Handler for updating individual data type consent
   const updateDataTypeConsent = useCallback(async (
     dataType: DataType,
@@ -2499,6 +2517,7 @@ export function AccountSettings() {
             {activeSection === 'account' && renderAccount()}
             {activeSection === 'astrology' && renderAstrology()}
             {activeSection === 'maia' && renderMaiaSettings()}
+            {activeSection === 'voice' && renderVoice()}
             {activeSection === 'data-privacy' && renderDataPrivacy()}
             {activeSection === 'sovereignty' && renderSovereignty()}
             {activeSection === 'notifications' && renderNotifications()}
