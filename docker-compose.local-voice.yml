@@ -26,7 +26,7 @@ services:
   #         --output test.mp3
   kokoro-tts:
     image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
-    container_name: maia-kokoro-tts
+    # No container_name — let compose auto-name to avoid ghost collisions
     restart: unless-stopped
     logging:
       driver: "json-file"
