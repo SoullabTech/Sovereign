@@ -26,6 +26,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Deployment & ops**: `docker-compose.production.yml`, `Caddyfile`, `scripts/deploy-production.sh`
 - **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
 - **Oath**: `docs/canon/MAIA_OATH.md` — the irreducible standard
+- **Sovereignty Invariants**: `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md` — relational constitution (constraints on relational power when the system works well enough that people start relating to it)
 
 ## Known recurring traps (read before debugging)
 
@@ -36,12 +37,12 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-01-22
-- **Current blocker**: Verifying iOS build after authentication fix
-- **Last fix applied**: Introduced `apiFetch()` with `x-member-id` for Capacitor; updated `OracleConversation.tsx` accordingly
-- **Next action**: Archive in Xcode and upload to TestFlight
+- **Date**: 2026-02-13
+- **Current milestone**: Bridge D implemented — spiral state persistence layer complete
+- **Last change**: Added `member_spiral_state` table + fire-and-forget persistence to prevent treating returning members as new
+- **Next action**: Run migration, verify continuity across server restarts
 - **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
-- **State of the system**: Oath sealed. No new capabilities until continuity is observed in practice.
+- **State of the system**: Bridge D landed. Anti-regression infrastructure in place. Structural continuity without content surveillance.
 
 ## Re-entry vow (for this session)
 
@@ -244,6 +245,59 @@ Users who forget their passkey can request email recovery:
 3. Server sends passkey + username via Resend
 4. User returns to sign-in
 
+## Bridge D: Spiral State Persistence (Anti-Regression Layer)
+
+Prevents MAIA from treating returning members like brand-new people. NOT personalization. NOT psychometrics. Just continuity.
+
+### What Gets Persisted
+
+Table: `member_spiral_state` (migration: `database/migrations/20260213200001_member_spiral_state.sql`)
+- `dominant_element` — Current element (fire/water/earth/air/aether) from conductor hysteresis
+- `phase` — Spiral phase (1-12)
+- `motion` — Movement pattern (ascending/stuck/breakthrough, nullable)
+- `intensity` — Signal strength (0-1, nullable)
+- `relational_phase` — Maturation stage (1=orientation, 2=capacity, 3=autonomy, 4=seasonal return)
+- `autonomy_streak` — Consecutive autonomous sessions
+- `return_count` — Times returned after autonomy
+
+### Implementation
+
+Module: `lib/consciousness/spiralStatePersistence.ts`
+- `loadSpiralState(memberId)` — Read at conversation start (graceful fallback on error)
+- `upsertSpiralState(memberId, update)` — Fire-and-forget write (never blocks oracle)
+
+Wire points in `app/api/oracle/conversation/route.ts`:
+1. **Load early** (line ~415): `const spiralState = await loadSpiralState(userId);`
+2. **Pass to conductor** (line ~1049): `persistedState: { dominant_element, phase }`
+3. **Upsert late** (line ~1067): `upsertSpiralState(userId, { element, phase, motion, intensity });` (fire-and-forget)
+
+Conductor enhancement (`lib/voice/conductor.ts`):
+- If `persistedState` exists and member has no hysteresis buffer, seed from database
+- Prevents element reset on server restart
+
+### Design Principles
+
+1. **Fire-and-forget writes** — like voiceSovereignty pattern (no await, no blocking)
+2. **Graceful fallback on read** — if load fails, conversation continues normally
+3. **No conversation content** — only structural position (element/phase/motion)
+4. **Upsert-safe** — first insert creates, updates modify existing
+5. **Server restart resilient** — hysteresis buffer seeds from DB if empty
+
+### Verification
+
+```bash
+# Check migration applied
+psql -U soullab maia_consciousness -f scripts/verify-bridge-d-db.sql
+
+# Verify continuity
+# 1. Have conversation (3+ turns)
+# 2. Restart server
+# 3. Continue conversation
+# Expected: Element maintained from database, not reset to default
+```
+
+See: `docs/bridge-d-verification.md` for full verification guide.
+
 ## Architecture
 
 - This is a Next.js 16 app using Turbopack
@@ -258,6 +312,11 @@ Users who forget their passkey can request email recovery:
 3. Run `npm run preflight` for full sovereignty check
 4. Run `npm run typecheck` for TypeScript validation (do not run single-file `tsc` - it bypasses path mappings)
 5. Test with `npm run smoke` before committing
+6. **Sovereignty Invariant Check** — For any feature that touches voice, expression, relational tone, or user-facing behavior, ask:
+   - Does this increase user agency?
+   - Does this push life outward into the world?
+   - Does this reduce the system's psychological centrality over time?
+   - If the honest answer to any is no, the feature does not ship. (See `docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md`)
 
 ## Setup (New Clones)
 
