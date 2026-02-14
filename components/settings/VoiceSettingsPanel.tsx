@@ -8,7 +8,7 @@
  * Member preferences are offsets, not overrides.
  */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 type Offsets = {
@@ -38,6 +38,7 @@ export default function VoiceSettingsPanel() {
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -102,26 +103,30 @@ export default function VoiceSettingsPanel() {
       // Map pace offset to speed within the same clamp range as the conductor
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
-      // /api/voice/local-tts expects: { text, voice, format?, speed? }
-      const res = await apiFetch('/api/voice/local-tts', {
+      // POST to preview endpoint → get { audioUrl } (real URL, not blob)
+      // This path works reliably on iOS WKWebView + Android WebView
+      const res = await apiFetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voice: 'af_heart', // default MAIA voice (Kokoro)
-          format: 'mp3',
+          voiceId: effectiveVoiceId === 'maia' ? 'af_heart' : effectiveVoiceId,
           speed,
         }),
       });
 
       if (!res.ok) throw new Error('Preview TTS failed');
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
+      const { audioUrl } = await res.json();
+      if (!audioRef.current || !audioUrl) return;
 
-      const audio = new Audio(url);
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
+      // Stop any currently playing preview
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+
+      // Cache-bust so iOS doesn't serve stale audio
+      audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
+      await audioRef.current.play();
     } catch (e) {
       console.warn('[voice-settings] Preview failed:', e);
     } finally {
@@ -206,6 +211,9 @@ export default function VoiceSettingsPanel() {
           {previewing ? 'Playing...' : 'Preview'}
         </button>
       </div>
+
+      {/* Hidden audio element for iOS/Android-reliable URL-based playback */}
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
 }
