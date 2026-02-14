@@ -44,13 +44,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Library Search] "${query.slice(0, 50)}..." (limit: ${limit}, facets: ${facets?.join(', ') || 'none'})`);
 
-    const results = await library.semanticSearch(query, {
+    const context = await library.search(query, {
       limit,
-      facets,
-      minScore,
+      mode: 'deep',
     });
 
     const elapsed = Date.now() - t0;
+
+    // Filter by minimum score if specified
+    const results = minScore > 0
+      ? context.chunks.filter(c => c.score >= minScore)
+      : context.chunks;
 
     return NextResponse.json({
       success: true,
