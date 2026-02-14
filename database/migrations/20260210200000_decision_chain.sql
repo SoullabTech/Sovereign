@@ -27,10 +27,19 @@ COMMENT ON COLUMN studio_decisions.root_decision_id IS
 -- - root_decision_id always points to the chain origin (the first decision that has no parent)
 -- - Enforced in application layer (POST /api/studio/decisions)
 --
--- Constraint: if parent exists, root must exist
-ALTER TABLE studio_decisions
-  ADD CONSTRAINT chk_chain_consistency
-  CHECK (
-    (parent_decision_id IS NULL)
-    OR (parent_decision_id IS NOT NULL AND root_decision_id IS NOT NULL)
-  );
+-- Constraint: if parent exists, root must exist (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_chain_consistency'
+      AND conrelid = 'studio_decisions'::regclass
+  ) THEN
+    ALTER TABLE studio_decisions
+      ADD CONSTRAINT chk_chain_consistency
+      CHECK (
+        (parent_decision_id IS NULL)
+        OR (parent_decision_id IS NOT NULL AND root_decision_id IS NOT NULL)
+      );
+  END IF;
+END $$;
