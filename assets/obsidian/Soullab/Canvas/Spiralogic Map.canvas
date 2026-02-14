@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "fire-node",
+      "x": 0,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "type": "file",
+      "file": "Fire.md"
+    },
+    {
+      "id": "water-node",
+      "x": 250,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "type": "file",
+      "file": "Water.md"
+    },
+    {
+      "id": "earth-node",
+      "x": 500,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "type": "file",
+      "file": "Earth.md"
+    },
+    {
+      "id": "air-node",
+      "x": 750,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "type": "file",
+      "file": "Air.md"
+    },
+    {
+      "id": "aether-node",
+      "x": 1000,
+      "y": 0,
+      "width": 200,
+      "height": 100,
+      "type": "file",
+      "file": "Aether.md"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "fire-node",
+      "target": "water-node"
+    },
+    {
+      "id": "edge-2",
+      "source": "water-node",
+      "target": "earth-node"
+    },
+    {
+      "id": "edge-3",
+      "source": "earth-node",
+      "target": "air-node"
+    },
+    {
+      "id": "edge-4",
+      "source": "air-node",
+      "target": "aether-node"
+    }
+  ]
+}

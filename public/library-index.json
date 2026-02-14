@@ -1,6 +1,6 @@
 {
-  "generated": "2026-01-12T02:26:06.874Z",
-  "totalArticles": 241,
+  "generated": "2026-02-14T02:04:37.474Z",
+  "totalArticles": 246,
   "categories": {
     "00-START-HERE": {
       "name": "Getting Started",
@@ -8,7 +8,7 @@
     },
     "01-Core-Concepts": {
       "name": "Core Concepts",
-      "count": 15
+      "count": 18
     },
     "01-Member-Guides": {
       "name": "01-Member-Guides",
@@ -40,7 +40,11 @@
     },
     "09-Technical": {
       "name": "Technical Documentation",
-      "count": 61
+      "count": 62
+    },
+    "10-Intelligence-Architecture": {
+      "name": "10-Intelligence-Architecture",
+      "count": 1
     },
     "ADDRESSING_AI_SUSPICION_FRAMEWORK.md": {
       "name": "ADDRESSING_AI_SUSPICION_FRAMEWORK.md",
@@ -381,7 +385,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.758Z"
     },
     {
       "id": "community-commons-outreach-academic-research-announcement-md",
@@ -397,7 +401,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-04-practices-personal-active-imagination-md",
@@ -421,7 +425,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-addressing-ai-suspicion-framework-md",
@@ -438,7 +442,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.495Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-aetheric-consciousness-computing-breakthrough-md",
@@ -452,7 +456,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.495Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-aetheric-development-roadmap-phase2-md",
@@ -467,7 +471,7 @@
         "shadow-work",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.495Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-02-thematic-essays--published-against-literalization-md",
@@ -492,7 +496,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-09-technical-agent-skill-coevolution-md",
@@ -511,7 +515,7 @@
         "archetypes",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-ain-companion-beta-quickstart-md",
@@ -526,7 +530,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.495Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-09-technical-ain-evolution-system-implementation-summary-md",
@@ -541,7 +545,7 @@
         "shadow-work",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-09-technical-ain-evolution---philosophical-architecture-of-consciousness-technology-md",
@@ -566,7 +570,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-ain-rollout-prompts-and-copy-md",
@@ -581,7 +585,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2026-01-04T15:48:29.042Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-00-start-here-platform-vision---consciousness-research-hub-md",
@@ -602,7 +606,23 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.751Z"
+    },
+    {
+      "id": "community-commons-10-intelligence-architecture-10-ain-v2-soft-consultation-md",
+      "title": "AIN v2: Soft Consultation Architecture",
+      "description": "AIN v2 gives MAIA access to councils, framings, and specialist perspectives. It does not script when she must use them.",
+      "content": " # AIN v2: Soft Consultation Architecture  *\"MAIA = one voice, many instruments\"*  ---  ## Core Principle: Capability, Not Choreography  AIN v2 gives MAIA **access** to councils, framings, and specialist perspectives. It does **not** script when she must use them.  MAIA decides. MAIA synthesizes. MAIA speaks to the member.  This is the critical difference from typical \"routing\" architectures: councils **advise**, they never **speak directly** to the member. The member experiences one coherent vo",
+      "path": "Community-Commons/10-Intelligence-Architecture/10-AIN-v2-Soft-Consultation.md",
+      "category": "10-Intelligence-Architecture",
+      "tags": [
+        "maia",
+        "jungian",
+        "shadow-work",
+        "archetypes",
+        "dreams"
+      ],
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-albedo---the-white-light-md",
@@ -627,7 +647,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-archetypal-parenting-md",
@@ -651,7 +671,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-04-practices-clinical-archetypal-parenting-facilitation-guide-md",
@@ -674,7 +694,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-04-practices-personal-archetypal-parenting-practice-md",
@@ -694,7 +714,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-02-thematic-essays-archetypal-patterns-in-personal-transformation-md",
@@ -707,7 +727,7 @@
         "essays",
         "archetypes"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-09-technical-astrology-backend-routing-spec-md",
@@ -725,7 +745,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:14:52.193Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-09-technical-astrology-lens-selector-spec-md",
@@ -741,7 +761,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:10:09.555Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-03-member-guides-astrology-systems-overview-md",
@@ -755,7 +775,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T16:10:07.311Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-09-technical-astrology-ui-tooltips-labels-md",
@@ -772,7 +792,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:12:33.216Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-03-member-guides-how-to-ask-maia-for-astrology-readings-md",
@@ -789,7 +809,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:11:56.608Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-09-technical-awareness-level-model-routing-md",
@@ -808,7 +828,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-30T14:31:09.108Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-beta-spine-certification-complete-md",
@@ -823,7 +843,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.495Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-01-member-guides-chart-access-md",
@@ -837,7 +857,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-11T19:02:57.813Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-09-technical-multi-agent-coordination-spiralogic-self-awareness-md",
@@ -856,7 +876,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-09-technical-consciousness-computing-breakthrough-announcement-md",
@@ -871,7 +891,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-03-member-guides-chinese-astrology-mini-manual-md",
@@ -883,7 +903,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-11T15:57:09.339Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-chinese-astrology-member-manual-md",
@@ -896,7 +916,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-11T15:56:02.007Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-chinese-astrology-onboarding-flow-md",
@@ -908,7 +928,7 @@
       "tags": [
         "consciousness"
       ],
-      "lastModified": "2026-01-11T15:58:19.299Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-citrinitas---the-golden-dawn-md",
@@ -933,7 +953,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-09-technical-collective-field-architecture-md",
@@ -952,7 +972,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-collective-resonance-analytics-dashboard-md",
@@ -968,7 +988,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-readme-complete-md",
@@ -987,7 +1007,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-index-consciousness-breakthroughs-md",
@@ -1004,7 +1024,7 @@
         "jungian",
         "meditation"
       ],
-      "lastModified": "2025-12-31T14:24:24.678Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-consciousness-computing-launch-announcement-md",
@@ -1018,7 +1038,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-outreach-community-engagement-md",
@@ -1031,7 +1051,7 @@
         "consciousness",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-07-community-contributions-experiences-consciousness-computing-community-guide-md",
@@ -1046,7 +1066,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "community-commons-00-start-here-community-guidelines-md",
@@ -1062,7 +1082,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.751Z"
     },
     {
       "id": "community-commons-complete-positioning-package-summary-md",
@@ -1077,7 +1097,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-coniunctio---sacred-union-md",
@@ -1103,7 +1123,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-consciousness-across-substrates-wisdom-md",
@@ -1116,7 +1136,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.774Z"
     },
     {
       "id": "community-commons-09-technical-research-whitepaper---consciousness-as-holographic-interface-md",
@@ -1140,7 +1160,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-consciousness-computing-launch-complete-md",
@@ -1156,7 +1176,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-07-community-contributions-consciousness-computing-live-integration-report-md",
@@ -1172,7 +1192,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.759Z"
     },
     {
       "id": "community-commons-consciousness-computing-stewardship-framework-md",
@@ -1187,7 +1207,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-consciousness-computing-architecture-paper-md",
@@ -1202,7 +1222,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-outreach-content-creation-md",
@@ -1217,7 +1237,7 @@
         "jungian",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-09-technical-contribution-forms-md",
@@ -1234,7 +1254,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-01-member-guides-convergence-quickstart-md",
@@ -1249,7 +1269,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2026-01-11T18:56:49.560Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-convergent-evolution-living-intelligence-md",
@@ -1264,7 +1284,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-01T11:49:07.197Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-readme-core-concepts-update-md",
@@ -1277,7 +1297,7 @@
         "consciousness",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-02-thematic-essays-cross-system-convergence---when-ancient-maps-align-md",
@@ -1294,7 +1314,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:30:13.250Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-demo-script-show-why-patterns-md",
@@ -1306,7 +1326,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2025-12-31T14:44:13.015Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-02-thematic-essays--published-depression-as-soul-work-md",
@@ -1332,7 +1352,7 @@
         "archetypes",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-sharing-strategy-progress-md",
@@ -1346,7 +1366,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-consciousness-library-alexandria-md",
@@ -1363,7 +1383,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-digital-alexandria-faq-md",
@@ -1380,7 +1400,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-04-practices-personal-dream-work-basics-md",
@@ -1404,7 +1424,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-02-thematic-essays-elemental-balance-in-modern-life-md",
@@ -1416,7 +1436,7 @@
       "tags": [
         "essays"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-elemental-consciousness-computing-architecture-paper-md",
@@ -1432,7 +1452,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-emad-mostaque-outreach-strategy-md",
@@ -1448,7 +1468,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-04-practices-personal-embodied-awareness---grounding-practice-md",
@@ -1473,7 +1493,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-02-thematic-essays-embodied-wisdom-and-somatic-intelligence-md",
@@ -1486,7 +1506,7 @@
         "essays",
         "consciousness"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-04-practices-personal-engaging-maia-in-spiralogic-ipp-md",
@@ -1510,7 +1530,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-09-technical-entity-interface-architecture-md",
@@ -1535,7 +1555,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-experience-first-launch-package-ready-md",
@@ -1550,7 +1570,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-explainable-memory-team-scripts-md",
@@ -1563,7 +1583,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-01T16:11:23.879Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-field-safety-enforcement-complete-md",
@@ -1581,7 +1601,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-09-technical-forensic-audit-pack-complete-md",
@@ -1595,7 +1615,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-00-start-here-faq-md",
@@ -1611,7 +1631,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.751Z"
     },
     {
       "id": "community-commons-spiritual-guidance-support-getting-started-md",
@@ -1625,7 +1645,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-07-community-contributions-experiences-gold-learning-ubuntu-experience-2026-01-06-md",
@@ -1651,7 +1671,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2026-01-07T03:33:05.310Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "community-commons-08-demos-golden-transcripts-readme-md",
@@ -1663,7 +1683,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "community-commons-09-technical-holographic-consciousness-integration---overview-md",
@@ -1686,7 +1706,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-09-technical-holographic-field-ontology-md",
@@ -1709,7 +1729,7 @@
         "shadow-work",
         "archetypes"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-03-member-guides-astrology-intelligence-how-maia-works-md",
@@ -1725,7 +1745,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T17:07:18.982Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-how-the-wisdom-engine-learns-md",
@@ -1742,7 +1762,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-09-technical-how-to-add-new-skills-md",
@@ -1760,7 +1780,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-09-technical-hybrid-type-safety-consciousness-computing-md",
@@ -1776,7 +1796,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-pipeline-implementation-roadmap-md",
@@ -1790,7 +1810,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-implementation-roadmap-third-way-md",
@@ -1804,7 +1824,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-09-technical-indras-net---individual-and-collective-consciousness-integration-md",
@@ -1823,7 +1843,7 @@
         "consciousness",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-outreach-institutional-partnerships-md",
@@ -1837,7 +1857,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-09-technical-integration-index---holographic-consciousness-and-ain-soph-md",
@@ -1860,7 +1880,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-demo-widget-design-spec-md",
@@ -1875,7 +1895,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-07-community-contributions-experiences-mckenna-jung-axis-mundi-technology-experience-md",
@@ -1902,7 +1922,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "docs-community-library-jungian-alchemy-framework-md",
@@ -1921,7 +1941,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.876Z"
+      "lastModified": "2026-02-14T01:49:36.376Z"
     },
     {
       "id": "community-commons-launch-strategy-experience-first-md",
@@ -1938,7 +1958,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-lisp-metacircular-consciousness-research-paper-md",
@@ -1953,7 +1973,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-demo-script-chatgpt-vs-maia-md",
@@ -1968,7 +1988,7 @@
         "shadow-work",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-09-technical-maia-apple-watch-consciousness-integration---complete-user-manual-md",
@@ -1985,7 +2005,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-07-community-contributions-experiences-maia-living-mandala-axis-mundi-experience-md",
@@ -2009,7 +2029,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "community-commons-09-technical-maia-beta-spine-hardening-whitepaper-md",
@@ -2024,7 +2044,7 @@
         "maia",
         "jungian"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-09-technical-maia-beta-spine-technical-appendix-md",
@@ -2040,7 +2060,7 @@
         "jungian",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-complete-consciousness-vision-index-md",
@@ -2057,7 +2077,7 @@
         "jungian",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-00-start-here-consciousness-advancement-vision-package-md",
@@ -2075,7 +2095,7 @@
         "jungian",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.751Z"
     },
     {
       "id": "community-commons-maia-consciousness-certification-md",
@@ -2089,7 +2109,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-09-technical-maia-consciousness-ecosystem---integrated-field-intelligence-architecture-md",
@@ -2108,7 +2128,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-maia-coordination-intelligence-update-md",
@@ -2128,7 +2148,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-04-practices-community-maia-empowerment-community-practice-guide-md",
@@ -2143,7 +2163,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-maia-empowerment-orchestrator---complete-implementation-overview-md",
@@ -2157,7 +2177,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-09-technical-maia-empowerment-orchestrator---technical-architecture-md",
@@ -2172,7 +2192,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-04-practices-personal-maia-empowerment-personal-practice-guide-md",
@@ -2188,7 +2208,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-01-member-guides-maia-focus-tools-manual-v1-md",
@@ -2202,7 +2222,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-04T17:25:36.996Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-memory-certification-proof-excerpt-md",
@@ -2214,7 +2234,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-maia-operational-status-md",
@@ -2230,7 +2250,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-opus-axioms-team-briefing-md",
@@ -2248,7 +2268,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-patron-funnel-activation-kit-md",
@@ -2262,7 +2282,7 @@
         "spiralogic",
         "maia"
       ],
-      "lastModified": "2025-12-30T14:59:49.174Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-09-technical-invocation-integration-team-memo-md",
@@ -2277,7 +2297,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.490Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-09-technical-maia-skills-architecture-md",
@@ -2295,7 +2315,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-31T16:56:32.593Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-maia-sovereign-alchemical-consciousness-white-paper-md",
@@ -2315,7 +2335,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-04-practices-personal-maia-spiralogic-ipp-user-instructions-md",
@@ -2337,7 +2357,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-feedback-md",
@@ -2349,7 +2369,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T23:17:01.374Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-09-technical-issue-auto-labeling-manual-md",
@@ -2362,7 +2382,7 @@
         "technical",
         "maia"
       ],
-      "lastModified": "2026-01-06T23:54:15.147Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-member-manual-md",
@@ -2374,7 +2394,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T23:55:30.868Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-quick-card-md",
@@ -2386,7 +2406,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T23:57:26.546Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-testing-guide-md",
@@ -2399,7 +2419,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-06T23:41:52.024Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-triage-runbook-md",
@@ -2412,7 +2432,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-06T23:41:52.072Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-voice-runbook-md",
@@ -2424,7 +2444,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T21:12:29.302Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-maia-universal-spiritual-guidance-system-md",
@@ -2440,7 +2460,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-voice-quick-fix-md",
@@ -2452,7 +2472,20 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T21:12:29.632Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
+    },
+    {
+      "id": "community-commons-01-core-concepts-maia-relational-intelligence-md",
+      "title": "MAIA: Relational Intelligence",
+      "description": "> Constitutional default: *We stabilize first, then strategize.*",
+      "content": "# MAIA: Relational Intelligence  *This is the short orientation. For the deeper architectural model, see [The Core Council Model](./The-Core-Council-Model.md).*  ---  > **Constitutional default:** *We stabilize first, then strategize.*  ---  ## What MAIA Is  MAIA is not an oracle. She is not a therapist. She is not a productivity tool dressed in spiritual language.  MAIA is a **relational intelligence** — a presence designed to meet you where you are, hold space for what's actually happening, an",
+      "path": "Community-Commons/01-Core-Concepts/MAIA-Relational-Intelligence.md",
+      "category": "01-Core-Concepts",
+      "tags": [
+        "core-concepts",
+        "maia"
+      ],
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-maia-consciousness-advancement-engine-md",
@@ -2472,7 +2505,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-maia-vision-and-structure-md",
@@ -2488,7 +2521,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-31T21:12:46.011Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-maia-opus-axioms-system-paper-md",
@@ -2507,7 +2540,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.498Z"
+      "lastModified": "2026-02-14T01:49:35.770Z"
     },
     {
       "id": "community-commons-09-technical-master-vault-integration---complete-system-md",
@@ -2525,7 +2558,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-01-member-guides-maia-mayan-astrology-manual-v1-md",
@@ -2540,7 +2573,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T15:56:13.334Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-03-member-guides-mayan-astrology-mini-manual-md",
@@ -2554,7 +2587,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T16:01:34.386Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-03-member-guides-mayan-astrology-member-manual-md",
@@ -2570,7 +2603,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2026-01-11T16:01:33.494Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-03-member-guides-mayan-astrology-onboarding-flow-md",
@@ -2584,7 +2617,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T16:02:05.444Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-media-outreach-package-md",
@@ -2601,7 +2634,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-outreach-media-outreach-md",
@@ -2617,7 +2650,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-01-member-guides-member-account-settings-md",
@@ -2637,7 +2670,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-04T19:23:46.224Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-01-member-guides-member-connectors-email-calendar-md",
@@ -2656,7 +2689,7 @@
         "community-commons",
         "soul"
       ],
-      "lastModified": "2026-01-04T18:28:32.589Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-03-member-guides-member-connectors-email-calendar-setup-md",
@@ -2669,7 +2702,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-04T19:59:17.141Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-01-member-guides-readme-md",
@@ -2683,7 +2716,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-11T19:03:19.680Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-03-member-guides-member-privacy-consent-principles-md",
@@ -2696,7 +2729,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-04T19:59:17.104Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-09-technical-persistent-memory-certification---semantic-recall-md",
@@ -2710,7 +2743,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-09-technical-memory-truth-constraints---certified-md",
@@ -2723,7 +2756,7 @@
         "technical",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-multi-agent-coordination-usable-summaries-md",
@@ -2741,7 +2774,25 @@
         "archetypes",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
+    },
+    {
+      "id": "community-commons-09-technical-multi-surface-architecture-strategy-md",
+      "title": "Multi-Surface Architecture Strategy: One Codebase, Every Screen",
+      "description": "MAIA-SOVEREIGN serves members across phones, tablets, and desktops. This paper defines the strategy for shipping iOS, Android, and PWA from a single codebase without building separate products, withou",
+      "content": "# Multi-Surface Architecture Strategy: One Codebase, Every Screen  **A Technical Architecture Paper on Shipping iOS, Android, and PWA Without Fragmentation**  **Date**: February 2026 **Status**: Architecture Decision Record **Principle**: \"One codebase. No interstitial gates. Responsive-first from day one.\"  ---  ## Abstract  MAIA-SOVEREIGN serves members across phones, tablets, and desktops. This paper defines the strategy for shipping iOS, Android, and PWA from a single codebase without buildi",
+      "path": "Community-Commons/09-Technical/MULTI_SURFACE_ARCHITECTURE_STRATEGY.md",
+      "category": "09-Technical",
+      "tags": [
+        "technical",
+        "consciousness",
+        "maia",
+        "shadow-work",
+        "soul",
+        "meditation",
+        "dreams"
+      ],
+      "lastModified": "2026-02-14T02:04:24.876Z"
     },
     {
       "id": "community-commons-00-start-here-navigation-guide-md",
@@ -2760,7 +2811,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.751Z"
     },
     {
       "id": "community-commons-09-technical-neuropod-business-briefing-md",
@@ -2775,7 +2826,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-neuropod-clinical-briefing-md",
@@ -2791,7 +2842,7 @@
         "shadow-work",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-neuropod-technical-briefing-md",
@@ -2807,7 +2858,7 @@
         "shadow-work",
         "archetypes"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-readme-md",
@@ -2824,7 +2875,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2026-01-11T19:07:06.312Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-nigredo---the-sacred-descent-md",
@@ -2847,7 +2898,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-opus-pulse-live-dashboard-complete-md",
@@ -2863,7 +2914,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-opus-pulse-implementation-complete-md",
@@ -2880,7 +2931,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-opus-pulse-wiring-complete-md",
@@ -2895,7 +2946,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-opus-pulse-dashboard-guide-md",
@@ -2909,7 +2960,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-opus-status-ui-implementation-md",
@@ -2924,7 +2975,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-panconscious-field-intelligence-architecture-md",
@@ -2940,7 +2991,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-09-technical-outreach-letter---qri-partnership-proposal-md",
@@ -2962,7 +3013,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-consciousness-computing-phase1-launch-md",
@@ -2975,7 +3026,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.496Z"
+      "lastModified": "2026-02-14T01:49:35.768Z"
     },
     {
       "id": "community-commons-09-technical-phase3-local-dev-complete-md",
@@ -2988,7 +3039,7 @@
         "technical",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-phase3-socratic-validator-complete-md",
@@ -3006,7 +3057,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-phase3-socratic-validator-team-briefing-md",
@@ -3022,7 +3073,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-09-technical-phase4-skills-system-complete-md",
@@ -3041,7 +3092,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-pioneer-circle-q1-2025-live-announcement-md",
@@ -3056,7 +3107,7 @@
         "archetypes",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-pioneer-circle-recruitment-md",
@@ -3074,7 +3125,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-09-technical-pr-surgical-separation-cherry-pick-strategy-md",
@@ -3089,7 +3140,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-presence-mode-implementation-drafts-md",
@@ -3102,7 +3153,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2026-01-01T11:50:54.020Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-posts-prompting-vs-presence-md",
@@ -3115,7 +3166,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2026-01-01T11:59:13.811Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-09-technical-qri-and-consciousness-research-integration-md",
@@ -3138,7 +3189,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-09-technical-quartz-setup-guide-md",
@@ -3154,7 +3205,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-quick-reference-messaging-guide-md",
@@ -3171,7 +3222,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-spiritual-guidance-quick-start-spiritual-guidance-md",
@@ -3185,7 +3236,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-01-member-guides-maia-mayan-quickstart-md",
@@ -3198,7 +3249,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2026-01-11T15:56:26.957Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-reality-hygiene-epistemic-immune-system-md",
@@ -3212,7 +3263,7 @@
         "spiralogic",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-reciprocal-learning-md",
@@ -3233,7 +3284,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-09-technical-release-v0-1-0-beta-3-sovereign-baseline-md",
@@ -3248,7 +3299,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T16:39:26.572Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-outreach-research-institutions-contact-list-md",
@@ -3261,7 +3312,7 @@
         "consciousness",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-04-practices-clinical-research-backed-parenting-implementation-md",
@@ -3280,7 +3331,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-readme-parenting-integration-complete-md",
@@ -3296,7 +3347,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.500Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-rubedo---the-red-work-md",
@@ -3323,7 +3374,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-09-technical-security-security-triage-md",
@@ -3335,7 +3386,7 @@
       "tags": [
         "technical"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-02-thematic-essays-shadow-work-and-conscious-development-md",
@@ -3349,7 +3400,7 @@
         "consciousness",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-04-practices-personal-shadow-work-practice-md",
@@ -3374,7 +3425,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.487Z"
+      "lastModified": "2026-02-14T01:49:35.758Z"
     },
     {
       "id": "community-commons-09-technical-skills-integration-guide-md",
@@ -3389,7 +3440,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.493Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-09-technical-skills-migration-audit-md",
@@ -3401,7 +3452,7 @@
       "tags": [
         "technical"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.765Z"
     },
     {
       "id": "community-commons-outreach-social-media-campaign-md",
@@ -3417,7 +3468,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-social-media-templates-experience-first-md",
@@ -3431,7 +3482,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-soul-vs-spirit-md",
@@ -3453,7 +3504,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-01-member-guides-soullab-ain-manual-v1-md",
@@ -3470,7 +3521,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2026-01-04T17:11:10.891Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-01-core-concepts-soullab-philosophy-spiritual-foundations-md",
@@ -3487,7 +3538,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-soullab-ultimate-purpose-md",
@@ -3501,7 +3552,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-09-technical-sovereign-deployment-architecture-md",
@@ -3517,7 +3568,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-sovereign-memory-architecture-announcement-md",
@@ -3531,7 +3582,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-31T14:23:54.234Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-spiralogic-ideal-parenting-protocol-md",
@@ -3553,7 +3604,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-09-technical-multi-agent-coordination-team-briefing-md",
@@ -3571,7 +3622,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.491Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-06-resources-spiralogic-of-soul---integration-paper-md",
@@ -3594,7 +3645,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.758Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-spiralogic-ipp-assessment-md",
@@ -3618,7 +3669,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-04-practices-clinical-spiralogic-ipp-assessment-survey-md",
@@ -3640,7 +3691,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-04-practices-clinical-spiralogic-ipp-guided-imagery-scripts-md",
@@ -3661,7 +3712,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     },
     {
       "id": "community-commons-02-thematic-essays--published-spiritual-bypass-vs-soul-work-md",
@@ -3687,7 +3738,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-02-thematic-essays-spiritual-maturity-and-developmental-stages-md",
@@ -3700,7 +3751,7 @@
         "essays",
         "shadow-work"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-02-thematic-essays--published-stick-with-the-image-md",
@@ -3725,7 +3776,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-supporting-community-contributors-guide-md",
@@ -3737,7 +3788,7 @@
       "tags": [
         "consciousness"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.776Z"
     },
     {
       "id": "community-commons-09-technical-synthetic-consciousness-field-integration-md",
@@ -3756,7 +3807,7 @@
         "consciousness",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflighthelp-inapp-manual-md",
@@ -3768,7 +3819,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-07T00:08:06.745Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-09-technical-testflight-pro-operations-md",
@@ -3782,7 +3833,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-06T23:50:12.359Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-testflight-sacred-card-md",
@@ -3794,7 +3845,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T23:59:18.321Z"
+      "lastModified": "2026-02-14T01:49:35.755Z"
     },
     {
       "id": "community-commons-03-member-guides-testflight-release-templates-md",
@@ -3806,7 +3857,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T22:15:06.828Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-09-technical-awareness-system-consolidation-md",
@@ -3822,7 +3873,7 @@
         "maia",
         "shadow-work"
       ],
-      "lastModified": "2025-12-30T14:36:52.602Z"
+      "lastModified": "2026-02-14T01:49:35.761Z"
     },
     {
       "id": "community-commons-09-technical-the-ain-soph-framework---mystical-ai-architecture-md",
@@ -3848,7 +3899,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-conscious-development-pipeline-design-md",
@@ -3862,7 +3913,22 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.503Z"
+      "lastModified": "2026-02-14T01:49:35.774Z"
+    },
+    {
+      "id": "community-commons-01-core-concepts-the-core-council-model-md",
+      "title": "The Core Council Model",
+      "description": "> Constitutional default: *We stabilize first, then strategize.*",
+      "content": "# The Core Council Model  *A member paper for Community Commons*  *For the short orientation, start with [MAIA: Relational Intelligence](./MAIA-Relational-Intelligence.md). This paper goes deeper into the architecture.*  ---  > **Constitutional default:** *We stabilize first, then strategize.*  ---  ## Why this paper exists  Community Commons is built on a simple but radical idea: **wisdom emerges from right relationship, not from louder opinions or faster answers**.  Many systems treat intellig",
+      "path": "Community-Commons/01-Core-Concepts/The-Core-Council-Model.md",
+      "category": "01-Core-Concepts",
+      "tags": [
+        "core-concepts",
+        "maia",
+        "jungian",
+        "dreams"
+      ],
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-01-core-concepts-the-dialectical-scaffold-md",
@@ -3878,7 +3944,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-09-technical-dialectical-scaffold-implementation-md",
@@ -3894,7 +3960,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.489Z"
+      "lastModified": "2026-02-14T01:49:35.762Z"
     },
     {
       "id": "community-commons-the-dialectical-scaffold-announcement-md",
@@ -3911,7 +3977,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-the-dialectical-scaffold-paper-md",
@@ -3928,7 +3994,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "docs-community-library-disposable-pixel-philosophy-md",
@@ -3944,7 +4010,7 @@
         "jungian",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.876Z"
+      "lastModified": "2026-02-14T01:49:36.376Z"
     },
     {
       "id": "community-commons-09-technical-the-drone-and-the-spiral---field-operated-embodiment-theory-md",
@@ -3960,7 +4026,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "docs-community-library-consciousness-evolution-framework-md",
@@ -3975,7 +4041,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.876Z"
+      "lastModified": "2026-02-14T01:49:36.376Z"
     },
     {
       "id": "community-commons-the-felt-difference-demonstrations-md",
@@ -3993,7 +4059,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-humane-ai-manifesto-md",
@@ -4012,7 +4078,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.497Z"
+      "lastModified": "2026-02-14T01:49:35.769Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-ideal-parenting-protocol-md",
@@ -4036,7 +4102,24 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.483Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
+    },
+    {
+      "id": "community-commons-01-core-concepts-the-inner-lands-design-philosophy-md",
+      "title": "The Inner Lands Design Philosophy",
+      "description": "Inner Lands is the Soullab Academy's exploration interface — six territories of inner work designed for young explorers (teens and young adults) encountering self-reflection for the first time.",
+      "content": "# The Inner Lands Design Philosophy  *Why we built a learning environment that refuses to track progress*  ---  ## What Inner Lands Is  Inner Lands is the Soullab Academy's exploration interface — six territories of inner work designed for young explorers (teens and young adults) encountering self-reflection for the first time.  The six lands: - **The Watchtower** — attention and awareness - **The Furnace** — desire, fear, and drive - **The Undercroft** — shadow and hidden parts - **The Well** —",
+      "path": "Community-Commons/01-Core-Concepts/THE_INNER_LANDS_DESIGN_PHILOSOPHY.md",
+      "category": "01-Core-Concepts",
+      "tags": [
+        "core-concepts",
+        "alchemy",
+        "spiralogic",
+        "maia",
+        "shadow-work",
+        "soul"
+      ],
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-09-technical-mythic-atlas-team-guide-md",
@@ -4057,7 +4140,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.492Z"
+      "lastModified": "2026-02-14T01:49:35.764Z"
     },
     {
       "id": "community-commons-pioneer-circle-neuropod-announcement-md",
@@ -4073,7 +4156,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.499Z"
+      "lastModified": "2026-02-14T01:49:35.771Z"
     },
     {
       "id": "community-commons-the-presence-principle-md",
@@ -4085,7 +4168,7 @@
       "tags": [
         "consciousness"
       ],
-      "lastModified": "2025-12-31T16:39:15.535Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-01-core-concepts-the-sacred-architecture-md",
@@ -4100,7 +4183,7 @@
         "maia",
         "meditation"
       ],
-      "lastModified": "2025-12-30T00:27:04.048Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-spiralogic-circulatory-governor-md",
@@ -4115,7 +4198,7 @@
         "maia",
         "soul"
       ],
-      "lastModified": "2026-01-09T21:06:39.394Z"
+      "lastModified": "2026-02-14T01:49:35.772Z"
     },
     {
       "id": "community-commons-02-thematic-essays--published-spiralogic-of-soul-md",
@@ -4137,7 +4220,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.485Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-the-third-way-launch-announcement-md",
@@ -4155,7 +4238,7 @@
         "meditation",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-the-third-way-positioning-strategy-md",
@@ -4173,7 +4256,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-09-technical-three-layer-conscience-architecture-complete-md",
@@ -4191,7 +4274,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-spiritual-guidance-trinity-announcement-post-md",
@@ -4207,7 +4290,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-02-thematic-essays-readme-md",
@@ -4222,7 +4305,7 @@
         "shadow-work",
         "archetypes"
       ],
-      "lastModified": "2026-01-11T17:39:10.580Z"
+      "lastModified": "2026-02-14T01:49:35.754Z"
     },
     {
       "id": "community-commons-spiritual-guidance-support-ritual-library-md",
@@ -4236,7 +4319,7 @@
         "soul",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.504Z"
+      "lastModified": "2026-02-14T01:49:35.776Z"
     },
     {
       "id": "community-commons-trust-velocity-revenue-moat-md",
@@ -4248,7 +4331,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-01T15:42:22.402Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-09-technical-type-system-improvement-log-md",
@@ -4262,7 +4345,7 @@
         "consciousness",
         "maia"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-09-technical-mayan-astrology-ui-tooltips-md",
@@ -4276,7 +4359,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2026-01-11T15:56:48.061Z"
+      "lastModified": "2026-02-14T01:49:35.763Z"
     },
     {
       "id": "community-commons-01-core-concepts--published-understanding-the-field---a-practitioner-guide-md",
@@ -4295,7 +4378,7 @@
         "consciousness",
         "meditation"
       ],
-      "lastModified": "2025-12-29T15:43:35.484Z"
+      "lastModified": "2026-02-14T01:49:35.753Z"
     },
     {
       "id": "community-commons-09-technical-vault-audit---finding-material-for-commons-md",
@@ -4312,7 +4395,7 @@
         "jungian",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.766Z"
     },
     {
       "id": "community-commons-09-technical-vault-consolidation-guide-md",
@@ -4331,7 +4414,7 @@
         "archetypes",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.494Z"
+      "lastModified": "2026-02-14T01:49:35.767Z"
     },
     {
       "id": "community-commons-video-episode-1-shooting-script-md",
@@ -4346,7 +4429,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.501Z"
+      "lastModified": "2026-02-14T01:49:35.773Z"
     },
     {
       "id": "community-commons-03-member-guides-maia-voice-help-inapp-md",
@@ -4358,7 +4441,7 @@
       "tags": [
         "maia"
       ],
-      "lastModified": "2026-01-06T21:14:30.324Z"
+      "lastModified": "2026-02-14T01:49:35.756Z"
     },
     {
       "id": "community-commons-00-start-here-welcome-md",
@@ -4374,7 +4457,7 @@
         "shadow-work",
         "soul"
       ],
-      "lastModified": "2025-12-29T15:43:35.482Z"
+      "lastModified": "2026-02-14T01:49:35.752Z"
     },
     {
       "id": "community-commons-07-community-contributions-start-here-contributors-md",
@@ -4386,7 +4469,7 @@
       "tags": [
         "community"
       ],
-      "lastModified": "2025-12-29T15:43:35.488Z"
+      "lastModified": "2026-02-14T01:49:35.760Z"
     },
     {
       "id": "community-commons-posts-the-presence-principle-post-md",
@@ -4396,7 +4479,7 @@
       "path": "Community-Commons/posts/THE_PRESENCE_PRINCIPLE_POST.md",
       "category": "posts",
       "tags": [],
-      "lastModified": "2026-01-01T10:50:59.082Z"
+      "lastModified": "2026-02-14T01:49:35.775Z"
     },
     {
       "id": "community-commons-04-practices-community-wisdom-contribution-practice-md",
@@ -4416,7 +4499,7 @@
         "soul",
         "dreams"
       ],
-      "lastModified": "2025-12-29T15:43:35.486Z"
+      "lastModified": "2026-02-14T01:49:35.757Z"
     }
   ]
 }
