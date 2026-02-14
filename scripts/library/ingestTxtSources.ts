@@ -19,6 +19,7 @@
  *   DATABASE_URL          PostgreSQL connection string
  */
 
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';

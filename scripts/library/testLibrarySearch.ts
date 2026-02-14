@@ -13,6 +13,7 @@
  * Exit 1 = at least one query returned 0 results (pipeline issue)
  */
 
+import 'dotenv/config';
 import { libraryService } from '../../lib/library/LibraryService';
 import { query } from '../../lib/database/postgres';
 
