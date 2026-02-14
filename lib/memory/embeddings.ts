@@ -8,6 +8,8 @@
  */
 
 export async function generateLocalEmbedding(text: string): Promise<number[]> {
+  const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 30000);
+
   try {
     const response = await fetch('http://localhost:11434/api/embeddings', {
       method: 'POST',
@@ -16,6 +18,7 @@ export async function generateLocalEmbedding(text: string): Promise<number[]> {
         model: 'nomic-embed-text',  // Efficient local embedding model
         prompt: text.substring(0, 8000),  // Limit context length
       }),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (!response.ok) {

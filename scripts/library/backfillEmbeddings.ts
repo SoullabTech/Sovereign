@@ -10,6 +10,7 @@
  *   npm run library:backfill-embeddings
  */
 
+import 'dotenv/config';
 import { query } from '../../lib/database/postgres';
 import { generateLocalEmbedding } from '../../lib/memory/embeddings';
 

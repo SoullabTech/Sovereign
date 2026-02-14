@@ -19,6 +19,7 @@
  *   DATABASE_URL          PostgreSQL connection string
  */
 
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -176,6 +177,9 @@ function findFiles(dir: string, basePath: string = dir): FileInfo[] {
         if (content.length < originalLength) {
           console.warn(`   ⚠️  Stripped ${originalLength - content.length} null bytes from ${entry.name}`);
         }
+
+        // Strip BOM (byte order mark) if present
+        content = content.replace(/^\uFEFF/, '');
 
         const checksum = crypto.createHash('sha256').update(content).digest('hex');
 

@@ -12,6 +12,7 @@
  *   npm run library:health
  */
 
+import 'dotenv/config';
 import { query } from '../../lib/database/postgres';
 
 async function healthCheck() {

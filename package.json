@@ -55,6 +55,8 @@
     "library:ingest": "npx tsx scripts/library/ingestTxtSources.ts --path data/ain/source",
     "library:health": "npx tsx scripts/library/healthCheck.ts",
     "library:backfill-embeddings": "npx tsx scripts/library/backfillEmbeddings.ts",
+    "library:test": "npx tsx scripts/library/testLibrarySearch.ts",
+    "library:ingest:dry": "npx tsx scripts/library/ingestTxtSources.ts --path data/ain/source --dry-run",
     "audiobook:generate": "npx tsx scripts/generate-audiobook.ts",
     "audiobook:preview": "npx tsx scripts/generate-audiobook.ts --dry-run",
     "leak-guard": "bash scripts/ci/leak-guard.sh",
