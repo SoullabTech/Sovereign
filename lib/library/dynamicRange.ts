@@ -23,6 +23,11 @@ export interface SpiralContext {
   motion?: string;              // ascending | stuck | breakthrough
   relationalPhase?: number;     // 1=orientation, 2=capacity, 3=autonomy, 4=seasonal return
   conversationDepth: number;    // Number of turns in current conversation
+  distress?: {                  // Distress doorway context (from detectDistressSignals)
+    isDistressed: boolean;
+    intensity: 'low' | 'medium' | 'high';
+    dominantTone: string;       // inferred element need (water/aether/earth/air)
+  };
 }
 
 export interface DynamicRangeDecision {
@@ -53,7 +58,9 @@ export function calculateDynamicRange(
 ): DynamicRangeDecision {
 
   // Gate 1: Too early in conversation — trust must be established first
-  if (context.conversationDepth < 3) {
+  // EXCEPTION: Distress signals bypass this gate. Someone in pain
+  // doesn't need to "earn" the Library through conversational depth.
+  if (context.conversationDepth < 3 && !context.distress?.isDistressed) {
     return {
       shouldConsult: false,
       retrievalLimit: 0,
@@ -63,6 +70,23 @@ export function calculateDynamicRange(
       excerptMaxLength: 0,
       framingLevel: 'minimal',
       reason: 'conversation_too_early',
+    };
+  }
+
+  // Gate 1b: DISTRESS DOORWAY
+  // When distress is detected at conversation start, the Library
+  // consults lightly — not to lecture, but to shape MAIA's tone.
+  // The member never sees the Library. They feel its presence.
+  if (context.distress?.isDistressed && context.conversationDepth <= 1) {
+    return {
+      shouldConsult: true,
+      retrievalLimit: 2,                              // Light — 1-2 chunks only
+      elementBoost: context.distress.dominantTone,    // Bias toward inferred need
+      phaseFilter: null,
+      includeDistillate: true,                        // Distillates have practices
+      excerptMaxLength: 200,                          // Short — presence not lecture
+      framingLevel: 'minimal',                        // Library whispers, doesn't teach
+      reason: 'distress_doorway',
     };
   }
 
