@@ -61,6 +61,7 @@ import {
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -440,6 +441,18 @@ export async function POST(req: NextRequest) {
   const timer = createVoiceTimer();
   timer.mark('request_received');
 
+  // Load voice preference offsets (language-level, shapes text generation)
+  let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
+  try {
+    const [systemVoice, memberVoice] = await Promise.all([
+      getSystemVoiceProfile(),
+      getMemberVoicePreferences(userId || ''),
+    ]);
+    voiceOffsets = mergeVoiceIntent(systemVoice, memberVoice).intent;
+  } catch (e) {
+    console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
+  }
+
   console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed, mode, sanctuary });
 
   if (!message?.trim()) {
@@ -792,6 +805,8 @@ export async function POST(req: NextRequest) {
           wisdomDirective,
           memoryContext: wisdomPayload?.memoryDirective,
           spiralContext: wisdomPayload?.spiralDirective,
+          // Voice preference offsets — shape text generation (warmth, poetry, directiveness, energy)
+          voiceOffsets,
         };
 
         let fullResponse = '';

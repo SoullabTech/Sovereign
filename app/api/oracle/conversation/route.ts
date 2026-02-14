@@ -608,7 +608,7 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
-    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
+    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -626,7 +626,8 @@ export async function POST(request: NextRequest) {
       astrologyContext,
       preferredAssistantName,
       distressSignal,
-      sessionId
+      sessionId,
+      voicePrefs.intent
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1510,7 +1511,8 @@ async function generateSpiralogicResponseWithLLM(
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
   distressSignal?: DistressSignal | null,
-  sessionId?: string
+  sessionId?: string,
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1526,7 +1528,7 @@ async function generateSpiralogicResponseWithLLM(
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
-  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
+  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology + voice prefs
   const systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
@@ -1542,7 +1544,8 @@ async function generateSpiralogicResponseWithLLM(
     anamnesisPrompt,
     astrologyContext,
     preferredAssistantName,
-    distressSignal
+    distressSignal,
+    voiceOffsets
   );
 
   // Format conversation history for LLM
@@ -1832,12 +1835,24 @@ function buildSacredAttendingPrompt(
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
-  distressSignal?: DistressSignal | null
+  distressSignal?: DistressSignal | null,
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
     ? `\nThis member calls you "${preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n`
     : '';
+
+  // Build voice preference guidance (language-level, not audio)
+  const band = (x: number) => x < -0.10 ? 'low' : x > 0.10 ? 'high' : 'mid';
+  const voiceSection = voiceOffsets ? `
+# Voice Preferences (IMPLICIT — follow gently, do not mention sliders or settings)
+This person has chosen these language-level preferences:
+- Warmth: ${band(voiceOffsets.warmth)} ${voiceOffsets.warmth < -0.10 ? '(crisp, clear, matter-of-fact)' : voiceOffsets.warmth > 0.10 ? '(tender, holding, gentle)' : '(present, grounded)'}
+- Poetry: ${band(voiceOffsets.poetry)} ${voiceOffsets.poetry < -0.10 ? '(plain language, concrete, no metaphor)' : voiceOffsets.poetry > 0.10 ? '(mythic, evocative, symbolic imagery welcome)' : '(natural, occasional imagery)'}
+- Directiveness: ${band(voiceOffsets.directiveness)} ${voiceOffsets.directiveness < -0.10 ? '(inviting, open questions, minimal guidance)' : voiceOffsets.directiveness > 0.10 ? '(clear guidance, direct framing, decisive)' : '(balanced guidance and open inquiry)'}
+- Energy: ${band(voiceOffsets.energy)} ${voiceOffsets.energy < -0.10 ? '(soft, quiet, close — like a late-night conversation)' : voiceOffsets.energy > 0.10 ? '(bright, alive, engaged — like morning light)' : '(steady, calm presence)'}
+` : '';
 
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
 ${nameInstruction}
@@ -1853,7 +1868,7 @@ ${nameInstruction}
 - Cringey spiritual phrases like "beloved soul", "sacred witnessing", "I am sensing turbulence in the field"
 - Guru/therapist stereotypes or self-help influencer language
 - Diagnoses or promises of outcomes
-
+${voiceSection}
 # Sacred Attending Stance
 
 Sacred attending means:
