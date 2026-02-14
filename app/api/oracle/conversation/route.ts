@@ -612,7 +612,8 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      voicePrefs?.intent
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1402,7 +1403,8 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  voiceCalibration?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1433,7 +1435,8 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    voiceCalibration
   );
 
   // Format conversation history for LLM
@@ -1530,9 +1533,9 @@ async function generateSpiralogicResponseWithLLM(
   let libraryWisdom = '';
   try {
     const rangeDecision = calculateDynamicRange(message, {
-      element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
-      phase: voiceHint?.phase || spiralogicCell?.phase,
-      motion: voiceHint?.motion,
+      element: spiralogicCell?.element?.toLowerCase(),
+      phase: spiralogicCell?.phase,
+      motion: undefined,
       relationalPhase: spiralState?.relational_phase,
       conversationDepth,
     });
@@ -1543,9 +1546,9 @@ async function generateSpiralogicResponseWithLLM(
         mode: rangeDecision.includeDistillate ? 'fast' : 'deep',
         memberId: userId,
         spiralContext: {
-          element: voiceHint?.element || spiralogicCell?.element?.toLowerCase(),
-          phase: voiceHint?.phase || spiralogicCell?.phase,
-          motion: voiceHint?.motion,
+          element: spiralogicCell?.element?.toLowerCase(),
+          phase: spiralogicCell?.phase,
+          motion: undefined,
           relationalPhase: spiralState?.relational_phase,
           conversationDepth,
         },
@@ -1669,6 +1672,51 @@ async function generateSpiralogicResponseWithLLM(
 }
 
 /**
+ * Voice calibration prompt block — translates member slider offsets into
+ * language-level guidance for Claude. Follows gently, never mentions sliders.
+ */
+function buildVoiceCalibrationBlock(vp: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }): string {
+  function vBand(v: number): 'low' | 'mid' | 'high' {
+    if (v < -0.10) return 'low';
+    if (v > 0.10) return 'high';
+    return 'mid';
+  }
+
+  const w = vBand(vp.warmth);
+  const p = vBand(vp.poetry);
+  const d = vBand(vp.directiveness);
+  const e = vBand(vp.energy);
+
+  // Only emit the block if at least one offset is non-mid
+  if (w === 'mid' && p === 'mid' && d === 'mid' && e === 'mid') return '';
+
+  const lines: string[] = [];
+  if (w !== 'mid') lines.push(
+    w === 'low' ? '- Tone: crisp, clean, minimal reassurance'
+                : '- Tone: tender, attuned, gently reassuring'
+  );
+  if (p !== 'mid') lines.push(
+    p === 'low' ? '- Language: plainspoken, practical, concrete'
+                : '- Language: mythic, imaginal, symbolic (without obscuring meaning)'
+  );
+  if (d !== 'mid') lines.push(
+    d === 'low' ? '- Stance: invitational questions, open space'
+                : '- Stance: clear guidance, one next step, no overwhelm'
+  );
+  if (e !== 'mid') lines.push(
+    e === 'low' ? '- Rhythm: slower cadence, shorter sentences, more pauses'
+                : '- Rhythm: brighter cadence, momentum, still grounded'
+  );
+
+  return `
+# Voice Calibration (IMPLICIT — follow quietly, never mention settings)
+
+${lines.join('\n')}
+
+`;
+}
+
+/**
  * Build sacred attending system prompt with implicit Spiralogic guidance
  * The patterns inform your response but are NOT stated explicitly to the user
  */
@@ -1686,7 +1734,8 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  voiceCalibration?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -1707,7 +1756,7 @@ ${nameInstruction}
 - Cringey spiritual phrases like "beloved soul", "sacred witnessing", "I am sensing turbulence in the field"
 - Guru/therapist stereotypes or self-help influencer language
 - Diagnoses or promises of outcomes
-
+${voiceCalibration ? buildVoiceCalibrationBlock(voiceCalibration) : ''}
 # Sacred Attending Stance
 
 Sacred attending means:
