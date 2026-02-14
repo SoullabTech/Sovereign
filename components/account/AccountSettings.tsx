@@ -2131,7 +2131,7 @@ export function AccountSettings() {
                 disabled={comingSoon}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
                   comingSoon
-                    ? 'border-[#D4B896]/20 bg-white/30 cursor-not-allowed opacity-60'
+                    ? 'border-[#D4B896]/20 bg-white/30 cursor-not-allowed'
                     : currentMode === id
                       ? 'border-amber-500/50 bg-amber-500/15'
                       : 'border-[#D4B896]/30 bg-white/40 hover:bg-white/50'
@@ -2372,7 +2372,7 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
+    <div className="max-w-xl mx-auto px-5 py-8 font-sans" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
       {/* Header - Claude style: minimal */}
       <div className="flex items-center gap-3 mb-8">
         <button

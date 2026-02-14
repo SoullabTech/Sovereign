@@ -47,7 +47,7 @@ export default function VideoLibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8">
+    <div className="min-h-screen font-sans bg-gradient-to-b from-gray-50 to-gray-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Soullab Guides</h1>

@@ -262,7 +262,7 @@ export default function StudioLayout({
         </AnimatePresence>
 
         {/* Content */}
-        <main className="flex-1 min-h-0">
+        <main className="flex-1 min-h-0 font-sans">
           <RecordingBanner />
           {children}
         </main>
@@ -382,7 +382,7 @@ export default function StudioLayout({
 
       {/* Main Content */}
       <main
-        className="flex-1 transition-all duration-300"
+        className="flex-1 font-sans transition-all duration-300"
         style={{ marginLeft: collapsed ? 64 : 200 }}
       >
         <RecordingBanner />

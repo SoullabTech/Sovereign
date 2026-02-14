@@ -749,7 +749,7 @@ export default function ScribePage() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm leading-relaxed opacity-90">
+                        <p className="text-sm leading-relaxed text-stone-200">
                           {insight.content.slice(0, 200)}
                           {insight.content.length > 200 && '...'}
                         </p>

@@ -13,11 +13,22 @@ export async function embedWithOllama(params: {
   const baseUrl = params.baseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
   const model = params.model || process.env.OLLAMA_EMBED_MODEL || 'nomic-embed-text';
 
-  const res = await fetch(`${baseUrl}/api/embeddings`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, prompt: params.text }),
-  });
+  const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 30000);
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/api/embeddings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, prompt: params.text }),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error: any) {
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      throw new Error(`Ollama embedding timeout after ${timeoutMs}ms (model: ${model})`);
+    }
+    throw error;
+  }
 
   if (!res.ok) {
     const t = await res.text();

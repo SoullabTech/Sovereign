@@ -141,7 +141,8 @@ export default function VoiceSettingsPanel() {
         if (res.status === 503) {
           setPreviewError('Voice engine is offline. Start the Kokoro TTS service to preview.');
         } else {
-          setPreviewError('Preview failed. Try again later.');
+          const data = await res.json().catch(() => ({}));
+          setPreviewError(data?.error ?? `Preview failed (${res.status})`);
         }
         return;
       }
@@ -180,11 +181,11 @@ export default function VoiceSettingsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm text-stone-400">Voice</div>
         <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs text-stone-400">
+        <div className="mt-2 text-xs text-stone-500">
           Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
         </div>
       </div>
@@ -259,7 +260,9 @@ export default function VoiceSettingsPanel() {
       </div>
 
       {previewError && (
-        <p className="text-xs text-amber-400/80 px-1">{previewError}</p>
+        <div className="rounded-lg border border-stone-700/60 bg-stone-900/40 px-3 py-2 text-sm text-stone-300">
+          {previewError}
+        </div>
       )}
 
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}

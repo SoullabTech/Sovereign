@@ -12,6 +12,7 @@
  *   --dry-run          Show what would be ingested without writing to DB
  *   --path <dir>       Override LIBRARY_INGEST_PATH env var
  *   --skip-embeddings  Skip embedding generation (faster, can run separately)
+ *   --reset-stuck      Reset sources stuck in "processing" to "pending"
  *
  * Environment:
  *   LIBRARY_INGEST_PATH   Directory containing .txt files to ingest
@@ -22,6 +23,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { libraryService } from '../../lib/library/LibraryService';
+import { query } from '../../lib/database/postgres';
 
 // =============================================================================
 // CONFIGURATION
@@ -166,7 +168,15 @@ function findFiles(dir: string, basePath: string = dir): FileInfo[] {
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
       if (CONFIG.ALLOWED_EXTENSIONS.includes(ext)) {
-        const content = fs.readFileSync(fullPath, 'utf-8');
+        let content = fs.readFileSync(fullPath, 'utf-8');
+
+        // Strip null bytes (PostgreSQL text columns reject 0x00)
+        const originalLength = content.length;
+        content = content.replace(/\x00/g, '');
+        if (content.length < originalLength) {
+          console.warn(`   ⚠️  Stripped ${originalLength - content.length} null bytes from ${entry.name}`);
+        }
+
         const checksum = crypto.createHash('sha256').update(content).digest('hex');
 
         // Extract title from filename or first heading
@@ -221,6 +231,7 @@ async function ingest(options: {
   dryRun: boolean;
   inputPath: string;
   skipEmbeddings: boolean;
+  resetStuck: boolean;
 }): Promise<IngestionResult> {
   const result: IngestionResult = {
     files_seen: 0,
@@ -237,6 +248,40 @@ async function ingest(options: {
   console.log(`   Embeddings: ${options.skipEmbeddings ? 'SKIP' : 'GENERATE'}`);
   console.log('');
 
+  // Reset stuck "processing" sources so they can be retried
+  if (options.resetStuck) {
+    const stuck = await query<{ id: string; title: string }>(
+      `SELECT id, title FROM library_sources WHERE ingestion_status = 'processing'`
+    );
+    if (stuck.length > 0) {
+      console.log(`🔄 Resetting ${stuck.length} stuck source(s):`);
+      for (const s of stuck) {
+        console.log(`   - ${s.title}`);
+        await query(
+          `UPDATE library_sources SET ingestion_status = 'pending', ingestion_error = NULL, updated_at = NOW() WHERE id = $1`,
+          [s.id]
+        );
+      }
+      console.log('');
+    } else {
+      console.log(`✅ No stuck sources\n`);
+    }
+  }
+
+  // Load skip list
+  const skipListPath = path.join(options.inputPath, '.skiplist');
+  const skipSet = new Set<string>();
+  if (fs.existsSync(skipListPath)) {
+    const lines = fs.readFileSync(skipListPath, 'utf-8').split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        skipSet.add(trimmed);
+      }
+    }
+    console.log(`   Skip list: ${skipSet.size} entries`);
+  }
+
   // Find all files
   if (!fs.existsSync(options.inputPath)) {
     console.error(`❌ Path does not exist: ${options.inputPath}`);
@@ -249,9 +294,19 @@ async function ingest(options: {
 
   console.log(`Found ${files.length} files to process\n`);
 
-  for (const file of files) {
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    const fileStart = Date.now();
     try {
-      console.log(`Processing: ${file.relativePath}`);
+      // Check skip list
+      if (skipSet.has(file.relativePath) || skipSet.has(file.name)) {
+        console.log(`[${fi + 1}/${files.length}] ${file.relativePath}`);
+        console.log(`   ⏭️  Skipped (.skiplist)`);
+        result.files_skipped++;
+        continue;
+      }
+
+      console.log(`[${fi + 1}/${files.length}] ${file.relativePath}`);
 
       // Check if already ingested
       const exists = await libraryService.sourceExists(file.checksum);
@@ -315,12 +370,14 @@ async function ingest(options: {
         chunkCount: addedChunks,
       });
 
-      console.log(`   ✅ Ingested successfully`);
+      const elapsed = ((Date.now() - fileStart) / 1000).toFixed(1);
+      console.log(`   ✅ Ingested successfully (${elapsed}s)`);
       result.files_ingested++;
       result.chunks_created += addedChunks;
 
     } catch (error: any) {
-      console.error(`   ❌ Error: ${error.message}`);
+      const elapsed = ((Date.now() - fileStart) / 1000).toFixed(1);
+      console.error(`   ❌ Error after ${elapsed}s: ${error.message}`);
       result.files_failed++;
       result.errors.push(`${file.relativePath}: ${error.message}`);
     }
@@ -338,6 +395,7 @@ async function main() {
 
   const dryRun = args.includes('--dry-run');
   const skipEmbeddings = args.includes('--skip-embeddings');
+  const resetStuck = args.includes('--reset-stuck');
 
   let inputPath = process.env.LIBRARY_INGEST_PATH || '';
 
@@ -359,6 +417,7 @@ async function main() {
     dryRun,
     inputPath,
     skipEmbeddings,
+    resetStuck,
   });
 
   // Print summary
