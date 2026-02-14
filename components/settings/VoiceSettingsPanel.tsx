@@ -29,6 +29,46 @@ const DEFAULT_OFFSETS: Offsets = {
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/** Bucket an offset (-0.30…+0.30) into low / mid / high */
+function band(v: number): 0 | 1 | 2 {
+  if (v < -0.10) return 0;
+  if (v > 0.10) return 2;
+  return 1;
+}
+
+// 2 variants per band — rotated by click counter so repeated previews feel alive
+const WARMTH: readonly string[][] = [
+  ["Let's be precise.", "Let's be clear."],
+  ["I'm with you.", "I'm here."],
+  ["I've got you.", "I'm right here with you."],
+];
+const POETRY: readonly string[][] = [
+  ["Let's name what's happening.", "Let's look at what's real."],
+  ["Let's listen for what matters.", "Let's find the shape of this."],
+  ["Let's follow the thread that's calling.", "Let's feel into what's emerging."],
+];
+const DIRECTIVE: readonly string[][] = [
+  ["What do you notice first?", "What's present for you?"],
+  ["Choose one place to begin.", "Pick what feels right."],
+  ["Do this now — pick one step.", "Start here — one move."],
+];
+const ENERGY: readonly string[][] = [
+  ["Slow is okay.", "Take your time."],
+  ["Steady.", "One step at a time."],
+  ["Let's move.", "Let's go."],
+];
+
+function buildPreviewText(o: Offsets, turn: number): string {
+  const pick = (arr: readonly string[][], dim: number) =>
+    arr[band(dim)][turn % arr[band(dim)].length];
+  return [
+    pick(WARMTH, o.warmth),
+    pick(POETRY, o.poetry),
+    pick(DIRECTIVE, o.directiveness),
+    pick(ENERGY, o.energy),
+  ].join(' ');
+}
+
 export default function VoiceSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,6 +80,7 @@ export default function VoiceSettingsPanel() {
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const previewTurn = useRef(0);
 
   useEffect(() => {
     (async () => {
@@ -119,8 +160,7 @@ export default function VoiceSettingsPanel() {
     setPreviewing(true);
     setPreviewError(null);
     try {
-      const sampleText =
-        "Here is a quick voice preview. I will keep a steady pace, warmth, and clarity so you can feel what changes.";
+      const sampleText = buildPreviewText(offset, previewTurn.current++);
 
       // Map pace offset to speed within the same clamp range as the conductor
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
