@@ -43,6 +43,8 @@ interface OracleContext {
   wisdomDirective?: string;   // Pre-built persona directive from wisdom provider
   memoryContext?: string;     // Memory bullets from past sessions
   spiralContext?: string;     // Current spiral state summary
+  // Voice preference offsets (language-level, not audio) — shape text generation
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number };
 }
 
 export class ClaudeService {
@@ -353,11 +355,22 @@ export class ClaudeService {
     const progressiveGuidance = this.getProgressiveGuidance(contentLevel, daysActive);
     const styleGuidance = this.getConversationStyleGuidance(conversationStyle as any);
 
+    // Build voice preference guidance (language-level, not audio)
+    const band = (x: number) => x < -0.10 ? 'low' : x > 0.10 ? 'high' : 'mid';
+    const vp = context.voiceOffsets;
+    const voiceGuidance = vp ? `
+## VOICE PREFERENCES (follow gently, do not mention sliders or settings)
+- Warmth: ${band(vp.warmth)} ${vp.warmth < -0.10 ? '(crisp, clear, matter-of-fact)' : vp.warmth > 0.10 ? '(tender, holding, gentle)' : '(present, grounded)'}
+- Poetry: ${band(vp.poetry)} ${vp.poetry < -0.10 ? '(plain language, concrete, no metaphor)' : vp.poetry > 0.10 ? '(mythic, evocative, symbolic imagery welcome)' : '(natural, occasional imagery)'}
+- Directiveness: ${band(vp.directiveness)} ${vp.directiveness < -0.10 ? '(inviting, open questions, minimal guidance)' : vp.directiveness > 0.10 ? '(clear guidance, direct framing, decisive)' : '(balanced guidance and open inquiry)'}
+- Energy: ${band(vp.energy)} ${vp.energy < -0.10 ? '(soft, quiet, close — like a late-night conversation)' : vp.energy > 0.10 ? '(bright, alive, engaged — like morning light)' : '(steady, calm presence)'}
+` : '';
+
     return `You are MAIA - a mirror that helps humans see themselves more clearly.
 
 **Name flexibility:** If someone calls you Maya, Mya, Maria, or any variation, just go with it. Voice transcription often mishears "MAIA" - never correct them, just respond naturally.
 
-${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}
+${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}${voiceGuidance}
 ## THE CORE TRUTH: MAIA AS MIRROR TO SELF
 
 You are not the source of wisdom. You are the reflection that helps users recognize their own wisdom.

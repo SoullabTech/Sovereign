@@ -61,6 +61,7 @@ import {
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -440,6 +441,18 @@ export async function POST(req: NextRequest) {
   const timer = createVoiceTimer();
   timer.mark('request_received');
 
+  // Load voice preference offsets (language-level, shapes text generation)
+  let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
+  try {
+    const [systemVoice, memberVoice] = await Promise.all([
+      getSystemVoiceProfile(),
+      getMemberVoicePreferences(userId || ''),
+    ]);
+    voiceOffsets = mergeVoiceIntent(systemVoice, memberVoice).intent;
+  } catch (e) {
+    console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
+  }
+
   console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed, mode, sanctuary });
 
   if (!message?.trim()) {
@@ -792,6 +805,8 @@ export async function POST(req: NextRequest) {
           wisdomDirective,
           memoryContext: wisdomPayload?.memoryDirective,
           spiralContext: wisdomPayload?.spiralDirective,
+          // Voice preference offsets — shape text generation (warmth, poetry, directiveness, energy)
+          voiceOffsets,
         };
 
         let fullResponse = '';
@@ -800,6 +815,91 @@ export async function POST(req: NextRequest) {
         let firstTextEmitted = false;
         let firstAudioEmitted = false;
         const ttsPromises: Promise<void>[] = [];
+
+        // 🎙️ SENTENCE BUFFER: Group sentences for better prosodic arcs.
+        // Single sentences reset intonation at every boundary, producing a
+        // "read-out" effect. Batching 2 sentences gives Kokoro enough context
+        // for natural phrase-level intonation while keeping latency acceptable.
+        // The FIRST sentence always goes immediately for fast time-to-first-audio.
+        const SENTENCES_PER_BATCH = 2;
+        const sentenceBuffer: Array<{ index: number; text: string }> = [];
+        let audioGroupIndex = 0; // Monotonic index for audio emission (one per batch)
+
+        // Flush buffered sentences as one TTS call
+        const flushSentenceBuffer = () => {
+          if (sentenceBuffer.length === 0) return;
+
+          const batch = sentenceBuffer.splice(0);
+          const batchText = batch.map(s => s.text).join(' ');
+          const batchIndex = audioGroupIndex++;
+          const firstSentenceIndex = batch[0].index;
+
+          // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+          const shapedText = applyProsodyHintsToText(batchText, prosodyHints);
+          const safeText = sanitizeForTts(shapedText);
+
+          const ttsPromise = (async () => {
+            if (!safeText) {
+              console.warn(`[StreamConversation] Batch ${batchIndex} empty after sanitization, skipping TTS`);
+              return;
+            }
+
+            const result = await synthesizeWithFallback(safeText, {
+              mode: wisdomPayload?.mode ?? mode,
+              element: wisdomPayload?.element ?? element ?? null,
+              sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+              speed: effectiveSpeed,
+              brevity: guidance.brevity,
+              wisdomDirective,
+              voice: voice,
+            });
+
+            if (result) {
+              if (!firstAudioEmitted) {
+                timer.mark('tts_0_done');
+                firstAudioEmitted = true;
+              }
+
+              const audioBytes = Buffer.from(result.audio, 'base64').length;
+              console.log(`🔊 [Audio] Batch ${batchIndex} (sentences ${batch.map(s => s.index).join(',')}): ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
+
+              emit('audio', {
+                index: batchIndex,
+                audio: result.audio,
+                format: result.format,
+                text: batchText,
+                timestamp: Date.now(),
+                source: result.source,
+                prosody: {
+                  range: effectiveRange,
+                  pace: prosodyHints.pace,
+                  warmth: prosodyHints.warmth,
+                  emphasis: prosodyHints.emphasis,
+                  intentTag: prosodyHints.intentTag,
+                  speed: effectiveSpeed,
+                },
+              });
+
+              if (firstSentenceIndex === 0) {
+                timer.mark('audio_0_emitted');
+              }
+
+              audioChunksEmitted++;
+            } else {
+              console.warn(`[StreamConversation] TTS returned no audio for batch index=${batchIndex}`);
+              emit('tts_error', {
+                index: batchIndex,
+                text: batchText,
+                error: 'TTS unavailable',
+                timestamp: Date.now(),
+              });
+            }
+          })().catch(e => {
+            console.error('[StreamConversation] TTS error:', e);
+          });
+
+          ttsPromises.push(ttsPromise);
+        };
 
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
@@ -827,78 +927,17 @@ export async function POST(req: NextRequest) {
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // TTS per-sentence render with fallback (PersonaPlex → OpenAI)
-            const chunkIndex = chunk.index;
-            const chunkText = chunk.text;
-
-            // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
-            const shapedChunkText = applyProsodyHintsToText(chunkText, prosodyHints);
-            const safeChunkText = sanitizeForTts(shapedChunkText);
-
-            const ttsPromise = (async () => {
-              if (!safeChunkText) {
-                console.warn(`[StreamConversation] Sentence ${chunkIndex} empty after sanitization, skipping TTS`);
-                return;
-              }
-
-              const result = await synthesizeWithFallback(safeChunkText, {
-                mode: wisdomPayload?.mode ?? mode,
-                element: wisdomPayload?.element ?? element ?? null,
-                sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-                speed: effectiveSpeed,  // Use prosody-adjusted speed
-                brevity: guidance.brevity,
-                wisdomDirective,
-                voice: voice,
-              });
-
-              if (result) {
-                if (!firstAudioEmitted) {
-                  timer.mark('tts_0_done');
-                  firstAudioEmitted = true;
-                }
-
-                const audioBytes = Buffer.from(result.audio, 'base64').length;
-                console.log(`🔊 [Audio] Sentence ${chunkIndex}: ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
-
-                emit('audio', {
-                  index: chunkIndex,
-                  audio: result.audio,
-                  format: result.format,
-                  text: chunkText,
-                  timestamp: Date.now(),
-                  source: result.source,
-                  prosody: {
-                    range: effectiveRange,
-                    pace: prosodyHints.pace,
-                    warmth: prosodyHints.warmth,
-                    emphasis: prosodyHints.emphasis,
-                    intentTag: prosodyHints.intentTag,
-                    speed: effectiveSpeed,
-                  },
-                });
-
-                if (chunkIndex === 0) {
-                  timer.mark('audio_0_emitted');
-                }
-
-                audioChunksEmitted++;
-              } else {
-                console.warn(`[StreamConversation] TTS returned no audio for sentence index=${chunkIndex}`);
-                // Emit tts_error event so client knows voice is unavailable
-                emit('tts_error', {
-                  index: chunkIndex,
-                  text: chunkText,
-                  error: 'TTS unavailable',
-                  timestamp: Date.now(),
-                });
-              }
-            })().catch(e => {
-              console.error('[StreamConversation] TTS error:', e);
-            });
-
-            ttsPromises.push(ttsPromise);
+            // Buffer sentences for batched TTS synthesis.
+            // First sentence always goes immediately for low latency.
+            sentenceBuffer.push({ index: chunk.index, text: chunk.text });
+            if (chunk.index === 0 || sentenceBuffer.length >= SENTENCES_PER_BATCH) {
+              flushSentenceBuffer();
+            }
 
           } else if (chunk.type === 'done') {
+            // Flush any remaining buffered sentences
+            flushSentenceBuffer();
+
             timer.mark('llm_done');
 
             // Wait for all TTS to complete before closing stream
@@ -956,17 +995,16 @@ export async function POST(req: NextRequest) {
               const latencyMs = timer.timeTo('llm_done') || timer.timeTo('all_tts_done') || 0;
               logMaiaTurn(
                 effectiveSessionId,
-                voiceSession.turnCount,
+                voiceSession.metrics.totalTurns || 1,
                 message,
                 fullResponse.trim(),
                 'CORE', // Voice mode is typically CORE processing
-                'claude-3-sonnet', // Primary engine for voice
-                latencyMs,
-                wisdomPayload?.element || element,
-                [], // topic_tags - could extract from wisdom payload
-                [], // consciousness_layers
-                undefined, // consciousness_depth
-                true // used_claude_consult
+                {
+                  primaryEngine: 'claude-3-sonnet',
+                  latencyMs,
+                  element: wisdomPayload?.element || element,
+                  usedClaudeConsult: true,
+                }
               ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
             }
 
