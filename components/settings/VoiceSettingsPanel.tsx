@@ -138,8 +138,11 @@ export default function VoiceSettingsPanel() {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setPreviewError(data?.error ?? `Preview failed (${res.status})`);
+        if (res.status === 503) {
+          setPreviewError('Voice engine is offline. Start the Kokoro TTS service to preview.');
+        } else {
+          setPreviewError('Preview failed. Try again later.');
+        }
         return;
       }
 
@@ -152,12 +155,21 @@ export default function VoiceSettingsPanel() {
 
       // Cache-bust so iOS doesn't serve stale audio
       audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
-      await audioRef.current.play().catch(() => {
-        setPreviewError('Audio couldn\u2019t play. Try unmute or tap again.');
-      });
-    } catch (e) {
+      try {
+        await audioRef.current.play();
+      } catch (playErr: any) {
+        // iOS WKWebView rejects play() if not user-gesture-initiated or muted
+        console.warn('[voice-settings] play() rejected:', playErr);
+        setPreviewError('Audio blocked. Tap Preview again or check your mute switch.');
+        return;
+      }
+    } catch (e: any) {
       console.warn('[voice-settings] Preview failed:', e);
-      setPreviewError('Preview failed \u2014 network error');
+      if (e?.message?.includes('401') || e?.message?.includes('Unauthorized')) {
+        setPreviewError('Session expired. Sign in again to preview.');
+      } else {
+        setPreviewError('Preview failed unexpectedly.');
+      }
     } finally {
       setPreviewing(false);
     }
@@ -168,11 +180,11 @@ export default function VoiceSettingsPanel() {
   }
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm text-stone-400">Voice</div>
         <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs text-stone-500">
+        <div className="mt-2 text-xs text-stone-400">
           Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
         </div>
       </div>
@@ -247,9 +259,7 @@ export default function VoiceSettingsPanel() {
       </div>
 
       {previewError && (
-        <div className="rounded-lg border border-stone-700/60 bg-stone-900/40 px-3 py-2 text-sm text-stone-300">
-          {previewError}
-        </div>
+        <p className="text-xs text-amber-400/80 px-1">{previewError}</p>
       )}
 
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}

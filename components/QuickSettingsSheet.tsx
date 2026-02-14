@@ -18,7 +18,6 @@ interface QuickSettingsSheetProps {
 interface MaiaSettings {
   sanctuary: boolean; // Session-level memory exclusion
   voice: {
-    openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
     prosodyRange: 0 | 1 | 2 | 3 | 4; // Range of Effect: scales prosody (0-4)
   };
@@ -38,14 +37,8 @@ interface MaiaSettings {
   };
 }
 
-const VOICE_OPTIONS = [
-  { id: 'shimmer', name: 'Shimmer', emoji: '💧', gender: 'Female', quality: 'Warm & Empathetic' },
-  { id: 'nova', name: 'Nova', emoji: '⭐', gender: 'Female', quality: 'Energetic & Bright' },
-  { id: 'alloy', name: 'Alloy', emoji: '🌍', gender: 'Neutral', quality: 'Balanced & Clear' },
-  { id: 'echo', name: 'Echo', emoji: '🎙️', gender: 'Male', quality: 'Professional & Clear' },
-  { id: 'fable', name: 'Fable', emoji: '📖', gender: 'Male', quality: 'Expressive & British' },
-  { id: 'onyx', name: 'Onyx', emoji: '🗣️', gender: 'Male', quality: 'Deep & Authoritative' },
-];
+// Voice model selection removed — MAIA's voice adapts to elemental state.
+// Fine-tuning lives in Settings → Voice (VoiceSettingsPanel).
 
 const ARCHETYPE_OPTIONS = [
   { id: 'TRUSTED_FRIEND' as ArchetypeId, name: 'Friend', emoji: '☕' },
@@ -59,7 +52,6 @@ const ARCHETYPE_OPTIONS = [
 const DEFAULT_SETTINGS: MaiaSettings = {
   sanctuary: false, // Default: memory enabled (continuity mode)
   voice: {
-    openaiVoice: 'shimmer',
     speed: 0.95,
     prosodyRange: 1, // Subtle by default
   },
@@ -386,40 +378,13 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
                 >
-                  <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+                  <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
                     <Mic size={16} />
-                    Voice Model
+                    Voice
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {VOICE_OPTIONS.map((voice) => (
-                      <motion.button
-                        key={voice.id}
-                        onClick={() => updateSetting('voice.openaiVoice', voice.id)}
-                        className={`py-3 px-3 rounded-xl border transition-all min-h-[72px] ${
-                          settings.voice.openaiVoice === voice.id
-                            ? 'border-amber-500/50 bg-amber-500/15 text-amber-400'
-                            : 'border-white/10 bg-black/20 text-white/60'
-                        }`}
-                        whileTap={{ scale: 0.95 }}
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                      >
-                        <motion.div
-                          className="text-xl mb-1"
-                          animate={settings.voice.openaiVoice === voice.id ? {
-                            scale: [1, 1.2, 1],
-                            rotate: [0, 10, -10, 0]
-                          } : {}}
-                          transition={{ duration: 0.5 }}
-                        >
-                          {voice.emoji}
-                        </motion.div>
-                        <div className="text-xs font-medium">{voice.name}</div>
-                        <div className="text-[10px] opacity-60">{voice.gender}</div>
-                        <div className="text-[9px] opacity-50 mt-0.5">{voice.quality}</div>
-                      </motion.button>
-                    ))}
-                  </div>
+                  <p className="text-xs text-stone-400 mb-2">
+                    MAIA&apos;s voice adapts to her elemental state. Fine-tune pace, warmth, and energy in Voice settings.
+                  </p>
                 </motion.div>
 
                 <motion.div

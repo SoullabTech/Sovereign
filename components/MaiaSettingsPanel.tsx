@@ -11,17 +11,11 @@ import { useLanguage } from '@/lib/services/languageService';
 import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
-import { getAccountSettings, saveAccountSettings } from '@/lib/settings/accountSettings';
+// Voice settings now managed by VoiceSettingsPanel → /api/settings/voice (no localStorage)
 
 interface MaiaSettings {
-  // Voice Settings
-  voice: {
-    provider: 'openai' | 'elevenlabs';
-    openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
-    speed: number;
-    pitch: number; // For future use
-    stability: number;
-  };
+  // Voice is managed by VoiceSettingsPanel → /api/settings/voice
+  // No voice fields here. One source of truth.
 
   // Memory Settings
   memory: {
@@ -55,13 +49,6 @@ interface MaiaSettings {
 }
 
 const DEFAULT_SETTINGS: MaiaSettings = {
-  voice: {
-    provider: 'openai',
-    openaiVoice: 'alloy',
-    speed: 0.95,
-    pitch: 1.0,
-    stability: 0.8
-  },
   memory: {
     enabled: true,
     depth: 'moderate',
@@ -133,18 +120,8 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
       };
     }
 
-    // Also sync voice settings from AccountSettings (source of truth for TTS)
-    const accountSettings = getAccountSettings();
-    console.log('🔊 [MaiaSettings] Loading voice from AccountSettings:', accountSettings.voice);
-    loadedSettings = {
-      ...loadedSettings,
-      voice: {
-        ...loadedSettings.voice,
-        openaiVoice: accountSettings.voice.openaiVoice,
-        speed: accountSettings.voice.speed,
-      }
-    };
-    console.log('🔊 [MaiaSettings] Final loaded voice:', loadedSettings.voice.openaiVoice);
+    // Voice settings are managed by VoiceSettingsPanel → /api/settings/voice
+    // No localStorage sync needed here — that path is dead.
 
     setSettings(loadedSettings);
     setOriginalSettings(loadedSettings);
@@ -156,14 +133,8 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
       localStorage.setItem('maia_settings', JSON.stringify(settings));
       setOriginalSettings(settings);
 
-      // Also save voice selection to the key OracleConversation uses
-      localStorage.setItem('selected_voice', settings.voice.openaiVoice);
-
-      // Sync voice settings to AccountSettings (used by OracleConversation TTS)
-      const accountSettings = getAccountSettings();
-      accountSettings.voice.openaiVoice = settings.voice.openaiVoice as any;
-      accountSettings.voice.speed = settings.voice.speed;
-      saveAccountSettings(accountSettings);
+      // Voice settings are managed by VoiceSettingsPanel → /api/settings/voice
+      // No localStorage sync for voice — that path is dead.
 
       // Trigger a custom event for components to react to settings changes
       window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
