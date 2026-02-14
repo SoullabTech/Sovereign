@@ -24,7 +24,9 @@
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
-import { resolveOpenAIVoice } from '@/lib/voice/voiceMap';
+import * as ttsRouter from '@/lib/tts/ttsRouter';
+import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
+import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
 import type { Element } from '@/lib/types/voiceIntent';
 import {
   processThreshold,
@@ -66,8 +68,12 @@ import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
 
 /**
- * TTS with fallback: Try PersonaPlex first, fall back to OpenAI TTS on error.
- * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'openai' }
+ * TTS with sovereign provider routing:
+ *   1. PersonaPlex (conversational AI voice)
+ *   2. Kokoro (local sovereign TTS) via ttsRouter
+ *   3. OpenAI TTS (cloud fallback, consent-gated)
+ *
+ * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'kokoro' | 'openai' }
  */
 async function synthesizeWithFallback(
   text: string,
@@ -96,7 +102,7 @@ async function synthesizeWithFallback(
       const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
       if (pcmBytes < 100) {
         console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), trying fallback`);
-        break; // Fall through to OpenAI
+        break; // Fall through to Kokoro/OpenAI
       }
       const wavB64 = pcmF32ToWavBase64(chunk.audioB64, 24000, 1);
       console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
@@ -106,21 +112,41 @@ async function synthesizeWithFallback(
     console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
   }
 
-  // Fallback to OpenAI TTS
+  // ── Sovereign TTS routing: Kokoro first, OpenAI fallback ──
+  const elementKey = (options.element ?? '').toLowerCase() as Element;
+
+  // Try Kokoro via ttsRouter (same path as preview endpoint)
+  try {
+    const result = await ttsRouter.synthesize({
+      text,
+      voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+      format: 'mp3',
+      speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+    });
+    const audio = result.audioBuffer.toString('base64');
+    console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} voice=${result.reason} ${result.audioBuffer.length}B MP3`);
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (err) {
+    if (err instanceof TTSFallbackToOpenAI) {
+      console.log(`[TTS] provider=openai fallback=true reason=${err.reason}`);
+    } else {
+      console.warn(`[TTS] ttsRouter error: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+
+  // OpenAI fallback (cloud) — only if enabled
   if (!USE_OPENAI_FALLBACK) {
     console.log('[TTS] OpenAI fallback disabled, returning null');
     return null;
   }
 
   try {
-    // Voice resolution: element map → explicit override → default
-    // 'maya' is a legacy client value — resolve it properly
-    const elementKey = (options.element ?? '').toLowerCase() as Element;
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const openaiVoice = (options.voice && options.voice !== 'maya')
       ? options.voice
       : elementVoice ?? 'nova';
-    console.log(`[TTS] OpenAI: element=${elementKey || 'none'} → voice=${openaiVoice}`);
+    console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} voice=${openaiVoice}`);
     const response = await synthesizeSpeech({
       text,
       voice: openaiVoice,
@@ -129,7 +155,6 @@ async function synthesizeWithFallback(
     });
     const buffer = Buffer.from(await response.arrayBuffer());
     const audio = buffer.toString('base64');
-    console.log(`🔊 [TTS] OpenAI OK: ${buffer.length}B MP3`);
     return { audio, format: 'mp3', source: 'openai' };
   } catch (e) {
     console.error(`[TTS] OpenAI fallback also failed: ${e instanceof Error ? e.message : e}`);
@@ -341,8 +366,9 @@ interface StreamRequest {
 }
 
 /**
- * Synthesize a single sentence to audio using OpenAI TTS
- * Returns base64 audio data or null on failure
+ * Synthesize a single sentence to audio.
+ * Routes through ttsRouter (Kokoro first, OpenAI fallback).
+ * Returns base64 audio data or null on failure.
  */
 async function synthesizeSentence(
   text: string,
@@ -350,9 +376,29 @@ async function synthesizeSentence(
   speed: number = 1.0,
   element?: string | null
 ): Promise<{ audio: string; format: string } | null> {
+  const elementKey = (element ?? '').toLowerCase() as Element;
+
+  // Try Kokoro via ttsRouter
   try {
-    // Voice resolution: element map → explicit override → default
-    const elementKey = (element ?? '').toLowerCase() as Element;
+    const result = await ttsRouter.synthesize({
+      text,
+      voice: voice && voice !== 'maya' ? voice : undefined,
+      format: 'mp3',
+      speed,
+      voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
+    });
+    const audio = result.audioBuffer.toString('base64');
+    return { audio, format: 'mp3' };
+  } catch (err) {
+    if (err instanceof TTSFallbackToOpenAI) {
+      // Expected — fall through to OpenAI
+    } else {
+      console.warn(`[StreamConversation] ttsRouter error: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+
+  // OpenAI fallback
+  try {
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const openaiVoice = (voice && voice !== 'maya')
       ? voice
@@ -362,14 +408,14 @@ async function synthesizeSentence(
       text,
       voice: openaiVoice,
       format: 'mp3',
-      speed: speed
+      speed,
     });
 
     const buffer = Buffer.from(await response.arrayBuffer());
     const audio = buffer.toString('base64');
     return { audio, format: 'mp3' };
   } catch (e) {
-    console.error('[StreamConversation] OpenAI TTS failed:', e);
+    console.error('[StreamConversation] OpenAI TTS fallback failed:', e);
     return null;
   }
 }
