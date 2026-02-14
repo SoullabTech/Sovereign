@@ -29,6 +29,57 @@ const DEFAULT_OFFSETS: Offsets = {
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/**
+ * Build preview text that varies with slider positions.
+ * The member should hear a noticeably different sentence when they change settings.
+ */
+function buildPreviewText(o: Offsets): string {
+  // Pace
+  const pace =
+    o.pace < -0.1 ? 'I can slow down and let each word land.'
+    : o.pace > 0.1 ? 'I can pick up the pace when the moment calls for it.'
+    : 'I will keep a steady, natural pace.';
+
+  // Warmth
+  const warmth =
+    o.warmth < -0.1 ? 'My tone stays clear and measured.'
+    : o.warmth > 0.1 ? 'There is warmth in how I hold this space with you.'
+    : 'My warmth is balanced and present.';
+
+  // Energy
+  const energy =
+    o.energy < -0.1 ? 'The energy is soft and close.'
+    : o.energy > 0.1 ? 'There is brightness in the way I speak.'
+    : 'The energy feels grounded.';
+
+  return `${pace} ${warmth} ${energy}`;
+}
+
+/**
+ * Map warmth + energy offsets to a Kokoro voice for preview.
+ * This gives audible variation when sliders change — not just speed.
+ *
+ * Kokoro voices available:
+ *   af_heart  — warm, grounded (default)
+ *   af_bella  — clear, bright
+ *   af_sarah  — neutral, cool
+ */
+function resolvePreviewVoice(base: string, o: Offsets): string {
+  // If member has a specific override that isn't the default 'maia', respect it
+  if (base !== 'maia' && base !== 'af_heart' && base !== '') {
+    return base;
+  }
+
+  // Warmth high + energy low → af_heart (warm grounded)
+  // Warmth low → af_sarah (cool neutral)
+  // Energy high → af_bella (clear bright)
+  if (o.warmth > 0.1) return 'af_heart';
+  if (o.warmth < -0.1) return 'af_sarah';
+  if (o.energy > 0.1) return 'af_bella';
+  if (o.energy < -0.1) return 'af_heart';
+  return 'af_heart';
+}
+
 export default function VoiceSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -119,11 +170,15 @@ export default function VoiceSettingsPanel() {
     setPreviewing(true);
     setPreviewError(null);
     try {
-      const sampleText =
-        "Here is a quick voice preview. I will keep a steady pace, warmth, and clarity so you can feel what changes.";
+      // Build sample text that reflects the current slider positions
+      // so the member hears an audibly different preview when they adjust
+      const sampleText = buildPreviewText(offset);
 
       // Map pace offset to speed within the same clamp range as the conductor
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
+
+      // Map warmth/energy to a Kokoro voice so preview reflects offset direction
+      const previewVoice = resolvePreviewVoice(effectiveVoiceId, offset);
 
       // POST to preview endpoint → get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
@@ -132,7 +187,7 @@ export default function VoiceSettingsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voiceId: effectiveVoiceId === 'maia' ? 'af_heart' : effectiveVoiceId,
+          voiceId: previewVoice,
           speed,
         }),
       });
