@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   RotateCcw,
   ArrowRight,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -33,6 +34,8 @@ import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 import MentorPanel from '@/components/studio/MentorPanel';
 import DecisionChain from '@/components/studio/DecisionChain';
 import ExperienceTimeline from '@/components/studio/ExperienceTimeline';
+import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
+import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -493,6 +496,7 @@ export default function DecisionDetailPage() {
   const [questions, setQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
   const councilRef = useRef<HTMLDivElement>(null);
+  const circleOffer = useOfferToCircle();
 
   useEffect(() => {
     loadDecision();
@@ -727,6 +731,24 @@ export default function DecisionDetailPage() {
           </div>
         ) : null}
 
+        {/* Offer to Circle */}
+        {council && (
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => circleOffer.offerToCircle(
+                'decision',
+                decisionId,
+                decision.title,
+                (council.recommendation || '').slice(0, 200)
+              )}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-amber-500/20 text-amber-400/80 hover:bg-amber-500/10 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Offer to Circle
+            </button>
+          </div>
+        )}
+
         {/* MAIA Mentor Panel (after council result) */}
         {council && (
           <div className="mt-6">
@@ -892,6 +914,15 @@ export default function DecisionDetailPage() {
             {saving ? 'Saving...' : saved ? 'Saved' : 'Save Notes & Questions'}
           </button>
         </div>
+
+        <ShareToCircleModal
+          open={circleOffer.open}
+          onClose={() => circleOffer.setOpen(false)}
+          artifactType={circleOffer.artifact.type}
+          artifactRef={circleOffer.artifact.ref}
+          defaultTitle={circleOffer.artifact.title}
+          defaultSummary={circleOffer.artifact.summary}
+        />
       </div>
     </div>
   );

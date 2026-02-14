@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -62,6 +62,8 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
+import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 
 /**
  * Detect Safari PWA environment for PWA-specific voice handling
@@ -523,6 +525,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setTimeout(() => stamp.remove(), 10000); // Remove after 10 seconds
     }
   }, []);
+
+  // Circle sharing
+  const circleOffer = useOfferToCircle();
 
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
@@ -7692,11 +7697,28 @@ I'm not sure what I'm feeling yet.`;
                             />
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-maia-spice-400
+                        <div className="flex items-center gap-2 text-xs
                                       opacity-0 group-hover:opacity-100 group-active:opacity-100
                                       touch-manipulation transition-opacity">
-                          <Copy className="w-3 h-3 text-maia-spice-400" />
-                          <span className="text-maia-spice-400">Copy</span>
+                          {message.role === 'oracle' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const text = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
+                                const title = text.split(/[.!?\n]/)[0]?.slice(0, 120) || 'MAIA reflection';
+                                const summary = text.slice(0, 300);
+                                circleOffer.offerToCircle('maia_reflection', message.turnId || message.id || `msg-${index}`, title, summary);
+                              }}
+                              className="flex items-center gap-1 text-amber-400/60 hover:text-amber-400 transition-colors"
+                            >
+                              <Users className="w-3 h-3" />
+                              <span>Offer</span>
+                            </button>
+                          )}
+                          <div className="flex items-center gap-1 text-maia-spice-400">
+                            <Copy className="w-3 h-3" />
+                            <span>Copy</span>
+                          </div>
                         </div>
                       </div>
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
@@ -8818,6 +8840,14 @@ I'm not sure what I'm feeling yet.`;
         )}
       </AnimatePresence>
 
+      <ShareToCircleModal
+        open={circleOffer.open}
+        onClose={() => circleOffer.setOpen(false)}
+        artifactType={circleOffer.artifact.type}
+        artifactRef={circleOffer.artifact.ref}
+        defaultTitle={circleOffer.artifact.title}
+        defaultSummary={circleOffer.artifact.summary}
+      />
     </div>
   );
 };

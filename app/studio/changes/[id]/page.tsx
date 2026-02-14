@@ -26,6 +26,7 @@ import {
   Merge,
   Zap,
   Sun,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -35,6 +36,8 @@ import HexagramDisplay from '@/components/studio/changes/HexagramDisplay';
 import HexagramCaster from '@/components/studio/changes/HexagramCaster';
 import ChangeMentorPanelComponent from '@/components/studio/changes/ChangeMentorPanel';
 import ChangeExperienceTimelineComponent from '@/components/studio/changes/ChangeExperienceTimeline';
+import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
+import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 
 const CHANGE_TYPE_ICONS: Record<string, typeof Wind> = {
   dissolution: Droplets,
@@ -467,6 +470,7 @@ export default function ChangeDetailPage() {
   const [newQuestion, setNewQuestion] = useState('');
   const [showCaster, setShowCaster] = useState(false);
   const councilRef = useRef<HTMLDivElement>(null);
+  const circleOffer = useOfferToCircle();
 
   useEffect(() => {
     loadChange();
@@ -748,6 +752,26 @@ export default function ChangeDetailPage() {
           </div>
         ) : null}
 
+        {/* Offer to Circle */}
+        {council && (
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => {
+                const title = change.hexagramName
+                  ? `${change.title} — ${change.hexagramName}`
+                  : change.title;
+                const summary = change.hexagramInterpretation?.guidance
+                  || (council.recommendation || '').slice(0, 200);
+                circleOffer.offerToCircle('change', changeId, title, summary);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-amber-500/20 text-amber-400/80 hover:bg-amber-500/10 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Offer to Circle
+            </button>
+          </div>
+        )}
+
         {/* Mentor Panel */}
         {council && (
           <div className="mt-6">
@@ -920,6 +944,15 @@ export default function ChangeDetailPage() {
             {saving ? 'Saving...' : saved ? 'Saved' : 'Save Notes & Questions'}
           </button>
         </div>
+
+        <ShareToCircleModal
+          open={circleOffer.open}
+          onClose={() => circleOffer.setOpen(false)}
+          artifactType={circleOffer.artifact.type}
+          artifactRef={circleOffer.artifact.ref}
+          defaultTitle={circleOffer.artifact.title}
+          defaultSummary={circleOffer.artifact.summary}
+        />
       </div>
     </div>
   );
