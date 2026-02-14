@@ -1,0 +1,110 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Staging Stack (Branch Testing)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Parallel staging instance for testing branches without touching production.
+# Shares postgres + kokoro with production (read-only testing).
+# Gets its own MAIA container on port 3002, Caddy-routed to staging.soullab.life.
+#
+# Usage:
+#   # Build and run staging (from any branch):
+#   docker compose -f docker-compose.staging.yml up -d --build
+#
+#   # Test locally (after adding /etc/hosts entry):
+#   curl http://staging.soullab.life:8090/api/consciousness/health
+#
+#   # Tear down staging (production untouched):
+#   docker compose -f docker-compose.staging.yml down
+#
+# IMPORTANT: Production containers must be running first (postgres, kokoro, caddy).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # MAIA Staging - Branch under test
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Same Dockerfile as production, different container name + port.
+  # Shares production database (be careful with migrations on staging branches).
+  maia-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-staging}
+    image: maia-sovereign:staging
+    container_name: maia-staging
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    env_file:
+      - .env.staging
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: "1"
+      MAIA_STRICT_503: "1"
+      MAIA_SELFLET_WRITE_ENABLED: "0"
+      MAIA_SELFLET_ALLOW_ANON: "0"
+      AIN_SHAPE_TELEMETRY: "0"
+      AIN_KNOWLEDGE_GATE_ENABLED: "1"
+      WHISPER_LOCAL_URL: "http://maia-whisper:8000"
+      WEBAUTHN_RP_ID: "soullab.life"
+      WEBAUTHN_ORIGIN: "http://staging.soullab.life:8090"
+      MAIA_EMBEDDINGS_MODE: queue
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "deepseek-r1:8b"
+      VOICE_NOTES_DIR: "/app/storage/voice-notes"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    command: ["./scripts/entrypoint.sh"]
+
+    volumes:
+      - ./public/audiobook:/app/public/audiobook:ro
+      - ./Community-Commons:/app/Community-Commons:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Staging Caddy - Lightweight reverse proxy on port 8090
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Separate from production Caddy. HTTP only (no Let's Encrypt needed).
+  # Routes staging.soullab.life:8090 → maia-staging:3000
+  caddy-staging:
+    image: caddy:2-alpine
+    container_name: maia-caddy-staging
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    ports:
+      - "8090:8090"
+    command: caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+    depends_on:
+      maia-staging:
+        condition: service_healthy
+    networks:
+      - maia-network
+
+networks:
+  maia-network:
+    external: true
+    name: maia-sovereign_maia-network

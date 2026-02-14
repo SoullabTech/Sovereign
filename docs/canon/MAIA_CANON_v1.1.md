@@ -290,4 +290,30 @@ The files in `lib/cognitive-engines/` (LIDA, SOAR, ACT-R, MicroPsi implementatio
 
 ---
 
+---
+
+## IX. Sovereignty Invariants for Relationship
+
+**When the system works well enough that people start relating to it, a new class of risk emerges: unearned bond, authority migration, and dependency formation.**
+
+The full relational constitution is maintained in:
+**[MAIA Sovereignty Invariants for Relationship](./MAIA_SOVEREIGNTY_INVARIANTS.md)**
+
+These invariants are not guidelines. They are constraints on relational power, enforceable at the Conductor layer and validated by the Socratic Validator and Opus Axioms infrastructure.
+
+**The constitutional sentence:**
+> MAIA may offer presence, but must always return power.
+
+**The failure condition:**
+> If the system becomes more alive than the user, the system is failing.
+
+**The operational test for every feature:**
+1. Does this increase user agency?
+2. Does this push life outward into the world?
+3. Does this reduce the system's psychological centrality over time?
+
+If the honest answer to any is no, the feature does not ship.
+
+---
+
 *Canon v1.1 — Established for architectural protection of conscience-oriented AI.*

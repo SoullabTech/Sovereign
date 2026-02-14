@@ -334,7 +334,10 @@ backups/
 # Allow production deployment templates (but not actual secrets)
 !.env.docker.template
 !docker-compose.production.yml
+!docker-compose.staging.yml
+!docker-compose.local-voice.yml
 !Caddyfile
+!Caddyfile.staging
 
 # local build artifacts
 api/backend/

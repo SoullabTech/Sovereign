@@ -38,8 +38,8 @@ COPY . .
 # Prisma client + engines for THIS build platform (no arch pinning)
 RUN npx prisma generate
 
-# Next build (standalone output)
-RUN npm run build
+# Next build (standalone output) — increase heap to avoid OOM on large codebase
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # --- runner: minimal runtime with standalone server ---
 FROM node:20-bookworm-slim AS runner

@@ -15,7 +15,7 @@ export type MaiaVoiceFormat = "mp3" | "opus";
 
 export async function synthesizeMaiaVoice(
   text: string,
-  options?: { format?: MaiaVoiceFormat }
+  options?: { format?: MaiaVoiceFormat; voice?: string }
 ): Promise<Buffer> {
   const trimmed = text?.trim();
   if (!trimmed) {
@@ -27,10 +27,11 @@ export async function synthesizeMaiaVoice(
   }
 
   const format: MaiaVoiceFormat = options?.format ?? "mp3";
+  const voice = (options?.voice ?? "nova") as any;
 
   const response = await openai.audio.speech.create({
     model: "tts-1", // TTS ONLY
-    voice: "alloy",  // you can change later to another voice
+    voice,
     response_format: format,
     input: trimmed,
   });

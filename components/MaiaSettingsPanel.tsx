@@ -10,17 +10,12 @@ import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
 import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
 import { useUpdate } from '@/components/providers/UpdateProvider';
-import { getAccountSettings, saveAccountSettings } from '@/lib/settings/accountSettings';
+import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+// Voice settings now managed by VoiceSettingsPanel → /api/settings/voice (no localStorage)
 
 interface MaiaSettings {
-  // Voice Settings
-  voice: {
-    provider: 'openai' | 'elevenlabs';
-    openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
-    speed: number;
-    pitch: number; // For future use
-    stability: number;
-  };
+  // Voice is managed by VoiceSettingsPanel → /api/settings/voice
+  // No voice fields here. One source of truth.
 
   // Memory Settings
   memory: {
@@ -54,13 +49,6 @@ interface MaiaSettings {
 }
 
 const DEFAULT_SETTINGS: MaiaSettings = {
-  voice: {
-    provider: 'openai',
-    openaiVoice: 'alloy',
-    speed: 0.95,
-    pitch: 1.0,
-    stability: 0.8
-  },
   memory: {
     enabled: true,
     depth: 'moderate',
@@ -85,15 +73,6 @@ const DEFAULT_SETTINGS: MaiaSettings = {
   }
 };
 
-const VOICE_OPTIONS = [
-  { id: 'alloy', name: 'Alloy', description: 'Neutral, balanced', recommended: true },
-  { id: 'shimmer', name: 'Shimmer', description: 'Soft, gentle, nurturing' },
-  { id: 'fable', name: 'Fable', description: 'Warm, expressive, storytelling' },
-  { id: 'nova', name: 'Nova', description: 'Lively, energetic' },
-  { id: 'echo', name: 'Echo', description: 'Male - calm, steady' },
-  { id: 'onyx', name: 'Onyx', description: 'Male - deep, authoritative' }
-];
-
 export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   const { ambientMode, witnessMode, toggleAmbientMode, toggleWitnessMode } = useMaiaPresence();
   const { currentVersion, checkForUpdate, applyUpdate, isChecking, lastCheckResult } = useUpdate();
@@ -101,7 +80,6 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   const [originalSettings, setOriginalSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [testingVoice, setTestingVoice] = useState(false);
   const [activeTab, setActiveTab] = useState<'language' | 'voice' | 'memory' | 'personality' | 'brain' | 'advanced'>('language');
   const [nativeBuildInfo, setNativeBuildInfo] = useState<{ version: string; build: string } | null>(null);
 
@@ -142,18 +120,8 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
       };
     }
 
-    // Also sync voice settings from AccountSettings (source of truth for TTS)
-    const accountSettings = getAccountSettings();
-    console.log('🔊 [MaiaSettings] Loading voice from AccountSettings:', accountSettings.voice);
-    loadedSettings = {
-      ...loadedSettings,
-      voice: {
-        ...loadedSettings.voice,
-        openaiVoice: accountSettings.voice.openaiVoice,
-        speed: accountSettings.voice.speed,
-      }
-    };
-    console.log('🔊 [MaiaSettings] Final loaded voice:', loadedSettings.voice.openaiVoice);
+    // Voice settings are managed by VoiceSettingsPanel → /api/settings/voice
+    // No localStorage sync needed here — that path is dead.
 
     setSettings(loadedSettings);
     setOriginalSettings(loadedSettings);
@@ -165,14 +133,8 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
       localStorage.setItem('maia_settings', JSON.stringify(settings));
       setOriginalSettings(settings);
 
-      // Also save voice selection to the key OracleConversation uses
-      localStorage.setItem('selected_voice', settings.voice.openaiVoice);
-
-      // Sync voice settings to AccountSettings (used by OracleConversation TTS)
-      const accountSettings = getAccountSettings();
-      accountSettings.voice.openaiVoice = settings.voice.openaiVoice as any;
-      accountSettings.voice.speed = settings.voice.speed;
-      saveAccountSettings(accountSettings);
+      // Voice settings are managed by VoiceSettingsPanel → /api/settings/voice
+      // No localStorage sync for voice — that path is dead.
 
       // Trigger a custom event for components to react to settings changes
       window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
@@ -195,38 +157,6 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
   const resetSettings = () => {
     setSettings(DEFAULT_SETTINGS);
-  };
-
-  const testVoice = async () => {
-    setTestingVoice(true);
-    try {
-      const response = await apiFetch('/api/voice/openai-tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: "Hey there. I'm Maya. This is how I'll sound with these settings.",
-          voice: settings.voice.openaiVoice,
-          speed: settings.voice.speed,
-          model: 'tts-1-hd'
-        })
-      });
-
-      if (!response.ok) throw new Error('Voice test failed');
-
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-
-      audio.onended = () => {
-        setTestingVoice(false);
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      await audio.play();
-    } catch (error) {
-      console.error('Voice test error:', error);
-      setTestingVoice(false);
-    }
   };
 
   const updateSetting = (path: string, value: any) => {
@@ -317,77 +247,7 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
           )}
 
           {activeTab === 'voice' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-amber-200 mb-3">Voice Selection</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {VOICE_OPTIONS.map(voice => {
-                    const isSelected = settings.voice?.openaiVoice === voice.id;
-                    if (voice.id === 'shimmer') {
-                      console.log('[Voice Debug] current voice:', settings.voice?.openaiVoice, 'checking shimmer, isSelected:', isSelected);
-                    }
-                    return (
-                      <button
-                        key={voice.id}
-                        onClick={() => updateSetting('voice.openaiVoice', voice.id)}
-                        className={`p-3 rounded-lg border-2 transition-all text-left relative active:scale-95 ${
-                          isSelected
-                            ? 'border-amber-400 bg-amber-500/30 ring-2 ring-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.4)]'
-                            : 'border-white/10 bg-black/20 hover:border-white/20 active:bg-white/10 active:border-white/30'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-2 right-2 text-amber-300">
-                            <Check size={16} strokeWidth={3} />
-                          </div>
-                        )}
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className={`font-medium ${isSelected ? 'text-amber-200' : 'text-white'}`}>{voice.name}</div>
-                            <div className="text-xs text-white/60">{voice.description}</div>
-                          </div>
-                          {voice.recommended && !isSelected && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">★</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-amber-200">Speech Speed</label>
-                  <span className="text-sm text-white/60">{settings.voice.speed.toFixed(2)}x</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.75"
-                  max="1.25"
-                  step="0.05"
-                  value={settings.voice.speed}
-                  onChange={(e) => updateSetting('voice.speed', parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-white/40 mt-1">
-                  <span>Slower</span>
-                  <span>Natural</span>
-                  <span>Faster</span>
-                </div>
-              </div>
-
-              <button
-                onClick={testVoice}
-                disabled={testingVoice}
-                className="w-full py-3 bg-blue-500/20 border border-blue-500/30 text-blue-400
-                         rounded-lg hover:bg-blue-500/30 transition-all disabled:opacity-50
-                         flex items-center justify-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                {testingVoice ? 'Playing...' : 'Test Voice'}
-              </button>
-            </div>
+            <VoiceSettingsPanel />
           )}
 
           {activeTab === 'memory' && (

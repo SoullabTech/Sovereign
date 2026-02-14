@@ -56,6 +56,24 @@ module.exports = {
         },
 
         // ══════════════════════════════════════════════════════════════════════
+        // JADE PALETTE (Mentor / Decision panels — earthy wisdom tones)
+        // ══════════════════════════════════════════════════════════════════════
+        jade: {
+          jade:      '#a8c7a0',  // primary text (soft sage-green)
+          sage:      '#8aad82',  // secondary text / borders
+          mineral:   '#6b8f64',  // tertiary text / labels
+          copper:    '#b89a6a',  // warm accent labels
+          bronze:    '#9a7d52',  // gradient accent
+          malachite: '#5fa87a',  // vivid accent (buttons, highlights)
+          forest:    '#2a4a3a',  // section backgrounds
+          shadow:    '#1a2e24',  // outer background layer
+          night:     '#162720',  // mid background layer
+          dusk:      '#1e3429',  // inner background layer
+          abyss:     '#0f1e16',  // deepest backdrop
+          silver:    '#b8c9b4',  // light accent
+        },
+
+        // ══════════════════════════════════════════════════════════════════════
         // WORLD PALETTES (for special modes / thematic pages)
         // Keep but use sparingly - default to maia.* tokens
         // ══════════════════════════════════════════════════════════════════════

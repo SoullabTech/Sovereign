@@ -1,0 +1,76 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Local Voice Services (Overlay)
+# ═══════════════════════════════════════════════════════════════════════════════
+# Additive overlay for local TTS. Does NOT modify production services.
+#
+# Usage:
+#   docker compose -f docker-compose.production.yml -f docker-compose.local-voice.yml up -d
+#
+# Or standalone for dev:
+#   docker compose -f docker-compose.local-voice.yml up -d kokoro-tts
+#
+# SOVEREIGNTY: This removes the last cloud dependency from MAIA's voice.
+# With this running, MAIA speaks without phoning home.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Kokoro TTS - Local Text-to-Speech (OpenAI-compatible API)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # 82M parameter model. Runs on CPU. Fast enough for real-time.
+  # Exposes OpenAI-compatible /v1/audio/speech endpoint on port 8880.
+  #
+  # Test: curl -X POST http://localhost:8880/v1/audio/speech \
+  #         -H "Content-Type: application/json" \
+  #         -d '{"input": "Hello from MAIA", "voice": "af_heart", "model": "kokoro"}' \
+  #         --output test.mp3
+  kokoro-tts:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
+    container_name: maia-kokoro-tts
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    ports:
+      - "8880:8880"
+
+    environment:
+      # Default voice — validate available voices after first boot
+      KOKORO_DEFAULT_VOICE: "af_heart"
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8880/v1/audio/speech -X POST -H 'Content-Type: application/json' -d '{\"input\":\"ok\",\"voice\":\"af_heart\",\"model\":\"kokoro\"}' -o /dev/null || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Sesame CSM (Phase 2 - Deep Presence Voice)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Uncomment when ready. Requires ~8GB RAM on Apple Silicon via MLX.
+  # More expressive, "thinking out loud" quality. Good for CORE/DEEP paths.
+  #
+  # sesame-tts:
+  #   build:
+  #     context: ./services/sesame-tts
+  #     dockerfile: Dockerfile
+  #   container_name: maia-sesame-tts
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8881:8000"
+  #   environment:
+  #     DEVICE: "mps"  # Apple Silicon GPU
+  #   networks:
+  #     - maia-network
+
+networks:
+  maia-network:
+    external: true
+    name: maia-sovereign_maia-network
