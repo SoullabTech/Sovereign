@@ -88,10 +88,30 @@ export default function VoiceSettingsPanel() {
     }
   };
 
-  const onReset = () => {
+  const onReset = async () => {
     setVoiceIdOverride(null);
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
+
+    // Auto-save the reset, then preview so the member hears "home"
+    setSaving(true);
+    try {
+      const res = await apiFetch('/api/settings/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceIdOverride: null, offset: { ...DEFAULT_OFFSETS } }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+        // Fire preview at baseline so member hears the clean home sound
+        setTimeout(() => onPreview(), 300);
+      }
+    } catch (e) {
+      console.error('[voice-settings] Reset save failed:', e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onPreview = async () => {
@@ -186,13 +206,18 @@ export default function VoiceSettingsPanel() {
         />
       </div>
 
+      <p className="text-xs opacity-50 px-1">
+        Offsets are bounded (&plusmn;0.30) and combined with MAIA&apos;s current elemental pacing.
+        Changes are gentle &mdash; sovereignty means the system breathes, not obeys.
+      </p>
+
       <div className="flex gap-3">
         <button
           className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/15 disabled:opacity-50 transition-colors"
           onClick={onReset}
-          disabled={saving}
+          disabled={saving || previewing}
         >
-          Reset to Default
+          Reset to Baseline
         </button>
 
         <button
