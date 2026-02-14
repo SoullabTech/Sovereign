@@ -274,10 +274,11 @@ const MAX_EVIDENCE_PER_PATTERN = 8;
 export function upsertPatternCandidate(
   memberId: string,
   sessionId: string,
+  turnIndex: number,
   candidate: PatternCandidate
 ): void {
   // Fire-and-forget (like Bridge D pattern)
-  _upsertPatternCandidateAsync(memberId, sessionId, candidate).catch((error) => {
+  _upsertPatternCandidateAsync(memberId, sessionId, turnIndex, candidate).catch((error) => {
     console.warn('[pattern-detection] Failed to upsert pattern:', {
       memberId: memberId.substring(0, 8) + '...',
       signature: candidate.signature,
@@ -289,6 +290,7 @@ export function upsertPatternCandidate(
 async function _upsertPatternCandidateAsync(
   memberId: string,
   sessionId: string,
+  turnIndex: number,
   candidate: PatternCandidate
 ): Promise<void> {
   // Check if pattern already exists for this member+signature
@@ -344,11 +346,17 @@ async function _upsertPatternCandidateAsync(
   );
 
   if (Number(evidenceCount.rows[0].count) < MAX_EVIDENCE_PER_PATTERN) {
+    // source_id is UUID NOT NULL but sessionId is not a UUID in this codebase
+    // (e.g. "session_1739..." or "studio-1739..."). Convert to deterministic
+    // UUID via md5 hash of session+turn, preserving the UNIQUE constraint
+    // idempotency guard while allowing multiple evidence per session.
     await query(
       `INSERT INTO pattern_evidence (pattern_id, source_type, source_id, excerpt)
-       VALUES ($1, 'conversation_turn', $2, $3)
+       VALUES ($1, 'conversation_turn',
+               md5($2 || ':' || $3::text)::uuid,
+               $4)
        ON CONFLICT (pattern_id, source_type, source_id) DO NOTHING`,
-      [patternId, sessionId, candidate.evidenceExcerpt]
+      [patternId, sessionId, turnIndex, candidate.evidenceExcerpt]
     ).catch(() => {
       // Duplicate evidence is fine — idempotent
     });
@@ -390,7 +398,7 @@ export function processPatternSignal(signal: PatternSignal): void {
 
     // Upsert each candidate (all fire-and-forget)
     for (const candidate of candidates) {
-      upsertPatternCandidate(signal.memberId, signal.sessionId, candidate);
+      upsertPatternCandidate(signal.memberId, signal.sessionId, signal.turnIndex, candidate);
     }
   } catch (error) {
     // Top-level safety — pattern detection must never break oracle
