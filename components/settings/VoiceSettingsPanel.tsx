@@ -15,8 +15,16 @@ import {
   SOVEREIGN_VOICES,
   getSovereignVoice,
   resolveToKokoro,
+  resolveToOpenAI,
   type SovereignVoiceId,
 } from '@/lib/voice/sovereignVoices';
+import type { TTSProviderPref } from '@/lib/types/voiceControls';
+
+const TTS_PROVIDER_OPTIONS: { id: TTSProviderPref; label: string; desc: string }[] = [
+  { id: 'auto',  label: 'Auto',        desc: 'Cloud voice with local fallback.' },
+  { id: 'cloud', label: 'Cloud Voice',  desc: 'Higher quality. Requires internet.' },
+  { id: 'local', label: 'Local Voice',  desc: 'Sovereign. Private. Works offline.' },
+];
 
 type Offsets = {
   pace: number;
@@ -80,6 +88,7 @@ export default function VoiceSettingsPanel() {
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
+  const [ttsProvider, setTtsProvider] = useState<TTSProviderPref>('auto');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -103,6 +112,7 @@ export default function VoiceSettingsPanel() {
             setVoiceIdOverride(migratedVoice);
           }
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
+          setTtsProvider(data.member?.ttsProvider ?? 'auto');
         }
       } catch (e) {
         console.warn('[voice-settings] Failed to load:', e);
@@ -138,7 +148,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, offset }),
+        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, ttsProvider, offset }),
       });
       if (res.ok) {
         setSaved(true);
@@ -153,6 +163,7 @@ export default function VoiceSettingsPanel() {
 
   const onReset = async () => {
     setVoiceIdOverride(null);
+    setTtsProvider('auto');
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
@@ -163,6 +174,7 @@ export default function VoiceSettingsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           voiceIdOverride: systemVoiceId,
+          ttsProvider: 'auto',
           offset: { ...DEFAULT_OFFSETS },
         }),
       });
@@ -185,8 +197,10 @@ export default function VoiceSettingsPanel() {
       const sampleText = buildPreviewText(offset);
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
-      // Use the selected sovereign voice's Kokoro voice for preview
-      const previewVoice = resolveToKokoro(effectiveVoiceId);
+      // Use the selected sovereign voice's provider-specific voice for preview
+      const previewVoice = ttsProvider === 'cloud'
+        ? resolveToOpenAI(effectiveVoiceId)
+        : resolveToKokoro(effectiveVoiceId);
 
       // POST to preview endpoint → get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
@@ -197,6 +211,7 @@ export default function VoiceSettingsPanel() {
           text: sampleText,
           voiceId: previewVoice,
           speed,
+          ttsProvider,
         }),
       });
 
@@ -245,6 +260,34 @@ export default function VoiceSettingsPanel() {
 
   return (
     <div className="space-y-6 font-sans">
+      {/* ── Voice Engine ─────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-sm font-medium text-stone-300 mb-3">Voice Engine</div>
+        <div className="grid grid-cols-3 gap-2">
+          {TTS_PROVIDER_OPTIONS.map((opt) => {
+            const isActive = ttsProvider === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => { setTtsProvider(opt.id); setSaved(false); }}
+                className={`
+                  rounded-xl border p-3 text-center transition-all
+                  ${isActive
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className={`text-sm font-semibold ${isActive ? 'text-amber-300' : 'text-stone-200'}`}>
+                  {opt.label}
+                </div>
+                <div className="text-[11px] text-stone-400 mt-1 leading-tight">{opt.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Voice Character Picker ──────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
