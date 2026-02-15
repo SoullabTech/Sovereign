@@ -23,9 +23,9 @@ export async function GET() {
       SELECT
         COUNT(*)::int as total,
         COALESCE(AVG(duration_ms), 0)::int as avg_ms,
-        COALESCE(AVG(input_tokens), 0)::int as avg_input,
-        COALESCE(AVG(output_tokens), 0)::int as avg_output,
-        COALESCE(SUM(input_tokens + output_tokens), 0)::bigint as total_tokens
+        COALESCE(AVG(prompt_tokens), 0)::int as avg_input,
+        COALESCE(AVG(completion_tokens), 0)::int as avg_output,
+        COALESCE(SUM(COALESCE(total_tokens, 0)), 0)::bigint as total_tokens
       FROM oracle_usage_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
     `, [days]);
@@ -82,18 +82,19 @@ export async function GET() {
       model: row.model,
     }));
 
-    // Latency by processing path (from field_monitor_turns)
-    const latencyResult = await query(`
-      SELECT processing_path, COALESCE(AVG(response_quality), 0)::float as avg_quality
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval AND processing_path IS NOT NULL
-      GROUP BY processing_path
-    `, [days]);
-
+    // Latency by processing path (from field_orchestrator_telemetry — graceful)
     const latencyByPath: Record<string, number> = {};
-    latencyResult.rows.forEach((row) => {
-      latencyByPath[row.processing_path] = Math.round(row.avg_quality * 100) / 100;
-    });
+    try {
+      const latencyResult = await query(`
+        SELECT path, COALESCE(AVG(ms), 0)::int as avg_ms
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval AND path IS NOT NULL
+        GROUP BY path
+      `, [days]);
+      latencyResult.rows.forEach((row: any) => {
+        latencyByPath[row.path] = row.avg_ms;
+      });
+    } catch { /* table may not exist yet */ }
 
     return NextResponse.json({
       period: {
@@ -142,9 +143,9 @@ export async function POST(req: NextRequest) {
       SELECT
         COUNT(*)::int as total,
         COALESCE(AVG(duration_ms), 0)::int as avg_ms,
-        COALESCE(AVG(input_tokens), 0)::int as avg_input,
-        COALESCE(AVG(output_tokens), 0)::int as avg_output,
-        COALESCE(SUM(input_tokens + output_tokens), 0)::bigint as total_tokens
+        COALESCE(AVG(prompt_tokens), 0)::int as avg_input,
+        COALESCE(AVG(completion_tokens), 0)::int as avg_output,
+        COALESCE(SUM(COALESCE(total_tokens, 0)), 0)::bigint as total_tokens
       FROM oracle_usage_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
     `, [days]);
@@ -201,18 +202,19 @@ export async function POST(req: NextRequest) {
       model: row.model,
     }));
 
-    // Latency by processing path (from field_monitor_turns)
-    const latencyResult = await query(`
-      SELECT processing_path, COALESCE(AVG(response_quality), 0)::float as avg_quality
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval AND processing_path IS NOT NULL
-      GROUP BY processing_path
-    `, [days]);
-
+    // Latency by processing path (from field_orchestrator_telemetry — graceful)
     const latencyByPath: Record<string, number> = {};
-    latencyResult.rows.forEach((row) => {
-      latencyByPath[row.processing_path] = Math.round(row.avg_quality * 100) / 100;
-    });
+    try {
+      const latencyResult = await query(`
+        SELECT path, COALESCE(AVG(ms), 0)::int as avg_ms
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval AND path IS NOT NULL
+        GROUP BY path
+      `, [days]);
+      latencyResult.rows.forEach((row: any) => {
+        latencyByPath[row.path] = row.avg_ms;
+      });
+    } catch { /* table may not exist yet */ }
 
     return NextResponse.json({
       period: {

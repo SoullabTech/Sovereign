@@ -25,7 +25,7 @@ export async function GET() {
              COUNT(*) FILTER (WHERE pass = true)::int as passed,
              COALESCE(AVG(score), 0)::float as avg_score
       FROM ain_shape_telemetry
-      WHERE created_at >= now() - ($1::int || ' days')::interval
+      WHERE formed_at >= now() - ($1::int || ' days')::interval
     `, [days]);
 
     const ainRow = ainResult.rows[0] || { total: 0, passed: 0, avg_score: 0 };
@@ -34,7 +34,8 @@ export async function GET() {
     // Socratic Validator metrics
     const socraticResult = await query(`
       SELECT COUNT(*)::int as total,
-             COALESCE(AVG(score), 0)::float as avg_score
+             COUNT(*) FILTER (WHERE is_gold = true)::int as gold,
+             COALESCE(AVG(rupture_count), 0)::float as avg_score
       FROM socratic_validator_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
     `, [days]);
@@ -67,7 +68,7 @@ export async function GET() {
 
     // Expansion Events
     const expansionResult = await query(`
-      SELECT type, COUNT(*)::int as count
+      SELECT event_type as type, COUNT(*)::int as count
       FROM expansion_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
       GROUP BY type
@@ -140,7 +141,7 @@ export async function POST(req: NextRequest) {
              COUNT(*) FILTER (WHERE pass = true)::int as passed,
              COALESCE(AVG(score), 0)::float as avg_score
       FROM ain_shape_telemetry
-      WHERE created_at >= now() - ($1::int || ' days')::interval
+      WHERE formed_at >= now() - ($1::int || ' days')::interval
     `, [days]);
 
     const ainRow = ainResult.rows[0] || { total: 0, passed: 0, avg_score: 0 };
@@ -149,7 +150,8 @@ export async function POST(req: NextRequest) {
     // Socratic Validator metrics
     const socraticResult = await query(`
       SELECT COUNT(*)::int as total,
-             COALESCE(AVG(score), 0)::float as avg_score
+             COUNT(*) FILTER (WHERE is_gold = true)::int as gold,
+             COALESCE(AVG(rupture_count), 0)::float as avg_score
       FROM socratic_validator_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
     `, [days]);
@@ -182,7 +184,7 @@ export async function POST(req: NextRequest) {
 
     // Expansion Events
     const expansionResult = await query(`
-      SELECT type, COUNT(*)::int as count
+      SELECT event_type as type, COUNT(*)::int as count
       FROM expansion_events
       WHERE created_at >= now() - ($1::int || ' days')::interval
       GROUP BY type

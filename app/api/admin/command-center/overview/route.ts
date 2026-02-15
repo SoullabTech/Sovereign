@@ -30,7 +30,7 @@ export async function GET() {
         SELECT now() - ($1::int || ' days')::interval AS start_ts
       ),
       conversations AS (
-        SELECT COUNT(*)::int as total,
+        SELECT COUNT(*)::int as conv_total,
                COUNT(DISTINCT user_id)::int as active_members,
                COALESCE(AVG(duration_ms), 0)::int as avg_ms,
                COUNT(*) FILTER (WHERE status != 'success')::int as errors
@@ -38,18 +38,12 @@ export async function GET() {
         WHERE created_at >= start_ts
       ),
       ain AS (
-        SELECT COUNT(*)::int as total,
-               COUNT(*) FILTER (WHERE pass = true)::int as gold
+        SELECT COUNT(*)::int as ain_total,
+               COUNT(*) FILTER (WHERE pass = true)::int as ain_gold
         FROM ain_shape_telemetry, period_filter
-        WHERE created_at >= start_ts
-      ),
-      field AS (
-        SELECT COUNT(*)::int as total,
-               COUNT(*) FILTER (WHERE frameworks_active IS NOT NULL AND array_length(frameworks_active, 1) > 0)::int as with_frameworks
-        FROM field_monitor_turns, period_filter
-        WHERE created_at >= start_ts
+        WHERE formed_at >= start_ts
       )
-      SELECT * FROM conversations, ain, field
+      SELECT * FROM conversations, ain
     `, [days]);
 
     const row = overviewResult.rows[0] || {
@@ -58,6 +52,21 @@ export async function GET() {
       avg_ms: 0,
       errors: 0,
     };
+
+    // Field engine hit rate from field_orchestrator_telemetry (graceful if table missing)
+    let fieldHitRate = 0;
+    try {
+      const fieldResult = await query(`
+        SELECT COUNT(*)::int as total,
+               COUNT(*) FILTER (WHERE array_length(sources, 1) >= 3)::int as full_hits
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval
+      `, [days]);
+      const fr = fieldResult.rows[0];
+      if (fr && fr.total > 0) {
+        fieldHitRate = (fr.full_hits / fr.total) * 100;
+      }
+    } catch { /* table may not exist yet */ }
 
     // Sparklines query (last 7 days)
     const sparklineResult = await query(`
@@ -91,9 +100,11 @@ export async function GET() {
     }
 
     // Calculate rates
-    const errorRate = row.total > 0 ? (row.errors / row.total) * 100 : 0;
-    const fieldEngineHitRate = row.total > 0 ? (row.with_frameworks / row.total) * 100 : 0;
-    const ainGoldRate = row.total > 0 ? (row.gold / row.total) * 100 : 0;
+    const convTotal = row.conv_total || 0;
+    const errorRate = convTotal > 0 ? (row.errors / convTotal) * 100 : 0;
+    const fieldEngineHitRate = fieldHitRate;
+    const ainTotal = row.ain_total || 0;
+    const ainGoldRate = ainTotal > 0 ? (row.ain_gold / ainTotal) * 100 : 0;
 
     // Compute alerts
     const alerts: Alert[] = [];
@@ -119,7 +130,7 @@ export async function GET() {
       });
     }
 
-    if (ainGoldRate < 50 && row.total > 10) {
+    if (ainGoldRate < 50 && ainTotal > 10) {
       alerts.push({
         severity: 'warn',
         message: `AIN gold rate at ${ainGoldRate.toFixed(1)}% (threshold: 50%)`,
@@ -134,7 +145,7 @@ export async function GET() {
         days,
       },
       vitals: {
-        totalConversations: row.total || 0,
+        totalConversations: convTotal,
         activeMembers: row.active_members || 0,
         avgResponseMs: row.avg_ms || 0,
         fieldEngineHitRate: Math.round(fieldEngineHitRate * 10) / 10,
@@ -178,7 +189,7 @@ export async function POST(req: NextRequest) {
         SELECT now() - ($1::int || ' days')::interval AS start_ts
       ),
       conversations AS (
-        SELECT COUNT(*)::int as total,
+        SELECT COUNT(*)::int as conv_total,
                COUNT(DISTINCT user_id)::int as active_members,
                COALESCE(AVG(duration_ms), 0)::int as avg_ms,
                COUNT(*) FILTER (WHERE status != 'success')::int as errors
@@ -186,18 +197,12 @@ export async function POST(req: NextRequest) {
         WHERE created_at >= start_ts
       ),
       ain AS (
-        SELECT COUNT(*)::int as total,
-               COUNT(*) FILTER (WHERE pass = true)::int as gold
+        SELECT COUNT(*)::int as ain_total,
+               COUNT(*) FILTER (WHERE pass = true)::int as ain_gold
         FROM ain_shape_telemetry, period_filter
-        WHERE created_at >= start_ts
-      ),
-      field AS (
-        SELECT COUNT(*)::int as total,
-               COUNT(*) FILTER (WHERE frameworks_active IS NOT NULL AND array_length(frameworks_active, 1) > 0)::int as with_frameworks
-        FROM field_monitor_turns, period_filter
-        WHERE created_at >= start_ts
+        WHERE formed_at >= start_ts
       )
-      SELECT * FROM conversations, ain, field
+      SELECT * FROM conversations, ain
     `, [days]);
 
     const row = overviewResult.rows[0] || {
@@ -206,6 +211,21 @@ export async function POST(req: NextRequest) {
       avg_ms: 0,
       errors: 0,
     };
+
+    // Field engine hit rate from field_orchestrator_telemetry (graceful if table missing)
+    let fieldHitRate = 0;
+    try {
+      const fieldResult = await query(`
+        SELECT COUNT(*)::int as total,
+               COUNT(*) FILTER (WHERE array_length(sources, 1) >= 3)::int as full_hits
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval
+      `, [days]);
+      const fr = fieldResult.rows[0];
+      if (fr && fr.total > 0) {
+        fieldHitRate = (fr.full_hits / fr.total) * 100;
+      }
+    } catch { /* table may not exist yet */ }
 
     // Sparklines query (last 7 days)
     const sparklineResult = await query(`
@@ -239,9 +259,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Calculate rates
-    const errorRate = row.total > 0 ? (row.errors / row.total) * 100 : 0;
-    const fieldEngineHitRate = row.total > 0 ? (row.with_frameworks / row.total) * 100 : 0;
-    const ainGoldRate = row.total > 0 ? (row.gold / row.total) * 100 : 0;
+    const convTotal = row.conv_total || 0;
+    const errorRate = convTotal > 0 ? (row.errors / convTotal) * 100 : 0;
+    const fieldEngineHitRate = fieldHitRate;
+    const ainTotal = row.ain_total || 0;
+    const ainGoldRate = ainTotal > 0 ? (row.ain_gold / ainTotal) * 100 : 0;
 
     // Compute alerts
     const alerts: Alert[] = [];
@@ -267,7 +289,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (ainGoldRate < 50 && row.total > 10) {
+    if (ainGoldRate < 50 && ainTotal > 10) {
       alerts.push({
         severity: 'warn',
         message: `AIN gold rate at ${ainGoldRate.toFixed(1)}% (threshold: 50%)`,
@@ -282,7 +304,7 @@ export async function POST(req: NextRequest) {
         days,
       },
       vitals: {
-        totalConversations: row.total || 0,
+        totalConversations: convTotal,
         activeMembers: row.active_members || 0,
         avgResponseMs: row.avg_ms || 0,
         fieldEngineHitRate: Math.round(fieldEngineHitRate * 10) / 10,
