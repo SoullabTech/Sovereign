@@ -11,7 +11,8 @@ import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
-import { resolveToKokoro, resolveToOpenAI, SOVEREIGN_VOICES } from '@/lib/voice/sovereignVoices';
+import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
+import { getMemberVoicePreferences } from '@/lib/voice/voiceControlsService';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -84,21 +85,88 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const rawVoice = body?.voice ?? "maia_core";
+    const rawVoice = body?.voice ?? "alloy";
     const format = body?.format ?? "mp3";
     const speed = body?.speed ?? 1.0;
-
-    // ═══ SOVEREIGN VOICE RESOLUTION ═══
-    // If the frontend sends a sovereign voice ID (maia_core, atlas, etc.),
-    // resolve it to the appropriate provider voice. If it's already a
-    // provider voice (legacy), pass through unchanged.
-    const isSovereignId = SOVEREIGN_VOICES.some(v => v.id === rawVoice);
-    const voice = isSovereignId ? resolveToKokoro(rawVoice) : rawVoice;
-    const openaiVoice = isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice;
 
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ARCHETYPE-AWARE VOICE ROUTING
+    // MAIA vow: default voice is always maia_core (OpenAI Alloy).
+    // Load member's archetype → resolve provider → route accordingly.
+    // ═══════════════════════════════════════════════════════════════════
+    let memberArchetype: string | null = null;
+    if (memberId) {
+      try {
+        const prefs = await getMemberVoicePreferences(memberId);
+        memberArchetype = prefs?.voiceArchetype ?? null;
+      } catch (e) {
+        // Non-blocking: if prefs fail, default to maia_core
+      }
+    }
+    const effectiveArchetype = memberArchetype || 'maia_core';
+    const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
+
+    // If archetype routes to OpenAI (MAIA feminine voices), skip Kokoro entirely
+    if (archetypeResolution.provider === 'openai') {
+      const voice = archetypeResolution.voice;
+      const t0 = Date.now();
+      console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → OpenAI ${voice} (skipping Kokoro)`);
+
+      if (!process.env.OPENAI_API_KEY) {
+        return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
+      }
+
+      const speech = await getOpenAI().audio.speech.create({
+        model: body?.model ?? "tts-1",
+        voice: voice as any,
+        input: text,
+        response_format: format,
+        speed,
+      });
+
+      const audioBuffer = Buffer.from(await speech.arrayBuffer());
+      const ms = Date.now() - t0;
+
+      console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} bytes=${audioBuffer.length} ms=${ms}`);
+
+      const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
+      LimitsEnforcer.recordUsage({
+        memberId: memberId || undefined,
+        anonId,
+        tier: memberTier,
+        resource: 'voice_tts',
+        amount: actualSeconds,
+      }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
+
+      const contentType =
+        format === "mp3" ? "audio/mpeg"
+        : format === "wav" ? "audio/wav"
+        : format === "opus" ? "audio/opus"
+        : format === "aac" ? "audio/aac"
+        : format === "flac" ? "audio/flac"
+        : "application/octet-stream";
+
+      return new Response(new Uint8Array(audioBuffer), {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Content-Length": audioBuffer.length.toString(),
+          "Cache-Control": "no-store",
+          "X-Request-Id": requestId,
+          "X-TTS-Provider": "openai",
+          "X-TTS-Fallback": "0",
+          "X-Voice-Archetype": effectiveArchetype,
+        },
+      });
+    }
+
+    // Kokoro archetype (Atlas, Puck) — use voice from archetype, not from client
+    const voice = archetypeResolution.voice;
+    console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → Kokoro ${voice}`);
 
     const t0 = Date.now();
 
@@ -209,7 +277,9 @@ export async function POST(req: NextRequest) {
 
     const model = body?.model ?? "tts-1";
 
-    console.log(`[openai-tts:${requestId}] starting model=${model} voice=${openaiVoice} format=${format} chars=${text.length}`);
+    // For Kokoro archetypes falling back to OpenAI, use alloy (Kokoro voice IDs aren't valid for OpenAI)
+    const openaiVoice = archetypeResolution.provider === 'kokoro' ? 'alloy' : voice;
+    console.log(`[openai-tts:${requestId}] FALLBACK model=${model} voice=${openaiVoice} archetype=${effectiveArchetype} format=${format} chars=${text.length}`);
 
     const speech = await getOpenAI().audio.speech.create({
       model,
@@ -222,7 +292,7 @@ export async function POST(req: NextRequest) {
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
 
-    console.log(`[openai-tts:${requestId}] ok model=${model} voice=${openaiVoice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
+    console.log(`[openai-tts:${requestId}] ok model=${model} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
 
     // ═══ RECORD VOICE USAGE (non-blocking) ═══
     const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
@@ -283,12 +353,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  // SOVEREIGNTY: Return sovereign voice identities, not vendor names.
-  // Backend resolves these to Kokoro (local) or cloud fallback internally.
   return new Response(JSON.stringify({
-    message: "Sovereign TTS endpoint active",
-    voices: ["maia_core", "maia_warm", "maia_clear", "atlas", "atlas_deep"],
-    usage: 'POST with { "text": "...", "voice": "maia_core", "format": "mp3" }'
+    message: "OpenAI TTS endpoint active",
+    voices: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+    usage: 'POST with { "text": "...", "voice": "alloy", "format": "mp3" }'
   }), {
     headers: { "Content-Type": "application/json" },
   });

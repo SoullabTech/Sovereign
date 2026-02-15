@@ -20,6 +20,7 @@ import { requireMemberId } from '@/lib/auth/session';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { resolveArchetypeVoice, resolveArchetypeToKokoro } from '@/lib/voice/voiceArchetypes';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { text?: string; voiceId?: string; speed?: number };
+  let body: { text?: string; voiceId?: string; voiceArchetype?: string; speed?: number };
   try {
     body = await req.json();
   } catch {
@@ -89,43 +90,69 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const voice = body.voiceId || 'af_kore';
+  // Resolve voice: archetype-aware, provider-aware
+  const archetypeResolution = body.voiceArchetype
+    ? resolveArchetypeVoice(body.voiceArchetype)
+    : null;
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
 
-  // Generate MP3 bytes
+  // Generate MP3 bytes — route to correct provider based on archetype
   let audioBuffer: Buffer;
 
-  try {
-    const result = await ttsRouter.synthesize({
-      text,
-      voice,
-      format: 'mp3',
-      speed,
-    });
-    audioBuffer = result.audioBuffer;
-  } catch (err) {
-    if (err instanceof TTSFallbackToOpenAI) {
-      // Try OpenAI fallback if available
-      if (!process.env.OPENAI_API_KEY) {
-        return NextResponse.json(
-          { error: 'Local TTS unavailable and no cloud fallback configured' },
-          { status: 503 },
-        );
-      }
-      try {
-        const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
-        audioBuffer = Buffer.from(await speech.arrayBuffer());
-      } catch (fallbackErr: any) {
-        return NextResponse.json(
-          { error: 'TTS fallback failed', detail: fallbackErr?.message },
-          { status: 503 },
-        );
-      }
-    } else {
+  if (archetypeResolution?.provider === 'openai') {
+    // OpenAI archetype (MAIA feminine voices) — go directly to OpenAI
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'TTS generation failed', detail: (err as Error)?.message },
-        { status: 500 },
+        { error: 'OpenAI TTS not configured' },
+        { status: 503 },
       );
+    }
+    try {
+      const speech = await synthesizeSpeech({ text, voice: archetypeResolution.voice, format: 'mp3', speed });
+      audioBuffer = Buffer.from(await speech.arrayBuffer());
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: 'TTS generation failed', detail: err?.message },
+        { status: 503 },
+      );
+    }
+  } else {
+    // Kokoro archetype or raw voiceId — use TTS router (local sovereign)
+    const voice = archetypeResolution
+      ? archetypeResolution.voice
+      : (body.voiceId || 'af_kore');
+    try {
+      const result = await ttsRouter.synthesize({
+        text,
+        voice,
+        format: 'mp3',
+        speed,
+      });
+      audioBuffer = result.audioBuffer;
+    } catch (err) {
+      if (err instanceof TTSFallbackToOpenAI) {
+        // Try OpenAI fallback if available
+        if (!process.env.OPENAI_API_KEY) {
+          return NextResponse.json(
+            { error: 'Local TTS unavailable and no cloud fallback configured' },
+            { status: 503 },
+          );
+        }
+        try {
+          const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
+          audioBuffer = Buffer.from(await speech.arrayBuffer());
+        } catch (fallbackErr: any) {
+          return NextResponse.json(
+            { error: 'TTS fallback failed', detail: fallbackErr?.message },
+            { status: 503 },
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'TTS generation failed', detail: (err as Error)?.message },
+          { status: 500 },
+        );
+      }
     }
   }
 

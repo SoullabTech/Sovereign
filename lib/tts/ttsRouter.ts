@@ -23,7 +23,8 @@
 
 import * as kokoro from './providers/kokoro';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
-import { resolveKokoroVoice, resolveSpeed } from '@/lib/voice/voiceMap';
+import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
+import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
 
@@ -33,6 +34,8 @@ interface TTSRequest {
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
   voiceHint?: VoiceIntent;
+  /** Member's chosen voice archetype — overrides element-based voice selection */
+  voiceArchetype?: string | null;
 }
 
 interface TTSResult {
@@ -82,17 +85,31 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     : localEnabled ? 'kokoro'
     : 'openai';
 
+  // Check if archetype routes to OpenAI (MAIA feminine voices) — skip Kokoro entirely
+  if (params.voiceArchetype) {
+    const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
+    if (archetypeResolution.provider === 'openai') {
+      const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
+      console.info('[voice]', {
+        archetype: params.voiceArchetype,
+        voice: `openai:${archetypeResolution.voice}`,
+        provider: 'openai',
+        reason,
+      });
+      throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
+    }
+  }
+
   // Try primary
   if (primary === 'kokoro') {
     try {
-      // Voice selection priority: explicit member choice > conductor element > default
-      // If params.voice is set (member chose a specific voice in settings), honor it.
-      // Otherwise fall back to conductor's element-based selection.
-      const kokoroVoice = params.voice
-        ? params.voice
+      // Archetype overrides element-based selection (member chose a fixed voice)
+      // Otherwise, Bridge B: element from Conductor determines the voice
+      const kokoroVoice = params.voiceArchetype
+        ? resolveVoiceWithArchetype(params.voiceHint?.element ?? 'earth', params.voiceArchetype)
         : params.voiceHint
           ? resolveKokoroVoice(params.voiceHint.element)
-          : undefined;
+          : params.voice;
       const kokoroSpeed = params.voiceHint
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;
