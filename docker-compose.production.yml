@@ -95,6 +95,10 @@ services:
       MAIA_SELFLET_ALLOW_ANON: "0"
       # AIN Shape Telemetry: Enable quality monitoring in production
       AIN_SHAPE_TELEMETRY: "1"
+      # PFI Mind: Enable Panconscious Field Intelligence consciousness layer
+      MAIA_PFI_MIND: "true"
+      # PFI Full Integration: All consciousness subsystems active
+      MAIA_PFI_FULL_INTEGRATION: "true"
       # AIN Phase 1: Knowledge Gate — awareness-modulated source well scoring
       AIN_KNOWLEDGE_GATE_ENABLED: "1"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)

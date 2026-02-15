@@ -44,6 +44,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelemetry';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -1267,6 +1268,26 @@ export async function POST(request: NextRequest) {
       completionTokens: undefined,
       totalTokens: undefined,
     }).catch(err => console.warn('[oracle] logging failed:', err));
+
+    // 🔭 FIELD MONITOR: Turn-level observability (fire-and-forget, never blocks response)
+    // Activates 5+ previously DORMANT systems: therapeuticFrameworkTracker, ainResponseShape,
+    // talkModeFieldIntelligence, wisdomFieldMoves, response-quality-metrics
+    fireAndForgetFieldMonitor({
+      memberId: userId,
+      sessionId,
+      route: 'oracle',
+      responseText: maiaResponse.coreMessage,
+      userMessage: message,
+      element: voiceHint.element,
+      phase: voiceHint.phase,
+      motion: voiceHint.motion,
+      voiceMode: 'talk', // oracle route is always talk mode
+      relationalStance: relationalHint.stance,
+      processingPath: String(ORACLE_LEVEL),
+      memoryContext,
+      activeFrameworks,
+      conversationHistory,
+    });
 
     // 🧠 CONSCIOUSNESS TRACE: Full trace spine for observability
     (async () => {
