@@ -89,13 +89,14 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   if (params.voiceArchetype) {
     const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
     if (archetypeResolution.provider === 'openai') {
+      const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
       console.info('[voice]', {
         archetype: params.voiceArchetype,
         voice: `openai:${archetypeResolution.voice}`,
         provider: 'openai',
-        reason: 'archetype_openai',
+        reason,
       });
-      throw new TTSFallbackToOpenAI(false, 'archetype_openai', archetypeResolution.voice);
+      throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
     }
   }
 
