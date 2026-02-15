@@ -1837,7 +1837,7 @@ export function AccountSettings() {
       {projects.length === 0 ? (
         <div className="p-6 bg-white/5 rounded-xl border border-white/10">
           <div className="text-center mb-4">
-            <Globe size={32} className="mx-auto mb-3 text-stone-400" />
+            <Globe size={32} className="mx-auto mb-3 text-stone-300" />
             <p className="text-stone-500 font-medium">No client portals found</p>
             <p className="text-sm text-stone-400 mt-1">
               Your member account may not be linked to a practitioner record yet.
@@ -1921,7 +1921,7 @@ export function AccountSettings() {
             className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
           >
             <span className="text-stone-200">Go to Practitioner Dashboard</span>
-            <ChevronRight size={18} className="text-stone-400" />
+            <ChevronRight size={18} className="text-stone-300" />
           </a>
         </div>
       )}
@@ -1988,7 +1988,7 @@ export function AccountSettings() {
               <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
             </div>
           ) : (
-            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
+            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300" />
           )}
         </div>
 
@@ -2379,7 +2379,7 @@ export function AccountSettings() {
           onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
           className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
         >
-          <ArrowLeft size={20} className="text-stone-400" />
+          <ArrowLeft size={20} className="text-amber-400" />
         </button>
         <h1 className="text-xl font-medium text-stone-200">
           {activeSection
@@ -2421,9 +2421,9 @@ export function AccountSettings() {
                 onClick={() => setActiveSection(id)}
                 className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
-                <Icon size={18} className="text-stone-400" />
+                <Icon size={18} className="text-stone-300 group-hover:text-amber-400 transition-colors" />
                 <span className="flex-1 text-left text-stone-200">{label}</span>
-                <ChevronRight size={16} className="text-stone-500 group-hover:text-stone-300 transition-colors" />
+                <ChevronRight size={16} className="text-stone-400 group-hover:text-stone-200 transition-colors" />
               </button>
             ))}
           </motion.div>
