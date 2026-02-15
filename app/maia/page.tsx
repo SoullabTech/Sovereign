@@ -415,6 +415,9 @@ function MAIAPageContent() {
         return;
       }
 
+      // Load user data first (needed for session registration)
+      const initialData = await getInitialUserData();
+
       // Get or create persistent sessionId - resets daily for fresh conversations
       const existingSessionId = localStorage.getItem('maia_session_id');
       const lastSessionDate = localStorage.getItem('maia_session_date');
@@ -467,8 +470,6 @@ function MAIAPageContent() {
         }
         console.log('✨ [MAIA] Created new session:', newSessionId);
       }
-
-      const initialData = await getInitialUserData();
       setExplorerId(initialData.id);
       setExplorerName(initialData.name);
 
