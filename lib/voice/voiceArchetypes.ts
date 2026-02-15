@@ -33,7 +33,7 @@ export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
   { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  kokoroVoice: 'af_nicole' },
   { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  kokoroVoice: 'am_michael' },
   { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  kokoroVoice: 'bm_lewis' },
-  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident.',                          bestFor: 'Lightness + humor',    kokoroVoice: 'am_puck' },
+  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', kokoroVoice: 'am_puck' },
 ];
 
 /**
