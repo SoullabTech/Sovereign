@@ -35,10 +35,28 @@ export interface VoiceArchetypeEntry {
   kokoroVoice: string;       // Kokoro fallback (used when OpenAI is down, or for local-only mode)
 }
 
+/**
+ * MAIA_VOICE_OVERRIDE — env-driven A/B test switch for MAIA's core voice.
+ *
+ * Set MAIA_VOICE_OVERRIDE=kokoro in docker-compose or .env to route
+ * all three MAIA feminine archetypes through Kokoro (af_kore, af_sarah, af_nicole)
+ * instead of OpenAI (alloy, shimmer, nova).
+ *
+ * Default (unset or "openai"): OpenAI voices. Set to "kokoro" to go fully local.
+ * No redeploy needed — just set the env var and restart the container:
+ *   docker restart maia-sovereign
+ */
+const voiceOverride = (process.env.MAIA_VOICE_OVERRIDE || '').toLowerCase();
+const maiaProvider: VoiceProvider = voiceOverride === 'kokoro' ? 'kokoro' : 'openai';
+
+if (maiaProvider === 'kokoro') {
+  console.log('[voiceArchetypes] MAIA_VOICE_OVERRIDE=kokoro — MAIA voices routed through Kokoro (sovereign local)');
+}
+
 export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
-  { id: 'maia_core',  label: 'Maia',           desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    provider: 'openai', voice: 'alloy',      kokoroVoice: 'af_kore' },
-  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          provider: 'openai', voice: 'shimmer',    kokoroVoice: 'af_sarah' },
-  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  provider: 'openai', voice: 'nova',       kokoroVoice: 'af_nicole' },
+  { id: 'maia_core',  label: 'Maia',           desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_kore' : 'alloy',       kokoroVoice: 'af_kore' },
+  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_sarah' : 'shimmer',    kokoroVoice: 'af_sarah' },
+  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_nicole' : 'nova',      kokoroVoice: 'af_nicole' },
   { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  provider: 'kokoro', voice: 'am_michael', kokoroVoice: 'am_michael' },
   { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  provider: 'kokoro', voice: 'bm_lewis',   kokoroVoice: 'bm_lewis' },
   { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', provider: 'kokoro', voice: 'am_puck', kokoroVoice: 'am_puck' },
