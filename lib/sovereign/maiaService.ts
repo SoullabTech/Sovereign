@@ -71,6 +71,7 @@ import { persistDecision, type Candidate } from '../services/decisionPersistence
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
+import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
 import {
   STATE_VECTOR_OUTPUT_CONTRACT,
   isLikelyCheckin,
@@ -1158,6 +1159,27 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     }
   }
 
+  // 🌊 FIELD INTELLIGENCE: Wire PFI → Unified → Resonance into prompt
+  try {
+    const fieldContext = await buildFieldContext({
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      isSanctuary: !!(meta as any)?.sanctuary,
+      depth: conversationHistory.length,
+      text: input,
+      conversationHistory: conversationHistory.map((h: any) => ({
+        role: h.role ?? 'user',
+        content: h.userMessage ?? h.maiaResponse ?? h.content ?? '',
+      })),
+      cognitiveProfile: (meta as any)?.cognitiveProfile ?? null,
+      element: (meta as any)?.element,
+    });
+    baseSystemPrompt += formatFieldAddendum(fieldContext);
+    console.info('[field-orchestrator] [FAST]', fieldContext?.meta);
+  } catch {
+    // Field intelligence must never break the hot path
+  }
+
   // Use single model call with complete MAIA intelligence stack
   const { text: response, provider } = await generateText({
     systemPrompt: baseSystemPrompt,
@@ -1443,6 +1465,30 @@ The current user has not provided their name. Address them as "friend" or "there
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to CORE path`);
     }
+  }
+
+  // 🌊 FIELD INTELLIGENCE: Wire PFI → Unified → Resonance into prompt
+  try {
+    const fieldContext = await buildFieldContext({
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      isSanctuary: isSanctuaryCore === true,
+      depth: conversationHistory.length,
+      text: input,
+      conversationHistory: conversationHistory.map((h: any) => ({
+        role: h.role ?? 'user',
+        content: h.userMessage ?? h.maiaResponse ?? h.content ?? '',
+      })),
+      cognitiveProfile: (meta as any)?.cognitiveProfile ?? null,
+      element: elementalResult?.dominant ?? (meta as any)?.element,
+      facet: (meta as any)?.facet,
+      archetype: (meta as any)?.archetype,
+      bloomLevel: (meta as any)?.bloomLevel,
+    });
+    adaptivePrompt += formatFieldAddendum(fieldContext);
+    console.info('[field-orchestrator] [CORE]', fieldContext?.meta);
+  } catch {
+    // Field intelligence must never break the hot path
   }
 
   const { text: response, provider: coreProvider } = await generateText({
