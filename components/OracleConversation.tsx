@@ -2085,7 +2085,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
-      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
       const LEGACY_MAP: Record<string, string> = { alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear' };
       setVoiceSettings({
         voice: LEGACY_MAP[settings.voice.openaiVoice] ?? settings.voice.openaiVoice ?? 'maia_core',
@@ -2100,11 +2099,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     loadVoiceSettings();
 
-    // Listen for settings changes (from MAIA Settings panel)
-    const handleSettingsChange = () => {
-      console.log('🔊 [VoiceSettings] Received settings change event');
-      loadVoiceSettings();
-    };
+    // Listen for settings changes (from MAIA Settings panel or AccountSettings)
+    const handleSettingsChange = () => loadVoiceSettings();
     window.addEventListener('maia-account-settings-changed', handleSettingsChange);
     window.addEventListener('maia-settings-changed', handleSettingsChange);
 
@@ -2968,27 +2964,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return getAgentConfig();
   });
 
-  // Listen for conversation style preference changes
+  // Listen for conversation style preference changes (agentConfig only)
+  // Voice settings (setVoiceSettings) are handled by the maia-account-settings-changed
+  // listener above — do NOT duplicate that logic here to avoid feedback loops.
   useEffect(() => {
     const handleStorageChange = () => {
       const savedVoice = localStorage.getItem('selected_voice');
       const newConfig = getAgentConfig(savedVoice || undefined);
       setAgentConfig(newConfig);
-      console.log('🎭 Conversation style updated:', newConfig.voice);
-
-      // Also reload voice settings from account settings (all MAIA preferences)
-      const settings = getAccountSettings();
-      const LEGACY_MAP2: Record<string, string> = { alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear' };
-      setVoiceSettings({
-        voice: LEGACY_MAP2[settings.voice.openaiVoice] ?? settings.voice.openaiVoice ?? 'maia_core',
-        speed: settings.voice.speed,
-        model: settings.voice.model || 'maia_core',
-        prosodyRange: settings.voice.prosodyRange ?? 1,
-        archetype: settings.archetype || 'AUTO',
-        conversationMode: settings.conversationMode || 'her',
-        memoryDepth: settings.memory?.depth || 'moderate',
-      });
-      console.log('🔊 Voice settings reloaded:', settings.voice, settings.archetype, settings.conversationMode);
+      console.log('🎭 Agent config updated:', newConfig.voice);
     };
 
     // Listen for storage events (from other tabs) and custom events (same tab)

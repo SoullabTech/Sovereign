@@ -465,15 +465,14 @@ export function AccountSettings() {
     saveAccountSettings(updated);
     showSaveIndicator();
 
-    // Sync voice settings to legacy localStorage keys used by OracleConversation
-    // This ensures both event paths are triggered for maximum compatibility
+    // Sync voice name to legacy localStorage key (still read by agentConfig)
     if (path === 'voice.openaiVoice') {
       localStorage.setItem('selected_voice', value as string);
     }
-    if (path.startsWith('voice.')) {
-      // Force reload of voice settings in OracleConversation
-      window.dispatchEvent(new Event('conversationStyleChanged'));
-    }
+    // NOTE: No separate conversationStyleChanged dispatch here.
+    // saveAccountSettings() already emits 'maia-account-settings-changed',
+    // which OracleConversation listens to. Double-dispatching caused a
+    // feedback loop with log spam (dozens of updates per second).
 
     // Also sync nested settings to server if we have userId
     if (userId) {

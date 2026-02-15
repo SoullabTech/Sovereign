@@ -116,7 +116,6 @@ export function saveAccountSettings(settings: AccountSettings): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 
     // Emit event for other components that may need to react
-    console.log('🔊 [AccountSettings] Emitting settings change event:', settings.voice);
     window.dispatchEvent(
       new CustomEvent('maia-account-settings-changed', { detail: settings })
     );
