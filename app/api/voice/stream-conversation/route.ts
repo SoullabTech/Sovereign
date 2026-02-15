@@ -27,11 +27,7 @@ import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
-<<<<<<< HEAD
-import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
-=======
 import { SOVEREIGN_VOICES, resolveToKokoro, resolveToOpenAI } from '@/lib/voice/sovereignVoices';
->>>>>>> origin/claude/happy-morse
 import type { Element } from '@/lib/types/voiceIntent';
 import {
   processThreshold,
@@ -124,15 +120,6 @@ async function synthesizeWithFallback(
   // ── Sovereign TTS routing: Kokoro first, OpenAI fallback ──
   const elementKey = (options.element ?? '').toLowerCase() as Element;
 
-<<<<<<< HEAD
-  // MAIA vow: default voice is always Alloy (maia_core archetype).
-  // When no archetype is set, resolve as maia_core → OpenAI alloy.
-  // This ensures the ttsRouter archetype intercept always fires for MAIA's default.
-  const effectiveArchetype = options.voiceArchetype || 'maia_core';
-  if (!options.voiceArchetype) {
-    console.log('[TTS] No archetype set — defaulting to maia_core (Alloy)');
-  }
-=======
   // ── Resolve sovereign voice IDs before passing to any provider ──
   // If the frontend sends 'atlas_deep', resolve to 'am_michael' (Kokoro) / 'onyx' (OpenAI)
   const rawVoice = options.voice && options.voice !== 'maya' ? options.voice : undefined;
@@ -143,7 +130,6 @@ async function synthesizeWithFallback(
   const openaiVoice = rawVoice
     ? (isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice)
     : undefined;
->>>>>>> origin/claude/happy-morse
 
   // Try Kokoro via ttsRouter (same path as preview endpoint)
   try {
@@ -153,7 +139,6 @@ async function synthesizeWithFallback(
       format: 'mp3',
       speed: options.speed,
       voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      voiceArchetype: effectiveArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} sovereign=${rawVoice || 'none'} kokoro=${kokoroVoice || 'auto'} ${result.audioBuffer.length}B MP3`);
@@ -189,20 +174,9 @@ async function synthesizeWithFallback(
   }
 
   try {
-<<<<<<< HEAD
-    // Resolve voice: effectiveArchetype always set (defaults to maia_core → alloy)
-    const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
-    const openaiVoice = archetypeResolution.provider === 'openai'
-      ? archetypeResolution.voice
-      : (options.voice && options.voice !== 'maya')
-        ? options.voice
-        : (elementKey ? resolveOpenAIVoice(elementKey) : null) ?? 'alloy';
-    console.log(`[TTS] provider=openai fallback=true archetype=${effectiveArchetype} voice=${openaiVoice}`);
-=======
     const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'nova';
     console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} sovereign=${rawVoice || 'none'} openai=${finalOpenaiVoice}`);
->>>>>>> origin/claude/happy-morse
     const response = await synthesizeSpeech({
       text,
       voice: finalOpenaiVoice,
@@ -431,20 +405,14 @@ async function synthesizeSentence(
   voice: string = 'maia_core',
   speed: number = 1.0,
   element?: string | null,
-  voiceArchetype?: string | null,
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
 
-<<<<<<< HEAD
-  // MAIA vow: default voice is always maia_core (Alloy) when no archetype set
-  const effectiveSentenceArchetype = voiceArchetype || 'maia_core';
-=======
   // ── Resolve sovereign voice IDs before passing to any provider ──
   const rawVoice = voice && voice !== 'maya' ? voice : undefined;
   const isSovereign = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
   const resolvedKokoro = rawVoice ? (isSovereign ? resolveToKokoro(rawVoice) : rawVoice) : undefined;
   const resolvedOpenai = rawVoice ? (isSovereign ? resolveToOpenAI(rawVoice) : rawVoice) : undefined;
->>>>>>> origin/claude/happy-morse
 
   // Try Kokoro via ttsRouter
   try {
@@ -454,7 +422,6 @@ async function synthesizeSentence(
       format: 'mp3',
       speed,
       voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
-      voiceArchetype: effectiveSentenceArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     return { audio, format: 'mp3' };
@@ -478,17 +445,8 @@ async function synthesizeSentence(
 
   // OpenAI fallback — archetype-aware (never drift to element-based defaults)
   try {
-<<<<<<< HEAD
-    const archetypeResolution = resolveArchetypeVoice(effectiveSentenceArchetype);
-    const openaiVoice = archetypeResolution.provider === 'openai'
-      ? archetypeResolution.voice
-      : (voice && voice !== 'maya')
-        ? voice
-        : (elementKey ? resolveOpenAIVoice(elementKey) : null) ?? 'alloy';
-=======
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const openaiVoice = resolvedOpenai ?? elementVoice ?? 'nova';
->>>>>>> origin/claude/happy-morse
 
     const response = await synthesizeSpeech({
       text,
@@ -532,11 +490,7 @@ export async function POST(req: NextRequest) {
   // Load voice preference offsets (language-level, shapes text generation)
   // AND voice_id_override (which voice character the member chose in settings)
   let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
-<<<<<<< HEAD
-  let memberVoiceArchetype: string | null = null;
-=======
   let effectiveVoice = voice; // Start with what the frontend sent
->>>>>>> origin/claude/happy-morse
   try {
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
@@ -544,15 +498,11 @@ export async function POST(req: NextRequest) {
     ]);
     const merged = mergeVoiceIntent(systemVoice, memberVoice);
     voiceOffsets = merged.intent;
-<<<<<<< HEAD
-    memberVoiceArchetype = merged.voiceArchetype;
-=======
     // If member has a voice_id_override in the database, use it as the
     // authoritative voice — ensures cross-device consistency
     if (merged.voiceId && merged.voiceId !== 'maia') {
       effectiveVoice = merged.voiceId;
     }
->>>>>>> origin/claude/happy-morse
   } catch (e) {
     console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
   }
@@ -809,12 +759,7 @@ export async function POST(req: NextRequest) {
             speed: effectiveSpeed,  // Use prosody-adjusted speed
             brevity: guidance.brevity,
             wisdomDirective,
-<<<<<<< HEAD
-            voice: voice,
-            voiceArchetype: memberVoiceArchetype,
-=======
             voice: effectiveVoice,
->>>>>>> origin/claude/happy-morse
           }) : null;
 
           if (thresholdTtsResult) {
@@ -960,12 +905,7 @@ export async function POST(req: NextRequest) {
               speed: effectiveSpeed,
               brevity: guidance.brevity,
               wisdomDirective,
-<<<<<<< HEAD
-              voice: voice,
-              voiceArchetype: memberVoiceArchetype,
-=======
               voice: effectiveVoice,
->>>>>>> origin/claude/happy-morse
             });
 
             if (result) {
