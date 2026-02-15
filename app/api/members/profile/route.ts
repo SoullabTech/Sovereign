@@ -120,11 +120,17 @@ export async function GET(request: NextRequest) {
       ? `${member.passkey.substring(0, 8)}${'*'.repeat(Math.max(0, member.passkey.length - 8))}`
       : null;
 
+    // Normalize empty strings to null — prevents '' from poisoning downstream fallback chains
+    const preferredName =
+      typeof member.preferred_name === 'string' && member.preferred_name.trim().length > 0
+        ? member.preferred_name.trim()
+        : null;
+
     return NextResponse.json({
       id: member.id,
       username: member.username,
       name: member.name,
-      preferredName: member.preferred_name,
+      preferredName,
       email: member.email,
       passkey: maskedPasskey,
       avatarUrl: member.avatar_url,

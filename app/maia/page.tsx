@@ -334,8 +334,10 @@ function MAIAPageContent() {
   const showDashboard = searchParams?.get('panel') === 'journey';
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
+  // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
+  // The real name loads async via getInitialUserData() and updates before greeting renders
   const [explorerId, setExplorerId] = useState('guest');
-  const [explorerName, setExplorerName] = useState('Friend');
+  const [explorerName, setExplorerName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -490,7 +492,7 @@ function MAIAPageContent() {
 
       // Check Week 0 onboarding completion
       const week0Complete = localStorage.getItem('week0_onboarding_complete');
-      if (!week0Complete && initialData.name !== 'Friend') {
+      if (!week0Complete && initialData.name && initialData.name !== 'Friend') {
         // Show onboarding for new users (but not for guest/default users)
         setShowWeekZeroOnboarding(true);
         console.log('🌱 [MAIA] Week 0 onboarding required for:', initialData.name);

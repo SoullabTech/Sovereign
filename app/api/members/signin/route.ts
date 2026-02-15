@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
       member: {
         id: member.id,
         username: member.username,
-        name: member.name,
+        name: (member.name || '').trim() || null,
         preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,

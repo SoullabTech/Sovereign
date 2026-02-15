@@ -266,8 +266,11 @@ export async function healIdentity(): Promise<HealedIdentity | null> {
 
     // Also update legacy keys that other parts of the app might read
     localStorage.setItem('explorerId', profile.id);
-    if (profile.name || profile.preferredName) {
-      localStorage.setItem('explorerName', profile.preferredName || profile.name);
+    const displayName = (profile.preferredName || profile.name || '').trim();
+    if (displayName) {
+      localStorage.setItem('explorerName', displayName);
+      // CRITICAL: Also set explorerPreferredName — getInitialUserData() checks this first
+      localStorage.setItem('explorerPreferredName', displayName);
     }
 
     console.log('[healIdentity] Identity healed successfully:', {
