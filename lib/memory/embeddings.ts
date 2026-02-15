@@ -8,10 +8,11 @@
  */
 
 export async function generateLocalEmbedding(text: string): Promise<number[]> {
+  const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
   const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 30000);
 
   try {
-    const response = await fetch('http://localhost:11434/api/embeddings', {
+    const response = await fetch(`${ollamaUrl}/api/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
