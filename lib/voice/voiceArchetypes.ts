@@ -19,17 +19,26 @@ export type MaiaVoiceArchetype =
   | 'maia_core'
   | 'maia_warm'
   | 'maia_clear'
+  | 'maia_echo'
+  | 'maia_fable'
+  | 'maia_onyx'
   | 'mentor'
   | 'elder'
-  | 'puck';
+  | 'puck'
+  | 'heart'
+  | 'bella'
+  | 'adam';
 
 export type VoiceProvider = 'openai' | 'kokoro';
+
+export type VoiceGroup = 'cloud' | 'local';
 
 export interface VoiceArchetypeEntry {
   id: MaiaVoiceArchetype;
   label: string;
   desc: string;
   bestFor: string;           // one-phrase orientation for quick selection
+  group: VoiceGroup;         // UI grouping: 'cloud' (OpenAI) or 'local' (Kokoro)
   provider: VoiceProvider;   // which TTS engine to use
   voice: string;             // provider-specific voice ID
   kokoroVoice: string;       // Kokoro fallback (used when OpenAI is down, or for local-only mode)
@@ -54,12 +63,21 @@ if (maiaProvider === 'kokoro') {
 }
 
 export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
-  { id: 'maia_core',  label: 'Maia',           desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_kore' : 'alloy',       kokoroVoice: 'af_kore' },
-  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_sarah' : 'shimmer',    kokoroVoice: 'af_sarah' },
-  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_nicole' : 'nova',      kokoroVoice: 'af_nicole' },
-  { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  provider: 'kokoro', voice: 'am_michael', kokoroVoice: 'am_michael' },
-  { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  provider: 'kokoro', voice: 'bm_lewis',   kokoroVoice: 'bm_lewis' },
-  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', provider: 'kokoro', voice: 'am_puck', kokoroVoice: 'am_puck' },
+  // ── MAIA Cloud Voices (OpenAI) ──
+  { id: 'maia_core',  label: 'Maia',           desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_kore' : 'alloy',       kokoroVoice: 'af_kore' },
+  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_sarah' : 'shimmer',    kokoroVoice: 'af_sarah' },
+  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_nicole' : 'nova',      kokoroVoice: 'af_nicole' },
+  { id: 'maia_echo',  label: 'Maia (Echo)',    desc: 'Measured and resonant. A contemplative quality.',             bestFor: 'Journaling + insight', group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_heart' : 'echo',      kokoroVoice: 'af_heart' },
+  { id: 'maia_fable', label: 'Maia (Fable)',   desc: 'Expressive and narrative. Storytelling warmth.',              bestFor: 'Stories + exploration', group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'af_bella' : 'fable',     kokoroVoice: 'af_bella' },
+  { id: 'maia_onyx',  label: 'Maia (Onyx)',    desc: 'Deep and grounded. Authoritative without pressure.',          bestFor: 'Grounding + structure', group: 'cloud', provider: maiaProvider, voice: maiaProvider === 'kokoro' ? 'am_adam' : 'onyx',      kokoroVoice: 'am_adam' },
+
+  // ── Sovereign Local Voices (Kokoro) ──
+  { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  group: 'local', provider: 'kokoro', voice: 'am_michael', kokoroVoice: 'am_michael' },
+  { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  group: 'local', provider: 'kokoro', voice: 'bm_lewis',   kokoroVoice: 'bm_lewis' },
+  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', group: 'local', provider: 'kokoro', voice: 'am_puck', kokoroVoice: 'am_puck' },
+  { id: 'heart',      label: 'Kore (Heart)',   desc: 'Warm and nurturing. The original local presence.',            bestFor: 'Comfort + holding',    group: 'local', provider: 'kokoro', voice: 'af_heart',   kokoroVoice: 'af_heart' },
+  { id: 'bella',      label: 'Kore (Bella)',   desc: 'Clear and articulate. Bright without sharpness.',             bestFor: 'Clarity + energy',     group: 'local', provider: 'kokoro', voice: 'af_bella',   kokoroVoice: 'af_bella' },
+  { id: 'adam',       label: 'Atlas (Adam)',   desc: 'Warm masculine. Gentle strength, approachable.',              bestFor: 'Conversation + ease',  group: 'local', provider: 'kokoro', voice: 'am_adam',    kokoroVoice: 'am_adam' },
 ];
 
 /**
