@@ -44,6 +44,12 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { emitFieldSignal, inferSignalType, inferValueAxis, loadMemberTrajectory, formatTrajectoryForPrompt } from '@/lib/consciousness/fieldSignalEmitter';
+import { createTurnContext, setStage, getStageTimings } from '@/lib/cerebellum/turnPipeline';
+import { canCommit } from '@/lib/cerebellum/consentGate';
+import { emitNonBlocking, fieldSignalSpec } from '@/lib/cerebellum/emitter';
+import { buildIdempotencyKey } from '@/lib/cerebellum/idempotency';
+import type { TurnContext } from '@/lib/cerebellum/types';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -429,8 +435,37 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
+    // ═══════════════════════════════════════════════════════════════
+    // CEREBELLUM: Create TurnContext — the spine of this turn's plumbing
+    // Oracle route is never sanctuary. Stage: INGEST complete -> LOAD.
+    // ═══════════════════════════════════════════════════════════════
+    const turnCtx: TurnContext = createTurnContext({
+      memberId: userId,
+      sessionId,
+      turnId: requestId, // requestId is already a UUID, deterministic enough for oracle
+      isSanctuary: false, // Oracle route is never sanctuary
+    });
+    setStage(turnCtx, 'LOAD');
+
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
-    const spiralState = await loadSpiralState(userId);
+    // FIELD SIGNALS: Load member trajectory (for trajectory-aware response shaping)
+    const [spiralState, memberTrajectory] = await Promise.all([
+      loadSpiralState(userId),
+      loadMemberTrajectory(userId, 30, 30, turnCtx.isSanctuary), // Single authority: TurnContext
+    ]);
+
+    if (memberTrajectory) {
+      console.info('[trajectory]', {
+        signalCount: memberTrajectory.signalCount,
+        direction: memberTrajectory.coherenceDirection,
+        slope: memberTrajectory.coherenceSlope,
+        volatility: memberTrajectory.volatility,
+        element: memberTrajectory.dominantElement,
+        valueAxis: memberTrajectory.activeValueAxis,
+        pattern: memberTrajectory.recurringPattern,
+        daysSince: memberTrajectory.daysSinceLastSignal,
+      });
+    }
 
     // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
     const [systemVoice, memberVoice] = await Promise.all([
@@ -530,6 +565,9 @@ export async function POST(request: NextRequest) {
     });
 
     console.info(`[MAIA Oracle] profile=${processingProfile} -> level=${consciousnessLevel} (Opus routing)`);
+
+    // CEREBELLUM: LOAD -> CORTEX (consciousness analysis begins)
+    setStage(turnCtx, 'CORTEX');
 
     // SPIRALOGIC INTELLIGENCE: Detect element/phase/context
     let spiralogicCell = await inferSpiralogicCell(message, userId);
@@ -650,7 +688,11 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Pattern Offer] Failed (non-critical):', offerError);
     }
 
+    // CEREBELLUM: CORTEX -> SPEAK (LLM generation begins)
+    setStage(turnCtx, 'SPEAK');
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
+    const trajectoryPrompt = formatTrajectoryForPrompt(memberTrajectory);
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -670,7 +712,8 @@ export async function POST(request: NextRequest) {
       distressSignal,
       sessionId,
       voicePrefs.intent,
-      buildPatternOfferPromptSection(patternOffer)
+      buildPatternOfferPromptSection(patternOffer),
+      trajectoryPrompt
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -914,6 +957,13 @@ export async function POST(request: NextRequest) {
 
     // 🕸️ AIN BREAKTHROUGH DETECTION: Detect and contribute breakthroughs to collective field
     // This is the AFFERENT flow - individual wisdom feeding the collective
+    // Variables hoisted so field signal emission (below Bridge D) can read them
+    let detectedBreakthrough = false;
+    let detectedBreakthroughDepth = 0;
+    let detectedMarkers: string[] = [];
+    let detectedSpiralLevel: string | undefined;
+    let detectedBreakthroughType: string | undefined;
+
     try {
       // Check both user message and MAIA response for breakthrough markers
       const userBreakthrough = detectBreakthrough(message);
@@ -924,6 +974,12 @@ export async function POST(request: NextRequest) {
       const breakthroughDepth = Math.max(userBreakthrough.depth, maiaBreakthrough.depth);
       const combinedMarkers = [...new Set([...userBreakthrough.markers, ...maiaBreakthrough.markers])];
       const spiralLevel = userBreakthrough.spiralLevel || maiaBreakthrough.spiralLevel;
+
+      // Hoist for field signal emission (used after Bridge D upsert)
+      detectedBreakthrough = isBreakthrough;
+      detectedBreakthroughDepth = breakthroughDepth;
+      detectedMarkers = combinedMarkers;
+      detectedSpiralLevel = spiralLevel;
 
       // Guard: Only contribute to collective field if we have valid spiralogic context
       // Never pollute the field with invalid element/phase - it dilutes matching
@@ -956,6 +1012,9 @@ export async function POST(request: NextRequest) {
         } else if (combinedMarkers.includes('truth') || combinedMarkers.includes('love')) {
           breakthroughType = 'unity-experience';
         }
+
+        // Hoist breakthroughType for field signal emission
+        detectedBreakthroughType = breakthroughType;
 
         // Build spiral moment for AIN bridge (use pre-validated element/phase)
         const spiralMoment = {
@@ -1139,28 +1198,100 @@ export async function POST(request: NextRequest) {
       hysteresis: rawElement !== voiceHint.element ? 'held' : 'passed',
     });
 
+    // ═══════════════════════════════════════════════════════════════
+    // CEREBELLUM: SPEAK -> COMMIT (core continuity writes — sanctuary-gated)
+    // ═══════════════════════════════════════════════════════════════
+    setStage(turnCtx, 'COMMIT');
+
     // BRIDGE D: Persist spiral state (fire-and-forget, never blocks response)
-    upsertSpiralState(userId, {
-      dominant_element: voiceHint.element,
-      phase: voiceHint.phase,
-      motion: voiceHint.motion,
-      intensity: voiceHint.intensity,
-    });
+    // Cerebellum gate: canCommit() returns false in sanctuary -> no writes
+    if (canCommit(turnCtx)) {
+      upsertSpiralState(userId, {
+        dominant_element: voiceHint.element,
+        phase: voiceHint.phase,
+        motion: voiceHint.motion,
+        intensity: voiceHint.intensity,
+      });
+    }
 
     // PATTERN DETECTION (Wire 1): Detect structural patterns from this turn
     // Fire-and-forget — never blocks oracle response (same pattern as Bridge D)
-    processPatternSignal({
-      memberId: userId,
-      sessionId,
-      turnIndex: conversationDepth,
-      userText: message,
-      maiaText: maiaResponse.coreMessage,
-      element: spiralogicCell.element,
-      phase: spiralogicCell.phase,
-      motion: voiceHint.motion,
-      intensity: voiceHint.intensity,
-      insights: extractedInsights,
-    });
+    if (canCommit(turnCtx)) {
+      processPatternSignal({
+        memberId: userId,
+        sessionId,
+        turnIndex: conversationDepth,
+        userText: message,
+        maiaText: maiaResponse.coreMessage,
+        element: spiralogicCell.element,
+        phase: spiralogicCell.phase,
+        motion: voiceHint.motion,
+        intensity: voiceHint.intensity,
+        insights: extractedInsights,
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CEREBELLUM: COMMIT -> EMIT (fire-and-forget signals — idempotent)
+    // ═══════════════════════════════════════════════════════════════
+    setStage(turnCtx, 'EMIT');
+
+    // FIELD SIGNAL EMISSION: Afferent nerve of AIN collective field
+    // Uses cerebellum emitter with consent -> budget -> idempotency -> queue ordering
+    {
+      const signalType = inferSignalType({
+        isBreakthrough: detectedBreakthrough,
+        breakthroughDepth: detectedBreakthroughDepth,
+        motion: voiceHint.motion,
+        intensity: voiceHint.intensity,
+        previousIntensity: spiralState?.intensity ?? null,
+        markers: detectedMarkers,
+      });
+
+      if (signalType) {
+        // Budget gate is inside emitNonBlocking (consent -> budget -> queue ordering)
+        const signalElement = voiceHint.element;
+        const signalPhase = voiceHint.phase;
+        const signalMotion = voiceHint.motion;
+        const signalIntensity = voiceHint.intensity ?? 0.5;
+        const signalValueAxis = inferValueAxis(signalElement, detectedMarkers);
+
+        // Build idempotency key via cerebellum
+        const emitSpec = fieldSignalSpec({
+          scope: 'private',
+          signalType,
+          element: signalElement,
+          phase: signalPhase,
+          motion: signalMotion ?? null,
+          intensity: signalIntensity,
+          coherenceDelta: 0, // Computed inside emitFieldSignal
+        });
+
+        // Emit via cerebellum non-blocking wrapper (consent-gated + idempotent)
+        emitNonBlocking({
+          ctx: turnCtx,
+          spec: emitSpec,
+          sink: async ({ idempotencyKey }) => {
+            emitFieldSignal({
+              memberId: userId,
+              sessionId,
+              signalType,
+              element: signalElement,
+              phase: signalPhase,
+              motion: signalMotion,
+              intensity: signalIntensity,
+              valueAxis: signalValueAxis,
+              markers: detectedMarkers.slice(0, 8),
+              consentScope: 'private', // Default private; member can upgrade later
+              breakthroughType: (detectedBreakthroughType as any) || null,
+              breakthroughDepth: detectedBreakthrough ? detectedBreakthroughDepth : null,
+              spiralLevel: detectedSpiralLevel || null,
+              idempotencyKey,
+            }, false); // Oracle route is never sanctuary
+          },
+        });
+      }
+    }
 
     // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
     const relationalHint: RelationalHint = decideRelationalHint({
@@ -1178,6 +1309,9 @@ export async function POST(request: NextRequest) {
       brevityLevel: relationalHint.brevityLevel,
       signals: relationalHint.signals,
     });
+
+    // CEREBELLUM: EMIT -> RESPOND (return payload)
+    setStage(turnCtx, 'RESPOND');
 
     const response = {
       success: true,
@@ -1332,6 +1466,15 @@ export async function POST(request: NextRequest) {
       model: maiaResponse.providerMetadata.modelUsed,
       usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
     });
+
+    // CEREBELLUM: RESPOND -> DONE (close stage timings)
+    setStage(turnCtx, 'DONE');
+    const timings = getStageTimings(turnCtx);
+    if (timings.length > 0) {
+      console.info('[cerebellum.timings]', Object.fromEntries(
+        timings.map(t => [t.stage, `${t.durationMs}ms`])
+      ));
+    }
 
     const jsonResponse = NextResponse.json(response);
     Object.entries(canonHeaders).forEach(([key, value]) => {
@@ -1571,7 +1714,8 @@ async function generateSpiralogicResponseWithLLM(
   distressSignal?: DistressSignal | null,
   sessionId?: string,
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
-  patternOfferSection?: string
+  patternOfferSection?: string,
+  trajectoryPrompt?: string | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1788,8 +1932,10 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking — MAIA proceeds without Library
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
+  // Trajectory goes BEFORE council/collective/library (pace/posture, not content)
+  const trajectorySection = trajectoryPrompt ? '\n\n' + trajectoryPrompt : '';
+  const finalSystemPrompt = trajectorySection || councilInsights || collectiveWisdom || libraryWisdom
+    ? systemPrompt + trajectorySection + councilInsights + collectiveWisdom + libraryWisdom
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
