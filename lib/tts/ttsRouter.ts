@@ -103,6 +103,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   // Try primary
   if (primary === 'kokoro') {
     try {
+<<<<<<< HEAD
       // Archetype overrides element-based selection (member chose a fixed voice)
       // Otherwise, Bridge B: element from Conductor determines the voice
       const kokoroVoice = params.voiceArchetype
@@ -110,6 +111,16 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         : params.voiceHint
           ? resolveKokoroVoice(params.voiceHint.element)
           : params.voice;
+=======
+      // Voice selection priority: explicit member choice > conductor element > default
+      // If params.voice is set (member chose a specific voice in settings), honor it.
+      // Otherwise fall back to conductor's element-based selection.
+      const kokoroVoice = params.voice
+        ? params.voice
+        : params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : undefined;
+>>>>>>> origin/claude/happy-morse
       const kokoroSpeed = params.voiceHint
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;

@@ -10,23 +10,28 @@ import type { Element } from '@/lib/types/voiceIntent';
 import { resolveArchetypeToKokoro } from './voiceArchetypes';
 
 // Kokoro voices (local, sovereign)
+<<<<<<< HEAD
 export type KokoroVoice =
   | 'af_heart' | 'af_kore' | 'af_bella' | 'af_sarah' | 'af_nicole'
   | 'am_adam' | 'am_michael' | 'am_puck'
   | 'bm_lewis';
+=======
+export type KokoroVoice = 'af_kore' | 'af_heart' | 'af_bella' | 'af_sarah' | 'am_adam' | 'am_michael';
+>>>>>>> origin/claude/happy-morse
 
 // OpenAI voices (cloud fallback)
 export type OpenAIVoice = 'alloy' | 'nova' | 'shimmer' | 'fable' | 'echo' | 'onyx';
 
 /**
  * Element → Kokoro voice (local-first, sovereign)
+ * Default (earth/aether) maps to af_kore — MAIA's primary voice.
  */
 export const ELEMENT_TO_KOKORO: Record<Element, KokoroVoice> = {
-  earth: 'af_heart',    // Warm, grounded
+  earth: 'af_kore',     // Primary MAIA voice, grounded
   fire: 'af_bella',     // Clear, catalytic
   water: 'af_sarah',    // Neutral, holding
   air: 'af_bella',      // Clear, articulate
-  aether: 'af_heart',   // Warm, integrative
+  aether: 'af_kore',    // Primary MAIA voice, integrative
 };
 
 /**
@@ -44,7 +49,7 @@ export const ELEMENT_TO_OPENAI: Record<Element, OpenAIVoice> = {
  * Resolve Kokoro voice from element
  */
 export function resolveKokoroVoice(element: Element): KokoroVoice {
-  return ELEMENT_TO_KOKORO[element] || 'af_heart';
+  return ELEMENT_TO_KOKORO[element] || 'af_kore';
 }
 
 /**

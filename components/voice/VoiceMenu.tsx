@@ -173,7 +173,7 @@ export default function VoiceMenu({
     const formData = new FormData();
     formData.append('audio', file);
     formData.append('name', name);
-    formData.append('baseVoice', 'nova');
+    formData.append('baseVoice', 'maia_core');
 
     try {
       const response = await fetch('/api/oracle/voice', {

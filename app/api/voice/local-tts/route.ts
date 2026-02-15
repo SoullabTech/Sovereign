@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     }
 
     const t0 = Date.now();
-    const voice = body?.voice ?? 'af_heart';
+    const voice = body?.voice ?? 'af_kore';
     const format = body?.format ?? 'mp3';
     const speed = body?.speed ?? 1.0;
 

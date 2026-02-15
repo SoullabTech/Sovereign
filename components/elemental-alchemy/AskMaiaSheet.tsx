@@ -25,8 +25,8 @@ const DEFAULT_ELEMENT_INFO = {
   color: 'violet'
 };
 
-// MAIA's voice for speaking insights
-const MAIA_VOICE = 'alloy';
+// Sovereign voice identity for MAIA insights
+const MAIA_VOICE = 'maia_core';
 
 // Track current audio for stopping
 let currentAudio: HTMLAudioElement | null = null;

@@ -90,10 +90,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
+<<<<<<< HEAD
   // Resolve voice: archetype-aware, provider-aware
   const archetypeResolution = body.voiceArchetype
     ? resolveArchetypeVoice(body.voiceArchetype)
     : null;
+=======
+  const voice = body.voiceId || 'af_kore';
+>>>>>>> origin/claude/happy-morse
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
 
   // Generate MP3 bytes — route to correct provider based on archetype

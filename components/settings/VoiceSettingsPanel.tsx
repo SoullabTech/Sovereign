@@ -3,10 +3,15 @@
 /**
  * VoiceSettingsPanel — member voice preference controls.
  *
+<<<<<<< HEAD
  * Two layers:
  *   1. Archetype cards — choose the felt presence (MAIA Core, Warm, Clear, Mentor, Elder, Puck)
  *   2. Offset sliders — gently bias MAIA's baseline voice within that archetype
  *
+=======
+ * Voice character picker: choose from all sovereign voices (3 female, 2 male).
+ * 5 sliders that gently bias MAIA's baseline voice.
+>>>>>>> origin/claude/happy-morse
  * MAIA can still self-regulate during HOLD states.
  * Member preferences are offsets, not overrides.
  */
@@ -14,10 +19,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
+<<<<<<< HEAD
   MAIA_VOICE_ARCHETYPES,
   type MaiaVoiceArchetype,
   type VoiceArchetypeEntry,
 } from '@/lib/voice/voiceArchetypes';
+=======
+  SOVEREIGN_VOICES,
+  getSovereignVoice,
+  resolveToKokoro,
+  type SovereignVoiceId,
+} from '@/lib/voice/sovereignVoices';
+>>>>>>> origin/claude/happy-morse
 
 type Offsets = {
   pace: number;
@@ -37,9 +50,19 @@ const DEFAULT_OFFSETS: Offsets = {
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/** Element badges for visual identification */
+const ELEMENT_ICONS: Record<string, string> = {
+  earth: '🌍',
+  water: '💧',
+  fire: '🔥',
+  air: '🌬️',
+  aether: '✨',
+};
+
 /**
  * Build preview text that varies with the chosen archetype.
  */
+<<<<<<< HEAD
 function buildPreviewText(archetype: MaiaVoiceArchetype | null): string {
   switch (archetype) {
     case 'maia_warm':
@@ -56,6 +79,28 @@ function buildPreviewText(archetype: MaiaVoiceArchetype | null): string {
     default:
       return 'I am here. Steady, balanced, quietly luminous. What do you need right now?';
   }
+=======
+function buildPreviewText(o: Offsets): string {
+  // Pace
+  const pace =
+    o.pace < -0.1 ? 'I can slow down and let each word land.'
+    : o.pace > 0.1 ? 'I can pick up the pace when the moment calls for it.'
+    : 'I will keep a steady, natural pace.';
+
+  // Warmth
+  const warmth =
+    o.warmth < -0.1 ? 'My tone stays clear and measured.'
+    : o.warmth > 0.1 ? 'There is warmth in how I hold this space with you.'
+    : 'My warmth is balanced and present.';
+
+  // Energy
+  const energy =
+    o.energy < -0.1 ? 'The energy is soft and close.'
+    : o.energy > 0.1 ? 'There is brightness in the way I speak.'
+    : 'The energy feels grounded.';
+
+  return `${pace} ${warmth} ${energy}`;
+>>>>>>> origin/claude/happy-morse
 }
 
 export default function VoiceSettingsPanel() {
@@ -67,6 +112,11 @@ export default function VoiceSettingsPanel() {
 
   const [selectedArchetype, setSelectedArchetype] = useState<MaiaVoiceArchetype>('maia_core');
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
+<<<<<<< HEAD
+=======
+  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
+  const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
+>>>>>>> origin/claude/happy-morse
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -76,7 +126,23 @@ export default function VoiceSettingsPanel() {
         const res = await apiFetch('/api/settings/voice');
         if (res.ok) {
           const data = await res.json();
+<<<<<<< HEAD
           setSelectedArchetype(data.member?.voiceArchetype || 'maia_core');
+=======
+          // Migrate legacy voice IDs on load
+          const rawVoiceId = data.member?.voiceIdOverride ?? data.system?.voiceId ?? 'maia_core';
+          const LEGACY_MAP: Record<string, string> = {
+            maia: 'maia_core', alloy: 'maia_core', shimmer: 'maia_warm',
+            nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+          };
+          const migratedVoice = LEGACY_MAP[rawVoiceId] ?? rawVoiceId;
+
+          setSystemVoiceId(data.system?.voiceId ?? 'maia_core');
+          setVoiceIdOverride(data.member?.voiceIdOverride ? migratedVoice : null);
+          if (!data.member?.voiceIdOverride && migratedVoice !== (data.system?.voiceId ?? 'maia_core')) {
+            setVoiceIdOverride(migratedVoice);
+          }
+>>>>>>> origin/claude/happy-morse
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
         }
       } catch (e) {
@@ -87,14 +153,33 @@ export default function VoiceSettingsPanel() {
     })();
   }, []);
 
+<<<<<<< HEAD
+=======
+  const effectiveVoiceId = useMemo(
+    () => voiceIdOverride || systemVoiceId,
+    [voiceIdOverride, systemVoiceId],
+  );
+
+  const selectedVoice = useMemo(
+    () => getSovereignVoice(effectiveVoiceId),
+    [effectiveVoiceId],
+  );
+
+>>>>>>> origin/claude/happy-morse
   const setOne = (k: keyof Offsets, v: number) => {
     setSaved(false);
     setOffset((prev) => ({ ...prev, [k]: clamp(v, -0.3, 0.3) }));
   };
 
+<<<<<<< HEAD
   const onSelectArchetype = (id: MaiaVoiceArchetype) => {
     setSaved(false);
     setSelectedArchetype(id);
+=======
+  const onSelectVoice = (voiceId: SovereignVoiceId) => {
+    setSaved(false);
+    setVoiceIdOverride(voiceId);
+>>>>>>> origin/claude/happy-morse
   };
 
   const onSave = async () => {
@@ -103,7 +188,11 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+<<<<<<< HEAD
         body: JSON.stringify({ voiceArchetype: selectedArchetype, offset }),
+=======
+        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, offset }),
+>>>>>>> origin/claude/happy-morse
       });
       if (res.ok) {
         setSaved(true);
@@ -150,6 +239,14 @@ export default function VoiceSettingsPanel() {
       const sampleText = buildPreviewText(selectedArchetype);
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
+<<<<<<< HEAD
+=======
+      // Use the selected sovereign voice's Kokoro voice for preview
+      const previewVoice = resolveToKokoro(effectiveVoiceId);
+
+      // POST to preview endpoint → get { audioUrl } (real URL, not blob)
+      // This path works reliably on iOS WKWebView + Android WebView
+>>>>>>> origin/claude/happy-morse
       const res = await apiFetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -199,8 +296,13 @@ export default function VoiceSettingsPanel() {
     return <div className="text-sm text-stone-400">Loading voice settings...</div>;
   }
 
+  // Split voices into female (maia_*) and male (atlas*) groups
+  const femaleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('maia_'));
+  const maleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('atlas'));
+
   return (
     <div className="space-y-6 font-sans">
+<<<<<<< HEAD
       {/* Archetype cards */}
       <div className="space-y-2">
         <div className="text-sm text-stone-400 px-1">Choose a voice presence</div>
@@ -217,7 +319,84 @@ export default function VoiceSettingsPanel() {
       </div>
 
       {/* Offset sliders */}
+=======
+      {/* ── Voice Character Picker ──────────────────────────────────── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
+
+        {/* Female voices */}
+        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Female</div>
+        <div className="grid grid-cols-1 gap-2 mb-4">
+          {femaleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Male voices */}
+        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Male</div>
+        <div className="grid grid-cols-1 gap-2">
+          {maleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Voice Tone Offsets ──────────────────────────────────────── */}
+>>>>>>> origin/claude/happy-morse
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
+        <div className="text-sm font-medium text-stone-300 mb-1">Tone Offsets</div>
         <VoiceSlider
           label="Pace"
           value={offset.pace}
