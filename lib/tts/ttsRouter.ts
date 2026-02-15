@@ -28,6 +28,11 @@ import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
 
+/** Single-line JSON log for grep-friendly TTS routing proof. */
+function logTtsResolve(payload: Record<string, unknown>) {
+  console.info('[tts.resolve]', JSON.stringify(payload));
+}
+
 interface TTSRequest {
   text: string;
   voice?: string;
@@ -36,6 +41,8 @@ interface TTSRequest {
   voiceHint?: VoiceIntent;
   /** Member's chosen voice archetype — overrides element-based voice selection */
   voiceArchetype?: string | null;
+  /** Member's TTS provider preference (from settings) */
+  ttsProviderPref?: string | null;
 }
 
 interface TTSResult {
@@ -85,19 +92,42 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     : localEnabled ? 'kokoro'
     : 'openai';
 
-  // Check if archetype routes to OpenAI (MAIA feminine voices) — skip Kokoro entirely
+  // ── Archetype intercept: OpenAI archetypes skip Kokoro entirely ──
   if (params.voiceArchetype) {
     const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
+
+    logTtsResolve({
+      path: 'ttsRouter',
+      stage: 'archetype_intercept',
+      voiceArchetype: params.voiceArchetype,
+      resolvedProvider: archetypeResolution.provider,
+      resolvedVoice: archetypeResolution.voice,
+      localEnabled,
+      ttsProviderEnv: process.env.MAIA_TTS_PROVIDER || null,
+    });
+
     if (archetypeResolution.provider === 'openai') {
       const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
-      console.info('[voice]', {
-        archetype: params.voiceArchetype,
-        voice: `openai:${archetypeResolution.voice}`,
-        provider: 'openai',
-        reason,
-      });
       throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
     }
+  }
+
+  // ── GUARDRAIL: MAIA OpenAI family cannot hit Kokoro unless member explicitly chose "local" ──
+  const memberPref = params.ttsProviderPref || 'auto';
+  const archetype = params.voiceArchetype || null;
+  const isMaiaOpenAiFamily =
+    typeof archetype === 'string' &&
+    archetype.startsWith('maia_') &&
+    resolveArchetypeVoice(archetype).provider === 'openai';
+
+  if (isMaiaOpenAiFamily && memberPref !== 'local') {
+    logTtsResolve({
+      path: 'ttsRouter',
+      stage: 'guardrail_force_openai',
+      voiceArchetype: archetype,
+      memberPref,
+    });
+    throw new TTSFallbackToOpenAI(false, 'maia_default_guardrail', resolveArchetypeVoice(archetype).voice);
   }
 
   // Try primary
@@ -114,13 +144,14 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;
 
-      // Voice identity logging — watch the body learn
-      console.info('[voice]', {
-        element: params.voiceHint?.element,
-        phase: params.voiceHint?.phase,
-        voice: kokoroVoice,
-        speed: kokoroSpeed,
+      logTtsResolve({
+        path: 'ttsRouter',
+        stage: 'dispatch',
         provider: 'kokoro',
+        voice: kokoroVoice,
+        voiceArchetype: params.voiceArchetype || null,
+        element: params.voiceHint?.element,
+        memberPref,
       });
 
       const result = await kokoro.synthesize({
@@ -147,16 +178,15 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   }
 
   // OpenAI as primary (not a fallback)
-  // Log voice intent even on cloud path — see what the body would have chosen
-  if (params.voiceHint) {
-    console.info('[voice]', {
-      element: params.voiceHint.element,
-      phase: params.voiceHint.phase,
-      voice: `openai:${params.voice || 'default'}`,
-      speed: params.speed,
-      provider: 'openai',
-    });
-  }
+  logTtsResolve({
+    path: 'ttsRouter',
+    stage: 'dispatch',
+    provider: 'openai',
+    voice: params.voice || 'default',
+    voiceArchetype: params.voiceArchetype || null,
+    element: params.voiceHint?.element,
+    memberPref,
+  });
   throw new TTSFallbackToOpenAI(false, 'openai_primary');
 }
 

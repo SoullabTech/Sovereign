@@ -92,13 +92,23 @@ export async function POST(req: NextRequest) {
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
   const providerPref = body.ttsProvider || 'auto';
 
+  // ── Resolve log: what this preview request decided ──
+  console.info('[tts.resolve]', JSON.stringify({
+    path: 'preview',
+    memberId: (memberId || '').slice(0, 8),
+    ttsProviderPref: providerPref,
+    voiceId: voice,
+    localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
+  }));
+
   // Generate MP3 bytes
   let audioBuffer: Buffer;
 
   // ── Member chose "local" → Kokoro only, no cloud fallback ──
   if (providerPref === 'local') {
+    console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'member_chose_local' }));
     try {
-      const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+      const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed, ttsProviderPref: 'local' });
       audioBuffer = result.audioBuffer;
     } catch (err) {
       return NextResponse.json(
@@ -117,8 +127,9 @@ export async function POST(req: NextRequest) {
         );
       }
       // "auto" without API key → fall back to Kokoro
+      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'no_openai_key_fallback' }));
       try {
-        const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+        const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed, ttsProviderPref: 'auto' });
         audioBuffer = result.audioBuffer;
       } catch {
         return NextResponse.json(
@@ -127,6 +138,7 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
+      console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'openai', voice, reason: 'auto/cloud lead' }));
       try {
         const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
         audioBuffer = Buffer.from(await speech.arrayBuffer());
@@ -139,8 +151,9 @@ export async function POST(req: NextRequest) {
           );
         }
         // "auto" → try Kokoro as fallback
+        console.info('[tts.attempt]', JSON.stringify({ path: 'preview', provider: 'kokoro', voice, reason: 'openai_fallback' }));
         try {
-          const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+          const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed, ttsProviderPref: 'auto' });
           audioBuffer = result.audioBuffer;
         } catch {
           return NextResponse.json(

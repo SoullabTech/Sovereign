@@ -133,8 +133,19 @@ async function synthesizeWithFallback(
     ? (isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice)
     : undefined;
 
+  // ── Resolve log: what this request decided BEFORE any synthesis ──
+  console.info('[tts.resolve]', JSON.stringify({
+    path: 'stream-conversation',
+    ttsProviderPref: memberProvider,
+    voiceArchetype: options.voiceArchetype || null,
+    openaiVoice: openaiVoice ?? 'alloy',
+    kokoroVoice: kokoroVoice || null,
+    localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
+  }));
+
   // ── Member chose "local" → Kokoro only, no cloud fallback ──
   if (memberProvider === 'local') {
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'member_chose_local' }));
     try {
       const result = await ttsRouter.synthesize({
         text,
@@ -142,9 +153,9 @@ async function synthesizeWithFallback(
         format: 'mp3',
         speed: options.speed,
         voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+        ttsProviderPref: 'local',
       });
       const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro member_choice=local sovereign=${rawVoice || 'none'} kokoro=${kokoroVoice || 'auto'} ${result.audioBuffer.length}B MP3`);
       return { audio, format: 'mp3', source: 'kokoro' };
     } catch (err) {
       console.warn(`[TTS] Kokoro failed, member chose local-only — no fallback: ${err instanceof Error ? err.message : err}`);
@@ -156,8 +167,8 @@ async function synthesizeWithFallback(
   const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
   const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
 
+  console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'auto/cloud lead' }));
   try {
-    console.log(`[TTS] provider=openai member_choice=${memberProvider} sovereign=${rawVoice || 'none'} openai=${finalOpenaiVoice}`);
     const response = await synthesizeSpeech({
       text,
       voice: finalOpenaiVoice,
@@ -173,6 +184,7 @@ async function synthesizeWithFallback(
     if (memberProvider === 'cloud') return null;
 
     // "auto" → try Kokoro as fallback
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'openai_fallback' }));
     try {
       const result = await ttsRouter.synthesize({
         text,
@@ -180,9 +192,9 @@ async function synthesizeWithFallback(
         format: 'mp3',
         speed: options.speed,
         voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+        ttsProviderPref: 'auto',
       });
       const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro fallback=true member_choice=auto ${result.audioBuffer.length}B MP3`);
       return { audio, format: 'mp3', source: 'kokoro' };
     } catch (kokoroErr) {
       console.error(`[TTS] Kokoro fallback also failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
