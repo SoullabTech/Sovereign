@@ -47,6 +47,8 @@ import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralSt
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { recordFieldMonitorTurn } from '@/lib/consciousness/fieldMonitorRecorder';
+import { assessAINResponseShape, type AINShapeResult } from '@/lib/ai/quality/ainResponseShape';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -747,6 +749,14 @@ export async function POST(request: NextRequest) {
     // Update maiaResponse with potentially regenerated coreMessage
     maiaResponse.coreMessage = coreMessage;
 
+    // AIN RESPONSE SHAPE: Structural evaluation for Field Monitor telemetry
+    let ainShapeResult: AINShapeResult | null = null;
+    try {
+      ainShapeResult = assessAINResponseShape(message, coreMessage);
+    } catch (shapeErr) {
+      console.warn('[ain-shape] evaluation failed (non-critical):', shapeErr);
+    }
+
     // OPUS AXIOMS: Evaluate response quality against Jungian alchemical principles
     const axiomEvals = evaluateResponseAgainstAxioms({
       userMessage: message,
@@ -856,6 +866,8 @@ export async function POST(request: NextRequest) {
 
     // 🕸️ AIN BREAKTHROUGH DETECTION: Detect and contribute breakthroughs to collective field
     // This is the AFFERENT flow - individual wisdom feeding the collective
+    let fieldMonitor_breakthroughDetected = false;
+    let fieldMonitor_breakthroughType: string | undefined;
     try {
       // Check both user message and MAIA response for breakthrough markers
       const userBreakthrough = detectBreakthrough(message);
@@ -898,6 +910,10 @@ export async function POST(request: NextRequest) {
         } else if (combinedMarkers.includes('truth') || combinedMarkers.includes('love')) {
           breakthroughType = 'unity-experience';
         }
+
+        // Hoist for Field Monitor telemetry
+        fieldMonitor_breakthroughDetected = true;
+        fieldMonitor_breakthroughType = breakthroughType;
 
         // Build spiral moment for AIN bridge (use pre-validated element/phase)
         const spiralMoment = {
@@ -1194,6 +1210,63 @@ export async function POST(request: NextRequest) {
       completionTokens: undefined,
       totalTokens: undefined,
     }).catch(err => console.warn('[oracle] logging failed:', err));
+
+    // 📊 FIELD MONITOR: Unified per-turn telemetry (fire-and-forget)
+    recordFieldMonitorTurn({
+      requestId,
+      memberId: userId,
+      sessionId,
+      element: spiralogicCell.element,
+      phase: spiralogicCell.phase,
+      motion: voiceHint.motion,
+      intensity: voiceHint.intensity,
+      frameworksActive: activeFrameworks,
+      ainShape: ainShapeResult ? {
+        pass: ainShapeResult.pass,
+        score: ainShapeResult.score,
+        flags: ainShapeResult.flags,
+      } : null,
+      opus: {
+        isGold: axiomSummary.isGold,
+        passed: axiomSummary.passed,
+        warnings: axiomSummary.warnings,
+        violations: axiomSummary.violations,
+        rupture: ruptureDetected,
+      },
+      socratic: validationResult ? {
+        decision: validationResult.decision,
+        isGold: validationResult.isGold,
+        ruptureCount: validationResult.ruptures.length,
+        regenerated: regenerationAttempt > 0,
+      } : null,
+      memoryLayers: {
+        session: !!memoryContext?.sessionMemory,
+        episodic: (memoryContext?.significantEpisodes?.length ?? 0) > 0,
+        somatic: (memoryContext?.somaticPatterns?.length ?? 0) > 0,
+        morphic: (memoryContext?.activePatterns?.length ?? 0) > 0,
+        semantic: false,
+        coherence: !!memoryContext?.latestCoherence,
+        evolution: !!memoryContext?.evolutionStatus,
+        anamnesis: !!relationshipEssence,
+      },
+      voice: {
+        element: voiceHint.element,
+        archetype: voiceHint.archetype || 'guide',
+        hysteresis: rawElement !== voiceHint.element ? 'held' : 'passed',
+      },
+      relational: {
+        stance: relationalHint.stance,
+        holdLevel: relationalHint.holdLevel,
+      },
+      fieldSafe: fieldSafety?.allowed ?? true,
+      cognitiveAltitude: cognitiveProfile?.rollingAverage,
+      breakthroughDetected: fieldMonitor_breakthroughDetected,
+      breakthroughType: fieldMonitor_breakthroughType,
+      durationMs,
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
+    }).catch(err => console.warn('[field-monitor] failed:', err));
 
     // 🧠 CONSCIOUSNESS TRACE: Full trace spine for observability
     (async () => {
