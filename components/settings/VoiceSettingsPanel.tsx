@@ -227,7 +227,7 @@ export default function VoiceSettingsPanel() {
         />
       </div>
 
-      <p className="text-xs text-stone-500 px-1">
+      <p className="text-xs text-stone-400 px-1">
         Offsets are bounded (&plusmn;0.30) and combined with MAIA&apos;s current elemental pacing.
         Changes are gentle &mdash; sovereignty means the system breathes, not obeys.
       </p>
@@ -308,7 +308,7 @@ function VoiceSlider({
           onChange(Math.round(v * 100) / 100); // round to 2 decimal places
         }}
       />
-      <div className="mt-1 flex justify-between text-xs text-stone-500">
+      <div className="mt-1 flex justify-between text-xs text-stone-400">
         <span>{left}</span>
         <span>{right}</span>
       </div>
