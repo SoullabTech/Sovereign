@@ -55,8 +55,8 @@ export default function MyLabPage() {
                      text-white/70 hover:text-white hover:bg-white/[0.06]
                      transition-all"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">MAIA</span>
+            <ArrowLeft className="w-4 h-4 text-amber-400" />
+            <span className="text-sm text-white">MAIA</span>
           </button>
 
           {/* Discover button */}
