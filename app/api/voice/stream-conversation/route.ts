@@ -86,6 +86,7 @@ async function synthesizeWithFallback(
     brevity?: 'brief' | 'moderate' | 'expansive';
     wisdomDirective?: string;
     voice?: string;
+    voiceArchetype?: string | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
   // Try PersonaPlex first
@@ -124,6 +125,7 @@ async function synthesizeWithFallback(
       format: 'mp3',
       speed: options.speed,
       voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+      voiceArchetype: options.voiceArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} voice=${result.reason} ${result.audioBuffer.length}B MP3`);
@@ -375,7 +377,8 @@ async function synthesizeSentence(
   text: string,
   voice: string = 'nova',
   speed: number = 1.0,
-  element?: string | null
+  element?: string | null,
+  voiceArchetype?: string | null,
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
 
@@ -387,6 +390,7 @@ async function synthesizeSentence(
       format: 'mp3',
       speed,
       voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
+      voiceArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     return { audio, format: 'mp3' };
@@ -443,12 +447,15 @@ export async function POST(req: NextRequest) {
 
   // Load voice preference offsets (language-level, shapes text generation)
   let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
+  let memberVoiceArchetype: string | null = null;
   try {
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
       getMemberVoicePreferences(userId || ''),
     ]);
-    voiceOffsets = mergeVoiceIntent(systemVoice, memberVoice).intent;
+    const merged = mergeVoiceIntent(systemVoice, memberVoice);
+    voiceOffsets = merged.intent;
+    memberVoiceArchetype = merged.voiceArchetype;
   } catch (e) {
     console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
   }
@@ -706,6 +713,7 @@ export async function POST(req: NextRequest) {
             brevity: guidance.brevity,
             wisdomDirective,
             voice: voice,
+            voiceArchetype: memberVoiceArchetype,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -852,6 +860,7 @@ export async function POST(req: NextRequest) {
               brevity: guidance.brevity,
               wisdomDirective,
               voice: voice,
+              voiceArchetype: memberVoiceArchetype,
             });
 
             if (result) {

@@ -7,9 +7,13 @@
  */
 
 import type { Element } from '@/lib/types/voiceIntent';
+import { resolveArchetypeToKokoro } from './voiceArchetypes';
 
 // Kokoro voices (local, sovereign)
-export type KokoroVoice = 'af_heart' | 'af_bella' | 'af_sarah' | 'am_adam' | 'am_michael';
+export type KokoroVoice =
+  | 'af_heart' | 'af_bella' | 'af_sarah' | 'af_nicole'
+  | 'am_adam' | 'am_michael' | 'am_puck'
+  | 'bm_lewis';
 
 // OpenAI voices (cloud fallback)
 export type OpenAIVoice = 'alloy' | 'nova' | 'shimmer' | 'fable' | 'echo' | 'onyx';
@@ -78,4 +82,24 @@ export function resolveSpeed(element: Element, requested?: number): number {
   };
 
   return clampSpeed(defaults[element] || 1.0);
+}
+
+/**
+ * Resolve Kokoro voice considering member archetype preference.
+ *
+ * Priority:
+ *   1. Member's chosen archetype (if set) → fixed voice regardless of element
+ *   2. Element-based mapping (conductor-driven, the original Bridge B path)
+ *
+ * This lets "Mentor" always sound like am_michael, while members without
+ * an archetype preference still get element-adaptive voice selection.
+ */
+export function resolveVoiceWithArchetype(
+  element: Element,
+  archetype?: string | null,
+): string {
+  if (archetype) {
+    return resolveArchetypeToKokoro(archetype);
+  }
+  return resolveKokoroVoice(element);
 }

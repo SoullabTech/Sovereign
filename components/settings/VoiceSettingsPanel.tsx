@@ -3,13 +3,21 @@
 /**
  * VoiceSettingsPanel — member voice preference controls.
  *
- * 5 sliders that gently bias MAIA's baseline voice.
+ * Two layers:
+ *   1. Archetype cards — choose the felt presence (MAIA Core, Warm, Clear, Mentor, Elder, Puck)
+ *   2. Offset sliders — gently bias MAIA's baseline voice within that archetype
+ *
  * MAIA can still self-regulate during HOLD states.
  * Member preferences are offsets, not overrides.
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  MAIA_VOICE_ARCHETYPES,
+  type MaiaVoiceArchetype,
+  type VoiceArchetypeEntry,
+} from '@/lib/voice/voiceArchetypes';
 
 type Offsets = {
   pace: number;
@@ -30,54 +38,24 @@ const DEFAULT_OFFSETS: Offsets = {
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 /**
- * Build preview text that varies with slider positions.
- * The member should hear a noticeably different sentence when they change settings.
+ * Build preview text that varies with the chosen archetype.
  */
-function buildPreviewText(o: Offsets): string {
-  // Pace
-  const pace =
-    o.pace < -0.1 ? 'I can slow down and let each word land.'
-    : o.pace > 0.1 ? 'I can pick up the pace when the moment calls for it.'
-    : 'I will keep a steady, natural pace.';
-
-  // Warmth
-  const warmth =
-    o.warmth < -0.1 ? 'My tone stays clear and measured.'
-    : o.warmth > 0.1 ? 'There is warmth in how I hold this space with you.'
-    : 'My warmth is balanced and present.';
-
-  // Energy
-  const energy =
-    o.energy < -0.1 ? 'The energy is soft and close.'
-    : o.energy > 0.1 ? 'There is brightness in the way I speak.'
-    : 'The energy feels grounded.';
-
-  return `${pace} ${warmth} ${energy}`;
-}
-
-/**
- * Map warmth + energy offsets to a Kokoro voice for preview.
- * This gives audible variation when sliders change — not just speed.
- *
- * Kokoro voices available:
- *   af_heart  — warm, grounded (default)
- *   af_bella  — clear, bright
- *   af_sarah  — neutral, cool
- */
-function resolvePreviewVoice(base: string, o: Offsets): string {
-  // If member has a specific override that isn't the default 'maia', respect it
-  if (base !== 'maia' && base !== 'af_heart' && base !== '') {
-    return base;
+function buildPreviewText(archetype: MaiaVoiceArchetype | null): string {
+  switch (archetype) {
+    case 'maia_warm':
+      return 'Take a breath. You are safe here. Let the next true thing arrive in its own time.';
+    case 'maia_clear':
+      return 'Here is what matters right now. One clear step. You already know what it is.';
+    case 'mentor':
+      return 'Hold the line. You have the capacity for this. I am here with steady counsel.';
+    case 'elder':
+      return 'Let us slow down. Breathe. Choose the next honest step.';
+    case 'puck':
+      return 'Hey, we have got this. One small step, clean and doable. Ready when you are.';
+    case 'maia_core':
+    default:
+      return 'This is MAIA. A calm, grounded voice for clear decisions and gentle guidance.';
   }
-
-  // Warmth high + energy low → af_heart (warm grounded)
-  // Warmth low → af_sarah (cool neutral)
-  // Energy high → af_bella (clear bright)
-  if (o.warmth > 0.1) return 'af_heart';
-  if (o.warmth < -0.1) return 'af_sarah';
-  if (o.energy > 0.1) return 'af_bella';
-  if (o.energy < -0.1) return 'af_heart';
-  return 'af_heart';
 }
 
 export default function VoiceSettingsPanel() {
@@ -87,9 +65,8 @@ export default function VoiceSettingsPanel() {
   const [previewing, setPreviewing] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
+  const [selectedArchetype, setSelectedArchetype] = useState<MaiaVoiceArchetype>('maia_core');
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
-  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
-  const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -99,8 +76,7 @@ export default function VoiceSettingsPanel() {
         const res = await apiFetch('/api/settings/voice');
         if (res.ok) {
           const data = await res.json();
-          setSystemVoiceId(data.system?.voiceId ?? 'maia');
-          setVoiceIdOverride(data.member?.voiceIdOverride ?? null);
+          setSelectedArchetype(data.member?.voiceArchetype || 'maia_core');
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
         }
       } catch (e) {
@@ -111,14 +87,14 @@ export default function VoiceSettingsPanel() {
     })();
   }, []);
 
-  const effectiveVoiceId = useMemo(
-    () => voiceIdOverride || systemVoiceId,
-    [voiceIdOverride, systemVoiceId],
-  );
-
   const setOne = (k: keyof Offsets, v: number) => {
     setSaved(false);
     setOffset((prev) => ({ ...prev, [k]: clamp(v, -0.3, 0.3) }));
+  };
+
+  const onSelectArchetype = (id: MaiaVoiceArchetype) => {
+    setSaved(false);
+    setSelectedArchetype(id);
   };
 
   const onSave = async () => {
@@ -127,7 +103,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride, offset }),
+        body: JSON.stringify({ voiceArchetype: selectedArchetype, offset }),
       });
       if (res.ok) {
         setSaved(true);
@@ -141,22 +117,23 @@ export default function VoiceSettingsPanel() {
   };
 
   const onReset = async () => {
-    setVoiceIdOverride(null);
+    setSelectedArchetype('maia_core');
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
-    // Auto-save the reset, then preview so the member hears "home"
     setSaving(true);
     try {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride: null, offset: { ...DEFAULT_OFFSETS } }),
+        body: JSON.stringify({
+          voiceArchetype: 'maia_core',
+          offset: { ...DEFAULT_OFFSETS },
+        }),
       });
       if (res.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
-        // Fire preview at baseline so member hears the clean home sound
         setTimeout(() => onPreview(), 300);
       }
     } catch (e) {
@@ -170,24 +147,15 @@ export default function VoiceSettingsPanel() {
     setPreviewing(true);
     setPreviewError(null);
     try {
-      // Build sample text that reflects the current slider positions
-      // so the member hears an audibly different preview when they adjust
-      const sampleText = buildPreviewText(offset);
-
-      // Map pace offset to speed within the same clamp range as the conductor
+      const sampleText = buildPreviewText(selectedArchetype);
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
-      // Map warmth/energy to a Kokoro voice so preview reflects offset direction
-      const previewVoice = resolvePreviewVoice(effectiveVoiceId, offset);
-
-      // POST to preview endpoint → get { audioUrl } (real URL, not blob)
-      // This path works reliably on iOS WKWebView + Android WebView
       const res = await apiFetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voiceId: previewVoice,
+          voiceArchetype: selectedArchetype,
           speed,
         }),
       });
@@ -205,16 +173,12 @@ export default function VoiceSettingsPanel() {
       const { audioUrl } = await res.json();
       if (!audioRef.current || !audioUrl) return;
 
-      // Stop any currently playing preview
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-
-      // Cache-bust so iOS doesn't serve stale audio
       audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
       try {
         await audioRef.current.play();
       } catch (playErr: any) {
-        // iOS WKWebView rejects play() if not user-gesture-initiated or muted
         console.warn('[voice-settings] play() rejected:', playErr);
         setPreviewError('Audio blocked. Tap Preview again or check your mute switch.');
         return;
@@ -237,14 +201,22 @@ export default function VoiceSettingsPanel() {
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-sm text-stone-400">Voice</div>
-        <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs text-stone-500">
-          Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
+      {/* Archetype cards */}
+      <div className="space-y-2">
+        <div className="text-sm text-stone-400 px-1">Choose a voice presence</div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {MAIA_VOICE_ARCHETYPES.map((arch) => (
+            <ArchetypeCard
+              key={arch.id}
+              entry={arch}
+              selected={selectedArchetype === arch.id}
+              onSelect={() => onSelectArchetype(arch.id)}
+            />
+          ))}
         </div>
       </div>
 
+      {/* Offset sliders */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
         <VoiceSlider
           label="Pace"
@@ -323,6 +295,36 @@ export default function VoiceSettingsPanel() {
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}
       <audio ref={audioRef} className="hidden" />
     </div>
+  );
+}
+
+// ===================================================================
+// Archetype card sub-component
+// ===================================================================
+
+function ArchetypeCard({
+  entry,
+  selected,
+  onSelect,
+}: {
+  entry: VoiceArchetypeEntry;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={`rounded-xl border p-3 text-left transition-colors ${
+        selected
+          ? 'border-amber-500/60 bg-amber-900/20'
+          : 'border-white/10 bg-white/5 hover:bg-white/10'
+      }`}
+    >
+      <div className={`text-sm font-semibold ${selected ? 'text-amber-300' : 'text-stone-200'}`}>
+        {entry.label}
+      </div>
+      <div className="mt-1 text-xs text-stone-400">{entry.desc}</div>
+    </button>
   );
 }
 

@@ -23,7 +23,7 @@
 
 import * as kokoro from './providers/kokoro';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
-import { resolveKokoroVoice, resolveSpeed } from '@/lib/voice/voiceMap';
+import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
 
@@ -33,6 +33,8 @@ interface TTSRequest {
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
   voiceHint?: VoiceIntent;
+  /** Member's chosen voice archetype — overrides element-based voice selection */
+  voiceArchetype?: string | null;
 }
 
 interface TTSResult {
@@ -85,10 +87,13 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   // Try primary
   if (primary === 'kokoro') {
     try {
-      // Bridge B: Use Conductor's VoiceIntent for voice selection
-      const kokoroVoice = params.voiceHint
-        ? resolveKokoroVoice(params.voiceHint.element)
-        : params.voice;
+      // Archetype overrides element-based selection (member chose a fixed voice)
+      // Otherwise, Bridge B: element from Conductor determines the voice
+      const kokoroVoice = params.voiceArchetype
+        ? resolveVoiceWithArchetype(params.voiceHint?.element ?? 'earth', params.voiceArchetype)
+        : params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : params.voice;
       const kokoroSpeed = params.voiceHint
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;

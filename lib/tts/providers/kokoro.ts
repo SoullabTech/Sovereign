@@ -23,10 +23,13 @@ function getKokoroUrl(): string {
  */
 export const KOKORO_VOICES = [
   'af_heart',   // Female, warm
-  'af_bella',   // Female, clear
-  'af_sarah',   // Female, neutral
+  'af_bella',   // Female, clear (MAIA Core)
+  'af_sarah',   // Female, neutral (MAIA Warm)
+  'af_nicole',  // Female, direct (MAIA Clear)
   'am_adam',    // Male, warm
-  'am_michael', // Male, clear
+  'am_michael', // Male, clear (Mentor)
+  'am_puck',    // Male, playful (Puck)
+  'bm_lewis',   // Male, deep (Elder)
 ] as const;
 
 export type KokoroVoice = typeof KOKORO_VOICES[number] | string;

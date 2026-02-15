@@ -21,6 +21,8 @@ export type SystemVoiceProfile = {
 
 export type MemberVoicePreferences = {
   voiceIdOverride?: string | null;
+  /** Member-chosen voice archetype (maia_core, maia_warm, maia_clear, mentor, elder) */
+  voiceArchetype?: string | null;
   offset: VoiceControlOffsets;
 };
 
@@ -29,6 +31,7 @@ export type VoiceControlsResponse = {
   member: MemberVoicePreferences;
   effective: {
     voiceId: string;
+    voiceArchetype: string | null;
     intent: VoiceControlOffsets; // merged base+offset before conductor modulation
   };
 };

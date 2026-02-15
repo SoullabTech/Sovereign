@@ -20,6 +20,7 @@ import { requireMemberId } from '@/lib/auth/session';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { resolveArchetypeToKokoro } from '@/lib/voice/voiceArchetypes';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { text?: string; voiceId?: string; speed?: number };
+  let body: { text?: string; voiceId?: string; voiceArchetype?: string; speed?: number };
   try {
     body = await req.json();
   } catch {
@@ -89,7 +90,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const voice = body.voiceId || 'af_heart';
+  // Archetype takes precedence over raw voiceId
+  const voice = body.voiceArchetype
+    ? resolveArchetypeToKokoro(body.voiceArchetype)
+    : (body.voiceId || 'af_bella');
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
 
   // Generate MP3 bytes via the TTS router (same path as /api/voice/local-tts)

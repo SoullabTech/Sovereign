@@ -15,6 +15,7 @@ import {
   upsertMemberVoicePreferences,
   mergeVoiceIntent,
 } from '@/lib/voice/voiceControlsService';
+import { isValidArchetype } from '@/lib/voice/voiceArchetypes';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,8 +94,12 @@ export async function POST(request: NextRequest) {
       ? body.voiceIdOverride.slice(0, 64)
       : null;
 
+    // Voice archetype: validate if provided, null if not set or invalid
+    const voiceArchetype = isValidArchetype(body.voiceArchetype) ? body.voiceArchetype : null;
+
     await upsertMemberVoicePreferences(memberId, {
       voiceIdOverride,
+      voiceArchetype,
       offset,
     });
 
