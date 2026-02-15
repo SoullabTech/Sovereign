@@ -46,7 +46,7 @@ const ELEMENT_ICONS: Record<string, string> = {
 };
 
 /**
- * Build preview text that varies with the chosen archetype.
+ * Build preview text that varies with the chosen offsets.
  */
 function buildPreviewText(o: Offsets): string {
   // Pace
@@ -188,7 +188,7 @@ export default function VoiceSettingsPanel() {
       // Use the selected sovereign voice's Kokoro voice for preview
       const previewVoice = resolveToKokoro(effectiveVoiceId);
 
-      // POST to preview endpoint → get { audioUrl } (real URL, not blob)
+      // POST to preview endpoint -> get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
       const res = await apiFetch('/api/voice/preview', {
         method: 'POST',
@@ -245,7 +245,7 @@ export default function VoiceSettingsPanel() {
 
   return (
     <div className="space-y-6 font-sans">
-      {/* ── Voice Character Picker ──────────────────────────────────── */}
+      {/* -- Voice Character Picker -- */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
 
@@ -318,7 +318,7 @@ export default function VoiceSettingsPanel() {
         </div>
       </div>
 
-      {/* ── Voice Tone Offsets ──────────────────────────────────────── */}
+      {/* -- Voice Tone Offsets -- */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
         <div className="text-sm font-medium text-stone-300 mb-1">Tone Offsets</div>
         <VoiceSlider

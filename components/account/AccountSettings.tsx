@@ -849,7 +849,7 @@ export function AccountSettings() {
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           placeholder="Your name"
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
       </div>
       <div>
@@ -859,7 +859,7 @@ export function AccountSettings() {
           value={editPreferredName}
           onChange={(e) => setEditPreferredName(e.target.value)}
           placeholder={editName || 'Your preferred name'}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
         <p className="text-xs text-stone-500 mt-2">Used in greetings and voice conversations</p>
       </div>
@@ -870,7 +870,7 @@ export function AccountSettings() {
           value={editEmail}
           onChange={(e) => setEditEmail(e.target.value)}
           placeholder="your@email.com"
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
       </div>
       <div>
@@ -880,7 +880,7 @@ export function AccountSettings() {
           onChange={(e) => setEditBio(e.target.value)}
           placeholder="A brief description about yourself..."
           rows={3}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none resize-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none resize-none"
         />
       </div>
       <div className="flex items-center justify-between text-sm text-stone-500">
@@ -904,12 +904,12 @@ export function AccountSettings() {
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Your Passkey</label>
         <div className="flex items-center gap-2">
-          <div className="flex-1 px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 font-mono text-sm">
+          <div className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 font-mono text-sm">
             {showPasskey ? profile?.passkey : '••••••••••••••••'}
           </div>
           <button
             onClick={() => setShowPasskey(!showPasskey)}
-            className="p-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-500 hover:text-stone-700 transition-colors"
+            className="p-3 bg-white/5 border border-white/10 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
           >
             {showPasskey ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -920,7 +920,7 @@ export function AccountSettings() {
       </div>
 
       {/* Password Change */}
-      <div className="pt-4 border-t border-[#D4B896]/30">
+      <div className="pt-4 border-t border-white/10">
         <h4 className="text-sm font-medium text-stone-300 mb-4">Change Password</h4>
         <div className="space-y-3">
           {passwordError && (
@@ -938,27 +938,27 @@ export function AccountSettings() {
             value={currentPassword}
             onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
             placeholder="Current password"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={newPassword}
             onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
             placeholder="New password (min 8 characters)"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
             placeholder="Confirm new password"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <motion.button
             type="button"
             onClick={handleChangePassword}
             disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordChanging}
-            className="w-full py-3 bg-white/500 hover:bg-white/80 border border-[#D4B896]/30 rounded-xl text-stone-600 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-stone-200 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             whileTap={{ scale: 0.98 }}
           >
             {passwordChanging ? 'Updating...' : 'Update Password'}
@@ -1018,7 +1018,7 @@ export function AccountSettings() {
                 className={`py-2.5 px-2 rounded-xl border transition-all active:scale-95 relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 hover:bg-white/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 hover:bg-white/10'
                 }`}
                 whileTap={{ scale: 0.95 }}
                 title={suggestion.description}
@@ -1055,7 +1055,7 @@ export function AccountSettings() {
                 }}
                 placeholder="Enter a name..."
                 maxLength={30}
-                className="flex-1 px-3 py-2 bg-white/50 border border-[#D4B896]/30 rounded-lg text-stone-800 text-sm placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-stone-200 text-sm placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
                 autoFocus
               />
               <motion.button
@@ -1072,7 +1072,7 @@ export function AccountSettings() {
                   setCustomNameInput('');
                   setSensitiveNameWarning(false);
                 }}
-                className="px-3 py-2 bg-white/50 border border-[#D4B896]/30 rounded-lg text-stone-500 text-sm transition-colors hover:bg-white/70"
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-stone-400 text-sm transition-colors hover:bg-white/10"
                 whileTap={{ scale: 0.95 }}
               >
                 Cancel
@@ -1105,7 +1105,7 @@ export function AccountSettings() {
                         setCustomNameInput('');
                         setSensitiveNameWarning(false);
                       }}
-                      className="px-3 py-1.5 bg-white/50 border border-[#D4B896]/30 rounded text-stone-500 text-xs transition-colors hover:bg-white/70"
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-stone-400 text-xs transition-colors hover:bg-white/10"
                       whileTap={{ scale: 0.95 }}
                     >
                       Choose different name
@@ -1119,7 +1119,7 @@ export function AccountSettings() {
 
         {/* Current Name Display */}
         {maiaSettings.preferredAssistantName && maiaSettings.preferredAssistantName !== 'MAIA' && (
-          <div className="mt-3 p-2 bg-white/50 rounded-lg text-center">
+          <div className="mt-3 p-2 bg-white/5 rounded-lg text-center">
             <span className="text-xs text-stone-500">Currently: </span>
             <span className="text-xs text-amber-300 font-medium">{maiaSettings.preferredAssistantName}</span>
           </div>
@@ -1144,7 +1144,7 @@ export function AccountSettings() {
                     ? mode === 'sanctuary'
                       ? 'border-emerald-400/70 bg-emerald-500/20 ring-2 ring-emerald-400/40 active:bg-emerald-500/30'
                       : 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1174,11 +1174,11 @@ export function AccountSettings() {
       {/* Voice — sovereign controls live in the dedicated Voice section */}
       <motion.button
         onClick={() => setActiveSection('voice')}
-        className="w-full flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30 active:bg-white/60 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 active:bg-white/60 transition-colors"
         whileTap={{ scale: 0.98 }}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+          <div className="p-2 rounded-lg bg-white/10 text-amber-400">
             <Mic size={18} />
           </div>
           <div className="text-left">
@@ -1207,7 +1207,7 @@ export function AccountSettings() {
                 className={`py-3 rounded-xl border transition-all active:scale-95 relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1241,7 +1241,7 @@ export function AccountSettings() {
                     ? arch.id === 'AUTO'
                       ? 'border-purple-400/70 bg-purple-500/20 text-purple-200 ring-2 ring-purple-400/40 active:bg-purple-500/30'
                       : 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1275,7 +1275,7 @@ export function AccountSettings() {
                 className={`w-full text-left p-3 rounded-xl border transition-all active:scale-[0.98] relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1298,9 +1298,9 @@ export function AccountSettings() {
       </div>
 
       {/* Vocabulary Tooltips */}
-      <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+          <div className="p-2 rounded-lg bg-white/10 text-amber-400">
             <BookOpen size={18} />
           </div>
           <div>
@@ -1347,7 +1347,7 @@ export function AccountSettings() {
       </motion.button>
 
       {/* Build Info */}
-      <div className="mt-6 pt-6 border-t border-[#D4B896]/30">
+      <div className="mt-6 pt-6 border-t border-white/10">
         <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
           <Settings size={16} />
           Build Info
@@ -1519,7 +1519,7 @@ export function AccountSettings() {
         <div className={`flex items-center gap-3 p-4 rounded-xl border ${
           consentSummary?.sanctuaryDefault
             ? 'bg-emerald-500/10 border-emerald-500/30'
-            : 'bg-white/50 border-[#D4B896]/30'
+            : 'bg-white/5 border-white/10'
         }`}>
           <StatusIcon size={20} className={status.color} />
           <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
@@ -1544,7 +1544,7 @@ export function AccountSettings() {
                 <Mic className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="text-amber-200 font-medium mb-2">Audio privacy (default: off)</p>
-                  <p className="text-stone-600 leading-relaxed">
+                  <p className="text-stone-300 leading-relaxed">
                     Raw audio recordings are <strong>not saved</strong> unless you enable audio saving below.
                   </p>
                   <p className="text-stone-500 mt-2 text-xs">
@@ -1604,7 +1604,7 @@ export function AccountSettings() {
                 const serverDisabled = isAudio && !canSaveAudioServer;
 
                 return (
-                  <div key={id} className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+                  <div key={id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="text-sm font-medium text-stone-200">{label}</div>
@@ -1617,7 +1617,7 @@ export function AccountSettings() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
                           saveLocal
                             ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
-                            : 'bg-white/50 border border-[#D4B896]/30 text-stone-400'
+                            : 'bg-white/5 border border-white/10 text-stone-400'
                         }`}
                       >
                         <HardDrive size={14} />
@@ -1633,7 +1633,7 @@ export function AccountSettings() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
                           saveServer
                             ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
-                            : 'bg-white/50 border border-[#D4B896]/30 text-stone-400'
+                            : 'bg-white/5 border border-white/10 text-stone-400'
                         } ${serverDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <Cloud size={14} />
@@ -1671,12 +1671,12 @@ export function AccountSettings() {
         })()}
 
         {/* What MAIA Uses */}
-        <div className="pt-4 border-t border-[#D4B896]/30">
+        <div className="pt-4 border-t border-white/10">
           <label className="text-sm font-medium text-amber-200/80 mb-3 block">
             What MAIA uses your data for
           </label>
           <div className="space-y-2 text-sm">
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <Brain size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Continuity</span>
@@ -1685,7 +1685,7 @@ export function AccountSettings() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <Sparkles size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Personalization</span>
@@ -1694,7 +1694,7 @@ export function AccountSettings() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Cross-device sync</span>
@@ -1723,7 +1723,7 @@ export function AccountSettings() {
         { key: 'communityUpdates', label: 'Community Updates', desc: 'News from the Community Commons' },
         { key: 'productUpdates', label: 'Product Updates', desc: 'New features and improvements' },
       ].map(({ key, label, desc }) => (
-        <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
           <div>
             <div className="text-sm font-medium text-stone-200">{label}</div>
             <div className="text-xs text-stone-400">{desc}</div>
@@ -1746,7 +1746,7 @@ export function AccountSettings() {
         { key: 'shareAnonymousInsights', label: 'Anonymous Insights', desc: 'Help improve MAIA with anonymized usage patterns' },
         { key: 'allowResearchParticipation', label: 'Research Participation', desc: 'Contribute to consciousness research studies' },
       ].map(({ key, label, desc }) => (
-        <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
           <div>
             <div className="text-sm font-medium text-stone-200">{label}</div>
             <div className="text-xs text-stone-400">{desc}</div>
@@ -1835,7 +1835,7 @@ export function AccountSettings() {
       </p>
 
       {projects.length === 0 ? (
-        <div className="p-6 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div className="p-6 bg-white/5 rounded-xl border border-white/10">
           <div className="text-center mb-4">
             <Globe size={32} className="mx-auto mb-3 text-stone-400" />
             <p className="text-stone-500 font-medium">No client portals found</p>
@@ -1850,8 +1850,8 @@ export function AccountSettings() {
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                       border border-[#D4B896]/40 text-sm text-stone-500
-                       hover:bg-white/50 transition-colors"
+                       border border-white/10 text-sm text-stone-500
+                       hover:bg-white/10 transition-colors"
             >
               <ExternalLink size={14} />
               <span>Debug API</span>
@@ -1860,7 +1860,7 @@ export function AccountSettings() {
             <Link
               href="/practitioners/signup"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                       bg-amber-500 text-black text-sm font-medium
+                       bg-amber-500 text-stone-900 text-sm font-medium
                        hover:bg-amber-400 transition-colors"
             >
               <span>Link Practitioner Account</span>
@@ -1890,7 +1890,7 @@ export function AccountSettings() {
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                             border border-[#D4B896]/40 text-sm text-stone-300
+                             border border-white/10 text-sm text-stone-300
                              hover:bg-white/5 transition-colors"
                   >
                     <ExternalLink size={14} />
@@ -1900,7 +1900,7 @@ export function AccountSettings() {
                   <a
                     href={project.previewUrl}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                             bg-amber-500 text-black text-sm font-medium
+                             bg-amber-500 text-stone-900 text-sm font-medium
                              hover:bg-amber-400 transition-colors"
                   >
                     <Eye size={14} />
@@ -1915,10 +1915,10 @@ export function AccountSettings() {
 
       {/* Practitioner Dashboard Link - only show if user has projects */}
       {projects.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[#D4B896]/30">
+        <div className="mt-4 pt-4 border-t border-white/10">
           <a
             href="/practitioner/dashboard"
-            className="flex items-center justify-between p-4 bg-white/50 hover:bg-white/70 rounded-xl border border-[#D4B896]/30 transition-colors"
+            className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
           >
             <span className="text-stone-200">Go to Practitioner Dashboard</span>
             <ChevronRight size={18} className="text-stone-400" />
@@ -1944,7 +1944,7 @@ export function AccountSettings() {
           type="date"
           value={editBirthDate}
           onChange={(e) => setEditBirthDate(e.target.value)}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 focus:border-amber-500/50 focus:outline-none [color-scheme:light]"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
         />
       </div>
 
@@ -1958,7 +1958,7 @@ export function AccountSettings() {
           type="time"
           value={editBirthTime}
           onChange={(e) => setEditBirthTime(e.target.value)}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 focus:border-amber-500/50 focus:outline-none [color-scheme:light]"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
         />
         <p className="text-xs text-stone-500 mt-1">
           Birth time enables accurate rising sign and house placements
@@ -1981,7 +1981,7 @@ export function AccountSettings() {
             }}
             onFocus={() => locationResults.length > 0 && setShowLocationResults(true)}
             placeholder="Search city or place..."
-            className="w-full px-4 py-3 pr-10 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 pr-10 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           {searchingLocation ? (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -1999,7 +1999,7 @@ export function AccountSettings() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute z-10 w-full mt-2 bg-[#EAE5DF] border border-[#D4B896]/30 rounded-xl shadow-xl max-h-60 overflow-y-auto"
+              className="absolute z-10 w-full mt-2 bg-stone-900 border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto"
             >
               {locationResults.map((loc, idx) => (
                 <button
@@ -2017,7 +2017,7 @@ export function AccountSettings() {
                     setBirthLocationSearch('');
                     setShowLocationResults(false);
                   }}
-                  className="w-full px-4 py-3 text-left hover:bg-white/50 border-b border-[#D4B896]/20 last:border-0 transition-colors"
+                  className="w-full px-4 py-3 text-left hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors"
                 >
                   <div className="text-sm text-stone-200 line-clamp-2">{loc.display_name}</div>
                   <div className="text-xs text-stone-500 mt-1">{loc.timezone}</div>
@@ -2131,10 +2131,10 @@ export function AccountSettings() {
                 disabled={comingSoon}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
                   comingSoon
-                    ? 'border-[#D4B896]/20 bg-white/30 cursor-not-allowed'
+                    ? 'border-white/10 bg-white/5 cursor-not-allowed'
                     : currentMode === id
                       ? 'border-amber-500/50 bg-amber-500/15'
-                      : 'border-[#D4B896]/30 bg-white/40 hover:bg-white/50'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
                 }`}
                 whileTap={comingSoon ? {} : { scale: 0.98 }}
               >
@@ -2165,9 +2165,9 @@ export function AccountSettings() {
 
         {/* Auto Sync Toggle */}
         {(currentMode === 'both' || currentMode === 'server_only') && (
-          <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+              <div className="p-2 rounded-lg bg-white/10 text-amber-400">
                 <RefreshCw size={18} />
               </div>
               <div>
@@ -2186,7 +2186,7 @@ export function AccountSettings() {
 
         {/* Sync Status */}
         {(currentMode === 'both' || currentMode === 'server_only') && (
-          <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+          <div className="p-4 bg-white/5 rounded-xl border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-stone-300">Sync Status</span>
               <motion.button
@@ -2200,15 +2200,15 @@ export function AccountSettings() {
               </motion.button>
             </div>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.local}</div>
                 <div className="text-xs text-stone-500">Local</div>
               </div>
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.server}</div>
                 <div className="text-xs text-stone-500">Server</div>
               </div>
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-amber-400">{syncCounts.pending}</div>
                 <div className="text-xs text-stone-500">Pending</div>
               </div>
@@ -2234,7 +2234,7 @@ export function AccountSettings() {
                   const enabled = (decision as { saveLocal: boolean; saveServer: boolean }).saveLocal ||
                                  (decision as { saveLocal: boolean; saveServer: boolean }).saveServer;
                   return (
-                    <div key={type} className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-[#D4B896]/30">
+                    <div key={type} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                       <span className="text-sm text-stone-300 capitalize">{type.replace(/_/g, ' ')}</span>
                       <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-stone-400'}`}>
                         {enabled ? 'Enabled' : 'Disabled'}
@@ -2247,7 +2247,7 @@ export function AccountSettings() {
         )}
 
         {/* Forgetting Ritual */}
-        <div className="pt-4 border-t border-[#D4B896]/30">
+        <div className="pt-4 border-t border-white/10">
           <motion.button
             onClick={() => setShowForgettingRitual(true)}
             className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 hover:from-violet-500/15 hover:to-purple-500/15 border border-violet-500/20 rounded-xl transition-colors"
@@ -2292,7 +2292,7 @@ export function AccountSettings() {
       {userId ? (
         <GoogleConnectSection userId={userId} />
       ) : (
-        <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30 text-stone-500 text-sm">
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-stone-500 text-sm">
           Sign in to connect services
         </div>
       )}
@@ -2302,7 +2302,7 @@ export function AccountSettings() {
   const renderData = () => (
     <div className="space-y-6">
       {/* Export */}
-      <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+      <div className="p-4 bg-white/5 rounded-xl border border-white/10">
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
@@ -2335,7 +2335,7 @@ export function AccountSettings() {
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder={`Type "${profile?.username}" to confirm`}
-              className="w-full px-3 py-2 mb-2 bg-white/50 border border-red-500/20 rounded-lg text-stone-800 text-sm placeholder-stone-400 focus:border-red-500/50 focus:outline-none"
+              className="w-full px-3 py-2 mb-2 bg-white/5 border border-red-500/20 rounded-lg text-stone-200 text-sm placeholder-stone-500 focus:border-red-500/50 focus:outline-none"
             />
             <motion.button
               onClick={deleteAccount}
@@ -2453,7 +2453,7 @@ export function AccountSettings() {
       </AnimatePresence>
 
       {/* Build Info Footer - subtle version stamp */}
-      <div className="mt-12 pt-6 border-t border-[#D4B896]/20 text-center">
+      <div className="mt-12 pt-6 border-t border-white/10 text-center">
         <p className="text-[10px] text-stone-300 font-mono">
           v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
           {Capacitor.isNativePlatform() && (
