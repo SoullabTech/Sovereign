@@ -20,32 +20,35 @@ export async function GET() {
   try {
     const days = 30;
 
-    // Query field_monitor_turns for processing paths and response quality
-    const pathsResult = await query(`
-      SELECT
-        COUNT(*)::int as total,
-        COUNT(*) FILTER (WHERE processing_path = 'FAST')::int as fast,
-        COUNT(*) FILTER (WHERE processing_path = 'CORE')::int as core,
-        COUNT(*) FILTER (WHERE processing_path = 'DEEP')::int as deep,
-        COALESCE(AVG(response_quality), 0)::float as avg_quality
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval
-    `, [days]);
+    // Processing paths from field_orchestrator_telemetry (graceful)
+    let pathRow = { total: 0, fast: 0, core: 0, deep: 0, avg_quality: 0 };
+    try {
+      const pathsResult = await query(`
+        SELECT
+          COUNT(*)::int as total,
+          COUNT(*) FILTER (WHERE path = 'FAST')::int as fast,
+          COUNT(*) FILTER (WHERE path = 'CORE')::int as core,
+          COUNT(*) FILTER (WHERE path = 'DEEP')::int as deep,
+          0::float as avg_quality
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval
+      `, [days]);
+      pathRow = pathsResult.rows[0] || pathRow;
+    } catch { /* table may not exist */ }
 
-    const pathRow = pathsResult.rows[0] || { total: 0, fast: 0, core: 0, deep: 0, avg_quality: 0 };
-
-    // Element distribution
-    const elementsResult = await query(`
-      SELECT element, COUNT(*)::int as count
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval AND element IS NOT NULL
-      GROUP BY element ORDER BY count DESC
-    `, [days]);
-
+    // Element distribution from field_orchestrator_telemetry (graceful)
     const elementDistribution: Record<string, number> = {};
-    elementsResult.rows.forEach((row) => {
-      elementDistribution[row.element] = row.count;
-    });
+    try {
+      const elementsResult = await query(`
+        SELECT pfi_element as element, COUNT(*)::int as count
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval AND pfi_element IS NOT NULL
+        GROUP BY pfi_element ORDER BY count DESC
+      `, [days]);
+      elementsResult.rows.forEach((row: any) => {
+        elementDistribution[row.element] = row.count;
+      });
+    } catch { /* table may not exist */ }
 
     // Try to get field_orchestrator_telemetry (graceful fallback if table doesn't exist)
     let orchestratorData = null;
@@ -125,32 +128,35 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const days = Math.max(1, Math.min(365, body.days || 30));
 
-    // Query field_monitor_turns for processing paths and response quality
-    const pathsResult = await query(`
-      SELECT
-        COUNT(*)::int as total,
-        COUNT(*) FILTER (WHERE processing_path = 'FAST')::int as fast,
-        COUNT(*) FILTER (WHERE processing_path = 'CORE')::int as core,
-        COUNT(*) FILTER (WHERE processing_path = 'DEEP')::int as deep,
-        COALESCE(AVG(response_quality), 0)::float as avg_quality
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval
-    `, [days]);
+    // Processing paths from field_orchestrator_telemetry (graceful)
+    let pathRow = { total: 0, fast: 0, core: 0, deep: 0, avg_quality: 0 };
+    try {
+      const pathsResult = await query(`
+        SELECT
+          COUNT(*)::int as total,
+          COUNT(*) FILTER (WHERE path = 'FAST')::int as fast,
+          COUNT(*) FILTER (WHERE path = 'CORE')::int as core,
+          COUNT(*) FILTER (WHERE path = 'DEEP')::int as deep,
+          0::float as avg_quality
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval
+      `, [days]);
+      pathRow = pathsResult.rows[0] || pathRow;
+    } catch { /* table may not exist */ }
 
-    const pathRow = pathsResult.rows[0] || { total: 0, fast: 0, core: 0, deep: 0, avg_quality: 0 };
-
-    // Element distribution
-    const elementsResult = await query(`
-      SELECT element, COUNT(*)::int as count
-      FROM field_monitor_turns
-      WHERE created_at >= now() - ($1::int || ' days')::interval AND element IS NOT NULL
-      GROUP BY element ORDER BY count DESC
-    `, [days]);
-
+    // Element distribution from field_orchestrator_telemetry (graceful)
     const elementDistribution: Record<string, number> = {};
-    elementsResult.rows.forEach((row) => {
-      elementDistribution[row.element] = row.count;
-    });
+    try {
+      const elementsResult = await query(`
+        SELECT pfi_element as element, COUNT(*)::int as count
+        FROM field_orchestrator_telemetry
+        WHERE created_at >= now() - ($1::int || ' days')::interval AND pfi_element IS NOT NULL
+        GROUP BY pfi_element ORDER BY count DESC
+      `, [days]);
+      elementsResult.rows.forEach((row: any) => {
+        elementDistribution[row.element] = row.count;
+      });
+    } catch { /* table may not exist */ }
 
     // Try to get field_orchestrator_telemetry (graceful fallback if table doesn't exist)
     let orchestratorData = null;
