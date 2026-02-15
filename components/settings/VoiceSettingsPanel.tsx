@@ -293,7 +293,7 @@ export default function VoiceSettingsPanel() {
         <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
 
         {/* Female voices */}
-        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Female</div>
+        <div className="text-xs text-stone-400 uppercase tracking-wider mb-2">Female</div>
         <div className="grid grid-cols-1 gap-2 mb-4">
           {femaleVoices.map((voice) => {
             const isSelected = effectiveVoiceId === voice.id;
@@ -327,7 +327,7 @@ export default function VoiceSettingsPanel() {
         </div>
 
         {/* Male voices */}
-        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Male</div>
+        <div className="text-xs text-stone-400 uppercase tracking-wider mb-2">Male</div>
         <div className="grid grid-cols-1 gap-2">
           {maleVoices.map((voice) => {
             const isSelected = effectiveVoiceId === voice.id;
@@ -401,7 +401,7 @@ export default function VoiceSettingsPanel() {
         />
       </div>
 
-      <p className="text-xs text-stone-500 px-1">
+      <p className="text-xs text-stone-400 px-1">
         Offsets are bounded (&plusmn;0.30) and combined with MAIA&apos;s current elemental pacing.
         Changes are gentle &mdash; sovereignty means the system breathes, not obeys.
       </p>
@@ -484,7 +484,7 @@ function VoiceSlider({
           onChange(Math.round(v * 100) / 100); // round to 2 decimal places
         }}
       />
-      <div className="mt-1 flex justify-between text-xs text-stone-500">
+      <div className="mt-1 flex justify-between text-xs text-stone-400">
         <span>{left}</span>
         <span>{right}</span>
       </div>

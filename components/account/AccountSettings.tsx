@@ -861,7 +861,7 @@ export function AccountSettings() {
           placeholder={editName || 'Your preferred name'}
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
-        <p className="text-xs text-stone-500 mt-2">Used in greetings and voice conversations</p>
+        <p className="text-xs text-stone-400 mt-2">Used in greetings and voice conversations</p>
       </div>
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Email</label>
@@ -883,7 +883,7 @@ export function AccountSettings() {
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none resize-none"
         />
       </div>
-      <div className="flex items-center justify-between text-sm text-stone-500">
+      <div className="flex items-center justify-between text-sm text-stone-400">
         <span>Member since {profile ? new Date(profile.createdAt).toLocaleDateString() : '...'}</span>
         <span>@{profile?.username}</span>
       </div>
@@ -914,7 +914,7 @@ export function AccountSettings() {
             {showPasskey ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        <p className="text-xs text-stone-500 mt-2">
+        <p className="text-xs text-stone-400 mt-2">
           Your passkey is used to recover your account. Keep it safe.
         </p>
       </div>
@@ -1002,7 +1002,7 @@ export function AccountSettings() {
           <User size={16} />
           What should MAIA call herself?
         </label>
-        <p className="text-xs text-stone-500 mb-3">
+        <p className="text-xs text-stone-400 mb-3">
           Choose a name that feels companionable, symbolic, or relational.
           MAIA is not a replacement for a person, authority, or loved one.
         </p>
@@ -1038,7 +1038,7 @@ export function AccountSettings() {
         {!showCustomNameInput ? (
           <motion.button
             onClick={() => setShowCustomNameInput(true)}
-            className="w-full py-2 text-xs text-stone-500 hover:text-stone-500 transition-colors"
+            className="w-full py-2 text-xs text-stone-400 hover:text-stone-400 transition-colors"
             whileTap={{ scale: 0.98 }}
           >
             Or choose a custom name...
@@ -1120,7 +1120,7 @@ export function AccountSettings() {
         {/* Current Name Display */}
         {maiaSettings.preferredAssistantName && maiaSettings.preferredAssistantName !== 'MAIA' && (
           <div className="mt-3 p-2 bg-white/5 rounded-lg text-center">
-            <span className="text-xs text-stone-500">Currently: </span>
+            <span className="text-xs text-stone-400">Currently: </span>
             <span className="text-xs text-amber-300 font-medium">{maiaSettings.preferredAssistantName}</span>
           </div>
         )}
@@ -1160,7 +1160,7 @@ export function AccountSettings() {
                 }`}>
                   {mode === 'continuity' ? 'Continuity' : 'Sanctuary'}
                 </div>
-                <div className="text-xs text-stone-500 mt-1">
+                <div className="text-xs text-stone-400 mt-1">
                   {mode === 'continuity'
                     ? 'MAIA remembers what helps growth.'
                     : "Sessions aren't saved. Speak freely."}
@@ -1174,7 +1174,7 @@ export function AccountSettings() {
       {/* Voice — sovereign controls live in the dedicated Voice section */}
       <motion.button
         onClick={() => setActiveSection('voice')}
-        className="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 active:bg-white/60 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 active:bg-white/10 transition-colors"
         whileTap={{ scale: 0.98 }}
       >
         <div className="flex items-center gap-3">
@@ -1183,12 +1183,12 @@ export function AccountSettings() {
           </div>
           <div className="text-left">
             <div className="text-sm font-medium text-stone-200">Voice Preferences</div>
-            <div className="text-xs text-stone-500">
+            <div className="text-xs text-stone-400">
               Pace, warmth, clarity, guidance style, energy
             </div>
           </div>
         </div>
-        <ChevronRight size={16} className="text-stone-500" />
+        <ChevronRight size={16} className="text-stone-400" />
       </motion.button>
 
       {/* Memory Depth */}
@@ -1288,7 +1288,7 @@ export function AccountSettings() {
                   <span className="text-lg">{desc.icon}</span>
                   <div>
                     <span className={`text-sm font-medium ${isSelected ? 'text-amber-200' : 'text-stone-300'}`}>{desc.title}</span>
-                    <p className="text-xs text-stone-500">{desc.description}</p>
+                    <p className="text-xs text-stone-400">{desc.description}</p>
                   </div>
                 </div>
               </motion.button>
@@ -1305,7 +1305,7 @@ export function AccountSettings() {
           </div>
           <div>
             <div className="text-sm font-medium text-stone-200">Vocabulary Tooltips</div>
-            <div className="text-xs text-stone-500">
+            <div className="text-xs text-stone-400">
               Highlight soul vocabulary terms with hover definitions
             </div>
           </div>
@@ -1356,7 +1356,7 @@ export function AccountSettings() {
           {/* Native App Info */}
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <span className="text-stone-500">Native App Build:</span>
+              <span className="text-stone-400">Native App Build:</span>
               <p className="text-stone-300 font-mono">
                 {nativeBuildInfo
                   ? `v${nativeBuildInfo.version} (${nativeBuildInfo.build})`
@@ -1364,7 +1364,7 @@ export function AccountSettings() {
               </p>
             </div>
             <div>
-              <span className="text-stone-500">Server Build:</span>
+              <span className="text-stone-400">Server Build:</span>
               <p className="text-stone-300 font-mono">
                 v{lastCheckResult?.serverVersion || currentVersion?.version || '...'} ({(lastCheckResult?.serverCommit || currentVersion?.commit)?.slice(0, 8) || '...'})
               </p>
@@ -1378,7 +1378,7 @@ export function AccountSettings() {
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-medium text-stone-200">Check for Updates</h4>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-stone-400 mt-0.5">
                 Last checked: {lastCheckResult ? new Date().toLocaleTimeString() : 'Never'}
               </p>
             </div>
@@ -1419,7 +1419,7 @@ export function AccountSettings() {
           <Mic size={16} />
           Voice Preferences
         </label>
-        <p className="text-xs text-stone-500 mb-4">
+        <p className="text-xs text-stone-400 mb-4">
           Gently bias MAIA&apos;s vocal tone. These are offsets, not overrides &mdash;
           MAIA can still self-regulate during HOLD states.
         </p>
@@ -1547,10 +1547,10 @@ export function AccountSettings() {
                   <p className="text-stone-300 leading-relaxed">
                     Raw audio recordings are <strong>not saved</strong> unless you enable audio saving below.
                   </p>
-                  <p className="text-stone-500 mt-2 text-xs">
+                  <p className="text-stone-400 mt-2 text-xs">
                     Transcript and audio are separate: you can save transcripts without saving raw audio.
                   </p>
-                  <p className="text-stone-500 mt-1 text-xs">
+                  <p className="text-stone-400 mt-1 text-xs">
                     {transcriptNote} Use <strong>Sanctuary mode</strong> for sessions that aren&apos;t saved at all.
                   </p>
                 </div>
@@ -1567,7 +1567,7 @@ export function AccountSettings() {
             </div>
             <div>
               <div className="text-sm font-medium text-emerald-200">Sanctuary Mode Default</div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-stone-400">
                 Ephemeral sessions — no conversations, journals, transcripts, or audio saved
               </div>
             </div>
@@ -1652,7 +1652,7 @@ export function AccountSettings() {
                     )}
                     {/* Status text when neither enabled */}
                     {neitherEnabled && (
-                      <div className="mt-2 text-xs text-stone-500 text-center">
+                      <div className="mt-2 text-xs text-stone-400 text-center">
                         {id === 'audio' ? 'Audio recordings will not be stored' : `${label} will not be stored`}
                       </div>
                     )}
@@ -1680,7 +1680,7 @@ export function AccountSettings() {
               <Brain size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Continuity</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   MAIA remembers your patterns, preferences, and growth journey across sessions.
                 </p>
               </div>
@@ -1689,7 +1689,7 @@ export function AccountSettings() {
               <Sparkles size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Personalization</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   Your journals and conversations help MAIA understand what matters to you.
                 </p>
               </div>
@@ -1698,13 +1698,13 @@ export function AccountSettings() {
               <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Cross-device sync</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   Server storage enables access from any device you sign into.
                 </p>
               </div>
             </div>
           </div>
-          <p className="text-xs text-stone-500 mt-4 text-center">
+          <p className="text-xs text-stone-400 mt-4 text-center">
             MAIA never shares your data with third parties or uses it for advertising.
           </p>
         </div>
@@ -1714,7 +1714,7 @@ export function AccountSettings() {
 
   const renderNotifications = () => (
     <div className="space-y-4">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Choose which emails you'd like to receive from MAIA.
       </p>
       {[
@@ -1739,7 +1739,7 @@ export function AccountSettings() {
 
   const renderPrivacy = () => (
     <div className="space-y-4">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Control how your data is used to improve MAIA for everyone.
       </p>
       {[
@@ -1772,7 +1772,7 @@ export function AccountSettings() {
             <span className="text-3xl">{tierInfo.emoji}</span>
             <div>
               <div className={`text-xl font-medium ${tierInfo.color}`}>{tierInfo.name}</div>
-              <div className="text-sm text-stone-500">
+              <div className="text-sm text-stone-400">
                 {profile?.membership?.joinedAt
                   ? `Since ${new Date(profile.membership.joinedAt).toLocaleDateString()}`
                   : 'Current tier'}
@@ -1780,7 +1780,7 @@ export function AccountSettings() {
             </div>
           </div>
           {profile?.membership?.amount ? (
-            <div className="text-sm text-stone-500">
+            <div className="text-sm text-stone-400">
               Contributing ${profile.membership.amount}/month
             </div>
           ) : null}
@@ -1789,7 +1789,7 @@ export function AccountSettings() {
         {/* Tier Benefits */}
         <div>
           <h4 className="text-sm font-medium text-stone-300 mb-3">All Members Receive</h4>
-          <ul className="space-y-2 text-sm text-stone-500">
+          <ul className="space-y-2 text-sm text-stone-400">
             <li className="flex items-center gap-2">
               <Check size={14} className="text-emerald-400" />
               Full MAIA access with all features
@@ -1819,7 +1819,7 @@ export function AccountSettings() {
         <div className="mt-4 text-center">
           <Link
             href="/maia/stewardship"
-            className="text-sm text-stone-500 hover:text-stone-500 transition-colors"
+            className="text-sm text-stone-400 hover:text-stone-400 transition-colors"
           >
             Why support matters →
           </Link>
@@ -1830,7 +1830,7 @@ export function AccountSettings() {
 
   const renderPortals = () => (
     <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-4">
+      <p className="text-sm text-stone-400 mb-4">
         Quick access to your client-facing portal sites.
       </p>
 
@@ -1838,7 +1838,7 @@ export function AccountSettings() {
         <div className="p-6 bg-white/5 rounded-xl border border-white/10">
           <div className="text-center mb-4">
             <Globe size={32} className="mx-auto mb-3 text-stone-300" />
-            <p className="text-stone-500 font-medium">No client portals found</p>
+            <p className="text-stone-400 font-medium">No client portals found</p>
             <p className="text-sm text-stone-400 mt-1">
               Your member account may not be linked to a practitioner record yet.
             </p>
@@ -1850,7 +1850,7 @@ export function AccountSettings() {
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                       border border-white/10 text-sm text-stone-500
+                       border border-white/10 text-sm text-stone-400
                        hover:bg-white/10 transition-colors"
             >
               <ExternalLink size={14} />
@@ -1879,7 +1879,7 @@ export function AccountSettings() {
                   <div className="text-base font-medium text-amber-100 truncate">
                     {project.name}
                   </div>
-                  <div className="text-sm text-stone-500 truncate">
+                  <div className="text-sm text-stone-400 truncate">
                     {project.publicUrl}
                   </div>
                 </div>
@@ -1930,7 +1930,7 @@ export function AccountSettings() {
 
   const renderAstrology = () => (
     <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-4">
+      <p className="text-sm text-stone-400 mb-4">
         Share your birth details so MAIA can weave astrological wisdom into your conversations.
       </p>
 
@@ -1960,7 +1960,7 @@ export function AccountSettings() {
           onChange={(e) => setEditBirthTime(e.target.value)}
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
         />
-        <p className="text-xs text-stone-500 mt-1">
+        <p className="text-xs text-stone-400 mt-1">
           Birth time enables accurate rising sign and house placements
         </p>
       </div>
@@ -2020,7 +2020,7 @@ export function AccountSettings() {
                   className="w-full px-4 py-3 text-left hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors"
                 >
                   <div className="text-sm text-stone-200 line-clamp-2">{loc.display_name}</div>
-                  <div className="text-xs text-stone-500 mt-1">{loc.timezone}</div>
+                  <div className="text-xs text-stone-400 mt-1">{loc.timezone}</div>
                 </button>
               ))}
             </motion.div>
@@ -2032,7 +2032,7 @@ export function AccountSettings() {
           <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <div className="text-xs text-amber-300">Selected:</div>
             <div className="text-sm text-stone-200 line-clamp-1">{selectedLocation.name}</div>
-            <div className="text-xs text-stone-500">{selectedLocation.timezone}</div>
+            <div className="text-xs text-stone-400">{selectedLocation.timezone}</div>
           </div>
         )}
       </div>
@@ -2044,7 +2044,7 @@ export function AccountSettings() {
             <Star size={18} />
             <span className="text-sm font-medium">Birth Chart Saved</span>
           </div>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-stone-400">
             MAIA can now reference your natal chart and current transits in conversations.
           </p>
           <motion.button
@@ -2077,7 +2077,7 @@ export function AccountSettings() {
             setSelectedLocation(null);
             saveBirthData();
           }}
-          className="w-full text-sm text-stone-500 hover:text-stone-500 transition-colors"
+          className="w-full text-sm text-stone-400 hover:text-stone-400 transition-colors"
         >
           Clear birth data
         </button>
@@ -2113,7 +2113,7 @@ export function AccountSettings() {
 
     return (
       <div className="space-y-6">
-        <p className="text-sm text-stone-500 mb-4">
+        <p className="text-sm text-stone-400 mb-4">
           You decide what MAIA remembers. Control where your data lives.
         </p>
 
@@ -2142,14 +2142,14 @@ export function AccountSettings() {
                   <Icon size={20} className={currentMode === id && !comingSoon ? 'text-amber-400' : 'text-stone-400'} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-500' : 'text-stone-200'}`}>{label}</span>
+                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-400' : 'text-stone-200'}`}>{label}</span>
                       {comingSoon && (
                         <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-300 rounded">
                           Coming Soon
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-stone-500">{desc}</div>
+                    <div className="text-xs text-stone-400">{desc}</div>
                   </div>
                   {currentMode === id && !comingSoon && (
                     <Check size={18} className="ml-auto text-amber-400" />
@@ -2172,7 +2172,7 @@ export function AccountSettings() {
               </div>
               <div>
                 <div className="text-sm font-medium text-stone-200">Auto Sync</div>
-                <div className="text-xs text-stone-500">
+                <div className="text-xs text-stone-400">
                   Automatically sync changes in the background
                 </div>
               </div>
@@ -2202,19 +2202,19 @@ export function AccountSettings() {
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.local}</div>
-                <div className="text-xs text-stone-500">Local</div>
+                <div className="text-xs text-stone-400">Local</div>
               </div>
               <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.server}</div>
-                <div className="text-xs text-stone-500">Server</div>
+                <div className="text-xs text-stone-400">Server</div>
               </div>
               <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-amber-400">{syncCounts.pending}</div>
-                <div className="text-xs text-stone-500">Pending</div>
+                <div className="text-xs text-stone-400">Pending</div>
               </div>
             </div>
             {syncState.lastSyncAt && (
-              <div className="mt-3 text-xs text-stone-500 text-center">
+              <div className="mt-3 text-xs text-stone-400 text-center">
                 Last synced: {syncState.lastSyncAt.toLocaleString()}
               </div>
             )}
@@ -2259,7 +2259,7 @@ export function AccountSettings() {
               </div>
               <div className="text-left">
                 <div className="text-sm font-medium text-violet-200">Forgetting Ritual</div>
-                <div className="text-xs text-stone-500">
+                <div className="text-xs text-stone-400">
                   Consciously release what no longer serves you
                 </div>
               </div>
@@ -2274,7 +2274,7 @@ export function AccountSettings() {
             href="https://github.com/SoullabTech/Sovereign/blob/main/docs/canon/MAIA_PROMISE_v1.0.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-stone-400 hover:text-stone-500 transition-colors"
+            className="text-xs text-stone-400 hover:text-stone-400 transition-colors"
           >
             MAIA operates under explicit architectural constraints.
           </a>
@@ -2285,14 +2285,14 @@ export function AccountSettings() {
 
   const renderConnections = () => (
     <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Connect external services to enhance your MAIA experience.
       </p>
 
       {userId ? (
         <GoogleConnectSection userId={userId} />
       ) : (
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-stone-500 text-sm">
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-stone-400 text-sm">
           Sign in to connect services
         </div>
       )}
@@ -2307,7 +2307,7 @@ export function AccountSettings() {
           <Download className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-sm font-medium text-stone-200">Export Your Data</h4>
-            <p className="text-xs text-stone-500 mt-1 mb-3">
+            <p className="text-xs text-stone-400 mt-1 mb-3">
               Download all your data including profile, settings, and session history.
             </p>
             <motion.button
@@ -2327,7 +2327,7 @@ export function AccountSettings() {
           <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-sm font-medium text-red-300">Delete Account</h4>
-            <p className="text-xs text-stone-500 mt-1 mb-3">
+            <p className="text-xs text-stone-400 mt-1 mb-3">
               Permanently delete your account and all associated data. This cannot be undone.
             </p>
             <input
@@ -2358,7 +2358,7 @@ export function AccountSettings() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <div className="animate-pulse text-stone-500">Loading settings...</div>
+        <div className="animate-pulse text-stone-400">Loading settings...</div>
       </div>
     );
   }
