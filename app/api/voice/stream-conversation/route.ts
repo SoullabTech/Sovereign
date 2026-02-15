@@ -62,6 +62,7 @@ import {
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -429,7 +430,7 @@ export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
   const {
     message,
-    userId,
+    userId: bodyUserId,
     sessionId,
     element,
     voice,
@@ -440,6 +441,9 @@ export async function POST(req: NextRequest) {
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
+
+  // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
+  const userId = bodyUserId || await getMemberIdFromRequest(req);
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer();

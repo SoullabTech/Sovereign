@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
-import { apiFetch } from '@/lib/http/apiBase';
+import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 
 /** Relational stack metadata from server */
 interface RelationalMetadata {
@@ -599,6 +599,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         credentials: 'include', // Belt + suspenders: cookies AND token header
         body: JSON.stringify({
           message,
+          userId: getValidMemberId(),  // Member ID for voice prefs + archetype resolution
           voice,
           speed,
           model,  // TTS quality: tts-1 (faster) or tts-1-hd (richer)
