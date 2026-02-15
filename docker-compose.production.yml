@@ -116,6 +116,9 @@ services:
       # Sovereign TTS: Kokoro primary, OpenAI fallback
       MAIA_LOCAL_VOICE_ENABLED: "1"
       KOKORO_TTS_URL: "http://kokoro-tts:8880"
+      # A/B test: set to "kokoro" to route MAIA voices through Kokoro (af_kore/af_sarah/af_nicole)
+      # Default (unset or "openai"): MAIA uses OpenAI voices (alloy/shimmer/nova)
+      # MAIA_VOICE_OVERRIDE: "kokoro"
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
