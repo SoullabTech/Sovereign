@@ -670,7 +670,8 @@ export async function POST(request: NextRequest) {
       distressSignal,
       sessionId,
       voicePrefs.intent,
-      buildPatternOfferPromptSection(patternOffer)
+      buildPatternOfferPromptSection(patternOffer),
+      serverUserName
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1571,7 +1572,8 @@ async function generateSpiralogicResponseWithLLM(
   distressSignal?: DistressSignal | null,
   sessionId?: string,
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
-  patternOfferSection?: string
+  patternOfferSection?: string,
+  userName?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1604,7 +1606,8 @@ async function generateSpiralogicResponseWithLLM(
     astrologyContext,
     preferredAssistantName,
     distressSignal,
-    voiceOffsets
+    voiceOffsets,
+    userName
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -1613,11 +1616,18 @@ async function generateSpiralogicResponseWithLLM(
   }
 
   // Format conversation history for LLM
-  const conversationContext = conversationHistory
+  // CLAMP: Keep last 10 turns max to prevent context window overflow
+  // (Each turn is ~200-500 chars → 10 turns ≈ 2k-5k chars ≈ 500-1250 tokens)
+  const MAX_HISTORY_TURNS = 10;
+  const clampedHistory = conversationHistory.length > MAX_HISTORY_TURNS
+    ? conversationHistory.slice(-MAX_HISTORY_TURNS)
+    : conversationHistory;
+
+  const conversationContext = clampedHistory
     .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
     .join('\n\n');
 
-  const fullUserInput = conversationContext
+  let fullUserInput = conversationContext
     ? `${conversationContext}\n\nUser: ${message}`
     : message;
 
@@ -1788,9 +1798,32 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking — MAIA proceeds without Library
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
+  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
     ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
     : systemPrompt;
+
+  // HARD CLAMP: Prevent context window overflow
+  // Claude Opus 4.5 has 200k tokens ≈ ~800k chars. Keep well under that.
+  // System prompt + user input combined should stay under 150k chars (~37k tokens).
+  const MAX_SYSTEM_PROMPT_CHARS = 100_000;  // ~25k tokens for system
+  const MAX_USER_INPUT_CHARS = 50_000;      // ~12k tokens for conversation
+  const promptChars = finalSystemPrompt.length;
+  const inputChars = fullUserInput.length;
+  const totalChars = promptChars + inputChars;
+
+  // Diagnostic log — always print for visibility
+  console.log(`📏 [PROMPT-SIZE] system=${promptChars.toLocaleString()} user=${inputChars.toLocaleString()} total=${totalChars.toLocaleString()} chars (~${Math.round(totalChars / 4).toLocaleString()} tokens)`);
+
+  if (finalSystemPrompt.length > MAX_SYSTEM_PROMPT_CHARS) {
+    console.warn(`⚠️ [PROMPT-SIZE] System prompt exceeds ${MAX_SYSTEM_PROMPT_CHARS} chars, truncating`);
+    finalSystemPrompt = finalSystemPrompt.slice(0, MAX_SYSTEM_PROMPT_CHARS) + '\n\n[System prompt truncated for length]';
+  }
+
+  if (fullUserInput.length > MAX_USER_INPUT_CHARS) {
+    console.warn(`⚠️ [PROMPT-SIZE] User input exceeds ${MAX_USER_INPUT_CHARS} chars, truncating conversation history`);
+    // Keep the most recent part (user's actual message is at the end)
+    fullUserInput = fullUserInput.slice(-MAX_USER_INPUT_CHARS);
+  }
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
@@ -1900,11 +1933,17 @@ function buildSacredAttendingPrompt(
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
   distressSignal?: DistressSignal | null,
-  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number }
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
+  userName?: string
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
     ? `\nThis member calls you "${preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n`
+    : '';
+
+  // Build the member name instruction
+  const memberNameInstruction = userName && userName !== 'Explorer' && userName !== 'Friend' && userName !== 'friend'
+    ? `\nYou are speaking with ${userName}. Use their name naturally and sparingly — not every message, but enough to show you know who they are. NEVER call them "friend" as a substitute for their name.\n`
     : '';
 
   // Build voice preference guidance (language-level, not audio)
@@ -1919,7 +1958,7 @@ This person has chosen these language-level preferences:
 ` : '';
 
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
-${nameInstruction}
+${nameInstruction}${memberNameInstruction}
 
 # Core Voice Principles
 
