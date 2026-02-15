@@ -2421,8 +2421,8 @@ export function AccountSettings() {
                 onClick={() => setActiveSection(id)}
                 className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
-                <Icon size={18} className="text-amber-400/80 group-hover:text-amber-300 transition-colors" />
-                <span className="flex-1 text-left text-white/90">{label}</span>
+                <Icon size={18} className="text-amber-400 group-hover:text-amber-300 transition-colors" />
+                <span className="flex-1 text-left text-white">{label}</span>
                 <ChevronRight size={16} className="text-stone-300 group-hover:text-amber-300 transition-colors" />
               </button>
             ))}
