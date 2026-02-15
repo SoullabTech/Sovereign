@@ -428,18 +428,30 @@ async function synthesizeSentence(
     return { audio, format: 'mp3' };
   } catch (err) {
     if (err instanceof TTSFallbackToOpenAI) {
-      // Expected — fall through to OpenAI
+      // If the router specified a voice (archetype-driven), use it directly
+      if (err.voice) {
+        try {
+          const response = await synthesizeSpeech({ text, voice: err.voice, format: 'mp3', speed });
+          const buffer = Buffer.from(await response.arrayBuffer());
+          return { audio: buffer.toString('base64'), format: 'mp3' };
+        } catch (e) {
+          console.error(`[synthesizeSentence] OpenAI archetype voice failed: ${e instanceof Error ? e.message : e}`);
+        }
+      }
+      // Fall through to final OpenAI fallback
     } else {
       console.warn(`[StreamConversation] ttsRouter error: ${err instanceof Error ? err.message : err}`);
     }
   }
 
-  // OpenAI fallback
+  // OpenAI fallback — archetype-aware (never drift to element-based defaults)
   try {
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (voice && voice !== 'maya')
-      ? voice
-      : elementVoice ?? 'nova';
+    const archetypeResolution = resolveArchetypeVoice(effectiveSentenceArchetype);
+    const openaiVoice = archetypeResolution.provider === 'openai'
+      ? archetypeResolution.voice
+      : (voice && voice !== 'maya')
+        ? voice
+        : (elementKey ? resolveOpenAIVoice(elementKey) : null) ?? 'alloy';
 
     const response = await synthesizeSpeech({
       text,
