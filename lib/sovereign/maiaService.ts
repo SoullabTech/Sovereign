@@ -72,6 +72,7 @@ import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
+import { logFieldOrchestratorTelemetry } from '../field/fieldOrchestratorTelemetry';
 import {
   STATE_VECTOR_OUTPUT_CONTRACT,
   isLikelyCheckin,
@@ -1176,6 +1177,12 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     });
     baseSystemPrompt += formatFieldAddendum(fieldContext);
     console.info('[field-orchestrator] [FAST]', fieldContext?.meta);
+    // Fire-and-forget telemetry persistence for Command Center
+    logFieldOrchestratorTelemetry(fieldContext, {
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      path: 'FAST',
+    });
   } catch {
     // Field intelligence must never break the hot path
   }
@@ -1487,6 +1494,12 @@ The current user has not provided their name. Address them as "friend" or "there
     });
     adaptivePrompt += formatFieldAddendum(fieldContext);
     console.info('[field-orchestrator] [CORE]', fieldContext?.meta);
+    // Fire-and-forget telemetry persistence for Command Center
+    logFieldOrchestratorTelemetry(fieldContext, {
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      path: 'CORE',
+    });
   } catch {
     // Field intelligence must never break the hot path
   }
