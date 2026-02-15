@@ -3,6 +3,7 @@
 /**
  * VoiceSettingsPanel — member voice preference controls.
  *
+ * Voice character picker: choose from all sovereign voices (3 female, 2 male).
  * 5 sliders that gently bias MAIA's baseline voice.
  * MAIA can still self-regulate during HOLD states.
  * Member preferences are offsets, not overrides.
@@ -10,6 +11,12 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  SOVEREIGN_VOICES,
+  getSovereignVoice,
+  resolveToKokoro,
+  type SovereignVoiceId,
+} from '@/lib/voice/sovereignVoices';
 
 type Offsets = {
   pace: number;
@@ -28,6 +35,15 @@ const DEFAULT_OFFSETS: Offsets = {
 };
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+/** Element badges for visual identification */
+const ELEMENT_ICONS: Record<string, string> = {
+  earth: '🌍',
+  water: '💧',
+  fire: '🔥',
+  air: '🌬️',
+  aether: '✨',
+};
 
 /**
  * Build preview text that varies with slider positions.
@@ -55,31 +71,6 @@ function buildPreviewText(o: Offsets): string {
   return `${pace} ${warmth} ${energy}`;
 }
 
-/**
- * Map warmth + energy offsets to a Kokoro voice for preview.
- * This gives audible variation when sliders change — not just speed.
- *
- * Kokoro voices available:
- *   af_heart  — warm, grounded (default)
- *   af_bella  — clear, bright
- *   af_sarah  — neutral, cool
- */
-function resolvePreviewVoice(base: string, o: Offsets): string {
-  // If member has a specific override that isn't the default 'maia', respect it
-  if (base !== 'maia' && base !== 'af_heart' && base !== '') {
-    return base;
-  }
-
-  // Warmth high + energy low → af_heart (warm grounded)
-  // Warmth low → af_sarah (cool neutral)
-  // Energy high → af_bella (clear bright)
-  if (o.warmth > 0.1) return 'af_heart';
-  if (o.warmth < -0.1) return 'af_sarah';
-  if (o.energy > 0.1) return 'af_bella';
-  if (o.energy < -0.1) return 'af_heart';
-  return 'af_heart';
-}
-
 export default function VoiceSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -88,7 +79,7 @@ export default function VoiceSettingsPanel() {
   const [previewError, setPreviewError] = useState<string | null>(null);
 
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
-  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
+  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -99,8 +90,19 @@ export default function VoiceSettingsPanel() {
         const res = await apiFetch('/api/settings/voice');
         if (res.ok) {
           const data = await res.json();
-          setSystemVoiceId(data.system?.voiceId ?? 'maia');
-          setVoiceIdOverride(data.member?.voiceIdOverride ?? null);
+          // Migrate legacy voice IDs on load
+          const rawVoiceId = data.member?.voiceIdOverride ?? data.system?.voiceId ?? 'maia_core';
+          const LEGACY_MAP: Record<string, string> = {
+            maia: 'maia_core', alloy: 'maia_core', shimmer: 'maia_warm',
+            nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+          };
+          const migratedVoice = LEGACY_MAP[rawVoiceId] ?? rawVoiceId;
+
+          setSystemVoiceId(data.system?.voiceId ?? 'maia_core');
+          setVoiceIdOverride(data.member?.voiceIdOverride ? migratedVoice : null);
+          if (!data.member?.voiceIdOverride && migratedVoice !== (data.system?.voiceId ?? 'maia_core')) {
+            setVoiceIdOverride(migratedVoice);
+          }
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
         }
       } catch (e) {
@@ -116,9 +118,19 @@ export default function VoiceSettingsPanel() {
     [voiceIdOverride, systemVoiceId],
   );
 
+  const selectedVoice = useMemo(
+    () => getSovereignVoice(effectiveVoiceId),
+    [effectiveVoiceId],
+  );
+
   const setOne = (k: keyof Offsets, v: number) => {
     setSaved(false);
     setOffset((prev) => ({ ...prev, [k]: clamp(v, -0.3, 0.3) }));
+  };
+
+  const onSelectVoice = (voiceId: SovereignVoiceId) => {
+    setSaved(false);
+    setVoiceIdOverride(voiceId);
   };
 
   const onSave = async () => {
@@ -127,7 +139,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride, offset }),
+        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, offset }),
       });
       if (res.ok) {
         setSaved(true);
@@ -177,8 +189,8 @@ export default function VoiceSettingsPanel() {
       // Map pace offset to speed within the same clamp range as the conductor
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
-      // Map warmth/energy to a Kokoro voice so preview reflects offset direction
-      const previewVoice = resolvePreviewVoice(effectiveVoiceId, offset);
+      // Use the selected sovereign voice's Kokoro voice for preview
+      const previewVoice = resolveToKokoro(effectiveVoiceId);
 
       // POST to preview endpoint → get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
@@ -235,17 +247,88 @@ export default function VoiceSettingsPanel() {
     return <div className="text-sm text-stone-400">Loading voice settings...</div>;
   }
 
+  // Split voices into female (maia_*) and male (atlas*) groups
+  const femaleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('maia_'));
+  const maleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('atlas'));
+
   return (
     <div className="space-y-6 font-sans">
+      {/* ── Voice Character Picker ──────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-sm text-stone-400">Voice</div>
-        <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs text-stone-500">
-          Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
+        <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
+
+        {/* Female voices */}
+        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Female</div>
+        <div className="grid grid-cols-1 gap-2 mb-4">
+          {femaleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Male voices */}
+        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2">Male</div>
+        <div className="grid grid-cols-1 gap-2">
+          {maleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* ── Voice Tone Offsets ──────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
+        <div className="text-sm font-medium text-stone-300 mb-1">Tone Offsets</div>
         <VoiceSlider
           label="Pace"
           value={offset.pace}

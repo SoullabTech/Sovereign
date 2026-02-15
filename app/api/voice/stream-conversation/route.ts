@@ -27,6 +27,7 @@ import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
+import { SOVEREIGN_VOICES, resolveToKokoro, resolveToOpenAI } from '@/lib/voice/sovereignVoices';
 import type { Element } from '@/lib/types/voiceIntent';
 import {
   processThreshold,
@@ -61,6 +62,7 @@ import {
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelemetry';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
@@ -116,17 +118,28 @@ async function synthesizeWithFallback(
   // ── Sovereign TTS routing: Kokoro first, OpenAI fallback ──
   const elementKey = (options.element ?? '').toLowerCase() as Element;
 
+  // ── Resolve sovereign voice IDs before passing to any provider ──
+  // If the frontend sends 'atlas_deep', resolve to 'am_michael' (Kokoro) / 'onyx' (OpenAI)
+  const rawVoice = options.voice && options.voice !== 'maya' ? options.voice : undefined;
+  const isSovereignId = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
+  const kokoroVoice = rawVoice
+    ? (isSovereignId ? resolveToKokoro(rawVoice) : rawVoice)
+    : undefined;
+  const openaiVoice = rawVoice
+    ? (isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice)
+    : undefined;
+
   // Try Kokoro via ttsRouter (same path as preview endpoint)
   try {
     const result = await ttsRouter.synthesize({
       text,
-      voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+      voice: kokoroVoice,
       format: 'mp3',
       speed: options.speed,
       voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
     });
     const audio = result.audioBuffer.toString('base64');
-    console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} voice=${result.reason} ${result.audioBuffer.length}B MP3`);
+    console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} sovereign=${rawVoice || 'none'} kokoro=${kokoroVoice || 'auto'} ${result.audioBuffer.length}B MP3`);
     return { audio, format: 'mp3', source: 'kokoro' };
   } catch (err) {
     if (err instanceof TTSFallbackToOpenAI) {
@@ -143,14 +156,12 @@ async function synthesizeWithFallback(
   }
 
   try {
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (options.voice && options.voice !== 'maya')
-      ? options.voice
-      : elementVoice ?? 'nova';
-    console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} voice=${openaiVoice}`);
+    const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
+    const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'nova';
+    console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} sovereign=${rawVoice || 'none'} openai=${finalOpenaiVoice}`);
     const response = await synthesizeSpeech({
       text,
-      voice: openaiVoice,
+      voice: finalOpenaiVoice,
       format: 'mp3',
       speed: options.speed,
     });
@@ -373,17 +384,23 @@ interface StreamRequest {
  */
 async function synthesizeSentence(
   text: string,
-  voice: string = 'nova',
+  voice: string = 'maia_core',
   speed: number = 1.0,
   element?: string | null
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
 
+  // ── Resolve sovereign voice IDs before passing to any provider ──
+  const rawVoice = voice && voice !== 'maya' ? voice : undefined;
+  const isSovereign = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
+  const resolvedKokoro = rawVoice ? (isSovereign ? resolveToKokoro(rawVoice) : rawVoice) : undefined;
+  const resolvedOpenai = rawVoice ? (isSovereign ? resolveToOpenAI(rawVoice) : rawVoice) : undefined;
+
   // Try Kokoro via ttsRouter
   try {
     const result = await ttsRouter.synthesize({
       text,
-      voice: voice && voice !== 'maya' ? voice : undefined,
+      voice: resolvedKokoro,
       format: 'mp3',
       speed,
       voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
@@ -401,9 +418,7 @@ async function synthesizeSentence(
   // OpenAI fallback
   try {
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (voice && voice !== 'maya')
-      ? voice
-      : elementVoice ?? 'nova';
+    const openaiVoice = resolvedOpenai ?? elementVoice ?? 'nova';
 
     const response = await synthesizeSpeech({
       text,
@@ -442,18 +457,26 @@ export async function POST(req: NextRequest) {
   timer.mark('request_received');
 
   // Load voice preference offsets (language-level, shapes text generation)
+  // AND voice_id_override (which voice character the member chose in settings)
   let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
+  let effectiveVoice = voice; // Start with what the frontend sent
   try {
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
       getMemberVoicePreferences(userId || ''),
     ]);
-    voiceOffsets = mergeVoiceIntent(systemVoice, memberVoice).intent;
+    const merged = mergeVoiceIntent(systemVoice, memberVoice);
+    voiceOffsets = merged.intent;
+    // If member has a voice_id_override in the database, use it as the
+    // authoritative voice — ensures cross-device consistency
+    if (merged.voiceId && merged.voiceId !== 'maia') {
+      effectiveVoice = merged.voiceId;
+    }
   } catch (e) {
     console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
   }
 
-  console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed, mode, sanctuary });
+  console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary });
 
   if (!message?.trim()) {
     return new Response('Missing message', { status: 400 });
@@ -705,7 +728,7 @@ export async function POST(req: NextRequest) {
             speed: effectiveSpeed,  // Use prosody-adjusted speed
             brevity: guidance.brevity,
             wisdomDirective,
-            voice: voice,
+            voice: effectiveVoice,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -851,7 +874,7 @@ export async function POST(req: NextRequest) {
               speed: effectiveSpeed,
               brevity: guidance.brevity,
               wisdomDirective,
-              voice: voice,
+              voice: effectiveVoice,
             });
 
             if (result) {
@@ -1006,6 +1029,21 @@ export async function POST(req: NextRequest) {
                   usedClaudeConsult: true,
                 }
               ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
+            }
+
+            // 🔭 FIELD MONITOR: Turn-level observability (fire-and-forget, never blocks stream)
+            if (!sanctuary && fullResponse.trim()) {
+              fireAndForgetFieldMonitor({
+                memberId: userId || '',
+                sessionId: effectiveSessionId,
+                route: 'stream',
+                responseText: fullResponse.trim(),
+                userMessage: message,
+                element: wisdomPayload?.element || element,
+                voiceMode: voiceSession.relationalStack.currentMode,
+                relationalStance: guidance.posture,
+                processingPath: 'CORE',
+              });
             }
 
             console.log(`[voice] LLM path: ${timer.summary()}${wisdomPayload?.sanctuary ? ' (sanctuary)' : ''}`);

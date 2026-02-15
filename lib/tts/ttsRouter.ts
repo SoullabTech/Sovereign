@@ -85,10 +85,14 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   // Try primary
   if (primary === 'kokoro') {
     try {
-      // Bridge B: Use Conductor's VoiceIntent for voice selection
-      const kokoroVoice = params.voiceHint
-        ? resolveKokoroVoice(params.voiceHint.element)
-        : params.voice;
+      // Voice selection priority: explicit member choice > conductor element > default
+      // If params.voice is set (member chose a specific voice in settings), honor it.
+      // Otherwise fall back to conductor's element-based selection.
+      const kokoroVoice = params.voice
+        ? params.voice
+        : params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : undefined;
       const kokoroSpeed = params.voiceHint
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;

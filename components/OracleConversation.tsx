@@ -368,11 +368,11 @@ interface OracleConversationProps {
   initialCheckIns?: Record<string, number>;
   showAnalytics?: boolean;
   voiceEnabled?: boolean;
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
+  voice?: string; // Sovereign voice identity (maia_core, maia_warm, atlas, etc.)
   voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
-  voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
+  voiceModel?: string; // Sovereign voice model
   voiceVolume?: number; // Voice playback volume (0.0 - 1.0)
-  onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
+  onVoiceChange?: (voice: string) => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
   initialShowChatInterface?: boolean; // Control voice/text mode from parent
@@ -488,9 +488,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   initialCheckIns = {},
   showAnalytics = false,
   voiceEnabled = true,
-  voice = 'alloy',
+  voice = 'maia_core',
   voiceSpeed = 0.95,
-  voiceModel = 'tts-1-hd',
+  voiceModel = 'maia_core',
   voiceVolume = 1.0,
   onVoiceChange,
   initialMode = 'normal',
@@ -696,9 +696,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceSettings, setVoiceSettings] = useState(() => {
     if (typeof window === 'undefined') {
       return {
-        voice: 'alloy',
+        voice: 'maia_core',
         speed: 1.0,
-        model: 'tts-1' as const,
+        model: 'maia_core',
         prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,
         archetype: 'AUTO' as string,
         conversationMode: 'her' as string,
@@ -706,10 +706,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       };
     }
     const settings = getAccountSettings();
+    // Migrate legacy vendor voice names to sovereign identities
+    const LEGACY_VOICE_MAP: Record<string, string> = {
+      alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear',
+      echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+    };
+    const rawVoice = settings.voice.openaiVoice;
     return {
-      voice: settings.voice.openaiVoice,
+      voice: LEGACY_VOICE_MAP[rawVoice] ?? rawVoice ?? 'maia_core',
       speed: settings.voice.speed,
-      model: settings.voice.model || 'tts-1' as const,
+      model: settings.voice.model || 'maia_core',
       prosodyRange: (settings.voice.prosodyRange ?? 1) as 0 | 1 | 2 | 3 | 4,
       archetype: settings.archetype || 'AUTO',
       conversationMode: settings.conversationMode || 'her',
@@ -2080,10 +2086,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
       console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
+      const LEGACY_MAP: Record<string, string> = { alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear' };
       setVoiceSettings({
-        voice: settings.voice.openaiVoice,
+        voice: LEGACY_MAP[settings.voice.openaiVoice] ?? settings.voice.openaiVoice ?? 'maia_core',
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
+        model: settings.voice.model || 'maia_core',
         prosodyRange: settings.voice.prosodyRange ?? 1,
         archetype: settings.archetype || 'AUTO',
         conversationMode: settings.conversationMode || 'her',
@@ -2971,10 +2978,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Also reload voice settings from account settings (all MAIA preferences)
       const settings = getAccountSettings();
+      const LEGACY_MAP2: Record<string, string> = { alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear' };
       setVoiceSettings({
-        voice: settings.voice.openaiVoice,
+        voice: LEGACY_MAP2[settings.voice.openaiVoice] ?? settings.voice.openaiVoice ?? 'maia_core',
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
+        model: settings.voice.model || 'maia_core',
         prosodyRange: settings.voice.prosodyRange ?? 1,
         archetype: settings.archetype || 'AUTO',
         conversationMode: settings.conversationMode || 'her',

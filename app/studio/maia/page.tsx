@@ -35,9 +35,9 @@ function StudioMAIAContent() {
 
   // Voice defaults (can load from localStorage later)
   const voiceEnabled = true;
-  const selectedVoice = 'alloy' as const;
+  const selectedVoice = 'maia_core';
   const voiceSpeed = 0.95;
-  const voiceModel = 'tts-1-hd' as const;
+  const voiceModel = 'maia_core';
   const [voiceVolume] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('maia_voice_volume');

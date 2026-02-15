@@ -10,6 +10,7 @@ import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/Lim
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
+import { resolveToKokoro, resolveToOpenAI, SOVEREIGN_VOICES } from '@/lib/voice/sovereignVoices';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -82,9 +83,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const voice = body?.voice ?? "alloy";
+    const rawVoice = body?.voice ?? "maia_core";
     const format = body?.format ?? "mp3";
     const speed = body?.speed ?? 1.0;
+
+    // ═══ SOVEREIGN VOICE RESOLUTION ═══
+    // If the frontend sends a sovereign voice ID (maia_core, atlas, etc.),
+    // resolve it to the appropriate provider voice. If it's already a
+    // provider voice (legacy), pass through unchanged.
+    const isSovereignId = SOVEREIGN_VOICES.some(v => v.id === rawVoice);
+    const voice = isSovereignId ? resolveToKokoro(rawVoice) : rawVoice;
+    const openaiVoice = isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice;
 
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
@@ -199,11 +208,11 @@ export async function POST(req: NextRequest) {
 
     const model = body?.model ?? "tts-1";
 
-    console.log(`[openai-tts:${requestId}] starting model=${model} voice=${voice} format=${format} chars=${text.length}`);
+    console.log(`[openai-tts:${requestId}] starting model=${model} voice=${openaiVoice} format=${format} chars=${text.length}`);
 
     const speech = await getOpenAI().audio.speech.create({
       model,
-      voice: voice as any,
+      voice: openaiVoice as any,
       input: text,
       response_format: format,
       speed,
@@ -212,7 +221,7 @@ export async function POST(req: NextRequest) {
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
 
-    console.log(`[openai-tts:${requestId}] ok model=${model} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
+    console.log(`[openai-tts:${requestId}] ok model=${model} voice=${openaiVoice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
 
     // ═══ RECORD VOICE USAGE (non-blocking) ═══
     const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
@@ -273,10 +282,12 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  // SOVEREIGNTY: Return sovereign voice identities, not vendor names.
+  // Backend resolves these to Kokoro (local) or cloud fallback internally.
   return new Response(JSON.stringify({
-    message: "OpenAI TTS endpoint active",
-    voices: ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
-    usage: 'POST with { "text": "...", "voice": "alloy", "format": "mp3" }'
+    message: "Sovereign TTS endpoint active",
+    voices: ["maia_core", "maia_warm", "maia_clear", "atlas", "atlas_deep"],
+    usage: 'POST with { "text": "...", "voice": "maia_core", "format": "mp3" }'
   }), {
     headers: { "Content-Type": "application/json" },
   });

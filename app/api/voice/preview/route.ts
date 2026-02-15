@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const voice = body.voiceId || 'af_heart';
+  const voice = body.voiceId || 'af_kore';
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
 
   // Generate MP3 bytes via the TTS router (same path as /api/voice/local-tts)

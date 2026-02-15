@@ -63,7 +63,7 @@ interface SacredLabDrawerProps {
   isResponding?: boolean;
   isAudioPlaying?: boolean;
   showChatInterface?: boolean;
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  voice?: string; // Sovereign voice identity (maia_core, maia_warm, atlas, etc.)
   // Session & Prompt props
   sessionPhase?: 'opening' | 'exploration' | 'integration' | 'closure' | 'complete';
   sessionMinutesRemaining?: number;

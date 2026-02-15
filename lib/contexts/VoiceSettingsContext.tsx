@@ -1,12 +1,18 @@
 'use client';
 
+/**
+ * SOVEREIGNTY: No vendor names. No provider nouns. No trust leaks.
+ * Provider types are sovereign archetypes from lib/voice/sovereignVoices.ts
+ */
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import type { VoiceProvider } from '@/lib/voice/sovereignVoices';
 
 interface VoiceSettings {
   adaptiveMode: boolean;
   silenceTimeout: number;
   minSpeechLength: number;
-  voiceProvider: 'openai' | 'elevenlabs' | 'webspeech';
+  voiceProvider: VoiceProvider;
   voiceSpeed: number;
   voiceModel: string;
 }
@@ -25,9 +31,9 @@ const DEFAULT_SETTINGS: VoiceSettings = {
   adaptiveMode: true, // Default to adaptive mode for better UX
   silenceTimeout: 5000, // Strict mode fallback timeout
   minSpeechLength: 2000, // Minimum speech duration
-  voiceProvider: 'openai', // Default to OpenAI TTS
+  voiceProvider: 'sovereign', // Sovereign local-first voice synthesis
   voiceSpeed: 0.95, // Natural conversational pace
-  voiceModel: 'tts-1-hd' // High quality model
+  voiceModel: 'maia_core' // Default sovereign voice identity
 };
 
 export function VoiceSettingsProvider({ children }: { children: ReactNode }) {
@@ -35,14 +41,32 @@ export function VoiceSettingsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load settings from localStorage on mount
+  // Load settings from localStorage on mount, migrating legacy vendor names
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('voiceSettings');
         if (stored) {
           const parsed = JSON.parse(stored);
-          setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+          // Migrate legacy vendor names (openai → sovereign, tts-1-hd → maia_core)
+          const PROVIDER_MAP: Record<string, VoiceProvider> = {
+            openai: 'sovereign', elevenlabs: 'sovereign', neural: 'sovereign',
+            webspeech: 'browser', web_speech: 'browser',
+          };
+          const MODEL_MAP: Record<string, string> = {
+            'tts-1': 'maia_core', 'tts-1-hd': 'maia_core',
+          };
+          const migrated = {
+            ...DEFAULT_SETTINGS,
+            ...parsed,
+            voiceProvider: PROVIDER_MAP[parsed.voiceProvider] ?? parsed.voiceProvider ?? 'sovereign',
+            voiceModel: MODEL_MAP[parsed.voiceModel] ?? parsed.voiceModel ?? 'maia_core',
+          };
+          setSettings(migrated);
+          // Persist the migration so it only runs once
+          if (parsed.voiceProvider !== migrated.voiceProvider || parsed.voiceModel !== migrated.voiceModel) {
+            localStorage.setItem('voiceSettings', JSON.stringify(migrated));
+          }
         }
       } catch (err) {
         console.warn('Failed to load voice settings from localStorage:', err);

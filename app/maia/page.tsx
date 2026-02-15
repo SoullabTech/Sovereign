@@ -343,9 +343,9 @@ function MAIAPageContent() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('alloy');  // Default to alloy - MAIA's OpenAI TTS voice
-  const [voiceSpeed, setVoiceSpeed] = useState(0.95);  // OpenAI TTS speed (0.25 - 4.0)
-  const [voiceModel, setVoiceModel] = useState<'tts-1' | 'tts-1-hd'>('tts-1-hd');  // TTS model quality
+  const [selectedVoice, setSelectedVoice] = useState<string>('maia_core');  // Sovereign voice identity
+  const [voiceSpeed, setVoiceSpeed] = useState(0.95);  // TTS speed (0.25 - 4.0)
+  const [voiceModel, setVoiceModel] = useState<string>('maia_core');  // Sovereign voice model
   const [voiceVolume, setVoiceVolume] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('maia_voice_volume');
@@ -498,10 +498,18 @@ function MAIAPageContent() {
         console.log('✅ [MAIA] Week 0 onboarding already completed or guest user');
       }
 
-      // Load saved voice preference
-      const savedVoice = localStorage.getItem('selected_voice') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+      // Load saved voice preference, migrating legacy vendor names
+      const savedVoice = localStorage.getItem('selected_voice');
       if (savedVoice) {
-        setSelectedVoice(savedVoice);
+        const LEGACY_VOICE_MAP: Record<string, string> = {
+          alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear',
+          echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+        };
+        const migrated = LEGACY_VOICE_MAP[savedVoice] ?? savedVoice;
+        setSelectedVoice(migrated);
+        if (migrated !== savedVoice) {
+          localStorage.setItem('selected_voice', migrated);
+        }
       }
     };
 
@@ -542,7 +550,7 @@ function MAIAPageContent() {
     };
   }, []);
 
-  const handleVoiceChange = (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
+  const handleVoiceChange = (voice: string) => {
     setSelectedVoice(voice);
     localStorage.setItem('selected_voice', voice);
     // Dispatch event to notify other components
@@ -1270,37 +1278,39 @@ function MAIAPageContent() {
                           <input
                             type="range"
                             min="0"
-                            max="5"
-                            value={['shimmer', 'fable', 'nova', 'alloy', 'echo', 'onyx'].indexOf(selectedVoice)}
+                            max="4"
+                            value={['maia_warm', 'maia_clear', 'maia_core', 'atlas', 'atlas_deep'].indexOf(selectedVoice)}
                             onChange={(e) => {
-                              const voices: Array<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'> = ['shimmer', 'fable', 'nova', 'alloy', 'echo', 'onyx'];
+                              const voices = ['maia_warm', 'maia_clear', 'maia_core', 'atlas', 'atlas_deep'];
                               handleVoiceChange(voices[parseInt(e.target.value)]);
                             }}
                             className="w-full h-1.5 bg-stone-700/50 rounded-lg appearance-none cursor-pointer accent-amber-500"
                             style={{
-                              background: `linear-gradient(to right, rgb(245 158 11 / 0.5) 0%, rgb(245 158 11 / 0.5) ${(['shimmer', 'fable', 'nova', 'alloy', 'echo', 'onyx'].indexOf(selectedVoice) / 5) * 100}%, rgb(87 83 78 / 0.5) ${(['shimmer', 'fable', 'nova', 'alloy', 'echo', 'onyx'].indexOf(selectedVoice) / 5) * 100}%, rgb(87 83 78 / 0.5) 100%)`
+                              background: `linear-gradient(to right, rgb(245 158 11 / 0.5) 0%, rgb(245 158 11 / 0.5) ${(['maia_warm', 'maia_clear', 'maia_core', 'atlas', 'atlas_deep'].indexOf(selectedVoice) / 4) * 100}%, rgb(87 83 78 / 0.5) ${(['maia_warm', 'maia_clear', 'maia_core', 'atlas', 'atlas_deep'].indexOf(selectedVoice) / 4) * 100}%, rgb(87 83 78 / 0.5) 100%)`
                             }}
                           />
                           <div className="flex justify-between text-xs">
-                            <span title="Shimmer - Gentle & soothing">✨</span>
-                            <span title="Fable - Storytelling">📖</span>
-                            <span title="Nova - Bright & energetic">⭐</span>
-                            <span title="Alloy - Neutral & balanced">🔘</span>
-                            <span title="Echo - Warm & expressive">🌊</span>
-                            <span title="Onyx - Deep & resonant">🖤</span>
+                            <span title="Maia Warm - Soft & reflective">💧</span>
+                            <span title="Maia Clear - Bright & articulate">🔥</span>
+                            <span title="Maia Kore - Clear & balanced">✨</span>
+                            <span title="Atlas - Grounded & resonant">🌍</span>
+                            <span title="Atlas Deep - Deep & contemplative">🖤</span>
                           </div>
                         </div>
                         <div className="flex flex-col items-center gap-1 min-w-[64px]">
                           <span className="text-xs text-amber-400/80 font-medium uppercase tracking-wide">
-                            {selectedVoice}
+                            {selectedVoice === 'maia_core' ? 'Kore' :
+                             selectedVoice === 'maia_warm' ? 'Warm' :
+                             selectedVoice === 'maia_clear' ? 'Clear' :
+                             selectedVoice === 'atlas' ? 'Atlas' :
+                             selectedVoice === 'atlas_deep' ? 'Deep' : selectedVoice}
                           </span>
                           <span className="text-[9px] text-stone-500">
-                            {selectedVoice === 'shimmer' && 'Gentle'}
-                            {selectedVoice === 'fable' && 'Story'}
-                            {selectedVoice === 'nova' && 'Bright'}
-                            {selectedVoice === 'alloy' && 'Neutral'}
-                            {selectedVoice === 'echo' && 'Warm'}
-                            {selectedVoice === 'onyx' && 'Deep'}
+                            {selectedVoice === 'maia_warm' && 'Reflective'}
+                            {selectedVoice === 'maia_clear' && 'Bright'}
+                            {selectedVoice === 'maia_core' && 'Balanced'}
+                            {selectedVoice === 'atlas' && 'Grounded'}
+                            {selectedVoice === 'atlas_deep' && 'Deep'}
                           </span>
                         </div>
                       </div>
