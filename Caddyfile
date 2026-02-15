@@ -168,7 +168,35 @@ soullab.life {
         }
     }
 
-    # Regular reverse proxy for non-API requests
+    # Hashed static assets — cache forever (immutable)
+    @static_hashed {
+        path /_next/static/*
+    }
+    handle @static_hashed {
+        header Cache-Control "public, max-age=31536000, immutable"
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # HTML pages — never cache, always get fresh chunk references
+    @html_pages {
+        not path /api/* /_next/* /icons/* /*.json /*.ico /*.png /*.svg /*.jpg /*.webp /*.woff2
+    }
+    handle @html_pages {
+        header Cache-Control "no-cache, no-store, must-revalidate"
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Regular reverse proxy for remaining requests (favicon, etc.)
     reverse_proxy maia-sovereign:3000 {
         # Health checks
         health_uri /api/consciousness/health
