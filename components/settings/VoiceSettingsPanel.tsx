@@ -10,6 +10,13 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import type { TTSProviderPref } from '@/lib/types/voiceControls';
+
+const TTS_PROVIDER_OPTIONS: { id: TTSProviderPref; label: string; desc: string }[] = [
+  { id: 'auto',  label: 'Auto',        desc: 'Cloud voice with local fallback.' },
+  { id: 'cloud', label: 'Cloud Voice',  desc: 'Higher quality. Requires internet.' },
+  { id: 'local', label: 'Local Voice',  desc: 'Sovereign. Private. Works offline.' },
+];
 
 type Offsets = {
   pace: number;
@@ -39,6 +46,7 @@ export default function VoiceSettingsPanel() {
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
+  const [ttsProvider, setTtsProvider] = useState<TTSProviderPref>('auto');
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -51,6 +59,7 @@ export default function VoiceSettingsPanel() {
           setSystemVoiceId(data.system?.voiceId ?? 'maia');
           setVoiceIdOverride(data.member?.voiceIdOverride ?? null);
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
+          setTtsProvider(data.member?.ttsProvider ?? 'auto');
         }
       } catch (e) {
         console.warn('[voice-settings] Failed to load:', e);
@@ -76,7 +85,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride, offset }),
+        body: JSON.stringify({ voiceIdOverride, ttsProvider, offset }),
       });
       if (res.ok) {
         setSaved(true);
@@ -91,6 +100,7 @@ export default function VoiceSettingsPanel() {
 
   const onReset = async () => {
     setVoiceIdOverride(null);
+    setTtsProvider('auto');
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
@@ -100,7 +110,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride: null, offset: { ...DEFAULT_OFFSETS } }),
+        body: JSON.stringify({ voiceIdOverride: null, ttsProvider: 'auto', offset: { ...DEFAULT_OFFSETS } }),
       });
       if (res.ok) {
         setSaved(true);
@@ -132,8 +142,9 @@ export default function VoiceSettingsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voiceId: effectiveVoiceId === 'maia' ? 'af_heart' : effectiveVoiceId,
+          voiceId: effectiveVoiceId === 'maia' ? 'alloy' : effectiveVoiceId,
           speed,
+          ttsProvider,
         }),
       });
 
@@ -141,7 +152,8 @@ export default function VoiceSettingsPanel() {
         if (res.status === 503) {
           setPreviewError('Voice engine is offline. Start the Kokoro TTS service to preview.');
         } else {
-          setPreviewError('Preview failed. Try again later.');
+          const data = await res.json().catch(() => ({}));
+          setPreviewError(data?.error ?? `Preview failed (${res.status})`);
         }
         return;
       }
@@ -180,12 +192,32 @@ export default function VoiceSettingsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
+      {/* ── Voice Engine ─────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <div className="text-sm text-stone-400">Voice</div>
-        <div className="mt-1 text-lg font-semibold text-stone-100">{effectiveVoiceId}</div>
-        <div className="mt-2 text-xs text-stone-400">
-          Your settings gently bias MAIA&apos;s baseline. MAIA can still self-regulate during HOLD states.
+        <div className="text-sm font-medium text-stone-300 mb-3">Voice Engine</div>
+        <div className="grid grid-cols-3 gap-2">
+          {TTS_PROVIDER_OPTIONS.map((opt) => {
+            const isActive = ttsProvider === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => { setTtsProvider(opt.id); setSaved(false); }}
+                className={`
+                  rounded-xl border p-3 text-center transition-all
+                  ${isActive
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className={`text-sm font-semibold ${isActive ? 'text-amber-300' : 'text-stone-200'}`}>
+                  {opt.label}
+                </div>
+                <div className="text-[11px] text-stone-400 mt-1 leading-tight">{opt.desc}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -259,7 +291,9 @@ export default function VoiceSettingsPanel() {
       </div>
 
       {previewError && (
-        <p className="text-xs text-amber-400/80 px-1">{previewError}</p>
+        <div className="rounded-lg border border-stone-700/60 bg-stone-900/40 px-3 py-2 text-sm text-stone-300">
+          {previewError}
+        </div>
       )}
 
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}
