@@ -14,6 +14,7 @@ export function getLocalMemberId(): string | null {
     if (betaUser) {
       const parsed = JSON.parse(betaUser);
       if (parsed.memberId) return parsed.memberId;
+      if (parsed.id) return parsed.id;
     }
 
     // Fallback to direct memberId
