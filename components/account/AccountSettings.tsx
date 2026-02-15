@@ -39,6 +39,7 @@ import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
+import { VOICE_CATALOG, VOICE_IDENTITY_MAP, type VoiceIdentity } from '@/src/types/voice';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -102,14 +103,8 @@ interface PractitionerProject {
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VOICE_OPTIONS = [
-  { id: 'shimmer', name: 'Shimmer', emoji: '💧', gender: 'Female' },
-  { id: 'nova', name: 'Nova', emoji: '⭐', gender: 'Female' },
-  { id: 'alloy', name: 'Alloy', emoji: '🌍', gender: 'Neutral' },
-  { id: 'echo', name: 'Echo', emoji: '🎙️', gender: 'Male' },
-  { id: 'fable', name: 'Fable', emoji: '📖', gender: 'Male' },
-  { id: 'onyx', name: 'Onyx', emoji: '🗣️', gender: 'Male' },
-];
+// Voice options from sovereign voice catalog
+const ALL_VOICE_OPTIONS = [...VOICE_CATALOG.female, ...VOICE_CATALOG.male];
 
 const SUGGESTED_NAMES = [
   { name: 'MAIA', description: 'Original name (default)' },
@@ -474,8 +469,9 @@ export function AccountSettings() {
 
     // Sync voice settings to legacy localStorage keys used by OracleConversation
     // This ensures both event paths are triggered for maximum compatibility
-    if (path === 'voice.openaiVoice') {
-      localStorage.setItem('selected_voice', value as string);
+    if (path === 'voice.identity') {
+      const resolvedId = VOICE_IDENTITY_MAP[value as VoiceIdentity] || value;
+      localStorage.setItem('selected_voice', resolvedId as string);
     }
     if (path.startsWith('voice.')) {
       // Force reload of voice settings in OracleConversation
@@ -486,7 +482,7 @@ export function AccountSettings() {
     if (userId) {
       // Map nested paths to server API keys
       const serverKeyMap: Record<string, string> = {
-        'voice.openaiVoice': 'voiceModel',
+        'voice.identity': 'voiceModel',
         'voice.speed': 'voiceSpeed',
         'memory.depth': 'memoryDepth',
       };
@@ -1188,13 +1184,13 @@ export function AccountSettings() {
               Voice Model
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {VOICE_OPTIONS.map((voice) => {
-                const isSelected = maiaSettings.voice?.openaiVoice === voice.id;
+              {ALL_VOICE_OPTIONS.map((voice) => {
+                const isSelected = maiaSettings.voice?.identity === voice.id;
                 return (
                   <motion.button
                     key={voice.id}
-                    onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
-                    className={`py-3 px-3 rounded-xl border transition-all active:scale-95 relative ${
+                    onClick={() => updateNestedMaiaSetting('voice.identity', voice.id)}
+                    className={`py-2 px-2 rounded-xl border transition-all active:scale-95 relative ${
                       isSelected
                         ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
                         : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
@@ -1206,8 +1202,8 @@ export function AccountSettings() {
                         <Check size={12} />
                       </div>
                     )}
-                    <div className="text-lg mb-1">{voice.emoji}</div>
                     <div className="text-xs font-medium">{voice.name}</div>
+                    <div className="text-[9px] opacity-60">{voice.description}</div>
                   </motion.button>
                 );
               })}

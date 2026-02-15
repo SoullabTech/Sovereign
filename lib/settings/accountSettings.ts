@@ -7,6 +7,7 @@
 
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import type { ConversationMode } from '@/lib/types/conversation-style';
+import type { VoiceIdentity } from '@/src/types/voice';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Schema
@@ -18,9 +19,12 @@ export interface AccountSettings {
 
   /** Voice preferences */
   voice: {
-    openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
+    /** Sovereign voice identity (archetypal, not vendor-specific) */
+    identity: VoiceIdentity;
+    /** @deprecated Use `identity` — kept for localStorage migration */
+    openaiVoice?: string;
     speed: number;
-    model: 'tts-1' | 'tts-1-hd'; // Standard (faster) vs HD (richer)
+    model: 'standard' | 'high';
     /** Range of Effect: scales prosody intensity (0-4) */
     prosodyRange: 0 | 1 | 2 | 3 | 4;
   };
@@ -53,9 +57,9 @@ export interface AccountSettings {
 export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   defaultMemoryMode: 'continuity', // Most users want memory; Sanctuary is opt-in
   voice: {
-    openaiVoice: 'alloy',
+    identity: 'kore',
     speed: 1.0,  // Natural pace (was 0.95, felt slow)
-    model: 'tts-1', // Standard by default (faster response)
+    model: 'standard', // Standard by default (faster response)
     prosodyRange: 1, // Subtle by default (warm without being theatrical)
   },
   memory: {
@@ -91,13 +95,27 @@ export function getAccountSettings(): AccountSettings {
 
     const parsed = JSON.parse(stored);
     // Merge with defaults to handle missing fields from older versions
-    return {
+    const merged = {
       ...DEFAULT_ACCOUNT_SETTINGS,
       ...parsed,
       voice: { ...DEFAULT_ACCOUNT_SETTINGS.voice, ...parsed.voice },
       memory: { ...DEFAULT_ACCOUNT_SETTINGS.memory, ...parsed.memory },
       display: { ...DEFAULT_ACCOUNT_SETTINGS.display, ...parsed.display },
     };
+
+    // MIGRATION: Convert old openaiVoice → sovereign identity
+    if (merged.voice.openaiVoice && !parsed.voice?.identity) {
+      const legacyMap: Record<string, VoiceIdentity> = {
+        alloy: 'kore', onyx: 'atlas', shimmer: 'selene',
+        nova: 'ember', echo: 'echo', fable: 'maia',
+      };
+      merged.voice.identity = legacyMap[merged.voice.openaiVoice] || 'kore';
+    }
+    // MIGRATION: Convert old model names → sovereign names
+    if (merged.voice.model === 'tts-1') merged.voice.model = 'standard';
+    if (merged.voice.model === 'tts-1-hd') merged.voice.model = 'high';
+
+    return merged;
   } catch (e) {
     console.error('[AccountSettings] Failed to parse stored settings:', e);
     return DEFAULT_ACCOUNT_SETTINGS;

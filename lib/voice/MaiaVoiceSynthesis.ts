@@ -4,6 +4,7 @@
  */
 
 import { getAccountSettings } from '@/lib/settings/accountSettings';
+import { VOICE_IDENTITY_MAP } from '@/src/types/voice';
 
 interface VoiceOptions {
   voice?: string;
@@ -27,8 +28,9 @@ export class MayaVoiceSynthesis {
 
     // Load voice settings from account preferences if not provided
     const accountSettings = getAccountSettings();
+    const vid = accountSettings.voice.identity || accountSettings.voice.openaiVoice || 'kore';
     const voiceSettings = {
-      voice: options?.voice ?? accountSettings.voice.openaiVoice,
+      voice: options?.voice ?? (VOICE_IDENTITY_MAP[vid] || vid),
       speed: options?.speed ?? accountSettings.voice.speed,
     };
 

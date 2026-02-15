@@ -120,6 +120,7 @@ import type { Element } from '@/lib/voice';
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
 import { getAccountSettings } from '@/lib/settings/accountSettings';
+import { VOICE_IDENTITY_MAP } from '@/src/types/voice';
 import { getAgentConfig, AgentConfig } from '@/lib/agent-config';
 import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
@@ -706,10 +707,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       };
     }
     const settings = getAccountSettings();
+    const voiceIdentity = settings.voice.identity || settings.voice.openaiVoice || 'kore';
     return {
-      voice: settings.voice.openaiVoice,
+      voice: VOICE_IDENTITY_MAP[voiceIdentity] || voiceIdentity,
       speed: settings.voice.speed,
-      model: settings.voice.model || 'tts-1' as const,
+      model: settings.voice.model === 'high' ? 'tts-1-hd' : 'tts-1' as const,
       prosodyRange: (settings.voice.prosodyRange ?? 1) as 0 | 1 | 2 | 3 | 4,
       archetype: settings.archetype || 'AUTO',
       conversationMode: settings.conversationMode || 'her',
@@ -2079,11 +2081,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
-      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
+      const vid = settings.voice.identity || settings.voice.openaiVoice || 'kore';
       setVoiceSettings({
-        voice: settings.voice.openaiVoice,
+        voice: VOICE_IDENTITY_MAP[vid] || vid,
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
+        model: settings.voice.model === 'high' ? 'tts-1-hd' : 'tts-1',
         prosodyRange: settings.voice.prosodyRange ?? 1,
         archetype: settings.archetype || 'AUTO',
         conversationMode: settings.conversationMode || 'her',
@@ -2942,10 +2944,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Also reload voice settings from account settings (all MAIA preferences)
       const settings = getAccountSettings();
+      const vid2 = settings.voice.identity || settings.voice.openaiVoice || 'kore';
       setVoiceSettings({
-        voice: settings.voice.openaiVoice,
+        voice: VOICE_IDENTITY_MAP[vid2] || vid2,
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
+        model: settings.voice.model === 'high' ? 'tts-1-hd' : 'tts-1',
         prosodyRange: settings.voice.prosodyRange ?? 1,
         archetype: settings.archetype || 'AUTO',
         conversationMode: settings.conversationMode || 'her',

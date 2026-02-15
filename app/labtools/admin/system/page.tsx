@@ -20,7 +20,12 @@ import {
   Check,
   Edit2,
   Eye,
+  Play,
+  Volume2,
 } from 'lucide-react';
+import { VOICE_CATALOG, VOICE_IDENTITY_MAP, DEFAULT_VOICE_IDENTITY, type VoiceIdentity } from '@/src/types/voice';
+import { getAccountSettings, saveAccountSettings } from '@/lib/settings/accountSettings';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface SystemSetting {
   key: string;
@@ -65,6 +70,16 @@ export default function SystemAdminPage() {
 
   const [editingMaintenance, setEditingMaintenance] = useState(false);
   const [maintenanceMessage, setMaintenanceMessage] = useState('');
+
+  // Voice override
+  const [selectedVoice, setSelectedVoice] = useState<VoiceIdentity>(() => {
+    if (typeof window !== 'undefined') {
+      return getAccountSettings().voice.identity || DEFAULT_VOICE_IDENTITY;
+    }
+    return DEFAULT_VOICE_IDENTITY;
+  });
+  const [testingVoice, setTestingVoice] = useState(false);
+  const [voiceSaved, setVoiceSaved] = useState(false);
 
   // Check if already authenticated this session
   useEffect(() => {
@@ -205,6 +220,40 @@ export default function SystemAdminPage() {
   };
 
   const getSetting = (key: string) => settings.find(s => s.key === key);
+
+  const testAdminVoice = async (voiceId: VoiceIdentity) => {
+    setTestingVoice(true);
+    try {
+      const kokoroId = VOICE_IDENTITY_MAP[voiceId] || voiceId;
+      const response = await apiFetch('/api/voice/openai-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: "I'm Maia. This is how I'll sound with this voice.",
+          voice: kokoroId,
+          format: 'mp3',
+        }),
+      });
+      if (!response.ok) throw new Error('Voice test failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.onended = () => { setTestingVoice(false); URL.revokeObjectURL(url); };
+      await audio.play();
+    } catch (e) {
+      console.error('Voice test error:', e);
+      setTestingVoice(false);
+    }
+  };
+
+  const setDefaultVoice = (voiceId: VoiceIdentity) => {
+    const acct = getAccountSettings();
+    acct.voice.identity = voiceId;
+    saveAccountSettings(acct);
+    setSelectedVoice(voiceId);
+    setVoiceSaved(true);
+    setTimeout(() => setVoiceSaved(false), 2000);
+  };
 
   // Password screen
   if (!authenticated) {
@@ -593,11 +642,99 @@ export default function SystemAdminPage() {
           )}
         </motion.div>
 
-        {/* Quick Status */}
+        {/* Voice Override */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="bg-slate-900/80 backdrop-blur-md border border-[#D4B896]/30 rounded-xl overflow-hidden mb-4"
+        >
+          <div className="p-4 border-b border-[#D4B896]/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-[#D4B896] flex items-center gap-2">
+                  <Volume2 className="w-5 h-5" /> Voice Override
+                </h2>
+                <p className="text-[#D4B896]/60 text-sm">Set the default MAIA voice for all members</p>
+              </div>
+              {voiceSaved && (
+                <span className="flex items-center gap-1 text-green-400 text-sm">
+                  <Check className="w-4 h-4" /> Saved
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 space-y-4">
+            {/* Female */}
+            <div>
+              <p className="text-[#D4B896]/70 text-xs font-medium mb-2 uppercase tracking-wider">Female</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {VOICE_CATALOG.female.map(voice => {
+                  const isSelected = selectedVoice === voice.id;
+                  return (
+                    <button
+                      key={voice.id}
+                      onClick={() => setDefaultVoice(voice.id as VoiceIdentity)}
+                      className={`p-2 rounded-lg border transition-all text-left ${
+                        isSelected
+                          ? 'border-amber-400/70 bg-amber-500/20 ring-1 ring-amber-400/40'
+                          : 'border-[#D4B896]/20 bg-slate-800/50 hover:border-[#D4B896]/40'
+                      }`}
+                    >
+                      <div className={`text-xs font-medium ${isSelected ? 'text-amber-300' : 'text-[#D4B896]'}`}>
+                        {voice.name}
+                      </div>
+                      <div className="text-[9px] text-[#D4B896]/50">{voice.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Male */}
+            <div>
+              <p className="text-[#D4B896]/70 text-xs font-medium mb-2 uppercase tracking-wider">Male</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {VOICE_CATALOG.male.map(voice => {
+                  const isSelected = selectedVoice === voice.id;
+                  return (
+                    <button
+                      key={voice.id}
+                      onClick={() => setDefaultVoice(voice.id as VoiceIdentity)}
+                      className={`p-2 rounded-lg border transition-all text-left ${
+                        isSelected
+                          ? 'border-amber-400/70 bg-amber-500/20 ring-1 ring-amber-400/40'
+                          : 'border-[#D4B896]/20 bg-slate-800/50 hover:border-[#D4B896]/40'
+                      }`}
+                    >
+                      <div className={`text-xs font-medium ${isSelected ? 'text-amber-300' : 'text-[#D4B896]'}`}>
+                        {voice.name}
+                      </div>
+                      <div className="text-[9px] text-[#D4B896]/50">{voice.description}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Test button */}
+            <button
+              onClick={() => testAdminVoice(selectedVoice)}
+              disabled={testingVoice}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all disabled:opacity-50 text-sm"
+            >
+              <Play className="w-4 h-4" />
+              {testingVoice ? 'Playing...' : `Test "${selectedVoice}"`}
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Quick Status */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
           className="bg-slate-900/80 backdrop-blur-md border border-[#D4B896]/30 rounded-xl p-4"
         >
           <div className="flex items-center justify-between">
