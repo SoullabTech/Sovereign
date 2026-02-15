@@ -3,34 +3,20 @@
 /**
  * VoiceSettingsPanel — member voice preference controls.
  *
-<<<<<<< HEAD
- * Two layers:
- *   1. Archetype cards — choose the felt presence (MAIA Core, Warm, Clear, Mentor, Elder, Puck)
- *   2. Offset sliders — gently bias MAIA's baseline voice within that archetype
- *
-=======
  * Voice character picker: choose from all sovereign voices (3 female, 2 male).
  * 5 sliders that gently bias MAIA's baseline voice.
->>>>>>> origin/claude/happy-morse
  * MAIA can still self-regulate during HOLD states.
  * Member preferences are offsets, not overrides.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
-<<<<<<< HEAD
-  MAIA_VOICE_ARCHETYPES,
-  type MaiaVoiceArchetype,
-  type VoiceArchetypeEntry,
-} from '@/lib/voice/voiceArchetypes';
-=======
   SOVEREIGN_VOICES,
   getSovereignVoice,
   resolveToKokoro,
   type SovereignVoiceId,
 } from '@/lib/voice/sovereignVoices';
->>>>>>> origin/claude/happy-morse
 
 type Offsets = {
   pace: number;
@@ -60,26 +46,8 @@ const ELEMENT_ICONS: Record<string, string> = {
 };
 
 /**
- * Build preview text that varies with the chosen archetype.
+ * Build preview text that varies with the chosen offsets.
  */
-<<<<<<< HEAD
-function buildPreviewText(archetype: MaiaVoiceArchetype | null): string {
-  switch (archetype) {
-    case 'maia_warm':
-      return 'Take a breath. You are safe here. Let the next true thing arrive in its own time.';
-    case 'maia_clear':
-      return 'Here is what matters right now. One clear step. You already know what it is.';
-    case 'mentor':
-      return 'Hold the line. You have the capacity for this. Steady counsel, no pressure.';
-    case 'elder':
-      return 'Let us slow down. There is no rush. Choose the next honest step.';
-    case 'puck':
-      return 'Hey, we have got this. One small step, clean and doable. Ready when you are.';
-    case 'maia_core':
-    default:
-      return 'I am here. Steady, balanced, quietly luminous. What do you need right now?';
-  }
-=======
 function buildPreviewText(o: Offsets): string {
   // Pace
   const pace =
@@ -100,7 +68,6 @@ function buildPreviewText(o: Offsets): string {
     : 'The energy feels grounded.';
 
   return `${pace} ${warmth} ${energy}`;
->>>>>>> origin/claude/happy-morse
 }
 
 export default function VoiceSettingsPanel() {
@@ -110,13 +77,9 @@ export default function VoiceSettingsPanel() {
   const [previewing, setPreviewing] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
-  const [selectedArchetype, setSelectedArchetype] = useState<MaiaVoiceArchetype>('maia_core');
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
-<<<<<<< HEAD
-=======
   const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
->>>>>>> origin/claude/happy-morse
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -126,9 +89,6 @@ export default function VoiceSettingsPanel() {
         const res = await apiFetch('/api/settings/voice');
         if (res.ok) {
           const data = await res.json();
-<<<<<<< HEAD
-          setSelectedArchetype(data.member?.voiceArchetype || 'maia_core');
-=======
           // Migrate legacy voice IDs on load
           const rawVoiceId = data.member?.voiceIdOverride ?? data.system?.voiceId ?? 'maia_core';
           const LEGACY_MAP: Record<string, string> = {
@@ -142,7 +102,6 @@ export default function VoiceSettingsPanel() {
           if (!data.member?.voiceIdOverride && migratedVoice !== (data.system?.voiceId ?? 'maia_core')) {
             setVoiceIdOverride(migratedVoice);
           }
->>>>>>> origin/claude/happy-morse
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
         }
       } catch (e) {
@@ -153,8 +112,6 @@ export default function VoiceSettingsPanel() {
     })();
   }, []);
 
-<<<<<<< HEAD
-=======
   const effectiveVoiceId = useMemo(
     () => voiceIdOverride || systemVoiceId,
     [voiceIdOverride, systemVoiceId],
@@ -165,21 +122,14 @@ export default function VoiceSettingsPanel() {
     [effectiveVoiceId],
   );
 
->>>>>>> origin/claude/happy-morse
   const setOne = (k: keyof Offsets, v: number) => {
     setSaved(false);
     setOffset((prev) => ({ ...prev, [k]: clamp(v, -0.3, 0.3) }));
   };
 
-<<<<<<< HEAD
-  const onSelectArchetype = (id: MaiaVoiceArchetype) => {
-    setSaved(false);
-    setSelectedArchetype(id);
-=======
   const onSelectVoice = (voiceId: SovereignVoiceId) => {
     setSaved(false);
     setVoiceIdOverride(voiceId);
->>>>>>> origin/claude/happy-morse
   };
 
   const onSave = async () => {
@@ -188,11 +138,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-<<<<<<< HEAD
-        body: JSON.stringify({ voiceArchetype: selectedArchetype, offset }),
-=======
         body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, offset }),
->>>>>>> origin/claude/happy-morse
       });
       if (res.ok) {
         setSaved(true);
@@ -206,7 +152,7 @@ export default function VoiceSettingsPanel() {
   };
 
   const onReset = async () => {
-    setSelectedArchetype('maia_core');
+    setVoiceIdOverride(null);
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
@@ -216,7 +162,7 @@ export default function VoiceSettingsPanel() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          voiceArchetype: 'maia_core',
+          voiceIdOverride: systemVoiceId,
           offset: { ...DEFAULT_OFFSETS },
         }),
       });
@@ -236,23 +182,20 @@ export default function VoiceSettingsPanel() {
     setPreviewing(true);
     setPreviewError(null);
     try {
-      const sampleText = buildPreviewText(selectedArchetype);
+      const sampleText = buildPreviewText(offset);
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
 
-<<<<<<< HEAD
-=======
       // Use the selected sovereign voice's Kokoro voice for preview
       const previewVoice = resolveToKokoro(effectiveVoiceId);
 
-      // POST to preview endpoint → get { audioUrl } (real URL, not blob)
+      // POST to preview endpoint -> get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
->>>>>>> origin/claude/happy-morse
       const res = await apiFetch('/api/voice/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voiceArchetype: selectedArchetype,
+          voiceId: previewVoice,
           speed,
         }),
       });
@@ -302,25 +245,7 @@ export default function VoiceSettingsPanel() {
 
   return (
     <div className="space-y-6 font-sans">
-<<<<<<< HEAD
-      {/* Archetype cards */}
-      <div className="space-y-2">
-        <div className="text-sm text-stone-400 px-1">Choose a voice presence</div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {MAIA_VOICE_ARCHETYPES.map((arch) => (
-            <ArchetypeCard
-              key={arch.id}
-              entry={arch}
-              selected={selectedArchetype === arch.id}
-              onSelect={() => onSelectArchetype(arch.id)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Offset sliders */}
-=======
-      {/* ── Voice Character Picker ──────────────────────────────────── */}
+      {/* -- Voice Character Picker -- */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
         <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
 
@@ -393,8 +318,7 @@ export default function VoiceSettingsPanel() {
         </div>
       </div>
 
-      {/* ── Voice Tone Offsets ──────────────────────────────────────── */}
->>>>>>> origin/claude/happy-morse
+      {/* -- Voice Tone Offsets -- */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
         <div className="text-sm font-medium text-stone-300 mb-1">Tone Offsets</div>
         <VoiceSlider
@@ -474,39 +398,6 @@ export default function VoiceSettingsPanel() {
       {/* Hidden audio element for iOS/Android-reliable URL-based playback */}
       <audio ref={audioRef} className="hidden" />
     </div>
-  );
-}
-
-// ===================================================================
-// Archetype card sub-component
-// ===================================================================
-
-function ArchetypeCard({
-  entry,
-  selected,
-  onSelect,
-}: {
-  entry: VoiceArchetypeEntry;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      onClick={onSelect}
-      className={`rounded-xl border p-3 text-left transition-colors ${
-        selected
-          ? 'border-amber-500/60 bg-amber-900/20'
-          : 'border-white/10 bg-white/5 hover:bg-white/10'
-      }`}
-    >
-      <div className={`text-sm font-semibold ${selected ? 'text-amber-300' : 'text-stone-200'}`}>
-        {entry.label}
-      </div>
-      <div className="mt-1 text-xs text-stone-400">{entry.desc}</div>
-      <div className={`mt-1.5 text-[10px] ${selected ? 'text-amber-400/70' : 'text-stone-500'}`}>
-        {entry.bestFor}
-      </div>
-    </button>
   );
 }
 
