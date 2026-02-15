@@ -1,11 +1,14 @@
 /**
- * Voice Archetypes — the MAIA 5.
+ * Voice Archetypes — sovereign voice presences.
  *
  * Members choose an archetype (a felt presence), not an engine ID.
  * The archetype resolves to a Kokoro voice behind the scenes.
  *
  * This keeps the member-facing layer sovereign and meaningful,
  * while allowing the engine layer to change without breaking identity.
+ *
+ * DB IDs (maia_core, mentor, etc.) are internal — never shown to members.
+ * Labels and descriptions are what members see and choose by.
  */
 
 export type MaiaVoiceArchetype =
@@ -20,26 +23,27 @@ export interface VoiceArchetypeEntry {
   id: MaiaVoiceArchetype;
   label: string;
   desc: string;
-  kokoroVoice: string; // engine id (hidden behind archetype)
+  bestFor: string;           // one-phrase orientation for quick selection
+  kokoroVoice: string;       // engine id (hidden behind archetype)
 }
 
 export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
-  { id: 'maia_core',  label: 'MAIA (Core)',  desc: 'Clear, balanced, attentive.',  kokoroVoice: 'af_bella' },
-  { id: 'maia_warm',  label: 'MAIA (Warm)',  desc: 'Softer, more comforting.',      kokoroVoice: 'af_sarah' },
-  { id: 'maia_clear', label: 'MAIA (Clear)', desc: 'Direct, crisp guidance.',       kokoroVoice: 'af_nicole' },
-  { id: 'mentor',     label: 'Mentor',       desc: 'Steady masculine counsel.',     kokoroVoice: 'am_michael' },
-  { id: 'elder',      label: 'Elder',        desc: 'Deep, grounded presence.',      kokoroVoice: 'bm_lewis' },
-  { id: 'puck',       label: 'Puck (Light)', desc: 'Playful confidence, lighter touch.', kokoroVoice: 'am_puck' },
+  { id: 'maia_core',  label: 'Maia (Kore)',   desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    kokoroVoice: 'af_kore' },
+  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          kokoroVoice: 'af_sarah' },
+  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  kokoroVoice: 'af_nicole' },
+  { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  kokoroVoice: 'am_michael' },
+  { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  kokoroVoice: 'bm_lewis' },
+  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident.',                          bestFor: 'Lightness + humor',    kokoroVoice: 'am_puck' },
 ];
 
 /**
  * Resolve archetype string → Kokoro voice ID.
- * Falls back to af_bella (MAIA Core) if archetype is unknown or unset.
+ * Falls back to af_kore (Maia Kore — primary voice) if archetype is unknown or unset.
  */
 export function resolveArchetypeToKokoro(archetype?: string | null): string {
-  if (!archetype) return 'af_bella';
+  if (!archetype) return 'af_kore';
   const entry = MAIA_VOICE_ARCHETYPES.find((x) => x.id === archetype);
-  return entry?.kokoroVoice ?? 'af_bella';
+  return entry?.kokoroVoice ?? 'af_kore';
 }
 
 /**

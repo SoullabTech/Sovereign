@@ -11,7 +11,7 @@ import { resolveArchetypeToKokoro } from './voiceArchetypes';
 
 // Kokoro voices (local, sovereign)
 export type KokoroVoice =
-  | 'af_heart' | 'af_bella' | 'af_sarah' | 'af_nicole'
+  | 'af_heart' | 'af_kore' | 'af_bella' | 'af_sarah' | 'af_nicole'
   | 'am_adam' | 'am_michael' | 'am_puck'
   | 'bm_lewis';
 

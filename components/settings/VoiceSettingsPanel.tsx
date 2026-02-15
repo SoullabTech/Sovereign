@@ -47,14 +47,14 @@ function buildPreviewText(archetype: MaiaVoiceArchetype | null): string {
     case 'maia_clear':
       return 'Here is what matters right now. One clear step. You already know what it is.';
     case 'mentor':
-      return 'Hold the line. You have the capacity for this. I am here with steady counsel.';
+      return 'Hold the line. You have the capacity for this. Steady counsel, no pressure.';
     case 'elder':
-      return 'Let us slow down. Breathe. Choose the next honest step.';
+      return 'Let us slow down. There is no rush. Choose the next honest step.';
     case 'puck':
       return 'Hey, we have got this. One small step, clean and doable. Ready when you are.';
     case 'maia_core':
     default:
-      return 'This is MAIA. A calm, grounded voice for clear decisions and gentle guidance.';
+      return 'I am here. Steady, balanced, quietly luminous. What do you need right now?';
   }
 }
 
@@ -324,6 +324,9 @@ function ArchetypeCard({
         {entry.label}
       </div>
       <div className="mt-1 text-xs text-stone-400">{entry.desc}</div>
+      <div className={`mt-1.5 text-[10px] ${selected ? 'text-amber-400/70' : 'text-stone-500'}`}>
+        {entry.bestFor}
+      </div>
     </button>
   );
 }

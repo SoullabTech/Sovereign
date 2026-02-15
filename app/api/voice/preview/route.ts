@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
   // Archetype takes precedence over raw voiceId
   const voice = body.voiceArchetype
     ? resolveArchetypeToKokoro(body.voiceArchetype)
-    : (body.voiceId || 'af_bella');
+    : (body.voiceId || 'af_kore');
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
 
   // Generate MP3 bytes via the TTS router (same path as /api/voice/local-tts)
