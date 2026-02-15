@@ -11,16 +11,14 @@
  * Files are ephemeral: written to /tmp/maia-tts-preview, cleaned after 10 min.
  * No long-term storage. No content extraction. Just presence, then gone.
  *
- * SOVEREIGNTY: Audio bytes are generated locally via Kokoro (when available).
+ * Routing: OpenAI leads (auto/cloud), Kokoro as fallback (auto) or explicit (local).
  * Preview files are scoped to the requesting member and cannot be accessed by others.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
-import { resolveArchetypeVoice, resolveArchetypeToKokoro } from '@/lib/voice/voiceArchetypes';
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -75,7 +73,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { text?: string; voiceId?: string; voiceArchetype?: string; speed?: number };
+  let body: { text?: string; voiceId?: string; speed?: number; ttsProvider?: string };
   try {
     body = await req.json();
   } catch {
@@ -90,68 +88,66 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Resolve voice: archetype-aware, provider-aware
-  const archetypeResolution = body.voiceArchetype
-    ? resolveArchetypeVoice(body.voiceArchetype)
-    : null;
+  const voice = body.voiceId || 'alloy';
   const speed = clamp(body.speed ?? 1.0, SPEED_MIN, SPEED_MAX);
+  const providerPref = body.ttsProvider || 'auto';
 
-  // Generate MP3 bytes — route to correct provider based on archetype
+  // Generate MP3 bytes
   let audioBuffer: Buffer;
 
-  if (archetypeResolution?.provider === 'openai') {
-    // OpenAI archetype (MAIA feminine voices) — go directly to OpenAI
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI TTS not configured' },
-        { status: 503 },
-      );
-    }
+  // ── Member chose "local" → Kokoro only, no cloud fallback ──
+  if (providerPref === 'local') {
     try {
-      const speech = await synthesizeSpeech({ text, voice: archetypeResolution.voice, format: 'mp3', speed });
-      audioBuffer = Buffer.from(await speech.arrayBuffer());
-    } catch (err: any) {
+      const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+      audioBuffer = result.audioBuffer;
+    } catch (err) {
       return NextResponse.json(
-        { error: 'TTS generation failed', detail: err?.message },
+        { error: 'Local voice engine is offline. Try again when Kokoro is running.' },
         { status: 503 },
       );
     }
   } else {
-    // Kokoro archetype or raw voiceId — use TTS router (local sovereign)
-    const voice = archetypeResolution
-      ? archetypeResolution.voice
-      : (body.voiceId || 'af_kore');
-    try {
-      const result = await ttsRouter.synthesize({
-        text,
-        voice,
-        format: 'mp3',
-        speed,
-      });
-      audioBuffer = result.audioBuffer;
-    } catch (err) {
-      if (err instanceof TTSFallbackToOpenAI) {
-        // Try OpenAI fallback if available
-        if (!process.env.OPENAI_API_KEY) {
-          return NextResponse.json(
-            { error: 'Local TTS unavailable and no cloud fallback configured' },
-            { status: 503 },
-          );
-        }
-        try {
-          const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
-          audioBuffer = Buffer.from(await speech.arrayBuffer());
-        } catch (fallbackErr: any) {
-          return NextResponse.json(
-            { error: 'TTS fallback failed', detail: fallbackErr?.message },
-            { status: 503 },
-          );
-        }
-      } else {
+    // ── "auto" or "cloud" → OpenAI Alloy leads ──
+    if (!process.env.OPENAI_API_KEY) {
+      // No API key — try Kokoro as last resort (auto only)
+      if (providerPref === 'cloud') {
         return NextResponse.json(
-          { error: 'TTS generation failed', detail: (err as Error)?.message },
-          { status: 500 },
+          { error: 'Cloud voice requires internet. No API key configured.' },
+          { status: 503 },
         );
+      }
+      // "auto" without API key → fall back to Kokoro
+      try {
+        const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+        audioBuffer = result.audioBuffer;
+      } catch {
+        return NextResponse.json(
+          { error: 'No cloud API key and local TTS unavailable' },
+          { status: 503 },
+        );
+      }
+    } else {
+      try {
+        const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
+        audioBuffer = Buffer.from(await speech.arrayBuffer());
+      } catch (err: any) {
+        // OpenAI failed — if "cloud", no fallback
+        if (providerPref === 'cloud') {
+          return NextResponse.json(
+            { error: 'Cloud TTS failed', detail: err?.message },
+            { status: 503 },
+          );
+        }
+        // "auto" → try Kokoro as fallback
+        try {
+          const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+          audioBuffer = result.audioBuffer;
+        } catch {
+          return NextResponse.json(
+            { error: 'Both cloud and local TTS failed', detail: err?.message },
+            { status: 503 },
+          );
+        }
       }
     }
   }
