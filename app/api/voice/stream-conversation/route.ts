@@ -119,6 +119,14 @@ async function synthesizeWithFallback(
   // ── Sovereign TTS routing: Kokoro first, OpenAI fallback ──
   const elementKey = (options.element ?? '').toLowerCase() as Element;
 
+  // MAIA vow: default voice is always Alloy (maia_core archetype).
+  // When no archetype is set, resolve as maia_core → OpenAI alloy.
+  // This ensures the ttsRouter archetype intercept always fires for MAIA's default.
+  const effectiveArchetype = options.voiceArchetype || 'maia_core';
+  if (!options.voiceArchetype) {
+    console.log('[TTS] No archetype set — defaulting to maia_core (Alloy)');
+  }
+
   // Try Kokoro via ttsRouter (same path as preview endpoint)
   try {
     const result = await ttsRouter.synthesize({
@@ -127,7 +135,7 @@ async function synthesizeWithFallback(
       format: 'mp3',
       speed: options.speed,
       voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      voiceArchetype: options.voiceArchetype,
+      voiceArchetype: effectiveArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     console.log(`[TTS] provider=kokoro element=${elementKey || 'none'} voice=${result.reason} ${result.audioBuffer.length}B MP3`);
@@ -163,16 +171,14 @@ async function synthesizeWithFallback(
   }
 
   try {
-    // Resolve voice: archetype > element > default
-    const archetypeResolution = options.voiceArchetype
-      ? resolveArchetypeVoice(options.voiceArchetype)
-      : null;
-    const openaiVoice = archetypeResolution?.provider === 'openai'
+    // Resolve voice: effectiveArchetype always set (defaults to maia_core → alloy)
+    const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
+    const openaiVoice = archetypeResolution.provider === 'openai'
       ? archetypeResolution.voice
       : (options.voice && options.voice !== 'maya')
         ? options.voice
         : (elementKey ? resolveOpenAIVoice(elementKey) : null) ?? 'alloy';
-    console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} voice=${openaiVoice}`);
+    console.log(`[TTS] provider=openai fallback=true archetype=${effectiveArchetype} voice=${openaiVoice}`);
     const response = await synthesizeSpeech({
       text,
       voice: openaiVoice,
@@ -405,6 +411,9 @@ async function synthesizeSentence(
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
 
+  // MAIA vow: default voice is always maia_core (Alloy) when no archetype set
+  const effectiveSentenceArchetype = voiceArchetype || 'maia_core';
+
   // Try Kokoro via ttsRouter
   try {
     const result = await ttsRouter.synthesize({
@@ -413,7 +422,7 @@ async function synthesizeSentence(
       format: 'mp3',
       speed,
       voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
-      voiceArchetype,
+      voiceArchetype: effectiveSentenceArchetype,
     });
     const audio = result.audioBuffer.toString('base64');
     return { audio, format: 'mp3' };
