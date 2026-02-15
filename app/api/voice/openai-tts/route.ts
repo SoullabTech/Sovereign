@@ -9,6 +9,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
+import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 import { resolveToKokoro, resolveToOpenAI, SOVEREIGN_VOICES } from '@/lib/voice/sovereignVoices';
 
