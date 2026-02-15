@@ -2381,7 +2381,7 @@ export function AccountSettings() {
         >
           <ArrowLeft size={20} className="text-amber-400" />
         </button>
-        <h1 className="text-xl font-medium text-stone-200">
+        <h1 className="text-xl font-medium text-white">
           {activeSection
             ? SECTIONS.find(s => s.id === activeSection)?.label
             : 'Settings'}
@@ -2421,9 +2421,9 @@ export function AccountSettings() {
                 onClick={() => setActiveSection(id)}
                 className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
-                <Icon size={18} className="text-stone-300 group-hover:text-amber-400 transition-colors" />
-                <span className="flex-1 text-left text-stone-200">{label}</span>
-                <ChevronRight size={16} className="text-stone-400 group-hover:text-stone-200 transition-colors" />
+                <Icon size={18} className="text-amber-400/80 group-hover:text-amber-300 transition-colors" />
+                <span className="flex-1 text-left text-white/90">{label}</span>
+                <ChevronRight size={16} className="text-stone-300 group-hover:text-amber-300 transition-colors" />
               </button>
             ))}
           </motion.div>
