@@ -213,6 +213,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
+  const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
 
   // Convenience aliases (kept for backward compat with existing code)
   const handsFreeActiveRef = useRef(true);
@@ -501,6 +502,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     recognition.onend = () => {
       console.log('🏁 [onend] Recognition stopped');
+      recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);
       isRecordingRef.current = false; // Update ref immediately
       onRecordingStateChange?.(false);
@@ -1750,18 +1752,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // This prevents the "blinking listening" bug where mic restarts even without speech
 
       try {
-        recognitionRef.current.start();
-        console.log('🎙️ [ContinuousConversation] Recognition started');
-
-        // Track analytics (disabled for Vercel build)
-        // Analytics.startRecording({
-        //   timestamp: new Date().toISOString(),
-        //   mode: 'continuous',
-        //   user_agent: window.navigator.userAgent
-        // });
+        // Guard against double-start: if recognition is already running, skip.
+        // This prevents InvalidStateError when multiple restart paths
+        // (watchdog, maya-voice-end, hands-free restart) fire within ms of each other.
+        // We track this ourselves because webkitSpeechRecognition has no .started property.
+        if (recognitionActiveRef.current) {
+          console.log('⏸️ [ContinuousConversation] Recognition already running, skipping duplicate start');
+        } else {
+          recognitionRef.current.start();
+          recognitionActiveRef.current = true;
+          console.log('🎙️ [ContinuousConversation] Recognition started');
+        }
       } catch (err: any) {
-        // Ignore "already started" errors since the onend handler will manage restart
-        if (err?.message?.includes('already started')) {
+        // Catch InvalidStateError and "already started" — both mean recognition is active
+        recognitionActiveRef.current = false;
+        if (err?.name === 'InvalidStateError' || err?.message?.includes('already started')) {
+          recognitionActiveRef.current = true; // It IS running, just not started by us
           console.log('⏸️ [ContinuousConversation] Recognition already active');
         } else {
           console.error('❌ [ContinuousConversation] Error starting recognition:', err);
@@ -1814,6 +1820,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isListeningRef.current = false; // Update ref immediately
     setIsRecording(false);
     isRecordingRef.current = false; // Update ref immediately
+    recognitionActiveRef.current = false; // Clear double-start guard
     setAudioLevel(0);
     smoothedAudioLevelRef.current = 0; // Reset EMA smoothing
     nativeStatusRef.current = 'stopped'; // 🔑 Reset native status immediately
