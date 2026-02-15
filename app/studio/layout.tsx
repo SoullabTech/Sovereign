@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -30,6 +30,26 @@ import {
   type ModuleSlug,
   type ModuleDefinition,
 } from '@/lib/studio/moduleDefinitions';
+import type { StudioMode } from '@/hooks/useStudioData';
+import { useTeamContext } from '@/hooks/useStudioData';
+
+/**
+ * Watches studioMode from TeamContext and calls back when it changes.
+ * Must be rendered inside TeamContextProvider.
+ */
+function StudioModeWatcher({
+  onModeChange,
+}: {
+  onModeChange: (mode: StudioMode) => void;
+}) {
+  const { studioMode } = useTeamContext();
+
+  useEffect(() => {
+    onModeChange(studioMode);
+  }, [studioMode, onModeChange]);
+
+  return null;
+}
 
 // Bottom tab bar items (highest-frequency mobile actions)
 const MOBILE_TABS = [
@@ -54,6 +74,9 @@ export default function StudioLayout({
   const [checkingPractitioner, setCheckingPractitioner] = useState(true);
   const [isPractitioner, setIsPractitioner] = useState(false);
   const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>(MODULE_DEFINITIONS);
+  const [initialStudioMode, setInitialStudioMode] = useState<StudioMode>('practice');
+  const [portalTypeRef, setPortalTypeRef] = useState<PortalType>('generalist');
+  const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -82,7 +105,12 @@ export default function StudioLayout({
           // Resolve visible modules from identity
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
           const enabledModules = data.identity?.enabledModules as ModuleSlug[] | null;
-          setVisibleModules(getVisibleModules(enabledModules, portalType));
+          const serverMode = (data.identity?.studioMode ?? 'practice') as StudioMode;
+
+          setPortalTypeRef(portalType);
+          setEnabledModulesRef(enabledModules);
+          setInitialStudioMode(serverMode);
+          setVisibleModules(getVisibleModules(enabledModules, portalType, serverMode));
         } else {
           router.replace('/studio/create');
           return;
@@ -97,6 +125,13 @@ export default function StudioLayout({
 
     checkPractitioner();
   }, [isCreatePage, router]);
+
+  // Callback for StudioModeWatcher — re-filters nav when mode changes
+  const handleModeChange = useCallback((mode: StudioMode) => {
+    if (isPractitioner) {
+      setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, mode));
+    }
+  }, [isPractitioner, enabledModulesRef, portalTypeRef]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -170,7 +205,8 @@ export default function StudioLayout({
   // ─── MOBILE LAYOUT ────────────────────────────────────────
   if (isMobile) {
     return (
-      <TeamContextProvider>
+      <TeamContextProvider initialStudioMode={initialStudioMode}>
+      <StudioModeWatcher onModeChange={handleModeChange} />
       <RecordingContextProvider>
       <NavigationGuard />
       <div className="min-h-screen bg-[#1a1a2e] flex flex-col">
@@ -298,7 +334,8 @@ export default function StudioLayout({
 
   // ─── DESKTOP LAYOUT (unchanged) ───────────────────────────
   return (
-    <TeamContextProvider>
+    <TeamContextProvider initialStudioMode={initialStudioMode}>
+    <StudioModeWatcher onModeChange={handleModeChange} />
     <RecordingContextProvider>
     <NavigationGuard />
     <div className="min-h-screen bg-[#1a1a2e] flex">
