@@ -27,6 +27,7 @@ import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
+import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 import type { Element } from '@/lib/types/voiceIntent';
 import {
   processThreshold,
@@ -133,7 +134,23 @@ async function synthesizeWithFallback(
     return { audio, format: 'mp3', source: 'kokoro' };
   } catch (err) {
     if (err instanceof TTSFallbackToOpenAI) {
-      console.log(`[TTS] provider=openai fallback=true reason=${err.reason}`);
+      console.log(`[TTS] provider=openai fallback=${err.isFallback} reason=${err.reason} voice=${err.voice || 'default'}`);
+      // If the router specified a voice (archetype-driven), use it directly
+      if (err.voice) {
+        try {
+          const response = await synthesizeSpeech({
+            text,
+            voice: err.voice,
+            format: 'mp3',
+            speed: options.speed,
+          });
+          const buffer = Buffer.from(await response.arrayBuffer());
+          return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
+        } catch (e) {
+          console.error(`[TTS] OpenAI archetype voice failed: ${e instanceof Error ? e.message : e}`);
+          return null;
+        }
+      }
     } else {
       console.warn(`[TTS] ttsRouter error: ${err instanceof Error ? err.message : err}`);
     }
@@ -146,10 +163,15 @@ async function synthesizeWithFallback(
   }
 
   try {
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (options.voice && options.voice !== 'maya')
-      ? options.voice
-      : elementVoice ?? 'nova';
+    // Resolve voice: archetype > element > default
+    const archetypeResolution = options.voiceArchetype
+      ? resolveArchetypeVoice(options.voiceArchetype)
+      : null;
+    const openaiVoice = archetypeResolution?.provider === 'openai'
+      ? archetypeResolution.voice
+      : (options.voice && options.voice !== 'maya')
+        ? options.voice
+        : (elementKey ? resolveOpenAIVoice(elementKey) : null) ?? 'alloy';
     console.log(`[TTS] provider=openai fallback=true element=${elementKey || 'none'} voice=${openaiVoice}`);
     const response = await synthesizeSpeech({
       text,

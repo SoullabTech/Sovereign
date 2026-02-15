@@ -24,6 +24,7 @@
 import * as kokoro from './providers/kokoro';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
 import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
+import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
 
@@ -83,6 +84,20 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     provider !== 'auto' ? provider
     : localEnabled ? 'kokoro'
     : 'openai';
+
+  // Check if archetype routes to OpenAI (MAIA feminine voices) — skip Kokoro entirely
+  if (params.voiceArchetype) {
+    const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
+    if (archetypeResolution.provider === 'openai') {
+      console.info('[voice]', {
+        archetype: params.voiceArchetype,
+        voice: `openai:${archetypeResolution.voice}`,
+        provider: 'openai',
+        reason: 'archetype_openai',
+      });
+      throw new TTSFallbackToOpenAI(false, 'archetype_openai', archetypeResolution.voice);
+    }
+  }
 
   // Try primary
   if (primary === 'kokoro') {
@@ -152,12 +167,15 @@ export class TTSFallbackToOpenAI extends Error {
   public readonly isFallback: boolean;
   /** Why the fallback happened (for audit logging) */
   public readonly reason: string;
+  /** Specific OpenAI voice to use (when archetype routes to OpenAI by design) */
+  public readonly voice?: string;
 
-  constructor(isFallback: boolean, reason: string = 'unknown') {
+  constructor(isFallback: boolean, reason: string = 'unknown', voice?: string) {
     super('Falling back to OpenAI TTS');
     this.name = 'TTSFallbackToOpenAI';
     this.isFallback = isFallback;
     this.reason = reason;
+    this.voice = voice;
   }
 }
 

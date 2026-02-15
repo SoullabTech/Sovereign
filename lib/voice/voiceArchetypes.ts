@@ -1,11 +1,15 @@
 /**
- * Voice Archetypes — sovereign voice presences.
+ * Voice Archetypes — sovereign voice presences with mixed-provider routing.
  *
  * Members choose an archetype (a felt presence), not an engine ID.
- * The archetype resolves to a Kokoro voice behind the scenes.
+ * Each archetype specifies its TTS provider:
+ *   - 'openai' — cloud TTS (higher quality feminine voices)
+ *   - 'kokoro' — local sovereign TTS (masculine/playful voices)
  *
- * This keeps the member-facing layer sovereign and meaningful,
- * while allowing the engine layer to change without breaking identity.
+ * MAIA's feminine voices use OpenAI (Alloy, Shimmer, Nova).
+ * Masculine/playful voices use Kokoro (sovereign, no data leaves the machine).
+ *
+ * This is a conscious architectural choice, not a fallback — documented, not hidden.
  *
  * DB IDs (maia_core, mentor, etc.) are internal — never shown to members.
  * Labels and descriptions are what members see and choose by.
@@ -19,26 +23,43 @@ export type MaiaVoiceArchetype =
   | 'elder'
   | 'puck';
 
+export type VoiceProvider = 'openai' | 'kokoro';
+
 export interface VoiceArchetypeEntry {
   id: MaiaVoiceArchetype;
   label: string;
   desc: string;
   bestFor: string;           // one-phrase orientation for quick selection
-  kokoroVoice: string;       // engine id (hidden behind archetype)
+  provider: VoiceProvider;   // which TTS engine to use
+  voice: string;             // provider-specific voice ID
+  kokoroVoice: string;       // Kokoro fallback (used when OpenAI is down, or for local-only mode)
 }
 
 export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
-  { id: 'maia_core',  label: 'Maia (Kore)',   desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    kokoroVoice: 'af_kore' },
-  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          kokoroVoice: 'af_sarah' },
-  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  kokoroVoice: 'af_nicole' },
-  { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  kokoroVoice: 'am_michael' },
-  { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  kokoroVoice: 'bm_lewis' },
-  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', kokoroVoice: 'am_puck' },
+  { id: 'maia_core',  label: 'Maia',           desc: 'Steady, balanced, and quietly luminous.',                     bestFor: 'Everyday guidance',    provider: 'openai', voice: 'alloy',      kokoroVoice: 'af_kore' },
+  { id: 'maia_warm',  label: 'Maia (Warm)',    desc: 'Softer presence: comforting, relational, gently encouraging.', bestFor: 'Tender days',          provider: 'openai', voice: 'shimmer',    kokoroVoice: 'af_sarah' },
+  { id: 'maia_clear', label: 'Maia (Clear)',   desc: 'Crisp and direct: focused, practical, cleanly articulated.',  bestFor: 'Decisions + clarity',  provider: 'openai', voice: 'nova',       kokoroVoice: 'af_nicole' },
+  { id: 'mentor',     label: 'Atlas',          desc: 'Grounded masculine: calm, steady, confident without pressure.', bestFor: 'Steady mentorship',  provider: 'kokoro', voice: 'am_michael', kokoroVoice: 'am_michael' },
+  { id: 'elder',      label: 'Atlas (Deep)',   desc: 'Deeper register: slow gravity, contemplative, anchoring.',    bestFor: 'Ritual + reflection',  provider: 'kokoro', voice: 'bm_lewis',   kokoroVoice: 'bm_lewis' },
+  { id: 'puck',       label: 'Puck',           desc: 'Light, quick, playfully confident. Best when you want play, not solemnity.', bestFor: 'Lightness + humor', provider: 'kokoro', voice: 'am_puck', kokoroVoice: 'am_puck' },
 ];
 
 /**
+ * Resolve archetype → { provider, voice }.
+ * Default (no archetype set): OpenAI Alloy (MAIA's primary voice).
+ */
+export function resolveArchetypeVoice(archetype?: string | null): { provider: VoiceProvider; voice: string } {
+  if (!archetype) return { provider: 'openai', voice: 'alloy' };
+  const entry = MAIA_VOICE_ARCHETYPES.find((x) => x.id === archetype);
+  return entry
+    ? { provider: entry.provider, voice: entry.voice }
+    : { provider: 'openai', voice: 'alloy' };
+}
+
+/**
  * Resolve archetype string → Kokoro voice ID.
- * Falls back to af_kore (Maia Kore — primary voice) if archetype is unknown or unset.
+ * Used as fallback when OpenAI is unavailable or for local-only mode.
+ * Falls back to af_kore (Maia Kore) if archetype is unknown or unset.
  */
 export function resolveArchetypeToKokoro(archetype?: string | null): string {
   if (!archetype) return 'af_kore';
