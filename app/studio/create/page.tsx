@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Stethoscope,
   Briefcase,
+  Compass,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
@@ -146,8 +147,9 @@ function generateSlug(name: string): string {
 
 export default function CreatePortalPage() {
   const router = useRouter();
-  const [step, setStep] = useState<'type' | 'modules' | 'details'>('type');
+  const [step, setStep] = useState<'fork' | 'type' | 'modules' | 'details'>('fork');
   const [selectedType, setSelectedType] = useState<PortalType | null>(null);
+  const [creatingPersonal, setCreatingPersonal] = useState(false);
 
   // Recommender state
   const [workStyle, setWorkStyle] = useState<WorkStyle>(null);
@@ -215,6 +217,31 @@ export default function CreatePortalPage() {
       if (data.isPractitioner) router.replace('/studio');
     } catch {
       // Not a practitioner, continue
+    }
+  }
+
+  async function handlePersonalCreate() {
+    if (!memberId) return;
+    setCreatingPersonal(true);
+    setError(null);
+
+    try {
+      const response = await apiFetch('/api/studio/personal/enter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || 'Failed to enter personal mode');
+        return;
+      }
+
+      router.replace('/studio/field');
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setCreatingPersonal(false);
     }
   }
 
@@ -313,30 +340,112 @@ export default function CreatePortalPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-3xl font-light text-white mb-3">
+            {step === 'fork' && 'How will you use Studio?'}
             {step === 'type' && 'Choose your practice style'}
             {step === 'modules' && 'Your starting kit'}
             {step === 'details' && 'Set up your portal'}
           </h1>
           <p className="text-slate-400">
+            {step === 'fork' && 'You can always switch later.'}
             {step === 'type' && 'Select the type that best describes how you work'}
             {step === 'modules' && 'These are your starting tools. You can add or remove any of them later in Settings.'}
             {step === 'details' && 'Choose a name and URL for your practice'}
           </p>
 
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-2 mt-6">
-            {['type', 'modules', 'details'].map((s, i) => (
-              <div key={s} className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  s === step ? 'bg-amber-400' :
-                  ['type', 'modules', 'details'].indexOf(step) > i ? 'bg-amber-400/40' :
-                  'bg-slate-700'
-                }`} />
-                {i < 2 && <div className="w-8 h-px bg-slate-700" />}
-              </div>
-            ))}
-          </div>
+          {/* Step indicator (only for practitioner flow) */}
+          {step !== 'fork' && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              {['type', 'modules', 'details'].map((s, i) => (
+                <div key={s} className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    s === step ? 'bg-amber-400' :
+                    ['type', 'modules', 'details'].indexOf(step) > i ? 'bg-amber-400/40' :
+                    'bg-slate-700'
+                  }`} />
+                  {i < 2 && <div className="w-8 h-px bg-slate-700" />}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* ═══ FORK: Personal vs Practitioner ═══ */}
+        {step === 'fork' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Personal card */}
+              <div className="p-6 rounded-xl bg-slate-900/50 border border-slate-800 flex flex-col">
+                <div className="w-11 h-11 rounded-xl bg-teal-500/15 flex items-center justify-center mb-4">
+                  <Compass className="w-5 h-5 text-teal-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-1">Personal</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  For your own decisions, transitions, and inner work
+                </p>
+                <ul className="space-y-1.5 mb-6 flex-1">
+                  {['Decisions log', 'Changes / I Ching', 'MAIA companion', 'Vault'].map((item) => (
+                    <li key={item} className="text-xs text-slate-500 flex items-start gap-1.5">
+                      <span className="text-teal-500/60 mt-0.5">-</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={handlePersonalCreate}
+                  disabled={creatingPersonal || !memberId}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creatingPersonal ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Entering...
+                    </>
+                  ) : (
+                    <>
+                      Start
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Practitioner card */}
+              <div className="p-6 rounded-xl bg-slate-900/50 border border-slate-800 flex flex-col">
+                <div className="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center mb-4">
+                  <Briefcase className="w-5 h-5 text-amber-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-1">Practitioner</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  For running a practice with clients
+                </p>
+                <ul className="space-y-1.5 mb-6 flex-1">
+                  {['Client management', 'Session scheduling', 'Calendar & tasks', 'All personal tools included'].map((item) => (
+                    <li key={item} className="text-xs text-slate-500 flex items-start gap-1.5">
+                      <span className="text-amber-500/60 mt-0.5">-</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setStep('type')}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-amber-500/30 text-amber-400 rounded-xl hover:bg-amber-500/10 transition-colors"
+                >
+                  Set up practice
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Error display */}
+            {error && (
+              <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══ STEP 1: Type Selection ═══ */}
         {step === 'type' && (
@@ -415,6 +524,16 @@ export default function CreatePortalPage() {
                 </div>
               )}
             </div>
+
+            {/* Back to fork */}
+            <button
+              type="button"
+              onClick={() => setStep('fork')}
+              className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
 
             {/* Portal Type Cards */}
             <div className="space-y-3">
@@ -754,7 +873,9 @@ export default function CreatePortalPage() {
 
         {/* Help text */}
         <p className="text-center text-sm text-slate-500 mt-12">
-          You can change your practice style and modules later in Studio Settings.
+          {step === 'fork'
+            ? 'You can add a practice later from Settings.'
+            : 'You can change your practice style and modules later in Studio Settings.'}
         </p>
       </div>
     </div>

@@ -111,6 +111,12 @@ export default function StudioLayout({
           setEnabledModulesRef(enabledModules);
           setInitialStudioMode(serverMode);
           setVisibleModules(getVisibleModules(enabledModules, portalType, serverMode));
+
+          // Personal-mode users who land on /studio go to /studio/field
+          if (serverMode === 'personal' && pathname === '/studio') {
+            router.replace('/studio/field');
+            return;
+          }
         } else {
           router.replace('/studio/create');
           return;
@@ -124,7 +130,7 @@ export default function StudioLayout({
     }
 
     checkPractitioner();
-  }, [isCreatePage, router]);
+  }, [isCreatePage, router, pathname]);
 
   // Callback for StudioModeWatcher — re-filters nav when mode changes
   const handleModeChange = useCallback((mode: StudioMode) => {
