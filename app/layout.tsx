@@ -6,6 +6,7 @@ import { DevNoServiceWorker } from "./DevNoServiceWorker";
 import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 import { AethericConsciousnessProvider } from "@/components/consciousness/AethericConsciousnessProvider";
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
+import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -181,7 +182,9 @@ export default function RootLayout({
                 autoSync={true}
                 syncInterval={30000}
               >
-                {children}
+                <FeatureTooltipProvider>
+                  {children}
+                </FeatureTooltipProvider>
               </SevenLayerArchitectureProvider>
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
