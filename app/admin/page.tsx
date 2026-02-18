@@ -171,8 +171,32 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="text-white/70 text-sm">
-            Logged in as {currentUser.name}
+          <div className="flex items-center space-x-4">
+            <nav className="hidden md:flex items-center space-x-1">
+              {[
+                { label: 'Beta Testers', href: '/admin/beta-testers' },
+                { label: 'Opus Pulse', href: '/admin/opus-pulse' },
+                { label: 'Analytics', href: '/admin/consciousness-analytics' },
+                { label: 'Videos', href: '/admin/library/videos' },
+                { label: 'Command Center', href: '/labtools/admin/command-center' },
+                { label: 'Platform Overview', href: '/admin/platform-overview' },
+              ].map(({ label, href }) => (
+                <button
+                  key={href}
+                  onClick={() => router.push(href)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    href === '/admin/platform-overview'
+                      ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            <div className="text-white/40 text-sm">
+              {currentUser.name}
+            </div>
           </div>
         </div>
       </div>
