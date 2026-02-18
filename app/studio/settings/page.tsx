@@ -31,6 +31,8 @@ import {
   ArrowRight,
   LayoutGrid,
   Check,
+  Compass,
+  Briefcase,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
@@ -53,6 +55,7 @@ interface SettingsSection {
 
 const sections: SettingsSection[] = [
   { id: 'profile', label: 'Profile', icon: User },
+  { id: 'studio-mode', label: 'Studio Mode', icon: Compass },
   { id: 'modules', label: 'Modules', icon: LayoutGrid },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'time-tracking', label: 'Time Tracking', icon: Clock },
@@ -337,6 +340,49 @@ function SettingsContent() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+  // ─── Studio Mode ──────────────────────────────────────────
+  const [studioMode, setStudioMode] = useState<'personal' | 'practice'>('practice');
+  const [studioModeLoading, setStudioModeLoading] = useState(true);
+  const [studioModeSwitching, setStudioModeSwitching] = useState(false);
+
+  useEffect(() => {
+    async function fetchStudioMode() {
+      try {
+        const res = await apiFetch('/api/studio/mode');
+        if (res.ok) {
+          const data = await res.json();
+          setStudioMode(data.studioMode ?? 'practice');
+        }
+      } catch {
+        // fallback
+      } finally {
+        setStudioModeLoading(false);
+      }
+    }
+    fetchStudioMode();
+  }, []);
+
+  async function switchStudioMode(mode: 'personal' | 'practice') {
+    if (mode === studioMode) return;
+    setStudioModeSwitching(true);
+    try {
+      const res = await apiFetch('/api/studio/mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studioMode: mode }),
+      });
+      if (res.ok) {
+        setStudioMode(mode);
+        // Redirect to the appropriate home after switching
+        window.location.href = mode === 'personal' ? '/studio/field' : '/studio';
+      }
+    } catch {
+      // handle error
+    } finally {
+      setStudioModeSwitching(false);
+    }
+  }
+
   // ─── Module Settings ────────────────────────────────────
   const [modulePortalType, setModulePortalType] = useState<PortalType>('generalist');
   const [enabledModules, setEnabledModules] = useState<Set<ModuleSlug>>(new Set());
@@ -518,6 +564,90 @@ function SettingsContent() {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {activeSection === 'studio-mode' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold text-white mb-1">Studio Mode</h2>
+              <p className="text-sm text-slate-400">
+                Choose how you use Studio. Switch between personal navigation and practice management anytime.
+              </p>
+            </div>
+
+            {studioModeLoading ? (
+              <div className="flex items-center gap-3 p-8 justify-center">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                <span className="text-slate-400">Loading...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {/* Personal / Field */}
+                <button
+                  onClick={() => switchStudioMode('personal')}
+                  disabled={studioModeSwitching}
+                  className={`
+                    relative p-6 rounded-xl border text-left transition-all
+                    ${studioMode === 'personal'
+                      ? 'border-amber-500/40 bg-amber-500/10'
+                      : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'}
+                  `}
+                >
+                  {studioModeSwitching && studioMode !== 'personal' && (
+                    <Loader2 className="absolute top-4 right-4 w-4 h-4 text-amber-400 animate-spin" />
+                  )}
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center mb-4">
+                    <Compass className={`w-5 h-5 ${studioMode === 'personal' ? 'text-amber-400' : 'text-slate-400'}`} />
+                  </div>
+                  <h3 className={`font-medium mb-1 ${studioMode === 'personal' ? 'text-white' : 'text-slate-300'}`}>
+                    Field
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Personal navigation. Decisions, changes, vault, and MAIA.
+                  </p>
+                  {studioMode === 'personal' && (
+                    <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-amber-400" />
+                    </div>
+                  )}
+                </button>
+
+                {/* Practice / Operations */}
+                <button
+                  onClick={() => switchStudioMode('practice')}
+                  disabled={studioModeSwitching}
+                  className={`
+                    relative p-6 rounded-xl border text-left transition-all
+                    ${studioMode === 'practice'
+                      ? 'border-teal-500/40 bg-teal-500/10'
+                      : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'}
+                  `}
+                >
+                  {studioModeSwitching && studioMode !== 'practice' && (
+                    <Loader2 className="absolute top-4 right-4 w-4 h-4 text-teal-400 animate-spin" />
+                  )}
+                  <div className="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center mb-4">
+                    <Briefcase className={`w-5 h-5 ${studioMode === 'practice' ? 'text-teal-400' : 'text-slate-400'}`} />
+                  </div>
+                  <h3 className={`font-medium mb-1 ${studioMode === 'practice' ? 'text-white' : 'text-slate-300'}`}>
+                    Practice
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Client management, sessions, scheduling, and business tools.
+                  </p>
+                  {studioMode === 'practice' && (
+                    <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-teal-500/20 flex items-center justify-center">
+                      <Check className="w-3 h-3 text-teal-400" />
+                    </div>
+                  )}
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-500">
+              Switching mode changes which tools appear in your sidebar. Your data is preserved in both modes.
+            </p>
           </div>
         )}
 
