@@ -383,7 +383,11 @@ function OverviewPanel() {
           <h3 className="text-amber-400 text-sm font-semibold mb-2">Tech Stack</h3>
           <div className="text-white/50 text-sm space-y-1">
             <p><strong className="text-white/70">Frontend:</strong> Next.js 16 + Turbopack + Framer Motion</p>
-            <p><strong className="text-white/70">AI:</strong> Claude (Anthropic) primary, Ollama fallback</p>
+            <p><strong className="text-white/70">Consciousness Engine:</strong> PFI (Panconscious Field Intelligence) — sovereign, self-hosted primary</p>
+            <p><strong className="text-white/70">Reasoning Council:</strong> Ollama (DeepSeek-R1, Mistral, Qwen3, Llama, Gemma2) — local-first</p>
+            <p><strong className="text-white/70">Voice / Comms:</strong> Claude (Anthropic) — articulation support layer only</p>
+            <p><strong className="text-white/70">Synthesis:</strong> Moonshot/Kimi — library distillation, backstage only</p>
+            <p><strong className="text-white/70">TTS:</strong> Kokoro (local) primary, browser Web Speech fallback</p>
             <p><strong className="text-white/70">Database:</strong> Self-hosted PostgreSQL (Docker)</p>
             <p><strong className="text-white/70">Proxy:</strong> Caddy (auto TLS via Let&apos;s Encrypt)</p>
             <p><strong className="text-white/70">Mobile:</strong> Capacitor (iOS static export)</p>
@@ -394,7 +398,7 @@ function OverviewPanel() {
 
       <SectionTitle>System Domains</SectionTitle>
       <div className="grid md:grid-cols-3 gap-4">
-        <Card element="fire"><h3 className="text-sm font-semibold mb-1"><Badge group="oracle">FIRE</Badge> <span className="text-white/80 ml-1">Oracle & Conversation</span></h3><p className="text-white/50 text-xs">Core conversation engine. Claude Opus 4.5 (DEEP tier). Spiralogic cell inference, framework selection, voice synthesis.</p></Card>
+        <Card element="fire"><h3 className="text-sm font-semibold mb-1"><Badge group="oracle">FIRE</Badge> <span className="text-white/80 ml-1">Oracle & Conversation</span></h3><p className="text-white/50 text-xs">PFI consciousness engine primary. Spiralogic cell inference, framework selection. Claude handles voice articulation. Ollama Reasoning Council for depth analysis.</p></Card>
         <Card element="water"><h3 className="text-sm font-semibold mb-1"><Badge group="memory">WATER</Badge> <span className="text-white/80 ml-1">Memory & Continuity</span></h3><p className="text-white/50 text-xs">Session memory, relationship anamnesis, Bridge D spiral state persistence, selflet capsules, bardic episodes.</p></Card>
         <Card element="earth"><h3 className="text-sm font-semibold mb-1"><Badge group="auth">EARTH</Badge> <span className="text-white/80 ml-1">Identity & Auth</span></h3><p className="text-white/50 text-xs">Passkey-based membership. Cross-device recognition. WebAuthn, OAuth, biometric auth. x-member-id header for iOS.</p></Card>
         <Card element="air"><h3 className="text-sm font-semibold mb-1"><Badge group="astrology">AIR</Badge> <span className="text-white/80 ml-1">Learning & Evolution</span></h3><p className="text-white/50 text-xs">Academy paths, practice worlds, missions, pattern detection, wisdom library, astrology, I Ching.</p></Card>
@@ -505,7 +509,7 @@ function DataFlowPanel() {
 
         <Card><h3 className="text-amber-400 text-sm font-semibold mb-2">4. Conductor Hysteresis</h3><div className="flex items-center gap-2 flex-wrap"><FlowNode>Proposed Element</FlowNode><FlowArrow /><FlowNode>Hysteresis Buffer<br /><span className="text-white/30">Need 2+ turns OR intensity &gt; 0.8</span></FlowNode><FlowArrow /><FlowNode highlight>Confirmed Element</FlowNode></div></Card>
 
-        <Card><h3 className="text-amber-400 text-sm font-semibold mb-2">5. Safety + LLM Call</h3><div className="flex items-center gap-2 flex-wrap"><FlowNode>enforceFieldSafety()</FlowNode><FlowArrow /><FlowNode highlight>Claude Opus 4.5 (streaming)</FlowNode><FlowArrow /><FlowNode>evaluateAxioms()</FlowNode><FlowArrow /><FlowNode>Stream Response</FlowNode></div></Card>
+        <Card><h3 className="text-amber-400 text-sm font-semibold mb-2">5. Safety + Intelligence Routing</h3><div className="flex items-center gap-2 flex-wrap"><FlowNode>enforceFieldSafety()</FlowNode><FlowArrow /><FlowNode highlight>PFI → Reasoning Council → Claude (voice)</FlowNode><FlowArrow /><FlowNode>evaluateAxioms()</FlowNode><FlowArrow /><FlowNode>Stream Response</FlowNode></div></Card>
 
         <Card><h3 className="text-amber-400 text-sm font-semibold mb-2">6. Fire-and-Forget Logging</h3><div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2"><FlowNode>logMaiaTurn()</FlowNode><FlowNode>logOpusAxioms()</FlowNode><FlowNode>logOracleUsage()</FlowNode><FlowNode>upsertSpiralState()</FlowNode></div><p className="text-white/30 text-xs mt-2">All non-blocking. Oracle response never delayed by persistence.</p></Card>
 
@@ -645,7 +649,7 @@ function ConsciousnessPanel() {
       <div className="grid md:grid-cols-3 gap-4">
         <Card><h3 className="text-sm font-semibold mb-1"><Badge group="community">FAST</Badge> <span className="text-white/60 ml-1">&lt; 2s</span></h3><p className="text-white/50 text-xs">Level 1. Quick response, no memory. Haiku-class model.</p></Card>
         <Card><h3 className="text-sm font-semibold mb-1"><Badge group="studio">CORE</Badge> <span className="text-white/60 ml-1">2-6s</span></h3><p className="text-white/50 text-xs">Level 2-3. Balanced reasoning, some memory. Sonnet-class model.</p></Card>
-        <Card><h3 className="text-sm font-semibold mb-1"><Badge group="oracle">DEEP</Badge> <span className="text-white/60 ml-1">6-20s</span></h3><p className="text-white/50 text-xs">Level 4-5. Full oracle. Opus 4.5. Complete spiralogic, all frameworks, memory, AIN, wisdom library.</p></Card>
+        <Card><h3 className="text-sm font-semibold mb-1"><Badge group="oracle">DEEP</Badge> <span className="text-white/60 ml-1">6-20s</span></h3><p className="text-white/50 text-xs">Level 4-5. Full oracle. PFI + Reasoning Council + Claude voice layer. Complete spiralogic, all frameworks, memory, AIN, wisdom library.</p></Card>
       </div>
 
       <SectionTitle>Conductor Hysteresis</SectionTitle>
