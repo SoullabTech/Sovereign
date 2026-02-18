@@ -23,6 +23,12 @@ import {
   type CompleteMayanProfile,
   type MayanBirthSign,
 } from '@/lib/astrology/mayanAstrology';
+import {
+  computeCelestialEvents,
+  type CelestialEventsSnapshot,
+  type EclipseEvent,
+  type LunationEvent,
+} from '@/lib/astrology/celestialEvents';
 
 // ==================== TYPES ====================
 
@@ -60,6 +66,7 @@ export interface AstrologyContext {
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
   formattedContext: string;
+  celestialEvents: CelestialEventsSnapshot | null;
 }
 
 // ==================== TRANSIT SIGNIFICANCE ====================
@@ -165,6 +172,19 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     // Get today's Mayan sign (always available)
     const todaysMayanSign = getTodaysMayanSign();
 
+    // Celestial events: eclipses, exact lunations, retrograde stations, seasonal markers
+    let celestialEvents: CelestialEventsSnapshot | null = null;
+    try {
+      const observer = (member.birth_location_lat && member.birth_location_lng)
+        ? { lat: parseFloat(member.birth_location_lat), lng: parseFloat(member.birth_location_lng) }
+        : undefined;
+      celestialEvents = computeCelestialEvents(new Date(), observer);
+      const eclipseCount = celestialEvents.eclipses.length;
+      console.log(`[AstrologyContext] Celestial events loaded: ${eclipseCount} eclipses, eclipse season: ${celestialEvents.eclipseSeasonActive}`);
+    } catch (celestialError) {
+      console.warn('[AstrologyContext] Celestial events calculation failed (non-critical):', celestialError);
+    }
+
     // Format the context for MAIA
     const formattedContext = formatAstrologyContextForMAIA(
       birthChart,
@@ -173,7 +193,8 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       currentTransits,
       transitHighlights,
       relevantPatterns,
-      !member.birth_time // Flag if birth time is unknown
+      !member.birth_time, // Flag if birth time is unknown
+      celestialEvents
     );
 
     return {
@@ -185,6 +206,7 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       transitHighlights,
       relevantPatterns,
       formattedContext,
+      celestialEvents,
     };
   } catch (error) {
     console.error('[AstrologyContext] Error fetching context:', error);
@@ -342,17 +364,24 @@ function formatAstrologyContextForMAIA(
   currentTransits: CurrentTransit[],
   transitHighlights: TransitHighlight[],
   relevantPatterns: string[],
-  birthTimeUnknown: boolean
+  birthTimeUnknown: boolean,
+  celestialEvents?: CelestialEventsSnapshot | null
 ): string {
   let context = '\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n';
 
   // Current sky (always available)
   context += '## Current Cosmic Weather\n';
 
-  // Moon phase
-  const moonPhase = getMoonPhase();
-  context += `**Current Moon Phase:** ${moonPhase.phase} (${moonPhase.percentage}% illuminated)\n`;
-  context += `- Emotional tone: ${moonPhase.meaning}\n\n`;
+  // Moon phase — use precise calculation from celestialEvents if available
+  if (celestialEvents?.currentMoonPhase) {
+    const mp = celestialEvents.currentMoonPhase;
+    context += `**Current Moon Phase:** ${mp.phase} (${mp.illumination}% illuminated)\n`;
+    context += `- Emotional tone: ${mp.meaning}\n\n`;
+  } else {
+    const moonPhase = getMoonPhase();
+    context += `**Current Moon Phase:** ${moonPhase.phase} (${moonPhase.percentage}% illuminated)\n`;
+    context += `- Emotional tone: ${moonPhase.meaning}\n\n`;
+  }
 
   const retrogradePlanets = currentTransits.filter(t => t.retrograde);
   if (retrogradePlanets.length > 0) {
@@ -383,6 +412,11 @@ function formatAstrologyContextForMAIA(
     context += `- Tone ${todaysMayanSign.tone}: ${getToneMeaning(todaysMayanSign.tone)}\n`;
   }
   context += '\n';
+
+  // Major celestial events: eclipses, exact lunations, stations, seasonal markers
+  if (celestialEvents) {
+    context += formatCelestialEventsSection(celestialEvents);
+  }
 
   // Birth chart (if available)
   if (birthChart) {
@@ -493,6 +527,170 @@ function formatAstrologyContextForMAIA(
 
   return context;
 }
+
+// ==================== CELESTIAL EVENTS FORMATTING ====================
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Format celestial events as a system prompt section.
+ * Only emits content when there are meaningful events to report.
+ */
+function formatCelestialEventsSection(events: CelestialEventsSnapshot): string {
+  const nearEclipses = events.eclipses.filter(e => Math.abs(e.daysFromNow) <= 45);
+  const nearLunations = events.lunations.filter(
+    l => (l.type === 'new_moon' || l.type === 'full_moon') && Math.abs(l.daysFromNow) <= 14
+  );
+  const nearSeasons = events.seasonalMarkers.filter(m => Math.abs(m.daysFromNow) <= 7);
+  const nearStations = events.retrogradeStations.filter(s => Math.abs(s.daysFromNow) <= 14);
+
+  const hasMajorEvents = nearEclipses.length > 0 || nearLunations.length > 0 ||
+    nearSeasons.length > 0 || nearStations.length > 0;
+
+  if (!hasMajorEvents && !events.eclipseSeasonActive) return '';
+
+  let section = '## Major Celestial Events (FACTUAL \u2014 cite dates exactly as given)\n\n';
+
+  // Eclipse season notice
+  if (events.eclipseSeasonActive) {
+    section += '**Eclipse Season Active** \u2014 The Sun is near the lunar nodes. Eclipses are possible during this window.\n\n';
+  }
+
+  // Eclipses
+  if (nearEclipses.length > 0) {
+    section += '**Eclipses:**\n';
+    for (const eclipse of nearEclipses) {
+      const dateStr = eclipse.peakTime.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const timeStr = eclipse.peakTime.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+      const typeLabel = `${capitalize(eclipse.kind)} ${capitalize(eclipse.type)} Eclipse`;
+      const proximity = formatProximity(eclipse.daysFromNow);
+
+      section += `- ${typeLabel} in ${eclipse.sign}: ${dateStr} at ${timeStr} (${proximity})\n`;
+
+      if (eclipse.localVisibility) {
+        if (eclipse.localVisibility.visible) {
+          section += `  - Visible from this member's location (${Math.round((eclipse.localVisibility.localObscuration || 0) * 100)}% obscuration)\n`;
+        } else {
+          section += `  - NOT visible from this member's location\n`;
+        }
+      }
+
+      section += `  - Meaning: ${getEclipseMeaning(eclipse)}\n`;
+    }
+    section += '\n';
+  }
+
+  // Exact lunation times
+  if (nearLunations.length > 0) {
+    section += '**Exact Lunation Times:**\n';
+    for (const lun of nearLunations) {
+      const label = lun.type === 'new_moon' ? 'New Moon' : 'Full Moon';
+      const dateStr = lun.time.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const timeStr = lun.time.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+      const proximity = formatProximity(lun.daysFromNow);
+
+      section += `- ${label} in ${lun.sign}: ${dateStr} at ${timeStr} (${proximity})\n`;
+      section += `  - Meaning: ${getLunationMeaning(lun)}\n`;
+    }
+    section += '\n';
+  }
+
+  // Seasonal markers
+  if (nearSeasons.length > 0) {
+    section += '**Seasonal Markers:**\n';
+    for (const marker of nearSeasons) {
+      const dateStr = marker.time.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const proximity = formatProximity(marker.daysFromNow);
+      section += `- ${marker.name}: ${dateStr} (${proximity})\n`;
+    }
+    section += '\n';
+  }
+
+  // Retrograde stations
+  if (nearStations.length > 0) {
+    section += '**Planetary Stations:**\n';
+    for (const station of nearStations) {
+      const label = station.event === 'station_retrograde'
+        ? `${station.planet} stations Retrograde in ${station.sign}`
+        : `${station.planet} stations Direct in ${station.sign}`;
+      const dateStr = station.approximateDate.toLocaleDateString('en-US', {
+        month: 'long', day: 'numeric'
+      });
+      const proximity = formatProximity(station.daysFromNow);
+      section += `- ${label}: ~${dateStr} (${proximity})\n`;
+    }
+    section += '\n';
+  }
+
+  section += 'IMPORTANT: When discussing celestial events, use the EXACT dates listed above. Do NOT guess or approximate dates for eclipses, lunations, or seasonal markers. If asked about an event not listed here, say you are not certain of the exact date rather than guessing.\n\n';
+
+  return section;
+}
+
+function formatProximity(daysFromNow: number): string {
+  const absDays = Math.abs(Math.round(daysFromNow));
+  if (absDays === 0 || Math.abs(daysFromNow) < 0.5) return 'TODAY';
+  if (daysFromNow < 0) {
+    if (absDays === 1) return 'yesterday';
+    return `${absDays} days ago`;
+  }
+  if (absDays === 1) return 'tomorrow';
+  return `in ${absDays} days`;
+}
+
+function getEclipseMeaning(eclipse: EclipseEvent): string {
+  if (eclipse.type === 'solar') {
+    const meanings: Record<string, string> = {
+      total: 'Powerful new beginning; old identity structures dissolve to make way for the new. A threshold crossing.',
+      annular: 'A ring of fire \u2014 illumination around a hidden center. Something old is framed by something emerging.',
+      partial: 'Partial reset \u2014 some aspect of life direction seeks realignment.',
+    };
+    return meanings[eclipse.kind] || 'Solar eclipse: new beginnings, reset of direction.';
+  } else {
+    const meanings: Record<string, string> = {
+      total: 'Deep emotional culmination; what has been hidden in shadow comes fully into view. Release and revelation.',
+      partial: 'Partial emotional release \u2014 some feeling or pattern surfaces for integration.',
+      penumbral: 'Subtle emotional shift \u2014 barely perceptible but meaningful. A quiet recalibration beneath awareness.',
+    };
+    return meanings[eclipse.kind] || 'Lunar eclipse: emotional culmination and release.';
+  }
+}
+
+function getLunationMeaning(lun: LunationEvent): string {
+  const signMeanings: Record<string, string> = {
+    Aries: 'initiative, identity, courage',
+    Taurus: 'stability, values, embodiment',
+    Gemini: 'communication, curiosity, connection',
+    Cancer: 'home, nurturing, emotional security',
+    Leo: 'creativity, self-expression, heart',
+    Virgo: 'service, health, discernment',
+    Libra: 'relationships, balance, beauty',
+    Scorpio: 'transformation, depth, power',
+    Sagittarius: 'meaning, freedom, expansion',
+    Capricorn: 'structure, ambition, mastery',
+    Aquarius: 'community, innovation, liberation',
+    Pisces: 'transcendence, compassion, imagination',
+  };
+  const signTheme = signMeanings[lun.sign] || '';
+  if (lun.type === 'new_moon') {
+    return `Seeding intentions around ${signTheme}`;
+  }
+  return `Culmination and illumination of themes around ${signTheme}`;
+}
+
+// ==================== MAYAN & OTHER HELPERS ====================
 
 /**
  * Get the meaning of a Mayan tone (1-13)
@@ -795,6 +993,83 @@ export function detectAstrologicalRelevance(
   ) {
     const dir = context.mayanProfile.cardinalDirection;
     relevantInsights.push(`Their Mayan cardinal direction is ${dir.direction} (${dir.color}) - their soul's activity is to ${dir.activity.toLowerCase()}`);
+  }
+
+  // Eclipse themes — ground MAIA in factual dates
+  if (
+    lowerMessage.includes('eclipse') ||
+    lowerMessage.includes('blood moon') ||
+    lowerMessage.includes('eclipse season')
+  ) {
+    if (context.celestialEvents) {
+      const nearEclipses = context.celestialEvents.eclipses.filter(e => Math.abs(e.daysFromNow) <= 45);
+      if (nearEclipses.length > 0) {
+        for (const eclipse of nearEclipses) {
+          const dateStr = eclipse.peakTime.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+          relevantInsights.push(
+            `There is a ${eclipse.kind} ${eclipse.type} eclipse on ${dateStr} in ${eclipse.sign} \u2014 use this exact date, do not guess`
+          );
+        }
+      } else {
+        relevantInsights.push(
+          'No eclipses in the immediate window. If the member mentions one, acknowledge their experience rather than guessing the date.'
+        );
+      }
+    }
+  }
+
+  // Lunation themes (full moon, new moon)
+  if (
+    lowerMessage.includes('full moon') ||
+    lowerMessage.includes('new moon') ||
+    lowerMessage.includes('moon phase') ||
+    lowerMessage.includes('lunar')
+  ) {
+    if (context.celestialEvents) {
+      const keyLunations = context.celestialEvents.lunations.filter(
+        l => (l.type === 'new_moon' || l.type === 'full_moon') && Math.abs(l.daysFromNow) <= 14
+      );
+      for (const lun of keyLunations) {
+        const label = lun.type === 'new_moon' ? 'New Moon' : 'Full Moon';
+        const dateStr = lun.time.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`The nearest ${label} is in ${lun.sign} on ${dateStr}`);
+      }
+    }
+  }
+
+  // Solstice/equinox themes
+  if (
+    lowerMessage.includes('solstice') ||
+    lowerMessage.includes('equinox') ||
+    lowerMessage.includes('shortest day') ||
+    lowerMessage.includes('longest day')
+  ) {
+    if (context.celestialEvents) {
+      const nearby = context.celestialEvents.seasonalMarkers.filter(m => Math.abs(m.daysFromNow) <= 30);
+      for (const marker of nearby) {
+        const dateStr = marker.time.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`${marker.name} falls on ${dateStr}`);
+      }
+    }
+  }
+
+  // Retrograde station themes
+  if (
+    lowerMessage.includes('retrograde') ||
+    lowerMessage.includes('station') ||
+    lowerMessage.includes('goes direct') ||
+    lowerMessage.includes('turns retrograde')
+  ) {
+    if (context.celestialEvents) {
+      const nearStations = context.celestialEvents.retrogradeStations.filter(s => Math.abs(s.daysFromNow) <= 14);
+      for (const station of nearStations) {
+        const label = station.event === 'station_retrograde'
+          ? `${station.planet} stations retrograde`
+          : `${station.planet} stations direct`;
+        const dateStr = station.approximateDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`${label} around ${dateStr} in ${station.sign}`);
+      }
+    }
   }
 
   return relevantInsights;
