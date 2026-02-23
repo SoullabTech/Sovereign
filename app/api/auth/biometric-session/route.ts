@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
 
     // Set tier and roles cookies
     cookieStore.set('maia_tier', accessTier, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     });
 
     cookieStore.set('maia_roles', JSON.stringify(roles), {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
