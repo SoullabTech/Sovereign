@@ -47,6 +47,13 @@ import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralSt
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import {
+  buildMaiaPlan,
+  buildRenderPrompt,
+  finalizeMaiaResponse,
+  curateMemoryWrite,
+  type MAIAResponsePlan,
+} from '@/lib/maia/maiaPlanner';
 
 /** Pattern Pipe (Narrative Wiring) */
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
@@ -653,6 +660,58 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Pattern Offer] Failed (non-critical):', offerError);
     }
 
+    // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
+    // Must run before buildMaiaPlan — plan depends on hysteresis-stable element/archetype.
+    const voiceHint = createVoiceIntent({
+      spiralogicCell: spiralogicCell,
+      memberVoicePrefs: {
+        speed: voicePrefs.intent.pace !== 0 ? 1.0 + voicePrefs.intent.pace * 0.15 : undefined,
+        timbre: voicePrefs.intent.warmth > 0.1 ? 'warm' : voicePrefs.intent.warmth < -0.1 ? 'bright' : undefined,
+      },
+      memberId: userId,
+      persistedState: spiralState ? {
+        dominant_element: spiralState.dominant_element,
+        phase: spiralState.phase,
+      } : null,
+    });
+
+    console.info('[voice:conductor]', {
+      element: voiceHint.element,
+      phase: voiceHint.phase,
+      archetype: voiceHint.archetype,
+      sourceElement: String(spiralogicCell.element || '').toLowerCase(),
+      sourcePhase: spiralogicCell.phase,
+      hysteresis: String(spiralogicCell.element || '').toLowerCase() !== voiceHint.element ? 'held' : 'passed',
+    });
+
+    // RELATIONAL STANCE (moved up): dance algorithm — how to hold space this turn.
+    // Depends only on message/depth/voiceHint — does NOT require Claude's output.
+    const relationalHint: RelationalHint = decideRelationalHint({
+      memberId: userId,
+      message,
+      conversationDepth,
+      voiceHint,
+      persistedState: spiralState ?? null,
+    });
+
+    console.info('[relational]', {
+      stance: relationalHint.stance,
+      holdLevel: relationalHint.holdLevel,
+      returnPowerLevel: relationalHint.returnPowerLevel,
+      brevityLevel: relationalHint.brevityLevel,
+      signals: relationalHint.signals,
+    });
+
+    // MAIA CENTRAL: MAIA decides before Claude speaks.
+    // Deterministic plan — no LLM call. Encodes stance, voice, memory intent.
+    const maiaPlan: MAIAResponsePlan = buildMaiaPlan(message, {
+      voiceHint,
+      relationalHint,
+      distressSignal,
+      conversationDepth,
+      isSanctuary,
+    });
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -674,7 +733,8 @@ export async function POST(request: NextRequest) {
       sessionId,
       voicePrefs.intent,
       buildPatternOfferPromptSection(patternOffer),
-      serverUserName
+      serverUserName,
+      maiaPlan
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -808,6 +868,14 @@ export async function POST(request: NextRequest) {
 
     // Update maiaResponse with potentially regenerated coreMessage
     maiaResponse.coreMessage = coreMessage;
+
+    // MAIA CENTRAL: CI shaping → split spokenText (voice) / displayText (screen)
+    // finalizeMaiaResponse never throws — Sesame failure silently falls back to plain text.
+    const { spokenText, displayText } = await finalizeMaiaResponse(
+      coreMessage,
+      maiaPlan,
+      process.env.SESAME_TTS_URL || 'http://maia-sesame-tts:8000'
+    );
 
     // OPUS AXIOMS: Evaluate response quality against Jungian alchemical principles
     const axiomEvals = evaluateResponseAgainstAxioms({
@@ -1003,17 +1071,61 @@ export async function POST(request: NextRequest) {
       console.error('⚠️ [AIN] Breakthrough detection failed (non-critical):', ainError);
     }
 
-    // 📚 MEMORY STORAGE: Store session pattern for cross-conversation memory
-    // 🔒 SANCTUARY: No content stored
-    if (isSanctuary) {
-      console.log('🛡️ [Sanctuary] Skipping session memory storage');
-    } else
-    try {
-      await sessionMemoryService.storeSessionPattern(
-        userId,
-        sessionId,
-        {
-          messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
+    // 📚 MEMORY STORAGE — gated by MAIA Central plan.memoryWrite
+    // 🔒 SANCTUARY: curateMemoryWrite enforces skip; double-enforced here + at route level
+    await curateMemoryWrite(maiaPlan, isSanctuary, async () => {
+      // SESSION MEMORY
+      try {
+        await sessionMemoryService.storeSessionPattern(
+          userId,
+          sessionId,
+          {
+            messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
+            fieldStates: [{
+              fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+              water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+              earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+              air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+              aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
+              coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+            }],
+            insights: extractedInsights,
+            themes: [spiralogicCell.context, ...activeFrameworks],
+            spiralIndicators: {
+              element: spiralogicCell.element,
+              phase: spiralogicCell.phase,
+              canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
+              trustLevel,
+              conversationDepth
+            }
+          }
+        );
+        console.log('📚 [Memory] Session pattern stored with', extractedInsights.length, 'insights');
+      } catch (memoryError) {
+        console.error('⚠️ [Memory] Failed to store session pattern (non-critical):', memoryError);
+      }
+
+      // MEMORY PALACE
+      try {
+        await memoryPalaceOrchestrator.storeConversationMemory({
+          userId,
+          sessionId,
+          userMessage: message,
+          maiaResponse: maiaResponse.coreMessage,
+          conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
+          significance: axiomSummary.isGold ? 9 : (axiomSummary.passed >= 8 ? 7 : 5),
+          emotionalIntensity: trustLevel,
+          breakthroughLevel: ruptureDetected ? 0 : (axiomSummary.isGold ? 9 : 5),
+          spiralStage: memoryContext?.sessionMemory?.spiralDevelopmentContext?.currentPrimaryStage || null,
+          archetypalResonances: activeFrameworks,
+          frameworksActive: activeFrameworks,
+          elementalLevels: {
+            fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+            water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+            earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+            air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+            aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4
+          },
           fieldStates: [{
             fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
             water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
@@ -1022,7 +1134,7 @@ export async function POST(request: NextRequest) {
             aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
             coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
           }],
-          insights: extractedInsights,  // 🧠 Use extracted insights instead of just symbol patterns
+          insights: extractedInsights,
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
@@ -1031,133 +1143,51 @@ export async function POST(request: NextRequest) {
             trustLevel,
             conversationDepth
           }
-        }
-      );
-      console.log('📚 [Memory] Session pattern stored with', extractedInsights.length, 'insights');
-    } catch (memoryError) {
-      console.error('⚠️ [Memory] Failed to store session pattern (non-critical):', memoryError);
-      // Don't break the conversation flow if memory storage fails
-    }
+        });
+        console.log('🏛️ [Memory Palace] All layers stored with', extractedInsights.length, 'insights');
+      } catch (palaceError) {
+        console.error('⚠️ [Memory Palace] Storage failed (non-critical):', palaceError);
+      }
 
-    // 🏛️ MEMORY PALACE STORAGE: Store all 5 memory layers + evolution tracking
-    // 🔒 SANCTUARY: Absolute boundary - nothing can be saved or extracted
-    if (isSanctuary) {
-      console.log('🛡️ [Sanctuary] Skipping memory palace storage - absolute boundary');
-    } else
-    try {
-      await memoryPalaceOrchestrator.storeConversationMemory({
-        userId,
-        sessionId,
-        userMessage: message,
-        maiaResponse: maiaResponse.coreMessage,
-        conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
-        significance: axiomSummary.isGold ? 9 : (axiomSummary.passed >= 8 ? 7 : 5),
-        emotionalIntensity: trustLevel,
-        breakthroughLevel: ruptureDetected ? 0 : (axiomSummary.isGold ? 9 : 5),
-        spiralStage: memoryContext?.sessionMemory?.spiralDevelopmentContext?.currentPrimaryStage || null,
-        archetypalResonances: activeFrameworks,
-        frameworksActive: activeFrameworks,
-        elementalLevels: {
-          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4
-        },
-        fieldStates: [{
-          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
-          coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
-        }],
-        insights: extractedInsights,  // 🧠 Use extracted insights
-        themes: [spiralogicCell.context, ...activeFrameworks],
-        spiralIndicators: {
-          element: spiralogicCell.element,
-          phase: spiralogicCell.phase,
-          canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
-          trustLevel,
-          conversationDepth
-        }
-      });
-      console.log('🏛️ [Memory Palace] All layers stored with', extractedInsights.length, 'insights');
-    } catch (palaceError) {
-      console.error('⚠️ [Memory Palace] Storage failed (non-critical):', palaceError);
-    }
-
-    // 💫 ANAMNESIS CAPTURE: Store soul-level essence of this encounter
-    // 🔒 SANCTUARY: Skip relationship essence — no content can be extracted or converted
-    if (isSanctuary) {
-      console.log('🛡️ [Sanctuary] Skipping anamnesis capture');
-    } else
-    try {
-      const anamnesis = getRelationshipAnamnesis();
-      const updatedEssence = anamnesis.captureEssence({
-        userId,
-        userMessage: message,
-        maiaResponse: maiaResponse.coreMessage,
-        conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
-        spiralDynamics: {
-          currentStage: memoryContext?.spiralDevelopmentContext?.currentPrimaryStage || null,
-          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.canonicalQuestion}`,
-        },
-        sessionThread: {
-          emergingAwareness: memoryContext?.relatedInsights?.map((i: any) => i.insight_type) || []
-        },
-        archetypalResonance: {
-          primaryResonance: activeFrameworks[0] || 'depth_psychology',
-          sensing: symbolPatterns[0]?.archetypalCore || null
-        },
-        recalibrationEvent: ruptureDetected ? { type: 'rupture', quality: 'detected' } : (axiomSummary.isGold ? { type: 'gold_seal', quality: 'achieved' } : null),
-        fieldState: {
-          depth: trustLevel
-        },
-        existingEssence: relationshipEssence || undefined
-      });
-
-      await saveRelationshipEssence(updatedEssence);
-      console.log('💫 [Anamnesis] Soul essence captured and stored:', {
-        encounterCount: updatedEssence.encounterCount,
-        presenceQuality: updatedEssence.presenceQuality,
-        morphicResonance: updatedEssence.morphicResonance
-      });
-    } catch (anamnesisError) {
-      console.error('⚠️ [Anamnesis] Failed to capture essence (non-critical):', anamnesisError);
-      // Don't break the conversation flow if essence capture fails
-    }
+      // ANAMNESIS
+      try {
+        const anamnesis = getRelationshipAnamnesis();
+        const updatedEssence = anamnesis.captureEssence({
+          userId,
+          userMessage: message,
+          maiaResponse: maiaResponse.coreMessage,
+          conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
+          spiralDynamics: {
+            currentStage: memoryContext?.spiralDevelopmentContext?.currentPrimaryStage || null,
+            dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.canonicalQuestion}`,
+          },
+          sessionThread: {
+            emergingAwareness: memoryContext?.relatedInsights?.map((i: any) => i.insight_type) || []
+          },
+          archetypalResonance: {
+            primaryResonance: activeFrameworks[0] || 'depth_psychology',
+            sensing: symbolPatterns[0]?.archetypalCore || null
+          },
+          recalibrationEvent: ruptureDetected ? { type: 'rupture', quality: 'detected' } : (axiomSummary.isGold ? { type: 'gold_seal', quality: 'achieved' } : null),
+          fieldState: { depth: trustLevel },
+          existingEssence: relationshipEssence || undefined
+        });
+        await saveRelationshipEssence(updatedEssence);
+        console.log('💫 [Anamnesis] Soul essence captured:', {
+          encounterCount: updatedEssence.encounterCount,
+          presenceQuality: updatedEssence.presenceQuality,
+          morphicResonance: updatedEssence.morphicResonance
+        });
+      } catch (anamnesisError) {
+        console.error('⚠️ [Anamnesis] Failed to capture essence (non-critical):', anamnesisError);
+      }
+    });
 
     // Create field event for this interaction
     const fieldEvent = createFieldEvent(userId, message, spiralogicCell);
     fieldEvent.frameworksUsed = activeFrameworks;
     fieldEvent.aiResponseType = 'spiralogic_guided';
     fieldEvent.contextDomain = spiralogicCell.context;
-
-    // BRIDGE A: Conductor creates VoiceIntent from oracle state + member voice preferences
-    const voiceHint = createVoiceIntent({
-      spiralogicCell: spiralogicCell,
-      memberVoicePrefs: {
-        speed: voicePrefs.intent.pace !== 0 ? 1.0 + voicePrefs.intent.pace * 0.15 : undefined,
-        timbre: voicePrefs.intent.warmth > 0.1 ? 'warm' : voicePrefs.intent.warmth < -0.1 ? 'bright' : undefined,
-      },
-      memberId: userId,
-      persistedState: spiralState ? {
-        dominant_element: spiralState.dominant_element,
-        phase: spiralState.phase,
-      } : null,
-    });
-
-    // Voice identity trace — oracle → conductor → body
-    const rawElement = String(spiralogicCell.element || '').toLowerCase();
-    console.info('[voice:conductor]', {
-      element: voiceHint.element,
-      phase: voiceHint.phase,
-      archetype: voiceHint.archetype,
-      sourceElement: rawElement,
-      sourcePhase: spiralogicCell.phase,
-      hysteresis: rawElement !== voiceHint.element ? 'held' : 'passed',
-    });
 
     // BRIDGE D: Persist spiral state (fire-and-forget, never blocks response)
     upsertSpiralState(userId, {
@@ -1182,26 +1212,11 @@ export async function POST(request: NextRequest) {
       insights: extractedInsights,
     });
 
-    // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
-    const relationalHint: RelationalHint = decideRelationalHint({
-      memberId: userId,
-      message,
-      conversationDepth,
-      voiceHint,
-      persistedState: spiralState ?? null,
-    });
-
-    console.info('[relational]', {
-      stance: relationalHint.stance,
-      holdLevel: relationalHint.holdLevel,
-      returnPowerLevel: relationalHint.returnPowerLevel,
-      brevityLevel: relationalHint.brevityLevel,
-      signals: relationalHint.signals,
-    });
-
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
+      spokenText,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
+      displayText,  // clean for screen rendering
       spiralogic: {
         cell: spiralogicCell,
         activeFrameworks: activeFrameworks,
@@ -1252,8 +1267,15 @@ export async function POST(request: NextRequest) {
       },
       responseId: `maia_hybrid_${Date.now()}`,
       timestamp: new Date().toISOString(),
-      voiceHint,
+      voiceHint: maiaPlan.voiceHint,  // sourced from plan (same value, computed before LLM)
       relationalHint,
+      ttsInstructions: maiaPlan.ttsInstructions,  // MAIA vocal intent for OpenAI TTS instructions field
+      maiaPlan: {  // audit trail — stance + responseType for client inspection
+        stance: maiaPlan.stance,
+        responseType: maiaPlan.responseType,
+        memoryWrite: maiaPlan.memoryWrite,
+        presenceSignal: maiaPlan.presenceSignal,
+      },
     };
 
     // Log successful oracle usage
@@ -1592,7 +1614,8 @@ async function generateSpiralogicResponseWithLLM(
   sessionId?: string,
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
   patternOfferSection?: string,
-  userName?: string
+  userName?: string,
+  maiaPlan?: MAIAResponsePlan
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1632,6 +1655,12 @@ async function generateSpiralogicResponseWithLLM(
   // PATTERN OFFERING: Append pattern offer section if available
   if (patternOfferSection) {
     systemPrompt += '\n' + patternOfferSection;
+  }
+
+  // MAIA CENTRAL: Inject MAIA directive after all other prompt content.
+  // The directive overrides conflicting instructions (stance, max words, tone).
+  if (maiaPlan) {
+    systemPrompt = buildRenderPrompt(maiaPlan, systemPrompt);
   }
 
   // Format conversation history for LLM

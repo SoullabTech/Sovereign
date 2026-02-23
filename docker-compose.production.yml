@@ -118,12 +118,11 @@ services:
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
       NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS: "true"
-      # Sovereign TTS: Kokoro primary, OpenAI fallback
+      # Sovereign TTS: Sesame primary → Kokoro fallback → (consented) OpenAI fallback
       MAIA_LOCAL_VOICE_ENABLED: "1"
-      KOKORO_TTS_URL: "http://kokoro-tts:8880"
-      # A/B test: set to "kokoro" to route MAIA voices through Kokoro (af_kore/af_sarah/af_nicole)
-      # Default (unset or "openai"): MAIA uses OpenAI voices (alloy/shimmer/nova)
-      # MAIA_VOICE_OVERRIDE: "kokoro"
+      MAIA_TTS_PROVIDER: "openai"       # Primary: OpenAI TTS (best quality)
+      KOKORO_TTS_URL: "http://kokoro-tts:8880"  # Backup: Kokoro (sovereign fallback)
+      SESAME_TTS_URL: "http://maia-sesame-tts:8000"  # CI shaping only — not audio synthesis
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]

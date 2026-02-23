@@ -1504,7 +1504,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setVoiceAmplitude(0);
   }, []);
 
-  const maiaSpeak = useCallback(async (text: string, elementHint?: Element) => {
+  const maiaSpeak = useCallback(async (text: string, elementHint?: Element, ttsInstructions?: string) => {
     if (!text || typeof window === 'undefined') return;
 
     // Check if we need to show audio permission prompt
@@ -1587,7 +1587,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             text: text,
             voice: voiceSettings.voice,
             speed: voiceSettings.speed,
-            model: voiceSettings.model
+            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
           },
           responseType: 'arraybuffer',
         });
@@ -1668,7 +1669,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             text: text,
             voice: voiceSettings.voice,
             speed: voiceSettings.speed,
-            model: voiceSettings.model
+            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
           })
         });
 
@@ -4539,6 +4541,8 @@ I'm not sure what I'm feeling yet.`;
       let responseText: string;
       let responseData: any = {};
       let element = 'aether'; // Default element, will be updated from metadata if available
+      let spokenTextForVoice: string = ''; // CI-shaped TTS text (falls back to responseText)
+      let ttsInstructionsForVoice: string = ''; // MAIA vocal intent for OpenAI TTS
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
       // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
@@ -4809,6 +4813,7 @@ I'm not sure what I'm feeling yet.`;
           }
 
           responseText = cleanMessage(fullText);
+          spokenTextForVoice = responseText; // Streaming has no CI shaping
           console.log(`✅ [STREAM] Complete response received (${fullText.length} chars)`);
 
         } catch (streamError) {
@@ -4837,6 +4842,10 @@ I'm not sure what I'm feeling yet.`;
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
         responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+
+        // MAIA Central: extract CI-shaped spoken text and vocal intent (if oracle/conversation route)
+        spokenTextForVoice = responseData.spokenText || responseText;
+        ttsInstructionsForVoice = responseData.ttsInstructions || '';
 
         // Extract opusAxioms and turnId for Gold Seal feature
         opusAxioms = responseData.opusAxioms;
@@ -5063,7 +5072,8 @@ I'm not sure what I'm feeling yet.`;
         setMaiaResponseText(responseText); // Update display text
 
         // Clean the response for voice - remove stage directions and markup
-        const cleanVoiceText = cleanMessageForVoice(responseText);
+        // Use CI-shaped spokenText if available (MAIA Central), otherwise fall back to responseText
+        const cleanVoiceText = cleanMessageForVoice(spokenTextForVoice || responseText);
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
@@ -5079,7 +5089,7 @@ I'm not sure what I'm feeling yet.`;
           // 🔥 FIX: No character-based timeout here! maiaSpeak now uses
           // the ACTUAL audio duration from metadata for its timeout,
           // which is much more reliable than estimating from text length.
-          await maiaSpeak(cleanVoiceText, element as Element);
+          await maiaSpeak(cleanVoiceText, element as Element, ttsInstructionsForVoice);
 
           const speakDuration = Date.now() - startSpeakTime;
           console.log(`🔇 Maia finished speaking after ${speakDuration}ms (${cleanVoiceText.length} chars)`);

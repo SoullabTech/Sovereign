@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       model?: string;
       format?: "mp3" | "wav" | "opus" | "aac" | "flac";
       speed?: number;
+      instructions?: string;  // MAIA vocal intent — passed to gpt-4o-mini-tts instructions field
     };
 
     const text = body?.text?.trim();
@@ -88,6 +89,8 @@ export async function POST(req: NextRequest) {
     const rawVoice = body?.voice ?? "alloy";
     const format = body?.format ?? "mp3";
     const speed = body?.speed ?? 1.0;
+    // MAIA vocal intent: if present, upgrade model to gpt-4o-mini-tts which supports instructions
+    const ttsInstructions = body?.instructions?.trim() || undefined;
 
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
@@ -120,18 +123,22 @@ export async function POST(req: NextRequest) {
         return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
       }
 
-      const speech = await getOpenAI().audio.speech.create({
-        model: body?.model ?? "tts-1",
-        voice: voice as any,
+      const speechParams: any = {
+        // gpt-4o-mini-tts is MAIA's default voice model (supports instructions + better quality)
+        // Client can override via body.model; ttsInstructions always requires gpt-4o-mini-tts
+        model: ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts"),
+        voice: voice,
         input: text,
         response_format: format,
         speed,
-      });
+        ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+      };
+      const speech = await getOpenAI().audio.speech.create(speechParams);
 
       const audioBuffer = Buffer.from(await speech.arrayBuffer());
       const ms = Date.now() - t0;
 
-      console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} bytes=${audioBuffer.length} ms=${ms}`);
+      console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
 
       const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
       LimitsEnforcer.recordUsage({
@@ -275,19 +282,20 @@ export async function POST(req: NextRequest) {
       return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
     }
 
-    const model = body?.model ?? "tts-1";
-
     // For Kokoro archetypes falling back to OpenAI, use alloy (Kokoro voice IDs aren't valid for OpenAI)
     const openaiVoice = archetypeResolution.provider === 'kokoro' ? 'alloy' : voice;
-    console.log(`[openai-tts:${requestId}] FALLBACK model=${model} voice=${openaiVoice} archetype=${effectiveArchetype} format=${format} chars=${text.length}`);
+    const fallbackModel = ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts");
+    console.log(`[openai-tts:${requestId}] FALLBACK model=${fallbackModel} voice=${openaiVoice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} format=${format} chars=${text.length}`);
 
-    const speech = await getOpenAI().audio.speech.create({
-      model,
-      voice: openaiVoice as any,
+    const fallbackSpeechParams: any = {
+      model: fallbackModel,
+      voice: openaiVoice,
       input: text,
       response_format: format,
       speed,
-    });
+      ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+    };
+    const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
 
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;

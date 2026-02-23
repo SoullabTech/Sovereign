@@ -22,6 +22,7 @@
  */
 
 import * as kokoro from './providers/kokoro';
+import * as sesame from './providers/sesame';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
 import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
@@ -172,9 +173,51 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   }
 
   if (primary === 'sesame') {
-    // Sesame integration is Phase 2 — for now, fall through to OpenAI
-    console.warn('[tts-router] Sesame provider selected but not yet integrated. Falling back to OpenAI.');
-    throw new TTSFallbackToOpenAI(true, 'sesame_not_integrated');
+    try {
+      logTtsResolve({
+        path: 'ttsRouter',
+        stage: 'dispatch',
+        provider: 'sesame',
+        voice: params.voice || 'maya',
+        element: params.voiceHint?.element,
+        memberPref,
+      });
+
+      const result = await sesame.synthesize({
+        text: params.text,
+        voice: params.voice || 'maya',
+        format: params.format,
+        speed: params.speed,
+        element: params.voiceHint?.element,
+      });
+      return { ...result, fallback: false, reason: 'sesame_healthy' };
+    } catch (sesameErr: any) {
+      const reason = sesameErr.message?.includes('timeout') ? 'sesame_timeout'
+        : sesameErr.message?.includes('ECONNREFUSED') ? 'sesame_unreachable'
+        : 'sesame_error';
+      console.warn(`[tts-router] Sesame failed (${reason}), trying Kokoro: ${sesameErr.message}`);
+
+      // Fallback to Kokoro (local) before considering OpenAI
+      try {
+        const kokoroVoice = params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : params.voice;
+        const kokoroSpeed = params.voiceHint
+          ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
+          : params.speed;
+        const result = await kokoro.synthesize({
+          text: params.text,
+          voice: kokoroVoice,
+          format: params.format,
+          speed: kokoroSpeed,
+        });
+        return { ...result, fallback: true, reason: `${reason}_kokoro_fallback` };
+      } catch (kokoroErr: any) {
+        const kokoroReason = kokoroErr.message?.includes('ECONNREFUSED') ? 'kokoro_unreachable' : 'kokoro_error';
+        console.warn(`[tts-router] Kokoro also failed (${kokoroReason}), falling back to OpenAI`);
+        throw new TTSFallbackToOpenAI(true, `${reason}_${kokoroReason}`);
+      }
+    }
   }
 
   // OpenAI as primary (not a fallback)
