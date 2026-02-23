@@ -674,6 +674,7 @@ services:
       OLLAMA_BASE_URL:  ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL:     ${OLLAMA_MODEL:-deepseek-r1:8b}
       GENERATE_TIMEOUT_S: "30"
+      PORT: "8080"   # Override .env.production PORT (Next.js default 3005) — server.py binds here
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -717,8 +718,6 @@ networks:
     driver: bridge   # DB + core services — no public exposure
   maia-public:
     driver: bridge   # Caddy + frontend containers
-  maia-network:
-    driver: bridge   # Legacy — remove once all services migrated
   marc-studio_default:
     external: true
   rudeboy-caddy-bridge:
