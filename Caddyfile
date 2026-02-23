@@ -218,12 +218,35 @@ soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         # Prevent clickjacking
         X-Frame-Options "SAMEORIGIN"
-        # XSS protection
         X-Content-Type-Options "nosniff"
-        X-XSS-Protection "1; mode=block"
+        # Referrer: send nothing cross-origin (privacy + SSRF reduction)
+        Referrer-Policy "no-referrer"
+        # Disable browser feature access (baseline restriction)
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        # X-XSS-Protection intentionally omitted — deprecated, can amplify XSS in legacy IE
         # Remove server header
         -Server
     }
+
+    # ── Admin route protection (Tailscale / VPN — enable when ready) ───────────
+    # Uncomment to restrict /api/admin/* to Tailscale IPs (100.x.x.x) only.
+    # Without Tailscale: replace with your static IP (home/office).
+    #
+    # @admin_path {
+    #     path /api/admin/*
+    # }
+    # handle @admin_path {
+    #     @not_tailscale {
+    #         not remote_ip 100.64.0.0/10 127.0.0.1/32
+    #     }
+    #     respond @not_tailscale "Forbidden" 403
+    #     reverse_proxy maia-sovereign:3000 {
+    #         header_up Host {host}
+    #         header_up X-Real-IP {remote_host}
+    #         header_up X-Forwarded-For {remote_host}
+    #         header_up X-Forwarded-Proto {scheme}
+    #     }
+    # }
 
     # Compression (exclude SSE which is handled above)
     encode gzip zstd
@@ -254,6 +277,8 @@ oldhead.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -391,6 +416,8 @@ loralee.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -421,6 +448,8 @@ demo.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -451,6 +480,8 @@ palisades.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -490,6 +521,8 @@ api.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -497,6 +530,64 @@ api.soullab.life {
 
     log {
         output file /var/log/caddy/api-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Marc Studio - Music Production Site
+# ═══════════════════════════════════════════════════════════════════════════════
+marc.soullab.life {
+    reverse_proxy app:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/marc-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Rude Boy Baking - Artisan Bakery Site
+# ═══════════════════════════════════════════════════════════════════════════════
+rudeboy.soullab.life {
+    reverse_proxy rudeboy-baking:4323 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/rudeboy-access.log {
             roll_size 10mb
             roll_keep 5
         }
