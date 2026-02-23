@@ -23,6 +23,7 @@ import {
   getClientIP,
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
+import { createSession } from '@/lib/auth/serverSessions';
 
 const ENDPOINT = '/api/members/magic-link';
 
@@ -251,9 +252,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/signin?error=no_token', baseUrl));
     }
 
-    // Find valid token
+    // Find valid token (include tier/roles for session cookie setup)
     const tokenResult = await safeQuery(
-      `SELECT t.id, t.email, t.member_id, m.id as found_member_id, m.username, m.name, m.onboarded, m.onboarding_step
+      `SELECT t.id, t.email, t.member_id,
+              m.id as found_member_id, m.username, m.name, m.onboarded, m.onboarding_step,
+              COALESCE(m.tier, 'free') as tier,
+              COALESCE(m.roles, ARRAY['member']) as roles
        FROM magic_link_tokens t
        LEFT JOIN members m ON t.member_id = m.id OR m.email = t.email
        WHERE t.token = $1
@@ -279,12 +283,13 @@ export async function GET(request: NextRequest) {
     const memberId = record.found_member_id || record.member_id;
 
     if (memberId) {
-      // Existing member - redirect to appropriate destination
+      // Existing member - create server session and redirect
       const isOnboarded = record.onboarded;
       console.log(`[MAGIC-LINK] Verified existing member: ${record.username} (onboarded: ${isOnboarded})`);
 
-      // Redirect to magic-link-success page which will set localStorage and redirect
       const destination = isOnboarded ? '/maia' : `/${record.onboarding_step || 'test-elemental'}`;
+
+      // Redirect to magic-link-success so it can hydrate localStorage (needed for native/iOS compat)
       const successUrl = new URL('/magic-link-success', baseUrl);
       successUrl.searchParams.set('member_id', memberId as string);
       successUrl.searchParams.set('username', record.username as string || '');
@@ -292,7 +297,32 @@ export async function GET(request: NextRequest) {
       successUrl.searchParams.set('onboarded', String(isOnboarded));
       successUrl.searchParams.set('redirect', destination);
 
-      return NextResponse.redirect(successUrl);
+      const response = NextResponse.redirect(successUrl);
+
+      // Create server session and set HttpOnly cookies on the redirect response
+      // This is what middleware checks — without this, the user is bounced back to signin
+      try {
+        const clientIP = getClientIP(request);
+        const userAgent = request.headers.get('user-agent') || '';
+        const session = await createSession({ memberId: memberId as string, ipAddress: clientIP, userAgent });
+        const cookieOpts = {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax' as const,
+          path: '/',
+          expires: session.expiresAt,
+        };
+        response.cookies.set('maia_session', session.sessionToken, cookieOpts);
+        response.cookies.set('maia_member_id', String(memberId), cookieOpts);
+        response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
+        response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
+        console.log(`[MAGIC-LINK] Session created for member: ${record.username}`);
+      } catch (sessionErr) {
+        // Non-fatal: log and proceed. User may hit signin again but token is spent.
+        console.error('[MAGIC-LINK] Session creation failed:', sessionErr);
+      }
+
+      return response;
     } else {
       // New user - redirect to signup with email prefilled
       console.log(`[MAGIC-LINK] Verified new user email: ${record.email}`);
