@@ -312,6 +312,7 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  sanctuary?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -372,7 +373,9 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId, sessionId } = parsed;
+    const { message, userId, sessionId, sanctuary } = parsed;
+    // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
+    const isSanctuary = sanctuary === true;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -861,6 +864,10 @@ export async function POST(request: NextRequest) {
     })();
 
     // 🎓 APPRENTICE LEARNING: Log Claude's wisdom for sovereign system to learn from
+    // 🔒 SANCTUARY: Skip training data pipeline entirely
+    if (isSanctuary) {
+      console.log('🛡️ [Sanctuary] Skipping training data log - speak freely');
+    } else
     try {
       await logMaiaTurn(
         sessionId,
@@ -997,6 +1004,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 📚 MEMORY STORAGE: Store session pattern for cross-conversation memory
+    // 🔒 SANCTUARY: No content stored
+    if (isSanctuary) {
+      console.log('🛡️ [Sanctuary] Skipping session memory storage');
+    } else
     try {
       await sessionMemoryService.storeSessionPattern(
         userId,
@@ -1029,6 +1040,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 🏛️ MEMORY PALACE STORAGE: Store all 5 memory layers + evolution tracking
+    // 🔒 SANCTUARY: Absolute boundary - nothing can be saved or extracted
+    if (isSanctuary) {
+      console.log('🛡️ [Sanctuary] Skipping memory palace storage - absolute boundary');
+    } else
     try {
       await memoryPalaceOrchestrator.storeConversationMemory({
         userId,
@@ -1073,6 +1088,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 💫 ANAMNESIS CAPTURE: Store soul-level essence of this encounter
+    // 🔒 SANCTUARY: Skip relationship essence — no content can be extracted or converted
+    if (isSanctuary) {
+      console.log('🛡️ [Sanctuary] Skipping anamnesis capture');
+    } else
     try {
       const anamnesis = getRelationshipAnamnesis();
       const updatedEssence = anamnesis.captureEssence({

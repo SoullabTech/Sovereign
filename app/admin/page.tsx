@@ -180,6 +180,7 @@ export default function AdminPage() {
                 { label: 'Videos', href: '/admin/library/videos' },
                 { label: 'Command Center', href: '/labtools/admin/command-center' },
                 { label: 'Platform Overview', href: '/admin/platform-overview' },
+                { label: 'Security', href: '/admin/security' },
               ].map(({ label, href }) => (
                 <button
                   key={href}
@@ -187,6 +188,8 @@ export default function AdminPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     href === '/admin/platform-overview'
                       ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                      : href === '/admin/security'
+                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
                       : 'text-white/50 hover:text-white/80 hover:bg-white/10'
                   }`}
                 >

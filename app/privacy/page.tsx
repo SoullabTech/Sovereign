@@ -9,7 +9,7 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Shield, HardDrive, Cloud, Download, Trash2, Eye, Mail, Calendar } from 'lucide-react';
+import { ArrowLeft, Shield, HardDrive, Cloud, Download, Trash2, Eye, Mail, Calendar, Brain, Volume2, Server } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 
 export default function PrivacyPolicyPage() {
@@ -57,7 +57,7 @@ export default function PrivacyPolicyPage() {
             Soullab — MAIA Sovereign Companion
           </p>
           <p className="text-xs text-white/40 mt-2">
-            Last updated: February 1, 2026
+            Last updated: February 23, 2026
           </p>
         </motion.div>
 
@@ -79,6 +79,23 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="text-[15px] leading-relaxed text-white/70">
               <span className="font-medium text-white">We do not sell, mine, or monetize your data. Ever.</span>
+            </p>
+          </div>
+        </motion.section>
+
+        {/* Scope disclaimer */}
+        <motion.section
+          className="mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <div className="p-5 rounded-xl border border-amber-500/20 bg-amber-500/5">
+            <p className="text-[13px] leading-relaxed text-amber-300/80">
+              <strong className="text-amber-300">Scope:</strong> MAIA is not a medical, psychological,
+              or crisis service. It is not a substitute for professional care and should not be used
+              for emergency or clinical decision-making. If you are in crisis, please contact emergency
+              services or a qualified professional.
             </p>
           </div>
         </motion.section>
@@ -155,6 +172,54 @@ export default function PrivacyPolicyPage() {
                 <strong>You can disconnect Google anytime</strong> from Settings → Connections.
                 This immediately revokes our access to your Google account.
               </p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* AI Processing */}
+        <motion.section
+          className="mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.26 }}
+        >
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-white/80 uppercase">
+            AI Processing
+          </h3>
+          <div className="space-y-4">
+            <div className="flex gap-4 p-5 rounded-xl border border-white/10 bg-white/5">
+              <Brain className="w-5 h-5 text-violet-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div>
+                <p className="text-[13px] font-medium text-white mb-1">Primary AI — Anthropic (Claude)</p>
+                <p className="text-[13px] text-white/60 leading-relaxed">
+                  MAIA uses Anthropic&apos;s Claude as the primary AI. Your conversation content is
+                  processed by Anthropic subject to their{' '}
+                  <a href="https://www.anthropic.com/privacy" className="text-amber-400 hover:underline" target="_blank" rel="noopener noreferrer">privacy policy</a>.
+                  Per Anthropic&apos;s policy, API inputs and outputs are not used to train their models without your consent.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4 p-5 rounded-xl border border-white/10 bg-white/5">
+              <Volume2 className="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div>
+                <p className="text-[13px] font-medium text-white mb-1">Voice Synthesis — OpenAI TTS only</p>
+                <p className="text-[13px] text-white/60 leading-relaxed">
+                  MAIA uses OpenAI&apos;s text-to-speech API <strong className="text-white">solely</strong> to
+                  convert MAIA&apos;s already-generated text responses to audio. OpenAI does not receive
+                  your prompts, conversation content, or any other user data.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4 p-5 rounded-xl border border-white/10 bg-white/5">
+              <Server className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div>
+                <p className="text-[13px] font-medium text-white mb-1">Local fallback — Ollama</p>
+                <p className="text-[13px] text-white/60 leading-relaxed">
+                  When the Anthropic API is unavailable, MAIA may route to locally-hosted models
+                  (Ollama / DeepSeek) running on Soullab&apos;s own hardware. In this mode, no content
+                  leaves Soullab&apos;s infrastructure.
+                </p>
+              </div>
             </div>
           </div>
         </motion.section>
@@ -298,7 +363,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <p className="text-[13px] text-white/60 leading-relaxed mt-2">
               Soullab<br />
-              San Diego, California
+              Connecticut, United States
             </p>
           </div>
         </motion.section>

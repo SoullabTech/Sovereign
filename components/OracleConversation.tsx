@@ -2614,7 +2614,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               assistantMessage: nextMsg.text,
               userId,
               sessionId,
-              isSanctuary: false, // TODO: Check sanctuary mode
+              isSanctuary,
             }),
           })
             .then(res => res.json())

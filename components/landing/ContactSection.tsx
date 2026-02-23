@@ -8,18 +8,21 @@ const pathways = [
     icon: <Hammer className="w-6 h-6" />,
     title: 'Build',
     description: 'Need a site, app, or digital presence? We build with soul. Clean design, strong systems, high trust.',
+    items: ['Websites & web apps', 'Brand systems', 'API & AI integrations', 'Custom dashboards'],
     cta: 'Start a project',
   },
   {
     icon: <Compass className="w-6 h-6" />,
     title: 'Consult',
     description: 'Strategy, architecture, consciousness-aware technology. For founders, practitioners, and teams in transition.',
+    items: ['Technical strategy', 'Architecture reviews', 'AI & emerging tech', 'Team advisory'],
     cta: 'Book a conversation',
   },
   {
     icon: <Users className="w-6 h-6" />,
     title: 'Collaborate',
     description: 'Research partners, open-source contributors, fellow builders. If you\'re making something real, let\'s talk.',
+    items: ['Research partnerships', 'Open-source projects', 'Co-creation & licensing', 'Fellowship programs'],
     cta: 'Reach out',
   },
 ];
@@ -56,9 +59,17 @@ export function ContactSection() {
                 <h3 className="text-xl font-medium text-white mb-3">
                   {pathway.title}
                 </h3>
-                <p className="text-white/50 leading-relaxed mb-6 flex-1" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                <p className="text-white/50 leading-relaxed mb-4" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                   {pathway.description}
                 </p>
+                <ul className="space-y-1.5 mb-6 flex-1">
+                  {pathway.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-white/40" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
+                      <span className="w-1 h-1 rounded-full bg-maia-spice-400/60 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
                 <a
                   href="mailto:hello@soullab.life"
                   className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-400 font-medium transition-colors group text-sm"
