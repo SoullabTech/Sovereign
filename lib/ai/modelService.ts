@@ -3,7 +3,48 @@ import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from '
 import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
-import type { TextResult, ProviderMeta } from './types';
+import { generateTextWithSovereignty } from './sovereignRouter';
+import type { TextResult, ProviderMeta, InferenceMode } from './types';
+
+// Phase 1: Sovereign inference mode — unset/empty = zero behavior change
+const MAIA_INFERENCE_MODE = (process.env.MAIA_INFERENCE_MODE || '') as InferenceMode | '';
+
+// ── Token usage logging ───────────────────────────────────────────────────────
+const MAIA_LOG_TOKEN_USAGE = (process.env.MAIA_LOG_TOKEN_USAGE || '') === 'true';
+const MAIA_LOG_TOKEN_USAGE_SAMPLE_RATE = Math.min(
+  1,
+  Math.max(0, Number(process.env.MAIA_LOG_TOKEN_USAGE_SAMPLE_RATE || '1'))
+);
+
+function shouldLogTokenUsage(): boolean {
+  if (!MAIA_LOG_TOKEN_USAGE) return false;
+  if (MAIA_LOG_TOKEN_USAGE_SAMPLE_RATE >= 1) return true;
+  return Math.random() < MAIA_LOG_TOKEN_USAGE_SAMPLE_RATE;
+}
+
+function logTokenUsageLine(args: {
+  provider: string;
+  model?: string;
+  t0: number;
+  usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number; input_tokens?: number; output_tokens?: number; total_tokens?: number };
+  routeTag?: string;
+}) {
+  if (!shouldLogTokenUsage()) return;
+  const line = {
+    at: new Date().toISOString(),
+    kind: 'token_usage',
+    provider: args.provider,
+    model: args.model ?? null,
+    ms: Date.now() - args.t0,
+    // read camelCase first (new providers), fall back to snake_case (existing claudeClient)
+    input: args.usage?.inputTokens ?? args.usage?.input_tokens ?? null,
+    output: args.usage?.outputTokens ?? args.usage?.output_tokens ?? null,
+    total: args.usage?.totalTokens ?? args.usage?.total_tokens ?? null,
+    tag: args.routeTag ?? null,
+  };
+  console.info(JSON.stringify(line));
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type TextModelProvider = 'anthropic' | 'local' | 'consciousness_engine' | 'multi_engine' | 'moonshot';
 
@@ -35,6 +76,15 @@ export interface TextRequest {
 export async function generateText(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
 
+  // ── Phase 1 sovereign routing guard ─────────────────────────────────────
+  // If MAIA_INFERENCE_MODE is unset/empty, skip entirely — zero behavior change.
+  // If set, hand off to sovereignRouter and return; existing logic below is bypassed.
+  // t0 passed so the router can log accurate end-to-end latency.
+  if (MAIA_INFERENCE_MODE) {
+    return generateTextWithSovereignty(req, MAIA_INFERENCE_MODE, t0);
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   // SOVEREIGNTY ENFORCEMENT - only Claude and local allowed
   if (TEXT_MODEL_PROVIDER === 'openai' as any) {
     throw new Error('🚨 SOVEREIGNTY VIOLATION: OpenAI is FORBIDDEN. Use Claude or local models only.');
@@ -59,15 +109,17 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 
     console.log(`🎼 Multi-engine response: ${multiEngineResponse.processingTime}ms, confidence: ${multiEngineResponse.confidence}, engines: ${multiEngineResponse.engineResponses.size}`);
 
-    return {
+    const multiResult = {
       text: multiEngineResponse.consensus || multiEngineResponse.primaryResponse,
       provider: {
-        provider: 'multi_engine',
+        provider: 'multi_engine' as const,
         model: `orchestration:${orchestrationType}`,
-        mode: 'full',
+        mode: 'full' as const,
         latencyMs: Date.now() - t0,
       },
     };
+    logTokenUsageLine({ provider: 'multi_engine', model: multiResult.provider.model, t0, routeTag: 'modelService.generateText' });
+    return multiResult;
   }
 
   // Explicit Moonshot/Kimi routing (for library distillation, deep synthesis)
@@ -78,12 +130,14 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     } else {
       console.log('🌙 Using Kimi (Moonshot) for backstage task');
       try {
-        return await generateWithKimi({
+        const kimiResult = await generateWithKimi({
           systemPrompt: req.systemPrompt,
           userInput: req.userInput,
           meta: req.meta,
           thinkingMode: req.meta?.thinkingMode !== false, // Default to thinking mode
         });
+        logTokenUsageLine({ provider: 'moonshot', model: kimiResult.provider?.model, t0, usage: kimiResult.provider?.usage, routeTag: 'modelService.generateText' });
+        return kimiResult;
       } catch (error: any) {
         console.error('Kimi error:', error);
         // If Kimi was explicitly requested, don't fall back
@@ -101,11 +155,13 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     // moonshot falls through here if Kimi unavailable
     console.log('🧠 Using Claude (Anthropic) as primary');
     try {
-      return await generateWithClaude({
+      const claudeResult = await generateWithClaude({
         systemPrompt: req.systemPrompt,
         userInput: req.userInput,
         meta: req.meta,
       });
+      logTokenUsageLine({ provider: 'anthropic', model: claudeResult.provider?.model, t0, usage: claudeResult.provider?.usage, routeTag: 'modelService.generateText' });
+      return claudeResult;
     } catch (error: any) {
       // 🚨 BILLING/AUTH ERRORS: Do NOT fallback - fail fast with clear error
       if (error?.noFallback || error?.code === 'ANTHROPIC_BILLING_ERROR') {
@@ -128,11 +184,13 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 
   // Fallback: local Ollama/DeepSeek
   console.log('🔮 Using local model (Ollama/DeepSeek)');
-  return generateWithLocalModel({
+  const localResult = await generateWithLocalModel({
     systemPrompt: req.systemPrompt,
     userInput: req.userInput,
     meta: req.meta,
   });
+  logTokenUsageLine({ provider: localResult.provider?.provider ?? 'ollama', model: localResult.provider?.model, t0, usage: localResult.provider?.usage, routeTag: 'modelService.generateText' });
+  return localResult;
 }
 
 // Re-export types for convenience

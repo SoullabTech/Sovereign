@@ -53,13 +53,17 @@ services:
       - .env.production
     environment:
       - DOMAIN=${DOMAIN:-localhost}
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       maia:
         condition: service_healthy
       maia-api:
         condition: service_healthy
     networks:
-      - maia-network
+      - maia-public
+      - marc-studio_default
+      - rudeboy-caddy-bridge  # Route rudeboy.soullab.life — no MAIA internals exposed
 
   # ═════════════════════════════════════════════════════════════════════════════
   # MAIA - Consciousness Computing Platform
@@ -134,6 +138,13 @@ services:
       # Voice notes storage - persisted across container restarts
       - voice_notes_data:/app/storage/voice-notes
 
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
       interval: 30s
@@ -142,7 +153,8 @@ services:
       start_period: 60s
 
     networks:
-      - maia-network
+      - maia-internal
+      - maia-public
 
   # ═════════════════════════════════════════════════════════════════════════════
   # MAIA API Service - Standalone Backend API
@@ -169,9 +181,6 @@ services:
     env_file:
       - .env.production
 
-    ports:
-      - "3001:3001"
-
     environment:
       NODE_ENV: production
       PORT: "3001"
@@ -179,6 +188,13 @@ services:
       CORS_ORIGINS: "https://soullab.life,https://www.soullab.life,https://loralee.soullab.life,https://chart.soullab.life"
       # Embedding mode: queue jobs for async processing by embed-worker
       MAIA_EMBEDDINGS_MODE: queue
+
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/v1/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
@@ -188,7 +204,8 @@ services:
       start_period: 30s
 
     networks:
-      - maia-network
+      - maia-internal
+      - maia-public
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Embedding Worker - Async Queue Consumer
@@ -254,7 +271,7 @@ services:
       start_period: 30s
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Comms Analysis Worker - MAIA Message Intelligence
@@ -293,7 +310,7 @@ services:
       start_period: 10s
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Session Summary Worker - Background Remembrance Generation
@@ -331,7 +348,7 @@ services:
       start_period: 10s
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # PostgreSQL - Consciousness Data Persistence
@@ -340,6 +357,7 @@ services:
     image: pgvector/pgvector:pg16
     container_name: maia-postgres
     restart: unless-stopped
+    logging: *default_logging
 
     env_file:
       - .env.production
@@ -373,6 +391,9 @@ services:
       # Only extensions init - schema owned by Prisma + migrate service
       - ./database/init:/docker-entrypoint-initdb.d:ro
 
+    security_opt:
+      - no-new-privileges:true
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U soullab -d maia_consciousness"]
       interval: 5s
@@ -380,7 +401,7 @@ services:
       retries: 20
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Database Migrations - One-Off Service
@@ -408,7 +429,7 @@ services:
     profiles: ["migrate"]
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Whisper.cpp - Local Speech-to-Text
@@ -435,10 +456,10 @@ services:
       '
     profiles: ["init"]
     networks:
-      - maia-network
+      - maia-internal
 
   whisper:
-    image: fedirz/faster-whisper-server:latest-cpu
+    image: fedirz/faster-whisper-server@sha256:760e5e43d427dc6cfbbc4731934b908b7de9c7e6d5309c6a1f0c8c923a5b6030
     container_name: maia-whisper
     restart: unless-stopped
     logging: *default_logging
@@ -455,7 +476,7 @@ services:
       start_period: 120s
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # RLM - Recursive Language Models Service
@@ -487,7 +508,7 @@ services:
       start_period: 10s
 
     networks:
-      - maia-network
+      - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Old Head Plaster - Astro SSR Site with Virtual Daragh
@@ -520,7 +541,7 @@ services:
       start_period: 30s
 
     networks:
-      - maia-network
+      - maia-public
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Demo Plaster - White-Label Demo Site
@@ -554,7 +575,7 @@ services:
       start_period: 30s
 
     networks:
-      - maia-network
+      - maia-public
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Palisades Master Handyman - Jeremy Larson's Business Site
@@ -588,48 +609,18 @@ services:
       start_period: 30s
 
     networks:
-      - maia-network
+      - maia-public
 
   # ═════════════════════════════════════════════════════════════════════════════
-  # Rude Boy Baking Co. - Astro SSR Site
+  # Rude Boy Baking Co. — MOVED TO ISOLATED STACK
   # ═════════════════════════════════════════════════════════════════════════════
-  # Artisan bakery website with Kitchen Console admin
-  # Build: docker compose -f docker-compose.production.yml build rudeboy
-  # Deploy: docker compose -f docker-compose.production.yml up -d rudeboy
-  rudeboy:
-    build:
-      context: /Users/soullab/RudeBoyBaking
-      dockerfile: Dockerfile
-    image: rudeboy-baking:prod
-    container_name: rudeboy-baking
-    restart: unless-stopped
-    logging: *default_logging
-
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-    env_file:
-      - .env.production
-
-    environment:
-      NODE_ENV: production
-      HOST: "0.0.0.0"
-      PORT: "4323"
-      DATABASE_URL: "postgresql://soullab:soullab@maia-postgres:5432/maia_consciousness"
-
-    volumes:
-      - /Users/soullab/RudeBoyBaking/public/uploads:/app/public/uploads
-
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4323/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-    networks:
-      - maia-network
+  # Rudeboy is a client build — it runs in its own isolated compose stack with
+  # its own PostgreSQL instance, completely separate from the MAIA platform.
+  #
+  # Stack:   /Users/soullab/RudeBoyBaking/docker-compose.yml
+  # Deploy:  docker compose -f /Users/soullab/RudeBoyBaking/docker-compose.yml up -d
+  # Routing: maia-caddy reaches rudeboy-baking:4323 via rudeboy-caddy-bridge network
+  # ═════════════════════════════════════════════════════════════════════════════
 
   # ═════════════════════════════════════════════════════════════════════════════
   # Ollama - Local LLM (Optional)
@@ -653,6 +644,49 @@ services:
   #   #           capabilities: [gpu]
   #   networks:
   #     - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # maia-local-inference — Phase 1 Sovereign Inference Adapter
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Thin FastAPI adapter: MAIA app → this service → Ollama.
+  # Profile: sovereign — only starts when MAIA_INFERENCE_MODE is set.
+  #
+  # Enable: docker compose --profile sovereign -f docker-compose.production.yml up -d
+  # Logs:   docker compose -f docker-compose.production.yml logs -f maia-local-inference
+  #
+  # Ollama may run on this host, the UM790, or any reachable machine.
+  # Set OLLAMA_BASE_URL in .env.production accordingly:
+  #   Same host:    http://host.docker.internal:11434
+  #   UM790 on LAN: http://192.168.x.x:11434
+  maia-local-inference:
+    profiles: ["sovereign"]
+    build:
+      context: ./services/local-inference
+      dockerfile: Dockerfile
+    container_name: maia-local-inference
+    restart: unless-stopped
+    logging: *default_logging
+
+    env_file:
+      - .env.production
+
+    environment:
+      OLLAMA_BASE_URL:  ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL:     ${OLLAMA_MODEL:-deepseek-r1:8b}
+      GENERATE_TIMEOUT_S: "30"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - maia-internal
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Persistent Volumes
@@ -679,5 +713,15 @@ volumes:
 # Network
 # ═══════════════════════════════════════════════════════════════════════════════
 networks:
+  maia-internal:
+    driver: bridge   # DB + core services — no public exposure
+  maia-public:
+    driver: bridge   # Caddy + frontend containers
   maia-network:
-    driver: bridge
+    driver: bridge   # Legacy — remove once all services migrated
+  marc-studio_default:
+    external: true
+  rudeboy-caddy-bridge:
+    external: true   # Pre-create: docker network create rudeboy-caddy-bridge
+    # Allows maia-caddy to route rudeboy.soullab.life → rudeboy-baking:4323
+    # No MAIA internal services are on this network.
