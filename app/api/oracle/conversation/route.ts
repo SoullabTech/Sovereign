@@ -944,7 +944,7 @@ export async function POST(request: NextRequest) {
         maiaResponse.coreMessage,
         'DEEP', // Oracle endpoint is deep processing with full consciousness
         {
-          primaryEngine: 'claude-opus-4-5-20251101',
+          primaryEngine: 'claude-opus-4-6',
           usedClaudeConsult: true,
           element: spiralogicCell.element,
           consciousnessData: {
@@ -1320,7 +1320,7 @@ export async function POST(request: NextRequest) {
           sessionId,
           requestId,
           agent: 'oracle.conversation',
-          model: 'claude-opus-4-5-20251101',
+          model: 'claude-opus-4-6',
           input: { text: message },
           safety: {
             level: fieldSafety?.allowed ? 'safe' : 'blocked',
@@ -1422,7 +1422,7 @@ export async function POST(request: NextRequest) {
         source: 'pfi_full',
         mode: 'STANDARD',
         provider: 'anthropic',  // The provider we TRIED to use
-        model: 'claude-opus-4-5-20251101',  // The model we TRIED to use
+        model: 'claude-opus-4-6',  // The model we TRIED to use
         usedProviderFallback: false,  // We did NOT fallback (strict mode blocked it)
       });
 

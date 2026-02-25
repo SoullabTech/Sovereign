@@ -40,31 +40,31 @@ export interface LLMResponse {
 const LEVEL_LLM_CONFIG: Record<ConsciousnessLevel, LLMConfig> = {
   1: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.7,
     maxTokens: 500
   },
   2: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.75,
     maxTokens: 600
   },
   3: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.8,
     maxTokens: 800
   },
   4: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.85,
     maxTokens: 1000
   },
   5: {
     provider: 'anthropic',
-    model: 'claude-opus-4-5-20251101',
+    model: 'claude-opus-4-6',
     temperature: 0.9,
     maxTokens: 1200
   }

@@ -116,7 +116,7 @@ describe('sovereignRouter — generateTextWithSovereignty', () => {
     it('returns Anthropic result when Anthropic succeeds — no local call', async () => {
       mockClaude.mockResolvedValueOnce({
         text: 'anthropic response',
-        provider: { provider: 'anthropic', model: 'claude-opus-4-5', mode: 'full' },
+        provider: { provider: 'anthropic', model: 'claude-opus-4-6', mode: 'full' },
       });
 
       const result = await generateTextWithSovereignty(BASE_REQ, 'primary', Date.now());
