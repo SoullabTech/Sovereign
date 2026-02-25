@@ -27,6 +27,7 @@ import {
   DoorOpen,
   Scale,
   Wind,
+  Heart,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -61,6 +62,7 @@ export type ModuleSlug =
   | 'scribe'
   | 'decisions'
   | 'changes'
+  | 'relationships'
   | 'teams'
   | 'maia'
   | 'tools'
@@ -230,6 +232,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     alwaysOn: false,
     mode: 'field',
   },
+  {
+    slug: 'relationships',
+    label: 'Relationships',
+    icon: Heart,
+    href: '/studio/relationships',
+    category: 'tools',
+    description: 'Track and reflect on significant relationships',
+    alwaysOn: false,
+    mode: 'field',
+  },
 
   // ── Shared tools (both modes) ──
   {
@@ -336,7 +348,7 @@ const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  personal: ['decisions', 'changes', 'relationships', 'maia', 'vault', 'threshold', 'tools'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
