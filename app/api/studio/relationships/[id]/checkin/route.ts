@@ -146,6 +146,39 @@ export async function POST(
     }
     const packIdsUsed = knowledgeSnippets.map(s => s.packId);
 
+    // Inject cached astrology context (non-blocking — never delays check-in if absent)
+    try {
+      const astroResult = await db.query(
+        `SELECT natal_summary_json, active_transits_json, synastry_narrative
+         FROM relationship_astrology_snapshots
+         WHERE relationship_id = $1 AND expires_at > NOW()
+         ORDER BY computed_at DESC LIMIT 1`,
+        [relationshipId]
+      );
+      if (astroResult.rows.length > 0) {
+        const astro = astroResult.rows[0];
+        const natal = astro.natal_summary_json;
+        const transits = (astro.active_transits_json || []) as {
+          planet: string; aspect: string; natalPoint: string; theme: string;
+        }[];
+        const astroParts: string[] = [];
+        if (natal) {
+          astroParts.push(`Sun ${natal.sun?.sign} h${natal.sun?.house}, Moon ${natal.moon?.sign} h${natal.moon?.house}, Rising ${natal.rising}.`);
+          if (natal.attachmentSignature) astroParts.push(natal.attachmentSignature);
+        }
+        if (transits.length > 0) {
+          astroParts.push(`Active: ${transits.slice(0, 2).map((t) => `${t.planet} ${t.aspect} ${t.natalPoint} — ${t.theme}`).join('; ')}.`);
+        }
+        if (astro.synastry_narrative) astroParts.push(astro.synastry_narrative);
+        if (astroParts.length > 0) {
+          contextParts.push('');
+          contextParts.push(`ASTRO_CONTEXT: ${astroParts.join(' ')}`);
+        }
+      }
+    } catch {
+      // Astrology context is optional — never block the check-in
+    }
+
     // Call MAIA (Haiku for speed)
     const PARENT_MODEL = 'claude-haiku-4-5-20251001';
     const message = await anthropic.messages.create({
