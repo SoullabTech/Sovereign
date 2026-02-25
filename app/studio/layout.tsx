@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowLeft,
   ChevronLeft,
   Loader2,
   Menu,
@@ -298,6 +299,18 @@ export default function StudioLayout({
                 <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
                   {visibleModules.map((mod) => renderNavLink(mod, () => setDrawerOpen(false)))}
                 </nav>
+
+                {/* Back to MAIA */}
+                <div className="px-2 py-2 border-t border-slate-800/50">
+                  <Link
+                    href="/maia"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                  >
+                    <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+                    <span>Back to MAIA</span>
+                  </Link>
+                </div>
               </motion.div>
             </div>
           )}
@@ -409,6 +422,17 @@ export default function StudioLayout({
             );
           })}
         </nav>
+
+        {/* Back to MAIA */}
+        <div className="px-2 py-2 border-t border-slate-800/50">
+          <Link
+            href="/maia"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Back to MAIA</span>}
+          </Link>
+        </div>
 
         {/* Expand button when collapsed */}
         {collapsed && (
