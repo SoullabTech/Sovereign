@@ -264,80 +264,76 @@ export async function POST(req: NextRequest) {
       return jsonWithCors(req, { error: 'Missing `message` in request body', code: 'NO_MESSAGE' }, 400);
     }
 
-    // Initialize database tables if needed
+    // ⚡ LATENCY FIX: Parallelize session init with cognitive profile + name change detection.
+    // Previously these ran sequentially (~200-500ms each).
+    // Session init must complete before ensureSession, but cognitive profile and
+    // name change detection are independent and can overlap.
     await withTimeoutLabeled('initializeSessionTable', initializeSessionTable(), 5000, start);
 
-    const session = await withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start);
+    // Run session creation, cognitive profile, and name change in parallel
+    const isRecognizedForProfile = typeof userId === 'string' && userId.length > 0 && !userId.startsWith('anon:');
+    const [session, cognitiveProfileResult, nameChangeResult] = await Promise.all([
+      withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start),
+      (userId || sessionId)
+        ? withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || sessionId!), 5000, start)
+            .catch(err => { console.warn('⚠️ [Field Safety] Could not fetch cognitive profile:', err); return null; })
+        : Promise.resolve(null),
+      (isRecognizedForProfile && message)
+        ? processNameChangeIfDetected(message, userId!)
+            .then(r => { if (r.detected && r.updated) console.log(`✨ [NAME_CHANGE] User asked to be called "${r.newName}" - updated`); return r; })
+            .catch(err => { console.warn('⚠️ [NAME_CHANGE] Detection failed (non-blocking):', err); return null; })
+        : Promise.resolve(null),
+    ]);
 
-    // 🎯 NAME CHANGE DETECTION: Detect "call me X" patterns and update preferred name
-    let nameChangeResult = null;
-    if (userId && typeof userId === 'string' && !userId.startsWith('anon:')) {
-      try {
-        nameChangeResult = await processNameChangeIfDetected(message, userId);
-        if (nameChangeResult.detected && nameChangeResult.updated) {
-          console.log(`✨ [NAME_CHANGE] User asked to be called "${nameChangeResult.newName}" - updated`);
-        }
-      } catch (err) {
-        console.warn('⚠️ [NAME_CHANGE] Detection failed (non-blocking):', err);
-      }
-    }
+    console.log(`[MAIA step] parallel init complete dt=${msSince(start)}ms`);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
-    let cognitiveProfile = null;
+    let cognitiveProfile = cognitiveProfileResult;
     let fieldSafety = null;
 
-    if (userId || session.id) {
-      try {
-        cognitiveProfile = await withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || session.id), 5000, start);
+    if (cognitiveProfile) {
+      fieldSafety = enforceFieldSafety({
+        cognitiveProfile,
+        element: (meta as any).element,
+        userName: (meta as any).userName,
+        context: 'maia',
+      });
 
-        if (cognitiveProfile) {
-          fieldSafety = enforceFieldSafety({
-            cognitiveProfile,
-            element: (meta as any).element,
-            userName: (meta as any).userName,
-            context: 'maia',
-          });
+      // If field work is not safe, return mythic boundary message immediately
+      if (!fieldSafety.allowed) {
+        console.log(
+          `🛡️  [Field Safety] Blocked request - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+            `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
+        );
 
-          // If field work is not safe, return mythic boundary message immediately
-          if (!fieldSafety.allowed) {
-            console.log(
-              `🛡️  [Field Safety] Blocked request - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
-                `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
-            );
-
-            const duration = Date.now() - start;
-            return jsonWithCors(req, {
-              message: fieldSafety.message,
-              elementalNote: fieldSafety.elementalNote,
-              route: {
-                endpoint: '/api/sovereign/app/maia',
-                type: 'Sovereign Consciousness Interface',
-                operational: true,
-                mode: 'field-safety-boundary',
-              },
-              session: {
-                id: session.id,
-                turns: session.turns,
-              },
-              metadata: {
-                fieldWorkSafe: false,
-                fieldRouting: fieldSafety.fieldRouting,
-                cognitiveAltitude: cognitiveProfile.rollingAverage,
-                stability: cognitiveProfile.stability,
-                processingTimeMs: duration,
-              },
-            }, 200);
-          }
-
-          console.log(
-            `🛡️  [Field Safety] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
-              `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
-          );
-        }
-      } catch (err) {
-        console.warn('⚠️  [Field Safety] Could not fetch cognitive profile:', err);
-        // Graceful degradation - continue without field safety if profile fetch fails
+        const duration = Date.now() - start;
+        return jsonWithCors(req, {
+          message: fieldSafety.message,
+          elementalNote: fieldSafety.elementalNote,
+          route: {
+            endpoint: '/api/sovereign/app/maia',
+            type: 'Sovereign Consciousness Interface',
+            operational: true,
+            mode: 'field-safety-boundary',
+          },
+          session: {
+            id: session.id,
+            turns: session.turns,
+          },
+          metadata: {
+            fieldWorkSafe: false,
+            fieldRouting: fieldSafety.fieldRouting,
+            cognitiveAltitude: cognitiveProfile.rollingAverage,
+            stability: cognitiveProfile.stability,
+            processingTimeMs: duration,
+          },
+        }, 200);
       }
+
+      console.log(
+        `🛡️  [Field Safety] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+          `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
+      );
     }
 
     let orchestratorResult;
@@ -374,122 +370,128 @@ export async function POST(req: NextRequest) {
       console.log(`🛡️ [Route/Identity] Anonymous session - cross-session memory disabled`);
     }
 
-    let memoryBundle: MemoryBundle | null = null;
-    let memoryContext = '';
+    // ⚡ LATENCY FIX: Run MemoryBundle and BaZi/WuXing in parallel.
+    // These are independent and previously ran sequentially (~500ms-2s each).
+    const shouldBuildMemory = !isSanctuary && allowCrossSessionMemory && memoryMode !== 'ephemeral';
+    const shouldComputeWuXing = isRecognizedUser && !isSanctuary;
 
-    // 🔒 SANCTUARY: Skip memory bundle entirely (no cross-session recall)
-    // 🔒 ANONYMOUS: Skip cross-session to prevent "0 memories" false alarms
-    if (isSanctuary) {
-      console.log('🛡️ [Route/MemoryBundle] Skipped - Sanctuary mode');
-    } else if (!allowCrossSessionMemory) {
-      console.log('🛡️ [Route/MemoryBundle] Skipped - Anonymous session (no cross-session)');
-    } else if (memoryMode !== 'ephemeral') {
-      console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${effectiveUserId}" mode="${memoryMode}"`);
-      try {
-        memoryBundle = await withTimeoutLabeled(
-          'MemoryBundleService.build',
-          MemoryBundleService.build({
-            userId: effectiveUserId,
-            currentInput: message,
-            sessionId: session.id,
-            traceId,  // For memory usage audit trail
-            scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
-            maxBullets: 5,
-          }),
-          5000,
-          start
-        );
-
-        if (memoryBundle) {
-          memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
-          console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
-          // 🔍 DEBUG: Log what actually came back
-          console.log(`📦 [Route/MemoryBundle] Turns: ${memoryBundle.retrievalStats.turnsRetrieved} (same-session: ${memoryBundle.retrievalStats.turnsSameSession}, cross: ${memoryBundle.retrievalStats.turnsCrossSession})`);
-          console.log(`📦 [Route/MemoryBundle] Relationship: encounters=${memoryBundle.relationshipSnapshot.encounterCount}, breakthroughs=${memoryBundle.relationshipSnapshot.breakthroughCount}`);
-          if (memoryContext.length > 0) {
-            console.log(`📦 [Route/MemoryBundle] Context preview (first 300 chars): ${memoryContext.slice(0, 300)}...`);
-          } else {
-            console.warn(`⚠️ [Route/MemoryBundle] memoryContext is EMPTY despite retrieval!`);
-          }
-        } else {
-          console.warn(`⚠️ [Route/MemoryBundle] Build returned null`);
-        }
-      } catch (memErr) {
-        console.warn('⚠️ [Route/MemoryBundle] Build failed (non-blocking):', memErr);
-      }
-    } else {
-      console.log(`🛡️ [Route/MemoryBundle] Skipped - memoryMode is "${memoryMode}"`);
+    if (!shouldBuildMemory) {
+      if (isSanctuary) console.log('🛡️ [Route/MemoryBundle] Skipped - Sanctuary mode');
+      else if (!allowCrossSessionMemory) console.log('🛡️ [Route/MemoryBundle] Skipped - Anonymous session');
+      else console.log(`🛡️ [Route/MemoryBundle] Skipped - memoryMode is "${memoryMode}"`);
     }
 
-    // 🌿 WU XING BRIDGE: Five Elements awareness (enhancement, not dependency)
-    let wuxingSnapshot: WuXingSnapshot | null = null;
-    let bridgedSnapshot: BridgedSnapshot | null = null;
-    let wuxingAddendum = '';
+    const [memoryBundleResult, wuxingResult] = await Promise.all([
+      // Memory bundle (parallel leg 1)
+      shouldBuildMemory
+        ? (async () => {
+            console.log(`🧠 [Route/MemoryBundle] ATTEMPTING retrieval for user="${effectiveUserId}" mode="${memoryMode}"`);
+            try {
+              return await withTimeoutLabeled(
+                'MemoryBundleService.build',
+                MemoryBundleService.build({
+                  userId: effectiveUserId,
+                  currentInput: message,
+                  sessionId: session.id,
+                  traceId,
+                  scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
+                  maxBullets: 5,
+                }),
+                5000,
+                start
+              );
+            } catch (memErr) {
+              console.warn('⚠️ [Route/MemoryBundle] Build failed (non-blocking):', memErr);
+              return null;
+            }
+          })()
+        : Promise.resolve(null),
 
-    if (isRecognizedUser && !isSanctuary) {
-      try {
-        // Fetch BaZi profile if stored
-        let baziProfile = null;
-        try {
-          const baziResult = await pool.query(
-            `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
-                    year_pillar, month_pillar, day_pillar, hour_pillar,
-                    element_counts, dominant_element, element_balance_score
-             FROM member_bazi_profile
-             WHERE member_id = $1`,
-            [effectiveUserId]
-          );
-          if (baziResult.rows.length > 0) {
-            baziProfile = baziResult.rows[0];
-          }
-        } catch (baziErr) {
-          console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
-        }
+      // Wu Xing / BaZi (parallel leg 2)
+      shouldComputeWuXing
+        ? (async (): Promise<{ wuxingSnapshot: WuXingSnapshot | null; bridgedSnapshot: BridgedSnapshot | null; wuxingAddendum: string }> => {
+            try {
+              let baziProfile = null;
+              try {
+                const baziResult = await pool.query(
+                  `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
+                          year_pillar, month_pillar, day_pillar, hour_pillar,
+                          element_counts, dominant_element, element_balance_score
+                   FROM member_bazi_profile
+                   WHERE member_id = $1`,
+                  [effectiveUserId]
+                );
+                if (baziResult.rows.length > 0) {
+                  baziProfile = baziResult.rows[0];
+                }
+              } catch (baziErr) {
+                console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
+              }
 
-        // Compute Wu Xing snapshot (works with or without BaZi)
-        wuxingSnapshot = computeWuXingSnapshot({
-          constitution: baziProfile ? {
-            dayMasterElement: baziProfile.day_master_element,
-            elementCounts: baziProfile.element_counts,
-            dominantElement: baziProfile.dominant_element,
-          } : undefined,
-          currentMoment: new Date(),
-          timezone: timezone,
-        });
+              const snapshot = computeWuXingSnapshot({
+                constitution: baziProfile ? {
+                  dayMasterElement: baziProfile.day_master_element,
+                  elementCounts: baziProfile.element_counts,
+                  dominantElement: baziProfile.dominant_element,
+                } : undefined,
+                currentMoment: new Date(),
+                timezone: timezone,
+              });
 
-        // Create bridged snapshot if we have spiral data
-        const spiralSnapshot = (meta as any)?.spiralSnapshot;
-        if (spiralSnapshot || wuxingSnapshot) {
-          bridgedSnapshot = createBridgedSnapshot(
-            spiralSnapshot || null,
-            wuxingSnapshot,
-            baziProfile
-          );
-
-          // Format Wu Xing addendum for prompt
-          if (bridgedSnapshot) {
-            const wx = bridgedSnapshot.wuxing;
-            const alignment = bridgedSnapshot.crossSystemInsights?.elementAlignment || 'unknown';
-            wuxingAddendum = `
+              let bridged: BridgedSnapshot | null = null;
+              let addendum = '';
+              const spiralSnapshot = (meta as any)?.spiralSnapshot;
+              if (spiralSnapshot || snapshot) {
+                bridged = createBridgedSnapshot(spiralSnapshot || null, snapshot, baziProfile);
+                if (bridged) {
+                  const wx = bridged.wuxing;
+                  const alignment = bridged.crossSystemInsights?.elementAlignment || 'unknown';
+                  addendum = `
 🌿 WU XING AWARENESS (Five Elements):
 - Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
 ${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No birth chart on file (using moment energy only)'}
 - Element alignment: ${alignment}
-${bridgedSnapshot.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridgedSnapshot.crossSystemInsights.practicalGuidance}` : ''}
+${bridged.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridged.crossSystemInsights.practicalGuidance}` : ''}
 
 Use this awareness to attune your tone and suggestions to the current elemental qualities.
 Wood = growth, vision, initiative | Fire = clarity, passion, connection
 Earth = stability, nourishment, integration | Metal = precision, release, boundaries
 Water = depth, reflection, wisdom`;
-          }
-        }
+                }
+              }
 
-        console.log(`🌿 [WU XING] Computed: ${wuxingSnapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
-      } catch (wuxingErr) {
-        console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
-        // Wu Xing is enhancement, not dependency - continue without it
+              console.log(`🌿 [WU XING] Computed: ${snapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+              return { wuxingSnapshot: snapshot, bridgedSnapshot: bridged, wuxingAddendum: addendum };
+            } catch (wuxingErr) {
+              console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
+              return { wuxingSnapshot: null, bridgedSnapshot: null, wuxingAddendum: '' };
+            }
+          })()
+        : Promise.resolve({ wuxingSnapshot: null as WuXingSnapshot | null, bridgedSnapshot: null as BridgedSnapshot | null, wuxingAddendum: '' }),
+    ]);
+
+    console.log(`[MAIA step] memory+wuxing parallel complete dt=${msSince(start)}ms`);
+
+    // Unpack memory bundle result
+    let memoryBundle: MemoryBundle | null = memoryBundleResult;
+    let memoryContext = '';
+
+    if (memoryBundle) {
+      memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
+      console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
+      console.log(`📦 [Route/MemoryBundle] Turns: ${memoryBundle.retrievalStats.turnsRetrieved} (same-session: ${memoryBundle.retrievalStats.turnsSameSession}, cross: ${memoryBundle.retrievalStats.turnsCrossSession})`);
+      console.log(`📦 [Route/MemoryBundle] Relationship: encounters=${memoryBundle.relationshipSnapshot.encounterCount}, breakthroughs=${memoryBundle.relationshipSnapshot.breakthroughCount}`);
+      if (memoryContext.length > 0) {
+        console.log(`📦 [Route/MemoryBundle] Context preview (first 300 chars): ${memoryContext.slice(0, 300)}...`);
+      } else {
+        console.warn(`⚠️ [Route/MemoryBundle] memoryContext is EMPTY despite retrieval!`);
       }
+    } else if (shouldBuildMemory) {
+      console.warn(`⚠️ [Route/MemoryBundle] Build returned null`);
     }
+
+    // Unpack Wu Xing result
+    const { wuxingSnapshot, bridgedSnapshot, wuxingAddendum } = wuxingResult;
 
     // 🏢 STUDIO SURFACE: Build prompt addendum when running inside Soullab Studio
     const surfaceMode = (meta as any)?.surface as string | undefined;

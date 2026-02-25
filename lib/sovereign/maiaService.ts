@@ -1236,6 +1236,7 @@ async function corePathResponse(
   mindContext?: MindContext
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
+  const coreT0 = Date.now();
 
   // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
   const userId = (meta as any).userId;
@@ -1246,13 +1247,65 @@ async function corePathResponse(
     (meta as any)?.memberId ??
     (meta as any)?.user?.id ??
     null;
-  const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
   // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
   const isSanctuary = (meta as any)?.sanctuary === true;
   if (isSanctuary) {
     console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
   }
+
+  // ⚡ LATENCY FIX: Run independent DB queries in parallel instead of sequentially.
+  // Previously these ran one after another (~200-500ms each = 1-2s total).
+  // Now they all fire at once, so we pay only the cost of the slowest one.
+  const [policy, relationshipMemory, crossSessionTurns, elementalResult] = await Promise.all([
+    // 1. Consciousness policy
+    effectiveUserId
+      ? getConsciousnessPolicy(effectiveUserId, input).catch(err => {
+          console.warn('⚠️ [CORE] Consciousness policy failed:', err);
+          return null;
+        })
+      : Promise.resolve(null),
+
+    // 2. Relationship memory
+    (userId && !isSanctuary)
+      ? loadRelationshipMemory(userId, {
+          includeThemes: true,
+          includeBreakthroughs: true,
+          includePatterns: true,
+          maxThemes: 5,
+          maxBreakthroughs: 2
+        }).catch(err => {
+          console.warn('⚠️ Could not load relationship memory for CORE path:', err);
+          return null;
+        })
+      : Promise.resolve(null),
+
+    // 3. Cross-session recall (only if current session is empty)
+    (conversationHistory.length === 0 && effectiveUserId && !isSanctuary)
+      ? TurnsStore.getRecentTurns(effectiveUserId, 8).catch(err => {
+          console.warn('⚠️ Could not load cross-session turns for CORE path:', err);
+          return [] as any[];
+        })
+      : Promise.resolve([] as any[]),
+
+    // 4. Elemental oracle (pattern matching, ~50ms)
+    (async () => {
+      try {
+        const elementalOracle = new ElementalOracleBridge();
+        await elementalOracle.activate();
+        return await elementalOracle.processAll({
+          input,
+          includeAll: true,
+          fastMode: true,
+        });
+      } catch (err) {
+        console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
+        return null;
+      }
+    })(),
+  ]);
+
+  console.log(`⚡ [CORE] Parallel fetch complete in ${Date.now() - coreT0}ms`);
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1261,82 +1314,38 @@ async function corePathResponse(
     (meta as any).consciousnessPolicy = policy;
   }
 
-  // 🌊 RELATIONSHIP MEMORY (load relational context for CORE path)
-  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
-  let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId && !isSanctuary) {
-    try {
-      relationshipMemory = await loadRelationshipMemory(userId, {
-        includeThemes: true,
-        includeBreakthroughs: true,
-        includePatterns: true, // CORE path: include patterns
-        maxThemes: 5,
-        maxBreakthroughs: 2
-      });
-      console.log(`🌊 [Relationship Memory CORE] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes`);
-      (meta as any).relationshipMemory = relationshipMemory;
-    } catch (error) {
-      console.warn('⚠️ Could not load relationship memory for CORE path:', error);
-    }
+  if (relationshipMemory) {
+    console.log(`🌊 [Relationship Memory CORE] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes`);
+    (meta as any).relationshipMemory = relationshipMemory;
   }
 
-  // 🔥 ELEMENTAL ORACLE (CORE path): Quick pattern-based elemental classification
-  let elementalResult: ElementalResponse | null = null;
-  try {
-    const elementalOracle = new ElementalOracleBridge();
-    await elementalOracle.activate();
-
-    console.log(`🌋 [ElementalOracle CORE] Starting pattern-based classification...`);
-    const elementalStart = Date.now();
-
-    elementalResult = await elementalOracle.processAll({
-      input,
-      includeAll: true,
-      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
-    });
-
-    const elementalLatency = Date.now() - elementalStart;
-    console.log(
-      `🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant} | ` +
-      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
-    );
-
+  if (elementalResult) {
+    console.log(`🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant}`);
     (meta as any).elementalResult = elementalResult;
-  } catch (err) {
-    console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
   }
 
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
   const selfletContext = (meta as any)?.selfletContext;
   const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
-  // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
-  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
+  // 🔄 CROSS-SESSION RECALL: Convert fetched turns to conversation exchanges
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuary) {
-    try {
-      const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 8);
-      if (crossSessionTurns.length > 0) {
-        // Convert turns to conversation exchange format
-        const pairs: any[] = [];
-        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
-          const userTurn = crossSessionTurns[i];
-          const assistantTurn = crossSessionTurns[i + 1];
-          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-            pairs.push({
-              userMessage: userTurn.content,
-              maiaResponse: assistantTurn.content,
-              timestamp: userTurn.createdAt
-            });
-          }
-        }
-        if (pairs.length > 0) {
-          effectiveHistory = pairs.slice(-4); // Last 4 exchanges
-          console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
-        }
+  if (crossSessionTurns && crossSessionTurns.length > 0 && conversationHistory.length === 0) {
+    const pairs: any[] = [];
+    for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+      const userTurn = crossSessionTurns[i];
+      const assistantTurn = crossSessionTurns[i + 1];
+      if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+        pairs.push({
+          userMessage: userTurn.content,
+          maiaResponse: assistantTurn.content,
+          timestamp: userTurn.createdAt
+        });
       }
-    } catch (err) {
-      console.warn('⚠️ Could not load cross-session turns for CORE path:', err);
+    }
+    if (pairs.length > 0) {
+      effectiveHistory = pairs.slice(-4);
+      console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
     }
   }
 
@@ -2073,12 +2082,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       (meta as any)?.user?.id ??
       null;
 
-    let cognitiveProfile: CognitiveProfile | null = null;
+    // ⚡ LATENCY: Reuse cognitiveProfile from route if already fetched (avoid duplicate DB call)
+    let cognitiveProfile: CognitiveProfile | null = (meta as any).cognitiveProfile ?? null;
     let fieldSafety: FieldSafetyDecision | null = null;
 
     if (userId || sessionId) {
       try {
-        cognitiveProfile = await getCognitiveProfile(userId || sessionId);
+        if (!cognitiveProfile) {
+          cognitiveProfile = await getCognitiveProfile(userId || sessionId);
+        }
 
         if (cognitiveProfile) {
           fieldSafety = enforceFieldSafety({
