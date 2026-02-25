@@ -5350,13 +5350,16 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // TRIPLE-PROCESSING FIX: Check if this exact transcript was just processed
+    // Window extended to 30s to survive the full MAIA response cycle
+    // (LLM generation + TTS + audio playback can take 10-20s)
     const now = Date.now();
     if (lastProcessedTranscriptRef.current) {
       const { text: lastText, timestamp: lastTime } = lastProcessedTranscriptRef.current;
       const timeSinceLastProcess = now - lastTime;
 
-      // If same transcript within 2 seconds, it's a duplicate
-      if (lastText === t && timeSinceLastProcess < 2000) {
+      // If same transcript within 30 seconds, it's a duplicate
+      // (covers the full MAIA response cycle: LLM + TTS + playback + mic restart)
+      if (lastText === t && timeSinceLastProcess < 30_000) {
         console.warn(`⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), ignoring:`, t);
         return;
       }

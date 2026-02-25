@@ -521,8 +521,10 @@ export async function POST(req: NextRequest) {
   }
 
   console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary, ttsProvider: memberTtsProvider });
+  console.log(`🔊 [StreamConversation] Message: "${(message || '').substring(0, 80)}" (${conversationHistory?.length ?? 0} history msgs)`);
 
   if (!message?.trim()) {
+    console.warn('🔊 [StreamConversation] ⚠️ Empty message received! Raw value:', JSON.stringify(message));
     return new Response('Missing message', { status: 400 });
   }
 

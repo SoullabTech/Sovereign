@@ -711,13 +711,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // The onresult handler will check inputSuppressedRef and ignore transcripts
       }
 
-      isProcessingRef.current = false;
+      // Keep isProcessingRef TRUE while MAIA speaks — prevents mic restart
+      // from re-submitting the same transcript. Reset when MAIA stops (below).
     } else {
       // MAIA stopped speaking - clear suppression
       if (inputSuppressedRef.current) {
         console.log('🎤 [PWA DUPLEX] MAIA stopped - clearing suppression, transcripts active');
         inputSuppressedRef.current = false;
       }
+
+      // 🔑 CRITICAL: Reset processing flag NOW that MAIA has finished speaking.
+      // This is the safe moment — the full request→response cycle is complete.
+      isProcessingRef.current = false;
+
+      // 🔑 Clear accumulated transcript to prevent stale text from the previous
+      // turn being re-submitted when the mic restarts after MAIA's response.
+      accumulatedTranscript.current = '';
+
       // Track audio end for conversation-alive gate
       lastAudioEndAtRef.current = Date.now();
       if (micStateRef.current === 'PLAYING_TTS') {
@@ -727,6 +737,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
     }
   }, [isSpeaking]);
+
+  // 🔄 FALLBACK: Sync isProcessingRef from parent prop.
+  // Handles the case where MAIA chose silence (isSpeaking never went true)
+  // and the parent cleared isProcessing before ContinuousConversation could.
+  useEffect(() => {
+    if (!isProcessing && isProcessingRef.current) {
+      // Parent says processing is done but our ref is still true —
+      // this means the isSpeaking transition never happened (silence response).
+      // Safe to clear so mic can restart.
+      isProcessingRef.current = false;
+      accumulatedTranscript.current = '';
+    }
+  }, [isProcessing]);
 
   // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
   // ONLY when handsFreeActive is true AND user has spoken recently
@@ -828,15 +851,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     const normalizedTranscript = transcript.toLowerCase().trim();
     const lastSentNormalized = lastSentRef.current.toLowerCase().trim();
 
-    // Check 1: Exact match within last 2 seconds
-    if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 2000) {
-      console.log('🚫 [DEDUP] Blocked duplicate transcript:', transcript);
+    // Check 1: Exact match within last 30 seconds (survives full MAIA response cycle)
+    if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 30_000) {
+      console.log('🚫 [DEDUP] Blocked duplicate transcript (', now - lastSentTimeRef.current, 'ms ago):', transcript);
       accumulatedTranscript.current = ""; // Clear duplicate
+      isCallingProcessRef.current = false;
       return;
     }
 
-    // Check 2: Very similar transcript (>90% match) within last 1 second
-    if (lastSentNormalized && (now - lastSentTimeRef.current) < 1000) {
+    // Check 2: Very similar transcript (>90% match) within last 15 seconds
+    if (lastSentNormalized && (now - lastSentTimeRef.current) < 15_000) {
       const similarity = normalizedTranscript.length > 0
         ? normalizedTranscript.split(' ').filter(word => lastSentNormalized.includes(word)).length / normalizedTranscript.split(' ').length
         : 0;
@@ -898,10 +922,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // Reset the guard flag immediately
     isCallingProcessRef.current = false;
 
-    // Will restart when Maya finishes speaking
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 500);
+    // NOTE: isProcessingRef stays TRUE until MAIA stops speaking.
+    // The isSpeaking effect (below) resets it when MAIA finishes.
+    // This prevents re-submission of the same transcript during the
+    // entire MAIA response cycle (was previously 500ms, causing races).
+    //
+    // Fallback: if MAIA never starts speaking (e.g. silence decision),
+    // the parent's isProcessing prop going false will clear it via the
+    // sync effect.
   }, [onTranscript]);
 
   // 🔊 Track if audio loop is currently running to prevent duplicates

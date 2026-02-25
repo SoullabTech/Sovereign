@@ -199,10 +199,13 @@ export class ClaudeService {
   ): AsyncGenerator<{ type: 'sentence' | 'done'; text: string; index: number }> {
     const trimmedInput = (input || '').trim();
     if (!trimmedInput || trimmedInput.length === 0) {
+      console.warn('[ClaudeService] ⚠️ Empty input received in generateOracleResponseStreaming — returning fallback. Raw input:', JSON.stringify(input));
       yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
       yield { type: 'done', text: '', index: 1 };
       return;
     }
+
+    console.log(`[ClaudeService] Streaming response for: "${trimmedInput.substring(0, 60)}..." (${context.conversationHistory?.length ?? 0} history msgs)`);
 
     const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
     const messages: Anthropic.MessageParam[] = [];
