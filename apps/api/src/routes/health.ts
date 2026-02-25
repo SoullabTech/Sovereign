@@ -19,7 +19,7 @@ interface HealthStatus {
   uptime: number;
   checks: {
     database: { status: string; latency?: number; error?: string };
-    memory: { status: string; used: number; total: number; percentage: number };
+    memory: { status: string; used: number; total: number; percentage: number; rss: number };
   };
 }
 
@@ -53,12 +53,13 @@ async function checkDatabase(): Promise<{ status: string; latency?: number; erro
  * stays small at idle, producing misleading 90%+ readings.
  * heap_size_limit is the actual ceiling (set by --max-old-space-size).
  */
-function checkMemory(): { status: string; used: number; total: number; percentage: number } {
+function checkMemory(): { status: string; used: number; total: number; percentage: number; rss: number } {
   const mem = process.memoryUsage();
   const heapStats = v8.getHeapStatistics();
 
   const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
   const heapLimitMB = Math.round(heapStats.heap_size_limit / 1024 / 1024);
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
   const percentage = Math.round((mem.heapUsed / heapStats.heap_size_limit) * 100);
 
   let status: 'ok' | 'warning' | 'critical' = 'ok';
@@ -69,7 +70,8 @@ function checkMemory(): { status: string; used: number; total: number; percentag
     status,
     used: heapUsedMB,
     total: heapLimitMB,
-    percentage
+    percentage,
+    rss: rssMB
   };
 }
 
