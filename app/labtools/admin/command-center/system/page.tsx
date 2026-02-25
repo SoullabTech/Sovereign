@@ -118,7 +118,7 @@ function StatusBadge({ status, count }: { status: string; count: number }) {
   return (
     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border ${color}`}>
       <span className="text-xs font-medium capitalize">{status}</span>
-      <span className="text-xs opacity-75">{count}</span>
+      <span className="text-xs text-stone-400">{count}</span>
     </div>
   );
 }

@@ -331,6 +331,9 @@ beta-tester-email.md
 # Production backups
 backups/
 
+# Admin credentials (separate from runtime keys — never commit)
+.env.admin
+
 # Allow production deployment templates (but not actual secrets)
 !.env.docker.template
 !docker-compose.production.yml

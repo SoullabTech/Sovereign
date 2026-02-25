@@ -12,8 +12,13 @@ export default function EnterPage() {
     // Uses sessionStorage (cleared on app restart, survives page reloads)
     const onceKey = 'maia_root_redirect_once';
     if (sessionStorage.getItem(onceKey) === '1') {
-      console.warn('[ENTER PAGE] Redirect guard tripped — refusing to redirect again this session');
-      setDebugInfo('Redirect already performed this session. Staying on enter page.');
+      console.warn('[ENTER PAGE] Redirect guard tripped — routing to safe destination');
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        router.replace('/maia');
+      } else {
+        router.replace('/signin');
+      }
       return;
     }
     sessionStorage.setItem(onceKey, '1');

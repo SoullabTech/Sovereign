@@ -439,7 +439,7 @@ function SigninContent() {
         }
 
         if (data.member) {
-          storeSession(data.member);
+          storeSession(data.member, data.sessionToken);
           window.location.assign(`/maia?ts=${Date.now()}`);
         }
         return;
@@ -491,7 +491,7 @@ function SigninContent() {
         }
 
         if (data.member) {
-          storeSession(data.member);
+          storeSession(data.member, data.sessionToken);
           window.location.assign(`/maia?ts=${Date.now()}`);
         }
         return;
