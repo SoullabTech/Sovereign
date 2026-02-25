@@ -56,10 +56,10 @@ export class ClaudeService {
   constructor(config: ClaudeConfig) {
     this.client = new Anthropic({
       apiKey: config.apiKey,
-      timeout: 8000, // 8 second timeout to fit within Vercel's 10 second limit
+      timeout: 30000, // 30 second timeout - self-hosted, not Vercel-limited
     });
-    this.model = config.model || 'claude-haiku-4-5-20251001'; // Use faster Haiku model
-    this.maxTokens = config.maxTokens || 1500; // Increased to let MAIA speak fully (was 600 - cut words off)
+    this.model = config.model || 'claude-haiku-4-5-20251001';
+    this.maxTokens = config.maxTokens || 1500;
     this.temperature = config.temperature || 0.8;
   }
   
@@ -183,8 +183,10 @@ export class ClaudeService {
         soulMetadata
       };
     } catch (error) {
-      console.error('Claude service error:', error);
-      throw new Error('Failed to generate Oracle response');
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = (error as any)?.status || (error as any)?.code || 'unknown';
+      console.error(`🚨 [ClaudeService] Oracle response FAILED — model: ${this.model}, code: ${errCode}, error: ${errMsg}`);
+      throw new Error(`Claude oracle response failed (${errCode}): ${errMsg}`);
     }
   }
 
@@ -327,10 +329,11 @@ export class ClaudeService {
       yield { type: 'done', text: '', index: sentenceIndex };
 
     } catch (error) {
-      console.error('Claude streaming error:', error);
-      // Fallback to non-streaming on error
-      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
-      yield { type: 'done', text: '', index: 1 };
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = (error as any)?.status || (error as any)?.code || 'unknown';
+      console.error(`🚨 [ClaudeService] Streaming FAILED — model: ${this.model}, code: ${errCode}, error: ${errMsg}`);
+      // Re-throw so the voice route can handle the error visibly instead of silent fallback
+      throw new Error(`Claude voice streaming failed (${errCode}): ${errMsg}`);
     }
   }
 
@@ -1098,9 +1101,9 @@ export function initializeClaudeService(apiKey: string): ClaudeService {
   if (!claudeService) {
     claudeService = new ClaudeService({
       apiKey,
-      model: 'claude-haiku-4-5-20251001', // Use faster Haiku model
-      temperature: 0.8,
-      maxTokens: 500
+      model: process.env.CLAUDE_VOICE_MODEL || 'claude-sonnet-4-6', // MAIA's voice — Sonnet for reliable articulation
+      temperature: 0.65,
+      maxTokens: 1500
     });
   }
   return claudeService;
