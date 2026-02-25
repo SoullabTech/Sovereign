@@ -25,9 +25,9 @@ const config: CapacitorConfig = {
   // Dev mode: use local dev server for hot reload
   server: BUILD_MODE === 'dev' ? devServer : undefined,
 
-  // Enable WebView debugging for Safari Web Inspector (even in TestFlight)
+  // Enable WebView debugging only in dev mode — never in beta/prod builds
   ios: {
-    webContentsDebuggingEnabled: true,
+    webContentsDebuggingEnabled: BUILD_MODE === 'dev',
   },
   // Custom iOS plugins that need explicit registration
   // AudioSessionManager is our custom plugin for managing iOS audio session state

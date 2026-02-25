@@ -36,9 +36,28 @@ if [ ! -d "out" ]; then
     exit 1
 fi
 
+# Replace root index.html with an instant JS redirect to /enter
+# This avoids the SoullabLanding animation flash on Capacitor startup
+echo "🔀 Patching root index.html → /enter redirect for iOS..."
+cat > out/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>html,body{margin:0;padding:0;background:#0b0f1c;}</style>
+    <script>window.location.replace('/enter');</script>
+  </head>
+  <body></body>
+</html>
+HTMLEOF
+
 # Revert patches after successful build
 ./scripts/capacitor-patch-routes.sh revert
 trap - EXIT
+
+# Remove stale build directory BEFORE cap sync — pod install fails if it exists
+rm -rf ios/App/build
 
 # Sync Capacitor
 echo "🔄 Syncing Capacitor to iOS..."

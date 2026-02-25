@@ -357,6 +357,7 @@
 			baseConfigurationReference = 147395BC46B468973C64DFCA /* Pods-App.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 739;
 				DEVELOPMENT_TEAM = ZVK2X646Z2;
@@ -378,6 +379,7 @@
 			baseConfigurationReference = C61E77B2422257CC0F2BC081 /* Pods-App.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 739;
 				DEVELOPMENT_TEAM = ZVK2X646Z2;
