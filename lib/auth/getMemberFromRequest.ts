@@ -21,14 +21,26 @@ export async function getMemberIdFromRequest(request: NextRequest): Promise<stri
     }
   }
 
-  // 2. Check memberId cookie (web apps)
+  // 2. Check maia_member_id cookie (web apps — set by setAccessCookies)
   const cookieStore = await cookies();
-  const cookieMemberId = cookieStore.get('memberId')?.value;
+  const cookieMemberId = cookieStore.get('maia_member_id')?.value;
   if (cookieMemberId) {
     // Validate the member exists
     const result = await query('SELECT id FROM members WHERE id = $1', [cookieMemberId]);
     if (result.rows.length > 0) {
       return cookieMemberId;
+    }
+  }
+
+  // 3. Fall back to maia_session cookie → look up member from session table
+  const sessionToken = cookieStore.get('maia_session')?.value;
+  if (sessionToken) {
+    const result = await query(
+      `SELECT member_id FROM auth_sessions WHERE session_token = $1 AND expires_at > NOW() AND revoked = FALSE`,
+      [sessionToken]
+    );
+    if (result.rows.length > 0) {
+      return result.rows[0].member_id;
     }
   }
 

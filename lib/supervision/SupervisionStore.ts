@@ -300,11 +300,15 @@ export async function getRecentTranscript(
   practitionerId?: string
 ): Promise<TranscriptSegment[]> {
   // SECURITY: Select all columns including encrypted for decrypt
+  // Note: lastMs is an epoch timestamp (ms) — filter by created_at, not start_ms.
+  // start_ms is a recording-relative offset (small integer); comparing it to epoch
+  // timestamps would overflow PostgreSQL INTEGER and return wrong results.
   const result = await query<TranscriptSegmentRow>(`
     SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
            text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
     FROM supervision_transcript_segments
-    WHERE session_id = $1 AND is_final = TRUE AND start_ms >= $2
+    WHERE session_id = $1 AND is_final = TRUE
+      AND created_at >= to_timestamp($2::double precision / 1000)
     ORDER BY start_ms ASC
   `, [sessionId, lastMs]);
 
