@@ -203,26 +203,64 @@ export default function AspectDetailClient() {
     );
   }
 
-  if (!aspectData.synthesis) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0d1b2e' }}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <p className="text-amber-200/70 mb-4">
-            Archetypal interpretation not yet available for this aspect
-          </p>
-          <Link href="/astrology" className="text-amber-400 hover:text-amber-300">
-            ← Back to chart overview
-          </Link>
-        </motion.div>
-      </div>
-    );
-  }
+  const { planet1, planet2, aspectType } = aspectData;
 
-  const { planet1, planet2, aspectType, synthesis } = aspectData;
+  // Generate fallback interpretation for aspects not in the library
+  const ASPECT_DYNAMICS: Record<AspectType, { label: string; essence: string; coreQuestion: string; shadow: string; gift: string }> = {
+    conjunction: {
+      label: 'fusion',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} merge into a unified force in your psyche. These two energies don't separate — they operate as one inseparable whole, amplifying and blending each other's qualities in everything you do.`,
+      coreQuestion: `Where does this fused energy want to express itself most fully in your life?`,
+      shadow: `The energies may reinforce each other's shadow — difficulty seeing where one ends and the other begins, leading to overwhelm or one-sidedness.`,
+      gift: `When integrated, this conjunction creates a uniquely powerful synthesis — a signature gift that combines both planetary qualities in a way only you can express.`,
+    },
+    opposition: {
+      label: 'polarity',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} stand across from each other in your chart, creating awareness through contrast. You see yourself most clearly when this dynamic is in full play — each side revealing what the other cannot see alone.`,
+      coreQuestion: `What becomes possible when you hold both sides of this polarity without collapsing into either?`,
+      shadow: `Oscillating between extremes, projecting one side onto others, or experiencing this as an irresolvable inner conflict.`,
+      gift: `The capacity to hold apparent opposites in creative tension — a rare form of psychological wholeness that others may seek your counsel for.`,
+    },
+    trine: {
+      label: 'harmony',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} flow together with natural ease. This is a gift aspect — energy moves between these two principles without friction, creating areas of natural talent and effortless expression.`,
+      coreQuestion: `Are you consciously using what comes naturally here, or taking this gift for granted?`,
+      shadow: `Natural gifts can be undervalued or overlooked. Ease can breed complacency, and what flows effortlessly may never be fully developed.`,
+      gift: `A genuine natural talent where these two energies support and amplify each other without effort — a reliable source of flow and creative expression.`,
+    },
+    square: {
+      label: 'tension',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} create productive friction in your chart. Squares demand integration — they are the aspects of growth through challenge, where two seemingly incompatible energies must learn to work together.`,
+      coreQuestion: `What strength have you built from navigating this ongoing tension?`,
+      shadow: `Experiencing this as an irresolvable conflict, exhaustion from constant inner friction, or expressing one side at the expense of the other.`,
+      gift: `Hard-won resilience and capability. Those with strong squares often develop precisely the qualities that others find most admirable — forged in the friction.`,
+    },
+    sextile: {
+      label: 'opportunity',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} offer supportive opportunities for growth. Unlike a trine, this ease requires some conscious activation — the energy is available and willing, but needs your intention to fully flower.`,
+      coreQuestion: `Where are you leaving this supportive energy untapped?`,
+      shadow: `The gentle nature of sextiles means they're often overlooked — potential that never quite gets activated because it doesn't demand attention.`,
+      gift: `When consciously engaged, this becomes a reliable source of creative support and skillful action — a door that opens easily when you choose to walk through it.`,
+    },
+    quincunx: {
+      label: 'adjustment',
+      essence: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} and ${planet2.charAt(0).toUpperCase() + planet2.slice(1)} connect energies that don't naturally understand each other. The quincunx requires constant creative adjustment — finding ways to honor both principles even though they operate in fundamentally different registers.`,
+      coreQuestion: `What creative synthesis have you discovered in navigating these mismatched energies?`,
+      shadow: `Chronic tension from energies that don't speak the same language, leading to awkward compromises or a nagging sense that something is always slightly off.`,
+      gift: `Unusual flexibility and creative problem-solving — the ability to bridge very different ways of being that others might never think to combine.`,
+    },
+  };
+
+  const synthesis = aspectData.synthesis || (() => {
+    const dynamic = ASPECT_DYNAMICS[aspectType] || ASPECT_DYNAMICS.conjunction;
+    return {
+      essence: dynamic.essence,
+      coreQuestion: dynamic.coreQuestion,
+      shadowExpression: dynamic.shadow,
+      giftExpression: dynamic.gift,
+      elementalDynamic: `${planet1.charAt(0).toUpperCase() + planet1.slice(1)} ${dynamic.label} ${planet2.charAt(0).toUpperCase() + planet2.slice(1)}`,
+    };
+  })();
   const style = ASPECT_STYLES[aspectType] || ASPECT_STYLES.conjunction;
 
   // Capitalize planet names
