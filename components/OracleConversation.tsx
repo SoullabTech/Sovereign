@@ -8098,22 +8098,6 @@ I'm not sure what I'm feeling yet.`;
 
 
 
-      {/* Bottom Right Lab Tools Button - Contains journal access */}
-      <button
-        onClick={() => {
-          console.log('🔬 Lab button clicked!');
-          setShowLabDrawer(true);
-        }}
-        className="fixed bottom-6 right-6 z-below-nav p-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 shadow-2xl shadow-amber-500/50 hover:scale-110 active:scale-95 border-2 border-amber-400/50"
-        style={{
-          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-          minWidth: '70px',
-          minHeight: '70px',
-        }}
-        title="Open Lab Tools - Includes Journal Access"
-      >
-        <FlaskConical className="w-8 h-8 text-black drop-shadow-lg" />
-      </button>
 
       {/* Voice Selection Menu - Popup from bottom */}
       {showVoiceMenu && (
