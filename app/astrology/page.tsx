@@ -601,7 +601,7 @@ export default function AstrologyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
         {/* Soft spiral unfurling */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
@@ -627,7 +627,7 @@ export default function AstrologyPage() {
 
   if (!chartData || !hasBirthData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
         {/* Back to MAIA */}
         <Link
           href="/maia"
@@ -673,7 +673,7 @@ export default function AstrologyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
       {/* Fixed Navigation Header */}
       <div className="fixed top-4 left-4 z-50">
         <Link
