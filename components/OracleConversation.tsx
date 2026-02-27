@@ -62,6 +62,7 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import useSession from '@/lib/hooks/useSession';
 
 /**
  * Detect Safari PWA environment for PWA-specific voice handling
@@ -725,6 +726,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Member's preferred name for MAIA (bonding affordance)
   const assistantName = useAssistantName();
+  // Admin-only diagnostics: SourceHalo, StateCard, level badges
+  const { isAdmin: showDiagnostics } = useSession();
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -7721,8 +7724,8 @@ I'm not sure what I'm feeling yet.`;
                           <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                             {message.role === 'user' ? (userName || 'You') : assistantName}
                           </div>
-                          {/* 🚪 AIN: Knowledge Gate source well indicator (suppressed in Sanctuary) */}
-                          {message.role === 'oracle' && !isSanctuary && message.ainState && (
+                          {/* 🚪 AIN: Knowledge Gate source well indicator (admin-only, suppressed in Sanctuary) */}
+                          {showDiagnostics && message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
                               sourceMix={message.ainState.sourceMix}
                               awarenessLevel={message.ainState.awarenessLevel}
@@ -7759,11 +7762,11 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
-                      {/* 🌀 STATE CARD: Consciousness state reading (mode-aware) */}
+                      {/* 🌀 STATE CARD: Consciousness state reading (admin-only diagnostic) */}
                       {/* Care = full (element + kairos + movement + practice) */}
                       {/* Talk = light (kairos + movement only — phenomenological, not prescriptive) */}
                       {/* Scribe = structural (full data, framed as session metadata) */}
-                      {message.role === 'oracle' && message.stateVector && (
+                      {showDiagnostics && message.role === 'oracle' && message.stateVector && (
                         <div className="mt-3">
                           <StateCard
                             stateVector={message.stateVector}
