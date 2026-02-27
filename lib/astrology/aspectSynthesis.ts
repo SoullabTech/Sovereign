@@ -129,6 +129,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     bodyAwareness: "Feel the pull between solar plexus (will, identity) and chest/belly (emotion, need). What happens if you let both speak?"
   },
 
+  'sun-moon-trine': {
+    essence: "Essence and emotional life flow together in natural rhythm—who you are and what you feel are in easy conversation. There's a quality of inner coherence: your instincts generally align with your direction, and vulnerability tends to emerge naturally in the right moments rather than being managed or suppressed. The invitation is to honor this gift by not taking it for granted.",
+    coreQuestion: "Am I using the natural wholeness I carry, or coasting on it?",
+    elementalDynamic: "Fire and Water in harmonious dialogue",
+    shadowExpression: "When unconscious: the ease of inner coherence can lead to complacency, avoiding growth that requires friction, or failing to develop the harder wisdom that comes from inner conflict",
+    giftExpression: "When integrated: natural authenticity and emotional intelligence, the capacity to be both expressive and feeling without one overwhelming the other, a wholeness that others find grounding",
+    practicePrompt: "Where in your life are you genuinely aligned—where what you want and what you feel actually agree? What becomes possible from that alignment?",
+    bodyAwareness: "There's often a quality of ease in the chest—a sense that your center and your feeling body are on speaking terms. Notice this presence when it's available."
+  },
+
+  'sun-moon-square': {
+    essence: "The productive war between who you're becoming and what you need. Will and feeling don't naturally agree here—identity pulls toward expression while the emotional body wants something different. This friction is the forge: you learn yourself most deeply by navigating the ongoing tension between essence and instinct, between what you want to become and what you need to feel safe.",
+    coreQuestion: "What do I discover about myself in the space between my will and my feelings?",
+    elementalDynamic: "Fire and Water in productive friction",
+    shadowExpression: "When unconscious: suppressing emotional needs in service of ego goals, or flooding identity with feeling, difficulty knowing where self ends and emotion begins",
+    giftExpression: "When integrated: deep self-knowledge earned through inner negotiation, the capacity to honor both aspiration and need, psychological complexity that understands the inner life",
+    practicePrompt: "Notice when your drive and your feelings pull in different directions. Instead of choosing one, can you stay present to both? What does the tension reveal?",
+    bodyAwareness: "Notice the distinct sensations of will (often solar plexus or chest expansion) versus emotional need (often heart, throat, or belly). Can you feel them as separate channels rather than competing forces?"
+  },
+
+  'sun-moon-sextile': {
+    essence: "A gentle opening between essence and feeling—will and emotion are available to each other, though the conversation requires some conscious effort to develop. There's latent harmony here, a natural capacity for authenticity and emotional intelligence that rewards attention and cultivation.",
+    coreQuestion: "What becomes available when I actively bridge my drive and my feeling life?",
+    elementalDynamic: "Fire and Water in offered harmony",
+    shadowExpression: "When unconscious: this harmonious potential goes undeveloped because it doesn't demand attention—a quiet gift that never quite blooms",
+    giftExpression: "When integrated: genuine emotional-expressive coherence, the ability to be both heartfelt and directed, will that knows how to serve feeling and feeling that clarifies will",
+    practicePrompt: "Where have your emotional responses actually guided you well? How can you develop a more conscious relationship between what you feel and what you choose?",
+    bodyAwareness: "Notice the gentle resonance when will and feeling happen to align. This subtle coherence is available more often than it seems—what helps you access it?"
+  },
+
   'sun-mars-conjunction': {
     essence: "Pure embodied will. Action and identity fuse here—there's a quality of moving before thinking, of fire that knows what it's here to ignite. This can create the warrior, the initiator, powerful direct presence. It can also mean every impulse feels like it requires immediate expression. The spectrum runs from courageous leadership to impulsive combustion.",
     coreQuestion: "How do I wield my fire without burning the field?",
@@ -341,6 +371,26 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: emotional maturity that holds space for what's hard, the capacity to metabolize feeling slowly and thoroughly, presence that others trust with their pain",
     practicePrompt: "What feelings have accumulated that might benefit from release rather than further integration? What would emotional lightness feel like without bypassing depth?",
     bodyAwareness: "Notice where emotional weight settles in the body—often chest, shoulders, or belly. What would happen if you let some of it lift while keeping your ground?"
+  },
+
+  'moon-saturn-trine': {
+    essence: "Emotional depth in easy conversation with structure and discipline. The feelings you carry have been weathered and refined—there's a natural maturity to how you process experience, a sense that emotion can serve as wisdom rather than chaos. This doesn't mean coldness; it means the capacity to be fully present to feeling while remaining grounded.",
+    coreQuestion: "What becomes possible when emotion and wisdom flow together naturally?",
+    elementalDynamic: "Water emotion in harmonious rhythm with Earth endurance",
+    shadowExpression: "When unconscious: taking this gift for granted—emotional maturity that never quite deepens because it comes too easily, a subtle bypassing of raw feeling in favor of the composed version",
+    giftExpression: "When integrated: reliable emotional wisdom that others seek out, the capacity to stay present through difficulty without drama, feelings that age into insight",
+    practicePrompt: "Notice where you're naturally emotionally steady. Is this genuine maturity or a habit of composure? What would it be like to be both grounded and raw?",
+    bodyAwareness: "There's often a solid, rooted quality when emotions arise. Notice what it feels like to be emotionally moved without losing your footing."
+  },
+
+  'moon-saturn-opposition': {
+    essence: "A mirror between feeling and form, between inner life and outer structure. Authority and emotion stand across from each other—at times the disciplined mind overrides the feeling body, at times deep feeling rebels against imposed structure. The path is negotiation: learning that neither feeling nor form has to win.",
+    coreQuestion: "Where do structure and feeling support each other rather than compete?",
+    elementalDynamic: "Water responding to Earth across the divide",
+    shadowExpression: "When unconscious: oscillating between emotional flooding and rigid control, projecting either coldness or neediness onto others, authority figures triggering deep emotional responses",
+    giftExpression: "When integrated: understanding that feeling and discipline each have their season, the capacity to be emotionally present with others while maintaining your own boundaries",
+    practicePrompt: "Where have feelings and structure been at war in you? What would a truce look like—not suppression, but genuine cooperation?",
+    bodyAwareness: "Notice what happens in your body when authority and emotion arise together. Can you feel both the structure and the flow without having to resolve the tension immediately?"
   },
 
   'moon-pluto-conjunction': {
@@ -659,6 +709,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     bodyAwareness: "There's often a gravitational pull in the belly or pelvis when this energy activates. Notice what happens when you feel it without acting on it—can you be with intensity without merging?"
   },
 
+  'venus-pluto-square': {
+    essence: "Desire pressed up against transformation's demand. Relationships carry a quality of life-or-death intensity—love isn't casual, attraction isn't surface, and whatever you value tends to be pulled into Pluto's crucible whether you consent or not. This aspect asks: can you let love transform you without it destroying you? The friction is productive, but it requires willingness to face what hides beneath longing.",
+    coreQuestion: "What would love look like if it didn't require someone to be broken down?",
+    elementalDynamic: "Water heart meeting volcanic pressure",
+    shadowExpression: "When unconscious: compulsive attraction to what harms, using love as a battlefield for power, intensity mistaken for depth, possessiveness or jealousy that erodes what you love",
+    giftExpression: "When integrated: love as genuine alchemical encounter, the capacity to hold intensity without collapsing, relationships as honest mirrors for transformation",
+    practicePrompt: "Where does love trigger your survival instincts? What would it feel like to want deeply without needing to control the outcome?",
+    bodyAwareness: "There's often a tightening sensation when attraction and threat arise together. Notice this in your gut or chest—what does it protect? What would ease feel like here?"
+  },
+
+  'venus-pluto-opposition': {
+    essence: "The mirror between what you love and what transforms you. Others may become agents of profound change—relationships carry destiny, and what you're drawn to tends to be exactly what challenges your deepest patterns. The task is remaining present through the transformation rather than fleeing to safer terrain or becoming consumed.",
+    coreQuestion: "Can I see who's in front of me without projecting my depths onto them?",
+    elementalDynamic: "Water meeting volcanic power across the axis",
+    shadowExpression: "When unconscious: projecting power or transformational energy onto partners, experiencing love as something that happens to you rather than with you, choosing relationships that repeat cycles of intensity and loss",
+    giftExpression: "When integrated: relationships as genuine co-evolution, the capacity to be changed by love without losing yourself, seeing others clearly even through the intensity",
+    practicePrompt: "Who has changed you most through love? What did those encounters reveal about your own depths—not theirs?",
+    bodyAwareness: "Notice the gravitational quality of deep attraction—where does it pull in your body? Practice staying present there without moving toward or away."
+  },
+
+  'venus-pluto-trine': {
+    essence: "Depth and desire flow together naturally. There's an innate capacity for intimacy that reaches below the surface—genuine connection, transformational love, and the ability to hold others through their darkness without flinching. This gift may not feel special because it comes so naturally; the invitation is to consciously develop what flows effortlessly.",
+    coreQuestion: "Are you using the depth you're capable of, or skating along the surface where it's safer?",
+    elementalDynamic: "Water and volcanic power in natural harmony",
+    shadowExpression: "When unconscious: taking profound relational capacity for granted, using depth as currency rather than offering, withdrawing into solitary intensity because connection requires less",
+    giftExpression: "When integrated: a rare capacity for genuine intimate transformation, love that includes the shadow, the ability to accompany others through their most difficult passages",
+    practicePrompt: "Where are you in shallow water when you have the capacity for depth? What would it mean to bring your full relational intensity to bear here?",
+    bodyAwareness: "Notice the pull toward depth when you're in connection. There's often a physical sense of recognition—a resonance in chest or belly. Trust that as a reliable signal."
+  },
+
   'venus-uranus-square': {
     essence: "Friction between the heart's desire for connection and the soul's need for freedom. There's often a craving for intimacy that simultaneously resists constraint—wanting closeness but needing space to breathe, to change, to become. This isn't commitment-phobia but a genuine need for relationships that honor evolution over expectation. The tension can create breakthrough or breakup.",
     coreQuestion: "Can I commit without losing my wings?",
@@ -731,6 +811,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: endurance that serves long-term goals, action refined by patience, the ability to push through resistance without burning out, mastery earned through time",
     practicePrompt: "Where do you feel blocked in your drive? Is the obstacle external or internal? What would patient assertion look like rather than frustrated force?",
     bodyAwareness: "Notice where frustration accumulates—often shoulders, jaw, or lower back. What happens if you breathe into the resistance rather than fighting it?"
+  },
+
+  'mars-saturn-conjunction': {
+    essence: "Will and endurance fused into a single force. Action here doesn't rush—it builds. There's a quality of patient power, of driving toward goals with methodical discipline rather than impulsive heat. The warrior and the elder occupy the same body. This can create formidable capacity and sustained achievement, and it can also mean chronic suppression of spontaneous desire in service of long-range goals.",
+    coreQuestion: "What can I build when my fire learns patience?",
+    elementalDynamic: "Fire drive contained and shaped by Earth endurance",
+    shadowExpression: "When unconscious: repressed anger accumulating into rigidity, perfectionism that kills momentum, effort as punishment, difficulty knowing when to rest",
+    giftExpression: "When integrated: sustained power that outlasts obstacles, will that knows how to pace itself, mastery born through consistent effort over time",
+    practicePrompt: "Where has patience amplified your power? Where has discipline become its own prison? What's the difference between productive perseverance and exhausting control?",
+    bodyAwareness: "Notice where tension and drive live together in your body—often in the lower back, jaw, or core. What happens when you breathe into your own endurance rather than fighting it?"
+  },
+
+  'mars-saturn-trine': {
+    essence: "Discipline and drive in natural conversation—effort flows with a quality of sustainable strength. There's an instinct for knowing when to push and when to consolidate, a natural pacing that allows for achievement without burning out. The work is taking this gift seriously and not letting ease breed complacency.",
+    coreQuestion: "What would you attempt if you trusted your own endurance?",
+    elementalDynamic: "Fire and Earth in rhythmic partnership",
+    shadowExpression: "When unconscious: using reliability as a reason not to stretch, taking your own resilience for granted, effort that never reaches its edge because safety feels like virtue",
+    giftExpression: "When integrated: consistent, sustainable power in service of meaningful work, ability to persist through difficulty without drama, achievement that comes from disciplined application of genuine drive",
+    practicePrompt: "What project deserves your sustained effort right now? What would you build if you knew you had the endurance for it?",
+    bodyAwareness: "There's often a quality of solidity when you move from this place—a sense of being in your own body's strength. Notice how it feels to act from endurance rather than urgency."
+  },
+
+  'mars-saturn-opposition': {
+    essence: "Action and constraint in dialogue across the axis. At times drive pushes hard and structure resists; at times structure disciplines what would otherwise scatter. The work is learning that these forces need each other—that will without form exhausts itself, and form without will calcifies. They are arguing partners who make each other stronger.",
+    coreQuestion: "What becomes possible when drive and discipline stop fighting and start collaborating?",
+    elementalDynamic: "Fire desire and Earth caution across the horizon",
+    shadowExpression: "When unconscious: chronic frustration with external authority that mirrors inner suppression, alternating between impulsive action and paralyzed restraint, blaming limits for your own reluctance",
+    giftExpression: "When integrated: understanding the rhythm of effort and rest, knowing when to assert and when to consolidate, the wisdom that comes from repeatedly navigating this tension",
+    practicePrompt: "Where have limits actually protected your energy? Where have they genuinely held you back? How do you tell the difference from the inside?",
+    bodyAwareness: "Notice the physical sensations of wanting to act and feeling held back. Can you be present to both without immediately resolving the tension?"
   },
 
   'mars-pluto-conjunction': {

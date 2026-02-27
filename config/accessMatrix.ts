@@ -164,7 +164,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
   { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
   { exact: '/astrology/vedic', minTier: 'personal', notes: 'Vedic astrology' },
-  { prefix: '/astrology/aspects/', minTier: 'personal', notes: 'Aspect details' },
+  { prefix: '/astrology/aspects/', public: true, notes: 'Aspect detail pages - public (chart page is public, aspects extend it)' },
   { prefix: '/astrology/pathways/', minTier: 'personal', notes: 'Pathways' },
   { exact: '/astrology/synastry', minTier: 'personal', notes: 'Synastry' },
   { exact: '/astrology/synastry/saved', minTier: 'personal', notes: 'Saved synastry' },
