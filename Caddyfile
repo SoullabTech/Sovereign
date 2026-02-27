@@ -221,8 +221,9 @@ soullab.life {
         X-Content-Type-Options "nosniff"
         # Referrer: send nothing cross-origin (privacy + SSRF reduction)
         Referrer-Policy "no-referrer"
-        # Disable browser feature access (baseline restriction)
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        # Allow mic + camera on soullab.life (MAIA voice + Session Room recording)
+        # Other features remain restricted. Geolocation stays denied — not used.
+        Permissions-Policy "microphone=(self), camera=(self), geolocation=()"
         # X-XSS-Protection intentionally omitted — deprecated, can amplify XSS in legacy IE
         # Remove server header
         -Server

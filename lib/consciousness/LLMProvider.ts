@@ -105,10 +105,16 @@ export class MultiLLMProvider {
     level: ConsciousnessLevel;
     forceClaude?: boolean;
     forceOllama?: boolean;
+    maxTokensOverride?: number;
   }): Promise<LLMResponse> {
 
-    const { systemPrompt, userInput, level, forceClaude, forceOllama } = params;
-    const config = LEVEL_LLM_CONFIG[level];
+    const { systemPrompt, userInput, level, forceClaude, forceOllama, maxTokensOverride } = params;
+    const baseConfig = LEVEL_LLM_CONFIG[level];
+    // Route-computed maxTokens wins over level default (MAIA-PAI depth scaling)
+    const config = maxTokensOverride
+      ? { ...baseConfig, maxTokens: maxTokensOverride }
+      : baseConfig;
+    console.info(`[oracle] effective maxTokens: ${config.maxTokens} (override=${maxTokensOverride ?? 'none'} level=${level})`);
     const startTime = Date.now();
 
     // Log model selection for testing

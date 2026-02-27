@@ -381,6 +381,7 @@ export async function POST(request: NextRequest) {
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
     const { message, userId, sessionId, sanctuary } = parsed;
+    const t0 = Date.now();
     // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
     const isSanctuary = sanctuary === true;
 
@@ -439,78 +440,71 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
-    // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
-    const spiralState = await loadSpiralState(userId);
-
-    // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
-    const [systemVoice, memberVoice] = await Promise.all([
-      getSystemVoiceProfile(),
-      getMemberVoicePreferences(userId),
+    // PARALLEL: spiral state, voice prefs, cognitive profile, assistant name — all independent
+    const [
+      spiralState,
+      [systemVoice, memberVoice],
+      cognitiveProfileResult,
+      assistantNameResult,
+    ] = await Promise.all([
+      loadSpiralState(userId).catch((e: unknown) => { console.warn('[Oracle] Spiral state load failed:', e); return null; }),
+      Promise.all([getSystemVoiceProfile(), getMemberVoicePreferences(userId)]),
+      getCognitiveProfile(userId).catch((e: unknown) => { console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', e); return null; }),
+      query(`SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`, [userId])
+        .catch((e: unknown) => { console.warn('⚠️ [Oracle] Could not fetch preferred assistant name:', e); return null; }),
     ]);
+
     const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
-    let cognitiveProfile: CognitiveProfile | null = null;
+    let cognitiveProfile: CognitiveProfile | null = cognitiveProfileResult;
     let fieldSafety: FieldSafetyDecision | null = null;
 
-    try {
-      cognitiveProfile = await getCognitiveProfile(userId);
+    if (cognitiveProfile) {
+      fieldSafety = enforceFieldSafety({
+        cognitiveProfile,
+        element: body.element,
+        userName: serverUserName, // Use server-derived name, not body.userName
+        context: 'oracle',
+      });
 
-      if (cognitiveProfile) {
-        fieldSafety = enforceFieldSafety({
-          cognitiveProfile,
-          element: body.element,
-          userName: serverUserName, // Use server-derived name, not body.userName
-          context: 'oracle',
-        });
-
-        // If field work is not safe, return mythic boundary message immediately
-        if (!fieldSafety.allowed) {
-          console.log(
-            `🛡️  [Field Safety - Oracle] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
-              `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
-          );
-
-          return NextResponse.json(
-            {
-              success: true,
-              response: fieldSafety.message,
-              elementalNote: fieldSafety.elementalNote,
-              metadata: {
-                fieldWorkSafe: false,
-                fieldRouting: fieldSafety.fieldRouting,
-                cognitiveAltitude: cognitiveProfile.rollingAverage,
-                stability: cognitiveProfile.stability,
-                boundaryType: 'field-safety',
-              },
-            },
-            { status: 200 }, // Not an error - expected behavior
-          );
-        }
-
+      // If field work is not safe, return mythic boundary message immediately
+      if (!fieldSafety.allowed) {
         console.log(
-          `🛡️  [Field Safety - Oracle] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
-            `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
+          `🛡️  [Field Safety - Oracle] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+            `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
+        );
+
+        return NextResponse.json(
+          {
+            success: true,
+            response: fieldSafety.message,
+            elementalNote: fieldSafety.elementalNote,
+            metadata: {
+              fieldWorkSafe: false,
+              fieldRouting: fieldSafety.fieldRouting,
+              cognitiveAltitude: cognitiveProfile.rollingAverage,
+              stability: cognitiveProfile.stability,
+              boundaryType: 'field-safety',
+            },
+          },
+          { status: 200 }, // Not an error - expected behavior
         );
       }
-    } catch (err) {
-      console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', err);
-      // Graceful degradation - continue without field safety if profile fetch fails
+
+      console.log(
+        `🛡️  [Field Safety - Oracle] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+          `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
+      );
     }
 
-    // Load member's preferred assistant name (what they call MAIA)
     let preferredAssistantName = 'MAIA';
-    try {
-      const settingsResult = await query(
-        `SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`,
-        [userId]
-      );
-      if (settingsResult.rows.length > 0 && settingsResult.rows[0].preferred_assistant_name) {
-        preferredAssistantName = settingsResult.rows[0].preferred_assistant_name;
-      }
-    } catch (err) {
-      console.warn('⚠️ [Oracle] Could not fetch preferred assistant name:', err);
+    if (assistantNameResult?.rows?.length > 0 && assistantNameResult.rows[0].preferred_assistant_name) {
+      preferredAssistantName = assistantNameResult.rows[0].preferred_assistant_name;
     }
+
+    const tAfterEarlyDb = Date.now();
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'early_db', ms: tAfterEarlyDb - t0 }));
 
     // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
     const processingProfile = ORACLE_PROFILE;
@@ -585,79 +579,74 @@ export async function POST(request: NextRequest) {
       panconsciousField.axisMundi.currentCenteringState
     );
 
-    // 🏛️ MEMORY PALACE RETRIEVAL: Get all 5 memory layers + evolution status
-    let memoryContext;
-    try {
-      memoryContext = await memoryPalaceOrchestrator.retrieveMemoryContext(
-        userId,
-        message,
-        conversationHistory
-      );
-    } catch (memoryError) {
-      console.warn('⚠️ [Memory Palace] Retrieval failed (non-critical):', memoryError);
-      memoryContext = null;
-    }
-
-    // 💫 ANAMNESIS: Load soul-level recognition
-    let relationshipEssence: RelationshipEssence | null = null;
-    let anamnesisPrompt: string | null = null;
-    try {
-      relationshipEssence = await loadRelationshipEssence(userId);
-      if (relationshipEssence) {
-        const anamnesis = getRelationshipAnamnesis();
-        anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
-        console.log('💫 [Anamnesis] Soul recognition activated:', {
-          encounterCount: relationshipEssence.encounterCount,
-          morphicResonance: relationshipEssence.morphicResonance,
-          presenceQuality: relationshipEssence.presenceQuality
-        });
-      } else {
-        console.log('💫 [Anamnesis] First encounter - essence will be captured');
-      }
-    } catch (anamnesisError) {
-      console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
-    }
-
-    // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
-    let astrologyContext: AstrologyContext | null = null;
-    try {
-      astrologyContext = await getAstrologyContextForUser(userId);
-      if (astrologyContext?.hasBirthData) {
-        console.log('🌟 [Astrology] Birth chart loaded:', {
-          sun: astrologyContext.birthChart?.sun?.sign,
-          moon: astrologyContext.birthChart?.moon?.sign,
-          rising: astrologyContext.birthChart?.ascendant?.sign,
-          retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
-        });
-      } else {
-        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
-      }
-    } catch (astrologyError) {
-      console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
-    }
-
-    // PATTERN OFFERING (Wire 2): Check for eligible pattern to offer
-    let patternOffer: Awaited<ReturnType<typeof getPatternOffer>> = null;
-    try {
-      patternOffer = await getPatternOffer({
+    // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer — all independent
+    const [
+      memoryContextResult,
+      relationshipEssenceResult,
+      astrologyContextResult,
+      patternOfferResult,
+    ] = await Promise.allSettled([
+      memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
+      loadRelationshipEssence(userId),
+      getAstrologyContextForUser(userId),
+      getPatternOffer({
         memberId: userId,
         sessionId,
         conversationDepth,
         element: spiralogicCell.element,
         distressIntensity: distressSignal?.intensity ?? null,
-      });
+      }),
+    ]);
 
+    const memoryContext = memoryContextResult.status === 'fulfilled'
+      ? memoryContextResult.value
+      : (console.warn('⚠️ [Memory Palace] Retrieval failed (non-critical):', (memoryContextResult as PromiseRejectedResult).reason), null);
+
+    const relationshipEssence: RelationshipEssence | null = relationshipEssenceResult.status === 'fulfilled'
+      ? relationshipEssenceResult.value
+      : (console.warn('⚠️ [Anamnesis] Load failed (non-critical):', (relationshipEssenceResult as PromiseRejectedResult).reason), null);
+
+    let anamnesisPrompt: string | null = null;
+    if (relationshipEssence) {
+      const anamnesis = getRelationshipAnamnesis();
+      anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
+      console.log('💫 [Anamnesis] Soul recognition activated:', {
+        encounterCount: relationshipEssence.encounterCount,
+        morphicResonance: relationshipEssence.morphicResonance,
+        presenceQuality: relationshipEssence.presenceQuality
+      });
+    } else if (relationshipEssenceResult.status === 'fulfilled') {
+      console.log('💫 [Anamnesis] First encounter - essence will be captured');
+    }
+
+    const astrologyContext: AstrologyContext | null = astrologyContextResult.status === 'fulfilled'
+      ? astrologyContextResult.value
+      : (console.warn('⚠️ [Astrology] Context load failed (non-critical):', (astrologyContextResult as PromiseRejectedResult).reason), null);
+
+    if (astrologyContext?.hasBirthData) {
+      console.log('🌟 [Astrology] Birth chart loaded:', {
+        sun: astrologyContext.birthChart?.sun?.sign,
+        moon: astrologyContext.birthChart?.moon?.sign,
+        rising: astrologyContext.birthChart?.ascendant?.sign,
+        retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
+      });
+    } else if (astrologyContextResult.status === 'fulfilled') {
+      console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+    }
+
+    let patternOffer: Awaited<ReturnType<typeof getPatternOffer>> = null;
+    if (patternOfferResult.status === 'fulfilled') {
+      patternOffer = patternOfferResult.value;
       if (patternOffer) {
         console.log('📋 [Pattern Offer] Offering pattern:', {
           patternId: patternOffer.patternId.substring(0, 8) + '...',
           statement: patternOffer.statement,
           confidence: patternOffer.confidence,
         });
-        // Record the pending offer for response capture on next turn
         recordPendingOffer(sessionId, patternOffer.patternId, conversationDepth);
       }
-    } catch (offerError) {
-      console.warn('⚠️ [Pattern Offer] Failed (non-critical):', offerError);
+    } else {
+      console.warn('⚠️ [Pattern Offer] Failed (non-critical):', (patternOfferResult as PromiseRejectedResult).reason);
     }
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
@@ -712,6 +701,9 @@ export async function POST(request: NextRequest) {
       isSanctuary,
     });
 
+    const tBeforeLLM = Date.now();
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'pre_llm', ms: tBeforeLLM - t0, depth: conversationDepth }));
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -736,6 +728,9 @@ export async function POST(request: NextRequest) {
       serverUserName,
       maiaPlan
     );
+
+    const tAfterLLM = Date.now();
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'llm_done', ms: tAfterLLM - t0, llm_ms: tAfterLLM - tBeforeLLM, generationTimeMs: maiaResponse.providerMetadata?.generationTimeMs }));
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
     let validationResult: SocraticValidationResult | null = null;
@@ -763,9 +758,15 @@ export async function POST(request: NextRequest) {
       });
 
       // If validator requests regeneration, attempt one repair pass
-      if (validationResult.decision === 'REGENERATE' && validationResult.repairPrompt) {
+      // Skip regen for early turns (depth <= 2): not worth doubling latency on a greeting
+      const skipRegen = conversationDepth <= 2;
+      if (validationResult.decision === 'REGENERATE' && validationResult.repairPrompt && skipRegen) {
+        console.log('⏭️ [Socratic Validator] Skipping regen (depth <= 2) — accepting first response');
+      }
+      if (validationResult.decision === 'REGENERATE' && validationResult.repairPrompt && !skipRegen) {
         console.log('🔧 [Socratic Validator] Regenerating with repair prompt...');
         regenerationAttempt = 1;
+
 
         try {
           const llmProvider = new MultiLLMProvider();
@@ -799,6 +800,7 @@ export async function POST(request: NextRequest) {
             systemPrompt: repairSystemPrompt,
             userInput: fullUserInput,
             level: consciousnessLevel, // Use computed level for regeneration too
+            maxTokensOverride: maxTokens,
           });
 
           coreMessage = repairedResponse.text?.trim() || coreMessage;
@@ -876,6 +878,9 @@ export async function POST(request: NextRequest) {
       maiaPlan,
       process.env.SESAME_TTS_URL || 'http://maia-sesame-tts:8000'
     );
+
+    const tAfterFinalize = Date.now();
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'finalize_done', ms: tAfterFinalize - t0, finalize_ms: tAfterFinalize - tAfterLLM }));
 
     // OPUS AXIOMS: Evaluate response quality against Jungian alchemical principles
     const axiomEvals = evaluateResponseAgainstAxioms({
@@ -1375,6 +1380,9 @@ export async function POST(request: NextRequest) {
       usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
     });
 
+    const tTotal = Date.now();
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'total', ms: tTotal - t0, depth: conversationDepth }));
+
     const jsonResponse = NextResponse.json(response);
     Object.entries(canonHeaders).forEach(([key, value]) => {
       jsonResponse.headers.set(key, value);
@@ -1791,6 +1799,11 @@ async function generateSpiralogicResponseWithLLM(
 
       if (libraryContext.chunks.length > 0) {
         libraryWisdom = libraryService.formatForPrompt(libraryContext);
+        // Hard cap: library wisdom injected into the system prompt must not bloat Opus context
+        const MAX_LIBRARY_CHARS = 1_500;
+        if (libraryWisdom.length > MAX_LIBRARY_CHARS) {
+          libraryWisdom = libraryWisdom.slice(0, MAX_LIBRARY_CHARS) + '\n...[library excerpt capped]\n';
+        }
 
         // Structured telemetry — one line, no content leakage
         const topScore = Math.max(...libraryContext.chunks.map(c => c.score));
@@ -1884,8 +1897,8 @@ async function generateSpiralogicResponseWithLLM(
     const llmResponse = await llmProvider.generate({
       systemPrompt: finalSystemPrompt,
       userInput: fullUserInput,
-      level: consciousnessLevel as any // Use computed level (DEEP -> 5 -> Opus 4.5)
-      // Claude is now primary by default
+      level: consciousnessLevel as any, // Use computed level (DEEP -> 5 -> Opus 4.5)
+      maxTokensOverride: maxTokens,     // Depth-scaled: 100 (greeting) → 400 (deep)
     });
     coreMessage = llmResponse.text;
 
@@ -2059,7 +2072,7 @@ ${getPhaseThemes(spiralogicCell.element, spiralogicCell.phase)}
 - Trust Level: ${(trustLevel * 100).toFixed(0)}%
 - Stage: ${conversationDepth === 0 ? 'First contact' : conversationDepth <= 3 ? 'Early connection' : conversationDepth <= 10 ? 'Building trust' : 'Deep relationship'}
 
-${memoryContext ? memoryPalaceOrchestrator.generateMemoryContextPrompt(memoryContext) : ''}
+${memoryContext ? (() => { const mc = memoryPalaceOrchestrator.generateMemoryContextPrompt(memoryContext); const MAX_MC = 1_200; return mc.length > MAX_MC ? mc.slice(0, MAX_MC) + '\n...[memory capped]\n' : mc; })() : ''}
 
 ${memoryContext?.sessionMemory && (memoryContext.sessionMemory.continuityOpportunities?.length > 0 || memoryContext.sessionMemory.relatedInsights?.length > 0) ? `# Session Memory (IMPLICIT)
 ${memoryContext.sessionMemory.continuityOpportunities?.length > 0 ? `**Continuity Opportunities:**
@@ -2071,8 +2084,8 @@ ${memoryContext.sessionMemory.relatedInsights.slice(0, 3).map((insight: any) => 
 IMPORTANT: Use these patterns to inform your attunement, but weave them in naturally. Goal is continuity, not displaying memory.
 
 ` : ''}
-${anamnesisPrompt ? anamnesisPrompt : ''}
-${astrologyContext?.formattedContext ? astrologyContext.formattedContext : ''}
+${anamnesisPrompt ? (anamnesisPrompt.length > 800 ? anamnesisPrompt.slice(0, 800) + '\n...[anamnesis capped]\n' : anamnesisPrompt) : ''}
+${astrologyContext?.formattedContext ? (astrologyContext.formattedContext.length > 600 ? astrologyContext.formattedContext.slice(0, 600) + '\n...[astrology capped]\n' : astrologyContext.formattedContext) : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
