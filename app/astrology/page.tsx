@@ -662,7 +662,7 @@ export default function AstrologyPage() {
           </p>
           <Link
             href="/journey"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-desert-dark font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
           >
             <Sparkles className="w-5 h-5" />
             Enter Birth Details
@@ -974,7 +974,7 @@ export default function AstrologyPage() {
                 )}
               </h3>
               <p className="text-amber-200/70 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
-              <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto">
+              <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto text-amber-200">
                 {[
                   { name: 'Sun', icon: '☉', data: chartData.sun },
                   { name: 'Moon', icon: '☽', data: chartData.moon },
@@ -1203,8 +1203,8 @@ export default function AstrologyPage() {
 
                   const aspectColor = aspect.type === 'square' ? 'text-red-400' :
                     aspect.type === 'conjunction' ? 'text-spice-orange' :
-                      aspect.type === 'trine' ? 'text-atreides-green' :
-                        'text-fremen-azure';
+                      aspect.type === 'trine' ? 'text-green-400' :
+                        'text-sky-400';
 
                   return (
                     <Link
@@ -1262,7 +1262,7 @@ export default function AstrologyPage() {
                   </p>
                   <Link
                     href="/maia/membership"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-desert-dark font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-medium rounded-lg transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
                     Upgrade to unlock
@@ -1289,7 +1289,7 @@ export default function AstrologyPage() {
               <div className="bg-black/30 border border-atreides-green/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☊</span>
-                  <h3 className="text-xl font-bold text-atreides-green">North Node</h3>
+                  <h3 className="text-xl font-bold text-green-400">North Node</h3>
                 </div>
                 <p className="text-lg font-semibold text-dune-amber mb-2">
                   {chartData.northNode.sign} in {chartData.northNode.house}
@@ -1313,7 +1313,7 @@ export default function AstrologyPage() {
               <div className="bg-black/30 border border-dune-sienna-rock/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☋</span>
-                  <h3 className="text-xl font-bold text-dune-sienna-rock">South Node</h3>
+                  <h3 className="text-xl font-bold text-orange-400">South Node</h3>
                 </div>
                 <p className="text-lg font-semibold text-dune-amber mb-2">
                   {chartData.southNode.sign} in {chartData.southNode.house}
@@ -1358,7 +1358,7 @@ export default function AstrologyPage() {
 
               <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-fremen-azure">Saturn trine Natal Moon</h3>
+                  <h3 className="font-semibold text-sky-400">Saturn trine Natal Moon</h3>
                   <span className="text-xs text-amber-200/70">Approaching</span>
                 </div>
                 <p className="text-amber-200/90 text-sm">
@@ -1405,7 +1405,7 @@ export default function AstrologyPage() {
                     <p className="text-sm text-amber-200/90">Houses 4, 8, 12 · Introspection & Depth</p>
                   </div>
                 </div>
-                <p className="text-amber-200/90 group-hover:text-fremen-azure transition-colors">
+                <p className="text-amber-200/90 group-hover:text-sky-400 transition-colors">
                   Heart → Healing → Holiness
                 </p>
               </Link>
@@ -1422,7 +1422,7 @@ export default function AstrologyPage() {
                     <p className="text-sm text-amber-200/90">Houses 2, 6, 10 · Manifestation & Grounding</p>
                   </div>
                 </div>
-                <p className="text-amber-200/90 group-hover:text-atreides-green transition-colors">
+                <p className="text-amber-200/90 group-hover:text-green-400 transition-colors">
                   Mission → Means → Medicine
                 </p>
               </Link>
@@ -1439,7 +1439,7 @@ export default function AstrologyPage() {
                     <p className="text-sm text-amber-200/90">Houses 3, 7, 11 · Communication & Connection</p>
                   </div>
                 </div>
-                <p className="text-amber-200/90 group-hover:text-bene-gesserit-gold transition-colors">
+                <p className="text-amber-200/90 group-hover:text-yellow-400 transition-colors">
                   Connection → Community → Consciousness
                 </p>
               </Link>
@@ -1523,7 +1523,7 @@ export default function AstrologyPage() {
                   >
                     <div className="text-4xl">☀️</div>
                     <div className="text-left">
-                      <h3 className="text-xl font-bold text-dune-amber group-hover:text-bene-gesserit-gold transition-colors">
+                      <h3 className="text-xl font-bold text-dune-amber group-hover:text-yellow-400 transition-colors">
                         Mayan Astrology
                       </h3>
                       <p className="text-amber-200/90 text-sm">
@@ -1636,7 +1636,7 @@ export default function AstrologyPage() {
                     </p>
                     <Link
                       href="/maia/membership"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-desert-dark font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-medium rounded-lg transition-colors"
                     >
                       <Sparkles className="w-4 h-4" />
                       Upgrade to unlock
