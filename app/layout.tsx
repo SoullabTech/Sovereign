@@ -64,7 +64,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#ffffff" }
+    { media: "(prefers-color-scheme: dark)", color: "#1A1513" }
   ]
 };
 
@@ -172,7 +172,7 @@ export default function RootLayout({
           })();
         `}} />
       </head>
-      <body className={`${inter.className}`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
         <FlagsDebug />
         <SubscriptionProvider>
           <DevNoServiceWorker />
