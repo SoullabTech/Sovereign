@@ -22,9 +22,23 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiFetch, clearAuthState } from '@/lib/http/apiBase';
 
 // ---------------------------------------------------------------------------
+// Build stamp — injected at build time via next.config.js
+// ---------------------------------------------------------------------------
+const BUILD_SHA = process.env.NEXT_PUBLIC_BUILD_SHA || 'dev';
+const BUILD_DATE = process.env.NEXT_PUBLIC_BUILD_DATE || 'unknown';
+
+// ---------------------------------------------------------------------------
 // Session version — keep in sync with /maia/page.tsx
 // ---------------------------------------------------------------------------
 const SESSION_VERSION = 2;
+
+// ---------------------------------------------------------------------------
+// Field Safe Mode — when true, visible in debug panel (env set server-side)
+// Client only knows via a data attribute we inject; actual enforcement is server-side.
+// ---------------------------------------------------------------------------
+const FIELD_SAFE_MODE_HINT = typeof window !== 'undefined'
+  ? document.documentElement.getAttribute('data-field-safe') === '1'
+  : false;
 
 function isLikelyUUID(str: string): boolean {
   if (!str) return false;
@@ -151,6 +165,30 @@ function FieldTalkContent() {
     const boot = async () => {
       setIsMounted(true);
 
+      // 🛡️ FIELD BOOT CALL GUARD: log + suppress any /api/studio/* calls during boot.
+      // This enforces the boot contract (Field Presence Spec §13).
+      // Not a hard throw — we warn loudly but don't crash the app.
+      const _nativeFetch = window.fetch;
+      const _bootGuardActive = { current: true };
+      window.fetch = function guardedFetch(input, init) {
+        const url = typeof input === 'string' ? input : input instanceof Request ? input.url : String(input);
+        if (_bootGuardActive.current && url.includes('/api/studio/')) {
+          console.warn(
+            `[Field] ⚠️ BOOT VIOLATION: /api/studio/* called during Field boot. ` +
+            `URL: ${url}. ` +
+            `This increases boot weight. Move to post-first-interaction.`
+          );
+          // Suppress — return empty 200 to avoid breaking callers
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, fieldBootSuppressed: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }));
+        }
+        return _nativeFetch.call(window, input as RequestInfo, init);
+      };
+      // Lift guard after boot completes (see cleanup at end of boot())
+
+
       // Session migration check (same logic as /maia)
       const storedVersion = localStorage.getItem('maia_session_version');
       const betaUser = localStorage.getItem('beta_user');
@@ -275,6 +313,10 @@ function FieldTalkContent() {
       setExplorerName(userData.name);
       if (userData.birthDate) setUserBirthDate(userData.birthDate);
       setSessionId(activeSessionId);
+
+      // Lift boot guard — boot complete, normal fetch resumes
+      _bootGuardActive.current = false;
+      window.fetch = _nativeFetch;
     };
 
     boot();
@@ -305,8 +347,37 @@ function FieldTalkContent() {
     );
   }
 
+  // Show debug panel when ?debug=1 is in the URL
+  const showDebug = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('debug') === '1';
+
   return (
     <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950">
+      {showDebug && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            left: 8,
+            zIndex: 9999,
+            background: 'rgba(0,0,0,0.85)',
+            color: '#a3e635',
+            fontFamily: 'monospace',
+            fontSize: 10,
+            padding: '6px 10px',
+            borderRadius: 6,
+            lineHeight: 1.6,
+            pointerEvents: 'none',
+            maxWidth: 280,
+          }}
+        >
+          <div>SHA: {BUILD_SHA}</div>
+          <div>Date: {BUILD_DATE}</div>
+          <div>Field: true</div>
+          <div>Safe: {FIELD_SAFE_MODE_HINT ? 'YES ⚠️' : 'no'}</div>
+          <div>Session: {sessionId.slice(-8)}</div>
+        </div>
+      )}
       <OracleConversation
         userId={explorerId}
         userName={explorerName}

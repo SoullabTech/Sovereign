@@ -388,6 +388,12 @@ export async function POST(request: NextRequest) {
     const clientMaiaMode = parsed.maiaMode as { mode?: string; subMode?: string } | undefined;
     const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
     void clientMode; void clientMaiaMode; // extracted for future use; isFieldMode is threaded through
+
+    // 🛡️ FIELD SAFE MODE: env flag FIELD_SAFE_MODE=true disables deep retrieval and
+    // heavy processing for Field requests — emergency lever when iOS is unstable.
+    const fieldSafeMode = process.env.FIELD_SAFE_MODE === 'true';
+    const effectiveFieldMode = isFieldMode && !fieldSafeMode; // safe mode strips regulation arc too
+
     const t0 = Date.now();
     // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
     const isSanctuary = sanctuary === true;
@@ -734,7 +740,7 @@ export async function POST(request: NextRequest) {
       buildPatternOfferPromptSection(patternOffer),
       serverUserName,
       maiaPlan,
-      isFieldMode
+      effectiveFieldMode
     );
 
     const tAfterLLM = Date.now();
@@ -1389,12 +1395,21 @@ export async function POST(request: NextRequest) {
     });
 
     const tTotal = Date.now();
-    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'total', ms: tTotal - t0, depth: conversationDepth }));
+    const routeLatencyMs = tTotal - t0;
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'total', ms: routeLatencyMs, depth: conversationDepth }));
 
     const jsonResponse = NextResponse.json(response);
     Object.entries(canonHeaders).forEach(([key, value]) => {
       jsonResponse.headers.set(key, value);
     });
+
+    // 🔭 INSTRUMENTATION HEADERS — observable by curl, DevTools, and Field debug panel
+    jsonResponse.headers.set('X-Field-Mode', isFieldMode ? '1' : '0');
+    jsonResponse.headers.set('X-Field-Safe-Mode', fieldSafeMode ? '1' : '0');
+    jsonResponse.headers.set('X-Route-Latency-Ms', String(routeLatencyMs));
+    jsonResponse.headers.set('X-Conversation-Depth', String(conversationDepth));
+    jsonResponse.headers.set('X-Build-SHA', process.env.NEXT_PUBLIC_BUILD_SHA || 'unknown');
+
     return jsonResponse;
 
   } catch (error) {
