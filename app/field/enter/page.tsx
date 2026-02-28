@@ -21,20 +21,7 @@ export default function FieldEnterPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Loop guard: if we've been here recently, go straight to /field/talk
-    const LOOP_KEY = 'field_enter_last_visit';
-    const LOOP_GUARD_MS = 10_000;
-    const now = Date.now();
-    const lastVisit = Number(localStorage.getItem(LOOP_KEY) || '0');
-
-    if (now - lastVisit < LOOP_GUARD_MS) {
-      console.log('[Field/enter] Loop guard triggered — routing to /field/talk');
-      router.replace('/field/talk');
-      return;
-    }
-    localStorage.setItem(LOOP_KEY, String(now));
-
-    // Check if user has any session data
+    // STEP 1: Auth check always runs first — loop guard never overrides it
     const betaUser = localStorage.getItem('beta_user');
     const explorerId = localStorage.getItem('explorerId');
     const signupCompleted = localStorage.getItem('signup_completed');
@@ -47,13 +34,14 @@ export default function FieldEnterPage() {
         (k) => k.startsWith('maia_') || k.startsWith('explorer') || k.startsWith('beta')
       );
 
+    // Fresh install — no auth data at all → onboarding
     if (!hasAnySessionData) {
       console.log('[Field/enter] Fresh install — routing to /begin');
       router.replace('/begin');
       return;
     }
 
-    // Parse beta_user to check onboarding state
+    // STEP 2: Onboarding state check
     let onboarded = false;
     if (betaUser) {
       try {
@@ -63,8 +51,7 @@ export default function FieldEnterPage() {
         // ignore parse error
       }
     }
-
-    // Legacy onboarding check
+    // Legacy check
     if (!onboarded) {
       onboarded = localStorage.getItem('betaOnboardingComplete') === 'true';
     }
@@ -75,8 +62,21 @@ export default function FieldEnterPage() {
       return;
     }
 
-    // Onboarded: route to /field/talk (active session handled there)
-    console.log('[Field/enter] Onboarded member — routing to /field/talk');
+    // STEP 3: Onboarded — route to /field/talk
+    // Loop guard only applies here (auth is confirmed; guard prevents redirect storms
+    // between /field/enter and /field/talk if something breaks in talk's mount)
+    const LOOP_KEY = 'field_enter_last_visit';
+    const LOOP_GUARD_MS = 10_000;
+    const now = Date.now();
+    const lastVisit = Number(localStorage.getItem(LOOP_KEY) || '0');
+    localStorage.setItem(LOOP_KEY, String(now));
+
+    if (now - lastVisit < LOOP_GUARD_MS) {
+      // Already routed here recently — still go to /field/talk (auth is confirmed above)
+      console.log('[Field/enter] Loop guard — re-routing confirmed-authed user to /field/talk');
+    } else {
+      console.log('[Field/enter] Onboarded member — routing to /field/talk');
+    }
     router.replace('/field/talk');
   }, [router]);
 
