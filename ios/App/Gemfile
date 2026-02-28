@@ -1,0 +1,12 @@
+# ios
+# Gemfile — pinned Ruby toolchain for MAIA Capacitor iOS builds
+# Location: ios/App/Gemfile
+# Run: bundle install  (from ios/App/)
+# Use: bundle exec fastlane ios <lane>
+
+source "https://rubygems.org"
+
+ruby "~> 3.3"
+
+# Pin fastlane to a stable version. Bump deliberately, not automatically.
+gem "fastlane", "~> 2.231"

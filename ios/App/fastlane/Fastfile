@@ -1,0 +1,166 @@
+# ios
+# fastlane/Fastfile — MAIA Capacitor iOS build lanes
+# Location: ios/App/fastlane/Fastfile
+#
+# All lanes must be run from ios/App/:
+#   bundle exec fastlane ios <lane>
+#
+# Lanes:
+#   web_prepare   — patch routes + next build + cap sync ios
+#   bump_build    — increment CFBundleVersion deterministically
+#   clean         — remove build artifacts and derived data
+#   build_local   — full pipeline: web_prepare + bump_build + archive + export IPA
+
+# ── paths ──────────────────────────────────────────────────────────────────────
+# ios/App/fastlane/ is two levels below the monorepo root
+REPO_ROOT = File.expand_path("../../..", __dir__)  # → MAIA-SOVEREIGN/
+IOS_APP   = File.expand_path("..", __dir__)          # → ios/App/
+WORKSPACE = File.join(IOS_APP, "App.xcworkspace")
+SCHEME    = "App"
+INFO_PLIST = File.join(IOS_APP, "App", "Info.plist")
+BUILD_DIR  = File.join(IOS_APP, "build")
+EXPORT_OPTIONS = File.join(IOS_APP, "exportOptions.plist")
+
+default_platform(:ios)
+
+platform :ios do
+
+  # ── web_prepare ─────────────────────────────────────────────────────────────
+  # Runs the full Capacitor web export pipeline so ios/App has fresh web assets.
+  # Mirrors what scripts/build-ios.sh does for the web portion.
+  desc "Build Next.js static export and sync web assets into ios/App via Capacitor"
+  lane :web_prepare do
+    UI.header("Step 1/3 · Patch dynamic routes for static export")
+    sh("cd #{REPO_ROOT} && ./scripts/capacitor-patch-routes.sh patch")
+
+    begin
+      UI.header("Step 2/3 · Build Next.js static export (CAPACITOR_BUILD=1)")
+      sh("cd #{REPO_ROOT} && CAPACITOR_BUILD=1 npm run build")
+
+      out_dir = File.join(REPO_ROOT, "out")
+      unless Dir.exist?(out_dir) && !Dir.empty?(out_dir)
+        UI.user_error!("Web build failed: #{out_dir} is missing or empty after `npm run build`")
+      end
+      UI.success("Web export produced: #{out_dir}")
+
+      UI.header("Step 3/3 · Sync web assets into ios/App via Capacitor")
+      # cap sync: copies web assets AND updates native project (safer than cap copy)
+      sh("cd #{REPO_ROOT} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios")
+
+    ensure
+      UI.message("Reverting dynamic route patches…")
+      sh("cd #{REPO_ROOT} && ./scripts/capacitor-patch-routes.sh revert")
+    end
+
+    UI.success("web_prepare complete — ios/App has latest web assets")
+  end
+
+  # ── bump_build ──────────────────────────────────────────────────────────────
+  # Increments CFBundleVersion using git commit count (stable, offline-safe).
+  # Strategy: git rev-list --count HEAD  → always monotonically increasing,
+  # never resets between machines, works without network.
+  #
+  # Override: BUILD_NUMBER=123 bundle exec fastlane ios bump_build
+  desc "Increment CFBundleVersion deterministically (git commit count or BUILD_NUMBER env)"
+  lane :bump_build do
+    new_build = if ENV["BUILD_NUMBER"] && !ENV["BUILD_NUMBER"].strip.empty?
+      build = ENV["BUILD_NUMBER"].strip
+      UI.message("Using BUILD_NUMBER from env: #{build}")
+      build
+    else
+      count = sh("cd #{REPO_ROOT} && git rev-list --count HEAD", log: false).strip
+      UI.message("Git commit count: #{count}")
+      count
+    end
+
+    # Write to Info.plist via /usr/libexec/PlistBuddy (avoids agvtool quirks with Capacitor)
+    sh("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{new_build}' '#{INFO_PLIST}'")
+
+    current_marketing = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' '#{INFO_PLIST}'", log: false).strip
+    UI.success("Build number → #{new_build}  (marketing version: #{current_marketing})")
+    new_build
+  end
+
+  # ── clean ───────────────────────────────────────────────────────────────────
+  desc "Clean derived data and ios/App/build artifacts"
+  lane :clean do
+    UI.header("Cleaning Xcode build artifacts")
+
+    # Clean the scheme via xcodebuild
+    xcodebuild(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      clean: true
+    )
+
+    # Remove the local build output directory
+    if Dir.exist?(BUILD_DIR)
+      FileUtils.rm_rf(BUILD_DIR)
+      UI.success("Removed #{BUILD_DIR}")
+    else
+      UI.message("#{BUILD_DIR} does not exist — nothing to remove")
+    end
+
+    # Remove derived data for this workspace (non-destructive to other projects)
+    derived = File.expand_path("~/Library/Developer/Xcode/DerivedData")
+    if Dir.exist?(derived)
+      matches = Dir.glob(File.join(derived, "App-*"))
+      matches.each do |d|
+        FileUtils.rm_rf(d)
+        UI.success("Removed derived data: #{d}")
+      end
+    end
+
+    UI.success("clean complete")
+  end
+
+  # ── build_local ─────────────────────────────────────────────────────────────
+  # Full pipeline: web assets → bump build number → archive → export IPA.
+  # Output: ios/App/build/App.xcarchive  +  ios/App/build/MAIA.ipa
+  #
+  # Options:
+  #   skip_web_prepare:true  — skip Next.js rebuild (use existing out/)
+  #   skip_bump:true         — skip build number increment
+  desc "Full local build: web export + bump build + archive + export IPA"
+  lane :build_local do |options|
+    FileUtils.mkdir_p(BUILD_DIR)
+
+    unless options[:skip_web_prepare]
+      web_prepare
+    else
+      UI.important("Skipping web_prepare (skip_web_prepare: true)")
+    end
+
+    unless options[:skip_bump]
+      bump_build
+    else
+      UI.important("Skipping bump_build (skip_bump: true)")
+    end
+
+    UI.header("Archiving (Release)")
+    archive_path = File.join(BUILD_DIR, "App.xcarchive")
+
+    gym(
+      workspace:         WORKSPACE,
+      scheme:            SCHEME,
+      configuration:     "Release",
+      archive_path:      archive_path,
+      export_options:    EXPORT_OPTIONS,
+      output_directory:  BUILD_DIR,
+      output_name:       "MAIA",
+      clean:             false,   # we already have a clean step; don't double-clean
+      silent:            false,
+      buildlog_path:     File.join(BUILD_DIR, "logs")
+    )
+
+    ipa_path = File.join(BUILD_DIR, "MAIA.ipa")
+
+    UI.success("=" * 60)
+    UI.success("BUILD COMPLETE")
+    UI.success("Archive : #{archive_path}")
+    UI.success("IPA     : #{ipa_path}")
+    UI.success("=" * 60)
+  end
+
+end
