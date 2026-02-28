@@ -274,6 +274,24 @@ build_and_upload() {
     fi
     log_success "Web content built"
 
+    # Patch root index.html → instant JS redirect to /enter
+    # Without this, Capacitor opens the Soullab.life marketing page (out/index.html)
+    # instead of routing through the app entry logic.
+    log_info "Patching root index.html → /enter redirect for iOS..."
+    cat > out/index.html << 'HTMLEOF'
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>html,body{margin:0;padding:0;background:#0b0f1c;}</style>
+    <script>window.location.replace('/enter');</script>
+  </head>
+  <body></body>
+</html>
+HTMLEOF
+    log_success "Root redirect patched"
+
     # Revert patches after successful build (trap will handle failure case)
     ./scripts/capacitor-patch-routes.sh revert
     trap - EXIT
