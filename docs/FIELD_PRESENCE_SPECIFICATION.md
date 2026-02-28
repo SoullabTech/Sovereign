@@ -198,6 +198,114 @@ In Field, the experience of MAIA — her presence, her pacing, her relational st
 
 ---
 
+## 13. Boot Contract (Critical)
+
+Field must reach conversational readiness **before** any of the following occur:
+
+**Not allowed during initial boot:**
+- Full memory retrieval
+- Studio context loading
+- Pattern analysis or cross-session aggregation
+- Tool preloading
+- Background synchronization beyond minimal auth/session
+
+**Allowed at boot:**
+- Local session state (localStorage)
+- User identity
+- Mode setting
+- Last conversation summary (optional, lightweight)
+
+> **Rule**: If a network call is not required to begin a conversation, it must not run during boot.
+
+*Most iOS instability and perceived slowness comes from hidden background work, not the conversation itself.*
+
+---
+
+## 14. Progressive Intelligence Model
+
+Field intelligence unlocks in layers:
+
+| Layer | Trigger | Content |
+|-------|---------|---------|
+| Layer 0 — Presence | Immediate | Conversation, minimal context |
+| Layer 1 — Personal context | After first interaction | Recent memories (limited window), last session themes |
+| Layer 2 — Deep retrieval | User requests patterns/insight, or Care/Insight mode requests depth, or Tools drawer opened | Full memory retrieval, cross-session analysis |
+
+> **Rule**: Depth is requested, not assumed.
+
+---
+
+## 15. Cognitive Load Guardrail
+
+Even when the model can provide rich analysis, early conversation must not include:
+
+- Pattern summaries
+- Psychological frameworks
+- Multi-theme interpretation
+- Long explanations
+
+...unless explicitly requested by the member.
+
+*This prevents MAIA from drifting back into "therapist-report mode."*
+
+---
+
+## 16. Conversation Energy State
+
+Field tracks a simple internal energy state:
+
+```
+arrival → settling → presence
+```
+
+| State | Triggers | Effect |
+|-------|----------|--------|
+| arrival | Conversation start | Fast response, short turns, conversational tone |
+| settling | After 2–3 turns | Slightly slower, reduced density, more reflection |
+| presence | Emotional/reflective cues from member | Fewer words, longer pauses, awareness emphasis |
+
+This state drives: prosody changes, retrieval limits, output length control.
+
+Without this, the experience drifts as features accumulate.
+
+### Mode-specific transitions
+
+| Mode | Behavior |
+|------|----------|
+| Care | Faster transition to settling; retrieval depth reduced unless requested; speech rate decreased |
+| Insight | Retrieval allowed immediately; concise structure; no extended regulation pacing |
+| Talk | Default progressive curve |
+
+---
+
+## 17. Performance Protection Rule
+
+**Any new feature must answer these three questions:**
+
+1. Does this run during boot?
+2. Does this increase time to first audio?
+3. Does this increase early cognitive load?
+
+**If yes to any → move to lazy load or tool trigger.**
+
+This single rule prevents most future regressions.
+
+---
+
+## 18. The Architectural Principle
+
+Field is not "MAIA with good tone." It is a **progressive nervous-system interface**.
+
+If the system loads intelligence all at once, the nervous system feels flooded.
+
+Presence requires:
+- **Fast arrival**
+- **Slow unfolding**
+
+That is an architectural property, not a writing style.
+
+---
+
 ## Current Latency Architecture (as of 2026-02-28)
 
 **Known ceiling**: The oracle conversation route returns full JSON after LLM completion. TTS is called on the complete `spokenText` after the response arrives. This means:
