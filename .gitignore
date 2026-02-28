@@ -1,6 +1,13 @@
 # MAIA-SOVEREIGN .gitignore
 # Comprehensive ignore file for Next.js, Node.js, and consciousness technology
 
+# ── iOS / App Store Connect secrets ──────────────────────────────────────────
+# Apple private keys (.p8) — NEVER commit these
+*.p8
+AuthKey_*.p8
+# Local env overrides for Fastlane
+ios/App/.env.local
+
 # Dependencies
 node_modules/
 npm-debug.log*
