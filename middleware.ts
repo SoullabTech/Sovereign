@@ -87,9 +87,13 @@ function isAuthenticated(req: NextRequest): boolean {
   const memberIdHeader = req.headers.get('x-member-id');
   if (memberIdHeader) return true;
 
-  // Option 3: Legacy beta_user check (temporary)
-  // Note: Can't read localStorage from middleware!
-  // This would need to be a cookie instead
+  // Option 3: Session token header (Safari/iOS header-based auth)
+  const sessionTokenHeader = req.headers.get('x-session-token');
+  if (sessionTokenHeader) return true;
+
+  // Option 4: Token or memberId as query param (for EventSource/SSE — can't send headers)
+  const url = new URL(req.url);
+  if (url.searchParams.get('_t') || url.searchParams.get('_m')) return true;
 
   return false;
 }
@@ -111,6 +115,35 @@ function getMemberId(req: NextRequest): string | null {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // ---------------------------------------------------------------------
+  // FIELD / STUDIO BOUNDARY: Reject /api/studio/* from Field shell context
+  //
+  // When a client sets X-App-Shell: field (done by apiFetch via sessionStorage
+  // 'field_shell' flag), /api/studio/* endpoints are explicitly forbidden.
+  // This prevents Field boot from silently coupling to Studio infrastructure.
+  //
+  // Allowlist: add any /api/studio/* path that Field genuinely needs here.
+  // Keep this list short and justify each entry.
+  // ---------------------------------------------------------------------
+  const appShell = req.headers.get('X-App-Shell');
+  if (appShell === 'field' && pathname.startsWith('/api/studio/')) {
+    const FIELD_STUDIO_ALLOWLIST: string[] = [
+      // Example: '/api/studio/whoami' — add only if Field genuinely needs it
+    ];
+    const allowed = FIELD_STUDIO_ALLOWLIST.some(p => pathname.startsWith(p));
+    if (!allowed) {
+      console.warn(`[Middleware] Field shell rejected studio call: ${pathname}`);
+      return NextResponse.json(
+        {
+          error: 'field_boundary_violation',
+          message: `${pathname} is not available from the Field shell. Move this call to post-first-interaction or add it to the Field studio allowlist.`,
+          shell: 'field',
+        },
+        { status: 403 }
+      );
+    }
+  }
 
   // ---------------------------------------------------------------------
   // DEV BYPASS: Skip auth for practitioner APIs in development

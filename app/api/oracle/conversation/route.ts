@@ -389,10 +389,15 @@ export async function POST(request: NextRequest) {
     const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
     void clientMode; void clientMaiaMode; // extracted for future use; isFieldMode is threaded through
 
-    // 🛡️ FIELD SAFE MODE: env flag FIELD_SAFE_MODE=true disables deep retrieval and
-    // heavy processing for Field requests — emergency lever when iOS is unstable.
+    // 🛡️ FIELD SAFE MODE: emergency lever — FIELD_SAFE_MODE=true in env tightens Field behavior.
+    // Safe mode means: minimal, regulated, fast. It enforces the regulation arc, not removes it.
+    // Safe mode disables: deep retrieval, optional services, heavy processing.
+    // Safe mode keeps: regulation arc prompt (or enforces stricter attunement-only style).
     const fieldSafeMode = process.env.FIELD_SAFE_MODE === 'true';
-    const effectiveFieldMode = isFieldMode && !fieldSafeMode; // safe mode strips regulation arc too
+    // effectiveFieldMode: true when Field AND safe mode is NOT active.
+    // In safe mode, we separately enforce tighter constraints below.
+    // The regulation arc is always active for Field requests (safe or not).
+    const effectiveFieldMode = !!(isFieldMode); // Arc always active in Field
 
     const t0 = Date.now();
     // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
@@ -740,7 +745,8 @@ export async function POST(request: NextRequest) {
       buildPatternOfferPromptSection(patternOffer),
       serverUserName,
       maiaPlan,
-      effectiveFieldMode
+      effectiveFieldMode,
+      fieldSafeMode
     );
 
     const tAfterLLM = Date.now();
@@ -1647,7 +1653,8 @@ async function generateSpiralogicResponseWithLLM(
   patternOfferSection?: string,
   userName?: string,
   maiaPlan?: MAIAResponsePlan,
-  isFieldMode?: boolean
+  isFieldMode?: boolean,
+  fieldSafeMode?: boolean
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1682,7 +1689,8 @@ async function generateSpiralogicResponseWithLLM(
     distressSignal,
     voiceOffsets,
     userName,
-    isFieldMode
+    isFieldMode,
+    fieldSafeMode
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -2021,7 +2029,8 @@ function buildSacredAttendingPrompt(
   distressSignal?: DistressSignal | null,
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
   userName?: string,
-  isFieldMode?: boolean
+  isFieldMode?: boolean,
+  fieldSafeMode?: boolean
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2216,7 +2225,25 @@ Remember: You are practicing sacred attending. The Spiralogic patterns and frame
 The conversation depth is ${conversationDepth}. Trust level is ${(trustLevel * 100).toFixed(0)}%. Calibrate your response length and depth accordingly.`;
 
   if (isFieldMode) {
-    prompt += `
+    if (fieldSafeMode) {
+      // 🛡️ SAFE MODE: Tighter than standard Field. Minimal, regulated, fast.
+      // This is the emergency mode — strip everything except attunement.
+      prompt += `
+
+## Field Safe Mode (ACTIVE)
+
+The system is in safe mode. Apply the strictest presence constraints:
+
+- Maximum 2 sentences. No exceptions.
+- Acknowledge only. Do not analyze, explain, or offer frameworks.
+- Speak as if the member just arrived and needs to know you're present.
+- No memory retrieval, no pattern references, no multi-part responses.
+- If you're unsure what to say: reflect one word or phrase back, then stop.
+
+Example: "I'm here. What's happening right now?"`;
+    } else {
+      // Standard Field regulation arc
+      prompt += `
 
 ## Field Presence Calibration
 
@@ -2236,6 +2263,7 @@ You are speaking with someone in Field mode — a mobile presence environment. F
 - Avoid long explanations. Let space do the work.
 
 **Adaptive rule:** If the member sounds distressed or rapid, slow sooner. If calm, allow spaciousness earlier.`;
+    }
   }
 
   return prompt;

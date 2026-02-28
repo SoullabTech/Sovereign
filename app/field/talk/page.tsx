@@ -165,9 +165,14 @@ function FieldTalkContent() {
     const boot = async () => {
       setIsMounted(true);
 
-      // 🛡️ FIELD BOOT CALL GUARD: log + suppress any /api/studio/* calls during boot.
-      // This enforces the boot contract (Field Presence Spec §13).
-      // Not a hard throw — we warn loudly but don't crash the app.
+      // Mark this session as Field shell — apiFetch will add X-App-Shell: field to all requests.
+      // This enables server-side enforcement of the Field/Studio boundary.
+      sessionStorage.setItem('field_shell', '1');
+
+      // 🛡️ FIELD BOOT CALL GUARD: detect (but do NOT suppress) /api/studio/* calls during boot.
+      // Detection-only: we warn loudly so the coupling becomes visible and can be fixed.
+      // Suppression was removed — fake 200s mask real dependencies and create inconsistent state.
+      // Real enforcement is server-side via X-App-Shell header (see middleware.ts).
       const _nativeFetch = window.fetch;
       const _bootGuardActive = { current: true };
       window.fetch = function guardedFetch(input, init) {
@@ -176,13 +181,10 @@ function FieldTalkContent() {
           console.warn(
             `[Field] ⚠️ BOOT VIOLATION: /api/studio/* called during Field boot. ` +
             `URL: ${url}. ` +
-            `This increases boot weight. Move to post-first-interaction.`
+            `This increases boot weight and must be moved to post-first-interaction. ` +
+            `Server will return 403 if X-App-Shell: field enforcement is active.`
           );
-          // Suppress — return empty 200 to avoid breaking callers
-          return Promise.resolve(new Response(JSON.stringify({ ok: true, fieldBootSuppressed: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }));
+          // Do NOT suppress — let the real request proceed so we see the actual failure
         }
         return _nativeFetch.call(window, input as RequestInfo, init);
       };
