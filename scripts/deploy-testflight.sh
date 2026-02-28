@@ -296,13 +296,15 @@ HTMLEOF
     ./scripts/capacitor-patch-routes.sh revert
     trap - EXIT
 
+    # Remove stale build dir BEFORE cap sync — pod install calls xcodebuild clean
+    # internally and fails if build/ exists without the CreatedByBuildSystem xattr
+    rm -rf ios/App/build
+
     log_info "Syncing Capacitor (beta mode)..."
     LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CAPACITOR_BUILD=1 npx cap sync ios
     log_success "Capacitor synced"
 
     cd ios/App
-    # Remove stale build dir so xcodebuild can create it fresh (xattr approach is fragile)
-    rm -rf ./build
 
     log_info "Building archive..."
     xcodebuild archive \
