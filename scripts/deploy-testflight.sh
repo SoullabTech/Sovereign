@@ -279,7 +279,7 @@ build_and_upload() {
     trap - EXIT
 
     log_info "Syncing Capacitor (beta mode)..."
-    CAPACITOR_BUILD=1 npx cap sync ios
+    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CAPACITOR_BUILD=1 npx cap sync ios
     log_success "Capacitor synced"
 
     cd ios/App

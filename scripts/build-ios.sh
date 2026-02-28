@@ -63,9 +63,9 @@ trap - EXIT
 # Remove stale build directory BEFORE cap sync — pod install fails if it exists
 rm -rf ios/App/build
 
-# Sync Capacitor
+# Sync Capacitor (LANG must be inline — npx spawns child process that may not inherit export)
 echo "🔄 Syncing Capacitor to iOS..."
-npx cap sync ios
+LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios
 
 # Navigate to iOS directory
 cd ios/App
