@@ -301,7 +301,8 @@ HTMLEOF
     log_success "Capacitor synced"
 
     cd ios/App
-    xattr -w com.apple.xcode.CreatedByBuildSystem true ./build 2>/dev/null || true
+    # Remove stale build dir so xcodebuild can create it fresh (xattr approach is fragile)
+    rm -rf ./build
 
     log_info "Building archive..."
     xcodebuild archive \
