@@ -1,81 +1,92 @@
 'use client';
 
+/**
+ * /field/enter — Field entry router
+ *
+ * Smart routing entry point for iOS/Capacitor Field mode.
+ * Reads localStorage session state and routes accordingly:
+ *
+ *   - Onboarded + active session  → /field/talk
+ *   - Onboarded, no session       → /field/talk (create session there)
+ *   - Not onboarded               → /begin
+ *   - No session data at all      → /begin
+ *
+ * Loop-guard: if this page is hit more than once in 10s, bail to /field/talk.
+ */
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-/**
- * /field/enter — Canonical iOS native app entry point
- *
- * Single deterministic router. Never lands on marketing.
- * Three outcomes only:
- *   1. Active session → /maia (straight to app)
- *   2. Known returning user (no current session) → /welcome-back
- *   3. Brand new device / fresh install → /begin
- *
- * Design rules:
- * - No API calls on mount (auth is localStorage-only at entry)
- * - No background processes initiated here
- * - No mic/audio init here
- * - Redirect loop guard via sessionStorage (one-shot per app session)
- * - Signout latch respected: if user explicitly signed out → /signin
- */
 export default function FieldEnterPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // LOOP GUARD: redirect fires exactly once per app session
-    const onceKey = 'maia_field_entry_once';
-    if (sessionStorage.getItem(onceKey) === '1') {
-      // Guard already tripped — route to safe fallback
-      const betaUser = localStorage.getItem('beta_user');
-      router.replace(betaUser ? '/maia' : '/signin');
+    // Loop guard: if we've been here recently, go straight to /field/talk
+    const LOOP_KEY = 'field_enter_last_visit';
+    const LOOP_GUARD_MS = 10_000;
+    const now = Date.now();
+    const lastVisit = Number(localStorage.getItem(LOOP_KEY) || '0');
+
+    if (now - lastVisit < LOOP_GUARD_MS) {
+      console.log('[Field/enter] Loop guard triggered — routing to /field/talk');
+      router.replace('/field/talk');
       return;
     }
-    sessionStorage.setItem(onceKey, '1');
+    localStorage.setItem(LOOP_KEY, String(now));
 
-    // SIGNOUT LATCH: user explicitly signed out → always go to signin
-    if (localStorage.getItem('maia_signed_out') === '1') {
-      router.replace('/signin');
-      return;
-    }
-
-    // CASE 1: Active session → straight to app
+    // Check if user has any session data
     const betaUser = localStorage.getItem('beta_user');
-    if (betaUser) {
-      router.replace('/maia');
-      return;
-    }
+    const explorerId = localStorage.getItem('explorerId');
+    const signupCompleted = localStorage.getItem('signup_completed');
 
-    // CASE 2: Any prior MAIA data → returning user who is currently signed out
-    const hasAnyPriorData =
-      localStorage.getItem('betaOnboardingComplete') ||
-      localStorage.getItem('explorerId') ||
-      localStorage.getItem('explorerName') ||
-      localStorage.getItem('maiaPermanentUser') ||
-      localStorage.getItem('betaUserId') ||
+    const hasAnySessionData =
+      betaUser ||
+      explorerId ||
+      signupCompleted ||
       Object.keys(localStorage).some(
-        (k) => k.includes('maia') || k.includes('explorer') || k.includes('beta')
+        (k) => k.startsWith('maia_') || k.startsWith('explorer') || k.startsWith('beta')
       );
 
-    if (hasAnyPriorData) {
-      router.replace('/welcome-back');
+    if (!hasAnySessionData) {
+      console.log('[Field/enter] Fresh install — routing to /begin');
+      router.replace('/begin');
       return;
     }
 
-    // CASE 3: Clean device → new user onboarding
-    router.replace('/begin');
+    // Parse beta_user to check onboarding state
+    let onboarded = false;
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        onboarded = !!userData.onboarded;
+      } catch {
+        // ignore parse error
+      }
+    }
+
+    // Legacy onboarding check
+    if (!onboarded) {
+      onboarded = localStorage.getItem('betaOnboardingComplete') === 'true';
+    }
+
+    if (!onboarded) {
+      console.log('[Field/enter] Not onboarded — routing to /begin');
+      router.replace('/begin');
+      return;
+    }
+
+    // Onboarded: route to /field/talk (active session handled there)
+    console.log('[Field/enter] Onboarded member — routing to /field/talk');
+    router.replace('/field/talk');
   }, [router]);
 
-  // Minimal holding state — no animation, no network calls
+  // Render nothing while routing
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#0b0f1c',
-      }}
-    />
+      className="h-screen w-screen flex items-center justify-center bg-stone-950"
+      aria-label="Loading"
+    >
+      <div className="w-2 h-2 rounded-full bg-amber-600/60 animate-pulse" />
+    </div>
   );
 }

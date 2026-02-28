@@ -129,6 +129,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/dashboard/insights', minTier: 'personal', notes: 'Pattern insights' },
   { prefix: '/dashboard/patterns', minTier: 'personal', notes: 'Pattern tracking' },
 
+  // Field routes — iOS/Capacitor voice-first entry (same auth level as /maia)
+  { exact: '/field/enter', minTier: 'free', notes: 'Field entry router — smart session routing' },
+  { exact: '/field/talk', minTier: 'free', notes: 'Field voice session — voice-first MAIA on iOS' },
+  { prefix: '/field', minTier: 'free', notes: 'Field routes — all authenticated members' },
+
   // MAIA Interface (core)
   { exact: '/maia', minTier: 'free', notes: 'MAIA main interface - open to all authenticated users' },
   { exact: '/maia/compact', minTier: 'personal', notes: 'MAIA compact' },

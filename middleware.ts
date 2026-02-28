@@ -296,6 +296,16 @@ export async function middleware(req: NextRequest) {
   // driver requires Node.js runtime. Route handlers call getEntitlements directly.
   // This is intentional - entitlement checks happen at the route level.
 
+  // Belt-and-suspenders: ensure mic/camera permissions for /field/* routes.
+  // Caddy sets these domain-wide; this mirrors that at the Next.js layer so
+  // the policy is present even during local dev or if Caddy config drifts.
+  if (pathname.startsWith('/field')) {
+    response.headers.set(
+      'Permissions-Policy',
+      'microphone=(self), camera=(self), geolocation=()'
+    );
+  }
+
   return response;
 }
 
