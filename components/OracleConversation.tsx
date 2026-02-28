@@ -394,6 +394,8 @@ interface OracleConversationProps {
     clientId?: string;
     pathname?: string;
   };
+  // Field presence regulation — when true, oracle applies the Field calibration arc
+  fieldMode?: boolean;
 }
 
 interface ConversationMessage {
@@ -508,6 +510,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   scribeSessionContext,
   surface,
   studioContext,
+  fieldMode,
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
@@ -4432,6 +4435,9 @@ I'm not sure what I'm feeling yet.`;
           // 🏢 STUDIO SURFACE: When running inside Soullab Studio
           surface: surface ?? 'maia',
           studioContext: studioContext ?? undefined,
+
+          // Field presence regulation — signals oracle to apply regulation arc
+          fieldMode: fieldMode ?? false,
         }),
         signal: controller.signal
       });

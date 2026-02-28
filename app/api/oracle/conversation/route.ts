@@ -320,6 +320,9 @@ type ConversationBody = {
   element?: string;
   userName?: string;
   sanctuary?: boolean;
+  mode?: string;
+  maiaMode?: { mode?: string; subMode?: string };
+  fieldMode?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -381,6 +384,10 @@ export async function POST(request: NextRequest) {
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
     const { message, userId, sessionId, sanctuary } = parsed;
+    const clientMode = parsed.mode as string | undefined;          // 'dialogue' | 'counsel' | 'scribe'
+    const clientMaiaMode = parsed.maiaMode as { mode?: string; subMode?: string } | undefined;
+    const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
+    void clientMode; void clientMaiaMode; // extracted for future use; isFieldMode is threaded through
     const t0 = Date.now();
     // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
     const isSanctuary = sanctuary === true;
@@ -726,7 +733,8 @@ export async function POST(request: NextRequest) {
       voicePrefs.intent,
       buildPatternOfferPromptSection(patternOffer),
       serverUserName,
-      maiaPlan
+      maiaPlan,
+      isFieldMode
     );
 
     const tAfterLLM = Date.now();
@@ -1623,7 +1631,8 @@ async function generateSpiralogicResponseWithLLM(
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
   patternOfferSection?: string,
   userName?: string,
-  maiaPlan?: MAIAResponsePlan
+  maiaPlan?: MAIAResponsePlan,
+  isFieldMode?: boolean
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1657,7 +1666,8 @@ async function generateSpiralogicResponseWithLLM(
     preferredAssistantName,
     distressSignal,
     voiceOffsets,
-    userName
+    userName,
+    isFieldMode
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -1995,7 +2005,8 @@ function buildSacredAttendingPrompt(
   preferredAssistantName?: string,
   distressSignal?: DistressSignal | null,
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
-  userName?: string
+  userName?: string,
+  isFieldMode?: boolean
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2188,6 +2199,29 @@ Total response: 3 sentences maximum. These are examples — generate your own wo
 Remember: You are practicing sacred attending. The Spiralogic patterns and frameworks are YOUR context to inform your attunement, not content to deliver to the user.
 
 The conversation depth is ${conversationDepth}. Trust level is ${(trustLevel * 100).toFixed(0)}%. Calibrate your response length and depth accordingly.`;
+
+  if (isFieldMode) {
+    prompt += `
+
+## Field Presence Calibration
+
+You are speaking with someone in Field mode — a mobile presence environment. Follow the regulation arc:
+
+**Phase 1 — Attunement (turns 1-2):**
+- 1-3 sentences only. Acknowledge and invite. Do not explain or analyze.
+- Begin speaking quickly — presence before wisdom.
+- Example energy: "I'm here. Tell me what's happening."
+
+**Phase 2 — Co-regulation (turns 3-5):**
+- Short sentences. Gentle pauses implied by punctuation.
+- Reduce informational density. More reflection, less analysis.
+
+**Phase 3 — Presence (turns 6+):**
+- Fewer words. Longer pauses. Emphasis on noticing, sensing, or breathing.
+- Avoid long explanations. Let space do the work.
+
+**Adaptive rule:** If the member sounds distressed or rapid, slow sooner. If calm, allow spaciousness earlier.`;
+  }
 
   return prompt;
 }

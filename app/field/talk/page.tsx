@@ -321,6 +321,7 @@ function FieldTalkContent() {
         consciousnessType="maia"
         onMessageAdded={handleMessageAdded}
         initialAction={searchParams?.get('action') || undefined}
+        fieldMode={true}
       />
     </div>
   );
