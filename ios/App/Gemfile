@@ -10,3 +10,6 @@ ruby "~> 3.3"
 
 # Pin fastlane to a stable version. Bump deliberately, not automatically.
 gem "fastlane", "~> 2.231"
+
+# CocoaPods — required for `cap sync ios` (pod install) inside bundler context
+gem "cocoapods", "~> 1.16"
