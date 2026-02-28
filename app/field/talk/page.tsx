@@ -20,6 +20,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { OracleConversation } from '@/components/OracleConversation';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { apiFetch, clearAuthState } from '@/lib/http/apiBase';
+import { advanceEnergyState, loadEnergyContext, type FieldEnergyState } from '@/lib/field/energyState';
 
 // ---------------------------------------------------------------------------
 // Build stamp — injected at build time via next.config.js
@@ -145,6 +146,9 @@ function FieldTalkContent() {
   const [sessionId, setSessionId] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   const [voiceEnabled] = useState(true);
+
+  // Field energy state — drives oracle regulation arc (arrival → settling → presence)
+  const [fieldEnergyState, setFieldEnergyState] = useState<FieldEnergyState>('arrival');
   const [selectedVoice, setSelectedVoice] = useState('maia_core');
   const [voiceSpeed] = useState(0.95);
   const [voiceVolume] = useState(() => {
@@ -336,10 +340,27 @@ function FieldTalkContent() {
     console.log('[Field] First interaction — enabling deferred modules');
   }, [heavyLoaded]);
 
-  // Treat a message being added as the first interaction signal
-  const handleMessageAdded = useCallback(() => {
+  // Treat a message being added as the first interaction signal.
+  // Also advances Field energy state when a user message is sent (arrival → settling → presence).
+  const handleMessageAdded = useCallback((message: { role?: string; text?: string; content?: string }) => {
     handleFirstInteraction();
-  }, [handleFirstInteraction]);
+
+    // Only advance energy state on user messages (not oracle/system responses)
+    if (sessionId && message.role === 'user') {
+      const text = message.text || message.content || '';
+      const ctx = advanceEnergyState(sessionId, text, 'dialogue');
+      setFieldEnergyState(ctx.state);
+      console.log(`[Field] Energy state: ${ctx.state} (turn ${ctx.turnCount})`);
+    }
+  }, [handleFirstInteraction, sessionId]);
+
+  // Restore persisted energy state when sessionId is known
+  useEffect(() => {
+    if (!sessionId) return;
+    const ctx = loadEnergyContext(sessionId);
+    setFieldEnergyState(ctx.state);
+    console.log(`[Field] Restored energy state: ${ctx.state} (turn ${ctx.turnCount})`);
+  }, [sessionId]);
 
   if (!isMounted || !sessionId) {
     return (
@@ -377,6 +398,7 @@ function FieldTalkContent() {
           <div>Date: {BUILD_DATE}</div>
           <div>Field: true</div>
           <div>Safe: {FIELD_SAFE_MODE_HINT ? 'YES ⚠️' : 'no'}</div>
+          <div>Energy: {fieldEnergyState}</div>
           <div>Session: {sessionId.slice(-8)}</div>
         </div>
       )}
@@ -395,6 +417,7 @@ function FieldTalkContent() {
         onMessageAdded={handleMessageAdded}
         initialAction={searchParams?.get('action') || undefined}
         fieldMode={true}
+        fieldEnergyState={fieldEnergyState}
       />
     </div>
   );

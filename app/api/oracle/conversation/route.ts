@@ -323,6 +323,7 @@ type ConversationBody = {
   mode?: string;
   maiaMode?: { mode?: string; subMode?: string };
   fieldMode?: boolean;
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence'; // client-tracked, server enforces constraints
 };
 
 export async function POST(request: NextRequest) {
@@ -394,10 +395,15 @@ export async function POST(request: NextRequest) {
     // Safe mode disables: deep retrieval, optional services, heavy processing.
     // Safe mode keeps: regulation arc prompt (or enforces stricter attunement-only style).
     const fieldSafeMode = process.env.FIELD_SAFE_MODE === 'true';
-    // effectiveFieldMode: true when Field AND safe mode is NOT active.
-    // In safe mode, we separately enforce tighter constraints below.
-    // The regulation arc is always active for Field requests (safe or not).
-    const effectiveFieldMode = !!(isFieldMode); // Arc always active in Field
+    // effectiveFieldMode: arc is always active for Field requests (safe or not).
+    const effectiveFieldMode = !!(isFieldMode);
+
+    // 📊 FIELD ENERGY STATE: client tracks state, server enforces constraints.
+    // Safe mode always overrides to 'arrival' (tightest constraints).
+    const clientEnergyState = parsed.fieldEnergyState as 'arrival' | 'settling' | 'presence' | undefined;
+    const fieldEnergyState: 'arrival' | 'settling' | 'presence' =
+      fieldSafeMode ? 'arrival'
+      : (isFieldMode ? (clientEnergyState ?? 'arrival') : 'arrival');
 
     const t0 = Date.now();
     // 🔒 SANCTUARY MODE: Absolute memory exclusion boundary (per CLAUDE.md invariants)
@@ -746,7 +752,8 @@ export async function POST(request: NextRequest) {
       serverUserName,
       maiaPlan,
       effectiveFieldMode,
-      fieldSafeMode
+      fieldSafeMode,
+      fieldEnergyState
     );
 
     const tAfterLLM = Date.now();
@@ -1412,6 +1419,7 @@ export async function POST(request: NextRequest) {
     // 🔭 INSTRUMENTATION HEADERS — observable by curl, DevTools, and Field debug panel
     jsonResponse.headers.set('X-Field-Mode', isFieldMode ? '1' : '0');
     jsonResponse.headers.set('X-Field-Safe-Mode', fieldSafeMode ? '1' : '0');
+    jsonResponse.headers.set('X-Field-Energy-State', fieldEnergyState);
     jsonResponse.headers.set('X-Route-Latency-Ms', String(routeLatencyMs));
     jsonResponse.headers.set('X-Conversation-Depth', String(conversationDepth));
     jsonResponse.headers.set('X-Build-SHA', process.env.NEXT_PUBLIC_BUILD_SHA || 'unknown');
@@ -1654,7 +1662,8 @@ async function generateSpiralogicResponseWithLLM(
   userName?: string,
   maiaPlan?: MAIAResponsePlan,
   isFieldMode?: boolean,
-  fieldSafeMode?: boolean
+  fieldSafeMode?: boolean,
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence'
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1690,7 +1699,8 @@ async function generateSpiralogicResponseWithLLM(
     voiceOffsets,
     userName,
     isFieldMode,
-    fieldSafeMode
+    fieldSafeMode,
+    fieldEnergyState
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -2030,7 +2040,8 @@ function buildSacredAttendingPrompt(
   voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number },
   userName?: string,
   isFieldMode?: boolean,
-  fieldSafeMode?: boolean
+  fieldSafeMode?: boolean,
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence'
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2225,44 +2236,62 @@ Remember: You are practicing sacred attending. The Spiralogic patterns and frame
 The conversation depth is ${conversationDepth}. Trust level is ${(trustLevel * 100).toFixed(0)}%. Calibrate your response length and depth accordingly.`;
 
   if (isFieldMode) {
+    // Energy state drives constraints — this is a system property, not just prompt advice.
+    const state = fieldSafeMode ? 'arrival' : (fieldEnergyState ?? 'arrival');
+
     if (fieldSafeMode) {
-      // 🛡️ SAFE MODE: Tighter than standard Field. Minimal, regulated, fast.
-      // This is the emergency mode — strip everything except attunement.
       prompt += `
 
-## Field Safe Mode (ACTIVE)
+## Field Safe Mode (ACTIVE) — Energy: arrival
 
-The system is in safe mode. Apply the strictest presence constraints:
+Strict emergency constraints. Presence only.
 
 - Maximum 2 sentences. No exceptions.
 - Acknowledge only. Do not analyze, explain, or offer frameworks.
-- Speak as if the member just arrived and needs to know you're present.
-- No memory retrieval, no pattern references, no multi-part responses.
-- If you're unsure what to say: reflect one word or phrase back, then stop.
+- No memory references, no pattern summaries, no multi-part responses.
+- If unsure: reflect one word or phrase back, then stop.
 
 Example: "I'm here. What's happening right now?"`;
-    } else {
-      // Standard Field regulation arc
+
+    } else if (state === 'arrival') {
       prompt += `
 
-## Field Presence Calibration
+## Field Presence — Energy State: ARRIVAL
 
-You are speaking with someone in Field mode — a mobile presence environment. Follow the regulation arc:
+The member just arrived. Prioritize connection over content.
 
-**Phase 1 — Attunement (turns 1-2):**
-- 1-3 sentences only. Acknowledge and invite. Do not explain or analyze.
-- Begin speaking quickly — presence before wisdom.
-- Example energy: "I'm here. Tell me what's happening."
+- Maximum 3 sentences.
+- Acknowledge and invite. Do not explain or analyze.
+- No retrieval, no pattern references, no frameworks.
+- Conversational pace — speak quickly, be present.
+- Example energy: "I'm here. Tell me what's happening."`;
 
-**Phase 2 — Co-regulation (turns 3-5):**
-- Short sentences. Gentle pauses implied by punctuation.
+    } else if (state === 'settling') {
+      prompt += `
+
+## Field Presence — Energy State: SETTLING
+
+The conversation is finding its footing. Begin co-regulation.
+
+- Up to 5 sentences, but prefer shorter.
+- Short sentences with natural pauses implied by punctuation.
 - Reduce informational density. More reflection, less analysis.
+- Light memory context is available — use it only if directly relevant.
+- Do not introduce new frameworks or concepts unprompted.`;
 
-**Phase 3 — Presence (turns 6+):**
-- Fewer words. Longer pauses. Emphasis on noticing, sensing, or breathing.
-- Avoid long explanations. Let space do the work.
+    } else {
+      // presence
+      prompt += `
 
-**Adaptive rule:** If the member sounds distressed or rapid, slow sooner. If calm, allow spaciousness earlier.`;
+## Field Presence — Energy State: PRESENCE
+
+The conversation has reached depth. Hold the space.
+
+- 2-4 sentences only. Let silence do the work.
+- Emphasize noticing, sensing, or breathing where appropriate.
+- Sparse language. Long pauses implied by punctuation.
+- Avoid explanations. Reflect what's already being said.
+- No new retrieval unless explicitly requested.`;
     }
   }
 

@@ -396,6 +396,8 @@ interface OracleConversationProps {
   };
   // Field presence regulation — when true, oracle applies the Field calibration arc
   fieldMode?: boolean;
+  // Field energy state — client-tracked, passed to oracle for constraint enforcement
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence';
 }
 
 interface ConversationMessage {
@@ -511,6 +513,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   surface,
   studioContext,
   fieldMode,
+  fieldEnergyState,
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
@@ -4438,6 +4441,7 @@ I'm not sure what I'm feeling yet.`;
 
           // Field presence regulation — signals oracle to apply regulation arc
           fieldMode: fieldMode ?? false,
+          fieldEnergyState: fieldEnergyState ?? 'arrival',
         }),
         signal: controller.signal
       });
