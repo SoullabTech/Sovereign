@@ -68,6 +68,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/welcome-flow', public: true, notes: 'Welcome flow' },
   { prefix: '/onboarding', public: true, notes: 'Onboarding flows' },
 
+  // Field (iOS native app shell) — entry is always public; content routes are auth-gated
+  // Capacitor bypass in middleware handles unauthenticated WKWebView page loads
+  { exact: '/field/enter', public: true, notes: 'Field canonical iOS entry router' },
+  { prefix: '/field', minTier: 'free', notes: 'Field mobile shell — all authenticated users' },
+
   // Beta access (invite-gated but public routes)
   { exact: '/beta-welcome', public: true, notes: 'Beta welcome' },
   { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
@@ -288,6 +293,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // Supervision
   { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
 
+  // Studio (session room + supporting pages)
+  { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
+
   // -------------------------------------------------------------------------
   // 5) ADMIN / STEWARD - Role-gated (not tier)
   // -------------------------------------------------------------------------
@@ -329,6 +337,15 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
+
+  // Studio API - session room, bookings, scribe markers, live prompts
+  { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },
+
+  // Supervision API - session lifecycle, transcript, insights SSE stream
+  { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
+
+  // Scribe API - session review, summaries
+  { prefix: '/api/scribe', minTier: 'free', notes: 'Scribe API' },
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },
