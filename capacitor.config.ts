@@ -31,10 +31,13 @@ const config: CapacitorConfig = {
   },
   // Custom iOS plugins that need explicit registration
   // AudioSessionManager is our custom plugin for managing iOS audio session state
+  // SignInWithApple + GoogleAuth are community plugins that also need explicit registration
   packageClassList: [
     'BluetoothLe',
     'SpeechRecognition',
     'AudioSessionManager',
+    'SignInWithApple',
+    'GoogleAuth',
     'AppPlugin',
     'ClipboardPlugin',
     'FilesystemPlugin',

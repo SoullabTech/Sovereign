@@ -5,6 +5,10 @@
 
 set -e
 
+# CocoaPods requires UTF-8 locale; Ruby's unicode_normalize crashes without it
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 echo "🍎 MAIA-SOVEREIGN iOS Build Pipeline"
 echo "====================================="
 
