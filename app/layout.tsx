@@ -8,6 +8,7 @@ import { AethericConsciousnessProvider } from "@/components/consciousness/Aether
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
 import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
+import { CapacitorBoot } from "@/components/CapacitorBoot";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -173,6 +174,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
+        <CapacitorBoot />
         <FlagsDebug />
         <SubscriptionProvider>
           <DevNoServiceWorker />
