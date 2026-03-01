@@ -103,6 +103,29 @@ export async function POST(req: NextRequest) {
       [sessionId, userId || null]
     );
 
+    // Guard: only enqueue if session has enough turns to summarize.
+    // Prevents "done but empty" jobs when a session ends before any conversation happens.
+    // The sweeper will pick this session up later if turns arrive after the fact.
+    const turnCountResult = await query<{ turn_count: string }>(
+      `SELECT COUNT(*) AS turn_count FROM conversation_turns WHERE session_id = $1`,
+      [sessionId]
+    );
+    const turnCount = parseInt(turnCountResult.rows[0]?.turn_count ?? '0', 10);
+
+    if (turnCount < 2) {
+      console.log(
+        `[EndSession] SKIP_ENQUEUE_TOO_FEW_TURNS: session ${sessionId} has ${turnCount} turn(s) — skipping queue`
+      );
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        mode: 'continuity',
+        message: 'Session closing. Too few turns for summary — will be captured by sweeper if more arrive.',
+        status: 'closing',
+        skippedQueue: true,
+      });
+    }
+
     // Enqueue for the summary worker
     await query(
       `INSERT INTO session_summary_queue (session_id, member_id)
