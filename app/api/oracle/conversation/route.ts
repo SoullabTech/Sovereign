@@ -1825,14 +1825,42 @@ async function generateSpiralogicResponseWithLLM(
     systemPrompt = buildRenderPrompt(maiaPlan, systemPrompt);
   }
 
-  // Format conversation history for LLM
-  // CLAMP: Keep last 10 turns max to prevent context window overflow
-  // (Each turn is ~200-500 chars → 10 turns ≈ 2k-5k chars ≈ 500-1250 tokens)
-  const MAX_HISTORY_TURNS = 10;
+  // Build proper alternating messages array for Claude's multi-turn API.
+  // This preserves real conversation structure so Claude treats prior turns as
+  // actual history, not as text the user typed — fixing in-session memory.
+  //
+  // CLAMP: Keep last 20 turns (10 exchanges). System prompt is the real size
+  // constraint — history is cheap at haiku/sonnet context sizes.
+  const MAX_HISTORY_TURNS = 20;
   const clampedHistory = conversationHistory.length > MAX_HISTORY_TURNS
     ? conversationHistory.slice(-MAX_HISTORY_TURNS)
     : conversationHistory;
 
+  // Build proper messages array: history + current user message
+  const rawMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [
+    ...clampedHistory.map((turn: any) => ({
+      role: (turn.role === 'assistant' || turn.role === 'oracle') ? 'assistant' as const : 'user' as const,
+      content: String(turn.content || ''),
+    })),
+    { role: 'user' as const, content: message },
+  ];
+
+  // Enforce alternating roles (Claude API requires user/assistant/user/...):
+  // merge consecutive same-role messages, ensure starts with user.
+  const claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+  for (const msg of rawMessages) {
+    const last = claudeMessages[claudeMessages.length - 1];
+    if (last && last.role === msg.role) {
+      last.content = last.content + '\n\n' + msg.content;
+    } else {
+      claudeMessages.push({ ...msg });
+    }
+  }
+  while (claudeMessages.length > 0 && claudeMessages[0].role === 'assistant') {
+    claudeMessages.shift();
+  }
+
+  // Legacy flat transcript — kept for Ollama fallback path and repair sub-call
   const conversationContext = clampedHistory
     .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
     .join('\n\n');
@@ -2050,7 +2078,8 @@ async function generateSpiralogicResponseWithLLM(
   try {
     const llmResponse = await llmProvider.generate({
       systemPrompt: finalSystemPrompt,
-      userInput: fullUserInput,
+      userInput: fullUserInput,         // Ollama fallback uses this flat transcript
+      messages: claudeMessages,         // Claude uses proper multi-turn array
       level: consciousnessLevel as any, // Use computed level (DEEP -> 5 -> Opus 4.5)
       maxTokensOverride: maxTokens,     // Depth-scaled: 100 (greeting) → 400 (deep)
     });

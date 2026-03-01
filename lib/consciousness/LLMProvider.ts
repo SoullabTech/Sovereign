@@ -102,13 +102,17 @@ export class MultiLLMProvider {
   async generate(params: {
     systemPrompt: string;
     userInput: string;
+    /** Optional: proper alternating messages array. When supplied, Claude uses this
+     *  instead of wrapping userInput in a single user message — preserving real
+     *  multi-turn context. Ollama ignores this and falls back to the flat transcript. */
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
     level: ConsciousnessLevel;
     forceClaude?: boolean;
     forceOllama?: boolean;
     maxTokensOverride?: number;
   }): Promise<LLMResponse> {
 
-    const { systemPrompt, userInput, level, forceClaude, forceOllama, maxTokensOverride } = params;
+    const { systemPrompt, userInput, messages, level, forceClaude, forceOllama, maxTokensOverride } = params;
     const baseConfig = LEVEL_LLM_CONFIG[level];
     // Route-computed maxTokens wins over level default (MAIA-PAI depth scaling)
     const config = maxTokensOverride
@@ -127,7 +131,7 @@ export class MultiLLMProvider {
       } catch (error) {
         console.warn('Ollama generation failed, trying Claude fallback:', error);
         if (this.anthropic) {
-          return await this.generateClaude(systemPrompt, userInput, config, startTime);
+          return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
         }
         throw error;
       }
@@ -136,7 +140,7 @@ export class MultiLLMProvider {
     // Default: Try Claude first (primary provider)
     if (this.anthropic) {
       try {
-        return await this.generateClaude(systemPrompt, userInput, config, startTime);
+        return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
       } catch (error) {
         console.error('Claude generation failed:', error);
 
@@ -216,12 +220,20 @@ export class MultiLLMProvider {
     systemPrompt: string,
     userInput: string,
     config: LLMConfig,
-    startTime: number
+    startTime: number,
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>
   ): Promise<LLMResponse> {
 
     if (!this.anthropic) {
       throw new Error('Claude not configured');
     }
+
+    // Use proper alternating messages array when provided (multi-turn context).
+    // Fallback: wrap userInput in a single user message (legacy single-turn path).
+    const claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
+      messages && messages.length > 0
+        ? messages
+        : [{ role: 'user', content: userInput }];
 
     const maxRetries = 3;
     const baseDelay = 1000; // 1 second
@@ -234,12 +246,7 @@ export class MultiLLMProvider {
           max_tokens: config.maxTokens,
           temperature: config.temperature,
           system: systemPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: userInput
-            }
-          ]
+          messages: claudeMessages,
         });
 
         const response = message.content[0];
