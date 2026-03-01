@@ -155,10 +155,17 @@ platform :ios do
       scheme:            SCHEME,
       configuration:     "Release",
       archive_path:      archive_path,
-      export_options:    EXPORT_OPTIONS,
+      export_method:     "app-store",
+      export_options:    {
+        method:          "app-store",
+        destination:     "upload",
+        teamID:          "ZVK2X646Z2",
+        signingStyle:    "automatic",
+        uploadSymbols:   true
+      },
       output_directory:  BUILD_DIR,
       output_name:       "MAIA",
-      clean:             false,   # we already have a clean step; don't double-clean
+      clean:             false,
       silent:            false,
       buildlog_path:     File.join(BUILD_DIR, "logs")
     )
