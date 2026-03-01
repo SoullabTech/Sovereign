@@ -53,6 +53,10 @@ platform :ios do
       UI.success("Web export produced: #{out_dir}")
 
       UI.header("Step 3/3 · Sync web assets into ios/App via Capacitor")
+      # Ensure build/ is marked as Xcode-owned before cap sync runs pod install,
+      # which triggers xcodebuild clean and fails if the xattr is missing.
+      FileUtils.mkdir_p(BUILD_DIR)
+      sh("xattr -w com.apple.xcode.CreatedByBuildSystem true '#{BUILD_DIR}'")
       # cap sync: copies web assets AND updates native project (safer than cap copy)
       sh("cd #{REPO_ROOT} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios")
 
@@ -134,6 +138,10 @@ platform :ios do
   desc "Full local build: web export + bump build + archive + export IPA"
   lane :build_local do |options|
     FileUtils.mkdir_p(BUILD_DIR)
+    # Mark build/ as Xcode-owned so xcodebuild clean can delete it.
+    # Must be re-applied every run because the xattr is lost when the dir
+    # is recreated by mkdir_p or after a filesystem event.
+    sh("xattr -w com.apple.xcode.CreatedByBuildSystem true '#{BUILD_DIR}'")
 
     unless options[:skip_web_prepare]
       web_prepare
