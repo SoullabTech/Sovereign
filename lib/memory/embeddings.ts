@@ -9,7 +9,9 @@
 
 export async function generateLocalEmbedding(text: string): Promise<number[]> {
   const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 30000);
+  // Short timeout: if Ollama is unreachable (e.g. container→host networking), fail fast
+  // rather than blocking every request for 30s. Set OLLAMA_EMBED_TIMEOUT_MS to increase.
+  const timeoutMs = Number(process.env.OLLAMA_EMBED_TIMEOUT_MS || 2000);
 
   try {
     const response = await fetch(`${ollamaUrl}/api/embeddings`, {
