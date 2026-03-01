@@ -88,6 +88,7 @@ import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundl
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -412,6 +413,7 @@ export async function POST(req: NextRequest) {
         ? (async (): Promise<{ wuxingSnapshot: WuXingSnapshot | null; bridgedSnapshot: BridgedSnapshot | null; wuxingAddendum: string }> => {
             try {
               let baziProfile = null;
+              let westernBirthData: { birth_date: string | null; birth_time: string | null; birth_location_name: string | null; birth_timezone: string | null } | null = null;
               try {
                 const baziResult = await pool.query(
                   `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
@@ -426,6 +428,20 @@ export async function POST(req: NextRequest) {
                 }
               } catch (baziErr) {
                 console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
+              }
+
+              // 🌟 WESTERN BIRTH DATA: Fetch birth date/time/location for astrological context
+              try {
+                const birthResult = await pool.query(
+                  `SELECT birth_date, birth_time, birth_location_name, birth_timezone
+                   FROM members WHERE id = $1`,
+                  [effectiveUserId]
+                );
+                if (birthResult.rows.length > 0 && birthResult.rows[0].birth_date) {
+                  westernBirthData = birthResult.rows[0];
+                }
+              } catch (birthErr) {
+                console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
               }
 
               const snapshot = computeWuXingSnapshot({
@@ -446,10 +462,14 @@ export async function POST(req: NextRequest) {
                 if (bridged) {
                   const wx = bridged.wuxing;
                   const alignment = bridged.crossSystemInsights?.elementAlignment || 'unknown';
+                  const westernBirthBlock = westernBirthData
+                    ? `- Western birth data: ${westernBirthData.birth_date}${westernBirthData.birth_time ? ` at ${westernBirthData.birth_time}` : ''}${westernBirthData.birth_location_name ? `, ${westernBirthData.birth_location_name}` : ''}${westernBirthData.birth_timezone ? ` (${westernBirthData.birth_timezone})` : ''}`
+                    : '';
                   addendum = `
 🌿 WU XING AWARENESS (Five Elements):
 - Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
-${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No birth chart on file (using moment energy only)'}
+${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No BaZi profile on file'}
+${westernBirthBlock}
 - Element alignment: ${alignment}
 ${bridged.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridged.crossSystemInsights.practicalGuidance}` : ''}
 
@@ -612,6 +632,45 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
 
     const providerUsed = rawProvider || 'unknown';
     const modelUsed = rawModel || 'unknown';
+
+    // 💫 ANAMNESIS WRITE (fire-and-forget): Capture relationship essence after each turn.
+    // This ensures relationship_essences is updated even when using the sovereign route.
+    if (effectiveUserId && !isSanctuary && orchestratorResult.text) {
+      (async () => {
+        try {
+          const existingEssence = await loadRelationshipEssence(effectiveUserId);
+          const anamnesis = getRelationshipAnamnesis();
+          const userName = (meta as any)?.userName || existingEssence?.userName;
+          const updatedEssence = anamnesis.captureEssence({
+            userId: effectiveUserId,
+            userName,
+            userMessage: message,
+            maiaResponse: orchestratorResult.text,
+            conversationHistory: [
+              { role: 'user', content: message },
+              { role: 'assistant', content: orchestratorResult.text },
+            ],
+            spiralDynamics: {
+              currentStage: wuxingSnapshot?.momentElement || null,
+              dynamics: wuxingSnapshot ? `${wuxingSnapshot.momentElement} moment` : 'Listening for patterns',
+              humanExperience: '',
+            },
+            sessionThread: { emergingAwareness: [] },
+            archetypalResonance: {
+              primaryResonance: (knowledgeGateResult?.source_mix?.[0]?.source) || 'depth_psychology',
+              sensing: null,
+            },
+            recalibrationEvent: null,
+            fieldState: { depth: 0.7 },
+            existingEssence: existingEssence || undefined,
+          });
+          await saveRelationshipEssence(updatedEssence);
+          console.log(`💫 [ANAMNESIS] Essence saved: encounters=${updatedEssence.encounterCount} morphic=${updatedEssence.morphicResonance.toFixed(2)}`);
+        } catch (anamnesisErr) {
+          console.warn('[ANAMNESIS] Write failed (non-blocking):', anamnesisErr);
+        }
+      })();
+    }
 
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {

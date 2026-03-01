@@ -2557,9 +2557,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
 
-      // Store in ref for MAIA API context (not displayed in UI)
+      // Store in ref for MAIA API context AND restore to UI so navigation back shows the conversation
       historicalMessagesRef.current = loadedMessages;
-      console.log(`💾 [Context] MAIA has access to ${loadedMessages.length} historical messages`);
+      if (loadedMessages.length > 0) {
+        // Show conversation history in the UI when navigating back to /maia within the same session/day
+        setMessages(loadedMessages);
+        console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI (same-session navigation)`);
+      } else {
+        console.log(`💾 [Context] No previous messages for this session`);
+      }
     };
 
     loadConversationHistory();
