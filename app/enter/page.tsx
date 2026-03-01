@@ -3,11 +3,24 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+async function hideSplash() {
+  try {
+    const { SplashScreen } = await import('@capacitor/splash-screen');
+    await SplashScreen.hide({ fadeOutDuration: 300 });
+  } catch {
+    // Not running in Capacitor — no-op
+  }
+}
+
 export default function EnterPage() {
   const router = useRouter();
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
   useEffect(() => {
+    // Hide splash immediately — this page is the iOS entry point.
+    // If we don't call this here, the brown splash stays forever because
+    // this page routes without painting, and WKWebView never gets unblocked.
+    hideSplash();
     // ONE-SHOT REDIRECT GUARD: Redirect once per app session, then become inert
     // Uses sessionStorage (cleared on app restart, survives page reloads)
     const onceKey = 'maia_root_redirect_once';
