@@ -37,12 +37,12 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-02-13
-- **Current milestone**: Bridge D implemented — spiral state persistence layer complete
-- **Last change**: Added `member_spiral_state` table + fire-and-forget persistence to prevent treating returning members as new
-- **Next action**: Run migration, verify continuity across server restarts
-- **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
-- **State of the system**: Bridge D landed. Anti-regression infrastructure in place. Structural continuity without content surveillance.
+- **Date**: 2026-02-28
+- **Current milestone**: Bridge E — end-to-end memory continuity pipeline complete
+- **Last change**: Wired session summaries + turns fallback into oracle system prompt; oracle now owns server-side turn persistence (fire-and-forget); idempotency via exchange_id + seq unique index; seq tiebreakers on all reads; addTurn schema mismatch fixed; 14,664 historical turns relinked to current member ID via reversible audit table
+- **Next action**: Deploy (`git pull && docker compose -f docker-compose.production.yml up -d --build`), run 3 verification queries, then run session summary worker to confirm `has_summary = true`
+- **Underlying question**: Can a member ask "what did we cover last time?" and receive a coherent, accurate answer across sessions and devices?
+- **State of the system**: Pipeline structurally complete. Awaiting post-deploy verification. Worker must be run manually (not yet a production service) after each finalized session to generate remembrances.
 
 ## Re-entry vow (for this session)
 

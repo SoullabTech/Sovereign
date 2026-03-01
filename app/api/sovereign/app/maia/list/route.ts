@@ -89,6 +89,9 @@ import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
+import { getActivePatternContext, type ActivePatternRow } from '@/lib/patterns/PatternOfferingService';
+import { getRecentSummaries } from '@/lib/scribe/sovereignSummarizer';
+import { loadJournals, type JournalEntry } from '@/lib/memory/SignificantMomentsService';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -513,6 +516,66 @@ Water = depth, reflection, wisdom`;
     // Unpack Wu Xing result
     const { wuxingSnapshot, bridgedSnapshot, wuxingAddendum } = wuxingResult;
 
+    // 🕸️ MEMBER WEB: Parallel fetch of patterns + session summaries + journal entries.
+    // These are the "threads" that make MAIA feel like the center of the web, not a chatbot.
+    // Capped and formatted so they never bloat the prompt.
+    let memberWebAddendum = '';
+    if (isRecognizedUser && !isSanctuary) {
+      const t_web_start = Date.now();
+      const [activePatterns, recentSummaries, recentJournals] = await Promise.all([
+        getActivePatternContext(effectiveUserId, 4).catch(() => [] as ActivePatternRow[]),
+        getRecentSummaries(effectiveUserId, 3).catch(() => []),
+        loadJournals(effectiveUserId, 5).catch(() => [] as JournalEntry[]),
+      ]);
+
+      // Format patterns (capped at 4, signal-dense)
+      const patternsBlock = activePatterns.length > 0
+        ? activePatterns.slice(0, 4).map((p, i) => {
+            const conf = (p.confidence * 100).toFixed(0);
+            const when = p.lastEvidenceAt ? p.lastEvidenceAt.slice(0, 10) : 'unknown';
+            return `  P${i + 1} [${conf}% | ${p.scope} | ${when}]: ${p.statement}`;
+          }).join('\n')
+        : '  None recorded yet.';
+
+      // Format session summaries (last 3, title only)
+      const summariesBlock = recentSummaries.length > 0
+        ? recentSummaries.slice(0, 3).map(s => {
+            const date = s.completedAt.slice(0, 10);
+            const title = (s.summary as any)?.title || (s.summary as any)?.essence || 'Session completed';
+            return `  [${date}] ${String(title).slice(0, 120)}`;
+          }).join('\n')
+        : '  No summaries yet — session history builds over time.';
+
+      // Format journals (last 5, condensed)
+      const journalsBlock = recentJournals.length > 0
+        ? recentJournals.slice(0, 5).map(j => {
+            const date = j.createdAt.toISOString().slice(0, 10);
+            const preview = j.content.replace(/\s+/g, ' ').trim().slice(0, 200);
+            const themes = j.themes?.slice(0, 3).join(', ') || '';
+            return `  [${date}]${themes ? ` (${themes})` : ''} — ${preview}`;
+          }).join('\n')
+        : '  No journal entries yet.';
+
+      memberWebAddendum = `🕸️ MEMBER WEB (Silent context — use as background awareness, do not recite):
+Active Patterns (recurring structures in their life):
+${patternsBlock}
+
+Recent Session Arcs (what we've been working on):
+${summariesBlock}
+
+Recent Journal:
+${journalsBlock}
+
+Instruction: Before responding, silently check these threads. If relevant, reflect them briefly and propose one integration step. Do not quote this block directly.`;
+
+      const t_web_ms = Date.now() - t_web_start;
+      console.log(
+        `🕸️ [CONTEXT] user=${effectiveUserId.slice(0, 8)} ` +
+        `patterns=${activePatterns.length} summaries=${recentSummaries.length} ` +
+        `journals=${recentJournals.length} t_web=${t_web_ms}ms dt=${msSince(start)}ms`
+      );
+    }
+
     // 🏢 STUDIO SURFACE: Build prompt addendum when running inside Soullab Studio
     const surfaceMode = (meta as any)?.surface as string | undefined;
     const studioCtx = (meta as any)?.studioContext as { surface?: string; clientId?: string; pathname?: string } | undefined;
@@ -588,6 +651,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           conversationId: bodyConversationId || session.id, // 📝 Stable conversation ID for thread continuity
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
+          memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
           ...meta,
         },
       }),

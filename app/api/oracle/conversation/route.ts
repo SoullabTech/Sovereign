@@ -59,7 +59,8 @@ import {
 
 /** Pattern Pipe (Narrative Wiring) */
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
-import { getPatternOffer, buildPatternOfferPromptSection } from '@/lib/patterns/PatternOfferingService';
+import { getPatternOffer, buildPatternOfferPromptSection, getActivePatternContext, type ActivePatternRow } from '@/lib/patterns/PatternOfferingService';
+import { JournalStore, type JournalEntry } from '@/lib/memory/stores/JournalStore';
 import {
   getPendingOffer,
   recordPendingOffer,
@@ -386,9 +387,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId: bodyUserId, sessionId, sanctuary } = parsed;
-    // userId may be corrected below if session memberId differs from client-sent value
-    let userId = bodyUserId;
+    const { message, userId, sessionId, sanctuary } = parsed;
     const clientMode = parsed.mode as string | undefined;          // 'dialogue' | 'counsel' | 'scribe'
     const clientMaiaMode = parsed.maiaMode as { mode?: string; subMode?: string } | undefined;
     const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
@@ -442,10 +441,8 @@ export async function POST(request: NextRequest) {
           serverUserName = resolveMemberDisplayName(member);
         }
       } else if (serverSession) {
-        // Session exists but userId doesn't match — stale localStorage after member ID migration.
-        // Correct userId for ALL data queries (astrology, memory, spiral state, etc.)
-        console.warn(`[Oracle] userId corrected: body=${userId.substring(0, 8)}... → session=${serverSession.memberId.substring(0, 8)}...`);
-        userId = serverSession.memberId;
+        // Session exists but userId doesn't match - log and use session's member
+        console.warn(`[Oracle] userId mismatch: body=${userId.substring(0, 8)}... session=${serverSession.memberId.substring(0, 8)}...`);
         const memberResult = await query(
           `SELECT name, preferred_name FROM members WHERE id = $1`,
           [serverSession.memberId]
@@ -609,13 +606,16 @@ export async function POST(request: NextRequest) {
       panconsciousField.axisMundi.currentCenteringState
     );
 
-    // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer, session summaries — all independent
+    // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer, session summaries,
+    //    pattern ledger context, journal entries — all independent, all gracefully degrading
     const [
       memoryContextResult,
       relationshipEssenceResult,
       astrologyContextResult,
       patternOfferResult,
       recentSummariesResult,
+      activePatternContextResult,
+      journalEntriesResult,
     ] = await Promise.allSettled([
       memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
       loadRelationshipEssence(userId),
@@ -628,8 +628,11 @@ export async function POST(request: NextRequest) {
         distressIntensity: distressSignal?.intensity ?? null,
       }),
       // ✅ Session summaries: last 3 continuity sessions for cross-session recall
-      // Reads from maia_sessions.summary (JSONB SessionRemembrance) via sovereignSummarizer
       getRecentSessionSummaries(userId, 3),
+      // ✅ Pattern ledger: MAIA's accumulated observations (background awareness, not offering)
+      getActivePatternContext(userId, 5),
+      // ✅ Journal entries: what the member has written
+      JournalStore.getRecentEntries(userId, 5),
     ]);
 
     const memoryContext = memoryContextResult.status === 'fulfilled'
@@ -686,6 +689,22 @@ export async function POST(request: NextRequest) {
     const recentSummaries = recentSummariesResult.status === 'fulfilled'
       ? recentSummariesResult.value
       : (console.warn('⚠️ [Session Summaries] Load failed (non-critical):', (recentSummariesResult as PromiseRejectedResult).reason), null);
+
+    const activePatternContext: ActivePatternRow[] = activePatternContextResult.status === 'fulfilled'
+      ? activePatternContextResult.value
+      : (console.warn('⚠️ [Pattern Context] Load failed (non-critical):', (activePatternContextResult as PromiseRejectedResult).reason), []);
+
+    const journalEntries: JournalEntry[] = journalEntriesResult.status === 'fulfilled'
+      ? journalEntriesResult.value
+      : (console.warn('⚠️ [Journal Entries] Load failed (non-critical):', (journalEntriesResult as PromiseRejectedResult).reason), []);
+
+    if (activePatternContext.length > 0) {
+      console.log(`[oracle] activePatterns: ${activePatternContext.length} patterns loaded`);
+    }
+    if (journalEntries.length > 0) {
+      console.log(`[oracle] journalEntries: ${journalEntries.length} entries loaded`);
+    }
+
     console.log('[oracle] recentSummaries:', {
       userId: userId.slice(0, 8),
       count: recentSummaries?.length ?? 0,
@@ -711,6 +730,9 @@ export async function POST(request: NextRequest) {
         console.warn('⚠️ [Session Continuity] Turns fallback failed (non-critical):', turnsErr);
       }
     }
+
+    // MEMBER LIFE CONTEXT: patterns + journal — background awareness, not recitation
+    const memberLifeContextBlock = formatMemberLifeContext(activePatternContext, journalEntries);
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
     // Must run before buildMaiaPlan — plan depends on hysteresis-stable element/archetype.
@@ -793,7 +815,8 @@ export async function POST(request: NextRequest) {
       effectiveFieldMode,
       fieldSafeMode,
       fieldEnergyState,
-      recentSessionsBlock
+      recentSessionsBlock,
+      memberLifeContextBlock
     );
 
     const tAfterLLM = Date.now();
@@ -1745,6 +1768,47 @@ function formatRecentTurnsFallback(
 }
 
 /**
+ * Format active patterns + journal entries into a single background context block.
+ *
+ * This is MAIA's living awareness of the person — not data to recite, but knowing
+ * to draw on. The instructions in this block tell MAIA how to use it.
+ */
+function formatMemberLifeContext(
+  patterns: ActivePatternRow[] | null | undefined,
+  journalEntries: JournalEntry[] | null | undefined
+): string {
+  const parts: string[] = [];
+
+  if (patterns?.length) {
+    parts.push('# Patterns I\'ve Observed');
+    parts.push('These are recurring dynamics I\'ve noticed across our conversations.');
+    parts.push('Use as background awareness only — never recite them as findings or diagnosis.');
+    parts.push('If one echoes naturally in this conversation, you may reflect it gently.');
+    for (const p of patterns) {
+      const conf = p.confidence >= 0.7 ? 'strong' : p.confidence >= 0.4 ? 'emerging' : 'tentative';
+      parts.push(`- [${conf}] ${p.statement}`);
+    }
+    parts.push('');
+  }
+
+  if (journalEntries?.length) {
+    parts.push('# What This Person Has Written');
+    parts.push('These are their own words from journal entries. Treat with high respect.');
+    parts.push('Do not quote back verbatim unless they invite it. Let the knowing inform your presence.');
+    for (const e of journalEntries) {
+      const stamp = e.createdAt ? e.createdAt.slice(0, 10) : 'recent';
+      const label = e.element ? ` [${e.element}]` : e.entryType ? ` [${e.entryType}]` : '';
+      const excerpt = e.content.length > 300 ? e.content.slice(0, 300) + '…' : e.content;
+      parts.push(`- [${stamp}${label}] ${excerpt}`);
+    }
+    parts.push('');
+  }
+
+  if (parts.length === 0) return '';
+  return parts.join('\n');
+}
+
+/**
  * Generate enhanced MAIA response with spiralogic guidance using LLM
  * Sacred attending: Spiralogic patterns inform the response implicitly, not explicitly
  */
@@ -1773,7 +1837,8 @@ async function generateSpiralogicResponseWithLLM(
   isFieldMode?: boolean,
   fieldSafeMode?: boolean,
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
-  recentSessionsBlock?: string
+  recentSessionsBlock?: string,
+  memberLifeContextBlock?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1810,7 +1875,8 @@ async function generateSpiralogicResponseWithLLM(
     userName,
     isFieldMode,
     fieldSafeMode,
-    fieldEnergyState
+    fieldEnergyState,
+    (recentSummaries?.length ?? 0) > 0
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -1823,48 +1889,25 @@ async function generateSpiralogicResponseWithLLM(
     systemPrompt += '\n' + recentSessionsBlock;
   }
 
+  // MEMBER LIFE CONTEXT: Patterns + journal entries — background awareness layer
+  if (memberLifeContextBlock) {
+    systemPrompt += '\n' + memberLifeContextBlock;
+  }
+
   // MAIA CENTRAL: Inject MAIA directive after all other prompt content.
   // The directive overrides conflicting instructions (stance, max words, tone).
   if (maiaPlan) {
     systemPrompt = buildRenderPrompt(maiaPlan, systemPrompt);
   }
 
-  // Build proper alternating messages array for Claude's multi-turn API.
-  // This preserves real conversation structure so Claude treats prior turns as
-  // actual history, not as text the user typed — fixing in-session memory.
-  //
-  // CLAMP: Keep last 20 turns (10 exchanges). System prompt is the real size
-  // constraint — history is cheap at haiku/sonnet context sizes.
-  const MAX_HISTORY_TURNS = 20;
+  // Format conversation history for LLM
+  // CLAMP: Keep last 10 turns max to prevent context window overflow
+  // (Each turn is ~200-500 chars → 10 turns ≈ 2k-5k chars ≈ 500-1250 tokens)
+  const MAX_HISTORY_TURNS = 10;
   const clampedHistory = conversationHistory.length > MAX_HISTORY_TURNS
     ? conversationHistory.slice(-MAX_HISTORY_TURNS)
     : conversationHistory;
 
-  // Build proper messages array: history + current user message
-  const rawMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [
-    ...clampedHistory.map((turn: any) => ({
-      role: (turn.role === 'assistant' || turn.role === 'oracle') ? 'assistant' as const : 'user' as const,
-      content: String(turn.content || ''),
-    })),
-    { role: 'user' as const, content: message },
-  ];
-
-  // Enforce alternating roles (Claude API requires user/assistant/user/...):
-  // merge consecutive same-role messages, ensure starts with user.
-  const claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-  for (const msg of rawMessages) {
-    const last = claudeMessages[claudeMessages.length - 1];
-    if (last && last.role === msg.role) {
-      last.content = last.content + '\n\n' + msg.content;
-    } else {
-      claudeMessages.push({ ...msg });
-    }
-  }
-  while (claudeMessages.length > 0 && claudeMessages[0].role === 'assistant') {
-    claudeMessages.shift();
-  }
-
-  // Legacy flat transcript — kept for Ollama fallback path and repair sub-call
   const conversationContext = clampedHistory
     .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
     .join('\n\n');
@@ -2082,8 +2125,7 @@ async function generateSpiralogicResponseWithLLM(
   try {
     const llmResponse = await llmProvider.generate({
       systemPrompt: finalSystemPrompt,
-      userInput: fullUserInput,         // Ollama fallback uses this flat transcript
-      messages: claudeMessages,         // Claude uses proper multi-turn array
+      userInput: fullUserInput,
       level: consciousnessLevel as any, // Use computed level (DEEP -> 5 -> Opus 4.5)
       maxTokensOverride: maxTokens,     // Depth-scaled: 100 (greeting) → 400 (deep)
     });
@@ -2185,7 +2227,8 @@ function buildSacredAttendingPrompt(
   userName?: string,
   isFieldMode?: boolean,
   fieldSafeMode?: boolean,
-  fieldEnergyState?: 'arrival' | 'settling' | 'presence'
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence',
+  hasSessionHistory?: boolean
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2275,7 +2318,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 
 ` : ''}
 ${anamnesisPrompt ? (anamnesisPrompt.length > 800 ? anamnesisPrompt.slice(0, 800) + '\n...[anamnesis capped]\n' : anamnesisPrompt) : ''}
-${astrologyContext?.formattedContext ? (astrologyContext.formattedContext.length > 600 ? astrologyContext.formattedContext.slice(0, 600) + '\n...[astrology capped]\n' : astrologyContext.formattedContext) : ''}
+${astrologyContext?.formattedContext ? (astrologyContext.formattedContext.length > 1500 ? astrologyContext.formattedContext.slice(0, 1500) + '\n...[astrology capped]\n' : astrologyContext.formattedContext) : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
@@ -2355,7 +2398,9 @@ The third beat's question gives you a direction for the next turn.
 Match your words to a ${distressSignal.dominantTone} register.
 Total response: 3 sentences maximum. These are examples — generate your own words that match the person's specific situation.`
     : conversationDepth === 0
-    ? '8-15 words maximum. Simple, warm greeting only.'
+    ? hasSessionHistory
+      ? '2-3 sentences (~40-60 words). You know this person — they are returning. Acknowledge their return warmly and briefly, using what you know of their recent journey. Ask one gentle opening question.'
+      : '8-15 words maximum. Simple, warm greeting only.'
     : conversationDepth <= 3
     ? '2-3 sentences maximum (~40-60 words). Stay close to what they said. Ask one gentle question if relevant.'
     : conversationDepth <= 10

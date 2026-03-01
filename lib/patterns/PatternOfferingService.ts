@@ -282,3 +282,64 @@ If you choose NOT to offer it this turn (because the conversation doesn't call f
 The pattern will remain available for a future turn.
 `;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Background Pattern Awareness (separate from offering)
+// ═══════════════════════════════════════════════════════════════
+
+export interface ActivePatternRow {
+  id: string;
+  statement: string;
+  confidence: number;
+  status: string;
+  scope: string;
+  lastEvidenceAt?: string;
+}
+
+/**
+ * Retrieve the top active patterns for a member as background context.
+ *
+ * This is NOT the offering pipeline (which surfaces 1 pattern to present).
+ * This gives MAIA silent awareness of all patterns she's accumulated —
+ * so she can recognise echoes without necessarily offering them.
+ *
+ * @param memberId - Member UUID (as string)
+ * @param limit    - Maximum patterns to return (default 5)
+ */
+export async function getActivePatternContext(
+  memberId: string,
+  limit: number = 5
+): Promise<ActivePatternRow[]> {
+  const result = await query<{
+    id: string;
+    statement: string;
+    confidence: number;
+    status: string;
+    scope: string;
+    last_evidence_at: string | null;
+  }>(
+    `SELECT
+      id::text,
+      statement,
+      confidence,
+      status,
+      scope,
+      last_evidence_at::text
+    FROM pattern_ledger
+    WHERE member_id = $1::uuid
+      AND status NOT IN ('retired', 'rejected')
+      AND confidence >= 0.25
+    ORDER BY confidence DESC, last_evidence_at DESC NULLS LAST
+    LIMIT $2`,
+    [memberId, limit]
+  );
+
+  return (result.rows ?? []).map(r => ({
+    id: r.id,
+    statement: r.statement,
+    confidence: Number(r.confidence),
+    status: r.status,
+    scope: r.scope,
+    lastEvidenceAt: r.last_evidence_at ?? undefined,
+  }));
+}

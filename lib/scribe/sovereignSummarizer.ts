@@ -33,6 +33,56 @@ export interface SessionRemembrance {
 }
 
 // ============================================================================
+// JSON Extraction Utility
+// ============================================================================
+
+/**
+ * Extract the first complete JSON object from a string.
+ *
+ * More robust than regex fence-stripping:
+ *   - Finds the first `{`
+ *   - Tracks brace depth (skips braces inside strings)
+ *   - Returns the slice from `{` to the matching `}`
+ *   - Handles code fences, leading commentary, trailing text
+ *
+ * Returns null if no valid JSON object is found.
+ */
+function extractFirstJsonObject(text: string): string | null {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (ch === '\\' && inString) {
+      escape = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+
+  return null; // Unbalanced braces
+}
+
+// ============================================================================
 // Main Entry Point
 // ============================================================================
 
@@ -115,7 +165,13 @@ Rules:
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const raw = message.content[0].type === 'text' ? message.content[0].text : '';
+    // Extract the first complete JSON object from the response.
+    // Handles: bare JSON, ```json fences, extra commentary before/after.
+    const text = extractFirstJsonObject(raw);
+    if (!text) {
+      throw new Error(`[Summarizer] No JSON object found in model response. Raw: ${raw.slice(0, 200)}`);
+    }
     const parsed = JSON.parse(text) as Omit<SessionRemembrance, 'generatedAt'>;
 
     return {

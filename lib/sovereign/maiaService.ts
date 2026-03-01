@@ -1110,6 +1110,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🚪 [FAST] Knowledge Gate addendum applied: source well modulation injected`);
   }
 
+  // 🕸️ MEMBER WEB: Patterns + session summaries + journals — the threads of the web
+  const memberWebAddendum = (meta as any)?.memberWebAddendum as string | undefined;
+  if (memberWebAddendum) {
+    console.log(`🕸️ [FAST] Member web injected: patterns+summaries+journals context active`);
+  }
+
   // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
   const fieldWisdomAddendum = (meta as any)?.fieldWisdomAddendum as string | undefined;
   if (fieldWisdomAddendum) {
@@ -1148,7 +1154,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1392,6 +1398,8 @@ async function corePathResponse(
     scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
     // 🚪 KNOWLEDGE GATE: AIN source well modulation
     knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+    // 🕸️ MEMBER WEB: Patterns + session summaries + journals
+    memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
     // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
     consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
     // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
