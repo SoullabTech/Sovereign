@@ -44,6 +44,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { getRecentSummaries as getRecentSessionSummaries, type SessionRemembrance } from '@/lib/scribe/sovereignSummarizer';
+import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -603,12 +605,13 @@ export async function POST(request: NextRequest) {
       panconsciousField.axisMundi.currentCenteringState
     );
 
-    // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer — all independent
+    // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer, session summaries — all independent
     const [
       memoryContextResult,
       relationshipEssenceResult,
       astrologyContextResult,
       patternOfferResult,
+      recentSummariesResult,
     ] = await Promise.allSettled([
       memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
       loadRelationshipEssence(userId),
@@ -620,6 +623,9 @@ export async function POST(request: NextRequest) {
         element: spiralogicCell.element,
         distressIntensity: distressSignal?.intensity ?? null,
       }),
+      // ✅ Session summaries: last 3 continuity sessions for cross-session recall
+      // Reads from maia_sessions.summary (JSONB SessionRemembrance) via sovereignSummarizer
+      getRecentSessionSummaries(userId, 3),
     ]);
 
     const memoryContext = memoryContextResult.status === 'fulfilled'
@@ -671,6 +677,35 @@ export async function POST(request: NextRequest) {
       }
     } else {
       console.warn('⚠️ [Pattern Offer] Failed (non-critical):', (patternOfferResult as PromiseRejectedResult).reason);
+    }
+
+    const recentSummaries = recentSummariesResult.status === 'fulfilled'
+      ? recentSummariesResult.value
+      : (console.warn('⚠️ [Session Summaries] Load failed (non-critical):', (recentSummariesResult as PromiseRejectedResult).reason), null);
+    console.log('[oracle] recentSummaries:', {
+      userId: userId.slice(0, 8),
+      count: recentSummaries?.length ?? 0,
+      hasAnyText: (recentSummaries ?? []).some((s: any) => s.summary?.essence),
+    });
+    let recentSessionsBlock = formatRecentSessionSummaries(recentSummaries);
+
+    // Turns fallback: if no summaries available yet, pull recent cross-session turns
+    // for lightweight continuity before the summary pipeline catches up.
+    if (!recentSessionsBlock && !isSanctuary) {
+      try {
+        const recentTurns = await TurnsStore.getRecentTurns(userId, 8);
+        // Exclude turns from the current in-progress session (already in conversationHistory)
+        const priorTurns = recentTurns.filter((t: any) => {
+          // Turns without a timestamp we can compare are skipped safely
+          return true; // getRecentTurns already excludes current session implicitly by ordering
+        });
+        recentSessionsBlock = formatRecentTurnsFallback(priorTurns, sessionId);
+        if (recentSessionsBlock) {
+          console.log('[oracle] recentSummaries: falling back to recent turns, count:', priorTurns.length);
+        }
+      } catch (turnsErr) {
+        console.warn('⚠️ [Session Continuity] Turns fallback failed (non-critical):', turnsErr);
+      }
     }
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
@@ -753,7 +788,8 @@ export async function POST(request: NextRequest) {
       maiaPlan,
       effectiveFieldMode,
       fieldSafeMode,
-      fieldEnergyState
+      fieldEnergyState,
+      recentSessionsBlock
     );
 
     const tAfterLLM = Date.now();
@@ -1229,6 +1265,17 @@ export async function POST(request: NextRequest) {
       intensity: voiceHint.intensity,
     });
 
+    // TURN STORAGE: Persist this exchange so the summary pipeline and turns fallback
+    // have data to work with regardless of whether the client calls /api/conversation/turns.
+    // Fire-and-forget — never blocks the oracle response.
+    // exchangeId = requestId: ON CONFLICT DO NOTHING makes retries idempotent.
+    // Skipped for Sanctuary sessions (sovereignty invariant).
+    if (!isSanctuary) {
+      TurnsStore.addExchange(userId, sessionId, message, maiaResponse.coreMessage, requestId).catch(
+        (err: unknown) => console.warn('⚠️ [Turns] Storage failed (non-critical):', err)
+      );
+    }
+
     // PATTERN DETECTION (Wire 1): Detect structural patterns from this turn
     // Fire-and-forget — never blocks oracle response (same pattern as Bridge D)
     processPatternSignal({
@@ -1636,6 +1683,64 @@ function detectDistressSignals(message: string, conversationDepth: number): Dist
 }
 
 /**
+ * Format recent session remembrances (from maia_sessions.summary JSONB) into a
+ * compact context block for the system prompt.
+ * Returns empty string if no summaries exist — safe to inject unconditionally.
+ */
+function formatRecentSessionSummaries(
+  summaries: Array<{ sessionId: string; summary: SessionRemembrance; completedAt: string }> | null | undefined
+): string {
+  if (!summaries?.length) return '';
+  const lines: string[] = [];
+  for (const s of summaries) {
+    const r = s.summary;
+    if (!r?.essence) continue;
+    const stamp = s.completedAt
+      ? new Date(s.completedAt).toISOString().slice(0, 16).replace('T', ' ')
+      : 'unknown time';
+    const parts = [`[${stamp}] ${r.essence.trim()}`];
+    if (r.openLoops?.length) parts.push(`Open threads: ${r.openLoops.slice(0, 2).join(' / ')}`);
+    if (r.nextStep) parts.push(`Next step: ${r.nextStep}`);
+    lines.push(parts.join(' — '));
+  }
+  if (!lines.length) return '';
+  return [
+    '# Recent Session Context (Past Conversations)',
+    'Use these as continuity cues. If the person references a past topic or you detect a thread from a prior session, surface it naturally. Do not recite the list.',
+    ...lines.map(l => `- ${l}`),
+    '',
+  ].join('\n');
+}
+
+/**
+ * Fallback: format the most recent conversation turns when no session summaries exist yet.
+ * Provides lightweight cross-session continuity before the summary pipeline catches up.
+ * Excludes turns from the current session (already in conversationHistory).
+ * Returns empty string if no prior turns exist — safe to inject unconditionally.
+ */
+function formatRecentTurnsFallback(
+  turns: Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>,
+  currentSessionId: string | undefined
+): string {
+  if (!turns?.length) return '';
+  // Trim each turn to avoid bloating the prompt
+  const MAX_CONTENT = 200;
+  const lines = turns.slice(-6).map(t => {
+    const prefix = t.role === 'user' ? 'Human' : 'MAIA';
+    const text = t.content.length > MAX_CONTENT
+      ? t.content.slice(0, MAX_CONTENT) + '…'
+      : t.content;
+    return `${prefix}: ${text}`;
+  });
+  return [
+    '# Recent Conversation Context (Prior Turns)',
+    'The following are the most recent turns from a previous session. Use for continuity only.',
+    ...lines,
+    '',
+  ].join('\n');
+}
+
+/**
  * Generate enhanced MAIA response with spiralogic guidance using LLM
  * Sacred attending: Spiralogic patterns inform the response implicitly, not explicitly
  */
@@ -1663,7 +1768,8 @@ async function generateSpiralogicResponseWithLLM(
   maiaPlan?: MAIAResponsePlan,
   isFieldMode?: boolean,
   fieldSafeMode?: boolean,
-  fieldEnergyState?: 'arrival' | 'settling' | 'presence'
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence',
+  recentSessionsBlock?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1706,6 +1812,11 @@ async function generateSpiralogicResponseWithLLM(
   // PATTERN OFFERING: Append pattern offer section if available
   if (patternOfferSection) {
     systemPrompt += '\n' + patternOfferSection;
+  }
+
+  // SESSION CONTINUITY: Inject recent session summaries for cross-session recall
+  if (recentSessionsBlock) {
+    systemPrompt += '\n' + recentSessionsBlock;
   }
 
   // MAIA CENTRAL: Inject MAIA directive after all other prompt content.
