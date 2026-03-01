@@ -148,3 +148,150 @@ export function describeLiveContext(ctx: MemberLiveContext): Record<string, unkn
     hasCosmicWeather: (ctx.astrology?.formattedContext?.length ?? 0) > 0,
   };
 }
+
+// ============================================================================
+// Builder — the single canonical assembly point
+// ============================================================================
+
+import { loadSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { getRecentSummaries } from '@/lib/scribe/sovereignSummarizer';
+import { getActivePatternContext } from '@/lib/patterns/PatternOfferingService';
+import { loadJournals } from '@/lib/memory/SignificantMomentsService';
+import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
+
+export interface BuildMemberLiveContextOptions {
+  /** Max session summaries to fetch (default 3) */
+  maxSessions?: number;
+  /** Max patterns to fetch (default 4) */
+  maxPatterns?: number;
+  /** Max journal entries to fetch (default 5) */
+  maxJournal?: number;
+  /** If true, skip all DB reads (sanctuary / anonymous sessions) */
+  skip?: boolean;
+  /** Display name for identity block */
+  displayName?: string;
+}
+
+/**
+ * Canonical assembly of everything MAIA knows about a member.
+ *
+ * Called once per conversation turn, before the oracle call.
+ * All fetches are parallel; any individual failure degrades gracefully.
+ * The returned object is typed and logged — never silently empty.
+ *
+ * Usage:
+ *   const live = await buildMemberLiveContext(effectiveUserId, { displayName: userName });
+ *   // then format into prompt or inspect via describeLiveContext(live)
+ */
+export async function buildMemberLiveContext(
+  userId: string,
+  options: BuildMemberLiveContextOptions = {}
+): Promise<MemberLiveContext> {
+  const {
+    maxSessions = 3,
+    maxPatterns = 4,
+    maxJournal = 5,
+    skip = false,
+    displayName,
+  } = options;
+
+  const assembledAt = new Date().toISOString();
+
+  // Empty context for sanctuary / anonymous sessions
+  if (skip || !userId) {
+    return {
+      identity: { userId, displayName },
+      spiralState: null,
+      recentSessions: [],
+      activePatterns: [],
+      recentJournal: [],
+      relationshipEssence: null,
+      astrology: null,
+      assembledAt,
+    };
+  }
+
+  // Parallel fetch — all failures degrade gracefully, never throw
+  const [
+    spiralState,
+    recentSessions,
+    activePatterns,
+    recentJournal,
+    relationshipEssence,
+  ] = await Promise.all([
+    loadSpiralState(userId).catch(() => null),
+    getRecentSummaries(userId, maxSessions).catch(() => []),
+    getActivePatternContext(userId, maxPatterns).catch(() => [] as ActivePattern[]),
+    loadJournals(userId, maxJournal).catch(() => [] as JournalEntry[]),
+    loadRelationshipEssence(userId).catch(() => null),
+  ]);
+
+  return {
+    identity: { userId, displayName },
+    spiralState,
+    recentSessions,
+    activePatterns,
+    recentJournal,
+    relationshipEssence,
+    astrology: null, // populated by route when birth data / transit engine available
+    assembledAt,
+  };
+}
+
+/**
+ * Format a MemberLiveContext into a compact "Member Web" prompt block.
+ *
+ * Caps: 4 patterns, 3 sessions, 5 journals. Hard limits prevent prompt bloat.
+ * Format is stable across turns — MAIA knows where to look in the prompt.
+ */
+export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
+  if (
+    ctx.activePatterns.length === 0 &&
+    ctx.recentSessions.length === 0 &&
+    ctx.recentJournal.length === 0
+  ) {
+    return ''; // Nothing to inject — don't add noise
+  }
+
+  const patternsBlock = ctx.activePatterns.length > 0
+    ? ctx.activePatterns.slice(0, 4).map((p, i) => {
+        const conf = (p.confidence * 100).toFixed(0);
+        const when = p.lastEvidenceAt ? p.lastEvidenceAt.slice(0, 10) : 'unknown';
+        return `  P${i + 1} [${conf}% | ${p.scope} | ${when}]: ${p.statement}`;
+      }).join('\n')
+    : '  None recorded yet.';
+
+  const summariesBlock = ctx.recentSessions.length > 0
+    ? ctx.recentSessions.slice(0, 3).map(s => {
+        const date = s.completedAt.slice(0, 10);
+        const rem = s.summary;
+        const essence = rem.essence ? rem.essence.slice(0, 140) : 'Session completed';
+        const topThemes = rem.themes?.slice(0, 3).join(', ') || '';
+        const next = rem.nextStep ? ` → ${rem.nextStep.slice(0, 60)}` : '';
+        return `  [${date}]${topThemes ? ` (${topThemes})` : ''}: ${essence}${next}`;
+      }).join('\n')
+    : '  No summaries yet — session history builds over time.';
+
+  const journalsBlock = ctx.recentJournal.length > 0
+    ? ctx.recentJournal.slice(0, 5).map(j => {
+        const date = j.createdAt instanceof Date
+          ? j.createdAt.toISOString().slice(0, 10)
+          : String(j.createdAt).slice(0, 10);
+        const preview = j.content.replace(/\s+/g, ' ').trim().slice(0, 200);
+        const themes = j.themes?.slice(0, 3).join(', ') || '';
+        return `  [${date}]${themes ? ` (${themes})` : ''} — ${preview}`;
+      }).join('\n')
+    : '  No journal entries yet.';
+
+  return `🕸️ MEMBER WEB (Silent context — use as background awareness, do not recite):
+Active Patterns (recurring structures in their life):
+${patternsBlock}
+
+Recent Session Arcs (what we've been working on):
+${summariesBlock}
+
+Recent Journal:
+${journalsBlock}
+
+Instruction: Before responding, silently check these threads. If relevant, reflect them briefly and propose one integration step. Do not quote this block directly.`;
+}
