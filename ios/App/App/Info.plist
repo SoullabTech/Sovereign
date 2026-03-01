@@ -32,7 +32,9 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>772</string>
+	<string>2406</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -41,6 +43,8 @@
 	<string>Some system libraries may reference Bluetooth APIs. MAIA does not use Bluetooth features.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>MAIA uses your camera to capture handwritten journal pages for text extraction.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>MAIA may access contacts through system libraries. Your contacts are never uploaded or stored by MAIA.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>MAIA uses Face ID to securely sign you in without a password.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -80,7 +84,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>
