@@ -386,7 +386,9 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId, sessionId, sanctuary } = parsed;
+    const { message, userId: bodyUserId, sessionId, sanctuary } = parsed;
+    // userId may be corrected below if session memberId differs from client-sent value
+    let userId = bodyUserId;
     const clientMode = parsed.mode as string | undefined;          // 'dialogue' | 'counsel' | 'scribe'
     const clientMaiaMode = parsed.maiaMode as { mode?: string; subMode?: string } | undefined;
     const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
@@ -440,8 +442,10 @@ export async function POST(request: NextRequest) {
           serverUserName = resolveMemberDisplayName(member);
         }
       } else if (serverSession) {
-        // Session exists but userId doesn't match - log and use session's member
-        console.warn(`[Oracle] userId mismatch: body=${userId.substring(0, 8)}... session=${serverSession.memberId.substring(0, 8)}...`);
+        // Session exists but userId doesn't match — stale localStorage after member ID migration.
+        // Correct userId for ALL data queries (astrology, memory, spiral state, etc.)
+        console.warn(`[Oracle] userId corrected: body=${userId.substring(0, 8)}... → session=${serverSession.memberId.substring(0, 8)}...`);
+        userId = serverSession.memberId;
         const memberResult = await query(
           `SELECT name, preferred_name FROM members WHERE id = $1`,
           [serverSession.memberId]

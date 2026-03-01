@@ -165,6 +165,7 @@ export function AccountSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [birthSaveError, setBirthSaveError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Practitioner projects state
@@ -629,6 +630,7 @@ export function AccountSettings() {
   const saveBirthData = useCallback(async () => {
     if (!userId) return;
     setSaving(true);
+    setBirthSaveError(null);
 
     try {
       const birthData = editBirthDate ? {
@@ -679,8 +681,14 @@ export function AccountSettings() {
         }
 
         showSaveIndicator();
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        const msg = errBody?.error || `Save failed (${res.status})`;
+        setBirthSaveError(msg);
+        console.error('[AccountSettings] Birth data save rejected:', res.status, errBody);
       }
     } catch (err) {
+      setBirthSaveError('Network error — check your connection and try again');
       console.error('[AccountSettings] Save birth data error:', err);
     } finally {
       setSaving(false);
@@ -1024,6 +1032,11 @@ export function AccountSettings() {
               View Full Chart →
             </motion.button>
           </div>
+        )}
+
+        {/* Birth save error */}
+        {birthSaveError && (
+          <p className="text-red-400 text-sm text-center">{birthSaveError}</p>
         )}
 
         {/* Save Birth Data */}
