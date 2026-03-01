@@ -4317,7 +4317,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Offline detected - using presence fallback');
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 
@@ -4457,7 +4457,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 
@@ -4502,6 +4502,8 @@ I'm not sure what I'm feeling yet.`;
         // 🚧 MAINTENANCE MODE: Show pause message when system is in maintenance
         if (response.status === 503) {
           const errData = await response.json().catch(() => null);
+          // Log actual error body (response.text() below would return "(no body)" since body already consumed)
+          console.error('[fetch] 503 error details:', errData);
           if (errData?.error === 'MAINTENANCE_MODE') {
             console.log('[OracleConversation] Maintenance mode active:', errData.message);
             const maintenanceMessage: ConversationMessage = {
@@ -4527,7 +4529,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Server error - using presence fallback');
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 

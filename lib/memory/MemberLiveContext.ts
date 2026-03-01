@@ -263,7 +263,9 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
 
   const summariesBlock = ctx.recentSessions.length > 0
     ? ctx.recentSessions.slice(0, 3).map(s => {
-        const date = s.completedAt.slice(0, 10);
+        const date = s.completedAt instanceof Date
+          ? s.completedAt.toISOString().slice(0, 10)
+          : String(s.completedAt).slice(0, 10);
         const rem = s.summary;
         const essence = rem.essence ? rem.essence.slice(0, 140) : 'Session completed';
         const topThemes = rem.themes?.slice(0, 3).join(', ') || '';
