@@ -285,7 +285,7 @@ build_and_upload() {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>html,body{margin:0;padding:0;background:#0b0f1c;}</style>
-    <script>window.location.replace('./field/enter.html');</script>
+    <script>window.location.replace('/enter');</script>
   </head>
   <body></body>
 </html>
