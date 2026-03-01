@@ -60,6 +60,25 @@ platform :ios do
       # cap sync: copies web assets AND updates native project (safer than cap copy)
       sh("cd #{REPO_ROOT} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios")
 
+      # Patch root index.html → instant JS redirect to /enter
+      # Without this, Capacitor loads the marketing homepage (/) which never calls
+      # SplashScreen.hide() and the app stays on the dark brown splash forever.
+      # /enter is the canonical iOS entry point — handles auth routing.
+      root_index = File.join(IOS_APP, "App", "public", "index.html")
+      if File.exist?(root_index)
+        html = File.read(root_index)
+        redirect_script = '<script>if(!window.__maiaRedirected){window.__maiaRedirected=true;window.location.replace(\'/enter\');}</script>'
+        unless html.include?("__maiaRedirected")
+          patched = html.sub("</head>", "#{redirect_script}</head>")
+          File.write(root_index, patched)
+          UI.success("Patched root index.html → /enter redirect")
+        else
+          UI.message("Root index.html already has /enter redirect — skipping")
+        end
+      else
+        UI.error("Root index.html not found at #{root_index} — iOS entry point will fail!")
+      end
+
     ensure
       UI.message("Reverting dynamic route patches…")
       sh("cd #{REPO_ROOT} && ./scripts/capacitor-patch-routes.sh revert")
