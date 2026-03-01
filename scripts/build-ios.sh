@@ -49,10 +49,10 @@ cat > out/index.html << 'HTMLEOF'
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>html,body{margin:0;padding:0;background:#0b0f1c;}</style>
-    <script>window.location.replace('/field/enter');</script>
+    <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
+    <script>window.location.replace('/enter');</script>
   </head>
-  <body></body>
+  <body style="background:#1A1513;"></body>
 </html>
 HTMLEOF
 
