@@ -367,7 +367,12 @@ function formatAstrologyContextForMAIA(
   birthTimeUnknown: boolean,
   celestialEvents?: CelestialEventsSnapshot | null
 ): string {
-  let context = '\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n';
+  // Lead with an unambiguous status directive so it survives any character cap
+  const birthStatus = birthChart
+    ? '**BIRTH DATA ON FILE — do NOT ask this person for their birth date, time, or location. You already have their natal chart. Reference it directly. They can also visit /astrology (Cosmic Blueprint) or /journey (Spiralogic map) to explore it visually.**'
+    : '**NO BIRTH DATA ON FILE — you may gently invite the person to share their birth details or visit /astrology to enter them, but only if cosmically relevant to the conversation.**';
+
+  let context = `\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n${birthStatus}\n\n`;
 
   // Current sky (always available)
   context += '## Current Cosmic Weather\n';
