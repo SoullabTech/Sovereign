@@ -187,6 +187,7 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
 
     // Format the context for MAIA
     const formattedContext = formatAstrologyContextForMAIA(
+      hasBirthData,
       birthChart,
       mayanProfile,
       todaysMayanSign,
@@ -358,6 +359,7 @@ function generateTransitHighlights(
  * Format astrology context as a section for MAIA's system prompt
  */
 function formatAstrologyContextForMAIA(
+  hasBirthData: boolean,
   birthChart: BirthChart | null,
   mayanProfile: CompleteMayanProfile | null,
   todaysMayanSign: MayanBirthSign | null,
@@ -367,9 +369,13 @@ function formatAstrologyContextForMAIA(
   birthTimeUnknown: boolean,
   celestialEvents?: CelestialEventsSnapshot | null
 ): string {
-  // Lead with an unambiguous status directive so it survives any character cap
-  const birthStatus = birthChart
-    ? '**BIRTH DATA ON FILE — do NOT ask this person for their birth date, time, or location. You already have their natal chart. Reference it directly. They can also visit /astrology (Cosmic Blueprint) or /journey (Spiralogic map) to explore it visually.**'
+  // Lead with an unambiguous status directive so it survives any character cap.
+  // Use hasBirthData (DB presence) not birthChart (which can be null if calculation
+  // failed silently) — MAIA should never ask for data that is already stored.
+  const birthStatus = hasBirthData
+    ? birthChart
+      ? '**BIRTH DATA ON FILE — do NOT ask this person for their birth date, time, or location. You already have their natal chart. Reference it directly. They can also visit /astrology (Cosmic Blueprint) or /journey (Spiralogic map) to explore it visually.**'
+      : '**BIRTH DATA ON FILE (chart calculation is loading) — do NOT ask this person for their birth date, time, or location. Their data is stored. Use what is available below, or direct them to /astrology to view their full chart.**'
     : '**NO BIRTH DATA ON FILE — you may gently invite the person to share their birth details or visit /astrology to enter them, but only if cosmically relevant to the conversation.**';
 
   let context = `\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n${birthStatus}\n\n`;
