@@ -215,7 +215,8 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    // Accept userId from query param (QuickJournalSheet) or x-member-id header (Reflections page via apiFetch)
+    const userId = searchParams.get('userId') || request.headers.get('x-member-id');
     const entryType = searchParams.get('type'); // optional filter
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
