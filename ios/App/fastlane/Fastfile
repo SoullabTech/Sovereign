@@ -292,6 +292,86 @@ platform :ios do
     UI.success("=" * 60)
   end
 
+  # ── upload_ipa ──────────────────────────────────────────────────────────────
+  # Upload a pre-built IPA to TestFlight WITHOUT rebuilding.
+  # Called by scripts/ios/upload.sh for the split build/upload workflow.
+  #
+  # Options:
+  #   ipa_path:"/path/to/MAIA.ipa"   — defaults to ios/App/build/MAIA.ipa
+  #   notify:false                   — whether to ping beta testers (default: false)
+  #   changelog:"text"               — TestFlight "What's New" text (optional)
+  #
+  # Auth: same env vars as `beta` (ASC_KEY_CONTENT or ASC_KEY_PATH)
+  desc "Upload a pre-built IPA to TestFlight (no rebuild)"
+  lane :upload_ipa do |options|
+    ipa_path    = options[:ipa_path] || File.join(BUILD_DIR, "MAIA.ipa")
+    notify      = options.fetch(:notify, false)
+    changelog   = options[:changelog] || "Build #{current_build_number_from_plist}"
+
+    unless File.exist?(ipa_path)
+      UI.user_error!("IPA not found: #{ipa_path} — run scripts/ios/build.sh first")
+    end
+
+    # ── Load ASC API key ──────────────────────────────────────────────────
+    key_id      = ENV["ASC_KEY_ID"]
+    issuer_id   = ENV["ASC_ISSUER_ID"]
+    key_content = ENV["ASC_KEY_CONTENT"]
+    key_path    = ENV["ASC_KEY_PATH"]
+
+    if key_id.nil? || key_id.strip.empty?
+      UI.user_error!("ASC_KEY_ID not set")
+    end
+    if issuer_id.nil? || issuer_id.strip.empty?
+      UI.user_error!("ASC_ISSUER_ID not set")
+    end
+
+    api_key_params = {
+      key_id:    key_id.strip,
+      issuer_id: issuer_id.strip,
+      duration:  1200,
+      in_house:  false,
+    }
+
+    if key_content && !key_content.strip.empty?
+      require "base64"
+      require "tempfile"
+      decoded = Base64.decode64(key_content.strip)
+      tmp = Tempfile.new(["AuthKey_#{key_id.strip}", ".p8"])
+      tmp.write(decoded)
+      tmp.flush
+      api_key_params[:key_filepath] = tmp.path
+      UI.message("Auth: ASC_KEY_CONTENT (base64) → temp file")
+    elsif key_path && !key_path.strip.empty?
+      expanded = File.expand_path(key_path.strip)
+      UI.user_error!("ASC_KEY_PATH does not exist: #{expanded}") unless File.exist?(expanded)
+      api_key_params[:key_filepath] = expanded
+      UI.message("Auth: ASC_KEY_PATH → #{expanded}")
+    else
+      UI.user_error!("Set ASC_KEY_CONTENT (base64) or ASC_KEY_PATH (.p8 path)")
+    end
+
+    api_key = app_store_connect_api_key(**api_key_params)
+
+    # ── Upload ────────────────────────────────────────────────────────────
+    UI.header("Uploading #{ipa_path} to TestFlight")
+    UI.message("Notify testers: #{notify}")
+
+    upload_to_testflight(
+      api_key:                           api_key,
+      ipa:                               ipa_path,
+      skip_waiting_for_build_processing: true,
+      notify_external_testers:           notify,
+      changelog:                         changelog
+    )
+
+    UI.success("=" * 60)
+    UI.success("TESTFLIGHT UPLOAD COMPLETE")
+    UI.success("Build : #{current_build_number_from_plist}")
+    UI.success("IPA   : #{ipa_path}")
+    UI.success("Check : https://appstoreconnect.apple.com/apps")
+    UI.success("=" * 60)
+  end
+
 end
 
 # ── helpers ───────────────────────────────────────────────────────────────────
