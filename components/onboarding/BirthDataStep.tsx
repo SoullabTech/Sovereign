@@ -11,17 +11,24 @@
  *   desirable. When the user declines, that preference is stored and the step
  *   is skipped on any future onboarding run.
  *
- * Consent states (stored in beta_user.astrologyConsent):
+ * Consent states (stored in both localStorage and server):
  *   'unknown'  → show choice screen (default for new members)
  *   'opted_in' → skip directly to next step
  *   'declined' → skip directly to next step
  *
- * TODO: persist astrologyConsent in members table (column: astrology_consent)
- *       so it survives localStorage clears and cross-device sign-ins.
+ * Cross-device persistence:
+ *   On mount, if localStorage says 'unknown', the server profile is checked
+ *   (best-effort). If the server has a resolved consent from another device,
+ *   it is stored locally and the step is skipped. If the check fails or the
+ *   server also says 'unknown', the choice screen is shown.
+ *
+ *   When the user makes a choice, consent is written to localStorage
+ *   immediately (fast path) and synced to the server in the background
+ *   (fire-and-forget, non-fatal on failure).
  *
  * Flow:
- *   unknown  → choice → (opted_in) → form → save → complete
- *                      → (declined) → complete immediately
+ *   unknown  → (mount check) → choice → (opted_in) → form → save → complete
+ *                                       → (declined) → complete immediately
  *   opted_in → complete immediately (step skipped)
  *   declined → complete immediately (step skipped)
  */
@@ -31,7 +38,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { apiFetch } from '@/lib/http/apiBase';
 
-type Phase = 'choice' | 'form' | 'saved';
+type Phase = 'checking' | 'choice' | 'form' | 'saved';
 type AstrologyConsent = 'unknown' | 'opted_in' | 'declined';
 
 interface BirthDataStepProps {
@@ -62,24 +69,101 @@ function storeAstrologyConsent(consent: 'opted_in' | 'declined') {
   }
 }
 
+function getStoredMemberId(): string | null {
+  try {
+    const raw = localStorage.getItem('beta_user');
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    const id = user.id ?? null;
+    if (!id || id.startsWith('local_')) return null;
+    return id;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sync astrology consent to the server (fire-and-forget).
+ * Non-fatal — localStorage is the primary fast path, DB adds cross-device persistence.
+ */
+async function syncConsentToServer(consent: 'opted_in' | 'declined'): Promise<void> {
+  const memberId = getStoredMemberId();
+  if (!memberId) return; // local_* or missing — skip server sync
+
+  try {
+    await apiFetch('/api/members/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-member-id': memberId },
+      body: JSON.stringify({ astrologyConsent: consent }),
+    });
+    console.log('[BirthDataStep] Consent synced to server:', consent);
+  } catch (err: any) {
+    // Best-effort — localStorage write already happened
+    console.warn('[BirthDataStep] Server consent sync failed (non-fatal):', err?.message);
+  }
+}
+
 export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataStepProps) {
-  const [phase, setPhase] = useState<Phase>('choice');
+  // Start in 'checking' while we verify localStorage + server consent
+  const [phase, setPhase] = useState<Phase>('checking');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Skip step entirely if consent is already known
+  // ── Mount: determine whether to skip this step ─────────────────────────────
   useEffect(() => {
-    const consent = readAstrologyConsent();
-    if (consent !== 'unknown') {
+    const localConsent = readAstrologyConsent();
+
+    // Fast path: localStorage already has a resolved consent
+    if (localConsent !== 'unknown') {
       onComplete();
+      return;
     }
+
+    // localStorage says 'unknown' — check server for cross-device persistence.
+    // If the user decided on another device, we should respect that.
+    const memberId = getStoredMemberId();
+    if (!memberId) {
+      // Can't check server (no valid ID) — show choice screen immediately
+      setPhase('choice');
+      return;
+    }
+
+    apiFetch('/api/members/profile', {
+      method: 'GET',
+      headers: { 'x-member-id': memberId },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          // Auth issue or server error — show choice screen, don't block
+          setPhase('choice');
+          return;
+        }
+        const profile = await res.json();
+        const serverConsent = (profile.astrologyConsent ?? 'unknown') as AstrologyConsent;
+
+        if (serverConsent !== 'unknown') {
+          // Server has a resolved consent from another device — honour it locally
+          storeAstrologyConsent(serverConsent);
+          onComplete();
+        } else {
+          setPhase('choice');
+        }
+      })
+      .catch(() => {
+        // Network error — show choice screen, don't block onboarding
+        setPhase('choice');
+      });
   }, [onComplete]);
 
+  // ── Decline handler ─────────────────────────────────────────────────────────
   function handleDecline() {
     storeAstrologyConsent('declined');
+    // Fire-and-forget server sync — don't await
+    syncConsentToServer('declined');
     onComplete();
   }
 
+  // ── Birth data save handler ─────────────────────────────────────────────────
   async function saveBirthData(data: {
     date: string;
     time: string;
@@ -89,10 +173,9 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
     setSaveError(null);
 
     try {
-      const betaUser = localStorage.getItem('beta_user');
-      const memberId = betaUser ? JSON.parse(betaUser)?.id : null;
+      const memberId = getStoredMemberId();
 
-      if (!memberId || memberId.startsWith('local_')) {
+      if (!memberId) {
         console.warn('[BirthDataStep] No valid member ID — skipping server save');
         storeAstrologyConsent('opted_in');
         setPhase('saved');
@@ -114,6 +197,8 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
               timezone: data.location.timezone,
             },
           },
+          // Bundle consent into the same request — one round-trip, atomic update
+          astrologyConsent: 'opted_in',
         }),
       });
 
@@ -122,7 +207,7 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
         throw new Error(body.error || `HTTP ${res.status}`);
       }
 
-      console.log('[BirthDataStep] Birth data saved for member', memberId);
+      console.log('[BirthDataStep] Birth data + consent saved for member', memberId);
       storeAstrologyConsent('opted_in');
       setPhase('saved');
       setTimeout(onComplete, 900);
@@ -140,6 +225,21 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
       style={{ background: 'radial-gradient(ellipse at top, #1a0e06 0%, #0c0905 60%, #000 100%)' }}
     >
       <AnimatePresence mode="wait">
+
+        {/* ── Checking (mount consent verification) ──────────────────────── */}
+        {phase === 'checking' && (
+          <motion.div
+            key="checking"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-8 h-8"
+            aria-hidden="true"
+          >
+            {/* Invisible placeholder — no spinner, no flash of content */}
+          </motion.div>
+        )}
 
         {/* ── Choice screen ────────────────────────────────────────────── */}
         {phase === 'choice' && (

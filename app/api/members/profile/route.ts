@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
           m.onboarded, m.created_at, m.last_sign_in,
           m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
           m.birth_location_name, m.birth_timezone,
+          m.astrology_consent,
           ms.circle_tier, ms.circle_amount, ms.circle_joined_at
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -158,6 +159,8 @@ export async function GET(request: NextRequest) {
           timezone: member.birth_timezone,
         } : null,
       } : null,
+      // Astrology consent — cross-device persistence for the BirthDataStep skip gate
+      astrologyConsent: (member.astrology_consent ?? 'unknown') as 'unknown' | 'opted_in' | 'declined',
       correlationId,
     }, { headers });
 
@@ -212,7 +215,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name, preferredName, email, bio, timezone, birthData } = body;
+    const { name, preferredName, email, bio, timezone, birthData, astrologyConsent } = body;
 
     // Build SET clauses dynamically
     const setClauses: string[] = [];
@@ -279,6 +282,19 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Astrology consent (cross-device persistence for onboarding skip gate)
+    if (astrologyConsent !== undefined) {
+      const validConsent = ['unknown', 'opted_in', 'declined'];
+      if (!validConsent.includes(astrologyConsent)) {
+        return NextResponse.json(
+          { error: `Invalid astrologyConsent value — must be one of: ${validConsent.join(', ')}`, correlationId },
+          { status: 400, headers }
+        );
+      }
+      setClauses.push(`astrology_consent = $${paramIndex++}`);
+      values.push(astrologyConsent);
+    }
+
     if (setClauses.length === 0) {
       return NextResponse.json(
         { error: 'No fields to update', correlationId },
@@ -295,7 +311,7 @@ export async function PUT(request: NextRequest) {
          WHERE id = $1
          RETURNING id, username, name, preferred_name, email, bio, timezone,
                    birth_date, birth_time, birth_location_lat, birth_location_lng,
-                   birth_location_name, birth_timezone`,
+                   birth_location_name, birth_timezone, astrology_consent`,
         values
       );
     } catch (dbError) {
