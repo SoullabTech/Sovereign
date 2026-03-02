@@ -120,6 +120,7 @@ const CHIRON_HOUSE_WOUNDS: Record<number, string> = {
  * Get complete astrology context for a user
  */
 export async function getAstrologyContextForUser(memberId: string): Promise<AstrologyContext | null> {
+  console.log(`[AstrologyContext] Loading for member: ${memberId?.substring(0, 8)}...`);
   try {
     // Fetch birth data from members table
     const result = await query(
@@ -130,11 +131,13 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     );
 
     if (result.rows.length === 0) {
+      console.warn(`[AstrologyContext] No member found for id: ${memberId?.substring(0, 8)}...`);
       return null;
     }
 
     const member = result.rows[0];
     const hasBirthData = !!member.birth_date;
+    console.log(`[AstrologyContext] Member found. hasBirthData=${hasBirthData}, hasBirthLocation=${!!(member.birth_location_lat && member.birth_location_lng)}`);
 
     let birthChart: BirthChart | null = null;
     let mayanProfile: CompleteMayanProfile | null = null;
