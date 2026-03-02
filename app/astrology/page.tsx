@@ -781,6 +781,7 @@ export default function AstrologyPage() {
                 </p>
                 <Link
                   href={`/astrology/placements/sun`}
+                  prefetch={false}
                   className="text-sm !text-orange-400 hover:!text-orange-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
@@ -811,6 +812,7 @@ export default function AstrologyPage() {
                 </p>
                 <Link
                   href={`/astrology/placements/moon`}
+                  prefetch={false}
                   className="text-sm !text-sky-400 hover:!text-sky-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
@@ -841,6 +843,7 @@ export default function AstrologyPage() {
                 </p>
                 <Link
                   href={`/astrology/placements/ascendant`}
+                  prefetch={false}
                   className="text-sm !text-yellow-400 hover:!text-yellow-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
