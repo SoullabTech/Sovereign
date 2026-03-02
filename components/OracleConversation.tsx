@@ -1167,6 +1167,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       historicalMessagesRef.current = [];
       // Reset activation state to show welcome screen
       setHasActivated(false);
+      // Reset session-restored flag so the welcome greeting can show for the new conversation
+      sessionRestoredRef.current = false;
       // Clear localStorage for current session
       if (typeof window !== 'undefined' && sessionId) {
         const storageKey = `maia_conversation_${sessionId}`;
@@ -1292,6 +1294,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 💾 Historical messages for API context - separate from UI display
   // UI stays clean on load, but MAIA has access to conversation history for context
   const historicalMessagesRef = useRef<ConversationMessage[]>([]);
+  // 🔄 Track whether messages were restored from storage (prevents greeting from overwriting)
+  const sessionRestoredRef = useRef(false);
   const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
@@ -2560,6 +2564,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Store in ref for MAIA API context AND restore to UI so navigation back shows the conversation
       historicalMessagesRef.current = loadedMessages;
       if (loadedMessages.length > 0) {
+        // Check for real messages (not just a greeting placeholder)
+        const hasRealMessages = loadedMessages.some(m => !m.id?.startsWith('greeting-'));
+        if (hasRealMessages) {
+          // Mark as restored so the greeting effect doesn't overwrite these messages
+          sessionRestoredRef.current = true;
+          // Auto-activate: skip the welcome overlay when returning to an existing conversation
+          setHasActivated(true);
+        }
         // Show conversation history in the UI when navigating back to /maia within the same session/day
         setMessages(loadedMessages);
         console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI (same-session navigation)`);
@@ -2882,7 +2894,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         source: 'maia'
       };
 
-      setMessages([greetingMessage]);
+      // Only initialize with greeting if messages weren't already restored from storage
+      // (prevents the greeting from overwriting an existing conversation on same-session navigation)
+      if (!sessionRestoredRef.current) {
+        setMessages([greetingMessage]);
+      }
       localStorage.setItem('lastSessionDate', new Date().toISOString());
     })();
 
@@ -6162,6 +6178,7 @@ I'm not sure what I'm feeling yet.`;
     console.log('🧹 Clearing previous conversation for fresh session start');
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
+    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
     setHasActivated(false); // Reset to show welcome/greeting
     // Clear localStorage for previous conversation
     if (typeof window !== 'undefined' && sessionId) {
@@ -6285,6 +6302,7 @@ I'm not sure what I'm feeling yet.`;
     // 🧹 Clear previous conversation messages
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
+    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
     setHasActivated(false);
     if (typeof window !== 'undefined' && sessionId) {
       const storageKey = `maia_conversation_${sessionId}`;
