@@ -37,12 +37,12 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-02-28
-- **Current milestone**: Bridge E — end-to-end memory continuity pipeline complete
-- **Last change**: Wired session summaries + turns fallback into oracle system prompt; oracle now owns server-side turn persistence (fire-and-forget); idempotency via exchange_id + seq unique index; seq tiebreakers on all reads; addTurn schema mismatch fixed; 14,664 historical turns relinked to current member ID via reversible audit table
-- **Next action**: Deploy (`git pull && docker compose -f docker-compose.production.yml up -d --build`), run 3 verification queries, then run session summary worker to confirm `has_summary = true`
-- **Underlying question**: Can a member ask "what did we cover last time?" and receive a coherent, accurate answer across sessions and devices?
-- **State of the system**: Pipeline structurally complete. Awaiting post-deploy verification. Worker must be run manually (not yet a production service) after each finalized session to generate remembrances.
+- **Date**: 2026-03-01
+- **Current milestone**: Bridge E complete + onboarding sovereignty pass done
+- **Last change**: Astrology consent cross-device persistence: `astrology_consent` column added to `members` table (migration applied), profile GET returns `astrologyConsent`, profile PUT accepts it, `BirthDataStep` now checks server on mount (best-effort cross-device skip gate) and bundles consent with birth data save
+- **Next action**: Settings page astrology section (add/edit/remove birth data, consent-aware UI — see session notes). Also: install sweeper cron on Mac Studio host (`*/15 * * * * docker exec maia-sovereign npx ts-node /app/scripts/sweep-stale-sessions.ts`)
+- **Underlying question**: Does every member get a coherent, sovereignty-respecting experience across devices and after localStorage clears?
+- **State of the system**: Memory pipeline live. Enqueue guard hardened. Onboarding astrology step sovereign. Consent persisted server-side. Pending: Settings UI + sweeper cron.
 
 ## Re-entry vow (for this session)
 
