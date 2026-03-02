@@ -584,7 +584,7 @@ async function validateAndRepairResponse(
           decision: validation.decision,
           is_gold: validation.isGold,
           passes: validation.passes,
-          ruptures: validation.ruptures,
+          ruptures: JSON.stringify(validation.ruptures),
           rupture_count: validation.ruptures.length,
           critical_count: validation.ruptures.filter((r: any) => r.severity === 'CRITICAL').length,
           violation_count: validation.ruptures.filter((r: any) => r.severity === 'VIOLATION').length,

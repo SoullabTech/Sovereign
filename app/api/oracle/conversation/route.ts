@@ -61,6 +61,8 @@ import {
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
 import { getPatternOffer, buildPatternOfferPromptSection, getActivePatternContext, type ActivePatternRow } from '@/lib/patterns/PatternOfferingService';
 import { JournalStore, type JournalEntry } from '@/lib/memory/stores/JournalStore';
+import { getRecentCapsules } from '@/lib/capsules/capsuleService';
+import type { CapsuleDTO } from '@/lib/capsules/types';
 import {
   getPendingOffer,
   recordPendingOffer,
@@ -607,7 +609,7 @@ export async function POST(request: NextRequest) {
     );
 
     // 🏛️ PARALLEL RETRIEVAL: Memory palace, anamnesis, astrology, pattern offer, session summaries,
-    //    pattern ledger context, journal entries — all independent, all gracefully degrading
+    //    pattern ledger context, journal entries, reflection capsules — all independent, all gracefully degrading
     const [
       memoryContextResult,
       relationshipEssenceResult,
@@ -616,6 +618,7 @@ export async function POST(request: NextRequest) {
       recentSummariesResult,
       activePatternContextResult,
       journalEntriesResult,
+      capsulesResult,
     ] = await Promise.allSettled([
       memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
       loadRelationshipEssence(userId),
@@ -633,6 +636,8 @@ export async function POST(request: NextRequest) {
       getActivePatternContext(userId, 5),
       // ✅ Journal entries: what the member has written
       JournalStore.getRecentEntries(userId, 5),
+      // ✅ Reflection capsules: distilled artifacts — gold lines, decisions, patterns
+      getRecentCapsules(userId, 8),
     ]);
 
     const memoryContext = memoryContextResult.status === 'fulfilled'
@@ -698,11 +703,18 @@ export async function POST(request: NextRequest) {
       ? journalEntriesResult.value
       : (console.warn('⚠️ [Journal Entries] Load failed (non-critical):', (journalEntriesResult as PromiseRejectedResult).reason), []);
 
+    const capsules: CapsuleDTO[] = capsulesResult.status === 'fulfilled'
+      ? capsulesResult.value
+      : (console.warn('⚠️ [Capsules] Load failed (non-critical):', (capsulesResult as PromiseRejectedResult).reason), []);
+
     if (activePatternContext.length > 0) {
       console.log(`[oracle] activePatterns: ${activePatternContext.length} patterns loaded`);
     }
     if (journalEntries.length > 0) {
       console.log(`[oracle] journalEntries: ${journalEntries.length} entries loaded`);
+    }
+    if (capsules.length > 0) {
+      console.log(`[oracle] capsules: ${capsules.length} reflection capsules loaded`);
     }
 
     console.log('[oracle] recentSummaries:', {
@@ -731,8 +743,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // MEMBER LIFE CONTEXT: patterns + journal — background awareness, not recitation
-    const memberLifeContextBlock = formatMemberLifeContext(activePatternContext, journalEntries);
+    // MEMBER LIFE CONTEXT: patterns + journal + capsules — background awareness, not recitation
+    const memberLifeContextBlock = formatMemberLifeContext(activePatternContext, journalEntries, capsules);
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
     // Must run before buildMaiaPlan — plan depends on hysteresis-stable element/archetype.
@@ -931,7 +943,7 @@ export async function POST(request: NextRequest) {
             decision: validationResult!.decision,
             is_gold: validationResult!.isGold,
             passes: validationResult!.passes,
-            ruptures: validationResult!.ruptures,
+            ruptures: JSON.stringify(validationResult!.ruptures),
             rupture_count: validationResult!.ruptures.length,
             critical_count: validationResult!.ruptures.filter((r: any) => r.severity === 'CRITICAL').length,
             violation_count: validationResult!.ruptures.filter((r: any) => r.severity === 'VIOLATION').length,
@@ -1768,38 +1780,78 @@ function formatRecentTurnsFallback(
 }
 
 /**
- * Format active patterns + journal entries into a single background context block.
+ * Format active patterns, journal entries, and reflection capsules into a single
+ * background context block.
  *
  * This is MAIA's living awareness of the person — not data to recite, but knowing
  * to draw on. The instructions in this block tell MAIA how to use it.
+ *
+ * The access-status directive at the top ensures MAIA never disclaims "no access"
+ * to journals or captures when this block is present.
  */
 function formatMemberLifeContext(
   patterns: ActivePatternRow[] | null | undefined,
-  journalEntries: JournalEntry[] | null | undefined
+  journalEntries: JournalEntry[] | null | undefined,
+  capsules: CapsuleDTO[] | null | undefined
 ): string {
   const parts: string[] = [];
 
-  if (patterns?.length) {
+  const hasPatterns = (patterns?.length ?? 0) > 0;
+  const hasJournal = (journalEntries?.length ?? 0) > 0;
+  const hasCapsules = (capsules?.length ?? 0) > 0;
+
+  // Access-status directive — prevents MAIA from disclaiming access when context is present.
+  // Without this, MAIA defaults to caution language even when data is injected.
+  if (hasPatterns || hasJournal || hasCapsules) {
+    parts.push('## MEMBER CONTEXT ACCESS');
+    parts.push('You have access to this member\'s recent journal entries, reflection capsules, and observed patterns (provided below).');
+    parts.push('Do NOT tell the member you "don\'t have access" to journals or captures while this block is present.');
+    parts.push('If they ask about something older than what is shown, invite them to share more or open Reflections — but never disclaim "no access" categorically.');
+    parts.push('');
+  }
+
+  if (hasPatterns) {
     parts.push('# Patterns I\'ve Observed');
     parts.push('These are recurring dynamics I\'ve noticed across our conversations.');
     parts.push('Use as background awareness only — never recite them as findings or diagnosis.');
     parts.push('If one echoes naturally in this conversation, you may reflect it gently.');
-    for (const p of patterns) {
+    for (const p of patterns!) {
       const conf = p.confidence >= 0.7 ? 'strong' : p.confidence >= 0.4 ? 'emerging' : 'tentative';
       parts.push(`- [${conf}] ${p.statement}`);
     }
     parts.push('');
   }
 
-  if (journalEntries?.length) {
-    parts.push('# What This Person Has Written');
+  if (hasJournal) {
+    parts.push('# What This Person Has Written (Journal)');
     parts.push('These are their own words from journal entries. Treat with high respect.');
     parts.push('Do not quote back verbatim unless they invite it. Let the knowing inform your presence.');
-    for (const e of journalEntries) {
+    for (const e of journalEntries!) {
       const stamp = e.createdAt ? e.createdAt.slice(0, 10) : 'recent';
       const label = e.element ? ` [${e.element}]` : e.entryType ? ` [${e.entryType}]` : '';
       const excerpt = e.content.length > 300 ? e.content.slice(0, 300) + '…' : e.content;
       parts.push(`- [${stamp}${label}] ${excerpt}`);
+    }
+    parts.push('');
+  }
+
+  if (hasCapsules) {
+    parts.push('# Reflection Capsules (Distilled)');
+    parts.push('These are distilled artifacts from previous conversations — what mattered, what was decided, what patterns emerged.');
+    parts.push('Use as deep background. Surface naturally when relevant — never as a list, never as a report.');
+    for (const c of capsules!) {
+      const stamp = c.createdAt ? c.createdAt.slice(0, 10) : 'recent';
+      const pinnedMark = c.pinned ? ' ★' : '';
+      const elementMark = c.signals?.element ? ` [${c.signals.element}]` : '';
+      const bits: string[] = [];
+      if (c.summary) bits.push(c.summary.slice(0, 200));
+      const goldText = c.goldLines.slice(0, 2).map(g => `"${g.text}"`).join('; ');
+      if (goldText) bits.push(`gold: ${goldText}`);
+      const decisionText = c.decisions.slice(0, 2).map(d => d.text).join('; ');
+      if (decisionText) bits.push(`decided: ${decisionText}`);
+      const patternText = c.patterns.slice(0, 2).map(p => p.name).join(', ');
+      if (patternText) bits.push(`patterns: ${patternText}`);
+      parts.push(`- [${stamp}${pinnedMark}${elementMark}] ${bits.join(' | ').slice(0, 400)}`);
     }
     parts.push('');
   }
