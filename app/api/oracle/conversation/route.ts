@@ -2318,7 +2318,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 
 ` : ''}
 ${anamnesisPrompt ? (anamnesisPrompt.length > 800 ? anamnesisPrompt.slice(0, 800) + '\n...[anamnesis capped]\n' : anamnesisPrompt) : ''}
-${astrologyContext?.formattedContext ? (astrologyContext.formattedContext.length > 2500 ? astrologyContext.formattedContext.slice(0, 2500) + '\n...[astrology capped]\n' : astrologyContext.formattedContext) : ''}
+${astrologyContext ? `${astrologyContext.contextHeader}${astrologyContext.contextDetail.length > 3000 ? astrologyContext.contextDetail.slice(0, 3000) + '\n...[astrology detail capped]\n' : astrologyContext.contextDetail}` : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
