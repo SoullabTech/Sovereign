@@ -1116,6 +1116,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🕸️ [FAST] Member web injected: patterns+summaries+journals context active`);
   }
 
+  // 🌟 ASTROLOGY: Natal chart + cosmic weather context
+  const astrologyAddendum = (meta as any)?.astrologyAddendum as string | undefined;
+  if (astrologyAddendum) {
+    console.log(`🌟 [FAST] Astrology addendum applied: birth chart + cosmic context injected`);
+  }
+
   // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
   const fieldWisdomAddendum = (meta as any)?.fieldWisdomAddendum as string | undefined;
   if (fieldWisdomAddendum) {
@@ -1154,7 +1160,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1400,6 +1406,8 @@ async function corePathResponse(
     knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
     // 🕸️ MEMBER WEB: Patterns + session summaries + journals
     memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
+    // 🌟 ASTROLOGY: Natal chart + cosmic weather context
+    astrologicalContextAddendum: (meta as any)?.astrologyAddendum as string | undefined,
     // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
     consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
     // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
@@ -1459,6 +1467,13 @@ The current user has not provided their name. Address them as "friend" or "there
   if (wuxingSnapshotAddendumCore) {
     console.log(`🌿 [CORE] Wu Xing addendum applied: elemental awareness injected`);
     adaptivePrompt = adaptivePrompt + '\n\n' + wuxingSnapshotAddendumCore;
+  }
+
+  // 🌟 ASTROLOGY ADDENDUM: Natal chart + cosmic weather context
+  const astrologyAddendumCore = (meta as any)?.astrologyAddendum as string | undefined;
+  if (astrologyAddendumCore) {
+    console.log(`🌟 [CORE] Astrology addendum applied: birth chart + cosmic context injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + astrologyAddendumCore;
   }
 
   // 🏢 STUDIO ADDENDUM: Practitioner prompt cap when running in Studio
@@ -1952,6 +1967,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
         // 🌿 WU XING: Five Elements elemental awareness
         wuxingSnapshotAddendum: (meta as any)?.wuxingSnapshotAddendum as string | undefined,
+        // 🌟 ASTROLOGY: Natal chart + cosmic weather context (maps to MaiaContext.astrologicalContextAddendum)
+        astrologicalContextAddendum: (meta as any)?.astrologyAddendum as string | undefined,
         // 🏢 STUDIO: Practitioner prompt cap
         studioAddendum: (meta as any)?.studioAddendum as string | undefined,
         // 🚪 KNOWLEDGE GATE: AIN source well modulation

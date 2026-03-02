@@ -90,6 +90,7 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
+import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
 import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } from '@/lib/ain/knowledge-gate';
@@ -383,7 +384,9 @@ export async function POST(req: NextRequest) {
       else console.log(`🛡️ [Route/MemoryBundle] Skipped - memoryMode is "${memoryMode}"`);
     }
 
-    const [memoryBundleResult, wuxingResult] = await Promise.all([
+    const shouldLoadAstrology = isRecognizedUser && !isSanctuary;
+
+    const [memoryBundleResult, wuxingResult, astrologyContextResult] = await Promise.all([
       // Memory bundle (parallel leg 1)
       shouldBuildMemory
         ? (async () => {
@@ -489,9 +492,17 @@ Water = depth, reflection, wisdom`;
             }
           })()
         : Promise.resolve({ wuxingSnapshot: null as WuXingSnapshot | null, bridgedSnapshot: null as BridgedSnapshot | null, wuxingAddendum: '' }),
+
+      // Astrology context (parallel leg 3)
+      shouldLoadAstrology
+        ? getAstrologyContextForUser(effectiveUserId).catch((e: unknown) => {
+            console.warn('⚠️ [Astrology] Context load failed (non-blocking):', e instanceof Error ? e.message : e);
+            return null;
+          })
+        : Promise.resolve(null as AstrologyContext | null),
     ]);
 
-    console.log(`[MAIA step] memory+wuxing parallel complete dt=${msSince(start)}ms`);
+    console.log(`[MAIA step] memory+wuxing+astrology parallel complete dt=${msSince(start)}ms`);
 
     // Unpack memory bundle result
     let memoryBundle: MemoryBundle | null = memoryBundleResult;
@@ -513,6 +524,26 @@ Water = depth, reflection, wisdom`;
 
     // Unpack Wu Xing result
     const { wuxingSnapshot, bridgedSnapshot, wuxingAddendum } = wuxingResult;
+
+    // 🌟 Unpack astrology context
+    const astrologyContext: AstrologyContext | null = astrologyContextResult;
+    let astrologyAddendum: string | undefined;
+    if (astrologyContext) {
+      const detail = astrologyContext.contextDetail.length > 3000
+        ? astrologyContext.contextDetail.slice(0, 3000) + '\n...[astrology detail capped]\n'
+        : astrologyContext.contextDetail;
+      astrologyAddendum = astrologyContext.contextHeader + detail;
+      if (astrologyContext.hasBirthData) {
+        console.log('🌟 [Astrology] Birth chart loaded:', {
+          sun: astrologyContext.birthChart?.sun?.sign,
+          moon: astrologyContext.birthChart?.moon?.sign,
+          rising: astrologyContext.birthChart?.ascendant?.sign,
+          retrogrades: astrologyContext.currentTransits.filter((t: any) => t.retrograde).map((t: any) => t.planet).join(', ') || 'none',
+        });
+      } else {
+        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+      }
+    }
 
     // 🕸️ MEMBER WEB: Canonical context assembly via buildMemberLiveContext.
     // Single source of truth for patterns + summaries + journals — used by both
@@ -615,6 +646,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           studioAddendum, // 🏢 Studio prompt cap (when surface === 'studio')
           knowledgeGateAddendum, // 🚪 AIN Knowledge Gate: source well modulation (Phase 1)
           memberWebAddendum: memberWebAddendum || undefined, // 🕸️ Member web: patterns + summaries + journals
+          astrologyAddendum: astrologyAddendum || undefined, // 🌟 Natal chart + cosmic weather context
           ...meta,
         },
       }),
