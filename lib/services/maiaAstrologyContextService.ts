@@ -413,9 +413,12 @@ function formatAstrologyContextForMAIA({
         'verification. Never re-ask.';
     } else {
       statusDirective =
-        '**BIRTH DATA: ON FILE** (chart calculation in progress) — Do not ask for ' +
-        'birth date, time, or location. Their data is stored. Use what is available ' +
-        'below; for the full chart, direct them to /astrology. Never re-ask.';
+        '**BIRTH DATA: ON FILE** (natal chart temporarily unavailable due to a ' +
+        'calculation issue — this is a system matter, not a data gap) — Do NOT ask ' +
+        'for birth date, time, or location. The data is stored server-side. Use ' +
+        'the Mayan profile and cosmic weather below for this conversation. You can ' +
+        'tell them their full Western chart is viewable at soullab.life/astrology. ' +
+        'Never re-ask for birth data.';
     }
   } else {
     statusDirective =
