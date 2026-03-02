@@ -137,6 +137,12 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
 
     const member = result.rows[0];
     const hasBirthData = !!member.birth_date;
+
+    // pg driver returns DATE columns as JS Date objects — normalise to YYYY-MM-DD string
+    // so that calculateBirthChart always receives the expected format
+    if (member.birth_date instanceof Date) {
+      member.birth_date = member.birth_date.toISOString().split('T')[0];
+    }
     console.log(`[AstrologyContext] Member found. hasBirthData=${hasBirthData}, hasBirthLocation=${!!(member.birth_location_lat && member.birth_location_lng)}`);
 
     let birthChart: BirthChart | null = null;
