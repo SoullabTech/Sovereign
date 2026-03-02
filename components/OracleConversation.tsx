@@ -1157,6 +1157,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     });
   }, [hasActivated, messages, isProcessing, isResponding]);
 
+  // 🧭 Navigation teardown: set a flag when this component unmounts due to client-side routing.
+  // React cleanup runs on client-side nav but NOT on F5/hard refresh — this lets
+  // loadConversationHistory distinguish "navigation return" from "fresh page load".
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem('maia_nav_teardown', 'true');
+    };
+  }, []);
+
   // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
   useEffect(() => {
     const handleNewConversation = () => {
@@ -1169,6 +1178,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setHasActivated(false);
       // Reset session-restored flag so the welcome greeting can show for the new conversation
       sessionRestoredRef.current = false;
+      // Clear navigation flag so next mount doesn't restore the cleared conversation
+      sessionStorage.removeItem('maia_nav_teardown');
       // Clear localStorage for current session
       if (typeof window !== 'undefined' && sessionId) {
         const storageKey = `maia_conversation_${sessionId}`;
@@ -2561,20 +2572,28 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
 
-      // Store in ref for MAIA API context AND restore to UI so navigation back shows the conversation
+      // Detect whether this mount is a client-side navigation return vs. a fresh page load.
+      // React cleanup runs on client-side nav unmount but NOT on F5/hard refresh.
+      // So: flag present = navigation return (restore), flag absent = fresh load (welcome overlay).
+      const wasNavigationReturn = sessionStorage.getItem('maia_nav_teardown') === 'true';
+      sessionStorage.removeItem('maia_nav_teardown'); // consume immediately
+
+      // Always populate historicalRef so MAIA has full context regardless of display mode
       historicalMessagesRef.current = loadedMessages;
+
       if (loadedMessages.length > 0) {
-        // Check for real messages (not just a greeting placeholder)
         const hasRealMessages = loadedMessages.some(m => !m.id?.startsWith('greeting-'));
-        if (hasRealMessages) {
-          // Mark as restored so the greeting effect doesn't overwrite these messages
+
+        if (hasRealMessages && wasNavigationReturn) {
+          // Navigation return: restore UI + skip welcome overlay
           sessionRestoredRef.current = true;
-          // Auto-activate: skip the welcome overlay when returning to an existing conversation
           setHasActivated(true);
+          setMessages(loadedMessages);
+          console.log(`💾 [Context] Navigation return — restored ${loadedMessages.length} messages to UI`);
+        } else {
+          // Fresh load (F5, new tab, returning member): MAIA has context but UI starts clean
+          console.log(`💾 [Context] Fresh load — ${loadedMessages.length} messages loaded for context only`);
         }
-        // Show conversation history in the UI when navigating back to /maia within the same session/day
-        setMessages(loadedMessages);
-        console.log(`💾 [Context] Restored ${loadedMessages.length} messages to UI (same-session navigation)`);
       } else {
         console.log(`💾 [Context] No previous messages for this session`);
       }
@@ -6179,6 +6198,7 @@ I'm not sure what I'm feeling yet.`;
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
     sessionRestoredRef.current = false; // Allow greeting to run for fresh session
+    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
     setHasActivated(false); // Reset to show welcome/greeting
     // Clear localStorage for previous conversation
     if (typeof window !== 'undefined' && sessionId) {
@@ -6303,6 +6323,7 @@ I'm not sure what I'm feeling yet.`;
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
     sessionRestoredRef.current = false; // Allow greeting to run for fresh session
+    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
     setHasActivated(false);
     if (typeof window !== 'undefined' && sessionId) {
       const storageKey = `maia_conversation_${sessionId}`;
