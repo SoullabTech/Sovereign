@@ -234,8 +234,16 @@ xcodebuild -exportArchive \
   -allowProvisioningUpdates \
   2>&1 | grep -E "(EXPORT|Progress|Upload|error:|warning:)" || true
 
+# xcodebuild names the IPA after the scheme ("App.ipa").
+# Rename to MAIA.ipa for consistent upload path.
+SCHEME_IPA="$BUILD_DIR/App.ipa"
+if [ -f "$SCHEME_IPA" ] && [ ! -f "$IPA_PATH" ]; then
+  mv "$SCHEME_IPA" "$IPA_PATH"
+  ok "IPA renamed: App.ipa → MAIA.ipa"
+fi
+
 if [ ! -f "$IPA_PATH" ]; then
-  fail "IPA not found at $IPA_PATH"
+  fail "IPA not found at $IPA_PATH (also checked $SCHEME_IPA)"
 fi
 ok "IPA exported: $IPA_PATH"
 
