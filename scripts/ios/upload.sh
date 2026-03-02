@@ -102,13 +102,24 @@ info "Using Fastlane upload_ipa lane (ios/App/fastlane/Fastfile)"
 
 cd "$IOS_APP"
 
-# Build Fastlane arguments
-FL_ARGS="ipa_path:$(printf '%q' "$IPA_PATH")"
-[ "$NOTIFY" = true ] && FL_ARGS="$FL_ARGS notify:true" || FL_ARGS="$FL_ARGS notify:false"
-[ -n "$CHANGELOG" ] && FL_ARGS="$FL_ARGS changelog:$(printf '%q' "$CHANGELOG")"
+# Pass each key:value as a separate shell word — Fastlane parses positional args
+# as "key:value" pairs. Combining them into one string causes Fastlane to treat
+# the entire string as a single option value (the IPA path bug).
+FL_NOTIFY="notify:false"
+[ "$NOTIFY" = true ] && FL_NOTIFY="notify:true"
 
-info "bundle exec fastlane ios upload_ipa $FL_ARGS"
-bundle exec fastlane ios upload_ipa "$FL_ARGS"
+info "bundle exec fastlane ios upload_ipa ipa_path:$IPA_PATH $FL_NOTIFY"
+
+if [ -n "$CHANGELOG" ]; then
+  bundle exec fastlane ios upload_ipa \
+    "ipa_path:$IPA_PATH" \
+    "$FL_NOTIFY" \
+    "changelog:$CHANGELOG"
+else
+  bundle exec fastlane ios upload_ipa \
+    "ipa_path:$IPA_PATH" \
+    "$FL_NOTIFY"
+fi
 
 # ── summary ───────────────────────────────────────────────────────────────────
 echo ""
