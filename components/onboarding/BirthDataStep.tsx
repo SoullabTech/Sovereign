@@ -124,29 +124,35 @@ export function BirthDataStep({ userName = 'Explorer', onComplete }: BirthDataSt
         </motion.div>
       )}
 
-      {/* Save error — non-fatal, show retry hint */}
+      {/* Save error — retry-focused, form values are preserved */}
       {saveError && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-4 text-sm text-center"
-          style={{ color: '#ef4444' }}
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 px-4 py-3 border text-sm text-center max-w-md mx-auto"
+          style={{ borderColor: '#7f1d1d', background: 'rgba(127,29,29,0.15)', color: '#fca5a5' }}
         >
-          Could not save right now ({saveError}). You can add birth data later in settings.
-        </motion.p>
+          <span className="block mb-1">Couldn't save — your entries are still here.</span>
+          <span className="block text-xs opacity-75">
+            Scroll up and try submitting again, or skip and add birth data later in settings.
+          </span>
+        </motion.div>
       )}
 
-      {/* Skip link — always visible, sovereignty first */}
+      {/* Skip link — sovereignty first; becomes more prominent after a save error */}
       {!saved && (
         <motion.button
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
+          animate={{ opacity: saveError ? 1 : 0.7 }}
+          transition={{ delay: saveError ? 0 : 1.2, duration: 0.5 }}
           onClick={onComplete}
           className="mt-6 text-sm underline-offset-4 hover:underline transition-opacity"
-          style={{ fontWeight: 300, color: '#6b4020', opacity: 0.7 }}
+          style={{
+            fontWeight: 300,
+            color: saveError ? '#9a6030' : '#6b4020',
+          }}
         >
-          Skip for now
+          {saveError ? 'Skip and add later in settings' : 'Skip for now'}
         </motion.button>
       )}
     </div>
