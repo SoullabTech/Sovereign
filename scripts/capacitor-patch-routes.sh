@@ -43,6 +43,7 @@ MOBILE_TOP_LEVEL=(
   "intro" "welcome-back" "capture" "journal" "field" "settings"
   "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
   "maia" "labtools" "account"
+  "styles"  # CSS assets imported by globals.css — must stay in build
 )
 
 # labtools sub-dirs to KEEP (everything else in labtools/ gets excluded)
