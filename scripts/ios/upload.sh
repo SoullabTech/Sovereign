@@ -76,7 +76,13 @@ echo ""
 echo -e "${BOLD}[1] Pre-flight${NC}"
 
 if [ ! -f "$IPA_PATH" ]; then
-  fail "IPA not found: $IPA_PATH\n       Run ./scripts/ios/build.sh first"
+  # Fallback: search within the build tree (handles xcodebuild placing IPA in a subdir)
+  found=$(find "$BUILD_DIR" -maxdepth 3 -name "MAIA.ipa" -print -quit 2>/dev/null || true)
+  if [ -n "$found" ]; then
+    IPA_PATH="$found"
+  else
+    fail "IPA not found: $IPA_PATH\n       Run ./scripts/ios/build.sh first"
+  fi
 fi
 IPA_SIZE_MB=$(du -sm "$IPA_PATH" | awk '{print $1}')
 ok "IPA: $IPA_PATH (${IPA_SIZE_MB} MB)"
