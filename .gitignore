@@ -406,3 +406,5 @@ scripts/maia-cli/node_modules/
 
 # Claude worktrees (never track)
 .claude/worktrees/
+ios/App/fastlane/README.md
+ios/App/fastlane/report.xml
