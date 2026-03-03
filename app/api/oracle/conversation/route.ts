@@ -60,6 +60,7 @@ import {
 /** Pattern Pipe (Narrative Wiring) */
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
 import { getPatternOffer, buildPatternOfferPromptSection, getActivePatternContext, type ActivePatternRow } from '@/lib/patterns/PatternOfferingService';
+import { canRespondDirectly as pfiCanRespond, generateDirectResponse as pfiGenerateDirect } from '@/lib/consciousness/pfiResponder';
 import { JournalStore, type JournalEntry } from '@/lib/memory/stores/JournalStore';
 import { getRecentCapsules } from '@/lib/capsules/capsuleService';
 import type { CapsuleDTO } from '@/lib/capsules/types';
@@ -798,11 +799,50 @@ export async function POST(request: NextRequest) {
       isSanctuary,
     });
 
+    // ── PFI DIRECT RESPONSE GATE ──────────────────────────────────────────────
+    // Check BEFORE any model call. Containment arcs (hold_silence, high distress,
+    // dissociation) are authored by PFI directly. Claude is not consulted.
+    // Source tagged for apprenticeship training data: tracks pfi_direct vs llm_draft.
+    const _turnAffect =
+      distressSignal?.intensity === 'high'          ? 'distressed' as const :
+      (distressSignal as any)?.isDistressed          ? 'distressed' as const :
+      maiaPlan.stance === 'hold_silence'             ? 'distressed' as const :
+      'calm' as const;
+
+    const _pfiDirect = pfiCanRespond(maiaPlan, _turnAffect, { ruptureDetected: false })
+      ? pfiGenerateDirect(maiaPlan, _turnAffect, {})
+      : null;
+
+    if (_pfiDirect) {
+      console.info(JSON.stringify({
+        tag: 'pfi.direct',
+        source: _pfiDirect.source,
+        stance: maiaPlan.stance,
+        element: maiaPlan.element,
+        wordCount: _pfiDirect.wordCount,
+        affect: _turnAffect,
+        note: 'LLM skipped — PFI authored directly',
+      }));
+    }
+
     const tBeforeLLM = Date.now();
-    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'pre_llm', ms: tBeforeLLM - t0, depth: conversationDepth }));
+    console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'pre_llm', ms: tBeforeLLM - t0, depth: conversationDepth, pfi_direct: Boolean(_pfiDirect) }));
 
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + voice prefs
-    const maiaResponse = await generateSpiralogicResponseWithLLM(
+    // If PFI gate triggered above, this call is skipped — synthetic response used instead.
+    const maiaResponse = _pfiDirect
+      ? {
+          coreMessage: _pfiDirect.text,
+          suggestedActions: [] as any[],
+          elementalGuidance: '',
+          providerMetadata: {
+            providerUsed: 'fallback' as const,
+            modelUsed: _pfiDirect.source,   // e.g. 'pfi_containment'
+            usedProviderFallback: false,
+            generationTimeMs: 0,
+          },
+        }
+      : await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
       spiralogicCell,
@@ -832,6 +872,26 @@ export async function POST(request: NextRequest) {
     );
 
     const tAfterLLM = Date.now();
+
+    // PFI gate branch log — unmistakable, one line per turn, always.
+    // grep [pfi.gate] to see: which turns are sovereign vs LLM, element, stance, timing.
+    if (_pfiDirect) {
+      console.info(JSON.stringify({
+        tag: '[pfi.gate]', branch: 'direct_response',
+        source: maiaResponse.providerMetadata.modelUsed,
+        stance: maiaPlan.stance, element: maiaPlan.element,
+        affect: _turnAffect, words: _pfiDirect.wordCount,
+        ms: tAfterLLM - tBeforeLLM,
+      }));
+    } else {
+      console.info(JSON.stringify({
+        tag: '[pfi.gate]', branch: 'llm_draft',
+        stance: maiaPlan.stance, element: maiaPlan.element,
+        affect: _turnAffect, provider: maiaResponse.providerMetadata.providerUsed,
+        ms: tAfterLLM - tBeforeLLM,
+      }));
+    }
+
     console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'llm_done', ms: tAfterLLM - t0, llm_ms: tAfterLLM - tBeforeLLM, generationTimeMs: maiaResponse.providerMetadata?.generationTimeMs }));
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -975,14 +1035,39 @@ export async function POST(request: NextRequest) {
 
     // MAIA CENTRAL: CI shaping → split spokenText (voice) / displayText (screen)
     // finalizeMaiaResponse never throws — Sesame failure silently falls back to plain text.
-    const { spokenText, displayText } = await finalizeMaiaResponse(
+    const { spokenText, displayText, draftMetrics } = await finalizeMaiaResponse(
       coreMessage,
       maiaPlan,
-      process.env.SESAME_TTS_URL || 'http://maia-sesame-tts:8000'
+      { sesameUrl: process.env.SESAME_TTS_URL || 'http://maia-sesame-tts:8000' }
     );
 
     const tAfterFinalize = Date.now();
     console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'finalize_done', ms: tAfterFinalize - t0, finalize_ms: tAfterFinalize - tAfterLLM }));
+
+    // PFI drift log — structured, filterable, persisted via apprentice system below.
+    // grep for tag:pfi.drift to extract apprenticeship training labels from production logs.
+    if (draftMetrics.drift_detected) {
+      console.warn(JSON.stringify({
+        tag: 'pfi.drift',
+        drift_detected: true,
+        stance: maiaPlan.stance,
+        element: maiaPlan.element,
+        actual_words: draftMetrics.actual_word_count,
+        budget: draftMetrics.maxWords_expected,
+        over_budget: draftMetrics.words_over_budget,
+        forbidden: draftMetrics.forbidden_phrase_hits,
+        abstraction: draftMetrics.abstraction_marker_hits,
+      }));
+    } else {
+      console.info(JSON.stringify({
+        tag: 'pfi.drift',
+        drift_detected: false,
+        stance: maiaPlan.stance,
+        element: maiaPlan.element,
+        actual_words: draftMetrics.actual_word_count,
+        budget: draftMetrics.maxWords_expected,
+      }));
+    }
 
     // OPUS AXIOMS: Evaluate response quality against Jungian alchemical principles
     const axiomEvals = evaluateResponseAgainstAxioms({
@@ -1069,7 +1154,20 @@ export async function POST(request: NextRequest) {
               ruptureDetected,
               symbolPatternsDetected: symbolPatterns.length,
               frameworksActive: activeFrameworks,
-              centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
+              centeringLevel: panconsciousField.axisMundi.currentCenteringState.level,
+              // PFI drift metrics — Stage 2 apprenticeship training labels
+              pfiDrift: {
+                drift_detected: draftMetrics.drift_detected,
+                actual_word_count: draftMetrics.actual_word_count,
+                maxWords_expected: draftMetrics.maxWords_expected,
+                words_over_budget: draftMetrics.words_over_budget,
+                forbidden_phrase_hits: draftMetrics.forbidden_phrase_hits,
+                abstraction_marker_hits: draftMetrics.abstraction_marker_hits,
+                length_compliant: draftMetrics.length_compliant,
+                stance_planned: maiaPlan.stance,
+                element_planned: maiaPlan.element,
+                ttsInstructions_present: Boolean(maiaPlan.ttsInstructions),
+              }
             },
             evolutionTriggers: suggestedInterventions.map(i => i.flowId)
           }

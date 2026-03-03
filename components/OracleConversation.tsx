@@ -4616,8 +4616,10 @@ I'm not sure what I'm feeling yet.`;
         let firstChunkReceived = false;
 
         // Import streaming audio utilities
-        const { StreamingAudioQueue, splitIntoSentences, generateAudioChunk } =
+        const { StreamingAudioQueue, splitIntoSentences, mergeShortSentences, generateAudioChunk } =
           await import('@/lib/voice/StreamingAudioQueue');
+        // Per-chunk prosody from PFI — element-aware, position-aware instructions
+        const { deriveChunkProsodyLegacy } = await import('@/lib/voice/prosodyFromPFI');
 
         // Initialize audio queue for voice mode
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
@@ -4743,6 +4745,7 @@ I'm not sure what I'm feeling yet.`;
                   const audio = await generateAudioChunk(partialSentence, {
                     agentVoice: 'maya',
                     element,
+                    instructions: ttsInstructionsForVoice,
                   });
                   audioQueue.enqueue({
                     audio,
@@ -4795,13 +4798,32 @@ I'm not sure what I'm feeling yet.`;
                       // Check if we have complete sentences (ending with . ! ?)
                       const sentenceEndMatch = partialSentence.match(/[.!?]+\s/);
                       if (sentenceEndMatch) {
-                        const sentences = splitIntoSentences(partialSentence);
+                        const rawSentences = splitIntoSentences(partialSentence);
+                        // Merge adjacent short sentences to reduce TTS API calls and stitching seams.
+                        // e.g. "Yes. I see." becomes one chunk instead of two.
+                        const _rawBatch = rawSentences.slice(0, -1);
+                        const completeSentences = mergeShortSentences(_rawBatch, 160);
+                        // Tell the queue how many raw sentences were collapsed this batch.
+                        // Feeds [pfi.voice] chunks_merged_count — if always 0, threshold is too high.
+                        if (audioQueue && _rawBatch.length > completeSentences.length) {
+                          audioQueue.noteMergedCount(_rawBatch.length - completeSentences.length);
+                        }
 
-                        // Process all complete sentences
-                        for (let i = 0; i < sentences.length - 1; i++) {
-                          const sentence = sentences[i].trim();
+                        // Process merged complete sentences
+                        for (let _ci = 0; _ci < completeSentences.length; _ci++) {
+                          const sentence = completeSentences[_ci];
                           if (sentence) {
                             console.log('🎤 [STREAM] Complete sentence, generating audio:', sentence.substring(0, 50));
+
+                            // Per-chunk prosody from PFI: element + position-aware instructions.
+                            // isFirstChunk/isLastChunk are relative to this SSE batch.
+                            const chunkTTSInstructions = deriveChunkProsodyLegacy({
+                              chunkText: sentence,
+                              baseTTSInstructions: ttsInstructionsForVoice || '',
+                              element: (element || 'aether') as any,
+                              isFirstChunk: _ci === 0,
+                              isLastChunk: _ci === completeSentences.length - 1,
+                            });
 
                             // 🔥 FIX: Track this pending TTS request
                             pendingTTSCount++;
@@ -4814,6 +4836,7 @@ I'm not sure what I'm feeling yet.`;
                                   return await generateAudioChunk(text, {
                                     agentVoice: 'maya',
                                     element,
+                                    instructions: chunkTTSInstructions,
                                   });
                                 } catch (err) {
                                   console.warn(`⚠️ [STREAM] TTS attempt ${attempt}/${retries} failed:`, err);
@@ -4849,8 +4872,8 @@ I'm not sure what I'm feeling yet.`;
                           }
                         }
 
-                        // Keep the last sentence (might be incomplete)
-                        partialSentence = sentences[sentences.length - 1] || '';
+                        // Keep the last raw sentence (might be incomplete — not merged)
+                        partialSentence = rawSentences[rawSentences.length - 1] || '';
                       }
                     }
                   }
