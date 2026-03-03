@@ -115,23 +115,6 @@ export class StreamingAudioQueue {
         // iOS does not care about your assumptions
         await this.ensureAudioContextReady();
 
-        // Gain ramp-in: 40ms linear fade prevents click at chunk seam (iOS + desktop)
-        // MediaElementAudioSourceNode can only be created once per element — guard with flag.
-        if (this.audioContext && this.audioContext.state === 'running' && !audio.dataset.gainNodeCreated) {
-          try {
-            const mediaSource = this.audioContext.createMediaElementSource(audio);
-            const gain = this.audioContext.createGain();
-            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
-            gain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + 0.04);
-            mediaSource.connect(gain);
-            gain.connect(this.audioContext.destination);
-            audio.dataset.gainNodeCreated = 'true';
-          } catch (gainErr) {
-            // Non-fatal: ramp failed (e.g. already connected), play without ramp
-            console.warn('[StreamingQueue] Gain ramp skipped:', gainErr);
-          }
-        }
-
         // Set playsinline for iOS
         audio.setAttribute('playsinline', 'true');
         audio.setAttribute('webkit-playsinline', 'true');
