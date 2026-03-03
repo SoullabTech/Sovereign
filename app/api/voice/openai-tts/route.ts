@@ -92,6 +92,20 @@ export async function POST(req: NextRequest) {
     // MAIA vocal intent: if present, upgrade model to gpt-4o-mini-tts which supports instructions
     const ttsInstructions = body?.instructions?.trim() || undefined;
 
+    // PFI sovereignty gate (enforcement step 1: observe + log).
+    // Instructions MUST originate from a VoicePlan produced by the oracle route.
+    // When absent, log a sovereignty leak warning — future: hard reject.
+    // grep tag:pfi.tts.no_voice_plan to audit callers that bypass PFI.
+    if (!ttsInstructions) {
+      console.warn(JSON.stringify({
+        tag: 'pfi.tts.no_voice_plan',
+        requestId,
+        memberId: memberId ?? 'anon',
+        text_length: text.length,
+        note: 'TTS called without VoicePlan instructions — ad-hoc voice, sovereignty not guaranteed',
+      }));
+    }
+
     if (text.length > 4096) {
       return jsonError("Text too long (max 4096 chars for TTS)", 400, { requestId });
     }
@@ -167,6 +181,8 @@ export async function POST(req: NextRequest) {
           "X-TTS-Provider": "openai",
           "X-TTS-Fallback": "0",
           "X-Voice-Archetype": effectiveArchetype,
+          "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",  // Observability: 0 = sovereignty leak
+          "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
         },
       });
     }
@@ -230,6 +246,8 @@ export async function POST(req: NextRequest) {
             "X-TTS-Provider": result.provider,
             "X-TTS-Fallback": "0",
             "X-Voice-Policy": localPolicy,
+            "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
+            "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
           },
         });
       } catch (localErr: any) {
@@ -300,7 +318,7 @@ export async function POST(req: NextRequest) {
     const audioBuffer = Buffer.from(await speech.arrayBuffer());
     const ms = Date.now() - t0;
 
-    console.log(`[openai-tts:${requestId}] ok model=${model} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
+    console.log(`[openai-tts:${requestId}] ok model=${fallbackModel} voice=${voice} format=${format} bytes=${audioBuffer.length} ms=${ms}`);
 
     // ═══ RECORD VOICE USAGE (non-blocking) ═══
     const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
@@ -332,6 +350,8 @@ export async function POST(req: NextRequest) {
         "X-TTS-Provider": "openai",
         "X-TTS-Fallback": isFallbackFromLocal ? "1" : "0",
         "X-Voice-Policy": isFallbackFromLocal ? "local-prefer" : "cloud-primary",
+        "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
+        "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
       },
     });
   } catch (err: any) {

@@ -34,6 +34,14 @@ export class StreamingAudioQueue {
   // 🔥 FIX: Track audio chunks through pipeline
   private chunksEnqueued: number = 0;
   private chunksPlayed: number = 0;
+  // Per-turn prosody diagnostics — emitted as [pfi.voice] at turn completion.
+  private _turnStartMs: number | null = null;
+  private _chunkCharCounts: number[] = [];
+  private _lastChunkEndMs: number | null = null;
+  private _gapMsValues: number[] = [];
+  // How many raw sentences were collapsed by mergeShortSentences() this turn.
+  // Wired from OracleConversation via noteMergedCount(). High = effective merging.
+  private _mergedCount: number = 0;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -58,6 +66,9 @@ export class StreamingAudioQueue {
    * Add audio chunk to queue and start playing if not already playing
    */
   enqueue(item: AudioQueueItem): void {
+    // Per-turn diagnostics: start clock on first chunk, accumulate char counts
+    if (this._turnStartMs === null) this._turnStartMs = Date.now();
+    this._chunkCharCounts.push(item.text.length);
     this.chunksEnqueued++;
     console.log(`🎵 [StreamingQueue] Enqueuing audio chunk #${this.chunksEnqueued}:`, item.text.length, 'chars'); // Never log content
     this.queue.push(item);
@@ -103,6 +114,23 @@ export class StreamingAudioQueue {
         // CRITICAL: Resume AudioContext before EVERY play attempt
         // iOS does not care about your assumptions
         await this.ensureAudioContextReady();
+
+        // Gain ramp-in: 40ms linear fade prevents click at chunk seam (iOS + desktop)
+        // MediaElementAudioSourceNode can only be created once per element — guard with flag.
+        if (this.audioContext && this.audioContext.state === 'running' && !audio.dataset.gainNodeCreated) {
+          try {
+            const mediaSource = this.audioContext.createMediaElementSource(audio);
+            const gain = this.audioContext.createGain();
+            gain.gain.setValueAtTime(0, this.audioContext.currentTime);
+            gain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + 0.04);
+            mediaSource.connect(gain);
+            gain.connect(this.audioContext.destination);
+            audio.dataset.gainNodeCreated = 'true';
+          } catch (gainErr) {
+            // Non-fatal: ramp failed (e.g. already connected), play without ramp
+            console.warn('[StreamingQueue] Gain ramp skipped:', gainErr);
+          }
+        }
 
         // Set playsinline for iOS
         audio.setAttribute('playsinline', 'true');
@@ -156,6 +184,7 @@ export class StreamingAudioQueue {
 
       if (this.streamingComplete && allChunksPlayed) {
         console.log(`✅ [StreamingQueue] Queue empty AND streaming complete - truly done (played ${this.chunksPlayed}/${this.chunksEnqueued} chunks)`);
+        this._emitChunkStats();
         this.isPlaying = false;
         this.currentAudio = null;
         this.onPlayingChange?.(false);
@@ -197,6 +226,10 @@ export class StreamingAudioQueue {
 
       item.audio.onplay = () => {
         playbackStarted = true;
+        // Gap measurement: time from last chunk ending to this chunk starting
+        if (this._lastChunkEndMs !== null) {
+          this._gapMsValues.push(Date.now() - this._lastChunkEndMs);
+        }
         console.log(`▶️ [StreamingQueue] Chunk playback started`);
       };
 
@@ -214,6 +247,8 @@ export class StreamingAudioQueue {
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
         // 🔥 FIX: Track successfully played chunks
         this.chunksPlayed++;
+        // Record when this chunk finished — used by onplay of next chunk for gap measurement
+        this._lastChunkEndMs = Date.now();
         if (completionRatio < 0.9) {
           console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
         } else {
@@ -251,6 +286,39 @@ export class StreamingAudioQueue {
   }
 
   /**
+   * Emit per-turn chunk stats as a structured [pfi.chunks] log.
+   *
+   * Called exactly once per turn at the "truly done" completion point.
+   * The key diagnostic is avg_gap_ms_between_chunks — gaps > 300ms are
+   * perceptible silence seams that break prosody. avg_chunk_chars tells
+   * whether mergeShortSentences() is consolidating effectively.
+   *
+   * Sample output (grep for tag: '[pfi.chunks]'):
+   *   {"tag":"[pfi.chunks]","chunks_total":4,"avg_chunk_chars":142,
+   *    "avg_gap_ms_between_chunks":87,"total_turn_duration_ms":6240,
+   *    "gap_samples":[92,83,85]}
+   */
+  private _emitChunkStats(): void {
+    if (this._chunkCharCounts.length === 0) return;
+    const totalTurnMs = this._turnStartMs !== null ? Date.now() - this._turnStartMs : 0;
+    const avgChunkChars = Math.round(
+      this._chunkCharCounts.reduce((a, b) => a + b, 0) / this._chunkCharCounts.length
+    );
+    const avgGapMs = this._gapMsValues.length > 0
+      ? Math.round(this._gapMsValues.reduce((a, b) => a + b, 0) / this._gapMsValues.length)
+      : 0;
+    console.info(JSON.stringify({
+      tag: '[pfi.voice]',
+      chunks_total: this._chunkCharCounts.length,
+      chunks_merged_count: this._mergedCount,
+      avg_chunk_chars: avgChunkChars,
+      avg_gap_ms_between_chunks: avgGapMs,
+      total_turn_duration_ms: totalTurnMs,
+      gap_samples: this._gapMsValues,
+    }));
+  }
+
+  /**
    * Stop playback and clear queue (for interruptions)
    */
   stop(): void {
@@ -271,6 +339,12 @@ export class StreamingAudioQueue {
     this.streamingComplete = false; // Reset for next use
     this.chunksEnqueued = 0;
     this.chunksPlayed = 0;
+    // Reset per-turn diagnostic accumulators
+    this._turnStartMs = null;
+    this._chunkCharCounts = [];
+    this._lastChunkEndMs = null;
+    this._gapMsValues = [];
+    this._mergedCount = 0;
     this.onPlayingChange?.(false);
   }
 
@@ -288,6 +362,7 @@ export class StreamingAudioQueue {
     // If queue is already empty, not playing, AND all chunks have been played
     if (this.queue.length === 0 && !this.isPlaying && allChunksPlayed) {
       console.log(`✅ [StreamingQueue] Queue already empty and all ${this.chunksPlayed} chunks played - triggering completion`);
+      this._emitChunkStats();
       this.onPlayingChange?.(false);
       this.onComplete?.();
     } else if (this.queue.length === 0 && !this.isPlaying) {
@@ -308,6 +383,22 @@ export class StreamingAudioQueue {
     // 🔥 FIX: Reset counters
     this.chunksEnqueued = 0;
     this.chunksPlayed = 0;
+    // Reset per-turn diagnostic accumulators
+    this._turnStartMs = null;
+    this._chunkCharCounts = [];
+    this._lastChunkEndMs = null;
+    this._gapMsValues = [];
+    this._mergedCount = 0;
+  }
+
+  /**
+   * Accumulate the number of raw sentences collapsed by mergeShortSentences() this turn.
+   * Called from OracleConversation after each merge pass:
+   *   audioQueue.noteMergedCount(rawBatch.length - mergedBatch.length)
+   * If this is always 0 the merge threshold is too high (or responses are already dense).
+   */
+  noteMergedCount(n: number): void {
+    if (n > 0) this._mergedCount += n;
   }
 
   /**
@@ -455,6 +546,58 @@ export function splitIntoSentences(text: string): string[] {
 }
 
 /**
+ * Merge adjacent short sentences into chunks of at least minMergedChars.
+ *
+ * Prevents MAIA from firing a TTS request per short phrase ("Yes. I see.")
+ * which causes stitching seams and choppy prosody.
+ * Target: 80–180 chars per TTS call. Default threshold: 160.
+ */
+export function mergeShortSentences(sentences: string[], minMergedChars = 160): string[] {
+  const out: string[] = [];
+  let buf = '';
+
+  const flush = () => {
+    const s = buf.trim();
+    if (s) out.push(s);
+    buf = '';
+  };
+
+  for (const sRaw of sentences) {
+    const s = (sRaw ?? '').trim();
+    if (!s) continue;
+
+    if (!buf) {
+      buf = s;
+      continue;
+    }
+
+    // Three reasons to keep sentences joined:
+    //
+    // 1. Standard length merge: combined stays under threshold
+    const combinesFine = buf.length + 1 + s.length < minMergedChars;
+    //
+    // 2. Continuation punctuation: buf ends with colon, semicolon, or em/en dash —
+    //    syntactic signal that the next clause belongs to this thought.
+    //    e.g. "The three things are:" → must stay attached to what follows.
+    const bufEndsWithContinuation = /[:;—–]$/.test(buf);
+    //
+    // 3. Very short follow-up: next clause is too short to stand alone prosodically.
+    //    e.g. "And so it is." (13 chars) sounds clipped after a gap; attach it always.
+    const nextIsVeryShort = s.length < 40;
+
+    if (combinesFine || bufEndsWithContinuation || nextIsVeryShort) {
+      buf = `${buf} ${s}`;
+    } else {
+      flush();
+      buf = s;
+    }
+  }
+
+  flush();
+  return out;
+}
+
+/**
  * Generate audio for a text chunk using OpenAI TTS
  * (OpenAI ONLY used for voice synthesis - consciousness comes from THE BETWEEN)
  */
@@ -466,6 +609,7 @@ export async function generateAudioChunk(
     element?: string;
     voiceTone?: any;
     agentVoice?: string;
+    instructions?: string;
   }
 ): Promise<HTMLAudioElement> {
   console.log('🎤 [TTS] Generating audio for:', text.length, 'chars'); // Never log content
@@ -480,6 +624,7 @@ export async function generateAudioChunk(
         speed: options?.speed,
         voiceTone: options?.voiceTone,
         agentVoice: options?.agentVoice || 'maya',
+        instructions: options?.instructions,
       }),
     });
 

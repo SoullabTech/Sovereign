@@ -16,6 +16,8 @@
 
 import type { VoiceIntent, Element } from '@/lib/types/voiceIntent';
 import type { RelationalHint } from '@/lib/types/relationalHint';
+import type { DraftPolicy } from '@/lib/consciousness/pfi';
+import { DEFAULT_FORBIDDEN_PHRASES } from '@/lib/consciousness/pfi';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -313,6 +315,144 @@ export function buildRenderPrompt(
   return `${baseSystemPrompt}${directive}`;
 }
 
+// ── DraftMetrics ──────────────────────────────────────────────────────────
+
+/**
+ * Per-turn fidelity metrics from the sanitize step.
+ * Logged fire-and-forget for drift tracking. Never blocks the pipeline.
+ * These are the Stage 2 apprenticeship training labels.
+ */
+export interface DraftMetrics {
+  /** Raw word count before sanitization */
+  actual_word_count: number;
+  /** Plan-mandated word budget */
+  maxWords_expected: number;
+  /** Words over budget (0 if compliant) */
+  words_over_budget: number;
+  /** Forbidden phrases found and stripped */
+  forbidden_phrase_hits: string[];
+  /** Claude-ism abstraction markers found and stripped */
+  abstraction_marker_hits: string[];
+  /** True if draft was within word budget before clamping */
+  length_compliant: boolean;
+  /** True if any sanitization was required */
+  drift_detected: boolean;
+}
+
+// Claude-ism abstraction patterns that survive forbidden phrase filter
+const ABSTRACTION_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
+  { pattern: /\bAs an AI\b/gi,                                    label: 'as-an-ai' },
+  { pattern: /\bI (can't|cannot) (help|assist)\b/gi,              label: 'cannot-help' },
+  { pattern: /\bI don't have access to\b/gi,                      label: 'no-access' },
+  { pattern: /\bIt('s| is) important to (note|remember|understand)\b/gi, label: 'important-to-note' },
+  { pattern: /\bI should (note|mention|clarify)\b/gi,             label: 'i-should-note' },
+  { pattern: /\bAs a language model\b/gi,                         label: 'language-model' },
+  { pattern: /\bI want to be transparent\b/gi,                    label: 'transparency-meta' },
+];
+
+/** Hard-clamp draft at sentence boundary near maxWords. */
+function clampAtBoundary(text: string, maxWords: number): string {
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+
+  // Look for a sentence boundary within a small buffer past the limit
+  const buffer = words.slice(0, maxWords + 8).join(' ');
+  const lastPeriod   = buffer.lastIndexOf('. ');
+  const lastBang     = buffer.lastIndexOf('! ');
+  const lastQuestion = buffer.lastIndexOf('? ');
+  const boundary = Math.max(lastPeriod, lastBang, lastQuestion);
+
+  if (boundary > 0) {
+    return buffer.slice(0, boundary + 1).trim();
+  }
+  // No sentence boundary — hard cut
+  return words.slice(0, maxWords).join(' ');
+}
+
+/**
+ * The single draft sanitization choke point.
+ *
+ * Runs BEFORE Sesame CI shaping, BEFORE voice output, AFTER LLM generation.
+ * This is where PFI re-authors the draft — stripping what shouldn't be there
+ * and clamping to the plan's constraints.
+ *
+ * Order matters:
+ *   1. Forbidden phrases (sovereignty integrity)
+ *   2. Abstraction markers (voice fidelity)
+ *   3. Length clamp (plan compliance)
+ *
+ * Never throws. Returns original draft on error.
+ */
+export function sanitizeDraft(
+  draft: string,
+  plan: MAIAResponsePlan,
+  draftPolicy?: DraftPolicy
+): { sanitized: string; metrics: DraftMetrics } {
+  try {
+    let text = draft;
+    const originalWordCount = text.trim().split(/\s+/).filter(Boolean).length;
+
+    // 1. Forbidden phrases — sovereignty guard
+    const forbidList = draftPolicy?.forbidPhrases ?? DEFAULT_FORBIDDEN_PHRASES;
+    const forbidden_phrase_hits: string[] = [];
+    for (const phrase of forbidList) {
+      const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'gi');
+      if (regex.test(text)) {
+        forbidden_phrase_hits.push(phrase);
+        text = text.replace(regex, '').replace(/\s{2,}/g, ' ').trim();
+      }
+    }
+
+    // 2. Abstraction markers — Claude-ism guard
+    const abstraction_marker_hits: string[] = [];
+    for (const { pattern, label } of ABSTRACTION_PATTERNS) {
+      if (pattern.test(text)) {
+        abstraction_marker_hits.push(label);
+        text = text.replace(pattern, '').replace(/\s{2,}/g, ' ').trim();
+      }
+    }
+
+    // 3. Length clamp — plan compliance
+    const words_over_budget = Math.max(0, originalWordCount - plan.maxWords);
+    if (words_over_budget > 0) {
+      text = clampAtBoundary(text, plan.maxWords);
+    }
+
+    const drift_detected =
+      forbidden_phrase_hits.length > 0 ||
+      abstraction_marker_hits.length > 0 ||
+      words_over_budget > 0;
+
+    return {
+      sanitized: text || draft, // never return empty — fallback to original
+      metrics: {
+        actual_word_count: originalWordCount,
+        maxWords_expected: plan.maxWords,
+        words_over_budget,
+        forbidden_phrase_hits,
+        abstraction_marker_hits,
+        length_compliant: words_over_budget === 0,
+        drift_detected,
+      },
+    };
+  } catch {
+    // Never break the pipeline
+    return {
+      sanitized: draft,
+      metrics: {
+        actual_word_count: 0,
+        maxWords_expected: plan.maxWords,
+        words_over_budget: 0,
+        forbidden_phrase_hits: [],
+        abstraction_marker_hits: [],
+        length_compliant: true,
+        drift_detected: false,
+      },
+    };
+  }
+}
+
 // ── finalizeMaiaResponse ──────────────────────────────────────────────────
 
 /**
@@ -329,10 +469,31 @@ export function buildRenderPrompt(
 export async function finalizeMaiaResponse(
   draft: string,
   plan: MAIAResponsePlan,
-  sesameUrl = 'http://maia-sesame-tts:8000'
-): Promise<{ coreMessage: string; spokenText: string; displayText: string }> {
-  const displayText = draft;
-  let spokenText = draft;
+  opts: {
+    sesameUrl?: string;
+    draftPolicy?: DraftPolicy;
+  } = {}
+): Promise<{ coreMessage: string; spokenText: string; displayText: string; draftMetrics: DraftMetrics }> {
+  const { sesameUrl = 'http://maia-sesame-tts:8000', draftPolicy } = opts;
+
+  // ── Step 1: Sanitize ─────────────────────────────────────────────────────
+  // THE choke point. Forbidden phrases, abstraction markers, length clamp.
+  // PFI re-authors here. One place. Always.
+  const { sanitized, metrics } = sanitizeDraft(draft, plan, draftPolicy);
+
+  if (metrics.drift_detected) {
+    console.warn('[maia.finalize] drift detected', JSON.stringify({
+      forbidden_phrase_hits: metrics.forbidden_phrase_hits,
+      abstraction_marker_hits: metrics.abstraction_marker_hits,
+      words_over_budget: metrics.words_over_budget,
+      stance: plan.stance,
+      element: plan.element,
+    }));
+  }
+
+  // ── Step 2: Sesame CI shaping on sanitized text ──────────────────────────
+  const displayText = sanitized;
+  let spokenText = sanitized;
   let shaped = false;
 
   try {
@@ -340,7 +501,7 @@ export async function finalizeMaiaResponse(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: draft,
+        text: sanitized,
         style: STANCE_TO_STYLE[plan.stance],
         element: plan.element,
         archetype: plan.voiceHint.archetype ?? 'companion',
@@ -362,6 +523,9 @@ export async function finalizeMaiaResponse(
       shaped,
       element: plan.element,
       stance: plan.stance,
+      drift_detected: metrics.drift_detected,
+      actual_words: metrics.actual_word_count,
+      budget: metrics.maxWords_expected,
     }));
   } catch (err: any) {
     // Silent fallback: Sesame unavailable, spokenText equals displayText
@@ -371,7 +535,7 @@ export async function finalizeMaiaResponse(
     }));
   }
 
-  return { coreMessage: draft, spokenText, displayText };
+  return { coreMessage: sanitized, spokenText, displayText, draftMetrics: metrics };
 }
 
 // ── curateMemoryWrite ─────────────────────────────────────────────────────
