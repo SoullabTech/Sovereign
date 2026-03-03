@@ -466,9 +466,13 @@ demo.soullab.life {
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Jeremy Larson's Business Site (Palisades Master Handyman)
-# jeremy.soullab.life is primary, palisades.soullab.life + jlmasterhandyman.com kept as aliases
+# jlmasterhandyman.com is canonical; jeremy.soullab.life redirects to it
 # ═══════════════════════════════════════════════════════════════════════════════
-jeremy.soullab.life, jlmasterhandyman.com, www.jlmasterhandyman.com {
+jlmasterhandyman.com, www.jlmasterhandyman.com {
+    redir https://jeremy.soullab.life{uri} permanent
+}
+
+jeremy.soullab.life {
     # Reverse proxy to Palisades Handyman container
     reverse_proxy palisades:4321 {
         header_up Host {host}
