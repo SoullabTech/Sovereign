@@ -1,7 +1,8 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * open-web — mobile gate page
@@ -14,11 +15,28 @@ import { useEffect, useState } from 'react';
  *   router.push('/open-web?to=/labtools/admin')
  *
  * The `to` param is appended to the base URL so the user lands on the right page.
+ *
+ * Note: useSearchParams() must be in a child component wrapped by <Suspense>
+ * for Next.js static export compatibility.
  */
 
 const BASE_URL = 'https://soullab.life';
 
-export default function OpenWebPage() {
+const containerStyle: React.CSSProperties = {
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '2rem',
+  background: '#1A1513',
+  color: '#E8DCC8',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  textAlign: 'center',
+  gap: '1.5rem',
+};
+
+function OpenWebContent() {
   const searchParams = useSearchParams();
   const [destination, setDestination] = useState(BASE_URL);
 
@@ -35,21 +53,7 @@ export default function OpenWebPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem',
-        background: '#1A1513',
-        color: '#E8DCC8',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        textAlign: 'center',
-        gap: '1.5rem',
-      }}
-    >
+    <div style={containerStyle}>
       <div style={{ fontSize: '2.5rem' }}>🌐</div>
 
       <h1
@@ -109,5 +113,25 @@ export default function OpenWebPage() {
         Go back
       </button>
     </div>
+  );
+}
+
+// Static fallback shown during SSR prerender (no search params available)
+function OpenWebFallback() {
+  return (
+    <div style={containerStyle}>
+      <div style={{ fontSize: '2.5rem' }}>🌐</div>
+      <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#E8DCC8', margin: 0 }}>
+        This feature is on the web
+      </h1>
+    </div>
+  );
+}
+
+export default function OpenWebPage() {
+  return (
+    <Suspense fallback={<OpenWebFallback />}>
+      <OpenWebContent />
+    </Suspense>
   );
 }
