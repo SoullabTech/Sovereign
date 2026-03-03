@@ -197,10 +197,11 @@ if $SKIP_BUMP; then
   current_build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST" 2>/dev/null || echo "unknown")
   skip "Bump (--skip-bump) — current build: $current_build"
 else
-  new_build=$(git -C "$REPO_ROOT" rev-list --count HEAD)
+  current_build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST" 2>/dev/null | tr -d '[:space:]')
+  new_build=$((current_build + 1))
   /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $new_build" "$INFO_PLIST"
   marketing=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST" 2>/dev/null || echo "unknown")
-  ok "CFBundleVersion → $new_build  (marketing version: $marketing)"
+  ok "CFBundleVersion → $new_build  (was: $current_build, marketing version: $marketing)"
 fi
 
 # ── Step 8: Archive ───────────────────────────────────────────────────────────

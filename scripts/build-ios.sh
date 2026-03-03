@@ -53,11 +53,17 @@ preflight_check() {
     # Override with:  ALLOW_DIRTY=1 npm run ios:build
     local dirty_ok="${ALLOW_DIRTY:-0}"
     if [ "$dirty_ok" != "1" ]; then
-        if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+        # Exclude Info.plist from the dirty check: build pipelines (fastlane bump_build,
+        # scripts/ios/build.sh Step 7) intentionally modify it and don't commit every bump.
+        # Everything else must be clean.
+        local dirty
+        dirty=$( { git diff --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; } \
+                 | grep -v '^ios/App/App/Info\.plist$' || true )
+        if [ -n "$dirty" ]; then
             echo ""
             echo "❌  Working tree has uncommitted changes:"
             echo ""
-            git status --short 2>/dev/null | head -20
+            git status --short 2>/dev/null | grep -v "ios/App/App/Info.plist" | head -20
             echo ""
             echo "    Commit or stash before building."
             echo "    To override:  ALLOW_DIRTY=1 npm run ios:build"

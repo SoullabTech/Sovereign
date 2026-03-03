@@ -92,21 +92,27 @@ platform :ios do
   end
 
   # ── bump_build ──────────────────────────────────────────────────────────────
-  # Increments CFBundleVersion using git commit count (stable, offline-safe).
-  # Strategy: git rev-list --count HEAD  → always monotonically increasing,
-  # never resets between machines, works without network.
+  # Increments CFBundleVersion by reading the current value and adding 1.
+  # This is the single authority for build number bumping in the Fastlane path.
   #
-  # Override: BUILD_NUMBER=123 bundle exec fastlane ios bump_build
-  desc "Increment CFBundleVersion deterministically (git commit count or BUILD_NUMBER env)"
+  # Using git commit count caused HTTP 409 collisions when both this lane and
+  # scripts/ios/build.sh ran on the same commit — they produced identical numbers.
+  # Plist-relative incrementing is monotonic regardless of commit state or which
+  # pipeline runs first.
+  #
+  # Override: BUILD_NUMBER=2500 bundle exec fastlane ios bump_build
+  desc "Increment CFBundleVersion (current plist value + 1, or BUILD_NUMBER env override)"
   lane :bump_build do
     new_build = if ENV["BUILD_NUMBER"] && !ENV["BUILD_NUMBER"].strip.empty?
       build = ENV["BUILD_NUMBER"].strip
       UI.message("Using BUILD_NUMBER from env: #{build}")
       build
     else
-      count = sh("cd #{REPO_ROOT} && git rev-list --count HEAD", log: false).strip
-      UI.message("Git commit count: #{count}")
-      count
+      # Read current value from Info.plist and increment — avoids git-count collisions.
+      current = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' '#{INFO_PLIST}'", log: false).strip.to_i
+      build   = (current + 1).to_s
+      UI.message("CFBundleVersion: #{current} → #{build}")
+      build
     end
 
     # Write to Info.plist via /usr/libexec/PlistBuddy (avoids agvtool quirks with Capacitor)
