@@ -109,7 +109,8 @@ if $SKIP_WEB; then
     fail "out/ is missing or empty — cannot skip web build"
   fi
 else
-  info "Patching dynamic routes for static export..."
+  info "Patching dynamic routes for static export (MOBILE_MODE=1)..."
+  export MOBILE_MODE=1
   "$REPO_ROOT/scripts/capacitor-patch-routes.sh" patch
 
   # Ensure patches are reverted even on failure
