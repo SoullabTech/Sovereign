@@ -408,3 +408,6 @@ scripts/maia-cli/node_modules/
 .claude/worktrees/
 ios/App/fastlane/README.md
 ios/App/fastlane/report.xml
+ios/App/fastlane/test_output/
+ios/App/fastlane/screenshots/
+ios/App/fastlane/metadata/
