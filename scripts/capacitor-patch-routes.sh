@@ -21,15 +21,142 @@ PAGES_BACKUP_DIR="$PROJECT_ROOT/.capacitor-pages-backup"
 DYNAMIC_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-pages-backup"
 DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
 PATCHED_PAGES_FILE="$PROJECT_ROOT/.capacitor-patched-pages.txt"
+MOBILE_BACKUP_DIR="$PROJECT_ROOT/.capacitor-mobile-backup"
+MOBILE_BACKUP_MANIFEST="$PROJECT_ROOT/.capacitor-mobile.manifest"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-log_info() { echo -e "${GREEN}[PATCH]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_info()  { echo -e "${GREEN}[PATCH]${NC} $1"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+log_patch() { echo -e "${GREEN}[MOBILE]${NC} $1"; }
+
+# ── Mobile Mode Allowlist ─────────────────────────────────────────────────────
+# When MOBILE_MODE=1, only these routes are included in the build.
+# All others are moved to .capacitor-mobile-backup/ before npm run build.
+
+MOBILE_TOP_LEVEL=(
+  "enter" "open-web" "signin" "begin" "test-elemental" "faq" "onboarding"
+  "intro" "welcome-back" "capture" "journal" "field" "settings"
+  "oauth-success" "magic-link-success" "reset-password" "soul-gateway"
+  "maia" "labtools" "account"
+)
+
+# labtools sub-dirs to KEEP (everything else in labtools/ gets excluded)
+MOBILE_LABTOOLS_KEEP=("journal" "settings" "reflections")
+
+# account sub-dirs to KEEP
+MOBILE_ACCOUNT_KEEP=("settings")
+
+# maia sub-dirs to KEEP (empty = keep root page only, exclude all sub-dirs)
+MOBILE_MAIA_KEEP=()
+
+# ── helper: is_in_array name array[@] ────────────────────────────────────────
+is_in_array() {
+  local needle="$1"; shift
+  local element
+  for element in "$@"; do
+    [ "$element" = "$needle" ] && return 0
+  done
+  return 1
+}
+
+# Move all app/ dirs not in the allowlist to backup, tracking in a manifest
+hide_non_mobile_routes() {
+  log_patch "Mobile Mode active — enforcing route allowlist"
+
+  if [ -d "$MOBILE_BACKUP_DIR" ]; then
+    log_warn "Mobile backup already exists, removing stale backup..."
+    rm -rf "$MOBILE_BACKUP_DIR"
+  fi
+  mkdir -p "$MOBILE_BACKUP_DIR"
+  : > "$MOBILE_BACKUP_MANIFEST"
+
+  # ── Phase 1: Top-level dirs not in MOBILE_TOP_LEVEL ──────────────────────
+  for dir in "$PROJECT_ROOT/app"/*/; do
+    [ -d "$dir" ] || continue
+    name=$(basename "$dir")
+
+    if ! is_in_array "$name" "${MOBILE_TOP_LEVEL[@]}"; then
+      mv "$PROJECT_ROOT/app/$name" "$MOBILE_BACKUP_DIR/$name"
+      echo "app/$name" >> "$MOBILE_BACKUP_MANIFEST"
+      log_patch "  Excluded top-level: app/$name/"
+    fi
+  done
+
+  # ── Phase 2: labtools — exclude sub-dirs not in MOBILE_LABTOOLS_KEEP ─────
+  if [ -d "$PROJECT_ROOT/app/labtools" ]; then
+    for subdir in "$PROJECT_ROOT/app/labtools"/*/; do
+      [ -d "$subdir" ] || continue
+      name=$(basename "$subdir")
+      if ! is_in_array "$name" "${MOBILE_LABTOOLS_KEEP[@]}"; then
+        mkdir -p "$MOBILE_BACKUP_DIR/labtools"
+        mv "$PROJECT_ROOT/app/labtools/$name" "$MOBILE_BACKUP_DIR/labtools/$name"
+        echo "app/labtools/$name" >> "$MOBILE_BACKUP_MANIFEST"
+        log_patch "  Excluded labtools sub-dir: app/labtools/$name/"
+      fi
+    done
+  fi
+
+  # ── Phase 3: maia — exclude all sub-dirs (keep root page only) ───────────
+  if [ -d "$PROJECT_ROOT/app/maia" ]; then
+    for subdir in "$PROJECT_ROOT/app/maia"/*/; do
+      [ -d "$subdir" ] || continue
+      name=$(basename "$subdir")
+      if ! is_in_array "$name" "${MOBILE_MAIA_KEEP[@]}"; then
+        mkdir -p "$MOBILE_BACKUP_DIR/maia"
+        mv "$PROJECT_ROOT/app/maia/$name" "$MOBILE_BACKUP_DIR/maia/$name"
+        echo "app/maia/$name" >> "$MOBILE_BACKUP_MANIFEST"
+        log_patch "  Excluded maia sub-dir: app/maia/$name/"
+      fi
+    done
+  fi
+
+  # ── Phase 4: account — exclude sub-dirs not in MOBILE_ACCOUNT_KEEP ───────
+  if [ -d "$PROJECT_ROOT/app/account" ]; then
+    for subdir in "$PROJECT_ROOT/app/account"/*/; do
+      [ -d "$subdir" ] || continue
+      name=$(basename "$subdir")
+      if ! is_in_array "$name" "${MOBILE_ACCOUNT_KEEP[@]}"; then
+        mkdir -p "$MOBILE_BACKUP_DIR/account"
+        mv "$PROJECT_ROOT/app/account/$name" "$MOBILE_BACKUP_DIR/account/$name"
+        echo "app/account/$name" >> "$MOBILE_BACKUP_MANIFEST"
+        log_patch "  Excluded account sub-dir: app/account/$name/"
+      fi
+    done
+  fi
+
+  local count
+  count=$(wc -l < "$MOBILE_BACKUP_MANIFEST" | tr -d ' ')
+  log_patch "Mobile Mode: moved $count route directories to backup"
+}
+
+# Restore all mobile-excluded routes from backup
+restore_non_mobile_routes() {
+  [ -f "$MOBILE_BACKUP_MANIFEST" ] || return 0
+
+  log_patch "Restoring mobile-excluded routes..."
+  local count=0
+
+  while IFS= read -r original_path; do
+    [ -z "$original_path" ] && continue
+    rel="${original_path#app/}"
+    src="$MOBILE_BACKUP_DIR/$rel"
+    dst="$PROJECT_ROOT/app/$rel"
+    if [ -d "$src" ]; then
+      mkdir -p "$(dirname "$dst")"
+      mv "$src" "$dst"
+      count=$((count + 1))
+    fi
+  done < "$MOBILE_BACKUP_MANIFEST"
+
+  rm -f "$MOBILE_BACKUP_MANIFEST"
+  rm -rf "$MOBILE_BACKUP_DIR"
+  log_patch "Restored $count mobile-excluded route directories"
+}
 
 # API routes - must be moved out for static export
 # Routes with `force-dynamic` cause build failures during static export
@@ -332,6 +459,9 @@ revert_patched_pages() {
 # Main
 case "${1:-}" in
     patch)
+        if [ "${MOBILE_MODE:-}" = "1" ]; then
+            hide_non_mobile_routes
+        fi
         hide_api_routes
         hide_middleware
         hide_pages_dir
@@ -344,6 +474,7 @@ case "${1:-}" in
         restore_pages_dir
         restore_incompatible_pages
         revert_patched_pages
+        restore_non_mobile_routes
         ;;
     *)
         echo "Usage: $0 {patch|revert}"
