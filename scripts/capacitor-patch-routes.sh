@@ -276,10 +276,11 @@ restore_pages_dir() {
 hide_incompatible_pages() {
     log_info "Scanning for pages incompatible with static export..."
 
-    # Clean up any stale backup
+    # Safety: abort if backup already exists (indicates a previous patch was never reverted).
     if [ -d "$DYNAMIC_PAGES_BACKUP" ]; then
-        log_warn "Backup already exists, removing stale backup..."
-        rm -rf "$DYNAMIC_PAGES_BACKUP"
+        log_error "Dynamic pages backup already exists at $DYNAMIC_PAGES_BACKUP"
+        log_error "Run './scripts/capacitor-patch-routes.sh revert' before patching again."
+        exit 1
     fi
     mkdir -p "$DYNAMIC_PAGES_BACKUP"
 
@@ -456,6 +457,122 @@ revert_patched_pages() {
     log_info "Reverted $count patched pages"
 }
 
+# Mobile Route Allowlist Exclusions
+#
+# Mirrors WEB_ONLY_PREFIXES in lib/mobile/mobileAllowlist.ts — keep in sync.
+#
+# These are top-level app directories that are NEVER shipped in the iOS build.
+# They redirect to /open-in-web at runtime; here we move them out entirely so
+# they don't inflate the static export or cause build errors.
+#
+# Format: app-relative path from project root (no leading slash)
+MOBILE_EXCLUDED_DIRS=(
+    # Studio web-only sections
+    "app/studio/marketing"
+    "app/studio/media"
+    "app/studio/metrics"
+    "app/studio/agents"
+    "app/studio/code"
+    "app/studio/review"
+    "app/studio/vault"
+    "app/studio/tools"
+    "app/studio/field"
+    "app/studio/groups"
+    "app/studio/create"
+    "app/studio/case-studies"
+    "app/studio/decisions"
+    "app/studio/changes"
+    "app/studio/camera"
+    "app/studio/threshold"
+    "app/studio/session-room"
+    "app/studio/maia"
+    "app/studio/tasks"
+    "app/studio/teams"
+    "app/studio/services"
+    # Admin (web-only always)
+    "app/admin"
+    # MAIA advanced tools (web-only)
+    "app/maia/labtools"
+    "app/maia/community"
+    "app/maia/realtime-monitor"
+    "app/maia/soul-consciousness"
+    "app/maia/training"
+    "app/maia/stewardship"
+    "app/maia/field-dashboard"
+    # Research / ops / advanced tools
+    "app/consciousness-lab"
+    "app/consciousness-monitor"
+    "app/pfi-monitor"
+    "app/model-studio"
+    "app/labtools"
+    "app/patterns"
+    "app/research"
+    "app/ain-evolution"
+    "app/ain-demo"
+)
+
+MOBILE_EXCLUDED_DIRS_BACKUP="$PROJECT_ROOT/.capacitor-mobile-excluded-backup"
+MOBILE_EXCLUDED_DIRS_MANIFEST="$PROJECT_ROOT/.capacitor-mobile-excluded.manifest"
+
+# Move web-only directories out of the build before static export
+hide_web_only_routes() {
+    log_info "Moving web-only routes out of mobile build (mirrors mobileAllowlist.ts)..."
+
+    # Safety: abort if backup already exists (indicates a previous patch was never reverted).
+    # Deleting a live backup would permanently lose the web-only route trees.
+    if [ -d "$MOBILE_EXCLUDED_DIRS_BACKUP" ]; then
+        log_error "Mobile exclusions backup already exists at $MOBILE_EXCLUDED_DIRS_BACKUP"
+        log_error "Run './scripts/capacitor-patch-routes.sh revert' before patching again."
+        exit 1
+    fi
+    mkdir -p "$MOBILE_EXCLUDED_DIRS_BACKUP"
+
+    > "$MOBILE_EXCLUDED_DIRS_MANIFEST"
+    local count=0
+
+    for rel_dir in "${MOBILE_EXCLUDED_DIRS[@]}"; do
+        local full_path="$PROJECT_ROOT/$rel_dir"
+        if [ -d "$full_path" ]; then
+            local backup_path="$MOBILE_EXCLUDED_DIRS_BACKUP/$rel_dir"
+            mkdir -p "$(dirname "$backup_path")"
+            mv "$full_path" "$backup_path"
+            echo "$rel_dir" >> "$MOBILE_EXCLUDED_DIRS_MANIFEST"
+            log_info "  Excluded (web-only): $rel_dir"
+            count=$((count + 1))
+        fi
+    done
+
+    log_info "Excluded $count web-only directories from mobile build"
+}
+
+# Restore web-only directories after build
+restore_web_only_routes() {
+    log_info "Restoring web-only routes from backup..."
+
+    if [ ! -f "$MOBILE_EXCLUDED_DIRS_MANIFEST" ]; then
+        log_warn "No mobile exclusions manifest found"
+        return 0
+    fi
+
+    local count=0
+    while IFS= read -r rel_dir; do
+        [ -z "$rel_dir" ] && continue
+        local backup_path="$MOBILE_EXCLUDED_DIRS_BACKUP/$rel_dir"
+        local restore_path="$PROJECT_ROOT/$rel_dir"
+        if [ -d "$backup_path" ]; then
+            mkdir -p "$(dirname "$restore_path")"
+            [ -d "$restore_path" ] && rm -rf "$restore_path"
+            mv "$backup_path" "$restore_path"
+            log_info "  Restored: $rel_dir"
+            count=$((count + 1))
+        fi
+    done < "$MOBILE_EXCLUDED_DIRS_MANIFEST"
+
+    rm -rf "$MOBILE_EXCLUDED_DIRS_BACKUP"
+    rm -f "$MOBILE_EXCLUDED_DIRS_MANIFEST"
+    log_info "Restored $count web-only directories"
+}
+
 # Main
 case "${1:-}" in
     patch)
@@ -465,6 +582,7 @@ case "${1:-}" in
         hide_api_routes
         hide_middleware
         hide_pages_dir
+        hide_web_only_routes
         hide_incompatible_pages
         patch_remaining_dynamic_pages
         ;;
@@ -472,6 +590,7 @@ case "${1:-}" in
         restore_api_routes
         restore_middleware
         restore_pages_dir
+        restore_web_only_routes
         restore_incompatible_pages
         revert_patched_pages
         restore_non_mobile_routes
@@ -483,7 +602,8 @@ case "${1:-}" in
         echo "  patch   - Prepare for Capacitor static export builds"
         echo "           - Move app/api out of the way (iOS uses production API)"
         echo "           - Move middleware.ts out of the way (not compatible with static export)"
-        echo "           - Exclude incompatible dynamic pages from the build"
+        echo "           - Move web-only routes out (mirrors lib/mobile/mobileAllowlist.ts)"
+        echo "           - Exclude remaining incompatible dynamic pages"
         echo "           - Add generateStaticParams to remaining dynamic pages"
         echo "  revert  - Restore original state after build"
         exit 1

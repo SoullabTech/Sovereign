@@ -21,6 +21,56 @@ if [ "$BUILD_TYPE" == "debug" ]; then
     CONFIGURATION="Debug"
 fi
 
+# ─── Preflight checks ─────────────────────────────────────────────────────────
+# Run before any patching so failures are fast and safe.
+
+preflight_check() {
+    # Guard 1: Stale patch backup
+    # Any .capacitor-*-backup directory means a previous patch was never reverted.
+    # Proceeding would silently delete the live backup and lose route trees.
+    local stale=()
+    for b in \
+        ".capacitor-api-backup" \
+        ".capacitor-mobile-excluded-backup" \
+        ".capacitor-pages-backup" \
+        ".capacitor-dynamic-pages-backup"
+    do
+        [ -d "$b" ] && stale+=("$b")
+    done
+    if [ ${#stale[@]} -gt 0 ]; then
+        echo ""
+        echo "❌  Stale patch backup detected — repo is still in a patched state:"
+        for b in "${stale[@]}"; do echo "      $b"; done
+        echo ""
+        echo "    Run:  ./scripts/capacitor-patch-routes.sh revert"
+        echo "    Then: npm run ios:build"
+        echo ""
+        exit 1
+    fi
+
+    # Guard 2: Dirty working tree
+    # Unintentional build-time changes make builds non-reproducible.
+    # Override with:  ALLOW_DIRTY=1 npm run ios:build
+    local dirty_ok="${ALLOW_DIRTY:-0}"
+    if [ "$dirty_ok" != "1" ]; then
+        if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
+            echo ""
+            echo "❌  Working tree has uncommitted changes:"
+            echo ""
+            git status --short 2>/dev/null | head -20
+            echo ""
+            echo "    Commit or stash before building."
+            echo "    To override:  ALLOW_DIRTY=1 npm run ios:build"
+            echo ""
+            exit 1
+        fi
+    else
+        echo "⚠️  ALLOW_DIRTY=1 — building with uncommitted changes"
+    fi
+}
+
+preflight_check
+
 echo "📱 Building iOS app (${CONFIGURATION} mode)..."
 
 # Patch force-dynamic routes for static export

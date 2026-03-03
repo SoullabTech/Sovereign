@@ -9,6 +9,7 @@ import { SystemHealthProvider } from "@/components/providers/SystemHealthProvide
 import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
+import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -185,7 +186,9 @@ export default function RootLayout({
                 syncInterval={30000}
               >
                 <FeatureTooltipProvider>
-                  {children}
+                  <MobileRouteGuard>
+                    {children}
+                  </MobileRouteGuard>
                 </FeatureTooltipProvider>
               </SevenLayerArchitectureProvider>
             </AethericConsciousnessProvider>
