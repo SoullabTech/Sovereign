@@ -30,6 +30,10 @@ INFO_PLIST = File.join(IOS_APP, "App", "Info.plist")
 BUILD_DIR  = File.join(IOS_APP, "build")
 EXPORT_OPTIONS = File.join(IOS_APP, "exportOptions.plist")
 
+# xcpretty and CocoaPods require UTF-8 — enforce it here so callers don't need to
+ENV["LANG"]   ||= "en_US.UTF-8"
+ENV["LC_ALL"] ||= "en_US.UTF-8"
+
 default_platform(:ios)
 
 platform :ios do
