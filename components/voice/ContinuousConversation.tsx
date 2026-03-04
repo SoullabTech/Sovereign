@@ -1484,6 +1484,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   isProcessingRef.current = true;
                   setIsRecording(false);
                   isRecordingRef.current = false;
+                  backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
                   onTranscript(finalTranscript);
                 }
                 nativeSilenceTimerRef.current = null;
@@ -1517,7 +1518,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             addDebug('✅ MIC IS LIVE - orange dot visible!');
             setMicState('LISTENING', 'listeningState:started');
             restartInFlightRef.current = false; // Clear restart-in-flight flag
-            backoffStepRef.current = 0; // Reset backoff on successful start
+            // ⚠️ DO NOT reset backoffStepRef here. The mic reaching LIVE for even 1ms
+            // does NOT mean speech was captured. Resetting here caused an infinite 800ms
+            // blink loop: mic→LIVE(1ms)→stopped→backoff resets→repeat.
+            // backoffStepRef resets ONLY when a transcript is confirmed (actual speech).
             lastNativeStartAtRef.current = Date.now();
             consecutiveRestartCount.current = 0;
             console.log('🔄 [Native] Restart counter reset to 0 (mic is live)');
@@ -1536,6 +1540,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               accumulatedTranscript.current = '';
               setIsRecording(false);
               isRecordingRef.current = false;
+              backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
               onTranscript(finalTranscript);
             }
 
