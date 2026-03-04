@@ -10,6 +10,7 @@ import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -177,6 +178,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
         <CapacitorBoot />
         <FlagsDebug />
+        <AppErrorBoundary>
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
@@ -194,6 +196,7 @@ export default function RootLayout({
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
         </SubscriptionProvider>
+        </AppErrorBoundary>
       </body>
     </html>
   );
