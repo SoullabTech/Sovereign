@@ -174,7 +174,9 @@ export function MobileRouteGuard({ children }: MobileRouteGuardProps) {
 
     // Route not in allowlist at all — decide immediately without server call
     if (!isMobileRoute(pathname)) {
-      setState(isWebOnlyRoute(pathname) ? 'web-only' : 'web-only');
+      // Explicitly web-only → show the "Open in Web Studio" hatch
+      // Unknown route (not in either list) → same treatment; nothing to render natively
+      setState('web-only');
       return;
     }
 

@@ -20,6 +20,7 @@
 // ─── Auth / Onboarding ────────────────────────────────────────────────────────
 // One-time flow. Must ship.
 export const ONBOARDING_ROUTES = [
+  "/enter",          // iOS app entry point — MUST be first in allowlist
   "/begin",
   "/intro",
   "/test-elemental",
