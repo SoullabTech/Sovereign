@@ -96,33 +96,67 @@ if [ ! -d "out" ]; then
     exit 1
 fi
 
-# Use enter.html directly as index.html — no JS redirect.
-# window.location.replace('/enter') causes WKWebView full reloads, which:
-#   1) clears Safari Inspector console logs (inspector disconnects on navigation)
-#   2) can create redirect loops if routing guard fires during reload
-# Copying enter.html preserves the correct URL (/enter) via a meta redirect
-# and keeps Inspector connected across the initial load.
-echo "📄 Patching root index.html → enter page (no JS redirect)..."
-if [ -f "out/enter.html" ]; then
-  # Build a thin shell that meta-refreshes to /enter — stays in same WKWebView
-  # session (Inspector doesn't disconnect for meta refresh the way it does for
-  # window.location.replace in a blank page).
-  cat > out/index.html << 'HTMLEOF'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="refresh" content="0; url=/enter">
-    <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
-  </head>
-  <body style="background:#1A1513;"></body>
-</html>
-HTMLEOF
-  echo "✅ index.html → meta-refresh to /enter (no JS navigation)"
-else
-  echo "⚠️  out/enter.html not found — keeping build default index.html"
-fi
+# ─── iOS entry point: embed maia.html directly as index.html ──────────────────
+#
+# WHY NOT meta-refresh or JS redirect to /enter:
+#   - meta-refresh navigates the WKWebView document → Safari Inspector
+#     disconnects (losing all console output for debugging)
+#   - /enter's router.replace('/maia') stalls: CapacitorHttp intercepts
+#     the Next.js RSC payload fetch and the router hangs waiting for RSC JSON
+#
+# WHY DIRECT EMBED of maia.html:
+#   - index.html IS the maia page — no navigation of any kind occurs
+#   - history.replaceState('/maia') runs synchronously before React hydrates
+#     so React sees pathname=/maia and hydrates the static HTML correctly
+#   - MobileRouteGuard allows /maia immediately (non-Studio route)
+#   - maia page reads localStorage:
+#       Returning user (beta_user set) → loads normally, no redirect needed
+#       Fresh install / sign-out → router.replace('/begin' or '/signin')
+#         served via CapacitorHttp which passes RSC payloads to the router
+#
+echo "📄 Patching index.html ← maia.html direct embed (no document navigation)..."
+python3 - << 'PYEOF'
+import sys, os
+
+src = 'out/maia.html'
+dst = 'out/index.html'
+
+if not os.path.exists(src):
+    print('  WARNING: out/maia.html not found — keeping build default index.html')
+    sys.exit(0)
+
+content = open(src, encoding='utf-8').read()
+
+# Synchronous URL fixup: before React hydrates, set pathname to /maia.
+# React's router then sees /maia and hydrates the static HTML correctly.
+fix = '<script>if(location.pathname==="/")history.replaceState(null,"","/maia");</script>'
+
+patched = content.replace('<head>', '<head>' + fix, 1)
+open(dst, 'w', encoding='utf-8').write(patched)
+print(f'  OK index.html <- maia.html + URL fixup ({len(patched)} bytes)')
+PYEOF
+
+# ─── URL fixup for key navigation destination pages ────────────────────────────
+# Capacitor maps /page → page.html internally but keeps the URL as /page.
+# These fixups are defensive: they correct the URL if .html ever surfaces
+# (e.g. direct link from another page, stale cache, or future runtime change).
+echo "📄 Adding URL fixup scripts to key navigation pages..."
+python3 - << 'PYEOF'
+import os
+
+pages = ['maia', 'begin', 'signin', 'welcome-back', 'enter', 'onboarding', 'faq']
+for page in pages:
+    path = f'out/{page}.html'
+    if not os.path.exists(path):
+        continue
+    content = open(path, encoding='utf-8').read()
+    fix = f'<script>if(location.pathname==="/{page}.html")history.replaceState(null,"",\"/{page}\");</script>'
+    if fix in content:
+        print(f'  SKIP {path} (already patched)')
+        continue
+    open(path, 'w', encoding='utf-8').write(content.replace('<head>', '<head>' + fix, 1))
+    print(f'  OK   {path} + URL fixup')
+PYEOF
 
 # Revert patches after successful build
 ./scripts/capacitor-patch-routes.sh revert
