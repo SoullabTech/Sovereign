@@ -244,6 +244,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
 
+  // 🔒 SR START MUTEX — prevents two simultaneous NativeSpeechRecognition.start() calls.
+  // Interruption-end (1000ms) and stopped-backoff (800ms) can fire almost simultaneously;
+  // the second call kills the first → 1ms LIVE → blink loop.
+  const srStartInFlightRef = useRef(false);
+
+  // 🛑 RAPID-STOP COUNTER — N consecutive stops within 300ms → immediate push-to-talk fallback.
+  // Fires independently of (and faster than) the 800ms→1500ms→2500ms backoff schedule.
+  const rapidStopCountRef = useRef(0);
+
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
@@ -779,7 +788,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
             console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
-            await NativeSpeechRecognition.start({
+            await safeStartNativeSR({
               language: 'en-US',
               maxResults: 3,
               partialResults: true,
@@ -1216,6 +1225,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastStartAttemptRef = useRef(0);
 
   // Start listening
+  // ─── safeStartNativeSR ───────────────────────────────────────────────────────
+  // ALL NativeSpeechRecognition.start() calls go through this single mutex.
+  // If a start is already in flight, the call is silently dropped (not queued).
+  // This prevents the most common blink-loop cause: interruption_end (1000ms) and
+  // stopped_backoff (800ms) firing nearly simultaneously, each calling start()
+  // independently — the second call kills the first within 1ms.
+  const safeStartNativeSR = useCallback(
+    async (opts: Parameters<typeof NativeSpeechRecognition.start>[0]) => {
+      if (srStartInFlightRef.current) {
+        console.info('🔒 [Native] start blocked — SR.start() already in flight');
+        return;
+      }
+      srStartInFlightRef.current = true;
+      try {
+        await NativeSpeechRecognition.start(opts);
+      } finally {
+        srStartInFlightRef.current = false;
+      }
+    },
+    [] // no deps — only touches stable refs and an imported module fn
+  );
+
   const startListening = useCallback(async (options?: { forceOverride?: boolean }) => {
     console.log('🎤 [ContinuousConversation] startListening called', options?.forceOverride ? '(FORCE OVERRIDE)' : '');
     addDebug('🎤 startListening called');
@@ -1552,6 +1583,37 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               const msSinceStart = now - (lastNativeStartAtRef.current || 0);
               const isIdleStop = msSinceStart < nativeStartGraceMs;
 
+              // 🛑 FIX B: RAPID-STOP COUNTER — independent of backoffStepRef.
+              // Stops within 300ms are "rapid" (SR is clearly failing to stay alive).
+              // After 3 rapid stops, fall back to push-to-talk immediately — no waiting
+              // for the 800ms+1500ms+2500ms backoff schedule to exhaust.
+              const RAPID_STOP_MS = 300;
+              const MAX_RAPID_STOPS = 3;
+              if (msSinceStart < RAPID_STOP_MS) {
+                rapidStopCountRef.current += 1;
+                console.warn(`⚡ [Native] Rapid stop #${rapidStopCountRef.current} (${msSinceStart}ms) — SR failing to stay alive`);
+                if (rapidStopCountRef.current >= MAX_RAPID_STOPS && handsFreeActiveRef.current) {
+                  console.warn('🛑 [HandsFreeFallback] rapid_stop_limit — falling back to push-to-talk', {
+                    rapidStops: rapidStopCountRef.current,
+                    threshold_ms: RAPID_STOP_MS,
+                  });
+                  setIsListening(false);
+                  isListeningRef.current = false;
+                  wantsContinuousConversationRef.current = false;
+                  handsFreeActiveRef.current = false;
+                  listeningModeRef.current = 'PUSH_TO_TALK';
+                  setMicState('IDLE', 'rapid_stop_fallback');
+                  backoffStepRef.current = 0;
+                  rapidStopCountRef.current = 0;
+                  onRecordingStateChange?.(false);
+                  onHandsFreeFallback?.();
+                  return;
+                }
+              } else {
+                // Non-rapid stop (>= 300ms) — SR was alive long enough; reset rapid counter
+                rapidStopCountRef.current = 0;
+              }
+
               if (isIdleStop) {
                 // iOS "idle stop" right after start — treat as normal cycling, not a failure
                 console.log(`🔄 [Native] Idle stop within ${msSinceStart}ms grace period - not counting as failure`);
@@ -1643,7 +1705,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                     try {
                       setMicState('ARMING', 'hands_free_restart');
                       console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
-                      await NativeSpeechRecognition.start({
+                      await safeStartNativeSR({
                         language: 'en-US',
                         maxResults: 3,
                         partialResults: true,
@@ -1692,7 +1754,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             popup: false  // Set to true if iOS requires the popup UI
           };
           addDebug(`📝 Options: ${JSON.stringify(startOptions)}`);
-          await NativeSpeechRecognition.start(startOptions);
+          await safeStartNativeSR(startOptions);
           console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
           addDebug('✅ SR.start() SUCCESS! Mic should be active');
           addDebug('🎤 Speak now - watching for partialResults...');
@@ -1710,7 +1772,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
           addDebug('🔄 Retrying popup:true...');
           try {
-            await NativeSpeechRecognition.start({
+            await safeStartNativeSR({
               language: 'en-US',
               maxResults: 3,
               prompt: 'Speak to MAIA',
@@ -2030,9 +2092,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('🔄 [INTERRUPT] Hands-free + conversation alive — restarting in 1s');
       setMicState('IDLE', 'ios_interruption_end');
       setTimeout(() => {
-        if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-          startListeningFnRef.current?.();
+        // 🔒 Fix A: Skip if another start is already in flight or mic is no longer idle.
+        // stopped_backoff (800ms) may have already fired; this fires at 1000ms.
+        // Allowing both to proceed causes the double-start blink loop.
+        if (
+          micStateRef.current !== 'IDLE' ||
+          srStartInFlightRef.current ||
+          restartInFlightRef.current ||
+          isSpeakingRef.current
+        ) {
+          console.info('🔒 [INTERRUPT] skip restart — mic not idle or start already in flight');
+          return;
         }
+        startListeningFnRef.current?.();
       }, 1000);
     } else {
       console.log('🎤 [INTERRUPT] Push-to-talk or stale conversation — staying idle');
