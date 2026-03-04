@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Capacitor } from '@capacitor/core';
 
+// 🔍 MODULE BEACON — fires if this JS chunk loads at all (no React needed)
+// If you never see this in Safari console, the chunk itself isn't executing.
+if (typeof window !== 'undefined') {
+  console.log('[ENTER:chunk] loaded url=' + window.location.pathname + ' t=' + Date.now());
+}
+
 async function hideSplash() {
   try {
     const { SplashScreen } = await import('@capacitor/splash-screen');
@@ -16,6 +22,14 @@ async function hideSplash() {
 export default function EnterPage() {
   const router = useRouter();
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
+
+  // 🔍 RENDER BEACON — fires synchronously if React mounts this component.
+  // If you see [ENTER:chunk] but NOT [ENTER:render], React is failing before mount.
+  if (typeof document !== 'undefined') {
+    (window as any).__maia_enter_rendered = true;
+    document.documentElement.setAttribute('data-maia-enter', '1');
+    console.log('[ENTER:render] component mounted t=' + Date.now());
+  }
 
   useEffect(() => {
     // Hide splash immediately — this page is the iOS entry point.

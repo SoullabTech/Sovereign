@@ -79,6 +79,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 🔍 DIAGNOSTIC: Global error listeners — catch crashes before React boundary */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            console.log('[LAYOUT:head] script executing url=' + location.pathname);
+            window.addEventListener('error', function(e) {
+              console.log('[LAYOUT:error] ' + e.message + ' @ ' + e.filename + ':' + e.lineno);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+              console.log('[LAYOUT:rejection] ' + String(e.reason));
+            });
+          })();
+        `}} />
         {/* 🔖 BUILD STAMP v6 + PWA Audio Unlock */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){

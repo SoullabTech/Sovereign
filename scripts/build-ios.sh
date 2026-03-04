@@ -96,21 +96,33 @@ if [ ! -d "out" ]; then
     exit 1
 fi
 
-# Replace root index.html with an instant JS redirect to /enter
-# This avoids the SoullabLanding animation flash on Capacitor startup
-echo "🔀 Patching root index.html → /enter redirect for iOS..."
-cat > out/index.html << 'HTMLEOF'
+# Use enter.html directly as index.html — no JS redirect.
+# window.location.replace('/enter') causes WKWebView full reloads, which:
+#   1) clears Safari Inspector console logs (inspector disconnects on navigation)
+#   2) can create redirect loops if routing guard fires during reload
+# Copying enter.html preserves the correct URL (/enter) via a meta redirect
+# and keeps Inspector connected across the initial load.
+echo "📄 Patching root index.html → enter page (no JS redirect)..."
+if [ -f "out/enter.html" ]; then
+  # Build a thin shell that meta-refreshes to /enter — stays in same WKWebView
+  # session (Inspector doesn't disconnect for meta refresh the way it does for
+  # window.location.replace in a blank page).
+  cat > out/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="refresh" content="0; url=/enter">
     <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
-    <script>window.location.replace('/enter');</script>
   </head>
   <body style="background:#1A1513;"></body>
 </html>
 HTMLEOF
+  echo "✅ index.html → meta-refresh to /enter (no JS navigation)"
+else
+  echo "⚠️  out/enter.html not found — keeping build default index.html"
+fi
 
 # Revert patches after successful build
 ./scripts/capacitor-patch-routes.sh revert
