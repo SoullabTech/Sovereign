@@ -704,7 +704,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (typeof window === 'undefined') {
       return {
         voice: 'maia_core',
-        speed: 1.0,
+        speed: 0.92,
         model: 'maia_core',
         prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,
         archetype: 'AUTO' as string,

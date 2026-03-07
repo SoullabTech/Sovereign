@@ -54,7 +54,7 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   defaultMemoryMode: 'continuity', // Most users want memory; Sanctuary is opt-in
   voice: {
     openaiVoice: 'alloy',
-    speed: 1.0,  // Natural pace (was 0.95, felt slow)
+    speed: 0.92,  // Contemplative pace — gpt-4o-mini-tts at 1.0 sounds rushed; 0.92 more human
     model: 'tts-1', // Standard by default (faster response)
     prosodyRange: 1, // Subtle by default (warm without being theatrical)
   },

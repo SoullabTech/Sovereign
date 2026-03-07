@@ -20,6 +20,12 @@
  * Both streaming and non-streaming paths must consume the same VoicePlan.
  * This is how PFI "owning" voice becomes audible — not advisory, authoritative.
  *
+ * VOICE CONTRACT: PROSODY_TOKENS is the only valid interface between maiaPlanner.ts
+ * and this file. inferProsodyModeFromInstructions() keys only off those tokens —
+ * freeform phrase detection is disallowed. Any new relational mode requires a new
+ * entry in PROSODY_TOKENS and a corresponding template update in maiaPlanner.ts.
+ * See: docs/canon/MAIA_VOICE_DOCTRINE_v1.0.md
+ *
  * Usage in streaming loop (OracleConversation.tsx):
  *   const voicePlan = plan.voicePlan; // from PFI / maiaPlanner
  *   for (let i = 0; i < completeSentences.length; i++) {
@@ -224,6 +230,43 @@ export function deriveChunkProsody(input: ChunkProsodyInput): ChunkProsodyResult
 // For call sites that have ttsInstructions + element but not yet a full VoicePlan.
 // Lets streaming callers upgrade incrementally — remove when PFI is fully wired.
 
+/**
+ * Controlled vocabulary — canonical relational cues embedded in maiaPlanner.ts templates.
+ *
+ * These tokens are the ONLY coupling between the planner and the prosody inference layer.
+ * Do not key inference off freeform wording. If you change a token here, update
+ * buildTTSInstructions() in maiaPlanner.ts in the same commit (and vice versa).
+ *
+ * Mapping:
+ *   WITNESS      → ceremonial  (attentive presence, open, spacious)
+ *   MIRROR       → intimate    (clear reflection, close, following)
+ *   GUIDE        → calm        (steady companion — default/fall-through)
+ *   CHALLENGE    → directive   (calm conviction, deliberate weight)
+ *   HOLD_SILENCE → ceremonial  (breath and stillness, barely spoken)
+ */
+export const PROSODY_TOKENS = {
+  WITNESS:      'attentive presence',
+  MIRROR:       'clear reflection',
+  GUIDE:        'steady companion',
+  CHALLENGE:    'calm conviction',
+  HOLD_SILENCE: 'breath and stillness',
+} as const;
+
+/**
+ * Infer a prosody mode from the base TTS instructions string.
+ * Keys only off PROSODY_TOKENS — never off freeform wording.
+ *
+ * @internal — exported for contract tests only, not part of public API
+ */
+export function inferProsodyModeFromInstructions(instructions: string): ProsodyMode {
+  const t = instructions.toLowerCase();
+  if (t.includes(PROSODY_TOKENS.CHALLENGE))    return 'directive';
+  if (t.includes(PROSODY_TOKENS.WITNESS) ||
+      t.includes(PROSODY_TOKENS.HOLD_SILENCE)) return 'ceremonial';
+  if (t.includes(PROSODY_TOKENS.MIRROR))       return 'intimate';
+  return 'calm'; // GUIDE + default
+}
+
 export function deriveChunkProsodyLegacy(opts: {
   chunkText: string;
   baseTTSInstructions: string;
@@ -231,11 +274,13 @@ export function deriveChunkProsodyLegacy(opts: {
   isFirstChunk?: boolean;
   isLastChunk?: boolean;
 }): string {
-  // Build a minimal VoicePlan from available signals
+  // Build a minimal VoicePlan from available signals.
+  // Infer prosody mode from stance keywords embedded in base instructions
+  // so chunk overlays match the relational context (not always 'calm').
   const voicePlan: VoicePlan = {
     provider: 'openai',
     ttsInstructions: opts.baseTTSInstructions,
-    prosodyMode: 'calm',
+    prosodyMode: inferProsodyModeFromInstructions(opts.baseTTSInstructions),
     pacing: { mergeBelowChars: 160, fadeInMs: 40 },
   };
 

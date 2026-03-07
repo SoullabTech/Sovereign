@@ -12,6 +12,12 @@
  *
  * SOVEREIGNTY: buildMaiaPlan is deterministic and non-blocking. finalizeMaiaResponse
  * never throws — Sesame CI shaping failure falls back silently to displayText.
+ *
+ * VOICE CONTRACT: buildTTSInstructions() embeds exactly one token from PROSODY_TOKENS
+ * (lib/voice/prosodyFromPFI.ts) per stance template. prosodyFromPFI.ts keys inference
+ * only off those tokens — never freeform wording. Any new stance or relational mode
+ * must be added in both files and include a new PROSODY_TOKENS entry.
+ * See: docs/canon/MAIA_VOICE_DOCTRINE_v1.0.md
  */
 
 import type { VoiceIntent, Element } from '@/lib/types/voiceIntent';
@@ -91,68 +97,65 @@ const RESPONSE_TYPE_DESCRIPTION: Record<MAIAResponsePlan['responseType'], string
 /**
  * Derive a compact OpenAI TTS `instructions` string from plan parameters.
  *
- * Tells the voice engine HOW to speak — pacing, warmth, intensity, texture.
- * MAIA controls the voice intent. OpenAI renders it.
- * Used with model: "gpt-4o-mini-tts" which reads natural-language instructions.
+ * Structure: 3 sentences — relational frame → pace + pause behavior → tone quality + anti-pattern.
+ * Element flavors the relational frame; stance determines the structure.
+ *
+ * Rule: shorter instructions improve synthesis quality by reducing over-acting.
+ * The instruction nudges behavior — it does not describe mood in detail.
+ *
+ * Keywords in each template are canonical and matched by
+ * inferProsodyModeFromInstructions() in prosodyFromPFI.ts.
+ * If you change the templates, update the keyword inference too.
  */
-function buildTTSInstructions(opts: {
+/** @internal — exported for contract tests only, not part of public API */
+export function buildTTSInstructions(opts: {
   stance: MAIAResponsePlan['stance'];
   element: Element;
   tone: { warmth: number; directness: number; poetry: number };
   maxWords: number;
 }): string {
-  const { stance, element, tone, maxWords } = opts;
+  const { stance, element } = opts;
 
-  // Pacing
-  const basePace =
-    stance === 'hold_silence' || stance === 'witness' ? 'slow' :
-    stance === 'mirror' ? 'slow-to-moderate' :
-    stance === 'guide' ? 'moderate' :
-    'deliberate'; // challenge
-
-  // Intimacy from warmth
-  const intimacy =
-    tone.warmth >= 0.8 ? 'intimate and warm' :
-    tone.warmth >= 0.6 ? 'present and clear' :
-    'grounded and direct';
-
-  // Energy intensity from directness + stance
-  const intensity =
-    stance === 'challenge' ? 'grounded, with weight' :
-    stance === 'hold_silence' ? 'very soft, contained' :
-    tone.directness >= 0.6 ? 'steady and clear' :
-    'gentle, unhurried';
-
-  // Elemental texture
-  const ELEMENT_TEXTURES: Partial<Record<Element, string>> = {
-    water:  'soft, tender, emotionally attuned',
-    fire:   'warm, alive, energised',
-    earth:  'grounded, steady, embodied',
-    air:    'clear, light, spacious',
-    aether: 'resonant, open, unhurried',
+  // Element-informed relational flavor — one adjective per dimension, used inline
+  type ElementFlavor = { frame: string; pace: string; quality: string };
+  const ELEMENT_FLAVOR: Partial<Record<Element, ElementFlavor>> = {
+    water:  { frame: 'quiet and flowing',   pace: 'slow and flowing, with gentle pauses that allow meaning to settle',        quality: 'warm and tender' },
+    fire:   { frame: 'alive and present',   pace: 'slightly forward, with brief pauses for emphasis',                        quality: 'direct and energized' },
+    earth:  { frame: 'steady and grounded', pace: 'deliberate and even, allowing each phrase to land fully',                  quality: 'warm and practical' },
+    air:    { frame: 'clear and light',     pace: 'measured and conversational, with light pauses between ideas',             quality: 'calm and articulate' },
+    aether: { frame: 'resonant and still',  pace: 'very slow and spacious, with pauses carrying as much as the speech',      quality: 'open and contained' },
   };
-  const texture = ELEMENT_TEXTURES[element] ?? 'present and clear';
+  const f: ElementFlavor = ELEMENT_FLAVOR[element] ?? { frame: 'calm and attentive', pace: 'measured', quality: 'calm and present' };
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  // Cadence density from maxWords
-  const density =
-    maxWords <= 40 ? 'sparse' :
-    maxWords <= 80 ? 'measured' :
-    'full';
+  // 3-sentence templates: frame → pace → quality + anti-pattern.
+  // Each template embeds a PROSODY_TOKENS canonical cue (from prosodyFromPFI.ts).
+  // Inference keys only off that token — do not add freeform keywords here.
+  // If you change a template phrase, update PROSODY_TOKENS in prosodyFromPFI.ts too.
+  switch (stance) {
+    case 'witness':
+      // PROSODY_TOKENS.WITNESS = 'attentive presence' → ceremonial
+      return `Speak as a ${f.frame} attentive presence — here for the listener, not performing. Pace ${f.pace}. ${cap(f.quality)} without emotional display or dramatic emphasis.`;
 
-  // Pauses from poetry weight
-  const pauses =
-    tone.poetry >= 0.7 ? 'let silence land between phrases' :
-    tone.poetry >= 0.4 ? 'brief pauses at natural breaks' :
-    'minimal pausing';
+    case 'mirror':
+      // PROSODY_TOKENS.MIRROR = 'clear reflection' → intimate
+      return `Speak as a ${f.frame} clear reflection of what the listener just said. Pace ${f.pace}. ${cap(f.quality)} without adding interpretation or coloring.`;
 
-  return [
-    `Voice: ${intimacy}.`,
-    `Pace: ${basePace}.`,
-    `Energy intensity: ${intensity}.`,
-    `Texture: ${texture}.`,
-    `Cadence: ${density}; ${pauses}.`,
-    `Avoid: sounding rushed, overly theatrical, or preachy.`,
-  ].join(' ');
+    case 'guide':
+      // PROSODY_TOKENS.GUIDE = 'steady companion' → calm
+      return `Speak as a ${f.frame} steady companion offering one clear thing. Pace ${f.pace}. ${cap(f.quality)}, avoiding preachy or ceremonial tone.`;
+
+    case 'challenge':
+      // PROSODY_TOKENS.CHALLENGE = 'calm conviction' → directive
+      return `Speak with ${f.frame} calm conviction, naming what is true directly. Deliberate pace with brief pauses for weight. Direct and grounded without softening or ceremony.`;
+
+    case 'hold_silence':
+      // PROSODY_TOKENS.HOLD_SILENCE = 'breath and stillness' → ceremonial
+      return `Speak as breath and stillness — barely more than breath. Very slow; let pauses carry as much as the speech. ${cap(f.quality)}, nothing added.`;
+
+    default:
+      return `Speak as a ${f.frame} steady companion. Pace ${f.pace}. ${cap(f.quality)}, no announcer rhythm.`;
+  }
 }
 
 // ── buildMaiaPlan ─────────────────────────────────────────────────────────
