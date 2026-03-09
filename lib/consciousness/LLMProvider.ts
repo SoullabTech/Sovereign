@@ -30,6 +30,8 @@ export interface LLMResponse {
   metadata: {
     generationTime: number;
     tokenCount?: number;
+    /** Why the model stopped: 'end_turn' | 'max_tokens' | 'stop_sequence'. 'max_tokens' = truncated. */
+    stopReason?: string;
   };
 }
 
@@ -256,13 +258,22 @@ export class MultiLLMProvider {
 
         const generationTime = Date.now() - startTime;
 
+        if (message.stop_reason === 'max_tokens') {
+          console.warn(JSON.stringify({
+            tag: 'llm.truncated', stop_reason: 'max_tokens',
+            output_tokens: message.usage.output_tokens, max_tokens: config.maxTokens,
+            model: config.model
+          }));
+        }
+
         return {
           text: response.text,
           provider: 'anthropic',
           model: config.model,
           metadata: {
             generationTime,
-            tokenCount: message.usage.output_tokens
+            tokenCount: message.usage.output_tokens,
+            stopReason: message.stop_reason ?? undefined
           }
         };
       } catch (error: any) {

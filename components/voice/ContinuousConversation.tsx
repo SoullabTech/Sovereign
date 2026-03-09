@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -189,6 +190,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeStateListenerRef = useRef<any>(null); // Store listeningState listener handle
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
+  const nativeGraceTimerRef = useRef<NodeJS.Timeout | null>(null);  // Grace window after native silence timer fires
+  const webGraceTimerRef = useRef<NodeJS.Timeout | null>(null);     // Grace window after web silence timer fires
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
   const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
   const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
@@ -434,25 +437,43 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         console.log('📊 Accumulated so far:', accumulatedTranscript.current);
 
-        // Reset silence timer on speech
+        // Reset silence timer AND grace timer on any new speech
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
         }
+        if (webGraceTimerRef.current) {
+          clearTimeout(webGraceTimerRef.current);
+          webGraceTimerRef.current = null;
+        }
 
-        // Start new silence timer - use the configurable threshold
-        console.log(`⏱️ Starting silence timer (${silenceThreshold}ms)`);
+        // Start new silence timer
+        console.info(JSON.stringify({
+          tag: 'voice.turn', phase: 'silence_timer_started', path: 'web',
+          threshold_ms: silenceThreshold, accumulated_chars: accumulatedTranscript.current.length,
+          timestamp: Date.now()
+        }));
         silenceTimerRef.current = setTimeout(() => {
-          console.log('🔕 Silence detected - processing transcript');
-          console.log('   isProcessingRef:', isProcessingRef.current);
-          console.log('   accumulatedTranscript:', accumulatedTranscript.current);
-          // CRITICAL FIX: Don't check isRecording - onend fires before this timer
-          // Just check if we have a transcript to send
-          if (!isProcessingRef.current && accumulatedTranscript.current.trim()) {
-            processAccumulatedTranscript();
-          } else {
-            console.log('⚠️ Silence timer fired but conditions not met to process');
-          }
-        }, silenceThreshold); // Use configurable threshold from props
+          // Grace window: extra pause before committing — cancellable if speech resumes
+          console.info(JSON.stringify({
+            tag: 'voice.turn', phase: 'grace_window_started', path: 'web',
+            grace_ms: VOICE_TIMING.GRACE_WINDOW_MS, accumulated_chars: accumulatedTranscript.current.length,
+            timestamp: Date.now()
+          }));
+          webGraceTimerRef.current = setTimeout(() => {
+            webGraceTimerRef.current = null;
+            const transcript = accumulatedTranscript.current.trim();
+            console.info(JSON.stringify({
+              tag: 'voice.turn', phase: 'transcript_finalized', path: 'web',
+              transcript_length: transcript.length, processing: isProcessingRef.current,
+              timestamp: Date.now()
+            }));
+            if (!isProcessingRef.current && transcript) {
+              processAccumulatedTranscript();
+            } else {
+              console.log('⚠️ Grace window expired but conditions not met to process');
+            }
+          }, VOICE_TIMING.GRACE_WINDOW_MS);
+        }, silenceThreshold); // configurable threshold from props
       }
 
       // Show user the accumulated finals + current interim for live feedback
@@ -1457,7 +1478,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
           // Track when we last had high audio (for silence detection)
           if (rawLevel >= 0.02) {
+            const wasQuiet = (now - lastHighAudioTimeRef.current) > VOICE_TIMING.NATIVE_SILENCE_MS;
             lastHighAudioTimeRef.current = now;
+            // Log speech start (transition from silence to speech)
+            if (wasQuiet) {
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'speech_start', path: 'native_ios',
+                raw_level: rawLevel.toFixed(4), timestamp: now
+              }));
+            }
           }
 
           // Update audio level for UV visualizer animation
@@ -1499,33 +1528,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // 2. We have any transcript (at least 1 char - don't gate on length, SR already handles this)
           // 3. We had recent speech (high audio within last 2s) - prevents false triggers on ambient noise
           const transcript = accumulatedTranscript.current.trim();
-          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 2000; // 2s window for natural pauses
+          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 3500; // 3.5s window — generous for trailing thought completion
           const hasAnyTranscript = transcript.length > 0;
 
           if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Silence detected after speech, starting 1.5s timer');
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'silence_timer_started', path: 'native_ios',
+                threshold_ms: VOICE_TIMING.NATIVE_SILENCE_MS, accumulated_chars: accumulatedTranscript.current.length,
+                timestamp: Date.now()
+              }));
               nativeSilenceTimerRef.current = setTimeout(() => {
-                // Double-check we still have transcript
-                if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
-                  const finalTranscript = accumulatedTranscript.current.trim();
-                  console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
-                  accumulatedTranscript.current = '';
-                  isProcessingRef.current = true;
-                  setIsRecording(false);
-                  isRecordingRef.current = false;
-                  backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
-                  onTranscript(finalTranscript);
-                }
                 nativeSilenceTimerRef.current = null;
-              }, 1500); // 1.5s of silence = end of speech (balanced for responsiveness)
+                // Grace window: cancellable if speech resumes before we commit
+                console.info(JSON.stringify({
+                  tag: 'voice.turn', phase: 'grace_window_started', path: 'native_ios',
+                  grace_ms: VOICE_TIMING.GRACE_WINDOW_MS, accumulated_chars: accumulatedTranscript.current.length,
+                  timestamp: Date.now()
+                }));
+                nativeGraceTimerRef.current = setTimeout(() => {
+                  nativeGraceTimerRef.current = null;
+                  if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
+                    const finalTranscript = accumulatedTranscript.current.trim();
+                    console.info(JSON.stringify({
+                      tag: 'voice.turn', phase: 'transcript_finalized', path: 'native_ios',
+                      transcript_length: finalTranscript.length, timestamp: Date.now()
+                    }));
+                    accumulatedTranscript.current = '';
+                    isProcessingRef.current = true;
+                    setIsRecording(false);
+                    isRecordingRef.current = false;
+                    backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
+                    onTranscript(finalTranscript);
+                  }
+                }, VOICE_TIMING.GRACE_WINDOW_MS);
+              }, VOICE_TIMING.NATIVE_SILENCE_MS);
             }
           } else if (rawLevel >= 0.02) {
-            // Clear silence timer if speech detected (higher threshold than silence)
+            // Speech resumed — cancel both silence timer and grace window
             if (nativeSilenceTimerRef.current) {
               clearTimeout(nativeSilenceTimerRef.current);
               nativeSilenceTimerRef.current = null;
+            }
+            if (nativeGraceTimerRef.current) {
+              clearTimeout(nativeGraceTimerRef.current);
+              nativeGraceTimerRef.current = null;
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'grace_window_cancelled', path: 'native_ios',
+                reason: 'speech_resumed', timestamp: Date.now()
+              }));
             }
           }
         });

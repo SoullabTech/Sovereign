@@ -62,6 +62,7 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import useSession from '@/lib/hooks/useSession';
 
 /**
@@ -8255,9 +8256,9 @@ I'm not sure what I'm feeling yet.`;
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
             silenceThreshold={
-              listeningMode === 'session' ? 999999 : // Scribe mode: never auto-send (stay open to record)
-              listeningMode === 'patient' ? 8000 :   // Care mode: 8 seconds (patience for emotional processing)
-              2000                                    // Talk mode: 2 seconds (natural conversation pace)
+              listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
+              listeningMode === 'patient' ? VOICE_TIMING.WEB_SILENCE_CARE_MS :
+              VOICE_TIMING.WEB_SILENCE_TALK_MS
             }
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
             onHandsFreeFallback={() => {

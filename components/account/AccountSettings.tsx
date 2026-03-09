@@ -73,6 +73,7 @@ interface MemberProfile {
     joinedAt: string | null;
   };
   birthData: BirthDataType | null;
+  astrologyConsent: 'unknown' | 'opted_in' | 'declined' | null;
 }
 
 interface MemberSettings {
@@ -88,7 +89,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+type SettingsSection = 'profile' | 'account' | 'maia' | 'voice' | 'astrology' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
 
 interface PractitionerProject {
   id: string;
@@ -143,6 +144,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'portals', label: 'Client Portals', icon: Globe, practitionerOnly: true },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
   { id: 'voice', label: 'Voice', icon: Mic },
+  { id: 'astrology', label: 'Astrology', icon: Star },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -214,6 +216,10 @@ export function AccountSettings() {
   } | null>(null);
   const [searchingLocation, setSearchingLocation] = useState(false);
 
+  // Astrology consent state
+  const [astrologyConsent, setAstrologyConsent] = useState<'unknown' | 'opted_in' | 'declined' | null>(null);
+  const [consentSaving, setConsentSaving] = useState(false);
+
   // Sovereignty state
   const [consentSummary, setConsentSummary] = useState<ConsentSummary | null>(null);
   const [syncState, setSyncState] = useState({ isSyncing: false, lastSyncAt: null as Date | null, pendingCount: 0 });
@@ -262,6 +268,7 @@ export function AccountSettings() {
           const profileData = await profileRes.json();
           console.log('[AccountSettings] Profile data received:', profileData);
           console.log('[AccountSettings] Birth data in profile:', profileData.birthData);
+          setAstrologyConsent(profileData.astrologyConsent ?? 'unknown');
           setProfile(profileData);
           setEditName(profileData.name || '');
           setEditPreferredName(profileData.preferredName || '');
@@ -695,6 +702,37 @@ export function AccountSettings() {
     }
   }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
 
+  // Save astrology consent
+  const saveAstrologyConsent = useCallback(async (consent: 'opted_in' | 'declined') => {
+    if (!userId) return;
+    setConsentSaving(true);
+    try {
+      const res = await fetch(apiUrl('/api/members/profile'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, astrologyConsent: consent }),
+      });
+      if (res.ok) {
+        setAstrologyConsent(consent);
+        setProfile(prev => prev ? { ...prev, astrologyConsent: consent } : null);
+        // Keep localStorage in sync
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            user.astrologyConsent = consent;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch (e) { /* silent */ }
+        }
+        showSaveIndicator();
+      }
+    } catch (err) {
+      console.error('[AccountSettings] Astrology consent save error:', err);
+    } finally {
+      setConsentSaving(false);
+    }
+  }, [userId, showSaveIndicator]);
+
   // Sovereignty handlers
   const updateStorageMode = useCallback(async (mode: StorageMode) => {
     if ('vibrate' in navigator) navigator.vibrate(5);
@@ -1067,6 +1105,262 @@ export function AccountSettings() {
       </div>
     </div>
   );
+
+  // ─── Astrology Section ───────────────────────────────────────────────────────
+
+  const renderAstrology = () => {
+    const isOptedIn = astrologyConsent === 'opted_in';
+    const isDeclined = astrologyConsent === 'declined';
+    const isUnknown = !astrologyConsent || astrologyConsent === 'unknown';
+    const hasBirthData = !!(profile?.birthData?.date);
+
+    return (
+      <div className="space-y-6">
+
+        {/* ── Consent State ────────────────────────────────────────────────── */}
+        <div>
+          <h3 className="text-base font-medium text-stone-200 mb-1">Birth Chart & Astrology</h3>
+          <p className="text-sm text-stone-400 mb-4">
+            When enabled, MAIA can reference your natal chart and current transits in conversations.
+            Your birth data is stored privately — it is never shared or sold.
+          </p>
+
+          {/* Opted in */}
+          {isOptedIn && (
+            <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl mb-4">
+              <div className="flex items-center gap-2 text-violet-300 mb-1">
+                <Star size={16} />
+                <span className="text-sm font-medium">Astrological context active</span>
+              </div>
+              <p className="text-xs text-stone-400 mb-3">
+                MAIA may draw on your natal chart and current planetary transits when relevant.
+              </p>
+              <button
+                onClick={() => saveAstrologyConsent('declined')}
+                disabled={consentSaving}
+                className="text-xs text-stone-500 hover:text-stone-300 transition-colors"
+              >
+                {consentSaving ? 'Saving…' : 'Remove astrological context from MAIA'}
+              </button>
+            </div>
+          )}
+
+          {/* Declined */}
+          {isDeclined && (
+            <div className="p-4 bg-stone-800/50 border border-white/10 rounded-xl mb-4">
+              <div className="flex items-center gap-2 text-stone-400 mb-1">
+                <Star size={16} />
+                <span className="text-sm font-medium">Astrology not active</span>
+              </div>
+              <p className="text-xs text-stone-500 mb-3">
+                Birth chart features are disabled. You can enable them at any time.
+              </p>
+              <motion.button
+                onClick={() => saveAstrologyConsent('opted_in')}
+                disabled={consentSaving}
+                className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                whileTap={{ scale: 0.97 }}
+              >
+                {consentSaving ? 'Saving…' : 'Enable astrology features'}
+              </motion.button>
+            </div>
+          )}
+
+          {/* Unknown — first time seeing this */}
+          {isUnknown && (
+            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl mb-4 space-y-3">
+              <p className="text-sm text-stone-300">
+                Would you like MAIA to be able to reference your birth chart in conversations?
+              </p>
+              <p className="text-xs text-stone-400">
+                This is entirely optional. If you choose yes, you can add your birth details below.
+                You can change this preference at any time.
+              </p>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => saveAstrologyConsent('opted_in')}
+                  disabled={consentSaving}
+                  className="flex-1 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-amber-300 text-sm font-medium transition-colors disabled:opacity-50"
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Yes, enable
+                </motion.button>
+                <motion.button
+                  onClick={() => saveAstrologyConsent('declined')}
+                  disabled={consentSaving}
+                  className="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-stone-400 text-sm transition-colors disabled:opacity-50"
+                  whileTap={{ scale: 0.97 }}
+                >
+                  No thanks
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Birth Data (only shown when opted in) ────────────────────────── */}
+        {isOptedIn && (
+          <div className="pt-4 border-t border-white/10 space-y-4">
+            <h4 className="text-sm font-medium text-stone-300">
+              {hasBirthData ? 'Birth Data' : 'Add Birth Data'}
+            </h4>
+
+            {/* Current chart summary */}
+            {hasBirthData && (
+              <div className="p-3 bg-gradient-to-br from-violet-500/10 to-amber-500/10 border border-violet-500/20 rounded-xl">
+                <div className="text-xs text-stone-400 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-stone-500">Date</span>
+                    <span className="text-stone-200">{profile?.birthData?.date}</span>
+                  </div>
+                  {profile?.birthData?.time && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Time</span>
+                      <span className="text-stone-200">{profile.birthData.time}</span>
+                    </div>
+                  )}
+                  {profile?.birthData?.location?.name && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Place</span>
+                      <span className="text-stone-200 text-right max-w-[55%] line-clamp-1">
+                        {profile.birthData.location.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-3">
+                  <motion.button
+                    onClick={() => window.location.href = '/astrology'}
+                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    View Full Chart →
+                  </motion.button>
+                </div>
+              </div>
+            )}
+
+            {/* Edit form */}
+            <div className="space-y-3">
+              {/* Birth Date */}
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Birth Date</label>
+                <input
+                  type="date"
+                  value={editBirthDate}
+                  onChange={e => setEditBirthDate(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              {/* Birth Time */}
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Birth Time <span className="text-stone-500">(optional)</span></label>
+                <input
+                  type="time"
+                  value={editBirthTime}
+                  onChange={e => setEditBirthTime(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              {/* Birth Location */}
+              <div className="relative">
+                <label className="text-xs text-stone-400 mb-1 block">Birth Location</label>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+                  <input
+                    type="text"
+                    value={birthLocationSearch || editBirthLocation}
+                    onChange={e => {
+                      setBirthLocationSearch(e.target.value);
+                      setEditBirthLocation(e.target.value);
+                    }}
+                    placeholder="Search city or region…"
+                    className="w-full pl-8 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm placeholder:text-stone-600 focus:outline-none focus:border-amber-500/50"
+                  />
+                  {searchingLocation && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs">…</div>
+                  )}
+                </div>
+
+                <AnimatePresence>
+                  {showLocationResults && locationResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute z-10 w-full mt-2 bg-stone-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto"
+                    >
+                      {locationResults.map((loc, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            const locationObj = {
+                              lat: parseFloat(loc.lat),
+                              lng: parseFloat(loc.lon),
+                              name: loc.display_name,
+                              timezone: loc.timezone,
+                            };
+                            setSelectedLocation(locationObj);
+                            setEditBirthLocation(loc.display_name);
+                            setBirthLocationSearch('');
+                            setShowLocationResults(false);
+                          }}
+                          className="w-full px-3 py-2.5 text-left hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors"
+                        >
+                          <div className="text-sm text-stone-200 line-clamp-1">{loc.display_name}</div>
+                          <div className="text-xs text-stone-400">{loc.timezone}</div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {selectedLocation && (
+                  <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <div className="text-xs text-stone-200 line-clamp-1">{selectedLocation.name}</div>
+                    <div className="text-xs text-stone-400">{selectedLocation.timezone}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Save */}
+              {birthSaveError && (
+                <p className="text-red-400 text-xs">{birthSaveError}</p>
+              )}
+              <motion.button
+                onClick={saveBirthData}
+                disabled={saving || !editBirthDate}
+                className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-medium transition-colors disabled:opacity-50"
+                whileTap={{ scale: 0.98 }}
+              >
+                {saving ? 'Saving…' : (hasBirthData ? 'Update Birth Data' : 'Save Birth Data')}
+              </motion.button>
+
+              {/* Remove */}
+              {hasBirthData && (
+                <button
+                  onClick={() => {
+                    setEditBirthDate('');
+                    setEditBirthTime('');
+                    setEditBirthLocation('');
+                    setSelectedLocation(null);
+                    saveBirthData();
+                  }}
+                  className="w-full text-xs text-stone-500 hover:text-stone-300 transition-colors py-1"
+                >
+                  Remove birth data
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Account Section ─────────────────────────────────────────────────────────
 
   const renderAccount = () => (
     <div className="space-y-6">
@@ -2450,6 +2744,7 @@ export function AccountSettings() {
           >
             {activeSection === 'profile' && renderProfile()}
             {activeSection === 'account' && renderAccount()}
+            {activeSection === 'astrology' && renderAstrology()}
             {activeSection === 'maia' && renderMaiaSettings()}
             {activeSection === 'voice' && renderVoice()}
             {activeSection === 'data-privacy' && renderDataPrivacy()}

@@ -330,6 +330,8 @@ type ConversationBody = {
   maiaMode?: { mode?: string; subMode?: string };
   fieldMode?: boolean;
   fieldEnergyState?: 'arrival' | 'settling' | 'presence'; // client-tracked, server enforces constraints
+  /** True when the request originates from voice input. Applies voice-specific token budgets. */
+  isVoiceMode?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -394,6 +396,7 @@ export async function POST(request: NextRequest) {
     const clientMode = parsed.mode as string | undefined;          // 'dialogue' | 'counsel' | 'scribe'
     const clientMaiaMode = parsed.maiaMode as { mode?: string; subMode?: string } | undefined;
     const isFieldMode = parsed.fieldMode as boolean | undefined;   // Field presence regulation
+    const isVoiceMode = parsed.isVoiceMode === true;               // Voice input → larger token budgets for full prosody
     void clientMode; void clientMaiaMode; // extracted for future use; isFieldMode is threaded through
 
     // 🛡️ FIELD SAFE MODE: emergency lever — FIELD_SAFE_MODE=true in env tightens Field behavior.
@@ -1043,6 +1046,30 @@ export async function POST(request: NextRequest) {
 
     const tAfterFinalize = Date.now();
     console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'finalize_done', ms: tAfterFinalize - t0, finalize_ms: tAfterFinalize - tAfterLLM }));
+
+    // Voice turn completion log — key observability for prosody quality
+    if (isVoiceMode) {
+      const endsWithTerminal = /[.!?][\s"']*$/.test(spokenText.trimEnd());
+      const stopReason = maiaResponse.providerMetadata?.stopReason;
+      console.info(JSON.stringify({
+        tag: 'oracle.turn', phase: 'voice_response_ready',
+        is_voice: true, depth: conversationDepth,
+        model: maiaResponse.providerMetadata?.modelUsed,
+        max_tokens: maxTokens,
+        output_tokens: maiaResponse.providerMetadata?.outputTokens,
+        stop_reason: stopReason,
+        truncated: stopReason === 'max_tokens',
+        response_chars: spokenText.length,
+        ends_with_terminal: endsWithTerminal,
+        timestamp: Date.now()
+      }));
+      if (!endsWithTerminal) {
+        console.warn(JSON.stringify({
+          tag: 'oracle.turn', phase: 'incomplete_sentence_warning',
+          spoken_tail: spokenText.slice(-60), stop_reason: stopReason
+        }));
+      }
+    }
 
     // PFI drift log — structured, filterable, persisted via apprentice system below.
     // grep for tag:pfi.drift to extract apprenticeship training labels from production logs.
@@ -1998,6 +2025,8 @@ async function generateSpiralogicResponseWithLLM(
     modelUsed: string;
     usedProviderFallback: boolean;  // true when Claude failed and Ollama took over
     generationTimeMs?: number;
+    stopReason?: string;            // 'end_turn' | 'max_tokens' | 'stop_sequence' — 'max_tokens' = truncated
+    outputTokens?: number;
   };
 }> {
   const llmProvider = new MultiLLMProvider();
@@ -2050,6 +2079,15 @@ async function generateSpiralogicResponseWithLLM(
     systemPrompt = buildRenderPrompt(maiaPlan, systemPrompt);
   }
 
+  // VOICE COMPLETION RULE: Appended last so it is never overridden.
+  // Ensures spoken replies end in complete sentences — never mid-clause.
+  if (isVoiceMode) {
+    systemPrompt += '\n\n[VOICE MODE] Your response will be spoken aloud via TTS. ' +
+      'Always end on a complete sentence with natural terminal punctuation (. ! ?). ' +
+      'Never end mid-clause or mid-thought. If you are close to your length limit, ' +
+      'finish the current sentence and stop — do not trail off.';
+  }
+
   // Format conversation history for LLM
   // CLAMP: Keep last 10 turns max to prevent context window overflow
   // (Each turn is ~200-500 chars → 10 turns ≈ 2k-5k chars ≈ 500-1250 tokens)
@@ -2066,17 +2104,40 @@ async function generateSpiralogicResponseWithLLM(
     ? `${conversationContext}\n\nUser: ${message}`
     : message;
 
-  // Determine max tokens based on conversation depth (MAIA-PAI pattern)
-  // DISTRESS OVERRIDE: 3-beat script needs ~40 words (not 15)
+  // ─── Token budgets — voice vs text are separated ────────────────────────────
+  // Voice budgets are larger: MAIA must complete spoken thoughts without clipping.
+  // Text budgets stay tighter: screen responses benefit from concision.
+  // DISTRESS OVERRIDE applies on both paths (3-beat script always needs room).
   const maxTokens = (distressSignal?.isDistressed && conversationDepth <= 1)
-    ? 200  // ~40 words for 3-beat distress doorway
-    : conversationDepth === 0
-    ? 100  // ~15 words for first greeting
-    : conversationDepth <= 3
-    ? 150  // ~40-60 words for early conversation
-    : conversationDepth <= 10
-    ? 250  // ~60-100 words for building trust
-    : 400; // ~80-150 words for deep relationship
+    ? (isVoiceMode ? 350 : 250)   // distress doorway: complete 3-beat, not clipped
+    : isVoiceMode
+      // ── Voice path ──────────────────────────────────────────────────────────
+      // Sized for spoken prosody: complete cadence, no mid-sentence cutoff.
+      // Testers live at depth 0-3; these budgets must support real expression.
+      ? (conversationDepth === 0
+          ? 150    // greeting: warm, complete (~35 words)
+          : conversationDepth <= 3
+          ? 400    // early turns: full thought, natural cadence (~100 words)
+          : conversationDepth <= 10
+          ? 600    // building trust: substantive (~150 words)
+          : 900)   // deep relationship: full prosody (~225 words)
+      // ── Text / chat path ────────────────────────────────────────────────────
+      // Tighter: screen readers scan, not listen. Concision is a feature here.
+      : (conversationDepth === 0
+          ? 120
+          : conversationDepth <= 3
+          ? 200
+          : conversationDepth <= 10
+          ? 350
+          : 500);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  console.info(JSON.stringify({
+    tag: 'oracle.turn', phase: 'token_budget',
+    is_voice: isVoiceMode, depth: conversationDepth,
+    max_tokens: maxTokens, model: 'pending_llm',
+    timestamp: Date.now()
+  }));
 
   // ------------------------------------------------------------
   // AIN v2: Soft consultation (capability, not choreography)
@@ -2271,6 +2332,8 @@ async function generateSpiralogicResponseWithLLM(
   let modelUsed = 'none';
   let usedProviderFallback = false;  // true when Claude failed and Ollama took over
   let generationTimeMs: number | undefined;
+  let llmStopReason: string | undefined;
+  let llmOutputTokens: number | undefined;
 
   try {
     const llmResponse = await llmProvider.generate({
@@ -2285,19 +2348,21 @@ async function generateSpiralogicResponseWithLLM(
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
     modelUsed = llmResponse.model || 'unknown';
     generationTimeMs = llmResponse.metadata?.generationTime;
+    llmStopReason = llmResponse.metadata?.stopReason;
+    llmOutputTokens = llmResponse.metadata?.tokenCount;
     usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
 
-    console.log('🌀 [MAIA Hybrid LLM Response]', {
-      provider: llmResponse.provider,
-      model: llmResponse.model,
-      generationTime: llmResponse.metadata.generationTime,
-      spiralogicCell: `${spiralogicCell.element}-${spiralogicCell.phase}`,
-      frameworks: activeFrameworks,
-      conversationDepth,
-      trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
-      targetMaxTokens: maxTokens,
-      usedProviderFallback
-    });
+    // Turn-level instrumentation: stop_reason is the key truncation signal
+    console.info(JSON.stringify({
+      tag: 'oracle.turn', phase: 'llm_complete',
+      is_voice: isVoiceMode, depth: conversationDepth,
+      model: llmResponse.model, max_tokens: maxTokens,
+      output_tokens: llmResponse.metadata?.tokenCount,
+      stop_reason: llmResponse.metadata?.stopReason,
+      truncated: llmResponse.metadata?.stopReason === 'max_tokens',
+      generation_ms: llmResponse.metadata?.generationTime,
+      timestamp: Date.now()
+    }));
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
     usedProviderFallback = true;
@@ -2348,7 +2413,9 @@ async function generateSpiralogicResponseWithLLM(
       providerUsed,
       modelUsed,
       usedProviderFallback,
-      generationTimeMs
+      generationTimeMs,
+      stopReason: llmStopReason,
+      outputTokens: llmOutputTokens,
     }
   };
 }
