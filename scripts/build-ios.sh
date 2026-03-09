@@ -88,7 +88,7 @@ trap './scripts/capacitor-patch-routes.sh revert' EXIT
 
 # Build web content first (required for Capacitor)
 echo "🌐 Building Next.js web content..."
-CAPACITOR_BUILD=1 npm run build
+CAPACITOR_BUILD=1 NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 # Verify out directory exists
 if [ ! -d "out" ]; then
@@ -161,6 +161,22 @@ PYEOF
 # Revert patches after successful build
 ./scripts/capacitor-patch-routes.sh revert
 trap - EXIT
+
+# Guard: Verify index.html is the maia embed, not a stale redirect stub.
+# If the Python patching step failed silently, this stops the build before
+# a broken index.html gets synced to iOS (which would produce a white screen).
+INDEX_SIZE=$(wc -c < out/index.html 2>/dev/null | tr -d ' ')
+if [ "${INDEX_SIZE:-0}" -lt 5000 ]; then
+    echo ""
+    echo "❌  out/index.html is too small (${INDEX_SIZE} bytes) — maia.html patching failed!"
+    echo "    Expected: ~30,000+ bytes (maia.html embed)"
+    echo "    Got: ${INDEX_SIZE} bytes (likely stale redirect stub)"
+    echo ""
+    echo "    Fix: check that out/maia.html exists and the Python patching step above succeeded."
+    echo ""
+    exit 1
+fi
+echo "✅ index.html verified (${INDEX_SIZE} bytes — maia.html embed confirmed)"
 
 # Remove stale build directory BEFORE cap sync — pod install fails if it exists
 rm -rf ios/App/build

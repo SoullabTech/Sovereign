@@ -319,13 +319,25 @@ HTMLEOF
     [ ! -d "./build/App.xcarchive" ] && { log_error "Archive failed!"; exit 1; }
     log_success "Archive created"
 
-    log_info "Uploading to App Store Connect..."
+    log_info "Exporting IPA..."
     xcodebuild -exportArchive \
         -archivePath ./build/App.xcarchive \
         -exportPath ./output \
         -exportOptionsPlist exportOptions.plist \
         -allowProvisioningUpdates \
-        2>&1 | grep -E "(Progress|Upload|EXPORT)" || true
+        2>&1 | grep -E "(Progress|Upload|EXPORT|error:)" || true
+
+    local ipa_path="./output/App.ipa"
+    [ ! -f "$ipa_path" ] && { log_error "IPA not found at $ipa_path — export failed!"; exit 1; }
+    log_success "IPA exported: $ipa_path"
+
+    log_info "Uploading to App Store Connect via altool..."
+    xcrun altool --upload-app \
+        -f "$ipa_path" \
+        --type ios \
+        --apiKey "$KEY_ID" \
+        --apiIssuer "$ISSUER_ID" \
+        2>&1
 
     log_success "Upload complete"
     cd ../..
