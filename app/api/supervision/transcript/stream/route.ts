@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     const startMs = parseInt(formData.get('startMs') as string || '0', 10);
     const endMs = parseInt(formData.get('endMs') as string || '0', 10);
     const speaker = formData.get('speaker') as string || 'unknown';
+    const chunkIndex = parseInt(formData.get('chunkIndex') as string || '-1', 10);
 
     if (!sessionId) {
       return NextResponse.json({
@@ -95,6 +96,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const chunkKb = (audioFile.size / 1024).toFixed(1);
+    console.log(`🎙️ [TranscriptStream] chunk #${chunkIndex} session=${sessionId.slice(0, 8)} size=${chunkKb}kb t=${startMs}-${endMs}ms`);
+
     // Prepare audio for Whisper
     const audioBuffer = await audioFile.arrayBuffer();
     const audioBlob = new Blob([audioBuffer], { type: audioFile.type });
@@ -127,8 +131,10 @@ export async function POST(request: NextRequest) {
           );
           confidence = totalConfidence / whisperResult.segments.length;
         }
+        console.log(`✅ [TranscriptStream] chunk #${chunkIndex} whisper=${transcriptText.length}chars lang=${language} conf=${confidence.toFixed(2)}`);
       } else {
-        console.error('[TranscriptStream] Whisper error:', await whisperResponse.text());
+        const whisperErr = await whisperResponse.text();
+        console.error(`❌ [TranscriptStream] chunk #${chunkIndex} Whisper error (${whisperResponse.status}):`, whisperErr.slice(0, 200));
       }
     } catch (whisperError) {
       console.error('[TranscriptStream] Whisper connection error:', whisperError);
@@ -148,7 +154,7 @@ export async function POST(request: NextRequest) {
         transcriptionConfidence: confidence,
       });
 
-      console.log(`📝 [TranscriptStream] Stored: "${transcriptText.slice(0, 50)}..."`);
+      console.log(`📝 [TranscriptStream] chunk #${chunkIndex} stored: "${transcriptText.slice(0, 60)}..."`);
 
       return NextResponse.json({
         success: true,
@@ -164,6 +170,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log(`🔇 [TranscriptStream] chunk #${chunkIndex} silence/empty — no text stored`);
     return NextResponse.json({
       success: true,
       segment: null,

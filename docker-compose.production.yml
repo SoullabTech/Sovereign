@@ -104,6 +104,9 @@ services:
       AIN_KNOWLEDGE_GATE_ENABLED: "1"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
+      WHISPER_URL: "http://whisper:8000"
+      # Session Room: enable chunked audio upload for live transcription
+      ALLOW_AUDIO_UPLOADS: "true"
       # WebAuthn/Passkey configuration - must match the domain users access
       WEBAUTHN_RP_ID: "soullab.life"
       WEBAUTHN_ORIGIN: "https://soullab.life"
