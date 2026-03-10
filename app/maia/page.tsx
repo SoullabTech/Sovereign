@@ -1187,6 +1187,40 @@ function MAIAPageContent() {
                   </motion.button>
                 </FeatureTooltip>
 
+                {/* Changes Button - Desktop */}
+                <FeatureTooltip featureId="changes" side="bottom">
+                  <motion.button
+                    onClick={() => setShowChangesSheet(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Changes"
+                  >
+                    <Wind className="w-4 h-4" />
+                    <span className="hidden sm:inline">Changes</span>
+                  </motion.button>
+                </FeatureTooltip>
+
+                {/* Decisions Button - Desktop */}
+                <FeatureTooltip featureId="decisions" side="bottom">
+                  <motion.button
+                    onClick={() => setShowDecisionsSheet(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Decisions"
+                  >
+                    <GitFork className="w-4 h-4" />
+                    <span className="hidden sm:inline">Decisions</span>
+                  </motion.button>
+                </FeatureTooltip>
+
                 {/* Feedback Button - Desktop */}
                 <FeatureTooltip featureId="feedback" side="bottom">
                   <motion.button
