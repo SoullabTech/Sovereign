@@ -82,6 +82,23 @@ Does this text invite the reader to depend on MAIA for ongoing orientation?
 
 ---
 
+## Publication Rate
+
+**Limit: maximum 3 oracle reflections per calendar day.**
+**Target: 1.**
+
+This is not a technical constraint — the API will not enforce it. It is an operator discipline.
+
+**Rationale:**
+Signal is made legible by scarcity. A system that speaks rarely is read carefully. A system that speaks often becomes ambient noise — and ambient noise eventually teaches readers to ignore it. Almost every AI public presence destroys its own authority through overproduction. The rate limit formalizes the restraint already implicit in the witness voice and the manual-trigger requirement.
+
+**Guidance for the 1-per-day target:**
+If the operator has a candidate reflection and is uncertain whether to publish it, the question is not "is this reflection good enough?" It is: "is this reflection the one thing worth saying today?"
+
+If the answer is not clear, the answer is no.
+
+---
+
 ## The Irreversibility Note
 
 The activation checklist notes: "deactivating the cert stops future publishing, but prior events remain permanent."
@@ -113,6 +130,7 @@ No code change that enables new publication behavior is valid without a correspo
 | What may MAIA publish? | Oracle conversation reflections, operator-surfaced | Defined |
 | Under what trigger? | Manual operator invocation only | Defined |
 | In what voice? | Witness | Defined |
+| Publication rate | Maximum 3/day, target 1 | Defined |
 | Autonomous publication | Not permitted | Deferred (Phase 5+, separate governance) |
 | Member-triggered publication | Not permitted | Deferred |
 | Support role (DMs) | Not addressed here | Phase 4b, separate doctrine |
