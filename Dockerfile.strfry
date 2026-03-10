@@ -3,12 +3,12 @@
 # Extends the official strfry image with curl and jq for the write policy plugin.
 # The write policy script uses curl to call MAIA's validate-pubkey endpoint
 # and jq to parse JSON from stdin/stdout.
+#
+# strfry is based on Alpine Linux — use apk, not apt-get.
 
 FROM ghcr.io/hoytech/strfry:latest
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl jq \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl jq
 
 # Ensure write policy script is executable at build time
 # (it is also mounted as a volume in docker-compose)

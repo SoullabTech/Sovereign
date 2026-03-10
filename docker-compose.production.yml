@@ -710,7 +710,7 @@ services:
       - ./config/strfry.conf:/app/strfry.conf:ro
       - ./scripts/nostr-write-policy.sh:/app/scripts/nostr-write-policy.sh:ro
 
-    command: ["strfry", "--config=/app/strfry.conf", "relay"]
+    command: ["--config=/app/strfry.conf", "relay"]
 
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:7777/ || exit 1"]
