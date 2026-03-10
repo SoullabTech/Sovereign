@@ -600,6 +600,51 @@ rudeboy.soullab.life {
     }
 }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Nostr Relay — wss://nostr.soullab.life
+# ═══════════════════════════════════════════════════════════════════════════════
+# WebSocket gateway to the self-hosted strfry relay (maia-nostr-relay:7777).
+# TLS terminated here by Caddy; backend uses plain WebSocket over Docker network.
+nostr.soullab.life {
+    @ws {
+        header Connection *Upgrade*
+        header Upgrade        websocket
+    }
+    handle @ws {
+        reverse_proxy maia-nostr-relay:7777 {
+            header_up Host              {host}
+            header_up X-Real-IP         {remote_host}
+            header_up X-Forwarded-For   {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            # Disable buffering for persistent WebSocket connections
+            flush_interval -1
+        }
+    }
+    # HTTP fallback (relay info endpoint)
+    handle {
+        reverse_proxy maia-nostr-relay:7777 {
+            header_up Host              {host}
+            header_up X-Real-IP         {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        Referrer-Policy           "no-referrer"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/nostr-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
 # Health check endpoint for load balancers
 :8080 {
     respond /health 200

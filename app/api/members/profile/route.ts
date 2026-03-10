@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
           m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
           m.birth_location_name, m.birth_timezone,
           m.astrology_consent,
+          m.nostr_pubkey, m.nostr_registered_at,
           ms.circle_tier, ms.circle_amount, ms.circle_joined_at
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -161,6 +162,9 @@ export async function GET(request: NextRequest) {
       } : null,
       // Astrology consent — cross-device persistence for the BirthDataStep skip gate
       astrologyConsent: (member.astrology_consent ?? 'unknown') as 'unknown' | 'opted_in' | 'declined',
+      // Nostr sovereign messaging identity (public key only — private key never stored)
+      nostrPubkey: member.nostr_pubkey ?? null,
+      nostrRegisteredAt: member.nostr_registered_at ?? null,
       correlationId,
     }, { headers });
 

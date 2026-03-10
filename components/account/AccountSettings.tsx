@@ -40,6 +40,7 @@ import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/c
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -89,7 +90,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'maia' | 'voice' | 'astrology' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+type SettingsSection = 'profile' | 'account' | 'maia' | 'voice' | 'astrology' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals' | 'messaging';
 
 interface PractitionerProject {
   id: string;
@@ -150,6 +151,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
   { id: 'membership', label: 'Membership', icon: Crown },
+  { id: 'messaging', label: 'Sovereign Messaging', icon: MessageSquare },
   { id: 'connections', label: 'Connections', icon: LinkIcon },
   { id: 'data', label: 'Your Data', icon: Download },
 ];
@@ -2753,6 +2755,9 @@ export function AccountSettings() {
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
             {activeSection === 'portals' && renderPortals()}
+            {activeSection === 'messaging' && userId && (
+              <NostrMessagingSection memberId={userId} />
+            )}
             {activeSection === 'connections' && renderConnections()}
             {activeSection === 'data' && renderData()}
           </motion.div>

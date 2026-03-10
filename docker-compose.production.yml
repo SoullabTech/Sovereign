@@ -691,6 +691,37 @@ services:
     networks:
       - maia-internal
 
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Nostr Relay — Sovereign member messaging backbone
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Self-hosted strfry relay, member-gated via write policy plugin.
+  # Accessible at wss://nostr.soullab.life (routed through Caddy).
+  # Only registered Soullab members can publish events.
+  maia-nostr-relay:
+    build:
+      context: .
+      dockerfile: Dockerfile.strfry
+    container_name: maia-nostr-relay
+    restart: unless-stopped
+    logging: *default_logging
+
+    volumes:
+      - nostr_relay_data:/app/strfry-db
+      - ./config/strfry.conf:/app/strfry.conf:ro
+      - ./scripts/nostr-write-policy.sh:/app/scripts/nostr-write-policy.sh:ro
+
+    command: ["strfry", "--config=/app/strfry.conf", "relay"]
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:7777/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - maia-internal
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Persistent Volumes
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -708,6 +739,8 @@ volumes:
   voice_notes_data:
     driver: local
   palisades_data:
+    driver: local
+  nostr_relay_data:
     driver: local
   # ollama_data:
   #   driver: local
