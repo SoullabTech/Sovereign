@@ -309,23 +309,45 @@ build_and_upload() {
     fi
     log_success "Web content built"
 
-    # Patch root index.html → instant JS redirect to /enter
-    # Without this, Capacitor opens the Soullab.life marketing page (out/index.html)
-    # instead of routing through the app entry logic.
-    log_info "Patching root index.html → /enter redirect for iOS..."
-    cat > out/index.html << 'HTMLEOF'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>html,body{margin:0;padding:0;background:#0b0f1c;}</style>
-    <script>window.location.replace('/enter');</script>
-  </head>
-  <body></body>
-</html>
-HTMLEOF
-    log_success "Root redirect patched"
+    # Embed maia.html directly as index.html — same logic as build-ios.sh.
+    # DO NOT use window.location.replace('/enter'): CapacitorHttp intercepts
+    # the RSC payload fetch, Next.js router hangs, result is a dark screen.
+    log_info "Patching index.html <- maia.html direct embed..."
+    python3 - << 'PYEOF2'
+import sys, os
+src = 'out/maia.html'
+dst = 'out/index.html'
+if not os.path.exists(src):
+    print('  WARNING: out/maia.html not found')
+    sys.exit(0)
+content = open(src, encoding='utf-8').read()
+fix = '<script>if(location.pathname==="/")history.replaceState(null,"","/maia");</script>'
+patched = content.replace('<head>', '<head>' + fix, 1)
+open(dst, 'w', encoding='utf-8').write(patched)
+print(f'  OK index.html <- maia.html + URL fixup ({len(patched)} bytes)')
+PYEOF2
+
+    python3 - << 'PYEOF2'
+import os
+pages = ['maia', 'begin', 'signin', 'welcome-back', 'enter', 'onboarding', 'faq']
+for page in pages:
+    path = f'out/{page}.html'
+    if not os.path.exists(path):
+        continue
+    content = open(path, encoding='utf-8').read()
+    fix = f'<script>if(location.pathname==="/{page}.html")history.replaceState(null,"","/{page}");</script>'
+    if fix in content:
+        continue
+    open(path, 'w', encoding='utf-8').write(content.replace('<head>', '<head>' + fix, 1))
+    print(f'  OK   {path} + URL fixup')
+PYEOF2
+
+    INDEX_SIZE=$(wc -c < out/index.html 2>/dev/null | tr -d ' ')
+    if [ "${INDEX_SIZE:-0}" -lt 5000 ]; then
+        log_error "out/index.html too small (${INDEX_SIZE} bytes) — maia.html embed failed!"
+        exit 1
+    fi
+    log_success "index.html verified (${INDEX_SIZE} bytes — maia.html embed confirmed)"
 
     # Revert patches after successful build (trap will handle failure case)
     ./scripts/capacitor-patch-routes.sh revert
