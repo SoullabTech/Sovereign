@@ -4,10 +4,12 @@
  * NostrMessagingSection
  *
  * Settings section for sovereign messaging.
- * Shown inside AccountSettings under "Sovereign Messaging".
+ * Three-tab layout once registered: Identity | Messages | Channels
  *
- * • Not registered → NostrIdentitySetup (first-time wizard)
- * • Registered     → tabbed view: Identity card | DM inbox
+ * Tabs:
+ *   Identity  — Key management, export, reset
+ *   Messages  — NIP-17 encrypted direct messages
+ *   Channels  — NIP-29 community channels (cohort, practitioners, retreat, alumni)
  */
 
 import { useState, useEffect } from 'react';
@@ -15,7 +17,12 @@ import { Loader2 } from 'lucide-react';
 import { NostrIdentitySetup } from './NostrIdentitySetup';
 import { NostrIdentityCard } from './NostrIdentityCard';
 import { NostrMessenger } from './NostrMessenger';
+import { NostrChannels } from './NostrChannels';
+import { NostrChannelThread } from './NostrChannelThread';
 import { apiFetch } from '@/lib/http/apiBase';
+import type { SoullabChannel } from '@/lib/nostr/channels';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface NostrIdentity {
   registered: boolean;
@@ -29,12 +36,15 @@ interface Props {
   memberId: string;
 }
 
-type Tab = 'identity' | 'messages';
+type Tab = 'identity' | 'messages' | 'channels';
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function NostrMessagingSection({ memberId }: Props) {
   const [identity, setIdentity] = useState<NostrIdentity | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('identity');
+  const [activeChannel, setActiveChannel] = useState<SoullabChannel | null>(null);
 
   async function loadIdentity() {
     setLoading(true);
@@ -45,7 +55,6 @@ export function NostrMessagingSection({ memberId }: Props) {
         setIdentity(data);
       }
     } catch {
-      // Non-critical — show setup if load fails
       setIdentity({ registered: false, relayUrl: 'wss://nostr.soullab.life' });
     } finally {
       setLoading(false);
@@ -73,21 +82,42 @@ export function NostrMessagingSection({ memberId }: Props) {
     );
   }
 
+  // Active channel thread takes over the panel
+  if (tab === 'channels' && activeChannel) {
+    return (
+      <NostrChannelThread
+        memberId={memberId}
+        myPubkey={identity.pubkey!}
+        channel={activeChannel}
+        onBack={() => setActiveChannel(null)}
+      />
+    );
+  }
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'identity', label: 'Identity' },
+    { id: 'messages', label: 'Messages' },
+    { id: 'channels', label: 'Channels' },
+  ];
+
   return (
     <div className="space-y-4">
       {/* Tab switcher */}
       <div className="flex gap-1 p-1 bg-stone-800/50 rounded-lg">
-        {(['identity', 'messages'] as Tab[]).map(t => (
+        {TABS.map(t => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={t.id}
+            onClick={() => {
+              setTab(t.id);
+              setActiveChannel(null);
+            }}
             className={`flex-1 px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              tab === t
+              tab === t.id
                 ? 'bg-stone-700 text-white'
                 : 'text-stone-400 hover:text-stone-300'
             }`}
           >
-            {t === 'identity' ? 'Identity' : 'Messages'}
+            {t.label}
           </button>
         ))}
       </div>
@@ -110,6 +140,15 @@ export function NostrMessagingSection({ memberId }: Props) {
           memberId={memberId}
           myPubkey={identity.pubkey!}
           myNpub={identity.npub!}
+        />
+      )}
+
+      {/* Channels tab */}
+      {tab === 'channels' && (
+        <NostrChannels
+          memberId={memberId}
+          myPubkey={identity.pubkey!}
+          onOpenChannel={ch => setActiveChannel(ch)}
         />
       )}
     </div>

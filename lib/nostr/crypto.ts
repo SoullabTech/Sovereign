@@ -9,7 +9,7 @@
 'use client';
 
 import { generateSecretKey, getPublicKey, finalizeEvent } from 'nostr-tools';
-import { npubEncode, nsecEncode } from 'nostr-tools/nip19';
+import { npubEncode, nsecEncode, decode as decodeNip19 } from 'nostr-tools/nip19';
 import * as nip44 from 'nostr-tools/nip44';
 import type { UnsignedEvent } from 'nostr-tools';
 
@@ -124,6 +124,45 @@ export function decryptMessage(
     senderPubkeyHex
   );
   return nip44.decrypt(ciphertext, conversationKey);
+}
+
+// ─── Key validation + import ─────────────────────────────────────────────────
+
+/**
+ * Verify that a stored privkey hex derives the expected pubkey.
+ * Guards against corrupted storage or key/identity mismatch.
+ */
+export function privkeyMatchesPubkey(privkeyHex: string, expectedPubkeyHex: string): boolean {
+  try {
+    if (!/^[0-9a-f]{64}$/.test(privkeyHex)) return false;
+    return getPublicKey(hexToBytes(privkeyHex)) === expectedPubkeyHex;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Import a Nostr keypair from an nsec bech32 backup string.
+ * Returns null if the nsec is malformed or not an nsec prefix.
+ * The caller is responsible for checking that the derived pubkey
+ * matches the registered pubkey before storing.
+ */
+export function importNsec(nsec: string): NostrKeypair | null {
+  try {
+    const result = decodeNip19(nsec.trim());
+    if (result.type !== 'nsec') return null;
+    const privkeyBytes = result.data as Uint8Array;
+    const privkeyHex = bytesToHex(privkeyBytes);
+    const pubkeyHex = getPublicKey(privkeyBytes);
+    return {
+      privkeyHex,
+      pubkeyHex,
+      npub: npubEncode(pubkeyHex),
+      nsec: nsec.trim(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ─── Local key storage ────────────────────────────────────────────────────────

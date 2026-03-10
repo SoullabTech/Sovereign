@@ -6,13 +6,21 @@
  * DM inbox — shows all threads sorted by most recent message.
  * Loaded inside the "Messages" tab of NostrMessagingSection.
  *
+ * Key handling:
+ *   1. Load from localStorage on mount
+ *   2. Validate: derive pubkey from stored key, compare to registered pubkey
+ *   3. If missing or mismatched → show nsec import / recovery UI
+ *   4. Only then allow messaging
+ *
  * Privacy: all decryption happens here (client-side).
- * The private key is read from localStorage once on mount.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MessageSquare, Plus, User, ShieldCheck, Loader2, X } from 'lucide-react';
-import { loadPrivkey } from '@/lib/nostr/crypto';
+import { MessageSquare, Plus, User, ShieldCheck, Loader2, X, Key, AlertTriangle } from 'lucide-react';
+import {
+  loadPrivkey, storePrivkey,
+  privkeyMatchesPubkey, importNsec,
+} from '@/lib/nostr/crypto';
 import { fetchAllDMs, subscribeToDMs, groupDMsByPeer, getDMPeer } from '@/lib/nostr/dm';
 import type { DecryptedDM } from '@/lib/nostr/dm';
 import { truncateNpub, isValidPubkeyHex } from '@/lib/nostr/utils';
@@ -34,24 +42,65 @@ interface Props {
   myNpub: string;
 }
 
+type KeyState = 'valid' | 'missing' | 'mismatch';
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
-  // Private key read once on mount — never changes during session
-  const [privkey] = useState<string | null>(() => loadPrivkey(memberId));
+  // ─── Key validation ────────────────────────────────────────────────────────
+
+  function resolveKeyState(): { privkey: string | null; state: KeyState } {
+    const raw = loadPrivkey(memberId);
+    if (!raw) return { privkey: null, state: 'missing' };
+    if (!privkeyMatchesPubkey(raw, myPubkey)) return { privkey: null, state: 'mismatch' };
+    return { privkey: raw, state: 'valid' };
+  }
+
+  const [{ privkey, state: keyState }, setKeyResult] = useState(() => resolveKeyState());
+
+  // ─── Thread state ──────────────────────────────────────────────────────────
 
   const [threads, setThreads] = useState<Map<string, DecryptedDM[]>>(new Map());
   const [contacts, setContacts] = useState<Map<string, ContactInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [activeThread, setActiveThread] = useState<string | null>(null);
 
-  // New DM form state
+  // New DM form
   const [showNewDM, setShowNewDM] = useState(false);
   const [newRecipient, setNewRecipient] = useState('');
   const [newRecipientError, setNewRecipientError] = useState('');
 
-  // Track which pubkeys we've already requested from the contacts API
+  // nsec import form
+  const [nsecInput, setNsecInput] = useState('');
+  const [nsecError, setNsecError] = useState('');
+  const [importingKey, setImportingKey] = useState(false);
+
   const loadedContacts = useRef(new Set<string>());
+
+  // ─── nsec import ──────────────────────────────────────────────────────────
+
+  function handleImportNsec() {
+    setNsecError('');
+    setImportingKey(true);
+    try {
+      const kp = importNsec(nsecInput.trim());
+      if (!kp) {
+        setNsecError('Invalid nsec — check the format (must start with nsec1)');
+        return;
+      }
+      if (kp.pubkeyHex !== myPubkey) {
+        setNsecError(
+          'This key belongs to a different identity. It does not match the pubkey registered with your account.'
+        );
+        return;
+      }
+      storePrivkey(memberId, kp.privkeyHex);
+      setNsecInput('');
+      setKeyResult({ privkey: kp.privkeyHex, state: 'valid' });
+    } finally {
+      setImportingKey(false);
+    }
+  }
 
   // ─── Contact resolution ────────────────────────────────────────────────────
 
@@ -84,7 +133,6 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
     setThreads(prev => {
       const next = new Map(prev);
       const list = [...(next.get(peer) ?? [])];
-      // Deduplicate by gift-wrap event ID
       if (!list.find(m => m.id === dm.id)) {
         list.push(dm);
         list.sort((a, b) => a.createdAt - b.createdAt);
@@ -94,7 +142,7 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
     });
   }, [myPubkey]);
 
-  // ─── Initialise: fetch history + subscribe ────────────────────────────────
+  // ─── Initialise on valid key ───────────────────────────────────────────────
 
   useEffect(() => {
     if (!privkey) {
@@ -132,7 +180,7 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
     setNewRecipientError('');
     const recipient = newRecipient.trim().toLowerCase();
     if (!isValidPubkeyHex(recipient)) {
-      setNewRecipientError('Enter a valid 64-character hex pubkey (starts with npub? Use the hex form instead)');
+      setNewRecipientError('Enter a valid 64-character hex pubkey');
       return;
     }
     setShowNewDM(false);
@@ -141,24 +189,56 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
     setActiveThread(recipient);
   }
 
-  // ─── Sorted thread list ───────────────────────────────────────────────────
-
   const sortedThreads = Array.from(threads.entries()).sort((a, b) => {
     const lastA = a[1][a[1].length - 1]?.createdAt ?? 0;
     const lastB = b[1][b[1].length - 1]?.createdAt ?? 0;
-    return lastB - lastA; // Most recent first
+    return lastB - lastA;
   });
 
-  // ─── Guard: no private key ────────────────────────────────────────────────
+  // ─── Key recovery UI ─────────────────────────────────────────────────────
 
-  if (!privkey) {
+  if (keyState !== 'valid') {
     return (
-      <div className="py-8 text-center">
-        <MessageSquare className="w-8 h-8 mx-auto mb-3 text-stone-600" />
-        <p className="text-sm text-stone-400">Private key not found on this device.</p>
-        <p className="mt-1 text-xs text-stone-500">
-          Open messages on the device where you set up sovereign messaging,
-          or import your key via the Identity tab.
+      <div className="space-y-4">
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-900/20 border border-amber-700/30">
+          <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-300">
+            {keyState === 'missing'
+              ? 'Private key not found on this device.'
+              : 'Stored key does not match your registered identity.'
+            }
+            <span className="text-amber-400/70 block mt-0.5 text-xs">
+              Import your nsec backup to restore messaging on this device.
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+            <Key className="w-3 h-3" />
+            Import private key (nsec)
+          </label>
+          <textarea
+            value={nsecInput}
+            onChange={e => setNsecInput(e.target.value)}
+            placeholder="nsec1…"
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg bg-stone-900 border border-stone-700 text-sm text-white placeholder-stone-600 focus:outline-none focus:border-violet-500 font-mono resize-none"
+          />
+          {nsecError && <p className="text-xs text-red-400">{nsecError}</p>}
+          <button
+            onClick={handleImportNsec}
+            disabled={!nsecInput.trim() || importingKey}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-700 hover:bg-violet-600 disabled:opacity-40 text-sm text-white font-medium transition-colors"
+          >
+            <Key className="w-3.5 h-3.5" />
+            Restore key
+          </button>
+        </div>
+
+        <p className="text-xs text-stone-600">
+          Your private key was shown when you first set up messaging.
+          If you exported it to a file, open that file and paste the nsec line above.
         </p>
       </div>
     );
@@ -187,7 +267,6 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Header row */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-stone-500 uppercase tracking-wider">Inbox</span>
         <button
@@ -199,7 +278,6 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
         </button>
       </div>
 
-      {/* New DM form */}
       {showNewDM && (
         <div className="p-3 rounded-lg bg-stone-800/60 border border-stone-700/40 space-y-2">
           <p className="text-xs text-stone-400">
@@ -220,13 +298,10 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
               Open
             </button>
           </div>
-          {newRecipientError && (
-            <p className="text-xs text-red-400">{newRecipientError}</p>
-          )}
+          {newRecipientError && <p className="text-xs text-red-400">{newRecipientError}</p>}
         </div>
       )}
 
-      {/* Thread list */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-5 h-5 text-stone-500 animate-spin" />
@@ -255,15 +330,12 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
                 onClick={() => setActiveThread(peerPubkey)}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-stone-800/60 transition-colors text-left"
               >
-                {/* Avatar */}
                 <div className="w-8 h-8 rounded-full bg-stone-700 flex items-center justify-center flex-shrink-0">
                   {contact?.isPractitioner
                     ? <ShieldCheck className="w-4 h-4 text-violet-400" />
                     : <User className="w-4 h-4 text-stone-400" />
                   }
                 </div>
-
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-white truncate">{displayName}</span>
@@ -279,8 +351,6 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
                     </p>
                   )}
                 </div>
-
-                {/* Timestamp */}
                 {last && (
                   <span className="text-xs text-stone-600 flex-shrink-0">
                     {relativeTime(last.createdAt)}
@@ -294,8 +364,6 @@ export function NostrMessenger({ memberId, myPubkey, myNpub }: Props) {
     </div>
   );
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function relativeTime(unixTs: number): string {
   const diff = Math.floor(Date.now() / 1000) - unixTs;
