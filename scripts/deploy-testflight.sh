@@ -156,6 +156,41 @@ get_latest_build() {
     log_success "Latest build: $BUILD_VERSION (ID: $BUILD_ID, State: $BUILD_STATE)"
 }
 
+# Wait for a NEW build to appear after upload (different ID from pre-upload snapshot).
+# Solves the race where App Store Connect hasn't ingested the upload yet and
+# get_latest_build returns the previous build instead of the new one.
+wait_for_new_build() {
+    local prev_build_id="$1"
+    log_info "Waiting for new build to appear in App Store Connect (prev: ${prev_build_id:0:8}...)..."
+    local max_attempts=60   # 10 minutes max (60 × 10s)
+    local attempt=0
+
+    while [ $attempt -lt $max_attempts ]; do
+        local response=$(api_request GET "/builds?filter[app]=$APP_ID&sort=-uploadedDate&limit=1")
+        local new_id=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+        local new_ver=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('version','') if d.get('data') else '')" 2>/dev/null)
+        local new_state=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('processingState','') if d.get('data') else '')" 2>/dev/null)
+
+        if [ -n "$new_id" ] && [ "$new_id" != "$prev_build_id" ]; then
+            BUILD_ID="$new_id"
+            BUILD_VERSION="$new_ver"
+            BUILD_STATE="$new_state"
+            echo ""
+            log_success "New build detected: $BUILD_VERSION (ID: $BUILD_ID, State: $BUILD_STATE)"
+            [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+            return 0
+        fi
+
+        echo -n "."
+        sleep 10
+        ((attempt++))
+    done
+
+    echo ""
+    log_error "Timeout: new build did not appear in App Store Connect after 10 minutes"
+    exit 1
+}
+
 # Wait for build processing
 wait_for_processing() {
     log_info "Waiting for build processing..."
@@ -356,11 +391,19 @@ main() {
     RELEASE_ONLY=false
     [ "$1" == "--release-only" ] && { RELEASE_ONLY=true; log_info "Release-only mode"; }
 
-    [ "$RELEASE_ONLY" == "false" ] && build_and_upload
-
     get_app_id
-    get_latest_build
-    [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+
+    if [ "$RELEASE_ONLY" == "false" ]; then
+        # Snapshot current latest build BEFORE uploading so we can detect the new one
+        get_latest_build
+        local pre_upload_build_id="$BUILD_ID"
+        build_and_upload
+        # Poll until App Store Connect shows a build with a different ID
+        wait_for_new_build "$pre_upload_build_id"
+    else
+        get_latest_build
+        [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+    fi
 
     get_beta_group
     submit_to_beta_review
