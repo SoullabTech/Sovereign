@@ -54,8 +54,8 @@
  *   The INSERT uses ON CONFLICT to deactivate old certs for the same role.
  */
 
-import { schnorr } from '@noble/curves/secp256k1';
-import { sha256 } from '@noble/hashes/sha256';
+import { schnorr } from '@noble/curves/secp256k1.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 import { getPublicKey } from 'nostr-tools';
 import { decode as decodeNip19 } from 'nostr-tools/nip19';
 import { buildConditions, createDelegationToken } from '../lib/nostr/nip26';

@@ -14,8 +14,8 @@
  * Safe to import in both server and browser contexts.
  */
 
-import { schnorr } from '@noble/curves/secp256k1';
-import { sha256 } from '@noble/hashes/sha256';
+import { schnorr } from '@noble/curves/secp256k1.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
