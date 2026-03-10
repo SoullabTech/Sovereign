@@ -47,12 +47,12 @@ export function isNpub(str: string): boolean {
 export const NOSTR_KINDS = {
   METADATA: 0,           // NIP-01: user metadata / profile
   TEXT_NOTE: 1,          // NIP-01: short text note (MAIA public reflections)
-  DM: 4,                 // NIP-04: encrypted DM (legacy, avoid)
-  GROUP_MSG: 9,          // NIP-29: group chat message
-  GROUP_ADMIN: 9000,     // NIP-29: group admin event
-  ENCRYPTED_DM: 1059,    // NIP-17: gift-wrapped private DM (Phase 2)
-  SEAL: 13,              // NIP-59: sealed event wrapper (Phase 2)
-  GIFT_WRAP: 1059,       // NIP-59: gift wrap
+  DM_LEGACY: 4,          // NIP-04: encrypted DM — DEPRECATED, avoid for new code
+  DM_CONTENT: 14,        // NIP-17: inner DM rumor (inside the seal)
+  SEAL: 13,              // NIP-59: seal wrapping the DM rumor
+  GIFT_WRAP: 1059,       // NIP-59: gift wrap (outermost; what gets published to the relay)
+  GROUP_MSG: 9,          // NIP-29: group chat message — Phase 3
+  GROUP_ADMIN: 9000,     // NIP-29: group admin event — Phase 3
 } as const;
 
 // ─── Relay ───────────────────────────────────────────────────────────────────
