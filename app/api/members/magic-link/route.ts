@@ -253,32 +253,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/signin?error=no_token', baseUrl));
     }
 
-    // Find valid token (include tier/roles for session cookie setup)
-    const tokenResult = await safeQuery(
-      `SELECT t.id, t.email, t.member_id,
-              m.id as found_member_id, m.username, m.name, m.onboarded, m.onboarding_step,
-              COALESCE(m.tier, 'free') as tier,
-              COALESCE(m.roles, ARRAY['member']) as roles
-       FROM magic_link_tokens t
-       LEFT JOIN members m ON t.member_id = m.id OR m.email = t.email
-       WHERE t.token = $1
-         AND t.used = false
-         AND t.expires_at > NOW()`,
+    // Atomically claim the token: UPDATE WHERE used = false ensures only one
+    // concurrent request wins. PostgreSQL row-level lock prevents double-redemption.
+    const claimResult = await safeQuery(
+      `UPDATE magic_link_tokens
+       SET used = true, used_at = NOW()
+       WHERE token = $1
+         AND used = false
+         AND expires_at > NOW()
+       RETURNING id, email, member_id`,
       [token]
     );
 
-    if (tokenResult.error || tokenResult.rows.length === 0) {
-      console.log(`[MAGIC-LINK] Invalid/expired token: ${token.substring(0, 8)}...`);
+    if (claimResult.error || claimResult.rows.length === 0) {
+      console.log(`[MAGIC-LINK] Invalid/expired/already-used token: ${token.substring(0, 8)}...`);
       return NextResponse.redirect(new URL('/signin?error=invalid_token', baseUrl));
     }
 
-    const record = tokenResult.rows[0];
+    const claimed = claimResult.rows[0];
 
-    // Mark token as used
-    await safeQuery(
-      'UPDATE magic_link_tokens SET used = true, used_at = NOW() WHERE id = $1',
-      [record.id]
+    // Fetch member data (including tier/roles for session cookie setup)
+    // separately now that we hold the atomically claimed token
+    const memberResult = await safeQuery(
+      `SELECT id as found_member_id, username, name, onboarded, onboarding_step,
+              COALESCE(tier, 'free') as tier,
+              COALESCE(roles, ARRAY['member']) as roles
+       FROM members
+       WHERE id = $1 OR email = $2
+       LIMIT 1`,
+      [claimed.member_id || null, claimed.email]
     );
+
+    const record = {
+      ...claimed,
+      ...(memberResult.rows[0] || {}),
+    };
 
     // Determine where to send the user
     const memberId = record.found_member_id || record.member_id;
