@@ -24,8 +24,11 @@
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import * as ttsRouter from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice } from '@/lib/voice/voiceMap';
 import type { Element } from '@/lib/types/voiceIntent';
+import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   processThreshold,
   createInitialThresholdState,
@@ -60,14 +63,23 @@ import {
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 
-// Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
-// ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
-// OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
-const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
+// OpenAI TTS is available only when:
+//   - OPENAI_API_KEY is set AND
+//   - TTS_OPENAI_FALLBACK is not explicitly 'false' AND
+//   - DISABLE_OPENAI_COMPLETELY is not set
+const USE_OPENAI_FALLBACK =
+  Boolean(process.env.OPENAI_API_KEY) &&
+  process.env.TTS_OPENAI_FALLBACK !== 'false' &&
+  process.env.DISABLE_OPENAI_COMPLETELY !== 'true' &&
+  process.env.DISABLE_OPENAI_COMPLETELY !== '1';
 
 /**
- * TTS with fallback: Try PersonaPlex first, fall back to OpenAI TTS on error.
- * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'openai' }
+ * TTS with provider routing:
+ *   1. PersonaPlex (conversational AI voice)
+ *   2. OpenAI Alloy leads (auto/cloud)
+ *   3. Kokoro (local sovereign TTS) — explicit local or auto fallback
+ *
+ * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'openai' | 'kokoro' }
  */
 async function synthesizeWithFallback(
   text: string,
@@ -79,6 +91,8 @@ async function synthesizeWithFallback(
     brevity?: 'brief' | 'moderate' | 'expansive';
     wisdomDirective?: string;
     voice?: string;
+    /** Member's TTS provider preference: 'auto' | 'cloud' | 'local' | null */
+    ttsProvider?: string | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
   // Try PersonaPlex first
@@ -96,7 +110,7 @@ async function synthesizeWithFallback(
       const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
       if (pcmBytes < 100) {
         console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), trying fallback`);
-        break; // Fall through to OpenAI
+        break; // Fall through to provider routing
       }
       const wavB64 = pcmF32ToWavBase64(chunk.audioB64, 24000, 1);
       console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
@@ -106,33 +120,74 @@ async function synthesizeWithFallback(
     console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
   }
 
-  // Fallback to OpenAI TTS
-  if (!USE_OPENAI_FALLBACK) {
-    console.log('[TTS] OpenAI fallback disabled, returning null');
-    return null;
+  // ── TTS routing: OpenAI Alloy leads, Kokoro only when member picks "local" ──
+  const elementKey = (options.element ?? '').toLowerCase() as Element;
+  const memberProvider = options.ttsProvider || 'auto';
+
+  // Voice resolution: element map → explicit override → default (alloy)
+  const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
+  const openaiVoice = (options.voice && options.voice !== 'maya')
+    ? options.voice
+    : elementVoice ?? 'alloy';
+
+  // ── Member chose "local" → Kokoro only, no cloud fallback ──
+  if (memberProvider === 'local') {
+    try {
+      const result = await ttsRouter.synthesize({
+        text,
+        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+        format: 'mp3',
+        speed: options.speed,
+        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+      });
+      const audio = result.audioBuffer.toString('base64');
+      console.log(`[TTS] provider=kokoro member_choice=local ${result.audioBuffer.length}B MP3`);
+      return { audio, format: 'mp3', source: 'kokoro' };
+    } catch (err) {
+      console.warn(`[TTS] Kokoro failed, member chose local-only — no fallback: ${err instanceof Error ? err.message : err}`);
+      return null;
+    }
   }
 
+  // ── "auto" or "cloud" → OpenAI Alloy leads (when key is available) ──
+  if (USE_OPENAI_FALLBACK) {
+    try {
+      console.log(`[TTS] provider=openai member_choice=${memberProvider} voice=${openaiVoice}`);
+      const response = await synthesizeSpeech({
+        text,
+        voice: openaiVoice,
+        format: 'mp3',
+        speed: options.speed,
+      });
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
+    } catch (e) {
+      console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+      // If member explicitly chose "cloud", don't fall back to Kokoro
+      if (memberProvider === 'cloud') return null;
+      // "auto" → fall through to Kokoro below
+    }
+  } else {
+    console.log(`[TTS] OpenAI not configured — going direct to Kokoro (member_choice=${memberProvider})`);
+    // "cloud" with no OpenAI key → nothing available
+    if (memberProvider === 'cloud') return null;
+  }
+
+  // ── Kokoro (sovereign local TTS) ──
   try {
-    // Voice resolution: element map → explicit override → default
-    // 'maya' is a legacy client value — resolve it properly
-    const elementKey = (options.element ?? '').toLowerCase() as Element;
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (options.voice && options.voice !== 'maya')
-      ? options.voice
-      : elementVoice ?? 'nova';
-    console.log(`[TTS] OpenAI: element=${elementKey || 'none'} → voice=${openaiVoice}`);
-    const response = await synthesizeSpeech({
+    const result = await ttsRouter.synthesize({
       text,
-      voice: openaiVoice,
+      voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
       format: 'mp3',
       speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
     });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const audio = buffer.toString('base64');
-    console.log(`🔊 [TTS] OpenAI OK: ${buffer.length}B MP3`);
-    return { audio, format: 'mp3', source: 'openai' };
-  } catch (e) {
-    console.error(`[TTS] OpenAI fallback also failed: ${e instanceof Error ? e.message : e}`);
+    const audio = result.audioBuffer.toString('base64');
+    const isFallback = USE_OPENAI_FALLBACK; // true = was a fallback from OpenAI, false = was primary
+    console.log(`[TTS] provider=kokoro fallback=${isFallback} member_choice=${memberProvider} ${result.audioBuffer.length}B MP3`);
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (kokoroErr) {
+    console.error(`[TTS] Kokoro failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
     return null;
   }
 }
@@ -390,11 +445,31 @@ export async function POST(req: NextRequest) {
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
 
+  // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
+  const effectiveMemberId = userId || await getMemberIdFromRequest(req);
+
   // Initialize timing instrumentation
   const timer = createVoiceTimer();
   timer.mark('request_received');
 
-  console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed, mode, sanctuary });
+  // Load voice preference offsets + TTS provider choice
+  let effectiveVoice = voice;
+  let memberTtsProvider: string | null = null;
+  try {
+    const [systemVoice, memberVoice] = await Promise.all([
+      getSystemVoiceProfile(),
+      getMemberVoicePreferences(effectiveMemberId || ''),
+    ]);
+    const merged = mergeVoiceIntent(systemVoice, memberVoice);
+    memberTtsProvider = merged.ttsProvider;
+    if (merged.voiceId && merged.voiceId !== 'maia') {
+      effectiveVoice = merged.voiceId;
+    }
+  } catch (e) {
+    console.warn('[StreamConversation] Voice prefs load failed (continuing without):', e);
+  }
+
+  console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary, ttsProvider: memberTtsProvider });
 
   if (!message?.trim()) {
     return new Response('Missing message', { status: 400 });
@@ -646,7 +721,8 @@ export async function POST(req: NextRequest) {
             speed: effectiveSpeed,  // Use prosody-adjusted speed
             brevity: guidance.brevity,
             wisdomDirective,
-            voice: voice,
+            voice: effectiveVoice,
+            ttsProvider: memberTtsProvider,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -802,7 +878,8 @@ export async function POST(req: NextRequest) {
                 speed: effectiveSpeed,  // Use prosody-adjusted speed
                 brevity: guidance.brevity,
                 wisdomDirective,
-                voice: voice,
+                voice: effectiveVoice,
+                ttsProvider: memberTtsProvider,
               });
 
               if (result) {
