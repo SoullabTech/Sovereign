@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 import { createSession } from '@/lib/auth/serverSessions';
+import { trackOnboarding } from '@/lib/onboarding/telemetry';
 import {
   checkRateLimit,
   getClientIP,
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
 
     const member = result.rows[0];
     console.log(`[register-email] Created: ${cleanUsername} (${member.id})`);
+    trackOnboarding({ event: 'profile_saved', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
 
     // Build response
     const responseBody = {
@@ -139,8 +141,10 @@ export async function POST(request: NextRequest) {
       response.cookies.set('maia_member_id', String(member.id), cookieOpts);
       response.cookies.set('maia_tier', 'free', cookieOpts);
       response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+      trackOnboarding({ event: 'session_created', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
       console.log(`[register-email] Session created for: ${cleanUsername}`);
     } catch (sessionErr) {
+      trackOnboarding({ event: 'session_missing_after_verify', memberId: String(member.id), email: normalizedEmail, path: 'register-email' });
       console.error('[register-email] Session creation failed (non-fatal):', sessionErr);
     }
 

@@ -42,6 +42,21 @@ function isDbConnectionError(error: unknown): boolean {
   return false;
 }
 
+// Check if error is a schema mismatch (missing column/table = unapplied migration)
+function isSchemaError(error: unknown): boolean {
+  if (error && typeof error === 'object') {
+    // PostgreSQL error codes: 42703 = undefined_column, 42P01 = undefined_table
+    const code = (error as { code?: string }).code;
+    if (code === '42703' || code === '42P01') return true;
+  }
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes('column') && msg.includes('does not exist') ||
+           msg.includes('relation') && msg.includes('does not exist');
+  }
+  return false;
+}
+
 /**
  * GET /api/members/profile
  * Get member profile from session
@@ -83,7 +98,7 @@ export async function GET(request: NextRequest) {
         `SELECT
           m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
           m.avatar_url, m.bio, m.timezone,
-          m.onboarded, m.created_at, m.last_sign_in,
+          m.onboarded, m.onboarding_step, m.created_at, m.last_sign_in,
           m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
           m.birth_location_name, m.birth_timezone,
           m.astrology_consent,
@@ -95,8 +110,11 @@ export async function GET(request: NextRequest) {
         [memberId]
       );
     } catch (dbError) {
-      // Database unavailable - return 503 not 500
-      console.error(`[Profile API] ${correlationId} - Database error:`, dbError);
+      if (isSchemaError(dbError)) {
+        console.error(`[Profile API] ${correlationId} - SCHEMA MISMATCH (unapplied migration?):`, dbError);
+      } else {
+        console.error(`[Profile API] ${correlationId} - Database error:`, dbError);
+      }
       const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
       return NextResponse.json(
         {
@@ -139,6 +157,7 @@ export async function GET(request: NextRequest) {
       bio: member.bio,
       timezone: member.timezone,
       onboarded: member.onboarded,
+      onboardingStep: member.onboarding_step,
       createdAt: member.created_at,
       lastSignIn: member.last_sign_in,
       membership: {
@@ -319,7 +338,11 @@ export async function PUT(request: NextRequest) {
         values
       );
     } catch (dbError) {
-      console.error(`[Profile API] ${correlationId} - Database error on update:`, dbError);
+      if (isSchemaError(dbError)) {
+        console.error(`[Profile API] ${correlationId} - SCHEMA MISMATCH on update (unapplied migration?):`, dbError);
+      } else {
+        console.error(`[Profile API] ${correlationId} - Database error on update:`, dbError);
+      }
       const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
       return NextResponse.json(
         {

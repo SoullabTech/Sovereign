@@ -24,6 +24,8 @@ import {
   buildRateLimitHeaders
 } from '@/lib/auth/rateLimiter';
 import { createSession } from '@/lib/auth/serverSessions';
+import { getNextOnboardingStep } from '@/lib/onboarding/state';
+import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 const ENDPOINT = '/api/members/magic-link';
 
@@ -223,6 +225,8 @@ The Soullab Team
       );
     }
 
+    trackOnboarding({ event: 'magic_link_sent', email: normalizedEmail, path: 'POST /api/members/magic-link', metadata: { isExistingMember } });
+
     return NextResponse.json({
       success: true,
       message: 'Check your email for a sign-in link.',
@@ -249,9 +253,10 @@ export async function GET(request: NextRequest) {
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
-      // No token - redirect to signin with error
-      return NextResponse.redirect(new URL('/signin?error=no_token', baseUrl));
+      return NextResponse.redirect(new URL('/magic-link-error?reason=no_token', baseUrl));
     }
+
+    trackOnboarding({ event: 'magic_link_opened', path: 'GET /api/members/magic-link' });
 
     // Atomically claim the token: UPDATE WHERE used = false ensures only one
     // concurrent request wins. PostgreSQL row-level lock prevents double-redemption.
@@ -266,14 +271,32 @@ export async function GET(request: NextRequest) {
     );
 
     if (claimResult.error || claimResult.rows.length === 0) {
-      console.log(`[MAGIC-LINK] Invalid/expired/already-used token: ${token.substring(0, 8)}...`);
-      return NextResponse.redirect(new URL('/signin?error=invalid_token', baseUrl));
+      // Distinguish already-used from expired for human-readable errors
+      const diagResult = await safeQuery(
+        `SELECT used, expires_at FROM magic_link_tokens WHERE token = $1`,
+        [token]
+      );
+      let reason = 'invalid_token';
+      let telemetryEvent: 'token_already_used' | 'token_expired' | 'token_invalid' = 'token_invalid';
+      if (!diagResult.error && diagResult.rows.length > 0) {
+        const row = diagResult.rows[0];
+        if (row.used) {
+          reason = 'already_used';
+          telemetryEvent = 'token_already_used';
+        } else {
+          reason = 'expired';
+          telemetryEvent = 'token_expired';
+        }
+      }
+      trackOnboarding({ event: telemetryEvent, path: 'GET /api/members/magic-link' });
+      console.log(`[MAGIC-LINK] Token failure (${reason}): ${token.substring(0, 8)}...`);
+      return NextResponse.redirect(new URL(`/magic-link-error?reason=${reason}`, baseUrl));
     }
 
     const claimed = claimResult.rows[0];
+    trackOnboarding({ event: 'token_redeemed', email: claimed.email as string, path: 'GET /api/members/magic-link' });
 
     // Fetch member data (including tier/roles for session cookie setup)
-    // separately now that we hold the atomically claimed token
     const memberResult = await safeQuery(
       `SELECT id as found_member_id, username, name, onboarded, onboarding_step,
               COALESCE(tier, 'free') as tier,
@@ -289,28 +312,29 @@ export async function GET(request: NextRequest) {
       ...(memberResult.rows[0] || {}),
     };
 
-    // Determine where to send the user
     const memberId = record.found_member_id || record.member_id;
 
     if (memberId) {
-      // Existing member - create server session and redirect
-      const isOnboarded = record.onboarded;
-      console.log(`[MAGIC-LINK] Verified existing member: ${record.username} (onboarded: ${isOnboarded})`);
+      // Existing member — use canonical step resolver
+      const onboardingTarget = getNextOnboardingStep({
+        onboarded: record.onboarded,
+        onboarding_step: record.onboarding_step as string,
+      });
 
-      const destination = isOnboarded ? '/maia' : `/${record.onboarding_step || 'test-elemental'}`;
+      console.log(`[MAGIC-LINK] Existing member: ${record.username} → ${onboardingTarget.path}`);
 
-      // Redirect to magic-link-success so it can hydrate localStorage (needed for native/iOS compat)
+      // Redirect via magic-link-success so it can hydrate localStorage (native/iOS compat)
+      // and do a server-state recovery fetch if needed
       const successUrl = new URL('/magic-link-success', baseUrl);
       successUrl.searchParams.set('member_id', memberId as string);
-      successUrl.searchParams.set('username', record.username as string || '');
-      successUrl.searchParams.set('name', record.name as string || '');
-      successUrl.searchParams.set('onboarded', String(isOnboarded));
-      successUrl.searchParams.set('redirect', destination);
+      successUrl.searchParams.set('username', (record.username as string) || '');
+      successUrl.searchParams.set('name', (record.name as string) || '');
+      successUrl.searchParams.set('onboarded', String(record.onboarded));
+      successUrl.searchParams.set('redirect', onboardingTarget.path);
 
       const response = NextResponse.redirect(successUrl);
 
-      // Create server session and set HttpOnly cookies on the redirect response
-      // This is what middleware checks — without this, the user is bounced back to signin
+      // Set HttpOnly session cookies so middleware recognises the member
       try {
         const clientIP = getClientIP(request);
         const userAgent = request.headers.get('user-agent') || '';
@@ -326,24 +350,26 @@ export async function GET(request: NextRequest) {
         response.cookies.set('maia_member_id', String(memberId), cookieOpts);
         response.cookies.set('maia_tier', String(record.tier || 'free'), cookieOpts);
         response.cookies.set('maia_roles', JSON.stringify(record.roles || ['member']), cookieOpts);
-        console.log(`[MAGIC-LINK] Session created for member: ${record.username}`);
+        trackOnboarding({ event: 'session_created', memberId: memberId as string, path: 'magic-link' });
+        console.log(`[MAGIC-LINK] Session created for: ${record.username}`);
       } catch (sessionErr) {
-        // Non-fatal: log and proceed. User may hit signin again but token is spent.
-        console.error('[MAGIC-LINK] Session creation failed:', sessionErr);
+        console.error('[MAGIC-LINK] Session creation failed (non-fatal):', sessionErr);
+        trackOnboarding({ event: 'session_missing_after_verify', memberId: memberId as string, path: 'magic-link' });
       }
 
       return response;
+
     } else {
-      // New user - redirect to signup with email prefilled
-      console.log(`[MAGIC-LINK] Verified new user email: ${record.email}`);
+      // New user — redirect to /begin profile step (email pre-verified)
+      console.log(`[MAGIC-LINK] New user email verified: ${record.email}`);
       const beginUrl = new URL('/begin', baseUrl);
       beginUrl.searchParams.set('email', record.email as string);
       beginUrl.searchParams.set('verified', 'true');
-
       return NextResponse.redirect(beginUrl);
     }
+
   } catch (error) {
     console.error('[MAGIC-LINK] Verify error:', error);
-    return NextResponse.redirect(new URL('/signin?error=verification_failed', baseUrl));
+    return NextResponse.redirect(new URL('/magic-link-error?reason=verification_failed', baseUrl));
   }
 }

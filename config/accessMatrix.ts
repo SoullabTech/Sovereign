@@ -58,6 +58,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
   { exact: '/magic-link-success', public: true, notes: 'Magic link confirmation' },
+  { exact: '/magic-link-error', public: true, notes: 'Magic link failure — human-readable recovery page' },
   { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
 
   // Onboarding (pre-auth)
