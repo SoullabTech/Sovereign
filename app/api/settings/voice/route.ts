@@ -15,6 +15,9 @@ import {
   upsertMemberVoicePreferences,
   mergeVoiceIntent,
 } from '@/lib/voice/voiceControlsService';
+import type { TTSProviderPref } from '@/lib/types/voiceControls';
+
+const VALID_TTS_PROVIDERS: TTSProviderPref[] = ['auto', 'cloud', 'local'];
 
 export const dynamic = 'force-dynamic';
 
@@ -93,8 +96,15 @@ export async function POST(request: NextRequest) {
       ? body.voiceIdOverride.slice(0, 64)
       : null;
 
+    // TTS provider preference: auto, cloud, or local
+    const ttsProvider: TTSProviderPref | null =
+      typeof body.ttsProvider === 'string' && VALID_TTS_PROVIDERS.includes(body.ttsProvider as TTSProviderPref)
+        ? (body.ttsProvider as TTSProviderPref)
+        : null;
+
     await upsertMemberVoicePreferences(memberId, {
       voiceIdOverride,
+      ttsProvider,
       offset,
     });
 

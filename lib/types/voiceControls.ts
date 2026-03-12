@@ -19,8 +19,13 @@ export type SystemVoiceProfile = {
   base: VoiceControlOffsets;
 };
 
+/** Member TTS provider preference: auto (default), cloud (OpenAI), local (Kokoro) */
+export type TTSProviderPref = 'auto' | 'cloud' | 'local';
+
 export type MemberVoicePreferences = {
   voiceIdOverride?: string | null;
+  /** Member-chosen TTS provider: auto, cloud, or local */
+  ttsProvider?: TTSProviderPref | null;
   offset: VoiceControlOffsets;
 };
 
