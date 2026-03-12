@@ -316,6 +316,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
+  { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },

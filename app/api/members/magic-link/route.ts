@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
           token VARCHAR(64) NOT NULL UNIQUE,
           expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
           used BOOLEAN DEFAULT FALSE,
+          used_at TIMESTAMP WITH TIME ZONE,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         )
       `);
@@ -275,7 +276,7 @@ export async function GET(request: NextRequest) {
 
     // Mark token as used
     await safeQuery(
-      'UPDATE magic_link_tokens SET used = true WHERE id = $1',
+      'UPDATE magic_link_tokens SET used = true, used_at = NOW() WHERE id = $1',
       [record.id]
     );
 
