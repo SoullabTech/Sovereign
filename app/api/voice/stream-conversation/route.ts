@@ -202,44 +202,53 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── "auto" or "cloud" → OpenAI Alloy leads ──
-  const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
-  const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
+  // ── SOVEREIGNTY GATE: skip OpenAI lead when disabled ──
+  const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
+    || !process.env.OPENAI_API_KEY;
 
-  console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'auto/cloud lead' }));
-  try {
-    const response = await synthesizeSpeech({
-      text,
-      voice: finalOpenaiVoice,
-      format: 'mp3',
-      speed: options.speed,
-    });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
-  } catch (e) {
-    console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+  if (!openaiDisabled) {
+    // ── "auto" or "cloud" → OpenAI Alloy leads ──
+    const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
+    const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
 
-    // If member explicitly chose "cloud", don't fall back to Kokoro
-    if (memberProvider === 'cloud') return null;
-
-    // "auto" → try Kokoro as fallback
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'openai_fallback' }));
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'auto/cloud lead' }));
     try {
-      const kokoroInput = options.ssml ?? text;
-      const result = await ttsRouter.synthesize({
-        text: kokoroInput,
-        voice: kokoroVoice,
+      const response = await synthesizeSpeech({
+        text,
+        voice: finalOpenaiVoice,
         format: 'mp3',
         speed: options.speed,
-        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-        ttsProviderPref: 'auto',
       });
-      const audio = result.audioBuffer.toString('base64');
-      return { audio, format: 'mp3', source: 'kokoro' };
-    } catch (kokoroErr) {
-      console.error(`[TTS] Kokoro fallback also failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
-      return null;
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
+    } catch (e) {
+      console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+      // If member explicitly chose "cloud", don't fall back to Kokoro
+      if (memberProvider === 'cloud') return null;
     }
+  } else if (memberProvider === 'cloud') {
+    // Member explicitly chose cloud but cloud is disabled — fail clearly
+    console.warn('[TTS] cloud TTS requested but DISABLE_OPENAI_COMPLETELY=true — returning null');
+    return null;
+  }
+
+  // ── Kokoro path: primary when OpenAI disabled, fallback otherwise ──
+  console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: openaiDisabled ? 'sovereign_primary' : 'openai_fallback' }));
+  try {
+    const kokoroInput = options.ssml ?? text;
+    const result = await ttsRouter.synthesize({
+      text: kokoroInput,
+      voice: kokoroVoice,
+      format: 'mp3',
+      speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+      ttsProviderPref: 'auto',
+    });
+    const audio = result.audioBuffer.toString('base64');
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (kokoroErr) {
+    console.error(`[TTS] Kokoro failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
+    return null;
   }
 }
 
@@ -478,6 +487,14 @@ async function synthesizeSentence(
     return { audio, format: 'mp3' };
   } catch (err) {
     if (err instanceof TTSFallbackToOpenAI) {
+      // SOVEREIGNTY GATE: never attempt OpenAI when disabled or key absent
+      const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
+        || !process.env.OPENAI_API_KEY;
+      if (openaiDisabled) {
+        console.warn('[synthesizeSentence] Kokoro failed and OpenAI is disabled — returning null (no audio)');
+        return null;
+      }
+
       // If the router specified a voice (archetype-driven), use it directly
       if (err.voice) {
         try {
@@ -495,6 +512,10 @@ async function synthesizeSentence(
   }
 
   // OpenAI fallback — archetype-aware (never drift to element-based defaults)
+  // Only reached when OpenAI is configured and Kokoro is unavailable
+  if (process.env.DISABLE_OPENAI_COMPLETELY === 'true' || !process.env.OPENAI_API_KEY) {
+    return null;
+  }
   try {
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
     const openaiVoice = resolvedOpenai ?? elementVoice ?? 'nova';
