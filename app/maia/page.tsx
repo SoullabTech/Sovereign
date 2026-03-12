@@ -35,7 +35,7 @@ import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll } from 'lucide-react';
 import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
@@ -684,43 +684,48 @@ function MAIAPageContent() {
         <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/30 via-transparent to-transparent pointer-events-none z-0" />
 
         {/* DREAM-WEAVER SYSTEM - Combined Header & Banner - Always visible */}
+        {/* NOTE: overflow-hidden removed from outer div — iOS Safari renders backdrop-blur-xl as invisible when
+            combined with overflow:hidden on the same element. Decorations are clipped in inner wrapper instead. */}
         <div
-          className="header-navigation safari-nav-fix flex-shrink-0 relative overflow-hidden bg-[#1b1410]/70 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-60"
+          className="header-navigation safari-nav-fix flex-shrink-0 relative bg-[#1b1410]/90 backdrop-blur-xl border-b border-[#3a2a1f]/60 z-60"
         >
-          {/* Spice particle effect - very subtle movement */}
-          <div className="absolute inset-0 opacity-5 pointer-events-none">
+          {/* Decorative elements — overflow-hidden applied here, NOT on the outer div */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Spice particle effect - very subtle movement */}
+            <div className="absolute inset-0 opacity-5">
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `radial-gradient(1px 1px at 20% 30%, amber 0%, transparent 50%),
+                                   radial-gradient(1px 1px at 60% 70%, amber 0%, transparent 50%),
+                                   radial-gradient(1px 1px at 80% 10%, amber 0%, transparent 50%)`,
+                  backgroundSize: '50px 50px',
+                }}
+                animate={{
+                  backgroundPosition: ['0% 0%', '100% 100%'],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
+            </div>
+
+            {/* Holographic scan line - more transparent */}
             <motion.div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `radial-gradient(1px 1px at 20% 30%, amber 0%, transparent 50%),
-                                 radial-gradient(1px 1px at 60% 70%, amber 0%, transparent 50%),
-                                 radial-gradient(1px 1px at 80% 10%, amber 0%, transparent 50%)`,
-                backgroundSize: '50px 50px',
-              }}
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-600/3 to-transparent"
               animate={{
-                backgroundPosition: ['0% 0%', '100% 100%'],
+                y: ['-100%', '200%'],
               }}
               transition={{
-                duration: 20,
+                duration: 8,
                 repeat: Infinity,
-                ease: "linear"
+                ease: "linear",
+                repeatDelay: 3
               }}
             />
           </div>
-
-          {/* Holographic scan line - more transparent */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-600/3 to-transparent pointer-events-none"
-            animate={{
-              y: ['-100%', '200%'],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "linear",
-              repeatDelay: 3
-            }}
-          />
 
           <div className="relative w-full px-2 py-1" style={{paddingTop: 'max(env(safe-area-inset-top), 1.5rem)'}}>
             {/* Mobile: Horizontal scrollable container */}
@@ -1640,6 +1645,18 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-5 h-5" />
                   <span className="text-base">Library</span>
+                </button>
+
+                {/* Wisdom Keepers */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/wisdom-keepers/wisdom');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <Scroll className="w-5 h-5" />
+                  <span className="text-base">Wisdom Keepers</span>
                 </button>
 
                 {/* Labtools - Full access for everyone */}
