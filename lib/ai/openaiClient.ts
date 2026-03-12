@@ -1,41 +1,32 @@
 /**
- * Shared OpenAI Client
- * Lazy initialization to prevent build-time errors
+ * OpenAI Client — SOVEREIGNTY BLOCKED
+ *
+ * All OpenAI access is prohibited under the MAIA zero-access doctrine.
+ * This file exists to satisfy legacy import shapes while failing loudly
+ * if any code path actually tries to use the client.
+ *
+ * See lib/ai/openaiPolicy.ts for the doctrine and approved alternatives.
  */
 
-import { OpenAI } from 'openai';
-
-let openaiInstance: OpenAI | null = null;
+import { assertOpenAIBlocked } from './openaiPolicy';
 
 /**
- * Get or create OpenAI client instance
- * Uses lazy initialization to prevent build-time errors when env vars aren't available
+ * Always throws. No OpenAI client will be constructed.
  */
-export function getOpenAIClient(): OpenAI {
-  if (!openaiInstance) {
-    const apiKey = process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      throw new Error('[OpenAI] OPENAI_API_KEY environment variable is required');
-    }
-
-    openaiInstance = new OpenAI({ apiKey });
-    console.log('[OpenAI] Client initialized successfully');
-  }
-
-  return openaiInstance;
+export function getOpenAIClient(): never {
+  return assertOpenAIBlocked('client access');
 }
 
 /**
- * Check if OpenAI is configured without throwing an error
+ * Always false — zero access means the key is irrelevant.
  */
 export function isOpenAIConfigured(): boolean {
-  return !!process.env.OPENAI_API_KEY;
+  return false;
 }
 
 /**
- * Reset the client instance (useful for testing)
+ * No-op. Nothing to reset.
  */
 export function resetOpenAIClient(): void {
-  openaiInstance = null;
+  // intentionally empty
 }

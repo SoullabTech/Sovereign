@@ -1,7 +1,16 @@
 // @ts-nocheck
+/**
+ * SOVEREIGNTY: OpenAI TTS removed from SesameVoiceService.
+ *
+ * Was: generateSpeech() called https://api.openai.com/v1/audio/speech
+ * Now: generateSpeech() routes to Kokoro via ttsRouter.synthesize().
+ *
+ * See lib/ai/openaiPolicy.ts for the zero-access doctrine.
+ */
 // import axios from 'axios'; // Commented out - using fetch instead
 import { EventEmitter } from 'events';
-import OpenAI from 'openai';
+import { synthesize, healthCheckAll } from '@/lib/tts/ttsRouter';
+import { resolveKokoroVoice } from '@/lib/voice/voiceMap';
 import { VoiceProfile as ConfigVoiceProfile } from '../config/voiceProfiles';
 
 export interface VoiceProfile {
@@ -70,7 +79,6 @@ export class SesameVoiceService extends EventEmitter {
   private voiceProfiles: Map<string, VoiceProfile>;
   private audioCache: Map<string, Buffer>;
   private activeRequests: number = 0;
-  private openai?: OpenAI;
 
   constructor(config: Partial<SesameVoiceConfig> = {}) {
     super();
@@ -87,13 +95,6 @@ export class SesameVoiceService extends EventEmitter {
 
     this.voiceProfiles = new Map();
     this.audioCache = new Map();
-
-    // Initialize OpenAI client if API key is available
-    const openAIKey = process.env.OPENAI_API_KEY;
-    if (openAIKey) {
-      this.openai = new OpenAI({ apiKey: openAIKey });
-    }
-
     this.initializeDefaultProfiles();
   }
 
@@ -443,35 +444,18 @@ export class SesameVoiceService extends EventEmitter {
         intonation: request.prosodyHints?.intonation
       };
 
-      // Use OpenAI TTS for actual voice generation
-      const openAIKey = process.env.OPENAI_API_KEY;
-      if (!openAIKey) {
-        throw new Error('OpenAI API key not configured');
-      }
+      // Use Kokoro TTS via ttsRouter (zero-OpenAI doctrine)
+      const kokoroVoice = request.element
+        ? resolveKokoroVoice(request.element.toLowerCase())
+        : 'af_heart';
 
-      // Call OpenAI TTS API
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'tts-1-hd', // High quality model
-          input: request.text,
-          voice: voiceProfile.baseVoice,
-          response_format: request.format || 'mp3',
-          speed: modulatedParams.speed
-        })
+      const result = await synthesize({
+        text: request.text,
+        voice: kokoroVoice,
+        format: request.format || 'mp3',
+        speed: modulatedParams.speed,
       });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`OpenAI TTS failed: ${error}`);
-      }
-
-      // Get audio data as buffer
-      const audioData = Buffer.from(await response.arrayBuffer());
+      const audioData = result.audioBuffer;
 
       // Cache the result
       if (this.config.cacheEnabled) {
@@ -486,14 +470,12 @@ export class SesameVoiceService extends EventEmitter {
 
       return {
         audioData,
-        duration: undefined, // OpenAI doesn't provide duration in headers
         metadata: {
           profile: voiceProfile.id,
           modulation: modulatedParams,
           cached: false,
-          provider: 'openai',
-          model: 'tts-1-hd',
-          voice: voiceProfile.baseVoice
+          provider: 'kokoro',
+          voice: kokoroVoice
         }
       };
 
@@ -700,24 +682,11 @@ export class SesameVoiceService extends EventEmitter {
     return size;
   }
 
-  // Health check
+  // Health check — Kokoro (local), not OpenAI
   async healthCheck(): Promise<boolean> {
     try {
-      // Check OpenAI API health
-      const openAIKey = process.env.OPENAI_API_KEY;
-      if (!openAIKey) return false;
-
-      try {
-        const response = await fetch('https://api.openai.com/v1/models', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${openAIKey}`
-          }
-        });
-        return response.ok;
-      } catch {
-        return false;
-      }
+      const status = await healthCheckAll();
+      return status.kokoro?.healthy ?? false;
     } catch {
       return false;
     }

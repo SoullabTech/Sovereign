@@ -23,9 +23,8 @@
 
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
-import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { resolveOpenAIVoice } from '@/lib/voice/voiceMap';
+import { resolveKokoroVoice } from '@/lib/voice/voiceMap';
 import type { Element } from '@/lib/types/voiceIntent';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -63,10 +62,8 @@ import {
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 
-// Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
-// ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
-// OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
-const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
+// Zero-OpenAI policy: all TTS routes through Kokoro.
+// See lib/ai/openaiPolicy.ts for the zero-access doctrine.
 
 /**
  * TTS with provider routing:
@@ -115,73 +112,29 @@ async function synthesizeWithFallback(
     console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
   }
 
-  // ── TTS routing: OpenAI Alloy leads, Kokoro only when member picks "local" ──
+  // ── TTS routing: Kokoro only (zero-OpenAI policy) ──
   const elementKey = (options.element ?? '').toLowerCase() as Element;
   const memberProvider = options.ttsProvider || 'auto';
 
-  // Voice resolution: element map → explicit override → default (alloy)
-  const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-  const openaiVoice = (options.voice && options.voice !== 'maya')
-    ? options.voice
-    : elementVoice ?? 'alloy';
-
-  // ── Member chose "local" → Kokoro only, no cloud fallback ──
-  if (memberProvider === 'local') {
-    try {
-      const result = await ttsRouter.synthesize({
-        text,
-        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
-        format: 'mp3',
-        speed: options.speed,
-        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      });
-      const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro member_choice=local ${result.audioBuffer.length}B MP3`);
-      return { audio, format: 'mp3', source: 'kokoro' };
-    } catch (err) {
-      console.warn(`[TTS] Kokoro failed, member chose local-only — no fallback: ${err instanceof Error ? err.message : err}`);
-      return null;
-    }
-  }
-
-  // ── "auto" or "cloud" → OpenAI Alloy leads ──
-  if (!USE_OPENAI_FALLBACK) {
-    console.log('[TTS] OpenAI fallback disabled, returning null');
-    return null;
+  // "cloud" is no longer an option — sovereignty doctrine removes cloud TTS
+  if (memberProvider === 'cloud') {
+    console.warn('[TTS] member_choice=cloud is no longer supported (zero-OpenAI policy). Using Kokoro.');
   }
 
   try {
-    console.log(`[TTS] provider=openai member_choice=${memberProvider} voice=${openaiVoice}`);
-    const response = await synthesizeSpeech({
+    const result = await ttsRouter.synthesize({
       text,
-      voice: openaiVoice,
+      voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
       format: 'mp3',
       speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
     });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
-  } catch (e) {
-    console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
-
-    // If member explicitly chose "cloud", don't fall back to Kokoro
-    if (memberProvider === 'cloud') return null;
-
-    // "auto" → try Kokoro as fallback
-    try {
-      const result = await ttsRouter.synthesize({
-        text,
-        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
-        format: 'mp3',
-        speed: options.speed,
-        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      });
-      const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro fallback=true member_choice=auto ${result.audioBuffer.length}B MP3`);
-      return { audio, format: 'mp3', source: 'kokoro' };
-    } catch (kokoroErr) {
-      console.error(`[TTS] Kokoro fallback also failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
-      return null;
-    }
+    const audio = result.audioBuffer.toString('base64');
+    console.log(`[TTS] provider=kokoro member_choice=${memberProvider} ${result.audioBuffer.length}B MP3`);
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (err) {
+    console.error(`[TTS] Kokoro failed: ${err instanceof Error ? err.message : err}`);
+    return null;
   }
 }
 
@@ -399,25 +352,19 @@ async function synthesizeSentence(
   element?: string | null
 ): Promise<{ audio: string; format: string } | null> {
   try {
-    // Voice resolution: element map → explicit override → default
     const elementKey = (element ?? '').toLowerCase() as Element;
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (voice && voice !== 'maya')
-      ? voice
-      : elementVoice ?? 'nova';
+    const kokoroVoice = elementKey ? resolveKokoroVoice(elementKey) : (voice && voice !== 'maya' ? voice : undefined);
 
-    const response = await synthesizeSpeech({
+    const result = await ttsRouter.synthesize({
       text,
-      voice: openaiVoice,
+      voice: kokoroVoice,
       format: 'mp3',
-      speed: speed
+      speed,
+      voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
     });
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-    const audio = buffer.toString('base64');
-    return { audio, format: 'mp3' };
+    return { audio: result.audioBuffer.toString('base64'), format: 'mp3' };
   } catch (e) {
-    console.error('[StreamConversation] OpenAI TTS failed:', e);
+    console.error('[StreamConversation] Kokoro TTS failed:', e);
     return null;
   }
 }

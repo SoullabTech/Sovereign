@@ -602,7 +602,6 @@ async function persistEpisodicMemory(
     let semanticVector: number[] | null = null;
     try {
       const embedder = new VectorEmbeddingService({
-        openaiApiKey: process.env.OPENAI_API_KEY,
         dimension: 768,
       });
       semanticVector = await embedder.getEmbedding(`${title} ${description}`);
@@ -652,7 +651,6 @@ async function searchResonance(
 
     // Generate embedding for motif search
     const embedder = new VectorEmbeddingService({
-      openaiApiKey: process.env.OPENAI_API_KEY,
       dimension: 768,
     });
     const queryVector = await embedder.getEmbedding(searchQuery);

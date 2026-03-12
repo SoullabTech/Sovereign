@@ -16,7 +16,6 @@ type ContentType = typeof CONTENT_TYPES[number]
 async function embedText(text: string): Promise<number[]> {
   try {
     const embedder = new VectorEmbeddingService({
-      openaiApiKey: process.env.OPENAI_API_KEY,
       dimension: 768
     })
     return await embedder.getEmbedding(text)

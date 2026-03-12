@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -107,48 +107,22 @@ export async function POST(req: NextRequest) {
       );
     }
   } else {
-    // ── "auto" or "cloud" → OpenAI Alloy leads ──
-    if (!process.env.OPENAI_API_KEY) {
-      // No API key — try Kokoro as last resort (auto only)
-      if (providerPref === 'cloud') {
-        return NextResponse.json(
-          { error: 'Cloud voice requires internet. No API key configured.' },
-          { status: 503 },
-        );
-      }
-      // "auto" without API key → fall back to Kokoro
-      try {
-        const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
-        audioBuffer = result.audioBuffer;
-      } catch {
-        return NextResponse.json(
-          { error: 'No cloud API key and local TTS unavailable' },
-          { status: 503 },
-        );
-      }
-    } else {
-      try {
-        const speech = await synthesizeSpeech({ text, voice, format: 'mp3', speed });
-        audioBuffer = Buffer.from(await speech.arrayBuffer());
-      } catch (err: any) {
-        // OpenAI failed — if "cloud", no fallback
-        if (providerPref === 'cloud') {
-          return NextResponse.json(
-            { error: 'Cloud TTS failed', detail: err?.message },
-            { status: 503 },
-          );
-        }
-        // "auto" → try Kokoro as fallback
-        try {
-          const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
-          audioBuffer = result.audioBuffer;
-        } catch {
-          return NextResponse.json(
-            { error: 'Both cloud and local TTS failed', detail: err?.message },
-            { status: 503 },
-          );
-        }
-      }
+    // ── "auto" or "cloud" → Kokoro only (zero-OpenAI policy) ──
+    if (providerPref === 'cloud') {
+      return NextResponse.json(
+        { error: 'Cloud voice is not available. MAIA uses local Kokoro TTS only.' },
+        { status: 503 },
+      );
+    }
+    // "auto" → Kokoro
+    try {
+      const result = await ttsRouter.synthesize({ text, voice, format: 'mp3', speed });
+      audioBuffer = result.audioBuffer;
+    } catch {
+      return NextResponse.json(
+        { error: 'Local TTS unavailable. Kokoro is not running or unreachable.' },
+        { status: 503 },
+      );
     }
   }
 

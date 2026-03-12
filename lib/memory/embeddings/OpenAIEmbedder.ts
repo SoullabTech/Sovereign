@@ -1,106 +1,36 @@
 /**
- * OpenAI Embedding Service
- * Generates vector embeddings for semantic search
+ * SOVEREIGNTY: OpenAI embeddings removed.
+ *
+ * Previously used text-embedding-ada-002 via the OpenAI API.
+ * Now delegates to local Ollama (nomic-embed-text) — on-machine, no egress.
+ *
+ * Interface is preserved so callers requiring EmbeddingService continue to work.
+ * embedBatch fans out to parallel single-embed calls against the local model.
+ *
+ * Requires Ollama running at http://localhost:11434 with nomic-embed-text pulled.
+ * Graceful degradation: returns empty vectors if Ollama is unavailable.
+ *
+ * See lib/ai/openaiPolicy.ts for the zero-access doctrine.
+ * See lib/memory/embeddings.ts for the underlying local embed function.
  */
 
-import OpenAI from 'openai';
 import type { EmbeddingService } from '../core/MemoryCore';
+import { generateLocalEmbedding } from '../embeddings';
 
 export class OpenAIEmbedder implements EmbeddingService {
-  private openai: OpenAI;
-  private model: string = 'text-embedding-ada-002';
-  private cache: Map<string, number[]> = new Map();
-  
-  constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
-    });
-  }
-  
   async embed(text: string): Promise<number[]> {
-    // Check cache first
-    const cacheKey = this.getCacheKey(text);
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
-    }
-    
-    try {
-      const response = await this.openai.embeddings.create({
-        model: this.model,
-        input: text,
-        encoding_format: 'float'
-      });
-      
-      const embedding = response.data[0].embedding;
-      
-      // Cache the result
-      this.cache.set(cacheKey, embedding);
-      
-      // Limit cache size
-      if (this.cache.size > 1000) {
-        const firstKey = this.cache.keys().next().value;
-        this.cache.delete(firstKey);
-      }
-      
-      return embedding;
-    } catch (error) {
-      console.error('Error generating embedding:', error);
-      // Return zero vector as fallback
-      return new Array(1536).fill(0);
-    }
+    return generateLocalEmbedding(text);
   }
-  
+
   async embedBatch(texts: string[]): Promise<number[][]> {
-    try {
-      // OpenAI allows up to 2048 embeddings per request
-      const batchSize = 100;
-      const embeddings: number[][] = [];
-      
-      for (let i = 0; i < texts.length; i += batchSize) {
-        const batch = texts.slice(i, i + batchSize);
-        
-        const response = await this.openai.embeddings.create({
-          model: this.model,
-          input: batch,
-          encoding_format: 'float'
-        });
-        
-        const batchEmbeddings = response.data.map(d => d.embedding);
-        embeddings.push(...batchEmbeddings);
-        
-        // Cache individual embeddings
-        batch.forEach((text, idx) => {
-          const cacheKey = this.getCacheKey(text);
-          this.cache.set(cacheKey, batchEmbeddings[idx]);
-        });
-      }
-      
-      return embeddings;
-    } catch (error) {
-      console.error('Error generating batch embeddings:', error);
-      // Return zero vectors as fallback
-      return texts.map(() => new Array(1536).fill(0));
-    }
+    return Promise.all(texts.map((t) => generateLocalEmbedding(t)));
   }
-  
-  private getCacheKey(text: string): string {
-    // Simple hash for cache key
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return `${this.model}_${hash}_${text.slice(0, 50)}`;
+
+  clearCache(): void {
+    // Local embeddings have no in-process cache at this layer
   }
-  
-  // Clear cache
-  clearCache() {
-    this.cache.clear();
-  }
-  
-  // Get cache size
+
   getCacheSize(): number {
-    return this.cache.size;
+    return 0;
   }
 }

@@ -15,21 +15,25 @@ interface SimilarityResult {
 }
 
 /**
- * Vector embeddings service with caching and similarity search
+ * Vector embeddings service with caching and similarity search.
+ *
+ * SOVEREIGNTY: OpenAI embeddings removed.
+ * Was: text-embedding-3-small when openaiApiKey provided.
+ * Now: local only (Ollama nomic-embed-text or hash-based fallback).
+ * openaiApiKey in constructor options is accepted but ignored.
+ *
+ * See lib/ai/openaiPolicy.ts for the zero-access doctrine.
  */
 export class VectorEmbeddingService extends EventEmitter {
   private cache: Map<string, EmbeddingResult>;
   private readonly MAX_CACHE_SIZE = 10000;
   private readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
   private embeddingDimension: number = 384; // Default for all-MiniLM-L6-v2
-  private openaiApiKey?: string;
-  private useOpenAI: boolean = false;
 
   constructor(options?: { openaiApiKey?: string; dimension?: number }) {
     super();
     this.cache = new Map();
-    this.openaiApiKey = options?.openaiApiKey;
-    this.useOpenAI = !!this.openaiApiKey;
+    // openaiApiKey ignored — zero-OpenAI doctrine (see lib/ai/openaiPolicy.ts)
     if (options?.dimension) {
       this.embeddingDimension = options.dimension;
     }
@@ -139,78 +143,14 @@ export class VectorEmbeddingService extends EventEmitter {
    * Generate embedding using either OpenAI or local method
    */
   private async generateEmbedding(text: string): Promise<number[]> {
-    if (this.useOpenAI && this.openaiApiKey) {
-      return this.generateOpenAIEmbedding(text);
-    } else {
-      return this.generateLocalEmbedding(text);
-    }
+    return this.generateLocalEmbedding(text);
   }
 
   /**
    * Generate embeddings for batch of texts
    */
   private async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    if (this.useOpenAI && this.openaiApiKey) {
-      return this.generateOpenAIBatchEmbeddings(texts);
-    } else {
-      return Promise.all(texts.map(text => this.generateLocalEmbedding(text)));
-    }
-  }
-
-  /**
-   * Generate embedding using OpenAI API
-   */
-  private async generateOpenAIEmbedding(text: string): Promise<number[]> {
-    try {
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.openaiApiKey}`
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: text,
-          dimensions: this.embeddingDimension
-        })
-      });
-
-      const data = await response.json();
-      if (!data.data || !data.data[0] || !data.data[0].embedding) {
-        console.error('Invalid OpenAI response structure:', data);
-        return this.generateLocalEmbedding(text);
-      }
-      return data.data[0].embedding;
-    } catch (error) {
-      console.error('OpenAI embedding failed, falling back to local', error);
-      return this.generateLocalEmbedding(text);
-    }
-  }
-
-  /**
-   * Generate batch embeddings using OpenAI API
-   */
-  private async generateOpenAIBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    try {
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.openaiApiKey}`
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: texts,
-          dimensions: this.embeddingDimension
-        })
-      });
-
-      const data = await response.json();
-      return data.data.map((item: any) => item.embedding);
-    } catch (error) {
-      console.error('OpenAI batch embedding failed, falling back to local', error);
-      return Promise.all(texts.map(text => this.generateLocalEmbedding(text)));
-    }
+    return Promise.all(texts.map(text => this.generateLocalEmbedding(text)));
   }
 
   /**

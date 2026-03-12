@@ -19,9 +19,7 @@ import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { LimitsEnforcer, getMemberTier, type MemberTier } from '@/lib/limits/LimitsEnforcer';
 import { NextRequest } from 'next/server';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
-import { synthesizeSpeech } from '@/lib/tts/openaiTts';
-import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
+import { logFallbackEvent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,11 +34,12 @@ function jsonError(message: string, status = 500, extra?: Record<string, unknown
 export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
 
-  // Gate: if local voice is not enabled, redirect to existing OpenAI route
+  // Under zero-OpenAI policy, local voice is always required.
+  // isLocalVoiceEnabled() defaults true; only disabled by MAIA_LOCAL_VOICE_ENABLED=0.
   if (!ttsRouter.isLocalVoiceEnabled()) {
-    return jsonError('Local voice not enabled. Use /api/voice/openai-tts instead.', 404, {
+    return jsonError('Local voice explicitly disabled (MAIA_LOCAL_VOICE_ENABLED=0). No cloud fallback available.', 503, {
       requestId,
-      hint: 'Set MAIA_LOCAL_VOICE_ENABLED=1 to enable local TTS',
+      hint: 'Remove MAIA_LOCAL_VOICE_ENABLED=0 or set it to 1 to enable Kokoro TTS.',
     });
   }
 
@@ -94,95 +93,48 @@ export async function POST(req: NextRequest) {
 
     console.log(`[local-tts:${requestId}] starting provider=${ttsRouter.getConfiguredProvider()} voice=${voice} chars=${text.length}`);
 
-    // ═══ CONSENT RESOLUTION ═══
-    const localOnlyHeader = req.headers.get('x-voice-local-only') === '1';
-    const cloudConsent = await checkCloudConsent({
-      memberId: memberId || undefined,
-      localOnlyHeader,
-    });
-
+    // Zero-OpenAI policy: local-only, no cloud fallback.
     const voicePolicy = resolveVoicePolicy({
-      localVoiceEnabled: ttsRouter.isLocalVoiceEnabled(),
+      localVoiceEnabled: true,
       configuredProvider: ttsRouter.getConfiguredProvider(),
-      cloudConsentAllowed: cloudConsent.allowed,
+      cloudConsentAllowed: false,
     });
 
     let audioBuffer: Buffer;
     let contentType: string;
     let provider: string;
-    let fallback = false;
-    let fallbackReason: string | undefined;
 
     try {
       const result = await ttsRouter.synthesize({ text, voice, format, speed });
       audioBuffer = result.audioBuffer;
       contentType = result.contentType;
       provider = result.provider;
-      fallback = result.fallback;
     } catch (err) {
-      if (err instanceof TTSFallbackToOpenAI) {
-        fallback = err.isFallback;
-        fallbackReason = err.reason;
-
-        // ═══ CONSENT GATE ═══
-        // If cloud is not allowed, fail closed — truth over convenience
-        if (fallback && !cloudConsent.allowed) {
-          // Log the blocked fallback for sovereignty accounting
-          logFallbackEvent({
-            requestId,
-            memberId: memberId || undefined,
-            anonId,
-            intendedProvider: ttsRouter.getConfiguredProvider(),
-            actualProvider: 'none',
-            isFallback: true,
-            reason: `consent_denied:${cloudConsent.reason}`,
-            textLength: text.length,
-          });
-
-          return jsonError(
-            'Local voice unavailable and cloud fallback is not permitted',
-            503,
-            {
-              requestId,
-              policy: voicePolicy,
-              consentReason: cloudConsent.reason,
-              hint: voicePolicy === 'local-only'
-                ? 'Local TTS is down. Enable cloud fallback or wait for local recovery.'
-                : 'Cloud voice consent is disabled for this account.',
-            }
-          );
-        }
-
-        provider = 'openai';
-
-        if (!process.env.OPENAI_API_KEY) {
-          return jsonError('Local TTS unavailable and no OpenAI API key configured', 503, { requestId });
-        }
-
-        console.log(`[local-tts:${requestId}] ${fallback ? 'falling back' : 'routing'} to OpenAI TTS (reason=${fallbackReason})`);
-        const speech = await synthesizeSpeech({ text, voice, format, speed });
-        audioBuffer = Buffer.from(await speech.arrayBuffer());
-        contentType = format === 'mp3' ? 'audio/mpeg'
-          : format === 'wav' ? 'audio/wav'
-          : format === 'opus' ? 'audio/opus'
-          : 'application/octet-stream';
-      } else {
-        throw err;
-      }
+      logFallbackEvent({
+        requestId,
+        memberId: memberId || undefined,
+        anonId,
+        intendedProvider: 'kokoro',
+        actualProvider: 'none',
+        isFallback: false,
+        reason: 'provider_unavailable',
+        textLength: text.length,
+      });
+      return jsonError('Local voice engine is offline. Kokoro is not running or unreachable.', 503, { requestId });
     }
 
     const ms = Date.now() - t0;
-    console.log(`[local-tts:${requestId}] ok provider=${provider} fallback=${fallback} policy=${voicePolicy} voice=${voice} bytes=${audioBuffer.length} ms=${ms}`);
+    console.log(`[local-tts:${requestId}] ok provider=${provider} policy=${voicePolicy} voice=${voice} bytes=${audioBuffer.length} ms=${ms}`);
 
     // ═══ SOVEREIGNTY AUDIT (fire-and-forget) ═══
     logFallbackEvent({
       requestId,
       memberId: memberId || undefined,
       anonId,
-      intendedProvider: ttsRouter.getConfiguredProvider() === 'auto' ? 'kokoro' : ttsRouter.getConfiguredProvider(),
+      intendedProvider: 'kokoro',
       actualProvider: provider,
-      isFallback: fallback,
-      reason: fallback ? fallbackReason : 'local_success',
+      isFallback: false,
+      reason: 'local_success',
       latencyMs: ms,
       audioBytes: audioBuffer.length,
       textLength: text.length,

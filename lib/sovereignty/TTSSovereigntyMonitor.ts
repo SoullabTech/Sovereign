@@ -134,7 +134,7 @@ export class TTSSovereigntyMonitor {
 
     const report: TTSSovereigntyReport = {
       generated_at: new Date().toISOString(),
-      current_tts_provider: process.env.OPENAI_API_KEY ? 'openai' : 'local',
+      current_tts_provider: 'local' // zero-OpenAI doctrine,
       sovereignty_status: sovereigntyStatus,
       quality_threshold: this.qualityThreshold,
       models: models.sort((a, b) => (b.quality_vs_openai || 0) - (a.quality_vs_openai || 0)),

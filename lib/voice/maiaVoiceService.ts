@@ -1,17 +1,19 @@
-// backend: lib/voice/maiaVoiceService.ts
+// lib/voice/maiaVoiceService.ts
+/**
+ * SOVEREIGNTY: OpenAI TTS removed.
+ *
+ * Previously used OpenAI `tts-1` via openai.audio.speech.create().
+ * Now routes to Kokoro (local) via ttsRouter.synthesize().
+ *
+ * Interface preserved — callers (sovereign/app/maia/voice/route.ts,
+ * lib/sovereign/maiaService.ts) continue to work without changes.
+ *
+ * See lib/ai/openaiPolicy.ts for the zero-access doctrine.
+ */
 
-import OpenAI from "openai";
+import * as ttsRouter from '@/lib/tts/ttsRouter';
 
-// Make OpenAI API key optional for testing
-let openai: OpenAI | null = null;
-
-if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-}
-
-export type MaiaVoiceFormat = "mp3" | "opus";
+export type MaiaVoiceFormat = 'mp3' | 'opus';
 
 export async function synthesizeMaiaVoice(
   text: string,
@@ -19,27 +21,12 @@ export async function synthesizeMaiaVoice(
 ): Promise<Buffer> {
   const trimmed = text?.trim();
   if (!trimmed) {
-    throw new Error("Cannot synthesize empty text");
+    throw new Error('Cannot synthesize empty text');
   }
 
-  if (!openai) {
-    throw new Error("OpenAI API key not configured - voice synthesis unavailable");
-  }
+  const format = options?.format ?? 'mp3';
+  const voice = options?.voice ?? 'af_heart';
 
-  const format: MaiaVoiceFormat = options?.format ?? "mp3";
-  const voice = (options?.voice ?? "nova") as any;
-
-  const response = await openai.audio.speech.create({
-    model: "tts-1", // TTS ONLY
-    voice,
-    response_format: format,
-    input: trimmed,
-  });
-
-  // @ts-ignore - SDK returns ArrayBuffer-like
-  const arrayBuffer: ArrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  const result = await ttsRouter.synthesize({ text: trimmed, voice, format });
+  return result.audioBuffer;
 }
-
-// Clean, simple OpenAI TTS-only voice service
-// MAIA's mind (Claude/DeepSeek) is completely separate from MAIA's voice (OpenAI TTS)
