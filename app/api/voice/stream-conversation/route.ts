@@ -53,12 +53,18 @@ import {
   type VoiceContextPayload,
   type MaiaVoiceMode,
 } from '@/lib/voice/wisdom/MaiaWisdomProvider';
-import { renderWithPersonaPlex } from '@/lib/voice/personaplex/personaPlexClient';
+import {
+  renderWithPersonaPlex,
+  isPersonaPlexReady,
+  markPersonaPlexHealthy,
+  markPersonaPlexUnhealthy,
+} from '@/lib/voice/personaplex/personaPlexClient';
 import { buildProsodyHints } from '@/lib/voice/prosody/buildProsodyHints';
 import { scaleProsody } from '@/lib/voice/prosody/scaleProsody';
 import {
   applyProsodyToText as applyProsodyHintsToText,
   mapProsodyToSpeed,
+  generateSSML,
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
@@ -92,31 +98,58 @@ async function synthesizeWithFallback(
     voiceArchetype?: string | null;
     /** Member's TTS provider preference: 'auto' | 'cloud' | 'local' | null */
     ttsProvider?: string | null;
+    /**
+     * Skip PersonaPlex entirely (iPhone/PWA path).
+     * PersonaPlex at 8s timeout is still too slow for mobile streaming speech.
+     * iOS Safari will silently gap or stutter waiting for a single sentence.
+     */
+    skipPersonaPlex?: boolean;
+    /**
+     * Pre-computed SSML markup for this text.
+     * Used by SSML-capable engines (Kokoro). Ignored by OpenAI and PersonaPlex.
+     * Omit or pass null to use plain shaped text.
+     */
+    ssml?: string | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
-  // Try PersonaPlex first
-  try {
-    for await (const chunk of renderWithPersonaPlex({
-      text,
-      wisdomDirective: options.wisdomDirective,
-      mode: options.mode,
-      element: options.element,
-      sanctuary: options.sanctuary,
-      speed: options.speed,
-      brevity: options.brevity,
-    })) {
-      // Got a chunk - convert to WAV
-      const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
-      if (pcmBytes < 100) {
-        console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), trying fallback`);
-        break; // Fall through to Kokoro/OpenAI
+  // ── PersonaPlex (Sesame CSM) — gate on health cache to avoid stalling ──
+  // isPersonaPlexReady() costs ~0 ms when the cache is warm; a real HTTP
+  // health check (≤ 5 s) only runs once per 30 s.  This prevents the old
+  // behaviour of blocking every TTS sentence for up to 30 s when the
+  // service is down.
+  // skipPersonaPlex=true (iPhone/PWA) bypasses this entirely — on mobile,
+  // even a 300 ms health probe adds perceptible cognitive delay.
+  const ppReady = options.skipPersonaPlex
+    ? false
+    : await isPersonaPlexReady().catch(() => false);
+  if (ppReady) {
+    try {
+      for await (const chunk of renderWithPersonaPlex({
+        text,
+        wisdomDirective: options.wisdomDirective,
+        mode: options.mode,
+        element: options.element,
+        sanctuary: options.sanctuary,
+        speed: options.speed,
+        brevity: options.brevity,
+      })) {
+        const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
+        if (pcmBytes < 100) {
+          console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), falling back`);
+          markPersonaPlexUnhealthy();
+          break;
+        }
+        const wavB64 = pcmToWavBase64(chunk.audioB64, 24000, 1);
+        markPersonaPlexHealthy(); // confirm liveness without extra RTT
+        console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
+        return { audio: wavB64, format: 'wav', source: 'personaplex' };
       }
-      const wavB64 = pcmF32ToWavBase64(chunk.audioB64, 24000, 1);
-      console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
-      return { audio: wavB64, format: 'wav', source: 'personaplex' };
+    } catch (e) {
+      markPersonaPlexUnhealthy();
+      console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
     }
-  } catch (e) {
-    console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
+  } else {
+    console.log('[TTS] PersonaPlex skipped (cached health=unhealthy)');
   }
 
   // ── TTS routing: OpenAI Alloy leads, Kokoro only when member picks "local" ──
@@ -147,8 +180,11 @@ async function synthesizeWithFallback(
   if (memberProvider === 'local') {
     console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'member_chose_local' }));
     try {
+      // Prefer SSML input when available — Kokoro-FastAPI supports SSML for
+      // precise pause/rate/emphasis control without text-shaping tricks.
+      const kokoroInput = options.ssml ?? text;
       const result = await ttsRouter.synthesize({
-        text,
+        text: kokoroInput,
         voice: kokoroVoice,
         format: 'mp3',
         speed: options.speed,
@@ -156,6 +192,8 @@ async function synthesizeWithFallback(
         ttsProviderPref: 'local',
       });
       const audio = result.audioBuffer.toString('base64');
+      const label = options.ssml ? 'ssml' : 'plain';
+      console.log(`[TTS] provider=kokoro member_choice=local input=${label} ${result.audioBuffer.length}B MP3`);
       return { audio, format: 'mp3', source: 'kokoro' };
     } catch (err) {
       console.warn(`[TTS] Kokoro failed, member chose local-only — no fallback: ${err instanceof Error ? err.message : err}`);
@@ -186,8 +224,9 @@ async function synthesizeWithFallback(
     // "auto" → try Kokoro as fallback
     console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'openai_fallback' }));
     try {
+      const kokoroInput = options.ssml ?? text;
       const result = await ttsRouter.synthesize({
-        text,
+        text: kokoroInput,
         voice: kokoroVoice,
         format: 'mp3',
         speed: options.speed,
@@ -491,6 +530,17 @@ export async function POST(req: NextRequest) {
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
 
+  // ── PLATFORM DETECTION ──────────────────────────────────────────────────
+  // iPhone/iPad PWA: skip PersonaPlex entirely.
+  // PersonaPlex timeout (even the reduced 8 s) is too expensive for mobile
+  // streamed speech — a single stall makes MAIA feel cognitively delayed.
+  // The health cache helps when the service is known down, but if the cache
+  // is cold (first request after 30 s) the probe still blocks.  Safest fix:
+  // iOS gets the cloud/local chain directly, no PersonaPlex hop.
+  const ua = req.headers.get('user-agent') ?? '';
+  const isIosPwa = /iPhone|iPad/i.test(ua);
+  if (isIosPwa) console.log('[StreamConversation] iOS client detected — PersonaPlex skipped');
+
   // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
   const userId = bodyUserId || await getMemberIdFromRequest(req);
 
@@ -759,6 +809,7 @@ export async function POST(req: NextRequest) {
 
           // TTS render with fallback (PersonaPlex → OpenAI)
           // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+          const thresholdSSML = generateSSML(text, prosodyHints);
           const shapedThresholdText = applyProsodyHintsToText(text, prosodyHints);
           const safeThresholdText = sanitizeForTts(shapedThresholdText);
           let thresholdAudioEmitted = false;
@@ -776,6 +827,8 @@ export async function POST(req: NextRequest) {
             wisdomDirective,
             voice: effectiveVoice,
             ttsProvider: memberTtsProvider,
+            skipPersonaPlex: isIosPwa,
+            ssml: thresholdSSML,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -886,59 +939,30 @@ export async function POST(req: NextRequest) {
         let firstAudioEmitted = false;
         const ttsPromises: Promise<void>[] = [];
 
-        // 🎙️ SENTENCE BUFFER: Group sentences for better prosodic arcs.
-        // Single sentences reset intonation at every boundary, producing a
-        // "read-out" effect. Batching 2 sentences gives Kokoro enough context
-        // for natural phrase-level intonation while keeping latency acceptable.
-        // The FIRST sentence always goes immediately for fast time-to-first-audio.
-        const SENTENCES_PER_BATCH = 2;
-        const sentenceBuffer: Array<{ index: number; text: string }> = [];
-        let audioGroupIndex = 0; // Monotonic index for audio emission (one per batch)
+        // ── ORDERED AUDIO BUFFER ──────────────────────────────────────────
+        // TTS promises run in parallel for speed, but audio MUST be emitted
+        // in sentence-index order so the client queue plays coherently.
+        // audioBuffer holds completed results keyed by sentence index; the
+        // drainAudioBuffer helper emits in strict order.
+        type AudioResult = { audio: string; format: string; source: string; text: string } | null;
+        const audioBuffer = new Map<number, AudioResult>();
+        let nextEmitIndex = 0;
 
-        // Flush buffered sentences as one TTS call
-        const flushSentenceBuffer = () => {
-          if (sentenceBuffer.length === 0) return;
-
-          const batch = sentenceBuffer.splice(0);
-          const batchText = batch.map(s => s.text).join(' ');
-          const batchIndex = audioGroupIndex++;
-          const firstSentenceIndex = batch[0].index;
-
-          // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
-          const shapedText = applyProsodyHintsToText(batchText, prosodyHints);
-          const safeText = sanitizeForTts(shapedText);
-
-          const ttsPromise = (async () => {
-            if (!safeText) {
-              console.warn(`[StreamConversation] Batch ${batchIndex} empty after sanitization, skipping TTS`);
-              return;
-            }
-
-            const result = await synthesizeWithFallback(safeText, {
-              mode: wisdomPayload?.mode ?? mode,
-              element: wisdomPayload?.element ?? element ?? null,
-              sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-              speed: effectiveSpeed,
-              brevity: guidance.brevity,
-              wisdomDirective,
-              voice: effectiveVoice,
-              ttsProvider: memberTtsProvider,
-            });
-
+        const drainAudioBuffer = () => {
+          while (audioBuffer.has(nextEmitIndex)) {
+            const result = audioBuffer.get(nextEmitIndex)!;
             if (result) {
               if (!firstAudioEmitted) {
                 timer.mark('tts_0_done');
                 firstAudioEmitted = true;
               }
-
               const audioBytes = Buffer.from(result.audio, 'base64').length;
-              console.log(`🔊 [Audio] Batch ${batchIndex} (sentences ${batch.map(s => s.index).join(',')}): ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
-
+              console.log(`🔊 [Audio] Sentence ${nextEmitIndex}: ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
               emit('audio', {
-                index: batchIndex,
+                index: nextEmitIndex,
                 audio: result.audio,
                 format: result.format,
-                text: batchText,
+                text: result.text,
                 timestamp: Date.now(),
                 source: result.source,
                 prosody: {
@@ -950,27 +974,13 @@ export async function POST(req: NextRequest) {
                   speed: effectiveSpeed,
                 },
               });
-
-              if (firstSentenceIndex === 0) {
-                timer.mark('audio_0_emitted');
-              }
-
+              if (nextEmitIndex === 0) timer.mark('audio_0_emitted');
               audioChunksEmitted++;
-            } else {
-              console.warn(`[StreamConversation] TTS returned no audio for batch index=${batchIndex}`);
-              emit('tts_error', {
-                index: batchIndex,
-                text: batchText,
-                error: 'TTS unavailable',
-                timestamp: Date.now(),
-              });
             }
-          })().catch(e => {
-            console.error('[StreamConversation] TTS error:', e);
-          });
-
-          ttsPromises.push(ttsPromise);
+            nextEmitIndex++;
+          }
         };
+        // ─────────────────────────────────────────────────────────────────
 
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
@@ -998,17 +1008,64 @@ export async function POST(req: NextRequest) {
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // Buffer sentences for batched TTS synthesis.
-            // First sentence always goes immediately for low latency.
-            sentenceBuffer.push({ index: chunk.index, text: chunk.text });
-            if (chunk.index === 0 || sentenceBuffer.length >= SENTENCES_PER_BATCH) {
-              flushSentenceBuffer();
-            }
+            // TTS per-sentence render with fallback (PersonaPlex → OpenAI → Kokoro)
+            const chunkIndex = chunk.index;
+            const chunkText = chunk.text;
+
+            // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+            // Generate SSML from original text (before shaping) so SSML-capable engines
+            // (Kokoro) get precise prosody markup. Plain-text shaping is fallback for OpenAI.
+            const chunkSSML = generateSSML(chunkText, prosodyHints);
+            const shapedChunkText = applyProsodyHintsToText(chunkText, prosodyHints);
+            const safeChunkText = sanitizeForTts(shapedChunkText);
+
+            const ttsPromise = (async () => {
+              if (!safeChunkText) {
+                console.warn(`[StreamConversation] Sentence ${chunkIndex} empty after sanitization, skipping TTS`);
+                // Still store null so the drain loop can advance past this slot
+                audioBuffer.set(chunkIndex, null);
+                drainAudioBuffer();
+                return;
+              }
+
+              const result = await synthesizeWithFallback(safeChunkText, {
+                mode: wisdomPayload?.mode ?? mode,
+                element: wisdomPayload?.element ?? element ?? null,
+                sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+                speed: effectiveSpeed,
+                brevity: guidance.brevity,
+                wisdomDirective,
+                voice: effectiveVoice,
+                ttsProvider: memberTtsProvider,
+                skipPersonaPlex: isIosPwa,
+                ssml: chunkSSML,
+              });
+
+              if (result) {
+                // Store result with its original text then drain in order
+                audioBuffer.set(chunkIndex, { ...result, text: chunkText });
+                drainAudioBuffer();
+              } else {
+                console.warn(`[StreamConversation] TTS returned no audio for sentence index=${chunkIndex}`);
+                audioBuffer.set(chunkIndex, null);
+                drainAudioBuffer();
+                emit('tts_error', {
+                  index: chunkIndex,
+                  text: chunkText,
+                  error: 'TTS unavailable',
+                  timestamp: Date.now(),
+                });
+              }
+            })().catch(e => {
+              console.error('[StreamConversation] TTS error:', e);
+              // Unblock the drain loop so subsequent sentences can still emit
+              audioBuffer.set(chunkIndex, null);
+              drainAudioBuffer();
+            });
+
+            ttsPromises.push(ttsPromise);
 
           } else if (chunk.type === 'done') {
-            // Flush any remaining buffered sentences
-            flushSentenceBuffer();
-
             timer.mark('llm_done');
 
             // Wait for all TTS to complete before closing stream

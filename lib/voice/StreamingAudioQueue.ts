@@ -31,7 +31,7 @@ export class StreamingAudioQueue {
   private audioUnlocked: boolean = false;
   // Track whether all sentences have been enqueued (streaming complete)
   private streamingComplete: boolean = false;
-  // 🔥 FIX: Track audio chunks through pipeline
+  // Track audio chunks through pipeline
   private chunksEnqueued: number = 0;
   private chunksPlayed: number = 0;
   // Per-turn prosody diagnostics — emitted as [pfi.voice] at turn completion.
@@ -42,6 +42,10 @@ export class StreamingAudioQueue {
   // How many raw sentences were collapsed by mergeShortSentences() this turn.
   // Wired from OracleConversation via noteMergedCount(). High = effective merging.
   private _mergedCount: number = 0;
+  // Single warmup per response: warm AudioContext once on first enqueue,
+  // then do a cheap state-check rather than the full async resume dance
+  // before every subsequent chunk.
+  private responseContextReady: boolean = false;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -74,6 +78,15 @@ export class StreamingAudioQueue {
     this.queue.push(item);
 
     if (!this.isPlaying) {
+      // Proactively warm the AudioContext on the FIRST enqueue of a response
+      // so it's ready by the time playNext() tries to play.  Subsequent chunks
+      // skip the full async warmup (see attemptPlay).
+      if (!this.responseContextReady) {
+        this.responseContextReady = true;
+        this.ensureAudioContextReady()
+          .then(() => console.log('🔥 [StreamingQueue] AudioContext pre-warmed for response'))
+          .catch(() => {});
+      }
       console.log(`▶️ [StreamingQueue] Starting playback (queue was idle)`);
       this.playNext();
     }
@@ -111,9 +124,14 @@ export class StreamingAudioQueue {
   private async attemptPlay(audio: HTMLAudioElement, retries = 3): Promise<boolean> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        // CRITICAL: Resume AudioContext before EVERY play attempt
-        // iOS does not care about your assumptions
-        await this.ensureAudioContextReady();
+        // For the first attempt of the first chunk in a response we already
+        // fired a proactive warmup in enqueue().  Do a cheap state check and
+        // only run the full ensureAudioContextReady() if the context has
+        // since dropped out of 'running' (e.g. iOS suspended it mid-response).
+        const status = getAudioStatus();
+        if (attempt > 1 || status.state !== 'running') {
+          await this.ensureAudioContextReady();
+        }
 
         // Set playsinline for iOS
         audio.setAttribute('playsinline', 'true');
@@ -319,7 +337,7 @@ export class StreamingAudioQueue {
     // Clear queue and reset counters
     this.queue = [];
     this.isPlaying = false;
-    this.streamingComplete = false; // Reset for next use
+    this.streamingComplete = false;
     this.chunksEnqueued = 0;
     this.chunksPlayed = 0;
     // Reset per-turn diagnostic accumulators
@@ -328,6 +346,7 @@ export class StreamingAudioQueue {
     this._lastChunkEndMs = null;
     this._gapMsValues = [];
     this._mergedCount = 0;
+    this.responseContextReady = false; // warm again on next response
     this.onPlayingChange?.(false);
   }
 
@@ -363,7 +382,6 @@ export class StreamingAudioQueue {
     this.queue = [];
     this.isPlaying = false;
     this.currentAudio = null;
-    // 🔥 FIX: Reset counters
     this.chunksEnqueued = 0;
     this.chunksPlayed = 0;
     // Reset per-turn diagnostic accumulators
@@ -372,6 +390,7 @@ export class StreamingAudioQueue {
     this._lastChunkEndMs = null;
     this._gapMsValues = [];
     this._mergedCount = 0;
+    this.responseContextReady = false; // warm again on next response's first enqueue
   }
 
   /**

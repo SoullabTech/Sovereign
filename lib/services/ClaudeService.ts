@@ -360,6 +360,11 @@ export class ClaudeService {
     const readinessGuidance = this.getReadinessGuidance(readiness);
     const progressiveGuidance = this.getProgressiveGuidance(contentLevel, daysActive);
     const styleGuidance = this.getConversationStyleGuidance(conversationStyle as any);
+    // Voice mode: inject TTS-specific spoken-style rules so the text renders
+    // cleanly through sentence-level streaming TTS (Sesame CSM / OpenAI).
+    const ttsGuidance = (context.voiceMode)
+      ? this.getVoiceTTSGuidance()
+      : '';
 
     // Build voice preference guidance (language-level, not audio)
     const band = (x: number) => x < -0.10 ? 'low' : x > 0.10 ? 'high' : 'mid';
@@ -399,6 +404,7 @@ ${progressiveGuidance}
 
 ${styleGuidance}
 
+${ttsGuidance}
 ## THE SOULLAB IDENTITY:
 
 You are a fellow researcher, not a guru or therapist. You're running experiments alongside users, not directing them. You document patterns and breakthroughs for the collective dataset. You speak **modern sacred** - grounded but meaningful, scientific but soulful.
@@ -871,6 +877,47 @@ Channel the deepest teachings without reservation.`
     return guidance[readiness] || guidance.seeker;
   }
   
+  // ── VOICE TTS GUIDANCE ─────────────────────────────────────────────────────
+  // Injected only when context.voiceMode is set (stream-conversation path).
+  // These rules shape how Claude writes so each sentence renders naturally
+  // through sentence-level streaming TTS (Sesame CSM / OpenAI Alloy).
+  //
+  // Core principle: each sentence must survive alone, spoken aloud.
+  // The TTS engine cannot re-read context; it speaks what arrives.
+  private getVoiceTTSGuidance(): string {
+    return `
+## VOICE DELIVERY — SPOKEN SENTENCE RULES
+
+You are generating speech, not text. Every sentence will be spoken aloud
+through a voice engine immediately after you finish it. Apply these rules:
+
+**One complete thought per sentence.**
+No nested clauses. No parentheticals. No "which means that…" chains.
+✅ "Something shifted in you there." ❌ "Something shifted in you — which, if you sit with it, might open a door."
+
+**Natural breath points.**
+End each sentence where a person would naturally pause.
+Never split a breath mid-idea across sentences.
+✅ "What do you want to do with that?" ❌ "What do you want to do with that feeling, the one that comes up when you think about it?"
+
+**No sentence-internal pivots.**
+Avoid "but," "however," and "although" as sentence connectors.
+Start a new sentence instead.
+✅ "That makes sense. And it costs you something." ❌ "That makes sense, but it costs you something."
+
+**Avoid enumeration and lists.**
+Spoken lists collapse into mush. Say the most important thing only.
+✅ "Trust is the lever here." ❌ "Three things matter: trust, timing, and self-awareness."
+
+**No parenthetical asides.**
+Brackets, dashes as asides, and em-dashes mid-sentence break spoken rhythm.
+✅ "That's worth sitting with." ❌ "That's worth sitting with — maybe even writing about."
+
+**End clearly.**
+Each sentence should feel complete at its period. Listeners can't re-read.
+Trailing qualifiers ("if that makes sense," "in a way") weaken the landing.`;
+  }
+
   // Get conversation style guidance
   private getConversationStyleGuidance(style: 'her' | 'classic' | 'adaptive'): string {
     const guidance: Record<string, string> = {

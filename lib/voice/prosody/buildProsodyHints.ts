@@ -161,6 +161,9 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     emphasis,
     pauseMs,
     intentTag,
-    ssmlOk: false, // Only enable for engines we explicitly trust
+    // ssmlOk: true  — SSML is generated but only consumed by engines that
+    // support it (Kokoro-FastAPI).  OpenAI and PersonaPlex paths in
+    // synthesizeWithFallback always use plain text; they never see SSML.
+    ssmlOk: true,
   };
 }
