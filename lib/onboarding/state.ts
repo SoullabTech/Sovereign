@@ -46,14 +46,9 @@ export interface OnboardingMemberRow {
  *  2. onboarding_step === 'complete'  →  complete, go to /maia
  *  3. onboarding_step === 'onboarding'  →  needs_prefs, go to /onboarding
  *  4. onboarding_step === 'faq'  →  needs_faq, go to /faq
- *  5. anything else  →  needs_profile, go to /begin
- *
- * Note: we no longer route to /test-elemental for members who landed
- * via the email-first path. Their onboarding_step starts at 'faq'
- * because register-email sets it that way. Legacy passkey members who
- * somehow have step='test-elemental' will be routed to /begin where
- * they can re-enter; their existing session cookie means they won't
- * need to re-verify email.
+ *  5. onboarding_step === 'test-elemental'  →  needs_faq, go to /faq
+ *     (passkey/email step is complete; FAQ is next regardless of path taken)
+ *  6. anything else  →  needs_profile, go to /begin
  */
 export function getNextOnboardingStep(
   member: OnboardingMemberRow | null | undefined
@@ -85,7 +80,7 @@ export function getNextOnboardingStep(
     };
   }
 
-  if (member.onboarding_step === 'faq') {
+  if (member.onboarding_step === 'faq' || member.onboarding_step === 'test-elemental') {
     return {
       phase: 'needs_faq',
       path: '/faq',
@@ -94,7 +89,7 @@ export function getNextOnboardingStep(
     };
   }
 
-  // Covers: null, 'begin', 'test-elemental', or any unknown value
+  // Covers: null, 'begin', or any unknown value
   return {
     phase: 'needs_profile',
     path: '/begin',

@@ -653,56 +653,70 @@ export function AccountSettings() {
         } : null,
       } : null;
 
-      // Debug logging
-      console.log('[AccountSettings] Saving birth data:', {
-        editBirthDate,
-        editBirthTime,
-        selectedLocation,
-        birthDataToSend: birthData,
-      });
-
       const res = await fetch(apiUrl('/api/members/profile'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId: userId,
-          birthData,
-        }),
+        body: JSON.stringify({ memberId: userId, birthData }),
       });
 
       if (res.ok) {
-        // Update local profile state
-        setProfile(prev => prev ? {
-          ...prev,
-          birthData,
-        } : null);
-
-        // Store birth data in localStorage for immediate MAIA access
+        setProfile(prev => prev ? { ...prev, birthData } : null);
         const storedUser = localStorage.getItem('beta_user');
         if (storedUser) {
           try {
             const user = JSON.parse(storedUser);
             user.birthData = birthData;
             localStorage.setItem('beta_user', JSON.stringify(user));
-          } catch (e) {
-            console.error('[AccountSettings] Failed to update localStorage:', e);
-          }
+          } catch { /* silent */ }
         }
-
         showSaveIndicator();
       } else {
         const errBody = await res.json().catch(() => ({}));
-        const msg = errBody?.error || `Save failed (${res.status})`;
-        setBirthSaveError(msg);
-        console.error('[AccountSettings] Birth data save rejected:', res.status, errBody);
+        setBirthSaveError(errBody?.error || `Save failed (${res.status})`);
       }
-    } catch (err) {
+    } catch {
       setBirthSaveError('Network error — check your connection and try again');
-      console.error('[AccountSettings] Save birth data error:', err);
     } finally {
       setSaving(false);
     }
   }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
+
+  // Remove birth data — explicit null PUT, bypasses form state closure
+  const removeBirthData = useCallback(async () => {
+    if (!userId) return;
+    setSaving(true);
+    setBirthSaveError(null);
+    try {
+      const res = await fetch(apiUrl('/api/members/profile'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, birthData: null }),
+      });
+      if (res.ok) {
+        setEditBirthDate('');
+        setEditBirthTime('');
+        setEditBirthLocation('');
+        setSelectedLocation(null);
+        setProfile(prev => prev ? { ...prev, birthData: null } : null);
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            delete user.birthData;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch { /* silent */ }
+        }
+        showSaveIndicator();
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        setBirthSaveError(errBody?.error || `Remove failed (${res.status})`);
+      }
+    } catch {
+      setBirthSaveError('Network error — check your connection and try again');
+    } finally {
+      setSaving(false);
+    }
+  }, [userId, showSaveIndicator]);
 
   // Save astrology consent
   const saveAstrologyConsent = useCallback(async (consent: 'opted_in' | 'declined') => {
@@ -1138,8 +1152,12 @@ export function AccountSettings() {
                 MAIA may draw on your natal chart and current planetary transits when relevant.
               </p>
               <button
-                onClick={() => saveAstrologyConsent('declined')}
-                disabled={consentSaving}
+                onClick={async () => {
+                  await saveAstrologyConsent('declined');
+                  // Also clear stored birth data so nothing lingers server-side
+                  if (hasBirthData) await removeBirthData();
+                }}
+                disabled={consentSaving || saving}
                 className="text-xs text-stone-500 hover:text-stone-300 transition-colors"
               >
                 {consentSaving ? 'Saving…' : 'Remove astrological context from MAIA'}
@@ -1343,16 +1361,11 @@ export function AccountSettings() {
               {/* Remove */}
               {hasBirthData && (
                 <button
-                  onClick={() => {
-                    setEditBirthDate('');
-                    setEditBirthTime('');
-                    setEditBirthLocation('');
-                    setSelectedLocation(null);
-                    saveBirthData();
-                  }}
-                  className="w-full text-xs text-stone-500 hover:text-stone-300 transition-colors py-1"
+                  onClick={removeBirthData}
+                  disabled={saving}
+                  className="w-full text-xs text-stone-500 hover:text-stone-300 transition-colors py-1 disabled:opacity-50"
                 >
-                  Remove birth data
+                  {saving ? 'Removing…' : 'Remove birth data'}
                 </button>
               )}
             </div>
