@@ -71,6 +71,7 @@ import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelemetry';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -729,6 +730,30 @@ export async function POST(req: NextRequest) {
             ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
             : undefined;
 
+        // ============ CONVERSATION DEPTH CLASSIFICATION ============
+        // MAIA meets the member at their present level of awareness.
+        // She only invokes deeper processing when the conversation asks for it.
+        // Tier A = presence/threshold (levels 1–2)
+        // Tier B = conversational core (levels 3–5)
+        // Tier C = deep process (levels 6–7)
+        const depthClass = classifyConversationDepth(message, {
+          activation: voiceSession.relationalStack.smoother.lastActivation,
+          conversationLength: voiceSession.metrics?.totalTurns ?? 0,
+          posture: guidance?.posture,
+          mode: voiceSession.relationalStack.currentMode,
+        });
+        // effectiveBrevity: the depth tier can pull 'brief' into threshold responses
+        // or allow 'moderate' for core, but never forces 'expansive' (relational stack decides that)
+        const effectiveBrevity = tierToBrevity(depthClass.tier, guidance?.brevity);
+        console.info('[depth.classify]', JSON.stringify({
+          tier: depthClass.tier,
+          awarenessLevel: depthClass.awarenessLevel,
+          depthScore: depthClass.depthScore.toFixed(2),
+          effectiveBrevity,
+          guidanceBrevity: guidance?.brevity,
+          topSignals: depthClass.signals.slice(0, 4),
+        }));
+
         // ============ PROSODY HINTS (MAIA's semantic voice intent) ============
         // MAIA decides delivery intent via ProsodyHints (semantic).
         // TTS adapter translates hints to provider-specific controls.
@@ -740,7 +765,7 @@ export async function POST(req: NextRequest) {
           activation: voiceSession.relationalStack.smoother.lastActivation,
           mode: wisdomPayload?.mode ?? mode ?? 'talk',
           sanctuary: wisdomPayload?.sanctuary ?? sanctuary ?? false,
-          brevity: guidance?.brevity ?? 'moderate',
+          brevity: effectiveBrevity,       // depth-tier aware brevity
           posture: guidance?.posture ?? 'MEET',
           element: wisdomPayload?.element ?? element ?? null,
           baseline: voiceSession.prosodyBaseline, // Conversation Prosody Memory
@@ -823,7 +848,7 @@ export async function POST(req: NextRequest) {
             element: wisdomPayload?.element ?? element ?? null,
             sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
             speed: effectiveSpeed,  // Use prosody-adjusted speed
-            brevity: guidance.brevity,
+            brevity: effectiveBrevity,
             wisdomDirective,
             voice: effectiveVoice,
             ttsProvider: memberTtsProvider,
@@ -893,7 +918,7 @@ export async function POST(req: NextRequest) {
             },
             guidance: {
               posture: guidance.posture,
-              brevity: guidance.brevity,
+              brevity: effectiveBrevity,
               reason: guidance.reason,
               modeLockMs: guidance.modeLockMs,
               speakBias: guidance.speakBias,
@@ -1033,7 +1058,7 @@ export async function POST(req: NextRequest) {
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
                 speed: effectiveSpeed,
-                brevity: guidance.brevity,
+                brevity: effectiveBrevity,
                 wisdomDirective,
                 voice: effectiveVoice,
                 ttsProvider: memberTtsProvider,
@@ -1095,7 +1120,7 @@ export async function POST(req: NextRequest) {
               },
               guidance: {
                 posture: guidance.posture,
-                brevity: guidance.brevity,
+                brevity: effectiveBrevity,
                 reason: guidance.reason,
                 modeLockMs: guidance.modeLockMs,
                 speakBias: guidance.speakBias,
