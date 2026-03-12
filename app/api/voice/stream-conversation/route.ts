@@ -63,10 +63,15 @@ import {
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 
-// Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
-// ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
-// OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
-const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
+// OpenAI TTS is available only when:
+//   - OPENAI_API_KEY is set AND
+//   - TTS_OPENAI_FALLBACK is not explicitly 'false' AND
+//   - DISABLE_OPENAI_COMPLETELY is not set
+const USE_OPENAI_FALLBACK =
+  Boolean(process.env.OPENAI_API_KEY) &&
+  process.env.TTS_OPENAI_FALLBACK !== 'false' &&
+  process.env.DISABLE_OPENAI_COMPLETELY !== 'true' &&
+  process.env.DISABLE_OPENAI_COMPLETELY !== '1';
 
 /**
  * TTS with provider routing:
@@ -144,44 +149,46 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── "auto" or "cloud" → OpenAI Alloy leads ──
-  if (!USE_OPENAI_FALLBACK) {
-    console.log('[TTS] OpenAI fallback disabled, returning null');
-    return null;
-  }
-
-  try {
-    console.log(`[TTS] provider=openai member_choice=${memberProvider} voice=${openaiVoice}`);
-    const response = await synthesizeSpeech({
-      text,
-      voice: openaiVoice,
-      format: 'mp3',
-      speed: options.speed,
-    });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
-  } catch (e) {
-    console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
-
-    // If member explicitly chose "cloud", don't fall back to Kokoro
-    if (memberProvider === 'cloud') return null;
-
-    // "auto" → try Kokoro as fallback
+  // ── "auto" or "cloud" → OpenAI Alloy leads (when key is available) ──
+  if (USE_OPENAI_FALLBACK) {
     try {
-      const result = await ttsRouter.synthesize({
+      console.log(`[TTS] provider=openai member_choice=${memberProvider} voice=${openaiVoice}`);
+      const response = await synthesizeSpeech({
         text,
-        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+        voice: openaiVoice,
         format: 'mp3',
         speed: options.speed,
-        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
       });
-      const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro fallback=true member_choice=auto ${result.audioBuffer.length}B MP3`);
-      return { audio, format: 'mp3', source: 'kokoro' };
-    } catch (kokoroErr) {
-      console.error(`[TTS] Kokoro fallback also failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
-      return null;
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
+    } catch (e) {
+      console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+      // If member explicitly chose "cloud", don't fall back to Kokoro
+      if (memberProvider === 'cloud') return null;
+      // "auto" → fall through to Kokoro below
     }
+  } else {
+    console.log(`[TTS] OpenAI not configured — going direct to Kokoro (member_choice=${memberProvider})`);
+    // "cloud" with no OpenAI key → nothing available
+    if (memberProvider === 'cloud') return null;
+  }
+
+  // ── Kokoro (sovereign local TTS) ──
+  try {
+    const result = await ttsRouter.synthesize({
+      text,
+      voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+      format: 'mp3',
+      speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+    });
+    const audio = result.audioBuffer.toString('base64');
+    const isFallback = USE_OPENAI_FALLBACK; // true = was a fallback from OpenAI, false = was primary
+    console.log(`[TTS] provider=kokoro fallback=${isFallback} member_choice=${memberProvider} ${result.audioBuffer.length}B MP3`);
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (kokoroErr) {
+    console.error(`[TTS] Kokoro failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
+    return null;
   }
 }
 
