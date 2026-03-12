@@ -113,6 +113,10 @@ services:
       VOICE_NOTES_DIR: "/app/storage/voice-notes"
       # Feature flag: Explainer Scripts for HeyGen (Phase 1)
       NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS: "true"
+      # Sovereign TTS — zero-OpenAI doctrine (see SOVEREIGNTY_PROVIDER_POLICY.md)
+      MAIA_LOCAL_VOICE_ENABLED: "1"
+      MAIA_TTS_PROVIDER: "kokoro"
+      DISABLE_OPENAI_COMPLETELY: "true"
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
