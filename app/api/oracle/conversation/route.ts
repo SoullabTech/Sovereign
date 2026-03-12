@@ -44,6 +44,11 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { loadLedgerForRouting, promoteToLedger, loadLedgerSummaries } from '@/lib/consciousness/interpretiveLedger';
+import { loadActiveHypotheses, persistGateResult, enqueueObservation, enqueueContradiction } from '@/lib/consciousness/hypothesisBuffer';
+import { evaluateHypothesis, DEFAULT_GATE_THRESHOLDS } from '@/lib/consciousness/gateEvaluator';
+import { extractObservations } from '@/lib/consciousness/observationExtractor';
+import type { LedgerRoutingView } from '@/lib/types/interpretive-ledger';
 import { getRecentSummaries as getRecentSessionSummaries, type SessionRemembrance } from '@/lib/scribe/sovereignSummarizer';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import type { RelationalHint } from '@/lib/types/relationalHint';
@@ -473,14 +478,18 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
-    // PARALLEL: spiral state, voice prefs, cognitive profile, assistant name — all independent
+    // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name
     const [
       spiralState,
+      ledgerRoutingView,
       [systemVoice, memberVoice],
       cognitiveProfileResult,
       assistantNameResult,
     ] = await Promise.all([
       loadSpiralState(userId).catch((e: unknown) => { console.warn('[Oracle] Spiral state load failed:', e); return null; }),
+      // COGNITIVE OS: Load active interpretive ledger entries for routing attunement
+      // Graceful fallback — never blocks oracle if ledger unavailable
+      loadLedgerForRouting(userId).catch((e: unknown) => { console.warn('[Oracle] Ledger routing load failed:', e); return [] as LedgerRoutingView[]; }),
       Promise.all([getSystemVoiceProfile(), getMemberVoicePreferences(userId)]),
       getCognitiveProfile(userId).catch((e: unknown) => { console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', e); return null; }),
       query(`SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`, [userId])
@@ -1428,6 +1437,110 @@ export async function POST(request: NextRequest) {
       motion: voiceHint.motion,
       intensity: voiceHint.intensity,
     });
+
+    // COGNITIVE OS: Full pipeline — extract → enqueue → gate → promote (fire-and-forget)
+    // Runs after each turn. Does not block the oracle response. Sanctuary excluded.
+    //
+    // Step 1  Extract observations deterministically (no LLM calls — OS-native only).
+    // Step 2  Enqueue observations into the accumulating hypothesis buffer.
+    // Step 3  Route contradiction signals to the matching active hypothesis.
+    // Step 4  Run gate evaluation on all active hypotheses; persist results.
+    // Step 5  Promote hypotheses that pass all gates and are worthiness-checked.
+    if (!isSanctuary) {
+      (async () => {
+        try {
+          const currentPhase = (voiceHint.phase ?? spiralState?.phase ?? 1) as import('@/lib/types/interpretive-ledger').SpiralogicPhase;
+          const currentElement = (voiceHint.element ?? spiralState?.dominant_element ?? 'water') as import('@/lib/types/interpretive-ledger').Element;
+          const modeMap: Record<string, import('@/lib/types/interpretive-ledger').VoiceMode> = {
+            dialogue: 'Talk',
+            counsel:  'Care',
+            scribe:   'Note',
+          };
+          const currentMode = modeMap[clientMode ?? ''] ?? 'Talk';
+
+          // Step 1: Extract
+          const extraction = extractObservations({
+            sessionId,
+            memberId:          userId,
+            userMessage:       message,
+            maiaResponse:      maiaResponse.coreMessage,
+            currentElement,
+            currentPhase,
+            currentMode,
+            conversationDepth,
+          });
+
+          // Step 2: Enqueue observations (fire-and-forget — creates/updates hypotheses)
+          for (const obs of extraction.observations) {
+            enqueueObservation(userId, obs, sessionId);
+          }
+
+          // Steps 3–5: Load state, route contradictions, evaluate gates, promote
+          const [hypotheses, ledgerSummaries] = await Promise.all([
+            loadActiveHypotheses(userId),
+            loadLedgerSummaries(userId),
+          ]);
+
+          // Step 3: Route contradiction signals to matching active hypotheses
+          for (const correction of extraction.corrections) {
+            const matched = hypotheses.find(h =>
+              correction.target_keywords.some(kw =>
+                h.candidate_interpretation.toLowerCase().includes(kw.toLowerCase())
+              )
+            );
+            if (matched) {
+              enqueueContradiction(matched.id, {
+                session_id:          correction.sessionId,
+                observation:         correction.observation,
+                context_domain:      correction.context_domain,
+                context_element:     correction.context_element,
+                source:              correction.source,
+                contradiction_weight: correction.contradiction_weight,
+                user_initiated:      correction.user_initiated,
+              });
+            }
+          }
+
+          // Steps 4 + 5: Gate evaluation and conditional promotion
+          if (hypotheses.length === 0) return;
+
+          await Promise.all(
+            hypotheses.map(async (hypothesis) => {
+              const result = evaluateHypothesis(
+                {
+                  hypothesis,
+                  thresholds:    DEFAULT_GATE_THRESHOLDS,
+                  current_phase: currentPhase,
+                  current_element: currentElement,
+                },
+                ledgerSummaries,
+                0, // sessionsSinceLastEvidence — sweeper handles precise decay
+              );
+              await persistGateResult(hypothesis.id, result);
+
+              // Step 5: Promote to interpretive ledger if all gates pass and worthy
+              if (
+                result.recommendation === 'promote' &&
+                hypothesis.target_store === 'interpretive_ledger'
+              ) {
+                try {
+                  await promoteToLedger(hypothesis, {
+                    evidenceSummary:
+                      `Promoted from ${hypothesis.evidence_events.length} evidence events ` +
+                      `across ${hypothesis.cross_context_count} contexts.`,
+                  });
+                  console.log('[Oracle] Cognitive OS: promoted hypothesis to ledger:', hypothesis.id);
+                } catch (promoteErr) {
+                  console.warn('[Oracle] Cognitive OS: promotion failed (non-fatal):', promoteErr);
+                }
+              }
+            })
+          );
+        } catch (e) {
+          console.warn('[Oracle] Cognitive OS gate pass failed (non-fatal):', e);
+        }
+      })();
+    }
 
     // TURN STORAGE: Persist this exchange so the summary pipeline and turns fallback
     // have data to work with regardless of whether the client calls /api/conversation/turns.

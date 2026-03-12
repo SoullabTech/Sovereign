@@ -34,6 +34,10 @@
 
 import { query } from '../lib/db/postgres';
 import { assertCorrectDb } from '../lib/scripts/dbSafetyGuard';
+import { applyDecay } from '../lib/consciousness/interpretiveLedger';
+import { loadActiveHypotheses } from '../lib/consciousness/hypothesisBuffer';
+import { shouldExpire } from '../lib/consciousness/gateEvaluator';
+import type { SpiralogicPhase } from '../lib/types/interpretive-ledger';
 
 // ============================================================================
 // Config
@@ -164,6 +168,116 @@ async function closeSessions(sessions: StaleSession[]): Promise<{ closed: number
 }
 
 // ============================================================================
+// Cognitive OS Decay
+// ============================================================================
+
+/**
+ * runCogosDecay
+ *
+ * Applies developmental decay to:
+ *   1. Interpretive ledger entries — reduces routing_influence_weight based on
+ *      phase distance and inactivity; entries below 0.05 are marked 'expired'.
+ *   2. Accumulating hypothesis buffer — expires hypotheses that have been
+ *      inactive too long or whose structural_confidence has collapsed.
+ *
+ * Uses actual completed session counts (not estimate) for inactivity scoring.
+ * Sanctuary sessions are excluded from the session count (sovereignty invariant).
+ * Non-fatal: per-member failures are logged and the sweep continues.
+ */
+async function runCogosDecay(): Promise<void> {
+  // Find all members with anything active in ledger or buffer
+  const memberResult = await query<{ member_id: string }>(
+    `SELECT DISTINCT member_id FROM (
+       SELECT member_id FROM interpretive_ledger
+        WHERE status = 'active'
+       UNION
+       SELECT member_id FROM accumulating_hypotheses
+        WHERE status IN ('accumulating', 'eligible', 'worthy')
+     ) AS m`,
+  );
+
+  const memberIds = memberResult.rows.map(r => r.member_id);
+  if (memberIds.length === 0) {
+    console.log('[Sweeper] [CogOS] Nothing to decay — no active ledger or buffer entries.');
+    return;
+  }
+
+  console.log(`[Sweeper] [CogOS] Decaying ${memberIds.length} member(s).`);
+
+  for (const memberId of memberIds) {
+    try {
+      // Load current Spiralogic phase from Bridge D state table
+      const phaseRow = await query<{ phase: number }>(
+        `SELECT phase FROM member_spiral_state WHERE member_id = $1`,
+        [memberId],
+      );
+      const currentPhase = (phaseRow.rows[0]?.phase ?? 1) as SpiralogicPhase;
+
+      // ── Ledger decay ────────────────────────────────────────────────────────
+      const ledgerRows = await query<{ id: string; last_updated: string }>(
+        `SELECT id, last_updated FROM interpretive_ledger
+          WHERE member_id = $1 AND status = 'active'`,
+        [memberId],
+      );
+
+      const sessionsSinceActive: Record<string, number> = {};
+      for (const row of ledgerRows.rows) {
+        const cnt = await query<{ count: string }>(
+          `SELECT COUNT(*) AS count FROM maia_sessions
+            WHERE member_id = $1
+              AND status = 'completed'
+              AND (mode IS NULL OR mode = 'continuity')  -- sanctuary excluded
+              AND completed_at > $2`,
+          [memberId, row.last_updated],
+        );
+        sessionsSinceActive[row.id] = parseInt(cnt.rows[0]?.count ?? '0', 10);
+      }
+
+      if (!DRY_RUN) {
+        await applyDecay(memberId, currentPhase, sessionsSinceActive);
+      }
+
+      // ── Buffer expiry ────────────────────────────────────────────────────────
+      const hypotheses = await loadActiveHypotheses(memberId);
+      let expired = 0;
+      for (const h of hypotheses) {
+        const cnt = await query<{ count: string }>(
+          `SELECT COUNT(*) AS count FROM maia_sessions
+            WHERE member_id = $1
+              AND status = 'completed'
+              AND (mode IS NULL OR mode = 'continuity')
+              AND completed_at > $2`,
+          [memberId, h.last_updated],
+        );
+        const sessionsSinceLastEvidence = parseInt(cnt.rows[0]?.count ?? '0', 10);
+
+        if (shouldExpire(h, currentPhase, sessionsSinceLastEvidence)) {
+          if (!DRY_RUN) {
+            await query(
+              `UPDATE accumulating_hypotheses
+                  SET status = 'expired', last_updated = NOW()
+                WHERE id = $1`,
+              [h.id],
+            );
+          }
+          expired++;
+        }
+      }
+
+      console.log(
+        `[Sweeper] [CogOS] ${DRY_RUN ? '(dry) ' : ''}member ${memberId.slice(0, 8)}...` +
+        ` phase=${currentPhase}` +
+        ` ledger=${ledgerRows.rows.length}` +
+        ` buffer=${hypotheses.length}` +
+        ` buffer_expired=${expired}`,
+      );
+    } catch (err) {
+      console.warn(`[Sweeper] [CogOS] Decay failed for member ${memberId.slice(0, 8)}... (non-fatal):`, err);
+    }
+  }
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -177,26 +291,27 @@ async function main() {
 
   if (stale.length === 0) {
     console.log('[Sweeper] ✅ No stale member sessions found.');
-    process.exit(0);
+  } else {
+    // Paranoid pre-write checks
+    assertNoneSanctuary(stale);
+    assertAllHaveMemberId(stale);
+
+    console.log(`[Sweeper] Found ${stale.length} stale session(s):`);
+    for (const s of stale) {
+      const age = Math.round((Date.now() - new Date(s.last_activity_at).getTime()) / 60000);
+      console.log(`  - ${s.id} (member: ${s.member_id.slice(0, 8)}..., turns: ${s.turn_count}, age: ${age}m, mode: ${s.mode ?? 'unset'})`);
+    }
+
+    if (!DRY_RUN) {
+      const { closed, enqueued } = await closeSessions(stale);
+      console.log(`[Sweeper] ✅ closed=${closed} enqueued=${enqueued}`);
+    } else {
+      console.log('[Sweeper] DRY RUN — no session changes made.');
+    }
   }
 
-  // Paranoid pre-write checks
-  assertNoneSanctuary(stale);
-  assertAllHaveMemberId(stale);
-
-  console.log(`[Sweeper] Found ${stale.length} stale session(s):`);
-  for (const s of stale) {
-    const age = Math.round((Date.now() - new Date(s.last_activity_at).getTime()) / 60000);
-    console.log(`  - ${s.id} (member: ${s.member_id.slice(0, 8)}..., turns: ${s.turn_count}, age: ${age}m, mode: ${s.mode ?? 'unset'})`);
-  }
-
-  if (DRY_RUN) {
-    console.log('[Sweeper] DRY RUN — no changes made.');
-    process.exit(0);
-  }
-
-  const { closed, enqueued } = await closeSessions(stale);
-  console.log(`[Sweeper] ✅ closed=${closed} enqueued=${enqueued}`);
+  // Cognitive OS decay pass — runs regardless of whether sessions were found
+  await runCogosDecay();
 
   process.exit(0);
 }

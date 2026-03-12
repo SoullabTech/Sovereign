@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { query } from '@/lib/db/postgres';
+
+/**
+ * Whisper hallucination guard.
+ * When audio is silent/noisy, Whisper loops a short phrase into every chunk.
+ * Returns true if `text` is too similar to `prev` (>70% word overlap, case-insensitive).
+ */
+function isLikelyHallucination(text: string, prev: string): boolean {
+  if (!prev || !text) return false;
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(Boolean);
+  const a = normalize(text);
+  const b = normalize(prev);
+  if (a.length === 0 || b.length === 0) return false;
+  const setB = new Set(b);
+  const overlap = a.filter(w => setB.has(w)).length;
+  const ratio = overlap / Math.max(a.length, b.length);
+  return ratio > 0.70;
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -144,6 +162,18 @@ export async function POST(request: NextRequest) {
 
     // Only store if we have text
     if (transcriptText) {
+      // Hallucination guard: skip if too similar to last stored segment
+      const lastResult = await query(
+        `SELECT text FROM supervision_transcript_segments
+         WHERE session_id = $1 ORDER BY start_ms DESC LIMIT 1`,
+        [sessionId]
+      );
+      const lastText = lastResult.rows[0]?.text || '';
+      if (isLikelyHallucination(transcriptText, lastText)) {
+        console.log(`⚠️ [TranscriptStream] chunk #${chunkIndex} hallucination skipped — "${transcriptText.slice(0, 50)}"`);
+        return NextResponse.json({ success: true, segment: null, message: 'Duplicate segment suppressed' });
+      }
+
       const segment = await addTranscriptSegment({
         sessionId,
         speaker,

@@ -123,7 +123,7 @@ services:
       NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS: "true"
       # Sovereign TTS: Sesame primary → Kokoro fallback → (consented) OpenAI fallback
       MAIA_LOCAL_VOICE_ENABLED: "1"
-      MAIA_TTS_PROVIDER: "openai"       # Primary: OpenAI TTS (best quality)
+      MAIA_TTS_PROVIDER: "kokoro"       # Sovereign TTS — zero-OpenAI doctrine
       KOKORO_TTS_URL: "http://kokoro-tts:8880"  # Backup: Kokoro (sovereign fallback)
       SESAME_TTS_URL: "http://maia-sesame-tts:8000"  # CI shaping only — not audio synthesis
 
@@ -720,7 +720,8 @@ services:
       start_period: 15s
 
     networks:
-      - maia-internal
+      - maia-internal   # write policy calls maia-sovereign:3000
+      - maia-public     # Caddy proxies wss://nostr.soullab.life → :7777
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Persistent Volumes

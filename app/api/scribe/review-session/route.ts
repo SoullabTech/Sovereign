@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       currentSessionId,
       question,
       questionNumber,
+      lens,
     } = await req.json();
 
     // Validate required parameters
@@ -32,12 +33,14 @@ export async function POST(req: NextRequest) {
 
     console.log(`🔍 Session Review: ${reviewedSessionId} | Question ${questionNumber || 1}`);
 
-    // Build prompt with full session context
-    const prompt = await buildSessionReviewPrompt(
+    // Build prompt with full session context (returns prompt + quality metadata)
+    const t0 = Date.now();
+    const { prompt, meta } = await buildSessionReviewPrompt(
       {
         reviewedSessionId,
         currentSessionId: currentSessionId || 'review-session',
         questionNumber: questionNumber || 1,
+        lens: lens || 'core',
       },
       question
     );
@@ -48,27 +51,34 @@ export async function POST(req: NextRequest) {
     });
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
       temperature: 0.7,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+      messages: [{ role: 'user', content: prompt }],
     });
 
     const responseText =
       message.content[0].type === 'text' ? message.content[0].text : '';
 
-    console.log(`✅ Session review response generated (${responseText.length} chars)`);
+    const usage = message.usage;
+    const elapsedMs = Date.now() - t0;
+
+    console.log(
+      `✅ Session review done | ${elapsedMs}ms | in=${usage.input_tokens}tok out=${usage.output_tokens}tok | lens=${meta.lens} clean=${(meta.cleanliness * 100).toFixed(0)}%`
+    );
 
     return NextResponse.json({
       success: true,
       response: responseText,
       reviewedSessionId,
       questionNumber: questionNumber || 1,
+      // Provenance + quality metadata (for debug panel / telemetry)
+      _meta: {
+        ...meta,
+        elapsedMs,
+        inputTokens: usage.input_tokens,
+        outputTokens: usage.output_tokens,
+      },
     });
   } catch (error: any) {
     console.error('❌ Error in session review:', error);
@@ -111,8 +121,7 @@ export async function GET(req: NextRequest) {
       userId: sessionData.userId,
       startTime: sessionData.startTime,
       duration: sessionData.duration,
-      exchangeCount: sessionData.conversationHistory.length,
-      hasSummary: !!sessionData.summary,
+      segmentCount: sessionData.segmentCount,
       displayText,
     });
   } catch (error: any) {
