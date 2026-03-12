@@ -63,6 +63,8 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Onboarding (pre-auth)
   { exact: '/begin', public: true, notes: 'Begin journey entry — email magic link path' },
+  { exact: '/resume', public: true, notes: 'Universal onboarding recovery — computes next step from server state' },
+  { exact: '/continue', public: true, notes: 'Alias for /resume' },
   { exact: '/test-elemental', public: true, notes: 'Passkey / invite code entry path' },
   { exact: '/intro-maia', public: true, notes: 'MAIA intro step' },
   { exact: '/intro-daimon', public: true, notes: 'Daimon intro step' },

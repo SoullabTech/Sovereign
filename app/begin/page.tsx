@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { Eye, EyeOff } from 'lucide-react';
+import { trackOnboarding } from '@/lib/onboarding/telemetry';
 
 // ─── Email collection (default view) ───────────────────────────────────────
 
@@ -23,6 +24,7 @@ function EmailStep() {
 
     setStatus('sending');
     setError('');
+    trackOnboarding({ event: 'email_submitted', email: trimmed, path: '/begin' });
 
     try {
       const res = await fetch('/api/members/magic-link', {
@@ -252,8 +254,9 @@ function BeginContent() {
   // Only show profile step if both flags are present and email looks valid
   const verified = searchParams?.get('verified') === 'true' && emailParam.includes('@');
 
-  // If user is already onboarded, go home
+  // Track page open and redirect already-onboarded members
   useEffect(() => {
+    trackOnboarding({ event: 'begin_opened', path: verified ? '/begin?verified=true' : '/begin' });
     try {
       const betaUser = localStorage.getItem('beta_user');
       if (betaUser) {
@@ -263,7 +266,7 @@ function BeginContent() {
         }
       }
     } catch { /* ignore */ }
-  }, [router]);
+  }, [router, verified]);
 
   const heading = verified ? 'Welcome' : 'Begin your journey';
   const subtitle = verified
