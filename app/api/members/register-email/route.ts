@@ -8,11 +8,15 @@ export const dynamic = 'force-dynamic';
  *
  * POST /api/members/register-email
  * Body: { email, username, password, name }
+ *
+ * Sets HttpOnly session cookies on success so middleware recognises the
+ * new member as authenticated immediately (no separate sign-in step).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
+import { createSession } from '@/lib/auth/serverSessions';
 import {
   checkRateLimit,
   getClientIP,
@@ -105,7 +109,8 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
     console.log(`[register-email] Created: ${cleanUsername} (${member.id})`);
 
-    return NextResponse.json({
+    // Build response
+    const responseBody = {
       success: true,
       member: {
         id: member.id,
@@ -114,7 +119,32 @@ export async function POST(request: NextRequest) {
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
       },
-    });
+    };
+
+    const response = NextResponse.json(responseBody);
+
+    // Create a server session so middleware recognises the member as authenticated.
+    // Failures here are non-fatal — log and continue; the client has localStorage.
+    try {
+      const userAgent = request.headers.get('user-agent') || '';
+      const session = await createSession({ memberId: String(member.id), ipAddress: clientIP, userAgent });
+      const cookieOpts = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' as const,
+        path: '/',
+        expires: session.expiresAt,
+      };
+      response.cookies.set('maia_session', session.sessionToken, cookieOpts);
+      response.cookies.set('maia_member_id', String(member.id), cookieOpts);
+      response.cookies.set('maia_tier', 'free', cookieOpts);
+      response.cookies.set('maia_roles', JSON.stringify(['member']), cookieOpts);
+      console.log(`[register-email] Session created for: ${cleanUsername}`);
+    } catch (sessionErr) {
+      console.error('[register-email] Session creation failed (non-fatal):', sessionErr);
+    }
+
+    return response;
 
   } catch (error) {
     console.error('[register-email] Error:', error);

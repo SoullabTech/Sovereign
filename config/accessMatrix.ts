@@ -61,7 +61,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
 
   // Onboarding (pre-auth)
-  { exact: '/begin', public: true, notes: 'Begin journey entry' },
+  { exact: '/begin', public: true, notes: 'Begin journey entry — email magic link path' },
+  { exact: '/test-elemental', public: true, notes: 'Passkey / invite code entry path' },
+  { exact: '/intro-maia', public: true, notes: 'MAIA intro step' },
+  { exact: '/intro-daimon', public: true, notes: 'Daimon intro step' },
   { exact: '/intro', public: true, notes: 'Introduction' },
   { exact: '/welcome', public: true, notes: 'Welcome page' },
   { exact: '/welcome-back', public: true, notes: 'Welcome returning user' },

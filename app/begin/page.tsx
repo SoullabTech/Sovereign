@@ -147,12 +147,13 @@ function ProfileStep({ email }: { email: string }) {
 
       const member = data.member;
 
-      // Store session
+      // Store session — mirrors what magic-link-success sets for consistency
       const sessionData = {
         id: member.id,
         memberId: member.id,
         username: member.username,
         name: member.name,
+        preferredName: member.name,
         email,
         onboarded: false,
       };
@@ -160,9 +161,12 @@ function ProfileStep({ email }: { email: string }) {
       localStorage.setItem('memberId', member.id);
       localStorage.setItem('explorerId', member.id);
       localStorage.setItem('explorerName', member.name);
+      localStorage.setItem('explorerPreferredName', member.name);
+      localStorage.setItem('betaOnboardingComplete', 'false');
+      localStorage.setItem('signup_completed', 'true');
       localStorage.setItem('maia_session_version', '2');
 
-      // Continue into onboarding (skip passkey + elemental steps, go to FAQ)
+      // Continue into onboarding (FAQ → onboarding → maia)
       router.push('/faq');
     } catch {
       setError('Could not complete registration. Please check your connection.');
