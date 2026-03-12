@@ -118,11 +118,11 @@ export async function POST(req: NextRequest) {
     }
   } else {
     // ── "auto" or "cloud" → OpenAI Alloy leads ──
-    if (!process.env.OPENAI_API_KEY) {
-      // No API key — try Kokoro as last resort (auto only)
+    if (!process.env.OPENAI_API_KEY || process.env.DISABLE_OPENAI_COMPLETELY === 'true') {
+      // No API key or cloud disabled — try Kokoro as last resort (auto only)
       if (providerPref === 'cloud') {
         return NextResponse.json(
-          { error: 'Cloud voice requires internet. No API key configured.' },
+          { error: 'Cloud voice is disabled or unconfigured.' },
           { status: 503 },
         );
       }

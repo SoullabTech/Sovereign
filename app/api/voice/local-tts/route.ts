@@ -155,8 +155,8 @@ export async function POST(req: NextRequest) {
 
         provider = 'openai';
 
-        if (!process.env.OPENAI_API_KEY) {
-          return jsonError('Local TTS unavailable and no OpenAI API key configured', 503, { requestId });
+        if (!process.env.OPENAI_API_KEY || process.env.DISABLE_OPENAI_COMPLETELY === 'true') {
+          return jsonError('Local TTS unavailable and cloud fallback is disabled', 503, { requestId });
         }
 
         console.log(`[local-tts:${requestId}] ${fallback ? 'falling back' : 'routing'} to OpenAI TTS (reason=${fallbackReason})`);
