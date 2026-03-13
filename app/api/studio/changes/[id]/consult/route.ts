@@ -20,6 +20,8 @@ import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { consultChangeCouncil } from '@/lib/studio/changes/changeCouncil';
 import type { ChangeContext, ChangeIterationContext } from '@/lib/studio/changes/types';
+import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
+import { getProtocol } from '@/lib/studio/practitioner/protocols';
 
 export async function POST(
   request: NextRequest,
@@ -34,13 +36,18 @@ export async function POST(
     const { practitionerId } = identity;
     const { id } = await params;
 
-    // Accept optional session notes from request body
+    // Accept optional session notes and protocol id from request body
     let sessionNotes: string | undefined;
     let updatedEmotionalState: string | undefined;
+    let councilBias: string | undefined;
     try {
       const body = await request.json();
       sessionNotes = body.sessionNotes?.trim() || undefined;
       updatedEmotionalState = body.emotionalState?.trim() || undefined;
+      if (body.protocolId) {
+        const protocol = getProtocol(body.protocolId);
+        councilBias = protocol?.councilBias;
+      }
     } catch {
       // No body or invalid JSON — that's fine for first consultation
     }
@@ -131,8 +138,71 @@ export async function POST(
       clientName: row.client_name || undefined,
     };
 
-    // Run AIN consultation (with iteration context if available)
-    const councilResult = await consultChangeCouncil(context, iterationContext);
+    // Load evidence bundle — client inquiry, field signals, practitioner observations
+    let inputBundle: DecisionInputBundle | undefined;
+    try {
+      const [inquiryResult, signalsResult, observationsResult] = await Promise.all([
+        db.query(
+          `SELECT * FROM studio_inquiry_responses WHERE change_id = $1 ORDER BY completed_at DESC LIMIT 1`,
+          [id]
+        ),
+        db.query(
+          `SELECT * FROM studio_field_signals WHERE change_id = $1 ORDER BY signal_timestamp DESC`,
+          [id]
+        ),
+        db.query(
+          `SELECT * FROM studio_practitioner_observations WHERE change_id = $1 ORDER BY created_at DESC`,
+          [id]
+        ),
+      ]);
+
+      inputBundle = {
+        clientInquiry: inquiryResult.rows[0]
+          ? {
+              id: inquiryResult.rows[0].id,
+              changeId: inquiryResult.rows[0].change_id,
+              clientId: inquiryResult.rows[0].client_id,
+              promptSetId: inquiryResult.rows[0].prompt_set_id,
+              promptSetTitle: inquiryResult.rows[0].prompt_set_title,
+              responses: inquiryResult.rows[0].responses || [],
+              summaryText: inquiryResult.rows[0].summary_text,
+              tags: inquiryResult.rows[0].tags || [],
+              completedAt: inquiryResult.rows[0].completed_at,
+              createdAt: inquiryResult.rows[0].created_at,
+            }
+          : null,
+        fieldSignals: signalsResult.rows.map((r) => ({
+          id: r.id,
+          changeId: r.change_id,
+          clientId: r.client_id,
+          practitionerId: r.practitioner_id,
+          source: r.source,
+          type: r.signal_type,
+          title: r.title,
+          content: r.content,
+          intensity: r.intensity != null ? Number(r.intensity) : null,
+          tags: r.tags || [],
+          timestamp: r.signal_timestamp,
+          createdAt: r.created_at,
+        })),
+        practitionerObservations: observationsResult.rows.map((r) => ({
+          id: r.id,
+          changeId: r.change_id,
+          practitionerId: r.practitioner_id,
+          clientId: r.client_id,
+          observationType: r.observation_type,
+          content: r.content,
+          tags: r.tags || [],
+          createdAt: r.created_at,
+        })),
+        existingNotes: row.notes || null,
+      };
+    } catch (bundleError) {
+      console.warn('[Change Council] Evidence bundle load failed, proceeding without:', bundleError);
+    }
+
+    // Run AIN consultation (with iteration context, evidence bundle, and optional protocol bias)
+    const councilResult = await consultChangeCouncil(context, iterationContext, inputBundle, councilBias);
 
     // Store new iteration
     await db.query(

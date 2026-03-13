@@ -11,6 +11,7 @@
 
 import type { Council, FramingDomain } from '@/lib/ain/types';
 import type { ChangeContext, ChangeUrgency, ChangeIterationContext } from './types';
+import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -195,12 +196,25 @@ export function getChangeTypeConfig(type?: string | null): ChangeTypeConfig {
  *
  * When iterationContext is provided, the question includes the arc:
  * prior tensions, recommendation, insights, and what happened since.
+ *
+ * When inputBundle is provided, the question includes segmented evidence
+ * from client inquiry, field signals, and practitioner observations.
+ *
+ * PROMPT CONSTRAINTS FOR CHANGES — Intervention Design:
+ * - Changes should produce the next smallest useful intervention, not a complete theory.
+ * - Distinguish witness-first work from technique installation.
+ * - Suggest success signals — observable markers, not clinical claims.
+ * - Include one risk/caution. Do not pretend the path is without hazard.
+ * - Name what to observe next. The experiment is not over at the session boundary.
+ * - Honest uncertainty is more useful than confident inference.
  */
 export function buildChangeQuestion(
   c: ChangeContext,
   config: ChangeTypeConfig,
   hexagramContext?: { name: string; judgment: string; image: string },
-  iteration?: ChangeIterationContext
+  iteration?: ChangeIterationContext,
+  inputBundle?: DecisionInputBundle,
+  councilBias?: string
 ): string {
   const parts: string[] = [
     `CHANGE: ${c.title}`,
@@ -240,6 +254,50 @@ export function buildChangeQuestion(
     );
   }
 
+  // ─── Evidence Bundle ──────────────────────────────────────────
+  if (inputBundle) {
+    parts.push('', '--- EVIDENCE BUNDLE ---');
+    parts.push('Note: Synthesize from direct evidence first. Label inferences as such.');
+
+    const inquiry = inputBundle.clientInquiry;
+    if (inquiry && inquiry.responses.length > 0) {
+      parts.push('', `CLIENT INQUIRY (${inquiry.promptSetTitle}):`);
+      parts.push('Source: client self-report — first-person phenomenology. Primary evidence.');
+      for (const r of inquiry.responses) {
+        if (r.answer?.trim()) {
+          parts.push(`  Q: ${r.questionText}`);
+          parts.push(`  A: ${r.answer.trim()}`);
+        }
+      }
+    } else {
+      parts.push('', 'CLIENT INQUIRY: Not available. Do not infer client experience from practitioner summary alone.');
+    }
+
+    const signals = inputBundle.fieldSignals;
+    if (signals && signals.length > 0) {
+      parts.push('', 'FIELD SIGNALS (between sessions):');
+      for (const sig of signals) {
+        const intensity = sig.intensity != null ? ` [intensity: ${Math.round(sig.intensity * 10)}/10]` : '';
+        parts.push(`  [${sig.type}/${sig.source}]${intensity} ${sig.title}: ${sig.content}`);
+      }
+    }
+
+    const observations = inputBundle.practitionerObservations;
+    if (observations && observations.length > 0) {
+      parts.push('', 'PRACTITIONER OBSERVATIONS:');
+      parts.push('Source: practitioner — hypothesis-generating, not confirmed fact.');
+      for (const obs of observations) {
+        parts.push(`  [${obs.observationType}] ${obs.content}`);
+      }
+    }
+
+    if (inputBundle.existingNotes?.trim()) {
+      parts.push('', 'NOTES:', inputBundle.existingNotes.trim());
+    }
+
+    parts.push('', '--- END EVIDENCE BUNDLE ---');
+  }
+
   // Iteration context — the council sees the arc
   if (iteration && iteration.iterationNumber > 1) {
     parts.push('', `--- PRIOR COUNCIL (iteration ${iteration.iterationNumber - 1}) ---`);
@@ -277,6 +335,32 @@ export function buildChangeQuestion(
   } else {
     parts.push('', config.closingQuestion);
   }
+
+  // ─── Protocol Clinical Frame (injected when a protocol is active) ──
+  if (councilBias) {
+    parts.push(
+      '',
+      '--- PROTOCOL CLINICAL FRAME ---',
+      'A clinical protocol is active for this session. This frame orients the council without overriding the evidence.',
+      councilBias,
+      '--- END PROTOCOL FRAME ---',
+    );
+  }
+
+  // ─── Intervention Design Synthesis Instructions ─────────────────
+  parts.push(
+    '',
+    '--- SYNTHESIS INSTRUCTIONS (INTERVENTION DESIGN) ---',
+    'When proposing Changes / next steps:',
+    '- Propose the next SMALLEST useful intervention, not a complete treatment plan.',
+    '- Distinguish: witness first (awareness work) vs install technique (NLP/hypnosis/somatic).',
+    '  Do not move to technique before the phenomenology is clear.',
+    '- Name at least one success signal: what would you observe if this is working?',
+    '- Name one risk or caution: what to watch for, what could go wrong.',
+    '- Specify an observation window: how long before reviewing?',
+    '- If field data is sparse, say so. Recommend gathering evidence first.',
+    '- Honest uncertainty is more useful than confident prescription.',
+  );
 
   return parts.join('\n');
 }
