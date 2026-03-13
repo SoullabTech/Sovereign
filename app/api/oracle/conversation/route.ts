@@ -51,6 +51,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { loadActiveProtocol, buildProtocolContextHeader, buildProtocolListeningGuidance } from '@/lib/studio/patternInquiryProtocol';
 import { loadLedgerForRouting, promoteToLedger, loadLedgerSummaries } from '@/lib/consciousness/interpretiveLedger';
 import { loadActiveHypotheses, persistGateResult, enqueueObservation, enqueueContradiction } from '@/lib/consciousness/hypothesisBuffer';
 import { evaluateHypothesis, DEFAULT_GATE_THRESHOLDS } from '@/lib/consciousness/gateEvaluator';
@@ -504,6 +505,12 @@ export async function POST(request: NextRequest) {
     ]);
 
     const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
+
+    // PATTERN INQUIRY PROTOCOL: Load active protocol for this member (graceful fallback, never blocks)
+    const activeProtocol = await loadActiveProtocol(userId).catch(() => null);
+    if (activeProtocol) {
+      console.log(`[protocol-ctx] id=${activeProtocol.id} week=${activeProtocol.currentWeek} pattern="${activeProtocol.patternName}"`);
+    }
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
     let cognitiveProfile: CognitiveProfile | null = cognitiveProfileResult;
@@ -1479,6 +1486,24 @@ export async function POST(request: NextRequest) {
       intensity: voiceHint.intensity,
     });
 
+    // PATTERN INQUIRY PROTOCOL: Log observation from this turn (fire-and-forget, non-blocking)
+    // Truncated to 500 chars. Swallows errors — never affects oracle response. Sanctuary excluded.
+    if (activeProtocol && !isSanctuary && message) {
+      (async () => {
+        try {
+          await query(
+            `INSERT INTO protocol_observations
+             (protocol_id, member_id, week_number, observation_text, source, session_id)
+             VALUES ($1, $2, $3, $4, 'maia', $5)`,
+            [activeProtocol.id, userId, activeProtocol.currentWeek,
+             String(message).slice(0, 500), sessionId]
+          );
+        } catch (e) {
+          console.error('[protocol-obs] log failed (non-critical):', e);
+        }
+      })();
+    }
+
     // COGNITIVE OS: Full pipeline — extract → enqueue → gate → promote (fire-and-forget)
     // Runs after each turn. Does not block the oracle response. Sanctuary excluded.
     //
@@ -2234,6 +2259,14 @@ async function generateSpiralogicResponseWithLLM(
     if (councilSection) {
       systemPrompt += councilSection;
     }
+  }
+
+  // PATTERN INQUIRY PROTOCOL: Invisible scaffolding — shape listening without referencing protocol
+  // Only injected for core/deep tiers (not threshold) to keep lens-neutral entry points
+  // buildProtocolListeningGuidance explicitly instructs MAIA not to mention the protocol by name
+  if (activeProtocol) {
+    systemPrompt += '\n\n' + buildProtocolContextHeader(activeProtocol);
+    systemPrompt += '\n' + buildProtocolListeningGuidance(activeProtocol);
   }
 
   // MAIA CENTRAL: Inject MAIA directive after all other prompt content.
