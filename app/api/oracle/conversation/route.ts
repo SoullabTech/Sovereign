@@ -16,6 +16,13 @@ import {
   type FieldEvent,
   type MaiaSuggestedAction
 } from '@/lib/consciousness/spiralogic-core';
+import {
+  resolveCouncil,
+  buildCouncilPromptSection,
+  normalizeGuideId,
+  type CouncilResolution,
+} from '@/lib/consciousness/interpretiveCouncil';
+import { logGuideActiveAtResponse } from '@/lib/consciousness/councilTelemetry';
 import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
@@ -492,8 +499,8 @@ export async function POST(request: NextRequest) {
       loadLedgerForRouting(userId).catch((e: unknown) => { console.warn('[Oracle] Ledger routing load failed:', e); return [] as LedgerRoutingView[]; }),
       Promise.all([getSystemVoiceProfile(), getMemberVoicePreferences(userId)]),
       getCognitiveProfile(userId).catch((e: unknown) => { console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', e); return null; }),
-      query(`SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`, [userId])
-        .catch((e: unknown) => { console.warn('⚠️ [Oracle] Could not fetch preferred assistant name:', e); return null; }),
+      query(`SELECT preferred_assistant_name, therapeutic_approach FROM member_settings WHERE member_id = $1`, [userId])
+        .catch((e: unknown) => { console.warn('⚠️ [Oracle] Could not fetch member settings:', e); return null; }),
     ]);
 
     const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
@@ -541,8 +548,11 @@ export async function POST(request: NextRequest) {
     }
 
     let preferredAssistantName = 'MAIA';
-    if (assistantNameResult?.rows?.length > 0 && assistantNameResult.rows[0].preferred_assistant_name) {
-      preferredAssistantName = assistantNameResult.rows[0].preferred_assistant_name;
+    let memberTherapeuticApproach = 'auto';
+    if (assistantNameResult?.rows?.length > 0) {
+      const row = assistantNameResult.rows[0];
+      if (row.preferred_assistant_name) preferredAssistantName = row.preferred_assistant_name;
+      if (row.therapeutic_approach) memberTherapeuticApproach = normalizeGuideId(row.therapeutic_approach);
     }
 
     const tAfterEarlyDb = Date.now();
@@ -581,8 +591,36 @@ export async function POST(request: NextRequest) {
     let spiralogicCell = await inferSpiralogicCell(message, userId);
     spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
-    // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
-    const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
+    // INTERPRETIVE COUNCIL: Resolve the active guide from member's preference
+    const councilResolution = resolveCouncil({
+      accountDefault: memberTherapeuticApproach,
+      sessionOverride: (body as any).sessionApproach ?? null,
+      message,
+    });
+    console.log('🏛️ [Council]', councilResolution.guide.archetypeName, '|', councilResolution.source);
+
+    // Fire-and-forget telemetry: structural signal, never blocks the oracle
+    const _councilDepthTier = conversationDepth <= 3 ? 'threshold' : conversationDepth <= 10 ? 'core' : 'deep';
+    logGuideActiveAtResponse(userId, councilResolution.guide.id, councilResolution.source, _councilDepthTier);
+
+    // MANY-ARMED INTELLIGENCE: Choose frameworks — member's guide enables its registry counterpart
+    const guideId = councilResolution.guide.id;
+    const GUIDE_TO_REGISTRY: Record<string, string[]> = {
+      jungian:        ['JUNGIAN'],
+      ifs:            ['IFS'],
+      psychodynamic:  ['JUNGIAN'],
+      cbt:            ['CBT'],
+      somatic:        ['SOMATIC'],
+      tcm:            [],
+      family_systems: [],
+      humanistic:     [],
+      existential:    [],
+      developmental:  [],
+      spiritual:      ['JUNGIAN'],
+      auto:           [],
+    };
+    const enabledApplied = GUIDE_TO_REGISTRY[guideId] ?? [];
+    const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied });
 
     // Initialize Panconscious Field for user
     const panconsciousField = await PanconsciousFieldService.initializeField(userId);
@@ -880,7 +918,8 @@ export async function POST(request: NextRequest) {
       fieldSafeMode,
       fieldEnergyState,
       recentSessionsBlock,
-      memberLifeContextBlock
+      memberLifeContextBlock,
+      councilResolution
     );
 
     const tAfterLLM = Date.now();
@@ -959,7 +998,9 @@ export async function POST(request: NextRequest) {
             anamnesisPrompt,
             astrologyContext,
             preferredAssistantName,
-            distressSignal
+            distressSignal,
+            undefined,
+            councilResolution
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -2128,7 +2169,8 @@ async function generateSpiralogicResponseWithLLM(
   fieldSafeMode?: boolean,
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
   recentSessionsBlock?: string,
-  memberLifeContextBlock?: string
+  memberLifeContextBlock?: string,
+  councilResolution?: CouncilResolution
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2184,6 +2226,14 @@ async function generateSpiralogicResponseWithLLM(
   // MEMBER LIFE CONTEXT: Patterns + journal entries — background awareness layer
   if (memberLifeContextBlock) {
     systemPrompt += '\n' + memberLifeContextBlock;
+  }
+
+  // INTERPRETIVE COUNCIL: Inject guide orientation (orthogonal to tier and mode)
+  if (councilResolution) {
+    const councilSection = buildCouncilPromptSection(councilResolution, conversationDepth);
+    if (councilSection) {
+      systemPrompt += councilSection;
+    }
   }
 
   // MAIA CENTRAL: Inject MAIA directive after all other prompt content.
@@ -2558,7 +2608,9 @@ function buildSacredAttendingPrompt(
   isFieldMode?: boolean,
   fieldSafeMode?: boolean,
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
-  hasSessionHistory?: boolean
+  hasSessionHistory?: boolean,
+  _reserved?: unknown,
+  councilResolution?: CouncilResolution
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2812,6 +2864,12 @@ The conversation has reached depth. Hold the space.
 - Avoid explanations. Reflect what's already being said.
 - No new retrieval unless explicitly requested.`;
     }
+  }
+
+  // INTERPRETIVE COUNCIL: Inject guide orientation (orthogonal to tier and mode)
+  if (councilResolution) {
+    const councilSection = buildCouncilPromptSection(councilResolution, conversationDepth);
+    if (councilSection) prompt += councilSection;
   }
 
   return prompt;

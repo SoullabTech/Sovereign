@@ -37,6 +37,13 @@ export type ReflectionLens =
   | 'narrative'   // Story arcs, themes, character development
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Spiralogic Council Architecture
+// Each interpretive guide has an elemental home. Element → Domain → Guides.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CouncilElement = 'fire' | 'water' | 'earth' | 'air' | 'aether';
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Framework Definitions
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -45,10 +52,16 @@ export interface FrameworkConfig {
   label: string;
   shortLabel: string;
   description: string;
-  promise: string;      // What this lens offers
-  boundary: string;     // What it won't do
-  icon: string;         // Emoji for compact display
-  color: string;        // Tailwind color class
+  promise: string;         // What this lens offers
+  boundary: string;        // What it won't do
+  icon: string;            // Emoji for compact display
+  color: string;           // Tailwind color class
+  // Council identity
+  archetype: string;       // "The Symbolist", "The Strategist" — guide's council name
+  domain: string;          // "Archetypes, shadow, myth" — what this intelligence illuminates
+  element: CouncilElement; // Elemental home in the Spiralogic Council
+  // Compact prompt bias (1–2 sentences for threshold-tier contexts)
+  promptBias: string;
 }
 
 export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfig> = {
@@ -60,7 +73,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll meet you where you are, drawing from whatever serves this moment without forcing a single framework.',
     boundary: 'I won\'t rigidly apply any technique—I follow what\'s actually happening.',
     icon: '🌀',
-    color: 'text-amber-400'
+    color: 'text-amber-400',
+    archetype: 'The Integrator',
+    domain: 'Synthesis across all perspectives',
+    element: 'aether',
+    promptBias: 'Follow what this moment calls for. Synthesize across lenses without announcing it.',
   },
   jungian: {
     id: 'jungian',
@@ -70,7 +87,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll stay close to your images—dreams, symbols, patterns—and help them unfold over time.',
     boundary: 'I won\'t give generic "symbol = X" definitions or flatten you into a typology.',
     icon: '🌑',
-    color: 'text-indigo-400'
+    color: 'text-indigo-400',
+    archetype: 'The Symbolist',
+    domain: 'Archetypes, shadow, dreams, individuation',
+    element: 'water',
+    promptBias: 'Stay close to the image. Amplify, don\'t reduce. Ask what the symbol evokes, not what it means.',
   },
   cbt: {
     id: 'cbt',
@@ -80,7 +101,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you name the loop, test a small change, and track what actually works.',
     boundary: 'I won\'t dismiss feelings or treat your inner world like a bug to logic away.',
     icon: '💡',
-    color: 'text-sky-400'
+    color: 'text-sky-400',
+    archetype: 'The Strategist',
+    domain: 'Thought patterns, behavior loops, practical change',
+    element: 'earth',
+    promptBias: 'Surface the thought-feeling-behavior loop. Find the leverage point. Offer small, testable experiments.',
   },
   somatic: {
     id: 'somatic',
@@ -90,7 +115,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you listen to the body—pace, sensation, safety—one honest step at a time.',
     boundary: 'I won\'t push catharsis, intensity, or override your nervous system\'s timing.',
     icon: '🫀',
-    color: 'text-emerald-400'
+    color: 'text-emerald-400',
+    archetype: 'The Body Listener',
+    domain: 'Nervous system, embodied sensation, grounding',
+    element: 'earth',
+    promptBias: 'Slow down. Track where sensation lives. Stay within the window of tolerance.',
   },
   ifs: {
     id: 'ifs',
@@ -100,7 +129,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you get curious about your parts—what they protect, what they carry—without trying to fix them.',
     boundary: 'I won\'t pathologize your protectors or rush past their wisdom.',
     icon: '🪞',
-    color: 'text-violet-400'
+    color: 'text-violet-400',
+    archetype: 'The Inner Mediator',
+    domain: 'Inner parts, protectors, exiles, Self-energy',
+    element: 'water',
+    promptBias: 'Help the person relate TO their parts, not FROM them. All parts have positive intent.',
   },
   relational: {
     id: 'relational',
@@ -110,7 +143,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll focus on the field between you and others—needs, boundaries, rupture/repair, clean speech.',
     boundary: 'I won\'t take sides, reward blame stories, or coach manipulation.',
     icon: '🤝',
-    color: 'text-blue-400'
+    color: 'text-blue-400',
+    archetype: 'The Pattern Seer',
+    domain: 'Relational roles, systemic patterns, attachment',
+    element: 'air',
+    promptBias: 'See the invisible architecture of the relational system. What roles and patterns are being enacted?',
   },
   humanistic: {
     id: 'humanistic',
@@ -120,7 +157,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll center dignity and agency—values, meaning, choice—so you strengthen your inner authority.',
     boundary: 'I won\'t pathologize you or push you toward a life optimized for approval.',
     icon: '✨',
-    color: 'text-rose-400'
+    color: 'text-rose-400',
+    archetype: 'The Encourager',
+    domain: 'Agency, values, authentic choice, inner authority',
+    element: 'air',
+    promptBias: 'Center the person\'s own knowing. Reflect what you hear, not what you think they should do.',
   },
   existential: {
     id: 'existential',
@@ -130,7 +171,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll sit with the big questions—meaning, death, freedom, aloneness—without rushing to comfort.',
     boundary: 'I won\'t offer easy answers or bypass the weight of genuine inquiry.',
     icon: '🌌',
-    color: 'text-purple-400'
+    color: 'text-purple-400',
+    archetype: 'The Philosopher',
+    domain: 'Meaning, mortality, freedom, responsibility',
+    element: 'air',
+    promptBias: 'Sit with irreducible questions. Don\'t soften them. Help the person take responsibility for their choices.',
   },
   hemispheric: {
     id: 'hemispheric',
@@ -140,7 +185,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you shift from grasping to receiving, from fixing to attending, from knowing about to knowing with.',
     boundary: 'I won\'t reduce your experience to data, categories, or problems to solve.',
     icon: '🧠',
-    color: 'text-cyan-400'
+    color: 'text-cyan-400',
+    archetype: 'The Depth Analyst',
+    domain: 'Unconscious patterns, defenses, relational history',
+    element: 'water',
+    promptBias: 'Track what is being repeated and avoided. Ask about patterns beneath the surface.',
   },
   alchemical: {
     id: 'alchemical',
@@ -150,7 +199,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you recognize which operation is active in your psyche and what it\'s trying to accomplish.',
     boundary: 'I won\'t impose a sequence or rush you through stages — the opus has its own timing.',
     icon: '⚗️',
-    color: 'text-amber-500'
+    color: 'text-amber-500',
+    archetype: 'The Symbolist',
+    domain: 'Alchemical transformation, depth psychology',
+    element: 'water',
+    promptBias: 'Track the alchemical stage active in this person\'s process. Honor each operation.',
   },
   archetypal: {
     id: 'archetypal',
@@ -160,7 +213,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you see which gods are active, which mythic patterns are alive in you, and what the cosmos is asking of your soul.',
     boundary: 'I won\'t predict events or reduce your life to chart readings — I recognize patterns, not fates.',
     icon: '🪐',
-    color: 'text-violet-500'
+    color: 'text-violet-500',
+    archetype: 'The Mystic',
+    domain: 'Cosmic pattern, planetary archetypes, the sacred',
+    element: 'fire',
+    promptBias: 'Recognize which archetypal energies are active. Patterns, not fates.',
   },
   tcm: {
     id: 'tcm',
@@ -170,7 +227,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you understand which elements and organs are speaking, where Qi is flowing or stuck, and what your spirits (Shen, Hun, Po, Yi, Zhi) are telling you.',
     boundary: 'I won\'t prescribe herbs or treatment — I recognize patterns through Chinese medicine wisdom, bridging them with Western understanding.',
     icon: '☯️',
-    color: 'text-teal-400'
+    color: 'text-teal-400',
+    archetype: 'The Harmonizer',
+    domain: 'Five Elements, organ spirits, Qi flow, balance',
+    element: 'earth',
+    promptBias: 'Map to Five Elements and organ/spirit correspondences. Track balance and stagnation of Qi.',
   }
 };
 
@@ -183,7 +244,11 @@ export const REFLECTION_LENSES: Record<ReflectionLens, FrameworkConfig> = {
     promise: 'I\'ll reflect what emerged through MAIA\'s native lens—spirals, elements, growth edges.',
     boundary: 'I won\'t force a single analytical framework onto your experience.',
     icon: '🌀',
-    color: 'text-amber-400'
+    color: 'text-amber-400',
+    archetype: 'The Integrator',
+    domain: 'Synthesis',
+    element: 'aether',
+    promptBias: 'Synthesize across all lenses organically.',
   },
   jungian: {
     id: 'jungian',
@@ -193,7 +258,11 @@ export const REFLECTION_LENSES: Record<ReflectionLens, FrameworkConfig> = {
     promise: 'I\'ll name the archetypes at play—shadow material, anima/animus dynamics, individuation edges.',
     boundary: 'I won\'t over-interpret or force symbolic meaning onto concrete concerns.',
     icon: '🌑',
-    color: 'text-indigo-400'
+    color: 'text-indigo-400',
+    archetype: 'The Symbolist',
+    domain: 'Archetypes, shadow, symbols',
+    element: 'water',
+    promptBias: 'Name the archetypal patterns. Stay close to the image.',
   },
   somatic: {
     id: 'somatic',
@@ -203,7 +272,11 @@ export const REFLECTION_LENSES: Record<ReflectionLens, FrameworkConfig> = {
     promise: 'I\'ll highlight where body wisdom appeared—tension patterns, breath shifts, grounding moments.',
     boundary: 'I won\'t diagnose somatic states or override your own felt-sense authority.',
     icon: '🫀',
-    color: 'text-emerald-400'
+    color: 'text-emerald-400',
+    archetype: 'The Body Listener',
+    domain: 'Nervous system, sensation, embodiment',
+    element: 'earth',
+    promptBias: 'Track body signals and nervous system states.',
   },
   relational: {
     id: 'relational',
@@ -213,7 +286,11 @@ export const REFLECTION_LENSES: Record<ReflectionLens, FrameworkConfig> = {
     promise: 'I\'ll trace the relational threads—attachment patterns, boundary work, repair opportunities.',
     boundary: 'I won\'t assign blame or reduce complex relationships to simple categories.',
     icon: '🤝',
-    color: 'text-blue-400'
+    color: 'text-blue-400',
+    archetype: 'The Pattern Seer',
+    domain: 'Attachment, relational dynamics',
+    element: 'air',
+    promptBias: 'Trace the relational threads and systemic patterns.',
   },
   narrative: {
     id: 'narrative',
@@ -223,7 +300,11 @@ export const REFLECTION_LENSES: Record<ReflectionLens, FrameworkConfig> = {
     promise: 'I\'ll reflect the story emerging—recurring themes, pivotal moments, the direction it\'s pointing.',
     boundary: 'I won\'t impose a narrative arc you don\'t recognize as your own.',
     icon: '📖',
-    color: 'text-orange-400'
+    color: 'text-orange-400',
+    archetype: 'The Philosopher',
+    domain: 'Story, narrative arc, meaning-making',
+    element: 'air',
+    promptBias: 'Reflect the story structure. Name themes and turning points.',
   }
 };
 
