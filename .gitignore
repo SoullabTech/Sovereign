@@ -411,3 +411,6 @@ ios/App/fastlane/report.xml
 ios/App/fastlane/test_output/
 ios/App/fastlane/screenshots/
 ios/App/fastlane/metadata/
+ios/App/ios/
+essence
+.claire/

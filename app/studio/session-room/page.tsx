@@ -47,6 +47,8 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
+import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
+import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 import {
   useRecordingContext,
   type SessionContainer,
@@ -183,6 +185,7 @@ export default function SessionRoomPage() {
   // Review
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
   const [markersExpanded, setMarkersExpanded] = useState(true);
+  const circleOffer = useOfferToCircle();
 
   // Refs
   const transcriptEndRef = useRef<HTMLDivElement>(null);
@@ -1114,6 +1117,18 @@ ${insightsSection}
                     <Download className="w-3.5 h-3.5" />
                     .txt
                   </button>
+                  <button
+                    onClick={() => {
+                      const title = ctx.sessionTitle || 'Session';
+                      const summary = `${ctx.segments.length} segments, ${formatDuration(ctx.duration)}, ${ctx.markers.length} marker${ctx.markers.length !== 1 ? 's' : ''}, ${ctx.insights.length} insight${ctx.insights.length !== 1 ? 's' : ''}`;
+                      circleOffer.offerToCircle('session', ctx.sessionId || `session-${Date.now()}`, title, summary);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-500/20 text-amber-400/80 text-xs hover:bg-amber-500/10 transition-all"
+                    title="Offer session summary to a circle"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    Offer
+                  </button>
                 </div>
               </div>
             </div>
@@ -1235,6 +1250,15 @@ ${insightsSection}
           </motion.div>
         )}
       </div>
+
+      <ShareToCircleModal
+        open={circleOffer.open}
+        onClose={() => circleOffer.setOpen(false)}
+        artifactType={circleOffer.artifact.type}
+        artifactRef={circleOffer.artifact.ref}
+        defaultTitle={circleOffer.artifact.title}
+        defaultSummary={circleOffer.artifact.summary}
+      />
     </div>
   );
 }

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import Link from 'next/link';
 
 type CircleListItem = {
   id: string;
@@ -102,7 +103,6 @@ export function ShareToCircleModal({
       }
 
       setSuccess(true);
-      setTimeout(() => onClose(), 1500);
     } finally {
       setSharing(false);
     }
@@ -116,7 +116,7 @@ export function ShareToCircleModal({
       {/* Modal */}
       <div className="relative w-full max-w-md rounded-t-2xl border border-maia-navy-700 bg-maia-navy-900 p-5 sm:rounded-2xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-maia-ink-100">Share to a circle</h2>
+          <h2 className="text-lg font-semibold text-maia-ink-100">Offer to circle</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-maia-ink-40 transition-colors hover:text-maia-ink-60"
@@ -126,13 +126,29 @@ export function ShareToCircleModal({
         </div>
 
         <p className="mb-4 text-xs text-maia-ink-40">
-          You're sharing a copy of this item. You can revoke anytime. Revoking removes it from the
-          circle feed. It does not delete your original.
+          You're offering a reflection from your work. You can revoke anytime. Revoking removes it
+          from the circle feed. It does not delete your original.
         </p>
 
         {success ? (
-          <div className="py-6 text-center">
-            <p className="text-sm font-medium text-maia-sage-400">Shared successfully</p>
+          <div className="py-6 text-center space-y-3">
+            <p className="text-sm font-medium text-maia-sage-400">Offered to circle</p>
+            <div className="flex items-center justify-center gap-3">
+              <Link
+                href={`/commons/circles/${selectedCircle?.id}`}
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 text-xs text-maia-spice-400 hover:text-maia-spice-300 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                View in Circle
+              </Link>
+              <button
+                onClick={onClose}
+                className="text-xs text-maia-ink-40 hover:text-maia-ink-60 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         ) : step === 'choose' ? (
           <>
@@ -169,7 +185,7 @@ export function ShareToCircleModal({
         ) : (
           <>
             <p className="mb-3 text-xs text-maia-ink-40">
-              Sharing to <span className="font-medium text-maia-ink-80">{selectedCircle?.name}</span>
+              Offering to <span className="font-medium text-maia-ink-80">{selectedCircle?.name}</span>
             </p>
 
             <div className="space-y-3">
@@ -215,10 +231,10 @@ export function ShareToCircleModal({
               </button>
               <button
                 onClick={handleShare}
-                disabled={sharing}
+                disabled={sharing || success}
                 className="flex-1 rounded-xl border border-maia-spice-500/30 bg-maia-spice-500/10 px-4 py-2 text-sm font-medium text-maia-spice-400 transition-colors hover:bg-maia-spice-500/20 disabled:opacity-50"
               >
-                {sharing ? 'Sharing...' : 'Share'}
+                {sharing ? 'Offering...' : 'Offer'}
               </button>
             </div>
           </>

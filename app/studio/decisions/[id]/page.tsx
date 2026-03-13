@@ -25,6 +25,7 @@ import {
   CheckCircle2,
   RotateCcw,
   ArrowRight,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -33,6 +34,15 @@ import { getSituationConfig } from '@/lib/studio/leadership/situationTypes';
 import MentorPanel from '@/components/studio/MentorPanel';
 import DecisionChain from '@/components/studio/DecisionChain';
 import ExperienceTimeline from '@/components/studio/ExperienceTimeline';
+import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
+import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
+import PractitionerLoopIndicator from '@/components/studio/practitioner/PractitionerLoopIndicator';
+import FieldSignalsPanel from '@/components/studio/practitioner/FieldSignalsPanel';
+import PractitionerObservationsPanel from '@/components/studio/practitioner/PractitionerObservationsPanel';
+import ClientInquiryPanel from '@/components/studio/practitioner/ClientInquiryPanel';
+import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRatingWidget';
+import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
+import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
 
 const ELEMENT_CONFIG: Record<string, { icon: typeof Flame; color: string; label: string }> = {
   'leadership-power': { icon: Flame, color: 'text-red-400', label: 'Power Dynamics' },
@@ -493,10 +503,36 @@ export default function DecisionDetailPage() {
   const [questions, setQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState('');
   const councilRef = useRef<HTMLDivElement>(null);
+  const circleOffer = useOfferToCircle();
+
+  // Practitioner loop state — counts for the loop progress indicator
+  const [fieldSignalCount, setFieldSignalCount] = useState(0);
+  const [hasClientInquiry, setHasClientInquiry] = useState(false);
+  const [observationCount, setObservationCount] = useState(0);
+  const [evidenceOpen, setEvidenceOpen] = useState(true);
+
+  // Protocol + occupancy tracking
+  const [selectedProtocolId, setSelectedProtocolId] = useState<string | null>(null);
+  const [currentOccupancyScore, setCurrentOccupancyScore] = useState<number | null>(null);
 
   useEffect(() => {
     loadDecision();
-  }, [decisionId]);
+    loadLoopState();
+  }, [decisionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadLoopState() {
+    try {
+      const params = new URLSearchParams({ decisionId });
+      const [signalsData, inquiryData, obsData] = await Promise.all([
+        apiFetch(`/api/studio/field-signals?${params.toString()}`),
+        apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`),
+        apiFetch(`/api/studio/practitioner-observations?${params.toString()}`),
+      ]);
+      setFieldSignalCount((signalsData.signals || []).length);
+      setHasClientInquiry((inquiryData.responses || []).length > 0);
+      setObservationCount((obsData.observations || []).length);
+    } catch { /* graceful — loop indicator stays empty */ }
+  }
 
   async function loadDecision() {
     setLoading(true);
@@ -520,6 +556,7 @@ export default function DecisionDetailPage() {
       const body: Record<string, string> = {};
       if (sessionNotes?.trim()) body.sessionNotes = sessionNotes.trim();
       if (emotionalState?.trim()) body.emotionalState = emotionalState.trim();
+      if (selectedProtocolId) body.protocolId = selectedProtocolId;
 
       const res = await apiFetch(`/api/studio/decisions/${decisionId}/consult`, {
         method: 'POST',
@@ -610,6 +647,15 @@ export default function DecisionDetailPage() {
   const council = decision.councilResult;
   const situationConfig = getSituationConfig(decision.situationType);
   const hasIterations = (decision.iterations?.length || 0) > 1;
+
+  const loopState: PractitionerLoopState = {
+    fieldSignalCount,
+    hasClientInquiry,
+    observationCount,
+    hasCouncilSynthesis: !!council,
+    hasExperiment: false,
+    hasFollowUp: !!(decision.followUpIntention),
+  };
   const priorIterations = decision.iterations?.slice(0, -1) || [];
   const isResolved = decision.status === 'complete';
 
@@ -655,6 +701,11 @@ export default function DecisionDetailPage() {
           </div>
         </div>
 
+        {/* Practitioner Loop Indicator */}
+        <div className="mb-4">
+          <PractitionerLoopIndicator state={loopState} />
+        </div>
+
         {/* Context */}
         <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4 mb-6">
           <p className="text-sm text-slate-300">{decision.context}</p>
@@ -684,6 +735,40 @@ export default function DecisionDetailPage() {
               </span>
             )}
           </div>
+        </div>
+
+        {/* Evidence — Field Signals, Client Inquiry, Practitioner Observations */}
+        <div className="mb-6 rounded-lg border border-slate-800/60 bg-slate-900/20 overflow-hidden">
+          <button
+            onClick={() => setEvidenceOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-900/40 transition-colors"
+          >
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Evidence</span>
+            <span className="text-xs text-slate-600">{evidenceOpen ? 'hide' : 'show'}</span>
+          </button>
+          {evidenceOpen && (
+            <div className="px-4 pb-4 border-t border-slate-800/60 pt-4 space-y-6">
+              {/* Protocol selector — persisted, orients the evidence loop and biases the council */}
+              <ProtocolSelector
+                decisionId={decisionId}
+                clientId={decision.clientId || null}
+                occupancyScore={currentOccupancyScore}
+                onProtocolChange={setSelectedProtocolId}
+              />
+              <div className="border-t border-slate-800/60 pt-6">
+                <FieldSignalsPanel decisionId={decisionId} />
+              </div>
+              <div className="border-t border-slate-800/60 pt-6">
+                <ClientInquiryPanel
+                  decisionId={decisionId}
+                  clientName={decision.clientName || null}
+                />
+              </div>
+              <div className="border-t border-slate-800/60 pt-6">
+                <PractitionerObservationsPanel decisionId={decisionId} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Council Error */}
@@ -726,6 +811,34 @@ export default function DecisionDetailPage() {
             <p className="text-xs text-slate-500 mt-1">This may take 10-30 seconds</p>
           </div>
         ) : null}
+
+        {/* Offer to Circle */}
+        {council && (
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => circleOffer.offerToCircle(
+                'decision',
+                decisionId,
+                decision.title,
+                (council.recommendation || '').slice(0, 200)
+              )}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-amber-500/20 text-amber-400/80 hover:bg-amber-500/10 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Offer to Circle
+            </button>
+          </div>
+        )}
+
+        {/* Relational Occupancy Rating (post-session) */}
+        {council && (
+          <div className="mt-4 rounded-lg border border-slate-800/60 bg-slate-900/20 p-4">
+            <OccupancyRatingWidget
+              decisionId={decisionId}
+              onRated={setCurrentOccupancyScore}
+            />
+          </div>
+        )}
 
         {/* MAIA Mentor Panel (after council result) */}
         {council && (
@@ -892,6 +1005,15 @@ export default function DecisionDetailPage() {
             {saving ? 'Saving...' : saved ? 'Saved' : 'Save Notes & Questions'}
           </button>
         </div>
+
+        <ShareToCircleModal
+          open={circleOffer.open}
+          onClose={() => circleOffer.setOpen(false)}
+          artifactType={circleOffer.artifact.type}
+          artifactRef={circleOffer.artifact.ref}
+          defaultTitle={circleOffer.artifact.title}
+          defaultSummary={circleOffer.artifact.summary}
+        />
       </div>
     </div>
   );
