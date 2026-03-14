@@ -1640,15 +1640,13 @@ export async function POST(request: NextRequest) {
     // that would identify MAIA as Claude or Anthropic (breaking the identity contract)
     const { sanitized: sanitizedCoreMessage } = sanitizeDraft(
       maiaResponse.coreMessage,
-      maiaPlan,
-      draftPolicy
+      maiaPlan
     );
 
     // Also sanitize spokenText to ensure TTS never leaks identity
     const { sanitized: sanitizedSpokenText } = sanitizeDraft(
       spokenText,
-      maiaPlan,
-      draftPolicy
+      maiaPlan
     );
 
     console.info(JSON.stringify({
