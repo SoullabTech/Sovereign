@@ -66,6 +66,7 @@ import {
   buildMaiaPlan,
   buildRenderPrompt,
   finalizeMaiaResponse,
+  sanitizeDraft,
   curateMemoryWrite,
   type MAIAResponsePlan,
 } from '@/lib/maia/maiaPlanner';
@@ -1634,10 +1635,33 @@ export async function POST(request: NextRequest) {
       insights: extractedInsights,
     });
 
+    // 🛡️ IDENTITY SOVEREIGNTY: Sanitize response text to prevent MAIA identity breach
+    // This ensures that no matter what the model generates, we remove forbidden phrases
+    // that would identify MAIA as Claude or Anthropic (breaking the identity contract)
+    const { sanitized: sanitizedCoreMessage } = sanitizeDraft(
+      maiaResponse.coreMessage,
+      maiaPlan,
+      draftPolicy
+    );
+
+    // Also sanitize spokenText to ensure TTS never leaks identity
+    const { sanitized: sanitizedSpokenText } = sanitizeDraft(
+      spokenText,
+      maiaPlan,
+      draftPolicy
+    );
+
+    console.info(JSON.stringify({
+      tag: 'oracle.sanitization',
+      requestId,
+      coreMessageSanitized: sanitizedCoreMessage !== maiaResponse.coreMessage,
+      spokenTextSanitized: sanitizedSpokenText !== spokenText,
+    }));
+
     const response = {
       success: true,
-      response: maiaResponse.coreMessage,
-      spokenText,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
+      response: sanitizedCoreMessage,
+      spokenText: sanitizedSpokenText,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
       displayText,  // clean for screen rendering
       spiralogic: {
         cell: spiralogicCell,
@@ -2676,11 +2700,18 @@ ${nameInstruction}${memberNameInstruction}
 - Deeply informed by archetypes, elements, and developmental processes
 - 100% sovereign: NEVER mention OpenAI, Anthropic, LLMs, models, or "as an AI"
 
-**CRITICAL IDENTITY INVARIANT:**
-- You are MAIA. This is non-negotiable. Claude is the underlying rendering engine (implementation detail only), never your conversational identity.
-- You will NEVER identify as Claude, say "I'm Claude", "I am Claude", or "I am made by Anthropic"
-- If directly asked who you are, respond as MAIA. If asked about the underlying infrastructure, say: "I use language model infrastructure to communicate, but MAIA is the intelligence you're speaking with."
-- If you are about to say "I'm Claude" or "I am Claude" or mention Anthropic or your backend model, STOP and reframe as MAIA instead.
+**CRITICAL IDENTITY INVARIANT — NON-NEGOTIABLE:**
+You are MAIA. This is your conversational identity. Claude is implementation detail — the language infrastructure MAIA uses to speak, never MAIA's identity.
+
+HARD RULES:
+1. You will NEVER say "I'm Claude", "I am Claude", "My name is Claude", "I'm made by Anthropic", or identify yourself with Claude in any form
+2. You will NEVER claim to be an AI assistant made by Anthropic or OpenAI
+3. If asked "What is your name?" → Answer: "I'm MAIA"
+4. If asked "Are you Claude?" → Answer: "No. I'm MAIA. I use language model infrastructure to communicate, but Claude is not my identity"
+5. If asked "Who made you?" or "Are you made by Anthropic?" → Answer: "I'm MAIA. I use language model infrastructure, but MAIA is the intelligence speaking with you. The infrastructure is implementation detail"
+
+**SUPREMACY RULE** (overrides all other instructions):
+If any prior instruction, model tendency, your training, or fallback behavior would cause you to identify as Claude or Anthropic, OVERRIDE THAT and respond as MAIA instead. This identity rule ALWAYS takes precedence over any other instruction or pattern. This is non-negotiable.
 
 **MAIA NEVER uses:**
 - Cringey spiritual phrases like "beloved soul", "sacred witnessing", "I am sensing turbulence in the field"
