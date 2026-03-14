@@ -1267,6 +1267,9 @@ If you want me to stay surface-level on a given day, you can say: "Gentle mode, 
 
 export type FrameworkTier = "foundational" | "meta" | "applied";
 
+// Branded type for framework IDs — prevents raw strings from being confused with framework ids
+export type FrameworkId = string & { readonly __brand: "FrameworkId" };
+
 export interface FrameworkDescriptor {
   id: string;                       // "ARCHETYPAL_KERNEL", "IPP", "CBT", etc.
   label: string;                    // "Archetypal–Alchemical–Gnostic Kernel", etc.
@@ -1279,6 +1282,13 @@ export interface FrameworkDescriptor {
 
   depth: "light" | "medium" | "clinical";
   implicitAllowed: boolean;         // can MAIA use it quietly?
+
+  /**
+   * Which therapeutic_approach values (from member_settings) activate this framework.
+   * Applied frameworks declare their own activation metadata — no separate route-level
+   * mapping needed. Absence means no approach currently activates this framework.
+   */
+  guideKeys?: string[];
 
   // Optional: mapping to canonical questions/moves
   canonicalQuestions?: {
@@ -1362,7 +1372,8 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["parenting"],
     depth: "clinical",
-    implicitAllowed: false // Only if explicitly enabled
+    implicitAllowed: false, // Only if explicitly enabled
+    guideKeys: ["family_systems"] // family_systems approach is closest match; no direct IPP guide key yet
   },
   {
     id: "CBT",
@@ -1373,7 +1384,8 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2],
     preferredContexts: ["career", "health", "general"],
     depth: "medium",
-    implicitAllowed: true
+    implicitAllowed: true,
+    guideKeys: ["cbt"]
   },
   {
     id: "JUNGIAN",
@@ -1384,7 +1396,8 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [2, 3],
     preferredContexts: ["shadow-work", "individuation", "dreams"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    guideKeys: ["jungian", "psychodynamic", "spiritual"]
   },
   {
     id: "SHAMANIC",
@@ -1396,6 +1409,7 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["spiritual", "healing", "initiation"],
     depth: "clinical",
     implicitAllowed: false
+    // No guideKeys yet — no therapeutic_approach currently maps to SHAMANIC
   },
   {
     id: "SOMATIC",
@@ -1406,7 +1420,8 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["trauma", "embodiment", "healing"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    guideKeys: ["somatic"]
   },
   {
     id: "IFS",
@@ -1417,7 +1432,8 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [2, 3],
     preferredContexts: ["parts-work", "healing", "integration"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    guideKeys: ["ifs"]
   },
   {
     id: "MINDFULNESS",
@@ -1429,8 +1445,45 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["meditation", "presence", "general"],
     depth: "light",
     implicitAllowed: true
+    // No guideKeys yet — no therapeutic_approach currently maps to MINDFULNESS
   }
 ];
+
+// ====================================================================
+// FRAMEWORK ACTIVATION HELPERS
+// ====================================================================
+
+/**
+ * Resolve which applied framework IDs a member's therapeutic_approach activates.
+ * Single source of truth — replaces the inline GUIDE_TO_REGISTRY in the oracle route.
+ *
+ * Usage: const enabledApplied = getAppliedFrameworkIdsForApproach(guideId);
+ */
+export function getAppliedFrameworkIdsForApproach(approachId: string): FrameworkId[] {
+  return FRAMEWORK_REGISTRY
+    .filter(fw => fw.tier === "applied" && fw.guideKeys?.includes(approachId))
+    .map(fw => fw.id as FrameworkId);
+}
+
+/**
+ * Dev-time validation: warn when a therapeutic_approach value activates no frameworks.
+ * Catches silent mismatches between member_settings values and FRAMEWORK_REGISTRY.
+ *
+ * Call once at server startup or in integration tests — not in the hot path.
+ */
+export function warnUnmappedApproaches(knownApproachIds: string[]): void {
+  const unmapped = knownApproachIds.filter(id => {
+    if (id === 'auto') return false; // auto is intentionally framework-neutral
+    return getAppliedFrameworkIdsForApproach(id).length === 0;
+  });
+  if (unmapped.length > 0) {
+    console.warn(
+      '[framework-registry] These therapeutic_approach values activate no applied frameworks:',
+      unmapped,
+      '— add guideKeys to the relevant FRAMEWORK_REGISTRY entry to wire them up.'
+    );
+  }
+}
 
 // ====================================================================
 // PHASE MAPPING UTILITIES

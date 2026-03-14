@@ -11,6 +11,7 @@ import {
   chooseFrameworksForCell,
   selectCanonicalQuestion,
   createFieldEvent,
+  getAppliedFrameworkIdsForApproach,
   FRAMEWORK_REGISTRY,
   type SpiralogicCell,
   type FieldEvent,
@@ -612,23 +613,10 @@ export async function POST(request: NextRequest) {
     const _councilDepthTier = conversationDepth <= 3 ? 'threshold' : conversationDepth <= 10 ? 'core' : 'deep';
     logGuideActiveAtResponse(userId, councilResolution.guide.id, councilResolution.source, _councilDepthTier);
 
-    // MANY-ARMED INTELLIGENCE: Choose frameworks — member's guide enables its registry counterpart
+    // MANY-ARMED INTELLIGENCE: Choose frameworks — member's therapeutic_approach enables its registry counterpart.
+    // Activation metadata lives on each FrameworkDescriptor (guideKeys field) — not here.
     const guideId = councilResolution.guide.id;
-    const GUIDE_TO_REGISTRY: Record<string, string[]> = {
-      jungian:        ['JUNGIAN'],
-      ifs:            ['IFS'],
-      psychodynamic:  ['JUNGIAN'],
-      cbt:            ['CBT'],
-      somatic:        ['SOMATIC'],
-      tcm:            [],
-      family_systems: [],
-      humanistic:     [],
-      existential:    [],
-      developmental:  [],
-      spiritual:      ['JUNGIAN'],
-      auto:           [],
-    };
-    const enabledApplied = GUIDE_TO_REGISTRY[guideId] ?? [];
+    const enabledApplied = getAppliedFrameworkIdsForApproach(guideId);
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied });
 
     // Initialize Panconscious Field for user

@@ -242,7 +242,11 @@ export const THERAPEUTIC_FRAMEWORKS: Record<TherapeuticFramework, FrameworkConfi
     promise: 'I\'ll help you notice what may be moving through the field — inherited loyalties, unnamed exclusions, love expressed as burden.',
     boundary: 'I won\'t declare field dynamics as fact, prescribe ritual, or claim authority over your family system.',
     icon: '🕸️',
-    color: 'text-stone-400'
+    color: 'text-stone-400',
+    archetype: 'The Ancestor',
+    domain: 'Systemic field, ancestral entanglements, orders of love, intergenerational patterns',
+    element: 'earth',
+    promptBias: 'Sense the systemic field — what has been excluded, unresolved, or inherited. Honour the orders of love without prescribing ritual or claiming authority over the family system.'
   }
 };
 
