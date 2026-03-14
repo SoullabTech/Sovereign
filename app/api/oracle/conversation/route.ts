@@ -70,6 +70,7 @@ import {
   curateMemoryWrite,
   type MAIAResponsePlan,
 } from '@/lib/maia/maiaPlanner';
+import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 
 /** Pattern Pipe (Narrative Wiring) */
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
@@ -1650,17 +1651,29 @@ export async function POST(request: NextRequest) {
       maiaPlan
     );
 
+    // Final enforcement: Apply shared identity guard (fail-closed)
+    const coreIdentityCheck = enforceMaiaIdentity(sanitizedCoreMessage);
+    const spokenIdentityCheck = enforceMaiaIdentity(sanitizedSpokenText);
+
+    if (!coreIdentityCheck.safe || !spokenIdentityCheck.safe) {
+      console.warn('[Oracle] Identity breach in final response:', {
+        coreBreach: !coreIdentityCheck.safe ? coreIdentityCheck.breachPatterns : null,
+        spokenBreach: !spokenIdentityCheck.safe ? spokenIdentityCheck.breachPatterns : null,
+      });
+    }
+
     console.info(JSON.stringify({
       tag: 'oracle.sanitization',
       requestId,
-      coreMessageSanitized: sanitizedCoreMessage !== maiaResponse.coreMessage,
-      spokenTextSanitized: sanitizedSpokenText !== spokenText,
+      coreMessageSanitized: coreIdentityCheck.sanitized !== maiaResponse.coreMessage,
+      spokenTextSanitized: spokenIdentityCheck.sanitized !== spokenText,
+      identityEnforced: !coreIdentityCheck.safe || !spokenIdentityCheck.safe,
     }));
 
     const response = {
       success: true,
-      response: sanitizedCoreMessage,
-      spokenText: sanitizedSpokenText,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
+      response: coreIdentityCheck.sanitized,
+      spokenText: spokenIdentityCheck.sanitized,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
       displayText,  // clean for screen rendering
       spiralogic: {
         cell: spiralogicCell,

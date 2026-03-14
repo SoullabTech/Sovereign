@@ -74,6 +74,7 @@ import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } fr
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
+import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 import { query } from '@/lib/db/postgres';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
@@ -1088,18 +1089,29 @@ export async function POST(req: NextRequest) {
               firstTextEmitted = true;
             }
 
+            // Enforce MAIA identity before emitting to client
+            const identityCheck = enforceMaiaIdentity(chunk.text);
+            if (!identityCheck.safe) {
+              console.warn('[Voice] Identity breach intercepted:', {
+                originalText: chunk.text.substring(0, 80),
+                patterns: identityCheck.breachPatterns,
+              });
+            }
+
             // Emit text immediately so UI can show it
             emit('text', {
               index: chunk.index,
-              text: chunk.text,
-              timestamp: Date.now()
+              text: identityCheck.sanitized,
+              timestamp: Date.now(),
+              identity_checked: !identityCheck.safe,
             });
 
             if (chunk.index === 0) {
               timer.mark('text_0_emitted');
             }
 
-            fullResponse += chunk.text + ' ';
+            // Accumulate the safe (identity-checked) text, not raw
+            fullResponse += identityCheck.sanitized + ' ';
             sentenceCount = chunk.index + 1;
 
             // TTS per-sentence render with fallback (PersonaPlex → OpenAI → Kokoro)
@@ -1178,8 +1190,17 @@ export async function POST(req: NextRequest) {
               thresholdMode: 'llm',
             });
 
+            // Final identity check on assembled response (fail-closed)
+            const finalIdentityCheck = enforceMaiaIdentity(fullResponse.trim());
+            if (!finalIdentityCheck.safe) {
+              console.warn('[Voice] Final response identity breach detected:', {
+                patterns: finalIdentityCheck.breachPatterns,
+                sentenceCount,
+              });
+            }
+
             emit('complete', {
-              fullResponse: fullResponse.trim(),
+              fullResponse: finalIdentityCheck.sanitized,
               sentenceCount,
               audioChunksEmitted,
               timestamp: Date.now(),
