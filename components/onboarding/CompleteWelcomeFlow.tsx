@@ -6,17 +6,25 @@ import ElementalOrientation from './ElementalOrientation';
 import { FAQSection } from './FAQSection';
 import { SageTealWelcome } from './SageTealWelcome';
 import { ConsciousnessPreparation } from './ConsciousnessPreparation';
+import { BirthDataStep } from './BirthDataStep';
 
 interface CompleteWelcomeFlowProps {
   userName?: string;
   onComplete: () => void;
 }
 
+// Step map (starts at 2 — ElementalOrientation + FAQ done on earlier pages)
+// 0 → ElementalOrientation
+// 1 → FAQSection
+// 2 → ConsciousnessPreparation
+// 3 → BirthDataStep  (new — activates personalised astrology)
+// 4 → SageTealWelcome (final welcome screen)
+
 export default function CompleteWelcomeFlow({ userName = "Explorer", onComplete }: CompleteWelcomeFlowProps) {
-  const [currentStep, setCurrentStep] = useState(2); // Start at ConsciousnessPreparation since ElementalOrientation and FAQ are done earlier
+  const [currentStep, setCurrentStep] = useState(2); // Start at ConsciousnessPreparation
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -42,6 +50,10 @@ export default function CompleteWelcomeFlow({ userName = "Explorer", onComplete 
       localStorage.setItem('consciousnessPreparation', JSON.stringify(data));
     }
     setCurrentStep(3);
+  };
+
+  const handleBirthDataComplete = () => {
+    setCurrentStep(4);
   };
 
   const handleSageTealWelcomeComplete = () => {
@@ -72,6 +84,13 @@ export default function CompleteWelcomeFlow({ userName = "Explorer", onComplete 
           />
         );
       case 3:
+        return (
+          <BirthDataStep
+            userName={userName}
+            onComplete={handleBirthDataComplete}
+          />
+        );
+      case 4:
         return (
           <SageTealWelcome
             userName={userName}

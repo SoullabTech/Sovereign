@@ -38,9 +38,13 @@ interface BirthDataFormProps {
   onSubmit: (data: BirthData) => void;
   loading?: boolean;
   isDayMode?: boolean;
+  /** Override the form's default header. Pass null to hide the header entirely. */
+  title?: string | null;
+  /** Override the form's default subtitle. Pass null to hide. */
+  subtitle?: string | null;
 }
 
-export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: BirthDataFormProps) {
+export function BirthDataForm({ onSubmit, loading = false, isDayMode = false, title, subtitle }: BirthDataFormProps) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [locationName, setLocationName] = useState('');
@@ -167,24 +171,33 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
           boxShadow: isDayMode ? '0 4px 20px rgba(0,0,0,0.08)' : '0 0 40px rgba(0, 0, 0, 0.8)',
         }}
       >
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="mb-4"
-        >
-          <MiniHoloflower size={96} isDayMode={false} />
-        </motion.div>
-        <h2 className="text-2xl font-serif mb-2 tracking-wide transition-colors duration-500"
-          style={{ fontWeight: 300, color: isDayMode ? '#C67A28' : '#D88A2D' }}>
-          Your Cosmic Blueprint
-        </h2>
-        <p className="text-sm font-serif italic transition-colors duration-500"
-          style={{ fontWeight: 300, color: isDayMode ? '#3D2E1F' : '#E7E2CF' }}>
-          The cosmos remembers the moment you arrived
-        </p>
-      </div>
+      {/* Header — callers can override title/subtitle or hide them (pass null) */}
+      {(title !== null || subtitle !== null) && (
+        <div className="text-center mb-8">
+          {title !== null && (
+            <>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="mb-4"
+              >
+                <MiniHoloflower size={96} isDayMode={false} />
+              </motion.div>
+              <h2 className="text-2xl font-serif mb-2 tracking-wide transition-colors duration-500"
+                style={{ fontWeight: 300, color: isDayMode ? '#C67A28' : '#D88A2D' }}>
+                {title ?? 'Your Cosmic Blueprint'}
+              </h2>
+            </>
+          )}
+          {subtitle !== null && (
+            <p className="text-sm font-serif italic transition-colors duration-500"
+              style={{ fontWeight: 300, color: isDayMode ? '#3D2E1F' : '#E7E2CF' }}>
+              {subtitle ?? 'The cosmos remembers the moment you arrived'}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="space-y-6">
         {/* Birth Date */}

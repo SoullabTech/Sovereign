@@ -344,7 +344,7 @@ export default function ServicesPage() {
               transition={{ delay: index * 0.05 }}
               className={`
                 bg-[#1e1e38] rounded-xl border border-slate-800/50 p-4
-                ${!service.isActive ? 'opacity-60' : ''}
+                ${!service.isActive ? 'opacity-60' : ''} /* Intentional: state indicator, not text dimming */
               `}
             >
               <div className="flex items-start gap-4">

@@ -12,7 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
-import { apiFetch } from '@/lib/http/apiBase';
+import { apiFetch, getValidMemberId } from '@/lib/http/apiBase';
 
 /** Relational stack metadata from server */
 interface RelationalMetadata {
@@ -264,6 +264,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   // Audio queue and playback management
   const audioQueueRef = useRef<AudioQueueItem[]>([]);
   const isPlayingRef = useRef(false);
+  const nextExpectedIndexRef = useRef(0); // Enforce strict playback order
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -276,6 +277,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   const audioEventsSeenRef = useRef(0);
   const audioPlayedCountRef = useRef(0);
   const audioWatchdogTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Browser-safe type
+
+  // ─── TURN INSTRUMENTATION REFS ───
+  // One UUID per voice turn — correlates client logs with server logs.
+  // Both refs are stable (no re-render) so safe to read in any callback.
+  const turnIdRef = useRef<string>('');
+  const turnStartRef = useRef<number>(0);
   const AUDIO_WATCHDOG_MS = 6000; // 6s after first audio event, if nothing played, force recovery
 
   // 🔥 FORCE RECOVERY: Called when audio pipeline is broken (watchdog or play failure)
@@ -359,10 +366,23 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       return;
     }
 
+    // Sort by index and enforce strict order — only play the next expected index.
+    // If chunks arrive out of order (e.g. index 1 before 0), wait for the earlier
+    // one to arrive. This preserves prosodic arcs across sentence boundaries.
     audioQueueRef.current.sort((a, b) => a.index - b.index);
+
+    const nextChunk = audioQueueRef.current[0];
+    if (!nextChunk) return;
+
+    // Wait for the expected index — don't play out of order
+    if (nextChunk.index > nextExpectedIndexRef.current) {
+      console.log(`[StreamingVoice] ⏳ Waiting for index ${nextExpectedIndexRef.current}, have ${nextChunk.index}`);
+      return; // Will be retried when the missing chunk arrives
+    }
 
     const chunk = audioQueueRef.current.shift();
     if (!chunk) return;
+    nextExpectedIndexRef.current = chunk.index + 1;
 
     isPlayingRef.current = true;
     setState(prev => ({
@@ -437,9 +457,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         );
         // 🎤 PWA SIGNAL: If this is the LAST chunk, emit AUDIO_ENDED
         if (audioQueueRef.current.length === 0) {
+          console.log(`[voice:playback_end:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
           onPlaybackSignalRef.current?.({ type: 'AUDIO_ENDED' });
           // 🔇 FEEDBACK PREVENTION: Signal MAIA finished speaking to re-enable mic
           if (typeof window !== 'undefined') {
+            console.log(`[voice:mic_resume_requested:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
             console.log('🎤 [StreamingVoice] Dispatching maya-voice-end for feedback prevention');
             setTimeout(() => {
               window.dispatchEvent(new Event('maya-voice-end'));
@@ -466,6 +488,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
           // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
           if (audioPlayedCountRef.current === 1) {
+            console.log(`[voice:playback_start:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
             onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
             // 🔇 FEEDBACK PREVENTION: Signal MAIA is speaking to stop mic
             if (typeof window !== 'undefined') {
@@ -514,9 +537,15 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     message: string,
     conversationHistory?: Array<{ role: string; content: string }>
   ) => {
+    // ─── TURN START ───
+    turnIdRef.current = crypto.randomUUID();
+    turnStartRef.current = Date.now();
+    console.log(`[voice:turn_start:${turnIdRef.current.slice(0,8)}] chars=${message.length} ts=${turnStartRef.current}`);
+
     // Clear previous state
     // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
     audioQueueRef.current = [];
+    nextExpectedIndexRef.current = 0; // Reset ordering for new message
     if (currentAudioRef.current) {
       // Clear handlers before clearing src to prevent stale error callbacks
       currentAudioRef.current.onerror = null;
@@ -578,12 +607,17 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       // 🔧 FIX: Include stable conversationId for memory continuity
       const conversationId = getOrCreateConversationId();
       console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation, conversationId:', conversationId.slice(0, 12) + '...');
+      console.log(`[voice:submission_fired:${turnIdRef.current.slice(0,8)}] elapsed=0ms`);
       const response = await apiFetch('/api/voice/stream-conversation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-voice-turn-id': turnIdRef.current,
+        },
         credentials: 'include', // Belt + suspenders: cookies AND token header
         body: JSON.stringify({
           message,
+          userId: getValidMemberId(),  // Member ID for voice prefs + archetype resolution
           voice,
           speed,
           model,  // TTS quality: tts-1 (faster) or tts-1-hd (richer)
@@ -622,6 +656,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       if (!reader) {
         throw new Error('No response stream available');
       }
+      console.log(`[voice:response_received:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
 
       const decoder = new TextDecoder();
       let buffer = '';
@@ -681,6 +716,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     // 🔥 WATCHDOG: Track audio events seen and start timer on first event
                     audioEventsSeenRef.current++;
                     if (audioEventsSeenRef.current === 1) {
+                      console.log(`[voice:first_audio:${turnIdRef.current.slice(0,8)}] elapsed=${Date.now() - turnStartRef.current}ms`);
                       console.log('[StreamingVoice] 🐕 Starting audio watchdog timer');
                       // Start watchdog: if no audio played within N seconds, force recovery
                       if (audioWatchdogTimerRef.current) clearTimeout(audioWatchdogTimerRef.current);
@@ -790,6 +826,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       relational: relationalMeta,
                     }));
                     onComplete?.(data.fullResponse, relationalMeta);
+
+                    // ─── SERVER TIMING SUMMARY ───
+                    // Log turn ID + host + server-side mark breakdown for comparison
+                    if (data.turnId || data.timing) {
+                      console.log(`[voice:server_timing:${(data.turnId ?? turnIdRef.current).slice(0,8)}] host=${data.host ?? 'unknown'} client_elapsed=${Date.now() - turnStartRef.current}ms ${data.timing ?? ''}`);
+                    }
 
                     // ── POSTURE TRACE (tuning log) ──
                     const g = data.guidance;

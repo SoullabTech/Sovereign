@@ -6,14 +6,15 @@
 import { query } from '@/lib/db/postgres';
 
 // Patterns that indicate a name change request
+// "I'm X" / "I am X" removed — too broad, falsely matched "I'm helping", "I'm learning" etc.
+// "I prefer X" removed — too broad, matched preferences unrelated to names
 const NAME_CHANGE_PATTERNS = [
   /\bcall me\s+([a-z][a-z'-]*(?:\s+[a-z][a-z'-]*)?)\b/i,
   /\bmy name is\s+([a-z][a-z'-]*(?:\s+[a-z][a-z'-]*)?)\b/i,
-  /\bi(?:'m| am)\s+([a-z][a-z'-]*)\b/i,
-  /\bi prefer\s+(?:to be called\s+)?([a-z][a-z'-]*)\b/i,
   /\bplease call me\s+([a-z][a-z'-]*)\b/i,
   /\bjust call me\s+([a-z][a-z'-]*)\b/i,
   /\byou can call me\s+([a-z][a-z'-]*)\b/i,
+  /\bi(?:'d like| want) (?:you )?to call me\s+([a-z][a-z'-]*)\b/i,
 ];
 
 // Words that shouldn't be treated as names

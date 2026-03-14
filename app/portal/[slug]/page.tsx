@@ -459,13 +459,37 @@ export default function PortalHomePage() {
 
       {/* Footer */}
       <footer className="py-12 px-4 border-t border-[#3A3347]">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center mb-8">
           <p className="font-cinzel text-lg text-[#F5F0FF] mb-2">
             {profile.brand.name || profile.name}
           </p>
           <p className="font-quicksand text-sm text-[#6B6280]">
             Powered by Stellium
           </p>
+        </div>
+
+        {/* AIN Platform Signature */}
+        <div className="max-w-4xl mx-auto pt-6 border-t border-[#3A3347]">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-xl">
+              <p className="font-quicksand text-xs text-[#9D8EC7]/70 font-semibold tracking-wide">
+                Powered by AIN — Private Intelligence Infrastructure
+              </p>
+              <p className="font-quicksand text-xs text-[#6B6280] mt-1">
+                Your data stays with this business. No third-party tracking or resale.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <a
+                href="https://soullab.life/powered-by"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-quicksand text-[#6B6280] hover:text-[#D4AF37] transition-colors underline underline-offset-2"
+              >
+                About AIN
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

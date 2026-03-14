@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  jeremy:
+    image: jeremy-web:latest
+    container_name: jeremy-web
+    restart: unless-stopped
+    networks:
+      - maia-network
+    depends_on:
+      - caddy
+
+networks:
+  maia-network:
+    external: true

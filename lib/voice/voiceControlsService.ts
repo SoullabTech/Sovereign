@@ -9,6 +9,7 @@ import { query } from '@/lib/db/postgres';
 import type {
   MemberVoicePreferences,
   SystemVoiceProfile,
+  TTSProviderPref,
   VoiceControlOffsets,
 } from '@/lib/types/voiceControls';
 
@@ -31,6 +32,8 @@ const DEFAULT_SYSTEM_PROFILE: SystemVoiceProfile = {
 
 const DEFAULT_MEMBER_PREFS: MemberVoicePreferences = {
   voiceIdOverride: null,
+  voiceArchetype: null,
+  ttsProvider: null,
   offset: { ...DEFAULT_OFFSETS },
 };
 
@@ -102,7 +105,7 @@ export async function getMemberVoicePreferences(
 ): Promise<MemberVoicePreferences> {
   try {
     const result = await query(
-      `SELECT voice_id_override, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset
+      `SELECT voice_id_override, voice_archetype, tts_provider, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset
        FROM member_voice_preferences
        WHERE member_id = $1`,
       [memberId],
@@ -115,6 +118,8 @@ export async function getMemberVoicePreferences(
     const row = result.rows[0];
     return {
       voiceIdOverride: row.voice_id_override,
+      voiceArchetype: row.voice_archetype ?? null,
+      ttsProvider: (row.tts_provider as TTSProviderPref) ?? null,
       offset: {
         pace: row.pace_offset,
         warmth: row.warmth_offset,
@@ -135,18 +140,22 @@ export async function upsertMemberVoicePreferences(
 ): Promise<void> {
   await query(
     `INSERT INTO member_voice_preferences
-       (member_id, voice_id_override, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (member_id, voice_id_override, voice_archetype, tts_provider, pace_offset, warmth_offset, poetry_offset, directiveness_offset, energy_offset)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      ON CONFLICT (member_id) DO UPDATE SET
        voice_id_override = $2,
-       pace_offset = $3,
-       warmth_offset = $4,
-       poetry_offset = $5,
-       directiveness_offset = $6,
-       energy_offset = $7`,
+       voice_archetype = $3,
+       tts_provider = $4,
+       pace_offset = $5,
+       warmth_offset = $6,
+       poetry_offset = $7,
+       directiveness_offset = $8,
+       energy_offset = $9`,
     [
       memberId,
       prefs.voiceIdOverride ?? null,
+      prefs.voiceArchetype ?? null,
+      prefs.ttsProvider ?? null,
       prefs.offset.pace,
       prefs.offset.warmth,
       prefs.offset.poetry,
@@ -167,9 +176,11 @@ export async function upsertMemberVoicePreferences(
 export function mergeVoiceIntent(
   system: SystemVoiceProfile,
   member: MemberVoicePreferences,
-): { voiceId: string; intent: VoiceControlOffsets } {
+): { voiceId: string; voiceArchetype: string | null; ttsProvider: TTSProviderPref | null; intent: VoiceControlOffsets } {
   return {
     voiceId: member.voiceIdOverride || system.voiceId,
+    voiceArchetype: member.voiceArchetype ?? null,
+    ttsProvider: member.ttsProvider ?? null,
     intent: {
       pace: system.base.pace + member.offset.pace,
       warmth: system.base.warmth + member.offset.warmth,

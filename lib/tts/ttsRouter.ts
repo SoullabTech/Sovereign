@@ -22,10 +22,17 @@
  */
 
 import * as kokoro from './providers/kokoro';
+import * as sesame from './providers/sesame';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
-import { resolveKokoroVoice, resolveSpeed } from '@/lib/voice/voiceMap';
+import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
+import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 
 export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
+
+/** Single-line JSON log for grep-friendly TTS routing proof. */
+function logTtsResolve(payload: Record<string, unknown>) {
+  console.info('[tts.resolve]', JSON.stringify(payload));
+}
 
 interface TTSRequest {
   text: string;
@@ -33,6 +40,10 @@ interface TTSRequest {
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
   voiceHint?: VoiceIntent;
+  /** Member's chosen voice archetype — overrides element-based voice selection */
+  voiceArchetype?: string | null;
+  /** Member's TTS provider preference (from settings) */
+  ttsProviderPref?: string | null;
 }
 
 interface TTSResult {
@@ -82,24 +93,66 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     : localEnabled ? 'kokoro'
     : 'openai';
 
+  // ── Archetype intercept: OpenAI archetypes skip Kokoro entirely ──
+  if (params.voiceArchetype) {
+    const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
+
+    logTtsResolve({
+      path: 'ttsRouter',
+      stage: 'archetype_intercept',
+      voiceArchetype: params.voiceArchetype,
+      resolvedProvider: archetypeResolution.provider,
+      resolvedVoice: archetypeResolution.voice,
+      localEnabled,
+      ttsProviderEnv: process.env.MAIA_TTS_PROVIDER || null,
+    });
+
+    if (archetypeResolution.provider === 'openai') {
+      const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
+      throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
+    }
+  }
+
+  // ── GUARDRAIL: MAIA OpenAI family cannot hit Kokoro unless member explicitly chose "local" ──
+  const memberPref = params.ttsProviderPref || 'auto';
+  const archetype = params.voiceArchetype || null;
+  const isMaiaOpenAiFamily =
+    typeof archetype === 'string' &&
+    archetype.startsWith('maia_') &&
+    resolveArchetypeVoice(archetype).provider === 'openai';
+
+  if (isMaiaOpenAiFamily && memberPref !== 'local') {
+    logTtsResolve({
+      path: 'ttsRouter',
+      stage: 'guardrail_force_openai',
+      voiceArchetype: archetype,
+      memberPref,
+    });
+    throw new TTSFallbackToOpenAI(false, 'maia_default_guardrail', resolveArchetypeVoice(archetype).voice);
+  }
+
   // Try primary
   if (primary === 'kokoro') {
     try {
-      // Bridge B: Use Conductor's VoiceIntent for voice selection
-      const kokoroVoice = params.voiceHint
-        ? resolveKokoroVoice(params.voiceHint.element)
-        : params.voice;
+      // Archetype overrides element-based selection (member chose a fixed voice)
+      // Otherwise, Bridge B: element from Conductor determines the voice
+      const kokoroVoice = params.voiceArchetype
+        ? resolveVoiceWithArchetype(params.voiceHint?.element ?? 'earth', params.voiceArchetype)
+        : params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : params.voice;
       const kokoroSpeed = params.voiceHint
         ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
         : params.speed;
 
-      // Voice identity logging — watch the body learn
-      console.info('[voice]', {
-        element: params.voiceHint?.element,
-        phase: params.voiceHint?.phase,
-        voice: kokoroVoice,
-        speed: kokoroSpeed,
+      logTtsResolve({
+        path: 'ttsRouter',
+        stage: 'dispatch',
         provider: 'kokoro',
+        voice: kokoroVoice,
+        voiceArchetype: params.voiceArchetype || null,
+        element: params.voiceHint?.element,
+        memberPref,
       });
 
       const result = await kokoro.synthesize({
@@ -120,22 +173,63 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   }
 
   if (primary === 'sesame') {
-    // Sesame integration is Phase 2 — for now, fall through to OpenAI
-    console.warn('[tts-router] Sesame provider selected but not yet integrated. Falling back to OpenAI.');
-    throw new TTSFallbackToOpenAI(true, 'sesame_not_integrated');
+    try {
+      logTtsResolve({
+        path: 'ttsRouter',
+        stage: 'dispatch',
+        provider: 'sesame',
+        voice: params.voice || 'maya',
+        element: params.voiceHint?.element,
+        memberPref,
+      });
+
+      const result = await sesame.synthesize({
+        text: params.text,
+        voice: params.voice || 'maya',
+        format: params.format,
+        speed: params.speed,
+        element: params.voiceHint?.element,
+      });
+      return { ...result, fallback: false, reason: 'sesame_healthy' };
+    } catch (sesameErr: any) {
+      const reason = sesameErr.message?.includes('timeout') ? 'sesame_timeout'
+        : sesameErr.message?.includes('ECONNREFUSED') ? 'sesame_unreachable'
+        : 'sesame_error';
+      console.warn(`[tts-router] Sesame failed (${reason}), trying Kokoro: ${sesameErr.message}`);
+
+      // Fallback to Kokoro (local) before considering OpenAI
+      try {
+        const kokoroVoice = params.voiceHint
+          ? resolveKokoroVoice(params.voiceHint.element)
+          : params.voice;
+        const kokoroSpeed = params.voiceHint
+          ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
+          : params.speed;
+        const result = await kokoro.synthesize({
+          text: params.text,
+          voice: kokoroVoice,
+          format: params.format,
+          speed: kokoroSpeed,
+        });
+        return { ...result, fallback: true, reason: `${reason}_kokoro_fallback` };
+      } catch (kokoroErr: any) {
+        const kokoroReason = kokoroErr.message?.includes('ECONNREFUSED') ? 'kokoro_unreachable' : 'kokoro_error';
+        console.warn(`[tts-router] Kokoro also failed (${kokoroReason}), falling back to OpenAI`);
+        throw new TTSFallbackToOpenAI(true, `${reason}_${kokoroReason}`);
+      }
+    }
   }
 
   // OpenAI as primary (not a fallback)
-  // Log voice intent even on cloud path — see what the body would have chosen
-  if (params.voiceHint) {
-    console.info('[voice]', {
-      element: params.voiceHint.element,
-      phase: params.voiceHint.phase,
-      voice: `openai:${params.voice || 'default'}`,
-      speed: params.speed,
-      provider: 'openai',
-    });
-  }
+  logTtsResolve({
+    path: 'ttsRouter',
+    stage: 'dispatch',
+    provider: 'openai',
+    voice: params.voice || 'default',
+    voiceArchetype: params.voiceArchetype || null,
+    element: params.voiceHint?.element,
+    memberPref,
+  });
   throw new TTSFallbackToOpenAI(false, 'openai_primary');
 }
 
@@ -147,12 +241,15 @@ export class TTSFallbackToOpenAI extends Error {
   public readonly isFallback: boolean;
   /** Why the fallback happened (for audit logging) */
   public readonly reason: string;
+  /** Specific OpenAI voice to use (when archetype routes to OpenAI by design) */
+  public readonly voice?: string;
 
-  constructor(isFallback: boolean, reason: string = 'unknown') {
+  constructor(isFallback: boolean, reason: string = 'unknown', voice?: string) {
     super('Falling back to OpenAI TTS');
     this.name = 'TTSFallbackToOpenAI';
     this.isFallback = isFallback;
     this.reason = reason;
+    this.voice = voice;
   }
 }
 

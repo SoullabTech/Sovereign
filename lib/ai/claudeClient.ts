@@ -9,8 +9,8 @@ import type { TextResult, ProviderMeta } from './types';
 // Model configuration
 // ARCHITECTURE: MAIA's mind is the consciousness system (Spiralogic, AIN, prompts)
 // Claude is the MOUTH - Sonnet for reliable articulation, Opus for deep reasoning tasks
-const OPUS_MODEL = process.env.CLAUDE_REASONING_MODEL || 'claude-opus-4-5-20251101';  // For AIN, consultation, analysis
-const SONNET_MODEL = process.env.CLAUDE_VOICE_MODEL || 'claude-sonnet-4-5-20250929';  // For conversation (MAIA's mouth)
+const OPUS_MODEL = process.env.CLAUDE_REASONING_MODEL || 'claude-opus-4-6';  // For AIN, consultation, analysis
+const SONNET_MODEL = process.env.CLAUDE_VOICE_MODEL || 'claude-sonnet-4-6';  // For conversation (MAIA's mouth)
 const CLAUDE_MAX_TOKENS = parseInt(process.env.CLAUDE_MAX_TOKENS || '2048');
 const CLAUDE_TEMPERATURE = parseFloat(process.env.CLAUDE_TEMPERATURE || '0.65');  // Slightly lower for consistency
 

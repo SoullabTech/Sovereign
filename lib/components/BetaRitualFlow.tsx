@@ -172,7 +172,7 @@ export const BetaRitualFlow: React.FC<BetaRitualFlowProps> = ({
                   <p className="text-amber-200 text-sm">
                     Warm, intuitive presence. Maya speaks with gentle wisdom and emotional attunement.
                   </p>
-                  <div className="text-xs text-amber-300">OpenAI Alloy Voice</div>
+                  <div className="text-xs text-amber-300">Maia Kore Voice</div>
                 </div>
               </button>
 
@@ -188,7 +188,7 @@ export const BetaRitualFlow: React.FC<BetaRitualFlowProps> = ({
                   <p className="text-blue-200 text-sm">
                     Clear, grounded presence. Anthony offers practical wisdom and steady guidance.
                   </p>
-                  <div className="text-xs text-blue-300">OpenAI Onyx Voice</div>
+                  <div className="text-xs text-blue-300">Atlas Deep Voice</div>
                 </div>
               </button>
             </div>

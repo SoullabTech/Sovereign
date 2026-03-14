@@ -349,7 +349,7 @@ export default function RepairScriptPage() {
                 </button>
 
                 <div
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4 opacity-60"
+                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
                 >
                   <div className="text-sm font-medium">4) Invitation</div>
                   <div className="mt-1 text-xs text-white/35">

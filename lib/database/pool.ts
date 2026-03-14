@@ -1,25 +1,12 @@
 /**
- * Shared Database Pool
+ * Shared Database Pool — thin shim over lib/db/postgres
  *
- * Centralized database connection for learning system services.
- * Currently implements a placeholder that can be replaced with actual
- * PostgreSQL or Supabase connection.
- */
-
-/**
- * Database pool interface for PostgreSQL-style queries
+ * The learning/comparison services (engineComparisonService, etc.) import
+ * `pool` from this file. Previously this was a stub that threw on every call,
+ * producing noisy "Database connection not implemented" errors in prod logs.
  *
- * This is a placeholder implementation. In production, replace with:
- * - PostgreSQL pool (pg module)
- * - Supabase client with query adapter
- * - Prisma client
+ * Fix: delegate to the real pool in lib/db/postgres so all callers work
+ * without any changes to the import sites.
  */
-export const pool = {
-  async query(text: string, params?: any[]) {
-    // This is a placeholder - replace with your actual database connection
-    // For example: return await yourPgPool.query(text, params);
-    throw new Error('Database connection not implemented - replace with your PostgreSQL setup');
-  }
-};
-
-export default pool;
+export { pool } from '@/lib/db/postgres';
+export default (await import('@/lib/db/postgres')).pool;

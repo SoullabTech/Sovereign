@@ -82,8 +82,47 @@ export interface PersonaPlexRenderResult {
 // PersonaPlex service URL (local Mac Studio or Docker container)
 const PERSONAPLEX_URL = process.env.PERSONAPLEX_URL || 'http://localhost:8765';
 
-// Timeout for render requests (voice generation can take time)
-const RENDER_TIMEOUT_MS = 30000;
+// Timeout for render requests. 8 s is generous but prevents the 30 s
+// dead-wait that stalls iPhone PWA when PersonaPlex is under load.
+const RENDER_TIMEOUT_MS = 8000;
+
+// ═══════════════════════════════════════════════════════════════
+// HEALTH CACHE — skip PersonaPlex probe when service is known down
+// ═══════════════════════════════════════════════════════════════
+
+/** How long to trust a health-check result (30 s) */
+const HEALTH_TTL_MS = 30_000;
+
+let _ppHealthy: boolean | null = null; // null = never checked
+let _ppHealthAt = 0;
+
+/**
+ * Returns true if PersonaPlex passed a recent health check.
+ * Caches the result so we avoid adding an extra round-trip to every
+ * TTS request when the service is known to be down.
+ */
+export async function isPersonaPlexReady(): Promise<boolean> {
+  const now = Date.now();
+  if (_ppHealthy !== null && now - _ppHealthAt < HEALTH_TTL_MS) {
+    return _ppHealthy;
+  }
+  const { available } = await checkPersonaPlexHealth();
+  _ppHealthy = available;
+  _ppHealthAt = now;
+  return available;
+}
+
+/** Call after a successful render — keeps cache warm without extra RTT. */
+export function markPersonaPlexHealthy(): void {
+  _ppHealthy = true;
+  _ppHealthAt = Date.now();
+}
+
+/** Call on any render failure — forces fresh check on next request. */
+export function markPersonaPlexUnhealthy(): void {
+  _ppHealthy = false;
+  _ppHealthAt = Date.now();
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CLIENT

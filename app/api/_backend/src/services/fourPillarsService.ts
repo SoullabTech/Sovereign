@@ -144,8 +144,11 @@ export function generateFourPillars(
   const month = pillar((yearStemIndex + m) % 10, (yearBranchIndex + m) % 12);
 
   // Day pillar (simplified - should use proper Julian day calculation)
+  // Use positiveMod to handle pre-1970 birth dates where dayNumber is negative
+  // (JS % operator returns negative results for negative operands)
   const dayNumber = Math.floor(local.getTime() / 86400000);
-  const day = pillar((dayNumber + 40) % 10, (dayNumber + 16) % 12);
+  const positiveMod = (n: number, m: number) => ((n % m) + m) % m;
+  const day = pillar(positiveMod(dayNumber + 40, 10), positiveMod(dayNumber + 16, 12));
 
   // Hour pillar (based on Chinese double-hour system)
   const hourBranchIndex = Math.floor((h + 1) / 2) % 12;

@@ -300,15 +300,19 @@ export function processThreshold(input: ThresholdInput): ThresholdResult {
 /**
  * Timing utility for voice pipeline instrumentation
  */
-export function createVoiceTimer() {
+export function createVoiceTimer(opts?: { turnId?: string; host?: string }) {
   const t0 = Date.now();
   const marks: { label: string; time: number }[] = [];
+  const prefix = ['[voice]',
+    opts?.turnId ? `turn=${opts.turnId.slice(0, 8)}` : '',
+    opts?.host ? `host=${opts.host}` : '',
+  ].filter(Boolean).join(' ');
 
   return {
     mark(label: string) {
       const elapsed = Date.now() - t0;
       marks.push({ label, time: elapsed });
-      console.log(`[voice] ${label} +${elapsed}ms`);
+      console.log(`${prefix} ${label} +${elapsed}ms`);
     },
 
     getMarks() {

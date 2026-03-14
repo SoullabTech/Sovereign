@@ -620,14 +620,14 @@ function SidebarEventCard({
       <div className={`font-medium ${event.source === 'maia' ? 'text-amber-300' : 'text-teal-300'}`}>
         {event.clientName || event.title}
       </div>
-      <div className="flex items-center gap-1.5 mt-1 text-sm opacity-70">
+      <div className="flex items-center gap-1.5 mt-1 text-sm text-stone-400">
         <Clock className="w-3 h-3" />
         <span className={event.source === 'maia' ? 'text-amber-400' : 'text-teal-400'}>
           {startTime} - {endTime}
         </span>
       </div>
       {event.location && (
-        <div className="flex items-center gap-1.5 mt-1 text-xs opacity-60">
+        <div className="flex items-center gap-1.5 mt-1 text-xs text-stone-500">
           <MapPin className="w-3 h-3" />
           <span className={event.source === 'maia' ? 'text-amber-400' : 'text-teal-400'}>
             {event.location}
@@ -867,11 +867,11 @@ function DayView({
                     `}
                   >
                     <div className="font-medium truncate">{event.title}</div>
-                    <div className="text-sm opacity-70 mt-0.5">
+                    <div className="text-sm text-stone-400 mt-0.5">
                       {formatEventTime(event.start)} - {formatEventTime(event.end)}
                     </div>
                     {event.clientName && (
-                      <div className="text-sm opacity-70 flex items-center gap-1 mt-1 truncate">
+                      <div className="text-sm text-stone-400 flex items-center gap-1 mt-1 truncate">
                         <User className="w-3 h-3 flex-shrink-0" />
                         {event.clientName}
                       </div>

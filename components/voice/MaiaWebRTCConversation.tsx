@@ -30,7 +30,7 @@ export interface MaiaWebRTCConversationProps {
   isSanctuary?: boolean; // Skip persistence for sanctuary mode
   element?: 'fire' | 'water' | 'earth' | 'air' | 'aether';
   conversationStyle?: 'natural' | 'consciousness' | 'adaptive';
-  voice?: 'shimmer' | 'alloy' | 'echo' | 'ash' | 'ballad' | 'coral' | 'sage' | 'verse';
+  voice?: string; // Sovereign voice identity (maia_core, maia_warm, atlas, etc.)
 }
 
 export interface MaiaWebRTCConversationRef {
@@ -55,7 +55,7 @@ export const MaiaWebRTCConversation = forwardRef<MaiaWebRTCConversationRef, Maia
       isSanctuary = false,
       element = 'aether',
       conversationStyle = 'natural',
-      voice = 'shimmer',
+      voice = 'maia_warm',
     } = props;
 
     // One-shot guard for autoStart to prevent double-connecting

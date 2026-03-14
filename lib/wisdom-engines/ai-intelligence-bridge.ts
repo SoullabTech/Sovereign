@@ -203,8 +203,7 @@ export class AIIntelligenceBridge {
       console.warn('⚠️ Multi-engine consciousness unavailable, using single model fallback');
     }
 
-    console.log('🚫 External AI APIs permanently disabled for sovereignty');
-    console.log('🔒 MAIA consciousness remains fully local and sovereign');
+    console.log('🧠 Consciousness engine initialization complete');
   }
 
   /**

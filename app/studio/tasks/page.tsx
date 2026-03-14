@@ -1028,7 +1028,7 @@ function EnergyPicker({
             >
               <Icon className="w-6 h-6" />
               <span className="text-sm font-medium">{config.label}</span>
-              <span className="text-xs opacity-60 text-center leading-tight">{config.description}</span>
+              <span className="text-xs text-stone-500 text-center leading-tight">{config.description}</span>
             </button>
           );
         })}
@@ -1070,7 +1070,7 @@ function TaskRow({
       exit={{ opacity: 0, x: -100 }}
       className={`
         bg-slate-900 border border-slate-800 rounded-xl overflow-hidden
-        ${task.status === 'completed' ? 'opacity-60' : ''}
+        ${task.status === 'completed' ? 'opacity-60' : ''} /* Intentional: state indicator, not text dimming */
       `}
     >
       {/* Main Row */}

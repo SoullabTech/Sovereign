@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  rudeboy:
+    image: rudeboy-web:latest
+    container_name: rudeboy-web
+    restart: unless-stopped
+    networks:
+      - maia-network
+    depends_on:
+      - caddy
+
+networks:
+  maia-network:
+    external: true

@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link, Hand } from 'lucide-react';
 import { GoogleConnectSection } from './settings/GoogleConnectSection';
+import { InfoBubble } from '@/components/help/FeatureTooltip';
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
@@ -430,6 +431,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                     <div className="flex items-center gap-2">
                       <Sparkles size={16} />
                       Range of Effect
+                      <InfoBubble featureId="range-of-effect" side="right" />
                     </div>
                     <span className="text-xs text-white/60">
                       {settings.voice.prosodyRange === 0 && 'Neutral'}
@@ -498,10 +500,11 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                           <Sparkles size={20} />
                         </div>
                         <div className="text-left">
-                          <div className={`text-sm font-medium ${
+                          <div className={`text-sm font-medium flex items-center gap-1.5 ${
                             streamingVoiceEnabled ? 'text-cyan-300' : 'text-white/80'
                           }`}>
                             Streaming Voice (Beta)
+                            <InfoBubble featureId="streaming-voice" side="right" />
                           </div>
                           <div className="text-xs text-white/50 mt-0.5">
                             Natural flow with sentence-by-sentence TTS
@@ -622,6 +625,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
                     <Brain size={16} />
                     Memory
+                    <InfoBubble featureId="memory-control" side="right" />
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {(['minimal', 'moderate', 'deep'] as const).map((depth) => (
@@ -650,6 +654,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
                     <Users size={16} />
                     Maia's Presence
+                    <InfoBubble featureId="archetype-selector" side="right" />
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {ARCHETYPE_OPTIONS.map((archetype) => (
@@ -692,6 +697,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
                     <MessageSquare size={16} />
                     Conversation Style
+                    <InfoBubble featureId="conversation-style" side="right" />
                   </label>
                   <div className="space-y-2">
                     {(['her', 'classic', 'adaptive'] as ConversationMode[]).map((mode) => {

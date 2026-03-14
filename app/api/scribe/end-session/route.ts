@@ -93,9 +93,42 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. CONTINUITY: queue for background summarization
-    console.log(`📝 Session ${sessionId} queued for summary`);
 
-    // Mark session as closing
+    // Guard: count turns BEFORE changing session state.
+    // Only transition to 'closing' if we're actually going to enqueue.
+    // If < 2 turns: leave session as 'active' so the sweeper can pick it up
+    // once turns arrive. Setting 'closing' here would make it invisible to
+    // the sweeper (which requires status='active').
+    const turnCountResult = await query<{ turn_count: string }>(
+      `SELECT COUNT(*) AS turn_count FROM conversation_turns WHERE session_id = $1`,
+      [sessionId]
+    );
+    const turnCount = parseInt(turnCountResult.rows[0]?.turn_count ?? '0', 10);
+
+    if (turnCount < 2) {
+      // Keep member_id if missing, but do NOT change status.
+      // Sweeper will close + enqueue once the session is stale with >= 2 turns.
+      await query(
+        `UPDATE maia_sessions
+         SET member_id = COALESCE(member_id, $2), updated_at = NOW()
+         WHERE id = $1`,
+        [sessionId, userId || null]
+      );
+      console.log(
+        `[EndSession] SKIP_ENQUEUE_TOO_FEW_TURNS: session ${sessionId} has ${turnCount} turn(s) — leaving active for sweeper`
+      );
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        mode: 'continuity',
+        message: 'Session has too few turns for summary — sweeper will handle when content arrives.',
+        status: 'active',
+        skippedQueue: true,
+      });
+    }
+
+    // Enough turns — transition to closing and enqueue.
+    console.log(`📝 Session ${sessionId} queued for summary (${turnCount} turns)`);
     await query(
       `UPDATE maia_sessions
        SET status = 'closing', member_id = COALESCE(member_id, $2), updated_at = NOW()

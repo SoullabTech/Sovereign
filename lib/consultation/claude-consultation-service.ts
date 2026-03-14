@@ -158,7 +158,7 @@ export async function consultClaudeForDepth(
     const userPrompt = buildClaudeUserPrompt(input);
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929", // Latest Claude model
+      model: "claude-sonnet-4-6", // Latest Claude model
       max_tokens: 800,
       temperature: 0.2, // Lower temperature for more consistent guidance
       system: systemPrompt,

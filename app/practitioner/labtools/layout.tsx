@@ -80,7 +80,7 @@ export default function LabtoolsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   const isActive = (href: string) => {
     // Exact match for overview and dashboard

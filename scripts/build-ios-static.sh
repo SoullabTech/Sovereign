@@ -10,6 +10,10 @@
 
 set -e
 
+# CocoaPods requires UTF-8 locale; Ruby's unicode_normalize crashes without it
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 

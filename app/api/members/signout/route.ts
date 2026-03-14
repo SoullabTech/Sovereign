@@ -38,8 +38,8 @@ export async function POST() {
 
     cookieStore.set('maia_session', '', { ...clearOptions, httpOnly: true });
     cookieStore.set('maia_member_id', '', { ...clearOptions, httpOnly: true });
-    cookieStore.set('maia_tier', '', { ...clearOptions, httpOnly: false });
-    cookieStore.set('maia_roles', '', { ...clearOptions, httpOnly: false });
+    cookieStore.set('maia_tier', '', { ...clearOptions, httpOnly: true });
+    cookieStore.set('maia_roles', '', { ...clearOptions, httpOnly: true });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -40,9 +40,9 @@ export function HandwritingUploadSheet({
 
   // Check OCR availability on mount
   useEffect(() => {
-    HandwritingOCR.isAvailable().then(result => {
-      setOcrAvailable(result.available);
-    });
+    HandwritingOCR.isAvailable()
+      .then(result => { setOcrAvailable(result.available); })
+      .catch(() => { setOcrAvailable(false); }); // plugin not registered on this platform
   }, []);
 
   // Reset state when sheet opens

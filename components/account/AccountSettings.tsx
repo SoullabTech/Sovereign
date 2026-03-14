@@ -40,6 +40,7 @@ import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/c
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -73,6 +74,7 @@ interface MemberProfile {
     joinedAt: string | null;
   };
   birthData: BirthDataType | null;
+  astrologyConsent: 'unknown' | 'opted_in' | 'declined' | null;
 }
 
 interface MemberSettings {
@@ -88,7 +90,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+type SettingsSection = 'profile' | 'account' | 'maia' | 'voice' | 'astrology' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals' | 'messaging';
 
 interface PractitionerProject {
   id: string;
@@ -141,14 +143,15 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'account', label: 'Account', icon: Lock },
   { id: 'portals', label: 'Client Portals', icon: Globe, practitionerOnly: true },
-  { id: 'astrology', label: 'Birth Chart', icon: Star },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
   { id: 'voice', label: 'Voice', icon: Mic },
+  { id: 'astrology', label: 'Astrology', icon: Star },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
   { id: 'membership', label: 'Membership', icon: Crown },
+  { id: 'messaging', label: 'Sovereign Messaging', icon: MessageSquare },
   { id: 'connections', label: 'Connections', icon: LinkIcon },
   { id: 'data', label: 'Your Data', icon: Download },
 ];
@@ -166,6 +169,7 @@ export function AccountSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [birthSaveError, setBirthSaveError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Practitioner projects state
@@ -213,6 +217,10 @@ export function AccountSettings() {
     timezone: string;
   } | null>(null);
   const [searchingLocation, setSearchingLocation] = useState(false);
+
+  // Astrology consent state
+  const [astrologyConsent, setAstrologyConsent] = useState<'unknown' | 'opted_in' | 'declined' | null>(null);
+  const [consentSaving, setConsentSaving] = useState(false);
 
   // Sovereignty state
   const [consentSummary, setConsentSummary] = useState<ConsentSummary | null>(null);
@@ -262,6 +270,7 @@ export function AccountSettings() {
           const profileData = await profileRes.json();
           console.log('[AccountSettings] Profile data received:', profileData);
           console.log('[AccountSettings] Birth data in profile:', profileData.birthData);
+          setAstrologyConsent(profileData.astrologyConsent ?? 'unknown');
           setProfile(profileData);
           setEditName(profileData.name || '');
           setEditPreferredName(profileData.preferredName || '');
@@ -465,15 +474,14 @@ export function AccountSettings() {
     saveAccountSettings(updated);
     showSaveIndicator();
 
-    // Sync voice settings to legacy localStorage keys used by OracleConversation
-    // This ensures both event paths are triggered for maximum compatibility
+    // Sync voice name to legacy localStorage key (still read by agentConfig)
     if (path === 'voice.openaiVoice') {
       localStorage.setItem('selected_voice', value as string);
     }
-    if (path.startsWith('voice.')) {
-      // Force reload of voice settings in OracleConversation
-      window.dispatchEvent(new Event('conversationStyleChanged'));
-    }
+    // NOTE: No separate conversationStyleChanged dispatch here.
+    // saveAccountSettings() already emits 'maia-account-settings-changed',
+    // which OracleConversation listens to. Double-dispatching caused a
+    // feedback loop with log spam (dozens of updates per second).
 
     // Also sync nested settings to server if we have userId
     if (userId) {
@@ -631,6 +639,7 @@ export function AccountSettings() {
   const saveBirthData = useCallback(async () => {
     if (!userId) return;
     setSaving(true);
+    setBirthSaveError(null);
 
     try {
       const birthData = editBirthDate ? {
@@ -644,50 +653,101 @@ export function AccountSettings() {
         } : null,
       } : null;
 
-      // Debug logging
-      console.log('[AccountSettings] Saving birth data:', {
-        editBirthDate,
-        editBirthTime,
-        selectedLocation,
-        birthDataToSend: birthData,
-      });
-
       const res = await fetch(apiUrl('/api/members/profile'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId: userId,
-          birthData,
-        }),
+        body: JSON.stringify({ memberId: userId, birthData }),
       });
 
       if (res.ok) {
-        // Update local profile state
-        setProfile(prev => prev ? {
-          ...prev,
-          birthData,
-        } : null);
-
-        // Store birth data in localStorage for immediate MAIA access
+        setProfile(prev => prev ? { ...prev, birthData } : null);
         const storedUser = localStorage.getItem('beta_user');
         if (storedUser) {
           try {
             const user = JSON.parse(storedUser);
             user.birthData = birthData;
             localStorage.setItem('beta_user', JSON.stringify(user));
-          } catch (e) {
-            console.error('[AccountSettings] Failed to update localStorage:', e);
-          }
+          } catch { /* silent */ }
         }
-
         showSaveIndicator();
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        setBirthSaveError(errBody?.error || `Save failed (${res.status})`);
       }
-    } catch (err) {
-      console.error('[AccountSettings] Save birth data error:', err);
+    } catch {
+      setBirthSaveError('Network error — check your connection and try again');
     } finally {
       setSaving(false);
     }
   }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
+
+  // Remove birth data — explicit null PUT, bypasses form state closure
+  const removeBirthData = useCallback(async () => {
+    if (!userId) return;
+    setSaving(true);
+    setBirthSaveError(null);
+    try {
+      const res = await fetch(apiUrl('/api/members/profile'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, birthData: null }),
+      });
+      if (res.ok) {
+        setEditBirthDate('');
+        setEditBirthTime('');
+        setEditBirthLocation('');
+        setSelectedLocation(null);
+        setProfile(prev => prev ? { ...prev, birthData: null } : null);
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            delete user.birthData;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch { /* silent */ }
+        }
+        showSaveIndicator();
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        setBirthSaveError(errBody?.error || `Remove failed (${res.status})`);
+      }
+    } catch {
+      setBirthSaveError('Network error — check your connection and try again');
+    } finally {
+      setSaving(false);
+    }
+  }, [userId, showSaveIndicator]);
+
+  // Save astrology consent
+  const saveAstrologyConsent = useCallback(async (consent: 'opted_in' | 'declined') => {
+    if (!userId) return;
+    setConsentSaving(true);
+    try {
+      const res = await fetch(apiUrl('/api/members/profile'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: userId, astrologyConsent: consent }),
+      });
+      if (res.ok) {
+        setAstrologyConsent(consent);
+        setProfile(prev => prev ? { ...prev, astrologyConsent: consent } : null);
+        // Keep localStorage in sync
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            user.astrologyConsent = consent;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch (e) { /* silent */ }
+        }
+        showSaveIndicator();
+      }
+    } catch (err) {
+      console.error('[AccountSettings] Astrology consent save error:', err);
+    } finally {
+      setConsentSaving(false);
+    }
+  }, [userId, showSaveIndicator]);
 
   // Sovereignty handlers
   const updateStorageMode = useCallback(async (mode: StorageMode) => {
@@ -849,7 +909,7 @@ export function AccountSettings() {
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           placeholder="Your name"
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
       </div>
       <div>
@@ -859,9 +919,9 @@ export function AccountSettings() {
           value={editPreferredName}
           onChange={(e) => setEditPreferredName(e.target.value)}
           placeholder={editName || 'Your preferred name'}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
-        <p className="text-xs text-stone-500 mt-2">Used in greetings and voice conversations</p>
+        <p className="text-xs text-stone-400 mt-2">Used in greetings and voice conversations</p>
       </div>
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Email</label>
@@ -870,7 +930,7 @@ export function AccountSettings() {
           value={editEmail}
           onChange={(e) => setEditEmail(e.target.value)}
           placeholder="your@email.com"
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
         />
       </div>
       <div>
@@ -880,10 +940,10 @@ export function AccountSettings() {
           onChange={(e) => setEditBio(e.target.value)}
           placeholder="A brief description about yourself..."
           rows={3}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none resize-none"
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none resize-none"
         />
       </div>
-      <div className="flex items-center justify-between text-sm text-stone-500">
+      <div className="flex items-center justify-between text-sm text-stone-400">
         <span>Member since {profile ? new Date(profile.createdAt).toLocaleDateString() : '...'}</span>
         <span>@{profile?.username}</span>
       </div>
@@ -895,8 +955,427 @@ export function AccountSettings() {
       >
         {saving ? 'Saving...' : 'Save Profile'}
       </motion.button>
+
+      {/* ── Birth Chart ──────────────────────────────────────────────── */}
+      <div className="border-t border-white/10 pt-6 mt-2">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-4">
+          <Star size={16} />
+          Birth Chart
+        </h3>
+        <p className="text-sm text-stone-400 mb-4">
+          Share your birth details so MAIA can weave astrological wisdom into your conversations.
+        </p>
+
+        {/* Birth Date */}
+        <div className="mb-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+            <Star size={16} />
+            Birth Date
+          </label>
+          <input
+            type="date"
+            value={editBirthDate}
+            onChange={(e) => setEditBirthDate(e.target.value)}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
+          />
+        </div>
+
+        {/* Birth Time */}
+        <div className="mb-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+            <Clock size={16} />
+            Birth Time (optional)
+          </label>
+          <input
+            type="time"
+            value={editBirthTime}
+            onChange={(e) => setEditBirthTime(e.target.value)}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
+          />
+          <p className="text-xs text-stone-400 mt-1">
+            Birth time enables accurate rising sign and house placements
+          </p>
+        </div>
+
+        {/* Birth Location */}
+        <div className="relative mb-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+            <MapPin size={16} />
+            Birth Location
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={birthLocationSearch || editBirthLocation}
+              onChange={(e) => {
+                setBirthLocationSearch(e.target.value);
+                setEditBirthLocation(e.target.value);
+              }}
+              onFocus={() => locationResults.length > 0 && setShowLocationResults(true)}
+              placeholder="Search city or place..."
+              className="w-full px-4 py-3 pr-10 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
+            />
+            {searchingLocation ? (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300" />
+            )}
+          </div>
+
+          {/* Location Search Results */}
+          <AnimatePresence>
+            {showLocationResults && locationResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute z-10 w-full mt-2 bg-stone-900 border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto"
+              >
+                {locationResults.map((loc, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      const locationObj = {
+                        lat: parseFloat(loc.lat),
+                        lng: parseFloat(loc.lon),
+                        name: loc.display_name,
+                        timezone: loc.timezone,
+                      };
+                      setSelectedLocation(locationObj);
+                      setEditBirthLocation(loc.display_name);
+                      setBirthLocationSearch('');
+                      setShowLocationResults(false);
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors"
+                  >
+                    <div className="text-sm text-stone-200 line-clamp-2">{loc.display_name}</div>
+                    <div className="text-xs text-stone-400 mt-1">{loc.timezone}</div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Selected Location Display */}
+          {selectedLocation && (
+            <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <div className="text-xs text-amber-300">Selected:</div>
+              <div className="text-sm text-stone-200 line-clamp-1">{selectedLocation.name}</div>
+              <div className="text-xs text-stone-400">{selectedLocation.timezone}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Current Chart Status */}
+        {profile?.birthData?.date && (
+          <div className="p-4 bg-gradient-to-br from-violet-500/10 to-amber-500/10 rounded-xl border border-violet-500/20 mb-4">
+            <div className="flex items-center gap-2 text-violet-300 mb-2">
+              <Star size={18} />
+              <span className="text-sm font-medium">Birth Chart Saved</span>
+            </div>
+            <p className="text-xs text-stone-400">
+              MAIA can now reference your natal chart and current transits in conversations.
+            </p>
+            <motion.button
+              onClick={() => window.location.href = '/astrology'}
+              className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+              whileTap={{ scale: 0.98 }}
+            >
+              View Full Chart →
+            </motion.button>
+          </div>
+        )}
+
+        {/* Birth save error */}
+        {birthSaveError && (
+          <p className="text-red-400 text-sm text-center">{birthSaveError}</p>
+        )}
+
+        {/* Save Birth Data */}
+        <motion.button
+          onClick={saveBirthData}
+          disabled={saving || !editBirthDate}
+          className="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors disabled:opacity-50"
+          whileTap={{ scale: 0.98 }}
+        >
+          {saving ? 'Saving...' : 'Save Birth Data'}
+        </motion.button>
+
+        {/* Clear Birth Data */}
+        {profile?.birthData?.date && (
+          <button
+            onClick={() => {
+              setEditBirthDate('');
+              setEditBirthTime('');
+              setEditBirthLocation('');
+              setSelectedLocation(null);
+              saveBirthData();
+            }}
+            className="w-full text-sm text-stone-400 hover:text-stone-400 transition-colors mt-2"
+          >
+            Clear birth data
+          </button>
+        )}
+      </div>
     </div>
   );
+
+  // ─── Astrology Section ───────────────────────────────────────────────────────
+
+  const renderAstrology = () => {
+    const isOptedIn = astrologyConsent === 'opted_in';
+    const isDeclined = astrologyConsent === 'declined';
+    const isUnknown = !astrologyConsent || astrologyConsent === 'unknown';
+    const hasBirthData = !!(profile?.birthData?.date);
+
+    return (
+      <div className="space-y-6">
+
+        {/* ── Consent State ────────────────────────────────────────────────── */}
+        <div>
+          <h3 className="text-base font-medium text-stone-200 mb-1">Birth Chart & Astrology</h3>
+          <p className="text-sm text-stone-400 mb-4">
+            When enabled, MAIA can reference your natal chart and current transits in conversations.
+            Your birth data is stored privately — it is never shared or sold.
+          </p>
+
+          {/* Opted in */}
+          {isOptedIn && (
+            <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl mb-4">
+              <div className="flex items-center gap-2 text-violet-300 mb-1">
+                <Star size={16} />
+                <span className="text-sm font-medium">Astrological context active</span>
+              </div>
+              <p className="text-xs text-stone-400 mb-3">
+                MAIA may draw on your natal chart and current planetary transits when relevant.
+              </p>
+              <button
+                onClick={async () => {
+                  await saveAstrologyConsent('declined');
+                  // Also clear stored birth data so nothing lingers server-side
+                  if (hasBirthData) await removeBirthData();
+                }}
+                disabled={consentSaving || saving}
+                className="text-xs text-stone-500 hover:text-stone-300 transition-colors"
+              >
+                {consentSaving ? 'Saving…' : 'Remove astrological context from MAIA'}
+              </button>
+            </div>
+          )}
+
+          {/* Declined */}
+          {isDeclined && (
+            <div className="p-4 bg-stone-800/50 border border-white/10 rounded-xl mb-4">
+              <div className="flex items-center gap-2 text-stone-400 mb-1">
+                <Star size={16} />
+                <span className="text-sm font-medium">Astrology not active</span>
+              </div>
+              <p className="text-xs text-stone-500 mb-3">
+                Birth chart features are disabled. You can enable them at any time.
+              </p>
+              <motion.button
+                onClick={() => saveAstrologyConsent('opted_in')}
+                disabled={consentSaving}
+                className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                whileTap={{ scale: 0.97 }}
+              >
+                {consentSaving ? 'Saving…' : 'Enable astrology features'}
+              </motion.button>
+            </div>
+          )}
+
+          {/* Unknown — first time seeing this */}
+          {isUnknown && (
+            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl mb-4 space-y-3">
+              <p className="text-sm text-stone-300">
+                Would you like MAIA to be able to reference your birth chart in conversations?
+              </p>
+              <p className="text-xs text-stone-400">
+                This is entirely optional. If you choose yes, you can add your birth details below.
+                You can change this preference at any time.
+              </p>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={() => saveAstrologyConsent('opted_in')}
+                  disabled={consentSaving}
+                  className="flex-1 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-amber-300 text-sm font-medium transition-colors disabled:opacity-50"
+                  whileTap={{ scale: 0.97 }}
+                >
+                  Yes, enable
+                </motion.button>
+                <motion.button
+                  onClick={() => saveAstrologyConsent('declined')}
+                  disabled={consentSaving}
+                  className="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-stone-400 text-sm transition-colors disabled:opacity-50"
+                  whileTap={{ scale: 0.97 }}
+                >
+                  No thanks
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Birth Data (only shown when opted in) ────────────────────────── */}
+        {isOptedIn && (
+          <div className="pt-4 border-t border-white/10 space-y-4">
+            <h4 className="text-sm font-medium text-stone-300">
+              {hasBirthData ? 'Birth Data' : 'Add Birth Data'}
+            </h4>
+
+            {/* Current chart summary */}
+            {hasBirthData && (
+              <div className="p-3 bg-gradient-to-br from-violet-500/10 to-amber-500/10 border border-violet-500/20 rounded-xl">
+                <div className="text-xs text-stone-400 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-stone-500">Date</span>
+                    <span className="text-stone-200">{profile?.birthData?.date}</span>
+                  </div>
+                  {profile?.birthData?.time && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Time</span>
+                      <span className="text-stone-200">{profile.birthData.time}</span>
+                    </div>
+                  )}
+                  {profile?.birthData?.location?.name && (
+                    <div className="flex justify-between">
+                      <span className="text-stone-500">Place</span>
+                      <span className="text-stone-200 text-right max-w-[55%] line-clamp-1">
+                        {profile.birthData.location.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3 mt-3">
+                  <motion.button
+                    onClick={() => window.location.href = '/astrology'}
+                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    View Full Chart →
+                  </motion.button>
+                </div>
+              </div>
+            )}
+
+            {/* Edit form */}
+            <div className="space-y-3">
+              {/* Birth Date */}
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Birth Date</label>
+                <input
+                  type="date"
+                  value={editBirthDate}
+                  onChange={e => setEditBirthDate(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              {/* Birth Time */}
+              <div>
+                <label className="text-xs text-stone-400 mb-1 block">Birth Time <span className="text-stone-500">(optional)</span></label>
+                <input
+                  type="time"
+                  value={editBirthTime}
+                  onChange={e => setEditBirthTime(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+
+              {/* Birth Location */}
+              <div className="relative">
+                <label className="text-xs text-stone-400 mb-1 block">Birth Location</label>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+                  <input
+                    type="text"
+                    value={birthLocationSearch || editBirthLocation}
+                    onChange={e => {
+                      setBirthLocationSearch(e.target.value);
+                      setEditBirthLocation(e.target.value);
+                    }}
+                    placeholder="Search city or region…"
+                    className="w-full pl-8 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-stone-200 text-sm placeholder:text-stone-600 focus:outline-none focus:border-amber-500/50"
+                  />
+                  {searchingLocation && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 text-xs">…</div>
+                  )}
+                </div>
+
+                <AnimatePresence>
+                  {showLocationResults && locationResults.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute z-10 w-full mt-2 bg-stone-900 border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto"
+                    >
+                      {locationResults.map((loc, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            const locationObj = {
+                              lat: parseFloat(loc.lat),
+                              lng: parseFloat(loc.lon),
+                              name: loc.display_name,
+                              timezone: loc.timezone,
+                            };
+                            setSelectedLocation(locationObj);
+                            setEditBirthLocation(loc.display_name);
+                            setBirthLocationSearch('');
+                            setShowLocationResults(false);
+                          }}
+                          className="w-full px-3 py-2.5 text-left hover:bg-white/10 border-b border-white/10 last:border-0 transition-colors"
+                        >
+                          <div className="text-sm text-stone-200 line-clamp-1">{loc.display_name}</div>
+                          <div className="text-xs text-stone-400">{loc.timezone}</div>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {selectedLocation && (
+                  <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <div className="text-xs text-stone-200 line-clamp-1">{selectedLocation.name}</div>
+                    <div className="text-xs text-stone-400">{selectedLocation.timezone}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Save */}
+              {birthSaveError && (
+                <p className="text-red-400 text-xs">{birthSaveError}</p>
+              )}
+              <motion.button
+                onClick={saveBirthData}
+                disabled={saving || !editBirthDate}
+                className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 text-sm font-medium transition-colors disabled:opacity-50"
+                whileTap={{ scale: 0.98 }}
+              >
+                {saving ? 'Saving…' : (hasBirthData ? 'Update Birth Data' : 'Save Birth Data')}
+              </motion.button>
+
+              {/* Remove */}
+              {hasBirthData && (
+                <button
+                  onClick={removeBirthData}
+                  disabled={saving}
+                  className="w-full text-xs text-stone-500 hover:text-stone-300 transition-colors py-1 disabled:opacity-50"
+                >
+                  {saving ? 'Removing…' : 'Remove birth data'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Account Section ─────────────────────────────────────────────────────────
 
   const renderAccount = () => (
     <div className="space-y-6">
@@ -904,23 +1383,23 @@ export function AccountSettings() {
       <div>
         <label className="text-sm text-stone-400 mb-2 block">Your Passkey</label>
         <div className="flex items-center gap-2">
-          <div className="flex-1 px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 font-mono text-sm">
+          <div className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 font-mono text-sm">
             {showPasskey ? profile?.passkey : '••••••••••••••••'}
           </div>
           <button
             onClick={() => setShowPasskey(!showPasskey)}
-            className="p-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-500 hover:text-stone-700 transition-colors"
+            className="p-3 bg-white/5 border border-white/10 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
           >
             {showPasskey ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        <p className="text-xs text-stone-500 mt-2">
+        <p className="text-xs text-stone-400 mt-2">
           Your passkey is used to recover your account. Keep it safe.
         </p>
       </div>
 
       {/* Password Change */}
-      <div className="pt-4 border-t border-[#D4B896]/30">
+      <div className="pt-4 border-t border-white/10">
         <h4 className="text-sm font-medium text-stone-300 mb-4">Change Password</h4>
         <div className="space-y-3">
           {passwordError && (
@@ -938,27 +1417,27 @@ export function AccountSettings() {
             value={currentPassword}
             onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
             placeholder="Current password"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={newPassword}
             onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
             placeholder="New password (min 8 characters)"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
             placeholder="Confirm new password"
-            className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
           />
           <motion.button
             type="button"
             onClick={handleChangePassword}
             disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordChanging}
-            className="w-full py-3 bg-white/500 hover:bg-white/80 border border-[#D4B896]/30 rounded-xl text-stone-600 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl text-stone-200 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             whileTap={{ scale: 0.98 }}
           >
             {passwordChanging ? 'Updating...' : 'Update Password'}
@@ -1002,7 +1481,7 @@ export function AccountSettings() {
           <User size={16} />
           What should MAIA call herself?
         </label>
-        <p className="text-xs text-stone-500 mb-3">
+        <p className="text-xs text-stone-400 mb-3">
           Choose a name that feels companionable, symbolic, or relational.
           MAIA is not a replacement for a person, authority, or loved one.
         </p>
@@ -1018,7 +1497,7 @@ export function AccountSettings() {
                 className={`py-2.5 px-2 rounded-xl border transition-all active:scale-95 relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 hover:bg-white/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 hover:bg-white/10'
                 }`}
                 whileTap={{ scale: 0.95 }}
                 title={suggestion.description}
@@ -1038,7 +1517,7 @@ export function AccountSettings() {
         {!showCustomNameInput ? (
           <motion.button
             onClick={() => setShowCustomNameInput(true)}
-            className="w-full py-2 text-xs text-stone-500 hover:text-stone-500 transition-colors"
+            className="w-full py-2 text-xs text-stone-400 hover:text-stone-400 transition-colors"
             whileTap={{ scale: 0.98 }}
           >
             Or choose a custom name...
@@ -1055,7 +1534,7 @@ export function AccountSettings() {
                 }}
                 placeholder="Enter a name..."
                 maxLength={30}
-                className="flex-1 px-3 py-2 bg-white/50 border border-[#D4B896]/30 rounded-lg text-stone-800 text-sm placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-stone-200 text-sm placeholder-stone-500 focus:border-amber-500/50 focus:outline-none"
                 autoFocus
               />
               <motion.button
@@ -1072,7 +1551,7 @@ export function AccountSettings() {
                   setCustomNameInput('');
                   setSensitiveNameWarning(false);
                 }}
-                className="px-3 py-2 bg-white/50 border border-[#D4B896]/30 rounded-lg text-stone-500 text-sm transition-colors hover:bg-white/70"
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-stone-400 text-sm transition-colors hover:bg-white/10"
                 whileTap={{ scale: 0.95 }}
               >
                 Cancel
@@ -1105,7 +1584,7 @@ export function AccountSettings() {
                         setCustomNameInput('');
                         setSensitiveNameWarning(false);
                       }}
-                      className="px-3 py-1.5 bg-white/50 border border-[#D4B896]/30 rounded text-stone-500 text-xs transition-colors hover:bg-white/70"
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-stone-400 text-xs transition-colors hover:bg-white/10"
                       whileTap={{ scale: 0.95 }}
                     >
                       Choose different name
@@ -1119,8 +1598,8 @@ export function AccountSettings() {
 
         {/* Current Name Display */}
         {maiaSettings.preferredAssistantName && maiaSettings.preferredAssistantName !== 'MAIA' && (
-          <div className="mt-3 p-2 bg-white/50 rounded-lg text-center">
-            <span className="text-xs text-stone-500">Currently: </span>
+          <div className="mt-3 p-2 bg-white/5 rounded-lg text-center">
+            <span className="text-xs text-stone-400">Currently: </span>
             <span className="text-xs text-amber-300 font-medium">{maiaSettings.preferredAssistantName}</span>
           </div>
         )}
@@ -1144,7 +1623,7 @@ export function AccountSettings() {
                     ? mode === 'sanctuary'
                       ? 'border-emerald-400/70 bg-emerald-500/20 ring-2 ring-emerald-400/40 active:bg-emerald-500/30'
                       : 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1160,7 +1639,7 @@ export function AccountSettings() {
                 }`}>
                   {mode === 'continuity' ? 'Continuity' : 'Sanctuary'}
                 </div>
-                <div className="text-xs text-stone-500 mt-1">
+                <div className="text-xs text-stone-400 mt-1">
                   {mode === 'continuity'
                     ? 'MAIA remembers what helps growth.'
                     : "Sessions aren't saved. Speak freely."}
@@ -1174,21 +1653,21 @@ export function AccountSettings() {
       {/* Voice — sovereign controls live in the dedicated Voice section */}
       <motion.button
         onClick={() => setActiveSection('voice')}
-        className="w-full flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30 active:bg-white/60 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 active:bg-white/10 transition-colors"
         whileTap={{ scale: 0.98 }}
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+          <div className="p-2 rounded-lg bg-white/10 text-amber-400">
             <Mic size={18} />
           </div>
           <div className="text-left">
             <div className="text-sm font-medium text-stone-200">Voice Preferences</div>
-            <div className="text-xs text-stone-500">
+            <div className="text-xs text-stone-400">
               Pace, warmth, clarity, guidance style, energy
             </div>
           </div>
         </div>
-        <ChevronRight size={16} className="text-stone-500" />
+        <ChevronRight size={16} className="text-stone-400" />
       </motion.button>
 
       {/* Memory Depth */}
@@ -1207,7 +1686,7 @@ export function AccountSettings() {
                 className={`py-3 rounded-xl border transition-all active:scale-95 relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1241,7 +1720,7 @@ export function AccountSettings() {
                     ? arch.id === 'AUTO'
                       ? 'border-purple-400/70 bg-purple-500/20 text-purple-200 ring-2 ring-purple-400/40 active:bg-purple-500/30'
                       : 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 text-stone-500 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 text-stone-400 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.95 }}
               >
@@ -1275,7 +1754,7 @@ export function AccountSettings() {
                 className={`w-full text-left p-3 rounded-xl border transition-all active:scale-[0.98] relative ${
                   isSelected
                     ? 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-[#D4B896]/30 bg-white/40 active:bg-white/60 active:border-[#D4B896]/50'
+                    : 'border-white/10 bg-white/5 active:bg-white/10 active:border-white/20'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
@@ -1288,7 +1767,7 @@ export function AccountSettings() {
                   <span className="text-lg">{desc.icon}</span>
                   <div>
                     <span className={`text-sm font-medium ${isSelected ? 'text-amber-200' : 'text-stone-300'}`}>{desc.title}</span>
-                    <p className="text-xs text-stone-500">{desc.description}</p>
+                    <p className="text-xs text-stone-400">{desc.description}</p>
                   </div>
                 </div>
               </motion.button>
@@ -1298,14 +1777,14 @@ export function AccountSettings() {
       </div>
 
       {/* Vocabulary Tooltips */}
-      <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+          <div className="p-2 rounded-lg bg-white/10 text-amber-400">
             <BookOpen size={18} />
           </div>
           <div>
             <div className="text-sm font-medium text-stone-200">Vocabulary Tooltips</div>
-            <div className="text-xs text-stone-500">
+            <div className="text-xs text-stone-400">
               Highlight soul vocabulary terms with hover definitions
             </div>
           </div>
@@ -1347,7 +1826,7 @@ export function AccountSettings() {
       </motion.button>
 
       {/* Build Info */}
-      <div className="mt-6 pt-6 border-t border-[#D4B896]/30">
+      <div className="mt-6 pt-6 border-t border-white/10">
         <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
           <Settings size={16} />
           Build Info
@@ -1356,7 +1835,7 @@ export function AccountSettings() {
           {/* Native App Info */}
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <span className="text-stone-500">Native App Build:</span>
+              <span className="text-stone-400">Native App Build:</span>
               <p className="text-stone-300 font-mono">
                 {nativeBuildInfo
                   ? `v${nativeBuildInfo.version} (${nativeBuildInfo.build})`
@@ -1364,7 +1843,7 @@ export function AccountSettings() {
               </p>
             </div>
             <div>
-              <span className="text-stone-500">Server Build:</span>
+              <span className="text-stone-400">Server Build:</span>
               <p className="text-stone-300 font-mono">
                 v{lastCheckResult?.serverVersion || currentVersion?.version || '...'} ({(lastCheckResult?.serverCommit || currentVersion?.commit)?.slice(0, 8) || '...'})
               </p>
@@ -1378,7 +1857,7 @@ export function AccountSettings() {
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-medium text-stone-200">Check for Updates</h4>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-stone-400 mt-0.5">
                 Last checked: {lastCheckResult ? new Date().toLocaleTimeString() : 'Never'}
               </p>
             </div>
@@ -1419,7 +1898,7 @@ export function AccountSettings() {
           <Mic size={16} />
           Voice Preferences
         </label>
-        <p className="text-xs text-stone-500 mb-4">
+        <p className="text-xs text-stone-400 mb-4">
           Gently bias MAIA&apos;s vocal tone. These are offsets, not overrides &mdash;
           MAIA can still self-regulate during HOLD states.
         </p>
@@ -1519,7 +1998,7 @@ export function AccountSettings() {
         <div className={`flex items-center gap-3 p-4 rounded-xl border ${
           consentSummary?.sanctuaryDefault
             ? 'bg-emerald-500/10 border-emerald-500/30'
-            : 'bg-white/50 border-[#D4B896]/30'
+            : 'bg-white/5 border-white/10'
         }`}>
           <StatusIcon size={20} className={status.color} />
           <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
@@ -1544,13 +2023,13 @@ export function AccountSettings() {
                 <Mic className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="text-amber-200 font-medium mb-2">Audio privacy (default: off)</p>
-                  <p className="text-stone-600 leading-relaxed">
+                  <p className="text-stone-300 leading-relaxed">
                     Raw audio recordings are <strong>not saved</strong> unless you enable audio saving below.
                   </p>
-                  <p className="text-stone-500 mt-2 text-xs">
+                  <p className="text-stone-400 mt-2 text-xs">
                     Transcript and audio are separate: you can save transcripts without saving raw audio.
                   </p>
-                  <p className="text-stone-500 mt-1 text-xs">
+                  <p className="text-stone-400 mt-1 text-xs">
                     {transcriptNote} Use <strong>Sanctuary mode</strong> for sessions that aren&apos;t saved at all.
                   </p>
                 </div>
@@ -1567,7 +2046,7 @@ export function AccountSettings() {
             </div>
             <div>
               <div className="text-sm font-medium text-emerald-200">Sanctuary Mode Default</div>
-              <div className="text-xs text-stone-500">
+              <div className="text-xs text-stone-400">
                 Ephemeral sessions — no conversations, journals, transcripts, or audio saved
               </div>
             </div>
@@ -1604,7 +2083,7 @@ export function AccountSettings() {
                 const serverDisabled = isAudio && !canSaveAudioServer;
 
                 return (
-                  <div key={id} className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+                  <div key={id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="text-sm font-medium text-stone-200">{label}</div>
@@ -1617,7 +2096,7 @@ export function AccountSettings() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
                           saveLocal
                             ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
-                            : 'bg-white/50 border border-[#D4B896]/30 text-stone-400'
+                            : 'bg-white/5 border border-white/10 text-stone-400'
                         }`}
                       >
                         <HardDrive size={14} />
@@ -1633,7 +2112,7 @@ export function AccountSettings() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
                           saveServer
                             ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
-                            : 'bg-white/50 border border-[#D4B896]/30 text-stone-400'
+                            : 'bg-white/5 border border-white/10 text-stone-400'
                         } ${serverDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <Cloud size={14} />
@@ -1652,7 +2131,7 @@ export function AccountSettings() {
                     )}
                     {/* Status text when neither enabled */}
                     {neitherEnabled && (
-                      <div className="mt-2 text-xs text-stone-500 text-center">
+                      <div className="mt-2 text-xs text-stone-400 text-center">
                         {id === 'audio' ? 'Audio recordings will not be stored' : `${label} will not be stored`}
                       </div>
                     )}
@@ -1671,40 +2150,40 @@ export function AccountSettings() {
         })()}
 
         {/* What MAIA Uses */}
-        <div className="pt-4 border-t border-[#D4B896]/30">
+        <div className="pt-4 border-t border-white/10">
           <label className="text-sm font-medium text-amber-200/80 mb-3 block">
             What MAIA uses your data for
           </label>
           <div className="space-y-2 text-sm">
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <Brain size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Continuity</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   MAIA remembers your patterns, preferences, and growth journey across sessions.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <Sparkles size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Personalization</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   Your journals and conversations help MAIA understand what matters to you.
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 bg-white/50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
               <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
               <div>
                 <span className="text-stone-200 font-medium">Cross-device sync</span>
-                <p className="text-stone-500 text-xs mt-0.5">
+                <p className="text-stone-400 text-xs mt-0.5">
                   Server storage enables access from any device you sign into.
                 </p>
               </div>
             </div>
           </div>
-          <p className="text-xs text-stone-500 mt-4 text-center">
+          <p className="text-xs text-stone-400 mt-4 text-center">
             MAIA never shares your data with third parties or uses it for advertising.
           </p>
         </div>
@@ -1714,7 +2193,7 @@ export function AccountSettings() {
 
   const renderNotifications = () => (
     <div className="space-y-4">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Choose which emails you'd like to receive from MAIA.
       </p>
       {[
@@ -1723,7 +2202,7 @@ export function AccountSettings() {
         { key: 'communityUpdates', label: 'Community Updates', desc: 'News from the Community Commons' },
         { key: 'productUpdates', label: 'Product Updates', desc: 'New features and improvements' },
       ].map(({ key, label, desc }) => (
-        <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
           <div>
             <div className="text-sm font-medium text-stone-200">{label}</div>
             <div className="text-xs text-stone-400">{desc}</div>
@@ -1739,14 +2218,14 @@ export function AccountSettings() {
 
   const renderPrivacy = () => (
     <div className="space-y-4">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Control how your data is used to improve MAIA for everyone.
       </p>
       {[
         { key: 'shareAnonymousInsights', label: 'Anonymous Insights', desc: 'Help improve MAIA with anonymized usage patterns' },
         { key: 'allowResearchParticipation', label: 'Research Participation', desc: 'Contribute to consciousness research studies' },
       ].map(({ key, label, desc }) => (
-        <div key={key} className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div key={key} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
           <div>
             <div className="text-sm font-medium text-stone-200">{label}</div>
             <div className="text-xs text-stone-400">{desc}</div>
@@ -1772,7 +2251,7 @@ export function AccountSettings() {
             <span className="text-3xl">{tierInfo.emoji}</span>
             <div>
               <div className={`text-xl font-medium ${tierInfo.color}`}>{tierInfo.name}</div>
-              <div className="text-sm text-stone-500">
+              <div className="text-sm text-stone-400">
                 {profile?.membership?.joinedAt
                   ? `Since ${new Date(profile.membership.joinedAt).toLocaleDateString()}`
                   : 'Current tier'}
@@ -1780,7 +2259,7 @@ export function AccountSettings() {
             </div>
           </div>
           {profile?.membership?.amount ? (
-            <div className="text-sm text-stone-500">
+            <div className="text-sm text-stone-400">
               Contributing ${profile.membership.amount}/month
             </div>
           ) : null}
@@ -1789,7 +2268,7 @@ export function AccountSettings() {
         {/* Tier Benefits */}
         <div>
           <h4 className="text-sm font-medium text-stone-300 mb-3">All Members Receive</h4>
-          <ul className="space-y-2 text-sm text-stone-500">
+          <ul className="space-y-2 text-sm text-stone-400">
             <li className="flex items-center gap-2">
               <Check size={14} className="text-emerald-400" />
               Full MAIA access with all features
@@ -1819,7 +2298,7 @@ export function AccountSettings() {
         <div className="mt-4 text-center">
           <Link
             href="/maia/stewardship"
-            className="text-sm text-stone-500 hover:text-stone-500 transition-colors"
+            className="text-sm text-stone-400 hover:text-stone-400 transition-colors"
           >
             Why support matters →
           </Link>
@@ -1830,15 +2309,15 @@ export function AccountSettings() {
 
   const renderPortals = () => (
     <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-4">
+      <p className="text-sm text-stone-400 mb-4">
         Quick access to your client-facing portal sites.
       </p>
 
       {projects.length === 0 ? (
-        <div className="p-6 bg-white/50 rounded-xl border border-[#D4B896]/30">
+        <div className="p-6 bg-white/5 rounded-xl border border-white/10">
           <div className="text-center mb-4">
-            <Globe size={32} className="mx-auto mb-3 text-stone-400" />
-            <p className="text-stone-500 font-medium">No client portals found</p>
+            <Globe size={32} className="mx-auto mb-3 text-stone-300" />
+            <p className="text-stone-400 font-medium">No client portals found</p>
             <p className="text-sm text-stone-400 mt-1">
               Your member account may not be linked to a practitioner record yet.
             </p>
@@ -1850,8 +2329,8 @@ export function AccountSettings() {
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                       border border-[#D4B896]/40 text-sm text-stone-500
-                       hover:bg-white/50 transition-colors"
+                       border border-white/10 text-sm text-stone-400
+                       hover:bg-white/10 transition-colors"
             >
               <ExternalLink size={14} />
               <span>Debug API</span>
@@ -1860,7 +2339,7 @@ export function AccountSettings() {
             <Link
               href="/practitioners/signup"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                       bg-amber-500 text-black text-sm font-medium
+                       bg-amber-500 text-stone-900 text-sm font-medium
                        hover:bg-amber-400 transition-colors"
             >
               <span>Link Practitioner Account</span>
@@ -1879,7 +2358,7 @@ export function AccountSettings() {
                   <div className="text-base font-medium text-amber-100 truncate">
                     {project.name}
                   </div>
-                  <div className="text-sm text-stone-500 truncate">
+                  <div className="text-sm text-stone-400 truncate">
                     {project.publicUrl}
                   </div>
                 </div>
@@ -1890,7 +2369,7 @@ export function AccountSettings() {
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                             border border-[#D4B896]/40 text-sm text-stone-300
+                             border border-white/10 text-sm text-stone-300
                              hover:bg-white/5 transition-colors"
                   >
                     <ExternalLink size={14} />
@@ -1900,7 +2379,7 @@ export function AccountSettings() {
                   <a
                     href={project.previewUrl}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg
-                             bg-amber-500 text-black text-sm font-medium
+                             bg-amber-500 text-stone-900 text-sm font-medium
                              hover:bg-amber-400 transition-colors"
                   >
                     <Eye size={14} />
@@ -1915,172 +2394,15 @@ export function AccountSettings() {
 
       {/* Practitioner Dashboard Link - only show if user has projects */}
       {projects.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[#D4B896]/30">
+        <div className="mt-4 pt-4 border-t border-white/10">
           <a
             href="/practitioner/dashboard"
-            className="flex items-center justify-between p-4 bg-white/50 hover:bg-white/70 rounded-xl border border-[#D4B896]/30 transition-colors"
+            className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
           >
             <span className="text-stone-200">Go to Practitioner Dashboard</span>
-            <ChevronRight size={18} className="text-stone-400" />
+            <ChevronRight size={18} className="text-stone-300" />
           </a>
         </div>
-      )}
-    </div>
-  );
-
-  const renderAstrology = () => (
-    <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-4">
-        Share your birth details so MAIA can weave astrological wisdom into your conversations.
-      </p>
-
-      {/* Birth Date */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
-          <Star size={16} />
-          Birth Date
-        </label>
-        <input
-          type="date"
-          value={editBirthDate}
-          onChange={(e) => setEditBirthDate(e.target.value)}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 focus:border-amber-500/50 focus:outline-none [color-scheme:light]"
-        />
-      </div>
-
-      {/* Birth Time */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
-          <Clock size={16} />
-          Birth Time (optional)
-        </label>
-        <input
-          type="time"
-          value={editBirthTime}
-          onChange={(e) => setEditBirthTime(e.target.value)}
-          className="w-full px-4 py-3 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 focus:border-amber-500/50 focus:outline-none [color-scheme:light]"
-        />
-        <p className="text-xs text-stone-500 mt-1">
-          Birth time enables accurate rising sign and house placements
-        </p>
-      </div>
-
-      {/* Birth Location */}
-      <div className="relative">
-        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
-          <MapPin size={16} />
-          Birth Location
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            value={birthLocationSearch || editBirthLocation}
-            onChange={(e) => {
-              setBirthLocationSearch(e.target.value);
-              setEditBirthLocation(e.target.value);
-            }}
-            onFocus={() => locationResults.length > 0 && setShowLocationResults(true)}
-            placeholder="Search city or place..."
-            className="w-full px-4 py-3 pr-10 bg-white/70 border border-[#D4B896]/30 rounded-xl text-stone-800 placeholder-stone-400 focus:border-amber-500/50 focus:outline-none"
-          />
-          {searchingLocation ? (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-            </div>
-          ) : (
-            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400" />
-          )}
-        </div>
-
-        {/* Location Search Results */}
-        <AnimatePresence>
-          {showLocationResults && locationResults.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute z-10 w-full mt-2 bg-[#EAE5DF] border border-[#D4B896]/30 rounded-xl shadow-xl max-h-60 overflow-y-auto"
-            >
-              {locationResults.map((loc, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    const locationObj = {
-                      lat: parseFloat(loc.lat),
-                      lng: parseFloat(loc.lon),
-                      name: loc.display_name,
-                      timezone: loc.timezone,
-                    };
-                    console.log('[AccountSettings] Location selected:', locationObj);
-                    setSelectedLocation(locationObj);
-                    setEditBirthLocation(loc.display_name);
-                    setBirthLocationSearch('');
-                    setShowLocationResults(false);
-                  }}
-                  className="w-full px-4 py-3 text-left hover:bg-white/50 border-b border-[#D4B896]/20 last:border-0 transition-colors"
-                >
-                  <div className="text-sm text-stone-200 line-clamp-2">{loc.display_name}</div>
-                  <div className="text-xs text-stone-500 mt-1">{loc.timezone}</div>
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Selected Location Display */}
-        {selectedLocation && (
-          <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-            <div className="text-xs text-amber-300">Selected:</div>
-            <div className="text-sm text-stone-200 line-clamp-1">{selectedLocation.name}</div>
-            <div className="text-xs text-stone-500">{selectedLocation.timezone}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Current Chart Status */}
-      {profile?.birthData?.date && (
-        <div className="p-4 bg-gradient-to-br from-violet-500/10 to-amber-500/10 rounded-xl border border-violet-500/20">
-          <div className="flex items-center gap-2 text-violet-300 mb-2">
-            <Star size={18} />
-            <span className="text-sm font-medium">Birth Chart Saved</span>
-          </div>
-          <p className="text-xs text-stone-500">
-            MAIA can now reference your natal chart and current transits in conversations.
-          </p>
-          <motion.button
-            onClick={() => window.location.href = '/astrology'}
-            className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
-            whileTap={{ scale: 0.98 }}
-          >
-            View Full Chart →
-          </motion.button>
-        </div>
-      )}
-
-      {/* Save Button */}
-      <motion.button
-        onClick={saveBirthData}
-        disabled={saving || !editBirthDate}
-        className="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors disabled:opacity-50"
-        whileTap={{ scale: 0.98 }}
-      >
-        {saving ? 'Saving...' : 'Save Birth Data'}
-      </motion.button>
-
-      {/* Clear Birth Data */}
-      {profile?.birthData?.date && (
-        <button
-          onClick={() => {
-            setEditBirthDate('');
-            setEditBirthTime('');
-            setEditBirthLocation('');
-            setSelectedLocation(null);
-            saveBirthData();
-          }}
-          className="w-full text-sm text-stone-500 hover:text-stone-500 transition-colors"
-        >
-          Clear birth data
-        </button>
       )}
     </div>
   );
@@ -2113,7 +2435,7 @@ export function AccountSettings() {
 
     return (
       <div className="space-y-6">
-        <p className="text-sm text-stone-500 mb-4">
+        <p className="text-sm text-stone-400 mb-4">
           You decide what MAIA remembers. Control where your data lives.
         </p>
 
@@ -2131,10 +2453,10 @@ export function AccountSettings() {
                 disabled={comingSoon}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
                   comingSoon
-                    ? 'border-[#D4B896]/20 bg-white/30 cursor-not-allowed opacity-60'
+                    ? 'border-white/10 bg-white/5 cursor-not-allowed'
                     : currentMode === id
                       ? 'border-amber-500/50 bg-amber-500/15'
-                      : 'border-[#D4B896]/30 bg-white/40 hover:bg-white/50'
+                      : 'border-white/10 bg-white/5 hover:bg-white/10'
                 }`}
                 whileTap={comingSoon ? {} : { scale: 0.98 }}
               >
@@ -2142,14 +2464,14 @@ export function AccountSettings() {
                   <Icon size={20} className={currentMode === id && !comingSoon ? 'text-amber-400' : 'text-stone-400'} />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-500' : 'text-stone-200'}`}>{label}</span>
+                      <span className={`text-sm font-medium ${comingSoon ? 'text-stone-400' : 'text-stone-200'}`}>{label}</span>
                       {comingSoon && (
                         <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-300 rounded">
                           Coming Soon
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-stone-500">{desc}</div>
+                    <div className="text-xs text-stone-400">{desc}</div>
                   </div>
                   {currentMode === id && !comingSoon && (
                     <Check size={18} className="ml-auto text-amber-400" />
@@ -2165,14 +2487,14 @@ export function AccountSettings() {
 
         {/* Auto Sync Toggle */}
         {(currentMode === 'both' || currentMode === 'server_only') && (
-          <div className="flex items-center justify-between p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/50 text-amber-400">
+              <div className="p-2 rounded-lg bg-white/10 text-amber-400">
                 <RefreshCw size={18} />
               </div>
               <div>
                 <div className="text-sm font-medium text-stone-200">Auto Sync</div>
-                <div className="text-xs text-stone-500">
+                <div className="text-xs text-stone-400">
                   Automatically sync changes in the background
                 </div>
               </div>
@@ -2186,7 +2508,7 @@ export function AccountSettings() {
 
         {/* Sync Status */}
         {(currentMode === 'both' || currentMode === 'server_only') && (
-          <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+          <div className="p-4 bg-white/5 rounded-xl border border-white/10">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-stone-300">Sync Status</span>
               <motion.button
@@ -2200,21 +2522,21 @@ export function AccountSettings() {
               </motion.button>
             </div>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.local}</div>
-                <div className="text-xs text-stone-500">Local</div>
+                <div className="text-xs text-stone-400">Local</div>
               </div>
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-stone-200">{syncCounts.server}</div>
-                <div className="text-xs text-stone-500">Server</div>
+                <div className="text-xs text-stone-400">Server</div>
               </div>
-              <div className="p-2 bg-white/50 rounded-lg">
+              <div className="p-2 bg-white/5 rounded-lg">
                 <div className="text-lg font-medium text-amber-400">{syncCounts.pending}</div>
-                <div className="text-xs text-stone-500">Pending</div>
+                <div className="text-xs text-stone-400">Pending</div>
               </div>
             </div>
             {syncState.lastSyncAt && (
-              <div className="mt-3 text-xs text-stone-500 text-center">
+              <div className="mt-3 text-xs text-stone-400 text-center">
                 Last synced: {syncState.lastSyncAt.toLocaleString()}
               </div>
             )}
@@ -2234,7 +2556,7 @@ export function AccountSettings() {
                   const enabled = (decision as { saveLocal: boolean; saveServer: boolean }).saveLocal ||
                                  (decision as { saveLocal: boolean; saveServer: boolean }).saveServer;
                   return (
-                    <div key={type} className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-[#D4B896]/30">
+                    <div key={type} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                       <span className="text-sm text-stone-300 capitalize">{type.replace(/_/g, ' ')}</span>
                       <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-stone-400'}`}>
                         {enabled ? 'Enabled' : 'Disabled'}
@@ -2247,7 +2569,7 @@ export function AccountSettings() {
         )}
 
         {/* Forgetting Ritual */}
-        <div className="pt-4 border-t border-[#D4B896]/30">
+        <div className="pt-4 border-t border-white/10">
           <motion.button
             onClick={() => setShowForgettingRitual(true)}
             className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 hover:from-violet-500/15 hover:to-purple-500/15 border border-violet-500/20 rounded-xl transition-colors"
@@ -2259,7 +2581,7 @@ export function AccountSettings() {
               </div>
               <div className="text-left">
                 <div className="text-sm font-medium text-violet-200">Forgetting Ritual</div>
-                <div className="text-xs text-stone-500">
+                <div className="text-xs text-stone-400">
                   Consciously release what no longer serves you
                 </div>
               </div>
@@ -2274,7 +2596,7 @@ export function AccountSettings() {
             href="https://github.com/SoullabTech/Sovereign/blob/main/docs/canon/MAIA_PROMISE_v1.0.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-stone-400 hover:text-stone-500 transition-colors"
+            className="text-xs text-stone-400 hover:text-stone-400 transition-colors"
           >
             MAIA operates under explicit architectural constraints.
           </a>
@@ -2285,14 +2607,14 @@ export function AccountSettings() {
 
   const renderConnections = () => (
     <div className="space-y-6">
-      <p className="text-sm text-stone-500 mb-6">
+      <p className="text-sm text-stone-400 mb-6">
         Connect external services to enhance your MAIA experience.
       </p>
 
       {userId ? (
         <GoogleConnectSection userId={userId} />
       ) : (
-        <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30 text-stone-500 text-sm">
+        <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-stone-400 text-sm">
           Sign in to connect services
         </div>
       )}
@@ -2302,12 +2624,12 @@ export function AccountSettings() {
   const renderData = () => (
     <div className="space-y-6">
       {/* Export */}
-      <div className="p-4 bg-white/50 rounded-xl border border-[#D4B896]/30">
+      <div className="p-4 bg-white/5 rounded-xl border border-white/10">
         <div className="flex items-start gap-3">
           <Download className="w-5 h-5 text-blue-400 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-sm font-medium text-stone-200">Export Your Data</h4>
-            <p className="text-xs text-stone-500 mt-1 mb-3">
+            <p className="text-xs text-stone-400 mt-1 mb-3">
               Download all your data including profile, settings, and session history.
             </p>
             <motion.button
@@ -2327,7 +2649,7 @@ export function AccountSettings() {
           <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-sm font-medium text-red-300">Delete Account</h4>
-            <p className="text-xs text-stone-500 mt-1 mb-3">
+            <p className="text-xs text-stone-400 mt-1 mb-3">
               Permanently delete your account and all associated data. This cannot be undone.
             </p>
             <input
@@ -2335,7 +2657,7 @@ export function AccountSettings() {
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               placeholder={`Type "${profile?.username}" to confirm`}
-              className="w-full px-3 py-2 mb-2 bg-white/50 border border-red-500/20 rounded-lg text-stone-800 text-sm placeholder-stone-400 focus:border-red-500/50 focus:outline-none"
+              className="w-full px-3 py-2 mb-2 bg-white/5 border border-red-500/20 rounded-lg text-stone-200 text-sm placeholder-stone-500 focus:border-red-500/50 focus:outline-none"
             />
             <motion.button
               onClick={deleteAccount}
@@ -2358,7 +2680,7 @@ export function AccountSettings() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <div className="animate-pulse text-stone-500">Loading settings...</div>
+        <div className="animate-pulse text-stone-400">Loading settings...</div>
       </div>
     );
   }
@@ -2372,16 +2694,16 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
+    <div className="max-w-xl mx-auto px-5 py-8 font-sans" style={{ paddingTop: 'max(env(safe-area-inset-top), 2rem)' }}>
       {/* Header - Claude style: minimal */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
           className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
         >
-          <ArrowLeft size={20} className="text-stone-400" />
+          <ArrowLeft size={20} className="text-amber-400" />
         </button>
-        <h1 className="text-xl font-medium text-stone-200">
+        <h1 className="text-xl font-medium text-white">
           {activeSection
             ? SECTIONS.find(s => s.id === activeSection)?.label
             : 'Settings'}
@@ -2421,9 +2743,9 @@ export function AccountSettings() {
                 onClick={() => setActiveSection(id)}
                 className="group w-full flex items-center gap-3 px-3 py-3 hover:bg-white/5 rounded-lg transition-colors"
               >
-                <Icon size={18} className="text-stone-400" />
-                <span className="flex-1 text-left text-stone-200">{label}</span>
-                <ChevronRight size={16} className="text-stone-500 group-hover:text-stone-300 transition-colors" />
+                <Icon size={18} className="text-amber-400 group-hover:text-amber-300 transition-colors" />
+                <span className="flex-1 text-left text-white">{label}</span>
+                <ChevronRight size={16} className="text-stone-300 group-hover:text-amber-300 transition-colors" />
               </button>
             ))}
           </motion.div>
@@ -2446,6 +2768,9 @@ export function AccountSettings() {
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
             {activeSection === 'portals' && renderPortals()}
+            {activeSection === 'messaging' && userId && (
+              <NostrMessagingSection memberId={userId} />
+            )}
             {activeSection === 'connections' && renderConnections()}
             {activeSection === 'data' && renderData()}
           </motion.div>
@@ -2453,7 +2778,7 @@ export function AccountSettings() {
       </AnimatePresence>
 
       {/* Build Info Footer - subtle version stamp */}
-      <div className="mt-12 pt-6 border-t border-[#D4B896]/20 text-center">
+      <div className="mt-12 pt-6 border-t border-white/10 text-center">
         <p className="text-[10px] text-stone-300 font-mono">
           v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
           {Capacitor.isNativePlatform() && (

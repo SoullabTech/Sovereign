@@ -177,6 +177,9 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const isRecordingRef = useRef(false);
   const chunkIndexRef = useRef(0);
   const chunkStartTimeRef = useRef(0);
+  // WebM init segment (first chunk contains container headers; must be prepended
+  // to all subsequent chunks so Whisper receives a decodable file each time)
+  const webmInitChunkRef = useRef<Blob | null>(null);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const levelAnimationRef = useRef<number | null>(null);
 
@@ -400,6 +403,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
 
       // 5. Wire chunk handler
       chunkIndexRef.current = 0;
+      webmInitChunkRef.current = null;
       startTimeRef.current = Date.now();
       chunkStartTimeRef.current = Date.now();
 
@@ -411,20 +415,38 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         chunkStartTimeRef.current = Date.now();
         const idx = chunkIndexRef.current++;
 
+        // The first chunk from MediaRecorder contains the WebM container header
+        // (codec info, stream metadata). Subsequent chunks are raw audio fragments
+        // with no header, which Whisper cannot decode standalone. Prepend the init
+        // segment to every non-first chunk so each upload is a valid WebM file.
+        if (idx === 0) {
+          webmInitChunkRef.current = event.data;
+        }
+        const initPrepended = idx > 0 && !!webmInitChunkRef.current;
+        const audioToSend = (idx === 0 || !webmInitChunkRef.current)
+          ? event.data
+          : new Blob([webmInitChunkRef.current, event.data], { type: event.data.type });
+
+        console.log(
+          `[RecordingContext] chunk #${idx} raw=${(event.data.size / 1024).toFixed(1)}kb` +
+          ` sent=${(audioToSend.size / 1024).toFixed(1)}kb initPrepended=${initPrepended}`
+        );
+
         const formData = new FormData();
         formData.append('sessionId', sessionIdRef.current);
-        formData.append('audio', event.data, `chunk_${idx}.webm`);
+        formData.append('audio', audioToSend, `chunk_${idx}.webm`);
+        formData.append('chunkIndex', String(idx));
         formData.append('startMs', String(startMs));
         formData.append('endMs', String(endMs));
         formData.append('speaker', 'Speaker 1');
 
         try {
-          await fetch(apiUrl('/api/supervision/transcript/stream'), {
+          await apiFetch('/api/supervision/transcript/stream', {
             method: 'POST',
             body: formData,
           });
         } catch (err) {
-          console.error('[RecordingContext] Chunk upload failed:', err);
+          console.error(`[RecordingContext] Chunk #${idx} upload failed:`, err);
         }
       };
 
@@ -499,7 +521,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
       eventSourceRef.current = null;
     }
 
-    // Notify server
+    // Notify server — supervision session
     try {
       await apiFetch('/api/supervision/session/stop', {
         method: 'POST',
@@ -511,7 +533,22 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         }),
       });
     } catch (err) {
-      console.error('[RecordingContext] Failed to stop session on server:', err);
+      console.error('[RecordingContext] Failed to stop supervision session on server:', err);
+    }
+
+    // Also close the scribe session (sets ended_at + is_active = false)
+    const scribeId = scribeSessionIdRef.current;
+    if (scribeId) {
+      try {
+        await apiFetch('/api/scribe/stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: scribeId }),
+        });
+        console.log('[RecordingContext] Scribe session closed:', scribeId);
+      } catch (err) {
+        console.error('[RecordingContext] Failed to stop scribe session:', err);
+      }
     }
 
     // Write back to booking (practitioner sessions only)

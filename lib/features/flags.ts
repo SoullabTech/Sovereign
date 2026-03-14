@@ -19,6 +19,8 @@ export const FEATURES = {
   // Auth
   NATIVE_OAUTH: false,        // Native Google/Apple buttons on iOS
   PASSKEY_ENROLLMENT: true,   // Already working, keep on unless hard-disable needed
+  QR_LOGIN: false,            // QR code sign-in (desktop only)
+  NATIVE_BIOMETRY: false,     // Capacitor native Face ID/Touch ID (vs WebAuthn)
 
   // Voice
   VOICE_V2: false,            // New permission + recording flow

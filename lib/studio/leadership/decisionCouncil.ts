@@ -11,6 +11,7 @@
 import { consult } from '@/lib/ain/consultation';
 import type { ConsultationRequest, ConsultationResult } from '@/lib/ain/types';
 import type { DecisionContext, IterationContext } from './types';
+import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
 import { getSituationConfig, buildSituationQuestion, mapTimePressure } from './situationTypes';
 
 /**
@@ -21,13 +22,19 @@ import { getSituationConfig, buildSituationQuestion, mapTimePressure } from './s
  *
  * When iterationContext is provided, the council sees the arc:
  * prior tensions, recommendation, insights, and what happened since.
+ *
+ * When inputBundle is provided, the council receives segmented evidence from
+ * client inquiry, field signals, and practitioner observations — reducing
+ * projection and increasing synthesis precision.
  */
 export async function consultDecisionCouncil(
   decision: DecisionContext,
-  iterationContext?: IterationContext
+  iterationContext?: IterationContext,
+  inputBundle?: DecisionInputBundle,
+  councilBias?: string
 ): Promise<ConsultationResult> {
   const config = getSituationConfig(decision.situationType);
-  const question = buildSituationQuestion(decision, config, iterationContext);
+  const question = buildSituationQuestion(decision, config, iterationContext, inputBundle, councilBias);
 
   const request: ConsultationRequest = {
     council: config.council,

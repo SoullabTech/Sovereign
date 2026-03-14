@@ -19,8 +19,15 @@ export type SystemVoiceProfile = {
   base: VoiceControlOffsets;
 };
 
+/** Member TTS provider preference: auto (default), cloud (OpenAI), local (Kokoro) */
+export type TTSProviderPref = 'auto' | 'cloud' | 'local';
+
 export type MemberVoicePreferences = {
   voiceIdOverride?: string | null;
+  /** Member-chosen voice archetype (maia_core, maia_warm, maia_clear, mentor, elder) */
+  voiceArchetype?: string | null;
+  /** Member-chosen TTS provider: auto, cloud, or local */
+  ttsProvider?: TTSProviderPref | null;
   offset: VoiceControlOffsets;
 };
 
@@ -29,6 +36,7 @@ export type VoiceControlsResponse = {
   member: MemberVoicePreferences;
   effective: {
     voiceId: string;
+    voiceArchetype: string | null;
     intent: VoiceControlOffsets; // merged base+offset before conductor modulation
   };
 };

@@ -90,6 +90,8 @@ export interface MaiaContext {
   studioAddendum?: string;
   // 🚪 KNOWLEDGE GATE: AIN source well modulation
   knowledgeGateAddendum?: string;
+  // 🕸️ MEMBER WEB: Patterns + session summaries + journals
+  memberWebAddendum?: string;
   // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
   consultationAddendum?: string;
   // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
@@ -821,6 +823,13 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (knowledgeGateSafe) {
     adaptedPrompt += `\n\n${knowledgeGateSafe}`;
     console.log(`🚪 [Knowledge Gate] Source well modulation injected`);
+  }
+
+  // 🕸️ MEMBER WEB: Patterns + session summaries + journals
+  const memberWebSafe = safeAddendum(context.memberWebAddendum);
+  if (memberWebSafe) {
+    adaptedPrompt += `\n\n${memberWebSafe}`;
+    console.log(`🕸️ [Member Web] Patterns+summaries+journals injected`);
   }
 
   // 1️⃣7️⃣ CONSULTATION: AIN council multi-perspective synthesis

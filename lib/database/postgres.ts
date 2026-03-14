@@ -21,8 +21,8 @@ function createPool(): Pool {
   return new Pool({
     host: process.env.POSTGRES_HOST || 'localhost',
     port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    database: process.env.POSTGRES_DATABASE || 'maia_sovereign',
-    user: process.env.POSTGRES_USER || 'postgres',
+    database: process.env.POSTGRES_DATABASE || 'maia_consciousness',
+    user: process.env.POSTGRES_USER || 'soullab',
     password: process.env.POSTGRES_PASSWORD,
 
     // Connection pool settings

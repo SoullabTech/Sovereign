@@ -439,7 +439,7 @@ function SigninContent() {
         }
 
         if (data.member) {
-          storeSession(data.member);
+          storeSession(data.member, data.sessionToken);
           window.location.assign(`/maia?ts=${Date.now()}`);
         }
         return;
@@ -491,7 +491,7 @@ function SigninContent() {
         }
 
         if (data.member) {
-          storeSession(data.member);
+          storeSession(data.member, data.sessionToken);
           window.location.assign(`/maia?ts=${Date.now()}`);
         }
         return;
@@ -803,10 +803,10 @@ function SigninContent() {
 
           <div className="pt-3 border-t border-teal-200/20">
             <button
-              onClick={() => { window.location.href = '/signup'; }}
+              onClick={() => { window.location.href = '/begin'; }}
               className="text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors"
             >
-              New to Soullab? Create account
+              New to Soullab? Begin your journey
             </button>
           </div>
         </div>

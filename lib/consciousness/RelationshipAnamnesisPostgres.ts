@@ -271,7 +271,7 @@ export async function saveRelationshipEssence(essence: RelationshipEssence): Pro
 
     // UPSERT: Insert new or update existing
     await queryOne(
-      `INSERT INTO relationship_essence (
+      `INSERT INTO relationship_essences (
         user_id,
         soul_signature,
         user_name,
@@ -328,7 +328,7 @@ export async function saveRelationshipEssence(essence: RelationshipEssence): Pro
 export async function loadRelationshipEssence(userId: string): Promise<RelationshipEssence | null> {
   try {
     const result = await queryOne<any>(
-      `SELECT * FROM relationship_essence WHERE user_id = $1`,
+      `SELECT * FROM relationship_essences WHERE user_id = $1`,
       [userId]
     );
 
