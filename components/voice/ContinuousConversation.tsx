@@ -243,6 +243,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastNetworkErrorTime = useRef<number>(0);
   const consecutiveRestartCount = useRef<number>(0);
   const lastRestartTime = useRef<number>(0);
+  // Arming-recovery counters — tracks frequency/success of stuck-ARMING recovery
+  const armingRecoveryAttemptsRef = useRef<number>(0);
+  const armingRecoverySuccessRef = useRef<number>(0);
+  const armingRecoveryFailedRef = useRef<number>(0);
+  const isArmingRecoveryRef = useRef<boolean>(false); // True during a startListening that followed a stuck-ARMING reset
   const recognitionStartTime = useRef<number>(0);
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
@@ -1292,8 +1297,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Force override bypasses authority guard (user is interrupting MAIA)
     if (!guard.allowed && !options?.forceOverride) {
-      addDebug(`🛡️ BLOCKED: ${guard.reason}`);
-      return;
+      // Recover from stale ARMING state when native SR failed to emit started/stopped
+      // and the outer UI timeout already expired. isStartingRef clears via its finally
+      // block, but micState stays ARMING because no listeningState event ever fired.
+      // This leaves the authority guard permanently blocking future user taps.
+      // startListening() already calls NativeSpeechRecognition.stop() pre-emptively,
+      // so the reset here is backed by a real cleanup path.
+      if (guard.reason === 'mic_state_ARMING') {
+        const timeSinceLastTap = lastMicTapAtRef.current > 0 ? Math.round((Date.now() - lastMicTapAtRef.current) / 1000) : null;
+        const timeSinceLastSpeech = lastSpeechHeardAtRef.current > 0 ? Math.round((Date.now() - lastSpeechHeardAtRef.current) / 1000) : null;
+        console.warn('⚠️ [ContinuousConversation] Recovering stuck ARMING state', JSON.stringify({
+          recovery: 'user_tap_reset_stuck_arming',
+          prior_mic_state: 'ARMING',
+          native_sr_status: nativeStatusRef.current,
+          secs_since_last_tap: timeSinceLastTap,
+          secs_since_last_speech: timeSinceLastSpeech,
+          platform: Capacitor.getPlatform(),
+        }));
+        armingRecoveryAttemptsRef.current++;
+        isArmingRecoveryRef.current = true;
+        setMicState('IDLE', 'user_tap_reset_stuck_arming');
+        isStartingRef.current = false;
+        // Fall through and let startListening proceed
+      } else {
+        addDebug(`🛡️ BLOCKED: ${guard.reason}`);
+        return;
+      }
     }
 
     // Track user tap for conversation-alive gate
@@ -1605,6 +1634,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (isNowRecording) {
             console.log('✅ [Native] Mic is LIVE - orange dot should be visible');
             addDebug('✅ MIC IS LIVE - orange dot visible!');
+            if (isArmingRecoveryRef.current) {
+              isArmingRecoveryRef.current = false;
+              armingRecoverySuccessRef.current++;
+              console.info('[ContinuousConversation] arming_recovery_succeeded', JSON.stringify({
+                attempts: armingRecoveryAttemptsRef.current,
+                succeeded: armingRecoverySuccessRef.current,
+                failed: armingRecoveryFailedRef.current,
+              }));
+            }
             setMicState('LISTENING', 'listeningState:started');
             restartInFlightRef.current = false; // Clear restart-in-flight flag
             // ⚠️ DO NOT reset backoffStepRef here. The mic reaching LIVE for even 1ms
@@ -1929,6 +1967,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     } catch (error: any) {
       console.error('❌ [ContinuousConversation] Failed to start listening:', error);
+      if (isArmingRecoveryRef.current) {
+        isArmingRecoveryRef.current = false;
+        armingRecoveryFailedRef.current++;
+        console.warn('[ContinuousConversation] arming_recovery_failed', JSON.stringify({
+          attempts: armingRecoveryAttemptsRef.current,
+          succeeded: armingRecoverySuccessRef.current,
+          failed: armingRecoveryFailedRef.current,
+          error: (error as any)?.message || String(error),
+        }));
+      }
       // Reset state on error and notify parent
       setIsListening(false);
       isListeningRef.current = false;
@@ -2284,6 +2332,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   useEffect(() => {
     return () => {
       stopListening();
+      const attempts = armingRecoveryAttemptsRef.current;
+      if (attempts > 0) {
+        const succeeded = armingRecoverySuccessRef.current;
+        const failed = armingRecoveryFailedRef.current;
+        console.info('[audio-telemetry] arming_recovery_summary', JSON.stringify({
+          attempts,
+          succeeded,
+          failed,
+          unresolved: attempts - succeeded - failed,
+        }));
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run on mount/unmount
