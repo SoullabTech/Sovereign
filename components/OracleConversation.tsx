@@ -1329,7 +1329,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
 
   // 🔊 Voice seam: Use the clean interface instead of reaching into voiceMicRef internals
-  const voiceSession = useVoiceSession(voiceMicRef, isSpeaking, isProcessing);
+  const voiceSession = useVoiceSession(voiceMicRef, isAudioPlaying || isMicrophonePaused, isProcessing);
 
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
