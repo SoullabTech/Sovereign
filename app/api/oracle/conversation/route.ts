@@ -2257,7 +2257,7 @@ async function generateSpiralogicResponseWithLLM(
     isFieldMode,
     fieldSafeMode,
     fieldEnergyState,
-    (recentSummaries?.length ?? 0) > 0
+    !!recentSessionsBlock  // hasSessionHistory: true if recent sessions were loaded
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
