@@ -6,6 +6,7 @@ import type {
   VoiceSessionMethods,
   UseVoiceSessionResult,
   VoicePhase,
+  VoiceCapabilities,
   TranscriptHandler,
   PhaseChangeHandler,
   ErrorHandler,
@@ -149,17 +150,32 @@ export function useVoiceSession(
   const ref = continuousConvRef.current;
   const isRecording = ref?.isRecording ?? false;
   const isListening = ref?.isListening ?? false;
+  const isRecovering = currentPhase === 'arming'; // TODO: wire from ContinuousConversation recovery flag
+
+  // Derive capabilities based on phase + context
+  // (These can differ for same phase under different modes)
+  const capabilities: VoiceCapabilities = {
+    canStartListening: currentPhase === 'idle' && !error && !isSpeaking && !isProcessing,
+    canStopListening: (currentPhase === 'listening' || currentPhase === 'capturing' || currentPhase === 'arming') && !isSpeaking,
+    canInterrupt: (currentPhase === 'capturing' || currentPhase === 'submitting') && !isSpeaking,
+    canSubmit: currentPhase === 'capturing' && !isSpeaking && transcript.trim().length > 0,
+    canClearError: error !== null,
+  };
 
   const state: VoiceSessionState = {
+    // State (what is happening)
     phase: currentPhase,
     transcript,
+    interimTranscript: '', // TODO: wire from ContinuousConversation interim results
     error,
+
+    // Context (where we are)
     isRecording,
     platform: isIOSPlatform() ? 'ios' : isAndroidPlatform() ? 'android' : 'web',
+    isRecovering,
 
-    // Capabilities
-    canStartListening: currentPhase === 'idle' && !error && !isSpeaking && !isProcessing,
-    canInterrupt: (currentPhase === 'capturing' || currentPhase === 'submitting') && !isSpeaking,
+    // Capabilities (what we can do — UI should use this for action enablement)
+    capabilities,
 
     // Metadata
     lastSpeechAt: 0, // TODO: wire from ContinuousConversation ref

@@ -6,6 +6,14 @@
  * setup) sees this, not the state machine details.
  */
 
+/**
+ * VoicePhase — Descriptive state (what is happening right now)
+ *
+ * Note: Phase alone is NOT sufficient for UI permission logic.
+ * Same phase can have different permissions under different modes.
+ * Example: "listening" during wake-word mode differs from "listening" during tap-to-talk.
+ * Use `capabilities` for action enablement, phase for UI rendering/feedback.
+ */
 export type VoicePhase =
   | 'idle'           // Ready for user tap or auto-start
   | 'arming'         // Permissions/setup in progress
@@ -17,22 +25,49 @@ export type VoicePhase =
   | 'interrupted'    // iOS audio interruption (phone call, Siri, etc.)
   | 'error';         // Recoverable error
 
+/**
+ * VoiceCapabilities — What actions are currently legal
+ *
+ * These are derived from phase + mode + context (not from phase alone).
+ * UI should prefer capabilities for action enablement, not phase comparisons.
+ *
+ * Future modes (wake-word, continuous, passive) will change capability
+ * rules even when phase is identical.
+ */
+export interface VoiceCapabilities {
+  canStartListening: boolean;   // Safe to call startListening()?
+  canStopListening: boolean;    // Safe to stop (or will it error)?
+  canInterrupt: boolean;        // Safe to interrupt MAIA?
+  canSubmit: boolean;           // Can user submit current transcript?
+  canClearError: boolean;       // Can user dismiss error state?
+}
+
 export interface VoiceSessionState {
-  // Observables (read-only to orchestration)
+  // ─── STATE (what is happening) ───────────────────────────────────────
   phase: VoicePhase;
   transcript: string;           // Current accumulated speech from user
+  interimTranscript: string;    // Partial speech (pending confirmation)
   error: Error | null;          // Recoverable error (permission, timeout, etc.)
+
+  // ─── CONTEXT (where we are) ──────────────────────────────────────────
   isRecording: boolean;         // Mic actually capturing audio
   platform: 'web' | 'ios' | 'android';
+  isRecovering: boolean;        // Arming recovery in progress? (for UI feedback)
 
-  // Capabilities (what can orchestration do right now?)
-  canStartListening: boolean;   // Safe to call startListening()?
-  canInterrupt: boolean;        // Safe to interrupt MAIA?
+  // ─── CAPABILITIES (what can we do) ────────────────────────────────────
+  // Always use this for action enablement, not phase comparisons.
+  capabilities: VoiceCapabilities;
 
-  // Metadata
+  // ─── METADATA ─────────────────────────────────────────────────────────
   lastSpeechAt: number;         // Timestamp of last confirmed user speech (ms)
   startedAt: number;            // Session start time (ms)
   conversationAlive: boolean;   // Is conversation still active? (gate for auto-restart)
+
+  // ─── FUTURE: Reserved for mode distinction ────────────────────────────
+  // Once you add push-to-talk, wake-word, continuous, passive modes,
+  // you'll want:
+  //   mode: VoiceInteractionMode; // 'tap_to_talk' | 'continuous' | 'wake_word' | 'passive'
+  // This lets phase + mode answer: "listening" under what rules?
 }
 
 export interface VoiceSessionMethods {

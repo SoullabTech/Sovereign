@@ -110,7 +110,7 @@ useEffect(() => {
 }, [voiceSession]);
 ```
 
-#### Pattern E: Checking mic state
+#### Pattern E: Checking mic state (UI feedback)
 
 **Before**:
 ```typescript
@@ -118,11 +118,13 @@ const isMicArming = voiceMicRef.current?.micState === 'ARMING';
 const isMicCapturing = voiceMicRef.current?.micState === 'CAPTURING';
 ```
 
-**After**:
+**After** (for UI rendering/feedback):
 ```typescript
 const isMicArming = voiceSession.state.phase === 'arming';
 const isMicCapturing = voiceSession.state.phase === 'capturing';
 ```
+
+**Key rule**: Phase is fine for UI feedback (what icon to show, what spinner to render). Use `capabilities` for action enablement.
 
 #### Pattern F: Checking recording status
 
@@ -139,6 +141,42 @@ if (voiceSession.state.isRecording) {
   showMicIndicator = true;
 }
 ```
+
+#### Pattern G: Enabling/disabling UI actions (NEW — use capabilities)
+
+**The key rule**: Phase is for rendering, capabilities is for permissions.
+
+**Render (phase)**:
+```typescript
+// Show spinner while arming
+{voiceSession.state.phase === 'arming' && <Spinner />}
+
+// Show listening indicator
+{voiceSession.state.phase === 'listening' && <OrangeDot />}
+
+// Show error badge
+{voiceSession.state.phase === 'error' && <ErrorBadge />}
+```
+
+**Enable actions (capabilities)**:
+```typescript
+// Button should be enabled/disabled based on capability, not phase
+<button
+  onClick={() => voiceSession.methods.startListening('user_tap')}
+  disabled={!voiceSession.state.capabilities.canStartListening}  // ✓ Correct
+>
+  Start
+</button>
+
+// NOT like this (will break with new modes):
+<button
+  disabled={voiceSession.state.phase !== 'idle'}  // ✗ Wrong
+>
+  Start
+</button>
+```
+
+Why this matters: When you add wake-word or continuous modes, "listening" will have different permission rules. Capabilities let you change those rules without breaking all the phase comparisons in UI.
 
 ---
 
