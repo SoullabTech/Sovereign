@@ -466,6 +466,8 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
           // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
           if (audioPlayedCountRef.current === 1) {
+            // ⏱ INSTRUMENTATION: playback_start milestone for latency measurement
+            console.log(`⏱ [LATENCY] playback_start index=${chunk.index} ts=${Date.now()}`);
             onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
             // 🔇 FEEDBACK PREVENTION: Signal MAIA is speaking to stop mic
             if (typeof window !== 'undefined') {

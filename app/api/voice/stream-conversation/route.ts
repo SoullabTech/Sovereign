@@ -864,6 +864,10 @@ export async function POST(req: NextRequest) {
                 return;
               }
 
+              if (chunkIndex === 0) {
+                timer.mark('tts_0_start');
+              }
+
               const result = await synthesizeWithFallback(safeChunkText, {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,

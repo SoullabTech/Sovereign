@@ -271,6 +271,29 @@ export class ClaudeService {
             continue;
           }
 
+          // === FIRST-SEGMENT FAST PATH ===
+          // Before the first full sentence lands, cut at the earliest clause boundary
+          // (comma / em-dash / semicolon + space) that yields a satisfying 5+ word chunk.
+          // This fires TTS immediately for a short, intentional opener rather than
+          // waiting for the full first sentence — reducing time-to-first-audio significantly.
+          if (sentenceIndex === 0) {
+            const clauseBreaks = /[,;—][ ]/g;
+            let cm: RegExpExecArray | null;
+            while ((cm = clauseBreaks.exec(buffer)) !== null) {
+              const clause = buffer.slice(0, cm.index).trim();
+              const wordCount = clause.split(/\s+/).filter(Boolean).length;
+              // Block weak conjunctive/filler openers that would sound like buffering
+              const isThinStarter = /^(well|and|but|so)\b/i.test(clause);
+              if (wordCount >= 5 && !isThinStarter) {
+                yield { type: 'sentence', text: clause, index: sentenceIndex++ };
+                // Advance buffer past the clause and its separator (char + space = 2)
+                buffer = buffer.slice(cm.index + 2);
+                break;
+              }
+            }
+          }
+          // === END FIRST-SEGMENT FAST PATH ===
+
           // Check for complete sentences in buffer
           let match;
           while ((match = sentenceEndRegex.exec(buffer)) !== null) {
