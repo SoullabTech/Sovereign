@@ -446,14 +446,14 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
             }, 500); // Small delay to ensure audio has fully finished
           }
         }
-        advance(50);
+        advance(0);
       };
 
       audio.onerror = (e) => {
         console.error('[StreamingVoice] Audio playback error:', e);
         // 🎤 PWA SIGNAL: Audio element error
         onPlaybackSignalRef.current?.({ type: 'AUDIO_FAILED', reason: 'audio element error' });
-        advance(50);
+        advance(0);
       };
 
       // 🔥 iOS FIX: Proper play() with retry and failure recovery
