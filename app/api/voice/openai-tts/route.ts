@@ -195,11 +195,13 @@ export async function POST(req: NextRequest) {
 
     // ═══════════════════════════════════════════════════════════════════
     // SOVEREIGN LOCAL VOICE INTERCEPT
-    // When local voice is enabled, try Kokoro first. If it succeeds,
-    // the audio never leaves the machine. All existing frontend calls
-    // to this endpoint automatically get local voice — zero UI changes.
+    // Only attempt Kokoro when explicitly configured as the primary provider.
+    // Default ('auto') now routes directly to OpenAI for reliability.
+    // Set MAIA_TTS_PROVIDER=kokoro to re-enable local-first routing.
     // ═══════════════════════════════════════════════════════════════════
-    if (ttsRouter.isLocalVoiceEnabled()) {
+    const configuredProvider = ttsRouter.getConfiguredProvider();
+    const useLocalFirst = ttsRouter.isLocalVoiceEnabled() && configuredProvider === 'kokoro';
+    if (useLocalFirst) {
       try {
         const result = await ttsRouter.synthesize({ text, voice, format: format as any, speed });
         const ms = Date.now() - t0;

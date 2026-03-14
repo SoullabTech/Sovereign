@@ -93,6 +93,10 @@ services:
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
       GIT_COMMIT: ${GIT_COMMIT:-unknown}
+      # HOST MARKER: Identifies which physical machine is running this stack.
+      # Change to "mac-studio" when running on the M4, "minisforum" on the Linux server.
+      # Appears in every [voice] server log line and in SSE complete events for comparison.
+      MAIA_HOST_ID: "minisforum"
       # STRICT 503: Claude-only mode - return 503 if Claude unavailable, never fall back to Ollama/DeepSeek
       MAIA_STRICT_503: "1"
       # Selflet Phase 2E: Disabled by default, enable via override file

@@ -310,6 +310,37 @@ export class ClaudeService {
             }
             buffer = buffer.slice(sentenceEnd);
           }
+
+          // FIRST-CHUNK FAST PATH: Before any sentence has been yielded, check for a
+          // clause-level boundary (comma, semicolon, em-dash). If we have 4–20 words of
+          // clean text before the boundary, yield it immediately so TTS can start while
+          // the rest of the sentence is still generating. This is the biggest felt-latency
+          // win available without moving to OpenAI Realtime.
+          if (sentenceIndex === 0 && buffer.length > 0) {
+            const clauseMatch = /,\s+|;\s+| [—–] /.exec(buffer);
+            if (clauseMatch) {
+              const candidate = buffer.slice(0, clauseMatch.index).trim();
+              const wordCount = candidate.split(/\s+/).filter(Boolean).length;
+              // Reject clauses that start with subordinating/coordinating conjunctions or
+              // discourse particles. These don't sound prosodically complete when spoken alone.
+              // "Because what you're describing," → fragmentary
+              // "I want to slow this down," → intentional
+              const startsWeak = /^(and|but|or|nor|yet|so|well|right|okay|ok|because|although|while|when|if|since|unless|until|after|before)\b/i.test(candidate);
+              if (
+                wordCount >= 4 &&
+                wordCount <= 20 &&
+                !startsWeak &&
+                !candidate.includes('---SOUL_METADATA---') &&
+                !candidate.includes('{') &&
+                !candidate.includes('[')
+              ) {
+                console.log(`[voice:first_segment_fast_path] words=${wordCount} chars=${candidate.length}`);
+                yield { type: 'sentence', text: candidate, index: sentenceIndex++ };
+                // Advance past the clause separator; the rest continues as subsequent chunks
+                buffer = buffer.slice(clauseMatch.index + clauseMatch[0].length).trimStart();
+              }
+            }
+          }
         }
       }
 

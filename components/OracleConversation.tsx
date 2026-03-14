@@ -115,6 +115,7 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
+import { getAudioContext as getSharedAudioContext, ensureAudioReady } from '@/lib/voice/ios-audio-session';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
@@ -1542,24 +1543,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
     if (isIOS && !audioContextRef.current) {
-      console.warn('📱 [iOS] AudioContext not initialized - creating now');
+      console.log('📱 [iOS] Borrowing shared AudioContext from ios-audio-session');
       try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        // Use the shared context — already unlocked via first gesture
+        audioContextRef.current = getSharedAudioContext();
       } catch (e) {
-        console.error('❌ Failed to create AudioContext:', e);
+        console.error('❌ Failed to get shared AudioContext:', e);
       }
     }
 
-    // Try to resume AudioContext if suspended or interrupted (iOS requires user gesture)
-    // iOS can have 'interrupted' state when another app took audio focus
-    const contextState = audioContextRef.current?.state;
-    if (contextState === 'suspended' || contextState === 'interrupted') {
-      console.log(`📱 [iOS] AudioContext ${contextState}, attempting resume...`);
+    // Ensure the shared AudioContext is running before playback
+    if (isIOS) {
       try {
-        await audioContextRef.current.resume();
-        console.log('✅ [iOS] AudioContext resumed:', audioContextRef.current.state);
+        await ensureAudioReady();
+        console.log('✅ [iOS] Shared AudioContext ensured ready');
       } catch (e) {
-        console.warn('⚠️ [iOS] Could not resume AudioContext - user interaction may be required:', e);
+        console.warn('⚠️ [iOS] ensureAudioReady failed:', e);
       }
     }
 
@@ -2719,13 +2718,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     trackEvent('session_start', { userId: userId || 'anonymous', sessionId });
 
-    // AUTO-START FIX: Initialize AudioContext immediately on mount
+    // AUTO-START FIX: Borrow the shared AudioContext from ios-audio-session
+    // (already unlocked via first-gesture handler, single instance per session)
     if (!audioContextRef.current) {
       try {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('✅ AudioContext initialized automatically on mount');
+        audioContextRef.current = getSharedAudioContext();
+        console.log('✅ Shared AudioContext initialized on mount, state:', audioContextRef.current.state);
       } catch (err) {
-        console.warn('⚠️ Could not auto-initialize AudioContext:', err);
+        console.warn('⚠️ Could not get shared AudioContext on mount:', err);
       }
     }
 
@@ -3553,21 +3553,16 @@ I'm not sure what I'm feeling yet.`;
     console.log('🔊 Enabling audio context on user interaction');
 
     try {
-      // Create or resume AudioContext
+      // Use or initialize the shared AudioContext (single instance per session)
       if (!audioContextRef.current && typeof window !== 'undefined') {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('📱 AudioContext created:', audioContextRef.current.state);
+        audioContextRef.current = getSharedAudioContext();
+        console.log('📱 Shared AudioContext obtained for iOS audio enable, state:', audioContextRef.current.state);
       }
 
-      // Resume if suspended OR interrupted (critical for iOS - interrupted state blocks speech recognition!)
+      // Ensure the shared context is running
       if (audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
-          console.log(`🎵 Audio context ${audioContextRef.current.state}, resuming...`);
-          await audioContextRef.current.resume();
-          console.log('🎵 Audio context resumed, state:', audioContextRef.current.state);
-        } else {
-          console.log('🎵 Audio context already running, state:', audioContextRef.current.state);
-        }
+        await ensureAudioReady();
+        console.log('🎵 Shared AudioContext ensured ready, state:', audioContextRef.current.state);
       }
 
       // iOS Safari needs a user gesture to unlock audio
@@ -3615,18 +3610,19 @@ I'm not sure what I'm feeling yet.`;
         console.warn('Silent audio play failed:', audioError);
       }
 
-      // Approach 2: Create oscillator as fallback
+      // Approach 2: Create subsonic oscillator as fallback (MUST be inaudible)
       if (!audioUnlocked && audioContextRef.current) {
         try {
           const oscillator = audioContextRef.current.createOscillator();
           const gainNode = audioContextRef.current.createGain();
-          gainNode.gain.value = 0.001;
+          gainNode.gain.value = 0.0001; // Effectively silent
+          oscillator.frequency.value = 1; // 1Hz — subsonic, below human hearing
           oscillator.connect(gainNode);
           gainNode.connect(audioContextRef.current.destination);
           oscillator.start();
           oscillator.stop(audioContextRef.current.currentTime + 0.1);
           audioUnlocked = true;
-          console.log('✅ Oscillator method used for audio unlock');
+          console.log('✅ Subsonic oscillator used for audio unlock');
         } catch (oscError) {
           console.warn('Oscillator method failed:', oscError);
         }
@@ -4631,7 +4627,7 @@ I'm not sure what I'm feeling yet.`;
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
-        const streamingCooldownMs = 400; // Natural breathing space between turns
+        const streamingCooldownMs = 200; // Brief breathing space — reduced for more natural turn handoff
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
