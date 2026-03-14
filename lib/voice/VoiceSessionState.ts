@@ -33,6 +33,12 @@ export type VoicePhase =
  *
  * Future modes (wake-word, continuous, passive) will change capability
  * rules even when phase is identical.
+ *
+ * ⚠️ SEAM RULE: Consumer components MUST use capabilities for action enablement.
+ * Do not re-derive permissions from phase in OracleConversation or UI components.
+ * Bad: const canInterrupt = state.phase === 'speaking';
+ * Good: const canInterrupt = state.capabilities.canInterrupt;
+ * This rule prevents seam leakage when transport behavior evolves.
  */
 export interface VoiceCapabilities {
   canStartListening: boolean;   // Safe to call startListening()?
@@ -55,7 +61,8 @@ export interface VoiceSessionState {
   isRecovering: boolean;        // Arming recovery in progress? (for UI feedback)
 
   // ─── CAPABILITIES (what can we do) ────────────────────────────────────
-  // Always use this for action enablement, not phase comparisons.
+  // ⚠️ SEAM RULE: Use ONLY for action enablement. Never re-derive in components.
+  // phase is for UI rendering/feedback. capabilities is for permissions.
   capabilities: VoiceCapabilities;
 
   // ─── METADATA ─────────────────────────────────────────────────────────
