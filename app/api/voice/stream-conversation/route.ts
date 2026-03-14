@@ -73,6 +73,8 @@ import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelem
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
+import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
+import { query } from '@/lib/db/postgres';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -584,11 +586,20 @@ export async function POST(req: NextRequest) {
   let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
   let effectiveVoice = voice; // Start with what the frontend sent
   let memberTtsProvider: string | null = null;
+  let memberTherapeuticApproach = 'auto';
   try {
-    const [systemVoice, memberVoice] = await Promise.all([
+    const [systemVoice, memberVoice, settingsRow] = await Promise.all([
       getSystemVoiceProfile(),
       getMemberVoicePreferences(userId || ''),
+      userId
+        ? query(`SELECT therapeutic_approach FROM member_settings WHERE member_id = $1`, [userId])
+            .then(r => r.rows[0] ?? null)
+            .catch(() => null)
+        : Promise.resolve(null),
     ]);
+    if (settingsRow?.therapeutic_approach) {
+      memberTherapeuticApproach = normalizeGuideId(settingsRow.therapeutic_approach);
+    }
     const merged = mergeVoiceIntent(systemVoice, memberVoice);
     voiceOffsets = merged.intent;
     memberTtsProvider = merged.ttsProvider;
@@ -776,7 +787,15 @@ export async function POST(req: NextRequest) {
         });
         // effectiveBrevity: the depth tier can pull 'brief' into threshold responses
         // or allow 'moderate' for core, but never forces 'expansive' (relational stack decides that)
-        const effectiveBrevity = tierToBrevity(depthClass.tier, guidance?.brevity);
+        const rawBrevity = tierToBrevity(depthClass.tier, guidance?.brevity);
+        // Care mode depth-aware expansion: when member is seeking guidance (depth signal present),
+        // don't lock to brief even at threshold — calmness ≠ completion.
+        // Talk mode: same rule — start brief, expand when depth warrants it.
+        const effectiveBrevity = (
+          rawBrevity === 'brief' &&
+          depthClass.depthScore > 0.3 &&
+          (mode === 'care' || mode === 'talk')
+        ) ? 'moderate' : rawBrevity;
         console.info('[depth.classify]', JSON.stringify({
           tier: depthClass.tier,
           awarenessLevel: depthClass.awarenessLevel,
@@ -1041,10 +1060,26 @@ export async function POST(req: NextRequest) {
         };
         // ─────────────────────────────────────────────────────────────────
 
+        // ── INTERPRETIVE GUIDE LENS ──────────────────────────────────────
+        // Resolve member's active interpretive guide and inject into system prompt.
+        // Same council system used by the oracle text route — now wired to voice.
+        const councilResolution = resolveCouncil({
+          accountDefault: memberTherapeuticApproach,
+          message,
+        });
+        const conversationDepth = conversationHistory?.length ?? 0;
+        const councilPromptSection = buildCouncilPromptSection(councilResolution, conversationDepth);
+        const voiceSystemPrompt = councilPromptSection || undefined;
+        if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
+          console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
           message,
-          context
+          context,
+          voiceSystemPrompt
         )) {
           if (chunk.type === 'sentence') {
             // Mark first token timing
