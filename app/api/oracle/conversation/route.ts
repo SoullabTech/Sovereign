@@ -927,7 +927,8 @@ export async function POST(request: NextRequest) {
       fieldEnergyState,
       recentSessionsBlock,
       memberLifeContextBlock,
-      councilResolution
+      councilResolution,
+      activeProtocol
     );
 
     const tAfterLLM = Date.now();
@@ -2217,7 +2218,8 @@ async function generateSpiralogicResponseWithLLM(
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
   recentSessionsBlock?: string,
   memberLifeContextBlock?: string,
-  councilResolution?: CouncilResolution
+  councilResolution?: CouncilResolution,
+  activeProtocol?: any
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
