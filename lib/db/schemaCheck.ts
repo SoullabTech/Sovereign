@@ -34,7 +34,7 @@ const REQUIRED_COLUMNS: ColumnCheck[] = [
 const REQUIRED_TABLES: TableCheck[] = [
   { table: 'member_nostr_events',       addedBy: '20260310000002_member_nostr_events.sql' },
   { table: 'nostr_channels',            addedBy: '20260310000003_nostr_channels.sql' },
-  { table: 'maia_nostr_identity',       addedBy: '20260310000004_maia_nostr_delegation.sql' },
+  { table: 'maia_nostr_service_keys',   addedBy: '20260310000004_maia_nostr_delegation.sql' },
   { table: 'accumulating_hypotheses',   addedBy: '20260311000001_accumulating_hypotheses.sql' },
   { table: 'interpretive_ledger',       addedBy: '20260311000002_interpretive_ledger.sql' },
   { table: 'member_spiral_state',       addedBy: '20260213200001_member_spiral_state.sql' },
