@@ -9,6 +9,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
+import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
 // TEMPORARILY DISABLED - causing ReferenceError crash
 // import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
@@ -665,6 +666,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
+  // Derived UI voice state for VoiceInteractionBar
+  const voiceInteractionState: import('./voice/VoiceInteractionBar').VoiceInteractionState =
+    (isProcessing || isResponding) ? 'thinking' :
+    isAudioPlaying ? 'speaking' :
+    isListening ? 'listening' :
+    isActivating ? 'recovering' :
+    'idle';
+
   // 🎤 PWA VOICE STATE MACHINE: Separate, first-class voice loop for Safari PWA
   // This provides confirmed transitions only - no "hopeful" state changes
   // TEMPORARILY DISABLED to debug crash
@@ -743,6 +752,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     userMessage: string;
   } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
+  const [interimTranscript, setInterimTranscript] = useState('');
 
   // Sync local state with parent when prop changes
   useEffect(() => {
@@ -5301,6 +5311,7 @@ I'm not sure what I'm feeling yet.`;
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
     console.log('🎤 handleVoiceTranscript called with:', transcript);
+    setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();
     if (!t) {
       console.log('⚠️ Empty transcript, returning');
@@ -7411,137 +7422,7 @@ I'm not sure what I'm feeling yet.`;
               </motion.div>
             )}
 
-            {/* Status text below holoflower - always show listening indicator */}
-            {isMounted && !showChatInterface && voiceEnabled && (
-              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
-                {/* Elemental Mode Indicator - TEMPORARILY DISABLED
-                {voiceMicRef.current?.elementalMode && (
-                  <motion.div
-                    className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full backdrop-blur-sm"
-                    style={{
-                      backgroundColor: `${voiceMicRef.current.elementalMode === 'fire' ? 'rgba(239, 68, 68, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'water' ? 'rgba(107, 155, 209, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'earth' ? 'rgba(161, 98, 7, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'air' ? 'rgba(212, 184, 150, 0.2)' :
-                        'rgba(147, 51, 234, 0.2)'}`,
-                      border: `1px solid ${voiceMicRef.current.elementalMode === 'fire' ? 'rgba(239, 68, 68, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'water' ? 'rgba(107, 155, 209, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'earth' ? 'rgba(161, 98, 7, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'air' ? 'rgba(212, 184, 150, 0.4)' :
-                        'rgba(147, 51, 234, 0.4)'}`
-                    }}
-                  >
-                    <span className="text-xs font-medium" style={{
-                      color: voiceMicRef.current.elementalMode === 'fire' ? '#ef4444' :
-                        voiceMicRef.current.elementalMode === 'water' ? '#6B9BD1' :
-                        voiceMicRef.current.elementalMode === 'earth' ? '#a16207' :
-                        voiceMicRef.current.elementalMode === 'air' ? '#D4B896' :
-                        '#9333ea'
-                    }}>
-                      {voiceMicRef.current.elementalMode === 'fire' ? '🔥 Fire' :
-                        voiceMicRef.current.elementalMode === 'water' ? '💧 Water' :
-                        voiceMicRef.current.elementalMode === 'earth' ? '🌍 Earth' :
-                        voiceMicRef.current.elementalMode === 'air' ? '🌬️ Air' :
-                        '✨ Aether'}
-                    </span>
-                  </motion.div>
-                )} */}
-                {/* Status messages - Processing state takes priority */}
-                <AnimatePresence mode="wait">
-                  {(isResponding || isAudioPlaying || isProcessing) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{
-                        opacity: [0.7, 1, 0.7],
-                        y: 0,
-                        scale: [0.98, 1, 0.98]
-                      }}
-                      transition={{
-                        opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/95 text-sm font-medium drop-shadow-[0_0_10px_rgba(252,211,77,0.6)]"
-                    >
-                      {isProcessing && !isResponding && !isAudioPlaying ? '✨ Thinking...' :
-                       isResponding && !isAudioPlaying ? '🎵 Preparing voice...' :
-                       '💫 Speaking...'}
-                    </motion.div>
-                  )}
-                  {/* Activating state - waiting for mic confirmation */}
-                  {isActivating && !isListening && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{
-                        opacity: [0.6, 0.9, 0.6],
-                        y: 0
-                      }}
-                      transition={{
-                        opacity: { duration: 1.0, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/90 text-sm font-medium drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                    >
-                      🎤 Activating...
-                    </motion.div>
-                  )}
-                  {/* Listening state - mic is CONFIRMED live (orange dot should be visible) */}
-                  {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <div className="flex flex-col items-center gap-2">
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{
-                          opacity: [0.8, 1, 0.8],
-                          y: 0
-                        }}
-                        transition={{
-                          opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-                        }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="text-emerald-300/95 text-sm font-medium drop-shadow-[0_0_8px_rgba(110,231,183,0.5)]"
-                      >
-                        🎤 Listening...
-                      </motion.div>
-                      {/* Keep Recording button - subtle, only when recording */}
-                      {voiceMicRef.current?.isRecording && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 0.7, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          whileHover={{ opacity: 1, scale: 1.05 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            voiceMicRef.current?.extendRecording();
-                          }}
-                          className="px-3 py-1 text-xs bg-emerald-500/20 text-emerald-300/90 rounded-full backdrop-blur-sm
-                                   border border-emerald-400/30 hover:bg-emerald-500/30 hover:border-emerald-400/50
-                                   transition-all duration-200 drop-shadow-[0_0_6px_rgba(110,231,183,0.3)]"
-                        >
-                          ⏱️ Keep Recording
-                        </motion.button>
-                      )}
-                    </div>
-                  )}
-                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
-                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{
-                        opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      className="text-violet-300/80 text-sm font-light drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]"
-                    >
-                      Tap holoflower to speak
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Hands-free toggle removed — holoflower IS the tap-to-talk affordance.
-                   Default is hands-free; user taps holoflower to mute/unmute. */}
-              </div>
-            )}
+            {/* Voice state display moved to VoiceInteractionBar (fixed bottom zone) */}
 
             {/* OLD BUTTON REMOVED - Holoflower itself is now clickable */}
           </div>
@@ -8082,22 +7963,34 @@ I'm not sure what I'm feeling yet.`;
 
 
 
-      {/* Bottom Right Lab Tools Button - Contains journal access */}
-      <button
-        onClick={() => {
-          console.log('🔬 Lab button clicked!');
-          setShowLabDrawer(true);
-        }}
-        className="fixed bottom-6 right-6 z-below-nav p-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 shadow-2xl shadow-amber-500/50 hover:scale-110 active:scale-95 border-2 border-amber-400/50"
-        style={{
-          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-          minWidth: '70px',
-          minHeight: '70px',
-        }}
-        title="Open Lab Tools - Includes Journal Access"
-      >
-        <FlaskConical className="w-8 h-8 text-black drop-shadow-lg" />
-      </button>
+      {/* Unified Voice Interaction Bar — state display, transcript, interruption, lab access */}
+      {isMounted && voiceEnabled && !showChatInterface && (
+        <VoiceInteractionBar
+          voiceState={voiceInteractionState}
+          interimTranscript={interimTranscript}
+          onStop={() => {
+            streamVoice.stop();
+            voiceMicRef.current?.stopListening({ userExitMode: false });
+            setIsListening(false);
+          }}
+          onInterrupt={handleVoiceInterrupt}
+          onOpenLab={() => setShowLabDrawer(true)}
+          onTextSubmit={(text) => handleTextMessage(text)}
+        />
+      )}
+
+      {/* Lab access in chat mode — compact FAB since VoiceInteractionBar is voice-only */}
+      {isMounted && showChatInterface && (
+        <button
+          onClick={() => setShowLabDrawer(true)}
+          className="fixed bottom-20 right-4 z-40 p-3 rounded-full bg-amber-500/20 text-amber-400
+                     border border-amber-500/30 hover:bg-amber-500/30 active:scale-95 transition-all backdrop-blur-sm"
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+          title="Open Lab"
+        >
+          <FlaskConical className="w-5 h-5" />
+        </button>
+      )}
 
       {/* Voice Selection Menu - Popup from bottom */}
       {showVoiceMenu && (
@@ -8162,6 +8055,7 @@ I'm not sure what I'm feeling yet.`;
           <ContinuousConversation
             ref={voiceMicRef}
             onTranscript={handleVoiceTranscript}
+            onInterimTranscript={(t) => setInterimTranscript(t)}
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
             onInterrupt={handleVoiceInterrupt}
