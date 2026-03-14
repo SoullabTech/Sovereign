@@ -248,7 +248,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
-  const adaptiveSilenceThreshold = 5000; // 5 seconds - generous buffer for natural pauses and thinking
+  const adaptiveSilenceThreshold = 8000; // 8 seconds — allows natural reflective pauses without premature submission
 
   // 🛑 BARGE-IN INTERRUPT DETECTION - Detect user speech while MAIA is speaking
   // NOTE: Voice-activated interrupt works on web browsers (uses separate MediaStream for audio monitoring)
@@ -285,7 +285,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
-      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
+      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 300ms');
       setTimeout(() => {
         if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
           try {
@@ -300,7 +300,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         } else {
           console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
         }
-      }, 600);
+      }, 300); // Reduced from 600ms — faster turn handoff for more natural conversation
     }
   }, [isSpeaking, isListening, isRecording, isProcessing]);
 
@@ -437,11 +437,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('   isProcessingRef:', isProcessingRef.current);
           console.log('   accumulatedTranscript:', accumulatedTranscript.current);
           // CRITICAL FIX: Don't check isRecording - onend fires before this timer
-          // Just check if we have a transcript to send
-          if (!isProcessingRef.current && accumulatedTranscript.current.trim()) {
+          // Require meaningful content (8+ chars) to avoid MAIA responding to fragments/noise
+          const silenceTimerTranscript = accumulatedTranscript.current.trim();
+          if (!isProcessingRef.current && silenceTimerTranscript && silenceTimerTranscript.length >= 8) {
+            console.log(`[voice:silence_detected] chars=${silenceTimerTranscript.length} threshold=${silenceThreshold}ms ts=${Date.now()}`);
             processAccumulatedTranscript();
           } else {
-            console.log('⚠️ Silence timer fired but conditions not met to process');
+            console.log('⚠️ Silence timer fired but conditions not met to process (length:', silenceTimerTranscript.length, ')');
           }
         }, silenceThreshold); // Use configurable threshold from props
       }
@@ -883,6 +885,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     // Send transcript
     console.log('📤 [ContinuousConversation] Sending transcript to parent:', transcript);
+    console.log(`[voice:transcript_submitted] chars=${transcript.length} ts=${Date.now()}`);
     setMicState('SUBMITTING', 'processAccumulatedTranscript');
     lastTranscriptSubmittedAtRef.current = Date.now();
     onTranscript(transcript);
@@ -1009,7 +1012,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
         // Check if pause has lasted long enough AND we have real content
         const silenceDuration = now - silenceStartTimeRef.current;
-        if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
+        const trimmed = accumulatedTranscript.current.trim();
+        // Require at least 8 characters to avoid submitting fragments like "um", "uh", single words
+        // that lead MAIA to respond with "take your time" instead of genuine engagement
+        if (silenceDuration >= adaptiveSilenceThreshold && trimmed && trimmed.length >= 8) {
           console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
           silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
           hasSpokenRef.current = false; // Reset for next turn
@@ -1359,9 +1365,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             }
             nativeSilenceTimerRef.current = setTimeout(() => {
               const finalTranscript = accumulatedTranscript.current.trim();
-              if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
-                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
-                addDebug('⏱️ Auto-submit (2.5s silence)');
+              // Require meaningful content before auto-submitting (>= 8 chars)
+              if (finalTranscript && finalTranscript.length >= 8 && !isProcessingRef.current && !isSpeakingRef.current) {
+                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting');
+                addDebug('⏱️ Auto-submit (4s silence)');
                 accumulatedTranscript.current = '';
                 isProcessingRef.current = true;
                 setIsRecording(false);
@@ -1371,7 +1378,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 NativeSpeechRecognition.stop().catch(() => {});
               }
               nativeSilenceTimerRef.current = null;
-            }, 2500); // 2.5s of no partials = end of speech
+            }, 4000); // 4s of no partials = end of speech (was 2.5s — more reflective breathing room)
           } else {
             addDebug('⚠️ partialResults fired but no matches');
           }

@@ -22,6 +22,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
@@ -424,6 +425,14 @@ async function synthesizeSentence(
 
 export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
+
+  // ─── TURN INSTRUMENTATION ───
+  // Client generates a UUID per turn and sends it as x-voice-turn-id.
+  // If missing (older client), generate server-side. Used to correlate
+  // client-side logs with backend marks in the same console grep.
+  const turnId = req.headers.get('x-voice-turn-id') || crypto.randomUUID();
+  const host = process.env.MAIA_HOST_ID || os.hostname();
+
   const {
     message,
     userId,
@@ -442,7 +451,7 @@ export async function POST(req: NextRequest) {
   const effectiveMemberId = userId || await getMemberIdFromRequest(req);
 
   // Initialize timing instrumentation
-  const timer = createVoiceTimer();
+  const timer = createVoiceTimer({ turnId, host });
   timer.mark('request_received');
 
   // Load voice preference offsets + TTS provider choice
@@ -544,6 +553,8 @@ export async function POST(req: NextRequest) {
             mode: 'silence',
             silenceIntent: turnDecision.silenceIntent,
             moveIntent: silenceMoveIntent,
+            turnId,
+            host,
             timing: timer.summary(),
             guidance: {
               posture: guidance.posture,
@@ -772,6 +783,8 @@ export async function POST(req: NextRequest) {
             mode: 'threshold',
             thresholdState: thresholdResult.state,
             moveIntent: thresholdMoveIntent,
+            turnId,
+            host,
             timing: timer.summary(),
             relational: {
               maiaMode: voiceSession.relationalStack.currentMode,
@@ -864,6 +877,10 @@ export async function POST(req: NextRequest) {
                 return;
               }
 
+              if (chunkIndex === 0) {
+                timer.mark('tts_0_requested');
+              }
+
               const result = await synthesizeWithFallback(safeChunkText, {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,
@@ -944,6 +961,8 @@ export async function POST(req: NextRequest) {
               timestamp: Date.now(),
               thresholdState: thresholdResult.state,
               moveIntent: llmMoveIntent,
+              turnId,
+              host,
               timing: timer.summary(),
               relational: {
                 maiaMode: voiceSession.relationalStack.currentMode,

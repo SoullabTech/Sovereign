@@ -161,101 +161,41 @@ export function installIOSAudioUnlock(): void {
   console.log('🔓 [iOS Audio] Unlock listeners installed');
 }
 
-// iOS Audio Keep-Alive - prevents AudioContext suspension
-let keepAliveInterval: NodeJS.Timeout | null = null;
-let keepAliveFailCount = 0;
-const MAX_KEEP_ALIVE_FAILURES = 3;
+// Keep-alive is now handled by the shared oscillator in ios-audio-session.ts
 
 /**
- * Start iOS audio keep-alive - plays silent sound every 2 seconds
- * to prevent iOS from suspending the AudioContext between audio chunks
+ * Start iOS audio keep-alive.
  *
- * NOTE: iOS WebView aggressively suspends AudioContext even during active
- * streaming playback. 2 seconds is more aggressive than the default 10s
- * to prevent dropouts between sentence chunks.
+ * Delegates to the shared oscillator-based keep-alive in ios-audio-session.ts
+ * which runs a continuous 1Hz near-silent oscillator — no clicks or pops.
  *
- * FIX: Now restarts if context is deeply suspended (iOS kills it between responses)
+ * The previous interval-based approach (playing 1-sample buffers every 2s)
+ * caused audible clicks at each buffer boundary and has been replaced.
  */
 export function startIOSAudioKeepAlive(): void {
   if (typeof window === 'undefined') return;
 
-  // Reset failure counter when explicitly starting
-  keepAliveFailCount = 0;
-
-  if (keepAliveInterval) {
-    console.log('🔓 [iOS Audio] Keep-alive already running, ensuring context is ready');
-    // Even if already running, ensure context is active NOW
-    ensureKeepAliveContextActive();
+  // Delegate to the shared oscillator keep-alive which is already managing
+  // the AudioContext lifecycle via ios-audio-session.ts.
+  // It started on first user gesture and runs continuously.
+  const status = getAudioStatus();
+  if (status.keepAliveActive) {
+    console.log('🔓 [iOS Audio] Shared oscillator keep-alive already running — no interval needed');
     return;
   }
 
-  console.log('🔓 [iOS Audio] Starting keep-alive ping (every 2s)');
-
-  keepAliveInterval = setInterval(async () => {
-    await ensureKeepAliveContextActive();
-  }, 2000); // Every 2 seconds - iOS suspends aggressively between chunks
+  // Fall back to starting the oscillator keep-alive if not yet running
+  console.log('🔓 [iOS Audio] Starting shared oscillator keep-alive (delegating to ios-audio-session)');
+  startSessionKeepAlive();
 }
 
 /**
- * Ensure the keep-alive context is active - recreates if iOS killed it
- */
-async function ensureKeepAliveContextActive(): Promise<void> {
-  try {
-    // If no context exists, create one
-    if (!iosAudioContext) {
-      console.log('🔓 [iOS Audio] Keep-alive: creating new AudioContext');
-      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-
-    // If context is closed (iOS killed it), recreate
-    if (iosAudioContext.state === 'closed') {
-      console.log('🔓 [iOS Audio] Keep-alive: context was CLOSED, recreating');
-      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      iosAudioUnlocked = false; // Need to re-unlock
-    }
-
-    // Resume if suspended
-    if (iosAudioContext.state === 'suspended') {
-      await iosAudioContext.resume();
-      console.log('🔓 [iOS Audio] Keep-alive resumed suspended context');
-    }
-
-    // Play silent buffer to keep iOS audio active
-    const buffer = iosAudioContext.createBuffer(1, 1, 22050);
-    const source = iosAudioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(iosAudioContext.destination);
-    source.start(0);
-
-    // Reset failure count on success
-    keepAliveFailCount = 0;
-  } catch (e) {
-    keepAliveFailCount++;
-    console.warn(`🔓 [iOS Audio] Keep-alive ping failed (${keepAliveFailCount}/${MAX_KEEP_ALIVE_FAILURES}):`, e);
-
-    // If we fail too many times, recreate the context entirely
-    if (keepAliveFailCount >= MAX_KEEP_ALIVE_FAILURES) {
-      console.log('🔓 [iOS Audio] Keep-alive: too many failures, recreating context');
-      try {
-        iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        iosAudioUnlocked = false;
-        keepAliveFailCount = 0;
-      } catch (createError) {
-        console.error('🔓 [iOS Audio] Failed to recreate context:', createError);
-      }
-    }
-  }
-}
-
-/**
- * Stop iOS audio keep-alive
+ * Stop iOS audio keep-alive (no-op — lifecycle managed by ios-audio-session.ts)
  */
 export function stopIOSAudioKeepAlive(): void {
-  if (keepAliveInterval) {
-    clearInterval(keepAliveInterval);
-    keepAliveInterval = null;
-    console.log('🔓 [iOS Audio] Stopped keep-alive ping');
-  }
+  // The shared oscillator keep-alive in ios-audio-session.ts manages its own
+  // lifecycle. Nothing to stop here from this module.
+  console.log('🔓 [iOS Audio] stopIOSAudioKeepAlive: delegated to ios-audio-session lifecycle');
 }
 
 // Auto-install on module load
