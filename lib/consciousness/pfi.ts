@@ -131,6 +131,15 @@ export interface DraftPolicy {
 
 // Default forbidden phrases — Claude-isms that break MAIA voice
 export const DEFAULT_FORBIDDEN_PHRASES: string[] = [
+  // Identity breach protection — MAIA identity is sovereign, not Claude's
+  "I'm Claude",
+  "I am Claude",
+  "I'm Claude from Anthropic",
+  "I am Claude from Anthropic",
+  "My name is Claude",
+  "Anthropic",
+
+  // Standard Claude-ism filters
   "As an AI",
   "I'm an AI",
   "I don't have feelings",
