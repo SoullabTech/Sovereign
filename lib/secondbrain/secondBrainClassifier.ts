@@ -105,7 +105,7 @@ Output:
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Model for classification (Sonnet is fast and reliable for structured output)
-const CLASSIFIER_MODEL = process.env.SB_CLASSIFIER_MODEL || 'claude-sonnet-4-5-20250929';
+const CLASSIFIER_MODEL = process.env.SB_CLASSIFIER_MODEL || 'claude-sonnet-4-6';
 
 // Lazy-initialized client
 let anthropicClient: Anthropic | null = null;

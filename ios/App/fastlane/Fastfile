@@ -1,0 +1,391 @@
+# ios
+# fastlane/Fastfile — MAIA Capacitor iOS build lanes
+# Location: ios/App/fastlane/Fastfile
+#
+# All lanes must be run from ios/App/:
+#   bundle exec fastlane ios <lane>
+#
+# Lanes:
+#   web_prepare   — patch routes + next build + cap sync ios
+#   bump_build    — increment CFBundleVersion deterministically
+#   clean         — remove build artifacts and derived data
+#   build_local   — full pipeline: web_prepare + bump_build + archive + export IPA
+#   beta          — build_local + upload to TestFlight (requires ASC API key env vars)
+#
+# TestFlight auth env vars (never commit values — set in shell or .env.local):
+#   ASC_KEY_ID          — Key ID from App Store Connect (e.g. ABC1234DEF)
+#   ASC_ISSUER_ID       — Issuer UUID from App Store Connect
+#   ASC_KEY_CONTENT     — Base64-encoded .p8 key content
+#                         Generate: base64 -i AuthKey_KEYID.p8 | tr -d '\n'
+#   (alternatively)
+#   ASC_KEY_PATH        — Absolute path to the .p8 file on disk
+
+# ── paths ──────────────────────────────────────────────────────────────────────
+# ios/App/fastlane/ is two levels below the monorepo root
+REPO_ROOT = File.expand_path("../../..", __dir__)  # → MAIA-SOVEREIGN/
+IOS_APP   = File.expand_path("..", __dir__)          # → ios/App/
+WORKSPACE = File.join(IOS_APP, "App.xcworkspace")
+SCHEME    = "App"
+INFO_PLIST = File.join(IOS_APP, "App", "Info.plist")
+BUILD_DIR  = File.join(IOS_APP, "build")
+EXPORT_OPTIONS = File.join(IOS_APP, "exportOptions.plist")
+
+# xcpretty and CocoaPods require UTF-8 — enforce it here so callers don't need to
+ENV["LANG"]   ||= "en_US.UTF-8"
+ENV["LC_ALL"] ||= "en_US.UTF-8"
+
+default_platform(:ios)
+
+platform :ios do
+
+  # ── web_prepare ─────────────────────────────────────────────────────────────
+  # Runs the full Capacitor web export pipeline so ios/App has fresh web assets.
+  # Mirrors what scripts/build-ios.sh does for the web portion.
+  desc "Build Next.js static export and sync web assets into ios/App via Capacitor"
+  lane :web_prepare do
+    UI.header("Step 1/3 · Patch dynamic routes for static export")
+    sh("cd #{REPO_ROOT} && ./scripts/capacitor-patch-routes.sh patch")
+
+    begin
+      UI.header("Step 2/3 · Build Next.js static export (CAPACITOR_BUILD=1)")
+      sh("cd #{REPO_ROOT} && CAPACITOR_BUILD=1 npm run build")
+
+      out_dir = File.join(REPO_ROOT, "out")
+      unless Dir.exist?(out_dir) && !Dir.empty?(out_dir)
+        UI.user_error!("Web build failed: #{out_dir} is missing or empty after `npm run build`")
+      end
+      UI.success("Web export produced: #{out_dir}")
+
+      UI.header("Step 3/3 · Sync web assets into ios/App via Capacitor")
+      # Ensure build/ is marked as Xcode-owned before cap sync runs pod install,
+      # which triggers xcodebuild clean and fails if the xattr is missing.
+      FileUtils.mkdir_p(BUILD_DIR)
+      sh("xattr -w com.apple.xcode.CreatedByBuildSystem true '#{BUILD_DIR}'")
+      # cap sync: copies web assets AND updates native project (safer than cap copy)
+      sh("cd #{REPO_ROOT} && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios")
+
+      # Patch root index.html → instant JS redirect to /enter
+      # Without this, Capacitor loads the marketing homepage (/) which never calls
+      # SplashScreen.hide() and the app stays on the dark brown splash forever.
+      # /enter is the canonical iOS entry point — handles auth routing.
+      root_index = File.join(IOS_APP, "App", "public", "index.html")
+      if File.exist?(root_index)
+        html = File.read(root_index)
+        redirect_script = '<script>if(!window.__maiaRedirected){window.__maiaRedirected=true;window.location.replace(\'/enter\');}</script>'
+        unless html.include?("__maiaRedirected")
+          patched = html.sub("</head>", "#{redirect_script}</head>")
+          File.write(root_index, patched)
+          UI.success("Patched root index.html → /enter redirect")
+        else
+          UI.message("Root index.html already has /enter redirect — skipping")
+        end
+      else
+        UI.error("Root index.html not found at #{root_index} — iOS entry point will fail!")
+      end
+
+    ensure
+      UI.message("Reverting dynamic route patches…")
+      sh("cd #{REPO_ROOT} && ./scripts/capacitor-patch-routes.sh revert")
+    end
+
+    UI.success("web_prepare complete — ios/App has latest web assets")
+  end
+
+  # ── bump_build ──────────────────────────────────────────────────────────────
+  # Increments CFBundleVersion by reading the current value and adding 1.
+  # This is the single authority for build number bumping in the Fastlane path.
+  #
+  # Using git commit count caused HTTP 409 collisions when both this lane and
+  # scripts/ios/build.sh ran on the same commit — they produced identical numbers.
+  # Plist-relative incrementing is monotonic regardless of commit state or which
+  # pipeline runs first.
+  #
+  # Override: BUILD_NUMBER=2500 bundle exec fastlane ios bump_build
+  desc "Increment CFBundleVersion (current plist value + 1, or BUILD_NUMBER env override)"
+  lane :bump_build do
+    new_build = if ENV["BUILD_NUMBER"] && !ENV["BUILD_NUMBER"].strip.empty?
+      build = ENV["BUILD_NUMBER"].strip
+      UI.message("Using BUILD_NUMBER from env: #{build}")
+      build
+    else
+      # Read current value from Info.plist and increment — avoids git-count collisions.
+      current = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' '#{INFO_PLIST}'", log: false).strip.to_i
+      build   = (current + 1).to_s
+      UI.message("CFBundleVersion: #{current} → #{build}")
+      build
+    end
+
+    # Write to Info.plist via /usr/libexec/PlistBuddy (avoids agvtool quirks with Capacitor)
+    sh("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{new_build}' '#{INFO_PLIST}'")
+
+    current_marketing = sh("/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' '#{INFO_PLIST}'", log: false).strip
+    UI.success("Build number → #{new_build}  (marketing version: #{current_marketing})")
+    new_build
+  end
+
+  # ── clean ───────────────────────────────────────────────────────────────────
+  desc "Clean derived data and ios/App/build artifacts"
+  lane :clean do
+    UI.header("Cleaning Xcode build artifacts")
+
+    # Clean the scheme via xcodebuild
+    xcodebuild(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      clean: true
+    )
+
+    # Remove the local build output directory
+    if Dir.exist?(BUILD_DIR)
+      FileUtils.rm_rf(BUILD_DIR)
+      UI.success("Removed #{BUILD_DIR}")
+    else
+      UI.message("#{BUILD_DIR} does not exist — nothing to remove")
+    end
+
+    # Remove derived data for this workspace (non-destructive to other projects)
+    derived = File.expand_path("~/Library/Developer/Xcode/DerivedData")
+    if Dir.exist?(derived)
+      matches = Dir.glob(File.join(derived, "App-*"))
+      matches.each do |d|
+        FileUtils.rm_rf(d)
+        UI.success("Removed derived data: #{d}")
+      end
+    end
+
+    UI.success("clean complete")
+  end
+
+  # ── build_local ─────────────────────────────────────────────────────────────
+  # Full pipeline: web assets → bump build number → archive → export IPA.
+  # Output: ios/App/build/App.xcarchive  +  ios/App/build/MAIA.ipa
+  #
+  # Options:
+  #   skip_web_prepare:true  — skip Next.js rebuild (use existing out/)
+  #   skip_bump:true         — skip build number increment
+  desc "Full local build: web export + bump build + archive + export IPA"
+  lane :build_local do |options|
+    FileUtils.mkdir_p(BUILD_DIR)
+    # Mark build/ as Xcode-owned so xcodebuild clean can delete it.
+    # Must be re-applied every run because the xattr is lost when the dir
+    # is recreated by mkdir_p or after a filesystem event.
+    sh("xattr -w com.apple.xcode.CreatedByBuildSystem true '#{BUILD_DIR}'")
+
+    unless options[:skip_web_prepare]
+      web_prepare
+    else
+      UI.important("Skipping web_prepare (skip_web_prepare: true)")
+    end
+
+    unless options[:skip_bump]
+      bump_build
+    else
+      UI.important("Skipping bump_build (skip_bump: true)")
+    end
+
+    UI.header("Archiving (Release)")
+    archive_path = File.join(BUILD_DIR, "App.xcarchive")
+
+    gym(
+      workspace:         WORKSPACE,
+      scheme:            SCHEME,
+      configuration:     "Release",
+      archive_path:      archive_path,
+      export_method:     "app-store",
+      export_options:    {
+        method:          "app-store",
+        teamID:          "ZVK2X646Z2",
+        signingStyle:    "automatic",
+        uploadSymbols:   true
+      },
+      output_directory:  BUILD_DIR,
+      output_name:       "MAIA",
+      clean:             false,
+      silent:            false,
+      buildlog_path:     File.join(BUILD_DIR, "logs")
+    )
+
+    ipa_path = File.join(BUILD_DIR, "MAIA.ipa")
+
+    UI.success("=" * 60)
+    UI.success("BUILD COMPLETE")
+    UI.success("Archive : #{archive_path}")
+    UI.success("IPA     : #{ipa_path}")
+    UI.success("=" * 60)
+  end
+
+  # ── beta ────────────────────────────────────────────────────────────────────
+  # Builds the IPA and uploads to TestFlight.
+  # Requires ASC API key env vars — see docs/ios_testflight.md for setup.
+  #
+  # Options:
+  #   skip_web_prepare:true  — reuse existing web export
+  #   skip_bump:true         — keep current CFBundleVersion
+  #
+  # Usage:
+  #   bundle exec fastlane ios beta
+  desc "Build and upload to TestFlight (requires ASC API key env vars)"
+  lane :beta do |options|
+    # ── 1. Load App Store Connect API key ──────────────────────────────────
+    key_id      = ENV["ASC_KEY_ID"]
+    issuer_id   = ENV["ASC_ISSUER_ID"]
+    key_content = ENV["ASC_KEY_CONTENT"]   # base64-encoded .p8 content (preferred)
+    key_path    = ENV["ASC_KEY_PATH"]       # fallback: path to .p8 file on disk
+
+    if key_id.nil? || key_id.strip.empty?
+      UI.user_error!("ASC_KEY_ID is not set. See docs/ios_testflight.md for setup.")
+    end
+    if issuer_id.nil? || issuer_id.strip.empty?
+      UI.user_error!("ASC_ISSUER_ID is not set. See docs/ios_testflight.md for setup.")
+    end
+    if (key_content.nil? || key_content.strip.empty?) && (key_path.nil? || key_path.strip.empty?)
+      UI.user_error!("Set either ASC_KEY_CONTENT (base64) or ASC_KEY_PATH (.p8 path). See docs/ios_testflight.md.")
+    end
+
+    api_key_params = {
+      key_id:    key_id.strip,
+      issuer_id: issuer_id.strip,
+      duration:  1200,   # 20 min — covers archive + upload
+      in_house:  false,
+    }
+
+    if key_content && !key_content.strip.empty?
+      # Decode base64 into a temp file
+      require "base64"
+      require "tempfile"
+      decoded = Base64.decode64(key_content.strip)
+      tmp = Tempfile.new(["AuthKey_#{key_id.strip}", ".p8"])
+      tmp.write(decoded)
+      tmp.flush
+      api_key_params[:key_filepath] = tmp.path
+      UI.message("Using ASC_KEY_CONTENT (base64) → temp file: #{tmp.path}")
+    else
+      expanded = File.expand_path(key_path.strip)
+      unless File.exist?(expanded)
+        UI.user_error!("ASC_KEY_PATH does not exist: #{expanded}")
+      end
+      api_key_params[:key_filepath] = expanded
+      UI.message("Using ASC_KEY_PATH: #{expanded}")
+    end
+
+    api_key = app_store_connect_api_key(**api_key_params)
+
+    # ── 2. Build the IPA ───────────────────────────────────────────────────
+    build_local(
+      skip_web_prepare: options[:skip_web_prepare] || false,
+      skip_bump:        options[:skip_bump] || false
+    )
+
+    ipa_path = File.join(BUILD_DIR, "MAIA.ipa")
+    unless File.exist?(ipa_path)
+      UI.user_error!("IPA not found at #{ipa_path} — build_local must have failed")
+    end
+
+    # ── 3. Upload to TestFlight ────────────────────────────────────────────
+    UI.header("Uploading to TestFlight")
+
+    upload_to_testflight(
+      api_key:                           api_key,
+      ipa:                               ipa_path,
+      skip_waiting_for_build_processing: true,   # don't block terminal — check ASC
+      notify_external_testers:           false,   # manual distribution until ready
+      changelog:                         "Build #{current_build_number_from_plist}"
+    )
+
+    build_num = current_build_number_from_plist
+    UI.success("=" * 60)
+    UI.success("TESTFLIGHT UPLOAD COMPLETE")
+    UI.success("Build : #{build_num}")
+    UI.success("IPA   : #{ipa_path}")
+    UI.success("Check : https://appstoreconnect.apple.com/apps")
+    UI.success("=" * 60)
+  end
+
+  # ── upload_ipa ──────────────────────────────────────────────────────────────
+  # Upload a pre-built IPA to TestFlight WITHOUT rebuilding.
+  # Called by scripts/ios/upload.sh for the split build/upload workflow.
+  #
+  # Options:
+  #   ipa_path:"/path/to/MAIA.ipa"   — defaults to ios/App/build/MAIA.ipa
+  #   notify:false                   — whether to ping beta testers (default: false)
+  #   changelog:"text"               — TestFlight "What's New" text (optional)
+  #
+  # Auth: same env vars as `beta` (ASC_KEY_CONTENT or ASC_KEY_PATH)
+  desc "Upload a pre-built IPA to TestFlight (no rebuild)"
+  lane :upload_ipa do |options|
+    ipa_path    = options[:ipa_path] || File.join(BUILD_DIR, "MAIA.ipa")
+    notify      = options.fetch(:notify, false)
+    changelog   = options[:changelog] || "Build #{current_build_number_from_plist}"
+
+    unless File.exist?(ipa_path)
+      UI.user_error!("IPA not found: #{ipa_path} — run scripts/ios/build.sh first")
+    end
+
+    # ── Load ASC API key ──────────────────────────────────────────────────
+    key_id      = ENV["ASC_KEY_ID"]
+    issuer_id   = ENV["ASC_ISSUER_ID"]
+    key_content = ENV["ASC_KEY_CONTENT"]
+    key_path    = ENV["ASC_KEY_PATH"]
+
+    if key_id.nil? || key_id.strip.empty?
+      UI.user_error!("ASC_KEY_ID not set")
+    end
+    if issuer_id.nil? || issuer_id.strip.empty?
+      UI.user_error!("ASC_ISSUER_ID not set")
+    end
+
+    api_key_params = {
+      key_id:    key_id.strip,
+      issuer_id: issuer_id.strip,
+      duration:  1200,
+      in_house:  false,
+    }
+
+    if key_content && !key_content.strip.empty?
+      require "base64"
+      require "tempfile"
+      decoded = Base64.decode64(key_content.strip)
+      tmp = Tempfile.new(["AuthKey_#{key_id.strip}", ".p8"])
+      tmp.write(decoded)
+      tmp.flush
+      api_key_params[:key_filepath] = tmp.path
+      UI.message("Auth: ASC_KEY_CONTENT (base64) → temp file")
+    elsif key_path && !key_path.strip.empty?
+      expanded = File.expand_path(key_path.strip)
+      UI.user_error!("ASC_KEY_PATH does not exist: #{expanded}") unless File.exist?(expanded)
+      api_key_params[:key_filepath] = expanded
+      UI.message("Auth: ASC_KEY_PATH → #{expanded}")
+    else
+      UI.user_error!("Set ASC_KEY_CONTENT (base64) or ASC_KEY_PATH (.p8 path)")
+    end
+
+    api_key = app_store_connect_api_key(**api_key_params)
+
+    # ── Upload ────────────────────────────────────────────────────────────
+    UI.header("Uploading #{ipa_path} to TestFlight")
+    UI.message("Notify testers: #{notify}")
+
+    upload_to_testflight(
+      api_key:                           api_key,
+      ipa:                               ipa_path,
+      skip_waiting_for_build_processing: true,
+      notify_external_testers:           notify,
+      changelog:                         changelog
+    )
+
+    UI.success("=" * 60)
+    UI.success("TESTFLIGHT UPLOAD COMPLETE")
+    UI.success("Build : #{current_build_number_from_plist}")
+    UI.success("IPA   : #{ipa_path}")
+    UI.success("Check : https://appstoreconnect.apple.com/apps")
+    UI.success("=" * 60)
+  end
+
+end
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+
+def current_build_number_from_plist
+  `/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' '#{INFO_PLIST}'`.strip
+end

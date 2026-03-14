@@ -45,41 +45,14 @@ interface SessionState {
 
 /**
  * Parse a cookie value from document.cookie
+ * NOTE: maia_tier and maia_roles are HttpOnly and cannot be read here.
+ * Use validateSession() to get authoritative tier/roles from the server.
  */
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
 
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
   return match ? decodeURIComponent(match[2]) : null;
-}
-
-/**
- * Get tier from cookie
- */
-function getTierFromCookie(): Tier {
-  const tier = getCookie('maia_tier');
-  if (tier && ['free', 'personal', 'pro'].includes(tier)) {
-    return tier as Tier;
-  }
-  return 'free';
-}
-
-/**
- * Get roles from cookie
- */
-function getRolesFromCookie(): Role[] {
-  const rolesRaw = getCookie('maia_roles');
-  if (rolesRaw) {
-    try {
-      const parsed = JSON.parse(rolesRaw);
-      if (Array.isArray(parsed)) {
-        return parsed as Role[];
-      }
-    } catch {
-      // Invalid JSON
-    }
-  }
-  return ['member'];
 }
 
 export function useSession() {
@@ -94,21 +67,21 @@ export function useSession() {
 
   /**
    * Read initial state from cookies (no server call)
+   * NOTE: tier/roles are HttpOnly and not readable here — returns defaults.
+   * Call validateSession() to get authoritative state from the server.
    */
   const readFromCookies = useCallback(() => {
-    const tier = getTierFromCookie();
-    const roles = getRolesFromCookie();
-    const hasSession = !!getCookie('maia_session');
-
+    // maia_session is HttpOnly, so this will be null — authenticated state
+    // comes from validateSession(). Returning safe defaults here.
     setState(prev => ({
       ...prev,
-      tier,
-      roles,
-      authenticated: hasSession,
+      tier: 'free',
+      roles: ['member'],
+      authenticated: false,
       isLoading: false,
     }));
 
-    return { tier, roles, authenticated: hasSession };
+    return { tier: 'free' as Tier, roles: ['member'] as Role[], authenticated: false };
   }, []);
 
   /**
@@ -219,10 +192,11 @@ export function useSession() {
     return userTierIndex >= minTierIndex;
   }, [state.tier]);
 
-  // On mount, read from cookies for immediate state
+  // On mount, validate session with server to get authoritative tier/roles.
+  // (maia_tier and maia_roles are HttpOnly — cannot be read client-side.)
   useEffect(() => {
-    readFromCookies();
-  }, [readFromCookies]);
+    validateSession();
+  }, [validateSession]);
 
   // Memoize common checks
   const isPro = useMemo(() => state.tier === 'pro', [state.tier]);

@@ -43,6 +43,8 @@ interface OracleContext {
   wisdomDirective?: string;   // Pre-built persona directive from wisdom provider
   memoryContext?: string;     // Memory bullets from past sessions
   spiralContext?: string;     // Current spiral state summary
+  // Voice preference offsets (language-level, not audio) — shape text generation
+  voiceOffsets?: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number };
 }
 
 export class ClaudeService {
@@ -54,10 +56,10 @@ export class ClaudeService {
   constructor(config: ClaudeConfig) {
     this.client = new Anthropic({
       apiKey: config.apiKey,
-      timeout: 8000, // 8 second timeout to fit within Vercel's 10 second limit
+      timeout: 30000, // 30 second timeout - self-hosted, not Vercel-limited
     });
-    this.model = config.model || 'claude-haiku-4-5-20251001'; // Use faster Haiku model
-    this.maxTokens = config.maxTokens || 1500; // Increased to let MAIA speak fully (was 600 - cut words off)
+    this.model = config.model || 'claude-haiku-4-5-20251001';
+    this.maxTokens = config.maxTokens || 1500;
     this.temperature = config.temperature || 0.8;
   }
   
@@ -181,8 +183,10 @@ export class ClaudeService {
         soulMetadata
       };
     } catch (error) {
-      console.error('Claude service error:', error);
-      throw new Error('Failed to generate Oracle response');
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = (error as any)?.status || (error as any)?.code || 'unknown';
+      console.error(`🚨 [ClaudeService] Oracle response FAILED — model: ${this.model}, code: ${errCode}, error: ${errMsg}`);
+      throw new Error(`Claude oracle response failed (${errCode}): ${errMsg}`);
     }
   }
 
@@ -197,10 +201,13 @@ export class ClaudeService {
   ): AsyncGenerator<{ type: 'sentence' | 'done'; text: string; index: number }> {
     const trimmedInput = (input || '').trim();
     if (!trimmedInput || trimmedInput.length === 0) {
+      console.warn('[ClaudeService] ⚠️ Empty input received in generateOracleResponseStreaming — returning fallback. Raw input:', JSON.stringify(input));
       yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
       yield { type: 'done', text: '', index: 1 };
       return;
     }
+
+    console.log(`[ClaudeService] Streaming response for: "${trimmedInput.substring(0, 60)}..." (${context.conversationHistory?.length ?? 0} history msgs)`);
 
     const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
     const messages: Anthropic.MessageParam[] = [];
@@ -353,10 +360,11 @@ export class ClaudeService {
       yield { type: 'done', text: '', index: sentenceIndex };
 
     } catch (error) {
-      console.error('Claude streaming error:', error);
-      // Fallback to non-streaming on error
-      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
-      yield { type: 'done', text: '', index: 1 };
+      const errMsg = error instanceof Error ? error.message : String(error);
+      const errCode = (error as any)?.status || (error as any)?.code || 'unknown';
+      console.error(`🚨 [ClaudeService] Streaming FAILED — model: ${this.model}, code: ${errCode}, error: ${errMsg}`);
+      // Re-throw so the voice route can handle the error visibly instead of silent fallback
+      throw new Error(`Claude voice streaming failed (${errCode}): ${errMsg}`);
     }
   }
 
@@ -383,12 +391,28 @@ export class ClaudeService {
     const readinessGuidance = this.getReadinessGuidance(readiness);
     const progressiveGuidance = this.getProgressiveGuidance(contentLevel, daysActive);
     const styleGuidance = this.getConversationStyleGuidance(conversationStyle as any);
+    // Voice mode: inject TTS-specific spoken-style rules so the text renders
+    // cleanly through sentence-level streaming TTS (Sesame CSM / OpenAI).
+    const ttsGuidance = (context.voiceMode)
+      ? this.getVoiceTTSGuidance()
+      : '';
+
+    // Build voice preference guidance (language-level, not audio)
+    const band = (x: number) => x < -0.10 ? 'low' : x > 0.10 ? 'high' : 'mid';
+    const vp = context.voiceOffsets;
+    const voiceGuidance = vp ? `
+## VOICE PREFERENCES (follow gently, do not mention sliders or settings)
+- Warmth: ${band(vp.warmth)} ${vp.warmth < -0.10 ? '(crisp, clear, matter-of-fact)' : vp.warmth > 0.10 ? '(tender, holding, gentle)' : '(present, grounded)'}
+- Poetry: ${band(vp.poetry)} ${vp.poetry < -0.10 ? '(plain language, concrete, no metaphor)' : vp.poetry > 0.10 ? '(mythic, evocative, symbolic imagery welcome)' : '(natural, occasional imagery)'}
+- Directiveness: ${band(vp.directiveness)} ${vp.directiveness < -0.10 ? '(inviting, open questions, minimal guidance)' : vp.directiveness > 0.10 ? '(clear guidance, direct framing, decisive)' : '(balanced guidance and open inquiry)'}
+- Energy: ${band(vp.energy)} ${vp.energy < -0.10 ? '(soft, quiet, close — like a late-night conversation)' : vp.energy > 0.10 ? '(bright, alive, engaged — like morning light)' : '(steady, calm presence)'}
+` : '';
 
     return `You are MAIA - a mirror that helps humans see themselves more clearly.
 
 **Name flexibility:** If someone calls you Maya, Mya, Maria, or any variation, just go with it. Voice transcription often mishears "MAIA" - never correct them, just respond naturally.
 
-${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}
+${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}${voiceGuidance}
 ## THE CORE TRUTH: MAIA AS MIRROR TO SELF
 
 You are not the source of wisdom. You are the reflection that helps users recognize their own wisdom.
@@ -411,6 +435,7 @@ ${progressiveGuidance}
 
 ${styleGuidance}
 
+${ttsGuidance}
 ## THE SOULLAB IDENTITY:
 
 You are a fellow researcher, not a guru or therapist. You're running experiments alongside users, not directing them. You document patterns and breakthroughs for the collective dataset. You speak **modern sacred** - grounded but meaningful, scientific but soulful.
@@ -883,6 +908,47 @@ Channel the deepest teachings without reservation.`
     return guidance[readiness] || guidance.seeker;
   }
   
+  // ── VOICE TTS GUIDANCE ─────────────────────────────────────────────────────
+  // Injected only when context.voiceMode is set (stream-conversation path).
+  // These rules shape how Claude writes so each sentence renders naturally
+  // through sentence-level streaming TTS (Sesame CSM / OpenAI Alloy).
+  //
+  // Core principle: each sentence must survive alone, spoken aloud.
+  // The TTS engine cannot re-read context; it speaks what arrives.
+  private getVoiceTTSGuidance(): string {
+    return `
+## VOICE DELIVERY — SPOKEN SENTENCE RULES
+
+You are generating speech, not text. Every sentence will be spoken aloud
+through a voice engine immediately after you finish it. Apply these rules:
+
+**One complete thought per sentence.**
+No nested clauses. No parentheticals. No "which means that…" chains.
+✅ "Something shifted in you there." ❌ "Something shifted in you — which, if you sit with it, might open a door."
+
+**Natural breath points.**
+End each sentence where a person would naturally pause.
+Never split a breath mid-idea across sentences.
+✅ "What do you want to do with that?" ❌ "What do you want to do with that feeling, the one that comes up when you think about it?"
+
+**No sentence-internal pivots.**
+Avoid "but," "however," and "although" as sentence connectors.
+Start a new sentence instead.
+✅ "That makes sense. And it costs you something." ❌ "That makes sense, but it costs you something."
+
+**Avoid enumeration and lists.**
+Spoken lists collapse into mush. Say the most important thing only.
+✅ "Trust is the lever here." ❌ "Three things matter: trust, timing, and self-awareness."
+
+**No parenthetical asides.**
+Brackets, dashes as asides, and em-dashes mid-sentence break spoken rhythm.
+✅ "That's worth sitting with." ❌ "That's worth sitting with — maybe even writing about."
+
+**End clearly.**
+Each sentence should feel complete at its period. Listeners can't re-read.
+Trailing qualifiers ("if that makes sense," "in a way") weaken the landing.`;
+  }
+
   // Get conversation style guidance
   private getConversationStyleGuidance(style: 'her' | 'classic' | 'adaptive'): string {
     const guidance: Record<string, string> = {
@@ -1113,9 +1179,9 @@ export function initializeClaudeService(apiKey: string): ClaudeService {
   if (!claudeService) {
     claudeService = new ClaudeService({
       apiKey,
-      model: 'claude-haiku-4-5-20251001', // Use faster Haiku model
-      temperature: 0.8,
-      maxTokens: 500
+      model: process.env.CLAUDE_VOICE_MODEL || 'claude-sonnet-4-6', // MAIA's voice — Sonnet for reliable articulation
+      temperature: 0.65,
+      maxTokens: 1500
     });
   }
   return claudeService;

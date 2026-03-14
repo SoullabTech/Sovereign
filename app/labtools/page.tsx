@@ -44,7 +44,7 @@ export default function MyLabPage() {
   const totalTools = categories.reduce((sum, cat) => sum + cat.tools.length, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+    <div className="min-h-screen font-sans bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -55,8 +55,8 @@ export default function MyLabPage() {
                      text-white/70 hover:text-white hover:bg-white/[0.06]
                      transition-all"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">MAIA</span>
+            <ArrowLeft className="w-4 h-4 text-amber-400" />
+            <span className="text-sm text-white">MAIA</span>
           </button>
 
           {/* Discover button */}

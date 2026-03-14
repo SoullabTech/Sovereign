@@ -325,11 +325,17 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
         <div className="grid grid-cols-4 gap-3">
           {(['year', 'month', 'day', 'hour'] as const).map((pillar) => {
             const p = profile.fourPillars[pillar];
+            if (!p || !p.stem || !p.branch) return (
+              <div key={pillar} className="text-center">
+                <p className="text-xs text-white/40 uppercase mb-1">{pillar}</p>
+                <p className="text-xl font-light text-white/40">—</p>
+              </div>
+            );
             return (
               <div key={pillar} className="text-center">
                 <p className="text-xs text-white/40 uppercase mb-1">{pillar}</p>
                 <p className="text-xl font-light text-white/80">
-                  {/* Find Chinese characters from stem/branch */}
+                  {/* First character of romanized stem/branch */}
                   {p.stem.charAt(0)}{p.branch.charAt(0)}
                 </p>
                 <p className="text-xs text-white/50">{p.stem}</p>

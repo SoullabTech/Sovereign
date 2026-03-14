@@ -94,13 +94,13 @@ export async function GET(request: NextRequest) {
 
     response.cookies.set('maia_tier', member.tier, {
       ...COOKIE_OPTIONS,
-      httpOnly: false,
+      httpOnly: true,
       expires: expiresAt,
     });
 
     response.cookies.set('maia_roles', JSON.stringify(member.roles), {
       ...COOKIE_OPTIONS,
-      httpOnly: false,
+      httpOnly: true,
       expires: expiresAt,
     });
 

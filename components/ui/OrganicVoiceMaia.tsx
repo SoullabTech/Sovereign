@@ -14,7 +14,7 @@ interface OrganicVoiceMaiaProps {
 
 export function OrganicVoiceMaia({
   text = '',
-  voice = 'shimmer',
+  voice = 'maia_warm',
   autoPlay = false,
   onPlayStart,
   onPlayEnd,

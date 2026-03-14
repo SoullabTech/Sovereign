@@ -6,6 +6,7 @@
  */
 
 import { Router, Request, Response } from 'express';
+import v8 from 'node:v8';
 import { asyncHandler } from '../middleware/error.js';
 
 const router = Router();
@@ -18,7 +19,7 @@ interface HealthStatus {
   uptime: number;
   checks: {
     database: { status: string; latency?: number; error?: string };
-    memory: { status: string; used: number; total: number; percentage: number };
+    memory: { status: string; used: number; total: number; percentage: number; rss: number };
   };
 }
 
@@ -47,19 +48,30 @@ async function checkDatabase(): Promise<{ status: string; latency?: number; erro
 }
 
 /**
- * Check memory usage
+ * Check memory usage against V8 heap limit (not dynamic heapTotal).
+ * heapTotal is the currently allocated heap — it grows on demand and
+ * stays small at idle, producing misleading 90%+ readings.
+ * heap_size_limit is the actual ceiling (set by --max-old-space-size).
  */
-function checkMemory(): { status: string; used: number; total: number; percentage: number } {
-  const used = process.memoryUsage();
-  const heapUsed = used.heapUsed;
-  const heapTotal = used.heapTotal;
-  const percentage = Math.round((heapUsed / heapTotal) * 100);
+function checkMemory(): { status: string; used: number; total: number; percentage: number; rss: number } {
+  const mem = process.memoryUsage();
+  const heapStats = v8.getHeapStatistics();
+
+  const heapUsedMB = Math.round(mem.heapUsed / 1024 / 1024);
+  const heapLimitMB = Math.round(heapStats.heap_size_limit / 1024 / 1024);
+  const rssMB = Math.round(mem.rss / 1024 / 1024);
+  const percentage = Math.round((mem.heapUsed / heapStats.heap_size_limit) * 100);
+
+  let status: 'ok' | 'warning' | 'critical' = 'ok';
+  if (percentage >= 95) status = 'critical';
+  else if (percentage >= 85) status = 'warning';
 
   return {
-    status: percentage < 90 ? 'ok' : 'warning',
-    used: Math.round(heapUsed / 1024 / 1024), // MB
-    total: Math.round(heapTotal / 1024 / 1024), // MB
-    percentage
+    status,
+    used: heapUsedMB,
+    total: heapLimitMB,
+    percentage,
+    rss: rssMB
   };
 }
 
@@ -79,7 +91,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
   // Determine overall status
   let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
-  if (dbCheck.status === 'disconnected') {
+  if (dbCheck.status === 'disconnected' || memoryCheck.status === 'critical') {
     status = 'unhealthy';
   } else if (memoryCheck.status === 'warning') {
     status = 'degraded';

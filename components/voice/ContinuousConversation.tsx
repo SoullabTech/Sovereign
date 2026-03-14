@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -189,6 +190,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeStateListenerRef = useRef<any>(null); // Store listeningState listener handle
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
+  const nativeGraceTimerRef = useRef<NodeJS.Timeout | null>(null);  // Grace window after native silence timer fires
+  const webGraceTimerRef = useRef<NodeJS.Timeout | null>(null);     // Grace window after web silence timer fires
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
   const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
   const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
@@ -243,6 +246,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const recognitionStartTime = useRef<number>(0);
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
+
+  // 🔒 SR START MUTEX — prevents two simultaneous NativeSpeechRecognition.start() calls.
+  // Interruption-end (1000ms) and stopped-backoff (800ms) can fire almost simultaneously;
+  // the second call kills the first → 1ms LIVE → blink loop.
+  const srStartInFlightRef = useRef(false);
+
+  // 🛑 RAPID-STOP COUNTER — N consecutive stops within 300ms → immediate push-to-talk fallback.
+  // Fires independently of (and faster than) the 800ms→1500ms→2500ms backoff schedule.
+  const rapidStopCountRef = useRef(0);
 
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
@@ -425,27 +437,44 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         console.log('📊 Accumulated so far:', accumulatedTranscript.current);
 
-        // Reset silence timer on speech
+        // Reset silence timer AND grace timer on any new speech
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
         }
+        if (webGraceTimerRef.current) {
+          clearTimeout(webGraceTimerRef.current);
+          webGraceTimerRef.current = null;
+        }
 
-        // Start new silence timer - use the configurable threshold
-        console.log(`⏱️ Starting silence timer (${silenceThreshold}ms)`);
+        // Start new silence timer
+        console.info(JSON.stringify({
+          tag: 'voice.turn', phase: 'silence_timer_started', path: 'web',
+          threshold_ms: silenceThreshold, accumulated_chars: accumulatedTranscript.current.length,
+          timestamp: Date.now()
+        }));
         silenceTimerRef.current = setTimeout(() => {
-          console.log('🔕 Silence detected - processing transcript');
-          console.log('   isProcessingRef:', isProcessingRef.current);
-          console.log('   accumulatedTranscript:', accumulatedTranscript.current);
-          // CRITICAL FIX: Don't check isRecording - onend fires before this timer
-          // Require meaningful content (8+ chars) to avoid MAIA responding to fragments/noise
-          const silenceTimerTranscript = accumulatedTranscript.current.trim();
-          if (!isProcessingRef.current && silenceTimerTranscript && silenceTimerTranscript.length >= 8) {
-            console.log(`[voice:silence_detected] chars=${silenceTimerTranscript.length} threshold=${silenceThreshold}ms ts=${Date.now()}`);
-            processAccumulatedTranscript();
-          } else {
-            console.log('⚠️ Silence timer fired but conditions not met to process (length:', silenceTimerTranscript.length, ')');
-          }
-        }, silenceThreshold); // Use configurable threshold from props
+          // Grace window: extra pause before committing — cancellable if speech resumes
+          console.info(JSON.stringify({
+            tag: 'voice.turn', phase: 'grace_window_started', path: 'web',
+            grace_ms: VOICE_TIMING.GRACE_WINDOW_MS, accumulated_chars: accumulatedTranscript.current.length,
+            timestamp: Date.now()
+          }));
+          webGraceTimerRef.current = setTimeout(() => {
+            webGraceTimerRef.current = null;
+            const transcript = accumulatedTranscript.current.trim();
+            console.info(JSON.stringify({
+              tag: 'voice.turn', phase: 'transcript_finalized', path: 'web',
+              transcript_length: transcript.length, processing: isProcessingRef.current,
+              timestamp: Date.now()
+            }));
+            if (!isProcessingRef.current && transcript) {
+              console.log(`[voice:silence_detected] chars=${transcript.length} threshold=${silenceThreshold}ms ts=${Date.now()}`);
+              processAccumulatedTranscript();
+            } else {
+              console.log('⚠️ Grace window expired but conditions not met to process');
+            }
+          }, VOICE_TIMING.GRACE_WINDOW_MS);
+        }, silenceThreshold); // configurable threshold from props
       }
 
       // Show user the accumulated finals + current interim for live feedback
@@ -713,13 +742,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // The onresult handler will check inputSuppressedRef and ignore transcripts
       }
 
-      isProcessingRef.current = false;
+      // Keep isProcessingRef TRUE while MAIA speaks — prevents mic restart
+      // from re-submitting the same transcript. Reset when MAIA stops (below).
     } else {
       // MAIA stopped speaking - clear suppression
       if (inputSuppressedRef.current) {
         console.log('🎤 [PWA DUPLEX] MAIA stopped - clearing suppression, transcripts active');
         inputSuppressedRef.current = false;
       }
+
+      // 🔑 CRITICAL: Reset processing flag NOW that MAIA has finished speaking.
+      // This is the safe moment — the full request→response cycle is complete.
+      isProcessingRef.current = false;
+
+      // 🔑 Clear accumulated transcript to prevent stale text from the previous
+      // turn being re-submitted when the mic restarts after MAIA's response.
+      accumulatedTranscript.current = '';
+
       // Track audio end for conversation-alive gate
       lastAudioEndAtRef.current = Date.now();
       if (micStateRef.current === 'PLAYING_TTS') {
@@ -729,6 +768,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
     }
   }, [isSpeaking]);
+
+  // 🔄 FALLBACK: Sync isProcessingRef from parent prop.
+  // Handles the case where MAIA chose silence (isSpeaking never went true)
+  // and the parent cleared isProcessing before ContinuousConversation could.
+  useEffect(() => {
+    if (!isProcessing && isProcessingRef.current) {
+      // Parent says processing is done but our ref is still true —
+      // this means the isSpeaking transition never happened (silence response).
+      // Safe to clear so mic can restart.
+      isProcessingRef.current = false;
+      accumulatedTranscript.current = '';
+    }
+  }, [isProcessing]);
 
   // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
   // ONLY when handsFreeActive is true AND user has spoken recently
@@ -758,7 +810,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         if (wantsContinuousConversationRef.current && handsFreeActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
             console.log('🎙️ [Native] Auto-restarting after MAIA speech (hands-free)...');
-            await NativeSpeechRecognition.start({
+            await safeStartNativeSR({
               language: 'en-US',
               maxResults: 3,
               partialResults: true,
@@ -830,15 +882,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     const normalizedTranscript = transcript.toLowerCase().trim();
     const lastSentNormalized = lastSentRef.current.toLowerCase().trim();
 
-    // Check 1: Exact match within last 2 seconds
-    if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 2000) {
-      console.log('🚫 [DEDUP] Blocked duplicate transcript:', transcript);
+    // Check 1: Exact match within last 30 seconds (survives full MAIA response cycle)
+    if (normalizedTranscript === lastSentNormalized && (now - lastSentTimeRef.current) < 30_000) {
+      console.log('🚫 [DEDUP] Blocked duplicate transcript (', now - lastSentTimeRef.current, 'ms ago):', transcript);
       accumulatedTranscript.current = ""; // Clear duplicate
+      isCallingProcessRef.current = false;
       return;
     }
 
-    // Check 2: Very similar transcript (>90% match) within last 1 second
-    if (lastSentNormalized && (now - lastSentTimeRef.current) < 1000) {
+    // Check 2: Very similar transcript (>90% match) within last 15 seconds
+    if (lastSentNormalized && (now - lastSentTimeRef.current) < 15_000) {
       const similarity = normalizedTranscript.length > 0
         ? normalizedTranscript.split(' ').filter(word => lastSentNormalized.includes(word)).length / normalizedTranscript.split(' ').length
         : 0;
@@ -901,10 +954,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // Reset the guard flag immediately
     isCallingProcessRef.current = false;
 
-    // Will restart when Maya finishes speaking
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 500);
+    // NOTE: isProcessingRef stays TRUE until MAIA stops speaking.
+    // The isSpeaking effect (below) resets it when MAIA finishes.
+    // This prevents re-submission of the same transcript during the
+    // entire MAIA response cycle (was previously 500ms, causing races).
+    //
+    // Fallback: if MAIA never starts speaking (e.g. silence decision),
+    // the parent's isProcessing prop going false will clear it via the
+    // sync effect.
   }, [onTranscript]);
 
   // 🔊 Track if audio loop is currently running to prevent duplicates
@@ -1194,6 +1251,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastStartAttemptRef = useRef(0);
 
   // Start listening
+  // ─── safeStartNativeSR ───────────────────────────────────────────────────────
+  // ALL NativeSpeechRecognition.start() calls go through this single mutex.
+  // If a start is already in flight, the call is silently dropped (not queued).
+  // This prevents the most common blink-loop cause: interruption_end (1000ms) and
+  // stopped_backoff (800ms) firing nearly simultaneously, each calling start()
+  // independently — the second call kills the first within 1ms.
+  const safeStartNativeSR = useCallback(
+    async (opts: Parameters<typeof NativeSpeechRecognition.start>[0]) => {
+      if (srStartInFlightRef.current) {
+        console.info('🔒 [Native] start blocked — SR.start() already in flight');
+        return;
+      }
+      srStartInFlightRef.current = true;
+      try {
+        await NativeSpeechRecognition.start(opts);
+      } finally {
+        srStartInFlightRef.current = false;
+      }
+    },
+    [] // no deps — only touches stable refs and an imported module fn
+  );
+
   const startListening = useCallback(async (options?: { forceOverride?: boolean }) => {
     console.log('🎤 [ContinuousConversation] startListening called', options?.forceOverride ? '(FORCE OVERRIDE)' : '');
     addDebug('🎤 startListening called');
@@ -1405,7 +1484,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
           // Track when we last had high audio (for silence detection)
           if (rawLevel >= 0.02) {
+            const wasQuiet = (now - lastHighAudioTimeRef.current) > VOICE_TIMING.NATIVE_SILENCE_MS;
             lastHighAudioTimeRef.current = now;
+            // Log speech start (transition from silence to speech)
+            if (wasQuiet) {
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'speech_start', path: 'native_ios',
+                raw_level: rawLevel.toFixed(4), timestamp: now
+              }));
+            }
           }
 
           // Update audio level for UV visualizer animation
@@ -1447,32 +1534,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // 2. We have any transcript (at least 1 char - don't gate on length, SR already handles this)
           // 3. We had recent speech (high audio within last 2s) - prevents false triggers on ambient noise
           const transcript = accumulatedTranscript.current.trim();
-          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 2000; // 2s window for natural pauses
+          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 3500; // 3.5s window — generous for trailing thought completion
           const hasAnyTranscript = transcript.length > 0;
 
           if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Silence detected after speech, starting 1.5s timer');
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'silence_timer_started', path: 'native_ios',
+                threshold_ms: VOICE_TIMING.NATIVE_SILENCE_MS, accumulated_chars: accumulatedTranscript.current.length,
+                timestamp: Date.now()
+              }));
               nativeSilenceTimerRef.current = setTimeout(() => {
-                // Double-check we still have transcript
-                if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
-                  const finalTranscript = accumulatedTranscript.current.trim();
-                  console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
-                  accumulatedTranscript.current = '';
-                  isProcessingRef.current = true;
-                  setIsRecording(false);
-                  isRecordingRef.current = false;
-                  onTranscript(finalTranscript);
-                }
                 nativeSilenceTimerRef.current = null;
-              }, 1500); // 1.5s of silence = end of speech (balanced for responsiveness)
+                // Grace window: cancellable if speech resumes before we commit
+                console.info(JSON.stringify({
+                  tag: 'voice.turn', phase: 'grace_window_started', path: 'native_ios',
+                  grace_ms: VOICE_TIMING.GRACE_WINDOW_MS, accumulated_chars: accumulatedTranscript.current.length,
+                  timestamp: Date.now()
+                }));
+                nativeGraceTimerRef.current = setTimeout(() => {
+                  nativeGraceTimerRef.current = null;
+                  if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
+                    const finalTranscript = accumulatedTranscript.current.trim();
+                    console.info(JSON.stringify({
+                      tag: 'voice.turn', phase: 'transcript_finalized', path: 'native_ios',
+                      transcript_length: finalTranscript.length, timestamp: Date.now()
+                    }));
+                    accumulatedTranscript.current = '';
+                    isProcessingRef.current = true;
+                    setIsRecording(false);
+                    isRecordingRef.current = false;
+                    backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
+                    onTranscript(finalTranscript);
+                  }
+                }, VOICE_TIMING.GRACE_WINDOW_MS);
+              }, VOICE_TIMING.NATIVE_SILENCE_MS);
             }
           } else if (rawLevel >= 0.02) {
-            // Clear silence timer if speech detected (higher threshold than silence)
+            // Speech resumed — cancel both silence timer and grace window
             if (nativeSilenceTimerRef.current) {
               clearTimeout(nativeSilenceTimerRef.current);
               nativeSilenceTimerRef.current = null;
+            }
+            if (nativeGraceTimerRef.current) {
+              clearTimeout(nativeGraceTimerRef.current);
+              nativeGraceTimerRef.current = null;
+              console.info(JSON.stringify({
+                tag: 'voice.turn', phase: 'grace_window_cancelled', path: 'native_ios',
+                reason: 'speech_resumed', timestamp: Date.now()
+              }));
             }
           }
         });
@@ -1496,7 +1607,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             addDebug('✅ MIC IS LIVE - orange dot visible!');
             setMicState('LISTENING', 'listeningState:started');
             restartInFlightRef.current = false; // Clear restart-in-flight flag
-            backoffStepRef.current = 0; // Reset backoff on successful start
+            // ⚠️ DO NOT reset backoffStepRef here. The mic reaching LIVE for even 1ms
+            // does NOT mean speech was captured. Resetting here caused an infinite 800ms
+            // blink loop: mic→LIVE(1ms)→stopped→backoff resets→repeat.
+            // backoffStepRef resets ONLY when a transcript is confirmed (actual speech).
             lastNativeStartAtRef.current = Date.now();
             consecutiveRestartCount.current = 0;
             console.log('🔄 [Native] Restart counter reset to 0 (mic is live)');
@@ -1515,6 +1629,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               accumulatedTranscript.current = '';
               setIsRecording(false);
               isRecordingRef.current = false;
+              backoffStepRef.current = 0; // ✅ Real speech confirmed — reset backoff
               onTranscript(finalTranscript);
             }
 
@@ -1525,6 +1640,37 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               const now = Date.now();
               const msSinceStart = now - (lastNativeStartAtRef.current || 0);
               const isIdleStop = msSinceStart < nativeStartGraceMs;
+
+              // 🛑 FIX B: RAPID-STOP COUNTER — independent of backoffStepRef.
+              // Stops within 300ms are "rapid" (SR is clearly failing to stay alive).
+              // After 3 rapid stops, fall back to push-to-talk immediately — no waiting
+              // for the 800ms+1500ms+2500ms backoff schedule to exhaust.
+              const RAPID_STOP_MS = 300;
+              const MAX_RAPID_STOPS = 3;
+              if (msSinceStart < RAPID_STOP_MS) {
+                rapidStopCountRef.current += 1;
+                console.warn(`⚡ [Native] Rapid stop #${rapidStopCountRef.current} (${msSinceStart}ms) — SR failing to stay alive`);
+                if (rapidStopCountRef.current >= MAX_RAPID_STOPS && handsFreeActiveRef.current) {
+                  console.warn('🛑 [HandsFreeFallback] rapid_stop_limit — falling back to push-to-talk', {
+                    rapidStops: rapidStopCountRef.current,
+                    threshold_ms: RAPID_STOP_MS,
+                  });
+                  setIsListening(false);
+                  isListeningRef.current = false;
+                  wantsContinuousConversationRef.current = false;
+                  handsFreeActiveRef.current = false;
+                  listeningModeRef.current = 'PUSH_TO_TALK';
+                  setMicState('IDLE', 'rapid_stop_fallback');
+                  backoffStepRef.current = 0;
+                  rapidStopCountRef.current = 0;
+                  onRecordingStateChange?.(false);
+                  onHandsFreeFallback?.();
+                  return;
+                }
+              } else {
+                // Non-rapid stop (>= 300ms) — SR was alive long enough; reset rapid counter
+                rapidStopCountRef.current = 0;
+              }
 
               if (isIdleStop) {
                 // iOS "idle stop" right after start — treat as normal cycling, not a failure
@@ -1617,7 +1763,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                     try {
                       setMicState('ARMING', 'hands_free_restart');
                       console.log('🎙️ [Native] Restarting speech recognition (hands-free)...');
-                      await NativeSpeechRecognition.start({
+                      await safeStartNativeSR({
                         language: 'en-US',
                         maxResults: 3,
                         partialResults: true,
@@ -1666,7 +1812,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             popup: false  // Set to true if iOS requires the popup UI
           };
           addDebug(`📝 Options: ${JSON.stringify(startOptions)}`);
-          await NativeSpeechRecognition.start(startOptions);
+          await safeStartNativeSR(startOptions);
           console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
           addDebug('✅ SR.start() SUCCESS! Mic should be active');
           addDebug('🎤 Speak now - watching for partialResults...');
@@ -1684,7 +1830,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
           addDebug('🔄 Retrying popup:true...');
           try {
-            await NativeSpeechRecognition.start({
+            await safeStartNativeSR({
               language: 'en-US',
               maxResults: 3,
               prompt: 'Speak to MAIA',
@@ -2004,9 +2150,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('🔄 [INTERRUPT] Hands-free + conversation alive — restarting in 1s');
       setMicState('IDLE', 'ios_interruption_end');
       setTimeout(() => {
-        if (micStateRef.current === 'IDLE' && !isSpeakingRef.current) {
-          startListeningFnRef.current?.();
+        // 🔒 Fix A: Skip if another start is already in flight or mic is no longer idle.
+        // stopped_backoff (800ms) may have already fired; this fires at 1000ms.
+        // Allowing both to proceed causes the double-start blink loop.
+        if (
+          micStateRef.current !== 'IDLE' ||
+          srStartInFlightRef.current ||
+          restartInFlightRef.current ||
+          isSpeakingRef.current
+        ) {
+          console.info('🔒 [INTERRUPT] skip restart — mic not idle or start already in flight');
+          return;
         }
+        startListeningFnRef.current?.();
       }, 1000);
     } else {
       console.log('🎤 [INTERRUPT] Push-to-talk or stale conversation — staying idle');

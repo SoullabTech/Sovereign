@@ -26,10 +26,10 @@ import os from 'os';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import * as ttsRouter from '@/lib/tts/ttsRouter';
-import { resolveOpenAIVoice } from '@/lib/voice/voiceMap';
+import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
+import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
+import { SOVEREIGN_VOICES, resolveToKokoro, resolveToOpenAI } from '@/lib/voice/sovereignVoices';
 import type { Element } from '@/lib/types/voiceIntent';
-import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import {
   processThreshold,
   createInitialThresholdState,
@@ -54,15 +54,25 @@ import {
   type VoiceContextPayload,
   type MaiaVoiceMode,
 } from '@/lib/voice/wisdom/MaiaWisdomProvider';
-import { renderWithPersonaPlex } from '@/lib/voice/personaplex/personaPlexClient';
+import {
+  renderWithPersonaPlex,
+  isPersonaPlexReady,
+  markPersonaPlexHealthy,
+  markPersonaPlexUnhealthy,
+} from '@/lib/voice/personaplex/personaPlexClient';
 import { buildProsodyHints } from '@/lib/voice/prosody/buildProsodyHints';
 import { scaleProsody } from '@/lib/voice/prosody/scaleProsody';
 import {
   applyProsodyToText as applyProsodyHintsToText,
   mapProsodyToSpeed,
+  generateSSML,
 } from '@/lib/tts/ttsAdapter';
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelemetry';
+import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -70,12 +80,12 @@ import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
 
 /**
- * TTS with provider routing:
+ * TTS with sovereign provider routing:
  *   1. PersonaPlex (conversational AI voice)
- *   2. OpenAI Alloy leads (auto/cloud)
- *   3. Kokoro (local sovereign TTS) — explicit local or auto fallback
+ *   2. Kokoro (local sovereign TTS) via ttsRouter
+ *   3. OpenAI TTS (cloud fallback, consent-gated)
  *
- * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'openai' | 'kokoro' }
+ * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'kokoro' | 'openai' }
  */
 async function synthesizeWithFallback(
   text: string,
@@ -87,57 +97,105 @@ async function synthesizeWithFallback(
     brevity?: 'brief' | 'moderate' | 'expansive';
     wisdomDirective?: string;
     voice?: string;
+    voiceArchetype?: string | null;
     /** Member's TTS provider preference: 'auto' | 'cloud' | 'local' | null */
     ttsProvider?: string | null;
+    /**
+     * Skip PersonaPlex entirely (iPhone/PWA path).
+     * PersonaPlex at 8s timeout is still too slow for mobile streaming speech.
+     * iOS Safari will silently gap or stutter waiting for a single sentence.
+     */
+    skipPersonaPlex?: boolean;
+    /**
+     * Pre-computed SSML markup for this text.
+     * Used by SSML-capable engines (Kokoro). Ignored by OpenAI and PersonaPlex.
+     * Omit or pass null to use plain shaped text.
+     */
+    ssml?: string | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
-  // Try PersonaPlex first
-  try {
-    for await (const chunk of renderWithPersonaPlex({
-      text,
-      wisdomDirective: options.wisdomDirective,
-      mode: options.mode,
-      element: options.element,
-      sanctuary: options.sanctuary,
-      speed: options.speed,
-      brevity: options.brevity,
-    })) {
-      // Got a chunk - convert to WAV
-      const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
-      if (pcmBytes < 100) {
-        console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), trying fallback`);
-        break; // Fall through to provider routing
+  // ── PersonaPlex (Sesame CSM) — gate on health cache to avoid stalling ──
+  // isPersonaPlexReady() costs ~0 ms when the cache is warm; a real HTTP
+  // health check (≤ 5 s) only runs once per 30 s.  This prevents the old
+  // behaviour of blocking every TTS sentence for up to 30 s when the
+  // service is down.
+  // skipPersonaPlex=true (iPhone/PWA) bypasses this entirely — on mobile,
+  // even a 300 ms health probe adds perceptible cognitive delay.
+  const ppReady = options.skipPersonaPlex
+    ? false
+    : await isPersonaPlexReady().catch(() => false);
+  if (ppReady) {
+    try {
+      for await (const chunk of renderWithPersonaPlex({
+        text,
+        wisdomDirective: options.wisdomDirective,
+        mode: options.mode,
+        element: options.element,
+        sanctuary: options.sanctuary,
+        speed: options.speed,
+        brevity: options.brevity,
+      })) {
+        const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
+        if (pcmBytes < 100) {
+          console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), falling back`);
+          markPersonaPlexUnhealthy();
+          break;
+        }
+        const wavB64 = pcmToWavBase64(chunk.audioB64, 24000, 1);
+        markPersonaPlexHealthy(); // confirm liveness without extra RTT
+        console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
+        return { audio: wavB64, format: 'wav', source: 'personaplex' };
       }
-      const wavB64 = pcmF32ToWavBase64(chunk.audioB64, 24000, 1);
-      console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
-      return { audio: wavB64, format: 'wav', source: 'personaplex' };
+    } catch (e) {
+      markPersonaPlexUnhealthy();
+      console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
     }
-  } catch (e) {
-    console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
+  } else {
+    console.log('[TTS] PersonaPlex skipped (cached health=unhealthy)');
   }
 
   // ── TTS routing: OpenAI Alloy leads, Kokoro only when member picks "local" ──
   const elementKey = (options.element ?? '').toLowerCase() as Element;
   const memberProvider = options.ttsProvider || 'auto';
 
-  // Voice resolution: element map → explicit override → default (alloy)
-  const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-  const openaiVoice = (options.voice && options.voice !== 'maya')
-    ? options.voice
-    : elementVoice ?? 'alloy';
+  // ── Resolve sovereign voice IDs before passing to any provider ──
+  const rawVoice = options.voice && options.voice !== 'maya' ? options.voice : undefined;
+  const isSovereignId = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
+  const kokoroVoice = rawVoice
+    ? (isSovereignId ? resolveToKokoro(rawVoice) : rawVoice)
+    : undefined;
+  const openaiVoice = rawVoice
+    ? (isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice)
+    : undefined;
+
+  // ── Resolve log: what this request decided BEFORE any synthesis ──
+  console.info('[tts.resolve]', JSON.stringify({
+    path: 'stream-conversation',
+    ttsProviderPref: memberProvider,
+    voiceArchetype: options.voiceArchetype || null,
+    openaiVoice: openaiVoice ?? 'alloy',
+    kokoroVoice: kokoroVoice || null,
+    localEnabled: process.env.MAIA_LOCAL_VOICE_ENABLED === '1',
+  }));
 
   // ── Member chose "local" → Kokoro only, no cloud fallback ──
   if (memberProvider === 'local') {
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: 'member_chose_local' }));
     try {
+      // Prefer SSML input when available — Kokoro-FastAPI supports SSML for
+      // precise pause/rate/emphasis control without text-shaping tricks.
+      const kokoroInput = options.ssml ?? text;
       const result = await ttsRouter.synthesize({
-        text,
-        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
+        text: kokoroInput,
+        voice: kokoroVoice,
         format: 'mp3',
         speed: options.speed,
         voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+        ttsProviderPref: 'local',
       });
       const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro member_choice=local ${result.audioBuffer.length}B MP3`);
+      const label = options.ssml ? 'ssml' : 'plain';
+      console.log(`[TTS] provider=kokoro member_choice=local input=${label} ${result.audioBuffer.length}B MP3`);
       return { audio, format: 'mp3', source: 'kokoro' };
     } catch (err) {
       console.warn(`[TTS] Kokoro failed, member chose local-only — no fallback: ${err instanceof Error ? err.message : err}`);
@@ -145,44 +203,53 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── "auto" or "cloud" → OpenAI Alloy leads ──
-  if (!USE_OPENAI_FALLBACK) {
-    console.log('[TTS] OpenAI fallback disabled, returning null');
+  // ── SOVEREIGNTY GATE: skip OpenAI lead when disabled ──
+  const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
+    || !process.env.OPENAI_API_KEY;
+
+  if (!openaiDisabled) {
+    // ── "auto" or "cloud" → OpenAI Alloy leads ──
+    const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
+    const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
+
+    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'auto/cloud lead' }));
+    try {
+      const response = await synthesizeSpeech({
+        text,
+        voice: finalOpenaiVoice,
+        format: 'mp3',
+        speed: options.speed,
+      });
+      const buffer = Buffer.from(await response.arrayBuffer());
+      return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
+    } catch (e) {
+      console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
+      // If member explicitly chose "cloud", don't fall back to Kokoro
+      if (memberProvider === 'cloud') return null;
+    }
+  } else if (memberProvider === 'cloud') {
+    // Member explicitly chose cloud but cloud is disabled — fail clearly
+    console.warn('[TTS] cloud TTS requested but DISABLE_OPENAI_COMPLETELY=true — returning null');
     return null;
   }
 
+  // ── Kokoro path: primary when OpenAI disabled, fallback otherwise ──
+  console.info('[tts.attempt]', JSON.stringify({ provider: 'kokoro', voice: kokoroVoice, reason: openaiDisabled ? 'sovereign_primary' : 'openai_fallback' }));
   try {
-    console.log(`[TTS] provider=openai member_choice=${memberProvider} voice=${openaiVoice}`);
-    const response = await synthesizeSpeech({
-      text,
-      voice: openaiVoice,
+    const kokoroInput = options.ssml ?? text;
+    const result = await ttsRouter.synthesize({
+      text: kokoroInput,
+      voice: kokoroVoice,
       format: 'mp3',
       speed: options.speed,
+      voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
+      ttsProviderPref: 'auto',
     });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
-  } catch (e) {
-    console.error(`[TTS] OpenAI failed: ${e instanceof Error ? e.message : e}`);
-
-    // If member explicitly chose "cloud", don't fall back to Kokoro
-    if (memberProvider === 'cloud') return null;
-
-    // "auto" → try Kokoro as fallback
-    try {
-      const result = await ttsRouter.synthesize({
-        text,
-        voice: options.voice && options.voice !== 'maya' ? options.voice : undefined,
-        format: 'mp3',
-        speed: options.speed,
-        voiceHint: elementKey ? { element: elementKey, speed: options.speed } as any : undefined,
-      });
-      const audio = result.audioBuffer.toString('base64');
-      console.log(`[TTS] provider=kokoro fallback=true member_choice=auto ${result.audioBuffer.length}B MP3`);
-      return { audio, format: 'mp3', source: 'kokoro' };
-    } catch (kokoroErr) {
-      console.error(`[TTS] Kokoro fallback also failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
-      return null;
-    }
+    const audio = result.audioBuffer.toString('base64');
+    return { audio, format: 'mp3', source: 'kokoro' };
+  } catch (kokoroErr) {
+    console.error(`[TTS] Kokoro failed: ${kokoroErr instanceof Error ? kokoroErr.message : kokoroErr}`);
+    return null;
   }
 }
 
@@ -390,35 +457,82 @@ interface StreamRequest {
 }
 
 /**
- * Synthesize a single sentence to audio using OpenAI TTS
- * Returns base64 audio data or null on failure
+ * Synthesize a single sentence to audio.
+ * Routes through ttsRouter (Kokoro first, OpenAI fallback).
+ * Returns base64 audio data or null on failure.
  */
 async function synthesizeSentence(
   text: string,
-  voice: string = 'nova',
+  voice: string = 'maia_core',
   speed: number = 1.0,
-  element?: string | null
+  element?: string | null,
 ): Promise<{ audio: string; format: string } | null> {
+  const elementKey = (element ?? '').toLowerCase() as Element;
+
+  // ── Resolve sovereign voice IDs before passing to any provider ──
+  const rawVoice = voice && voice !== 'maya' ? voice : undefined;
+  const isSovereign = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
+  const resolvedKokoro = rawVoice ? (isSovereign ? resolveToKokoro(rawVoice) : rawVoice) : undefined;
+  const resolvedOpenai = rawVoice ? (isSovereign ? resolveToOpenAI(rawVoice) : rawVoice) : undefined;
+
+  // Try Kokoro via ttsRouter
   try {
-    // Voice resolution: element map → explicit override → default
-    const elementKey = (element ?? '').toLowerCase() as Element;
+    const result = await ttsRouter.synthesize({
+      text,
+      voice: resolvedKokoro,
+      format: 'mp3',
+      speed,
+      voiceHint: elementKey ? { element: elementKey, speed } as any : undefined,
+    });
+    const audio = result.audioBuffer.toString('base64');
+    return { audio, format: 'mp3' };
+  } catch (err) {
+    if (err instanceof TTSFallbackToOpenAI) {
+      // SOVEREIGNTY GATE: never attempt OpenAI when disabled or key absent
+      const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
+        || !process.env.OPENAI_API_KEY;
+      if (openaiDisabled) {
+        console.warn('[synthesizeSentence] Kokoro failed and OpenAI is disabled — returning null (no audio)');
+        return null;
+      }
+
+      // If the router specified a voice (archetype-driven), use it directly
+      if (err.voice) {
+        try {
+          const response = await synthesizeSpeech({ text, voice: err.voice, format: 'mp3', speed });
+          const buffer = Buffer.from(await response.arrayBuffer());
+          return { audio: buffer.toString('base64'), format: 'mp3' };
+        } catch (e) {
+          console.error(`[synthesizeSentence] OpenAI archetype voice failed: ${e instanceof Error ? e.message : e}`);
+        }
+      }
+      // Fall through to final OpenAI fallback
+    } else {
+      console.warn(`[StreamConversation] ttsRouter error: ${err instanceof Error ? err.message : err}`);
+    }
+  }
+
+  // OpenAI fallback — archetype-aware (never drift to element-based defaults)
+  // Only reached when OpenAI is configured and Kokoro is unavailable
+  if (process.env.DISABLE_OPENAI_COMPLETELY === 'true' || !process.env.OPENAI_API_KEY) {
+    return null;
+  }
+  try {
     const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = (voice && voice !== 'maya')
-      ? voice
-      : elementVoice ?? 'nova';
+    const openaiVoice = resolvedOpenai ?? elementVoice ?? 'nova';
 
     const response = await synthesizeSpeech({
       text,
       voice: openaiVoice,
       format: 'mp3',
-      speed: speed
+      speed,
     });
 
     const buffer = Buffer.from(await response.arrayBuffer());
     const audio = buffer.toString('base64');
     return { audio, format: 'mp3' };
   } catch (e) {
-    console.error('[StreamConversation] OpenAI TTS failed:', e);
+    console.error('[StreamConversation] OpenAI TTS fallback failed:', e);
     return null;
   }
 }
@@ -435,7 +549,7 @@ export async function POST(req: NextRequest) {
 
   const {
     message,
-    userId,
+    userId: bodyUserId,
     sessionId,
     element,
     voice,
@@ -447,23 +561,39 @@ export async function POST(req: NextRequest) {
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
 
+  // ── PLATFORM DETECTION ──────────────────────────────────────────────────
+  // iPhone/iPad PWA: skip PersonaPlex entirely.
+  // PersonaPlex timeout (even the reduced 8 s) is too expensive for mobile
+  // streamed speech — a single stall makes MAIA feel cognitively delayed.
+  // The health cache helps when the service is known down, but if the cache
+  // is cold (first request after 30 s) the probe still blocks.  Safest fix:
+  // iOS gets the cloud/local chain directly, no PersonaPlex hop.
+  const ua = req.headers.get('user-agent') ?? '';
+  const isIosPwa = /iPhone|iPad/i.test(ua);
+  if (isIosPwa) console.log('[StreamConversation] iOS client detected — PersonaPlex skipped');
+
   // Resolve member ID: body first, then header fallback (iOS/Safari x-member-id)
-  const effectiveMemberId = userId || await getMemberIdFromRequest(req);
+  const userId = bodyUserId || await getMemberIdFromRequest(req);
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer({ turnId, host });
   timer.mark('request_received');
 
-  // Load voice preference offsets + TTS provider choice
-  let effectiveVoice = voice;
+  // Load voice preference offsets (language-level, shapes text generation)
+  // AND voice_id_override (which voice character the member chose in settings)
+  let voiceOffsets: { pace: number; warmth: number; poetry: number; directiveness: number; energy: number } | undefined;
+  let effectiveVoice = voice; // Start with what the frontend sent
   let memberTtsProvider: string | null = null;
   try {
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
-      getMemberVoicePreferences(effectiveMemberId || ''),
+      getMemberVoicePreferences(userId || ''),
     ]);
     const merged = mergeVoiceIntent(systemVoice, memberVoice);
+    voiceOffsets = merged.intent;
     memberTtsProvider = merged.ttsProvider;
+    // If member has a voice_id_override in the database, use it as the
+    // authoritative voice — ensures cross-device consistency
     if (merged.voiceId && merged.voiceId !== 'maia') {
       effectiveVoice = merged.voiceId;
     }
@@ -472,8 +602,10 @@ export async function POST(req: NextRequest) {
   }
 
   console.log('🔊 [StreamConversation] Received voice settings:', { voice: effectiveVoice, speed, mode, sanctuary, ttsProvider: memberTtsProvider });
+  console.log(`🔊 [StreamConversation] Message: "${(message || '').substring(0, 80)}" (${conversationHistory?.length ?? 0} history msgs)`);
 
   if (!message?.trim()) {
+    console.warn('🔊 [StreamConversation] ⚠️ Empty message received! Raw value:', JSON.stringify(message));
     return new Response('Missing message', { status: 400 });
   }
 
@@ -630,6 +762,30 @@ export async function POST(req: NextRequest) {
             ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
             : undefined;
 
+        // ============ CONVERSATION DEPTH CLASSIFICATION ============
+        // MAIA meets the member at their present level of awareness.
+        // She only invokes deeper processing when the conversation asks for it.
+        // Tier A = presence/threshold (levels 1–2)
+        // Tier B = conversational core (levels 3–5)
+        // Tier C = deep process (levels 6–7)
+        const depthClass = classifyConversationDepth(message, {
+          activation: voiceSession.relationalStack.smoother.lastActivation,
+          conversationLength: voiceSession.metrics?.totalTurns ?? 0,
+          posture: guidance?.posture,
+          mode: voiceSession.relationalStack.currentMode,
+        });
+        // effectiveBrevity: the depth tier can pull 'brief' into threshold responses
+        // or allow 'moderate' for core, but never forces 'expansive' (relational stack decides that)
+        const effectiveBrevity = tierToBrevity(depthClass.tier, guidance?.brevity);
+        console.info('[depth.classify]', JSON.stringify({
+          tier: depthClass.tier,
+          awarenessLevel: depthClass.awarenessLevel,
+          depthScore: depthClass.depthScore.toFixed(2),
+          effectiveBrevity,
+          guidanceBrevity: guidance?.brevity,
+          topSignals: depthClass.signals.slice(0, 4),
+        }));
+
         // ============ PROSODY HINTS (MAIA's semantic voice intent) ============
         // MAIA decides delivery intent via ProsodyHints (semantic).
         // TTS adapter translates hints to provider-specific controls.
@@ -641,7 +797,7 @@ export async function POST(req: NextRequest) {
           activation: voiceSession.relationalStack.smoother.lastActivation,
           mode: wisdomPayload?.mode ?? mode ?? 'talk',
           sanctuary: wisdomPayload?.sanctuary ?? sanctuary ?? false,
-          brevity: guidance?.brevity ?? 'moderate',
+          brevity: effectiveBrevity,       // depth-tier aware brevity
           posture: guidance?.posture ?? 'MEET',
           element: wisdomPayload?.element ?? element ?? null,
           baseline: voiceSession.prosodyBaseline, // Conversation Prosody Memory
@@ -710,6 +866,7 @@ export async function POST(req: NextRequest) {
 
           // TTS render with fallback (PersonaPlex → OpenAI)
           // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+          const thresholdSSML = generateSSML(text, prosodyHints);
           const shapedThresholdText = applyProsodyHintsToText(text, prosodyHints);
           const safeThresholdText = sanitizeForTts(shapedThresholdText);
           let thresholdAudioEmitted = false;
@@ -723,10 +880,12 @@ export async function POST(req: NextRequest) {
             element: wisdomPayload?.element ?? element ?? null,
             sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
             speed: effectiveSpeed,  // Use prosody-adjusted speed
-            brevity: guidance.brevity,
+            brevity: effectiveBrevity,
             wisdomDirective,
             voice: effectiveVoice,
             ttsProvider: memberTtsProvider,
+            skipPersonaPlex: isIosPwa,
+            ssml: thresholdSSML,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -793,7 +952,7 @@ export async function POST(req: NextRequest) {
             },
             guidance: {
               posture: guidance.posture,
-              brevity: guidance.brevity,
+              brevity: effectiveBrevity,
               reason: guidance.reason,
               modeLockMs: guidance.modeLockMs,
               speakBias: guidance.speakBias,
@@ -828,6 +987,8 @@ export async function POST(req: NextRequest) {
           wisdomDirective,
           memoryContext: wisdomPayload?.memoryDirective,
           spiralContext: wisdomPayload?.spiralDirective,
+          // Voice preference offsets — shape text generation (warmth, poetry, directiveness, energy)
+          voiceOffsets,
         };
 
         let fullResponse = '';
@@ -836,6 +997,49 @@ export async function POST(req: NextRequest) {
         let firstTextEmitted = false;
         let firstAudioEmitted = false;
         const ttsPromises: Promise<void>[] = [];
+
+        // ── ORDERED AUDIO BUFFER ──────────────────────────────────────────
+        // TTS promises run in parallel for speed, but audio MUST be emitted
+        // in sentence-index order so the client queue plays coherently.
+        // audioBuffer holds completed results keyed by sentence index; the
+        // drainAudioBuffer helper emits in strict order.
+        type AudioResult = { audio: string; format: string; source: string; text: string } | null;
+        const audioBuffer = new Map<number, AudioResult>();
+        let nextEmitIndex = 0;
+
+        const drainAudioBuffer = () => {
+          while (audioBuffer.has(nextEmitIndex)) {
+            const result = audioBuffer.get(nextEmitIndex)!;
+            if (result) {
+              if (!firstAudioEmitted) {
+                timer.mark('tts_0_done');
+                firstAudioEmitted = true;
+              }
+              const audioBytes = Buffer.from(result.audio, 'base64').length;
+              console.log(`🔊 [Audio] Sentence ${nextEmitIndex}: ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
+              emit('audio', {
+                index: nextEmitIndex,
+                audio: result.audio,
+                format: result.format,
+                text: result.text,
+                timestamp: Date.now(),
+                source: result.source,
+                prosody: {
+                  range: effectiveRange,
+                  pace: prosodyHints.pace,
+                  warmth: prosodyHints.warmth,
+                  emphasis: prosodyHints.emphasis,
+                  intentTag: prosodyHints.intentTag,
+                  speed: effectiveSpeed,
+                },
+              });
+              if (nextEmitIndex === 0) timer.mark('audio_0_emitted');
+              audioChunksEmitted++;
+            }
+            nextEmitIndex++;
+          }
+        };
+        // ─────────────────────────────────────────────────────────────────
 
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
@@ -863,17 +1067,23 @@ export async function POST(req: NextRequest) {
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // TTS per-sentence render with fallback (PersonaPlex → OpenAI)
+            // TTS per-sentence render with fallback (PersonaPlex → OpenAI → Kokoro)
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
 
             // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+            // Generate SSML from original text (before shaping) so SSML-capable engines
+            // (Kokoro) get precise prosody markup. Plain-text shaping is fallback for OpenAI.
+            const chunkSSML = generateSSML(chunkText, prosodyHints);
             const shapedChunkText = applyProsodyHintsToText(chunkText, prosodyHints);
             const safeChunkText = sanitizeForTts(shapedChunkText);
 
             const ttsPromise = (async () => {
               if (!safeChunkText) {
                 console.warn(`[StreamConversation] Sentence ${chunkIndex} empty after sanitization, skipping TTS`);
+                // Still store null so the drain loop can advance past this slot
+                audioBuffer.set(chunkIndex, null);
+                drainAudioBuffer();
                 return;
               }
 
@@ -885,47 +1095,23 @@ export async function POST(req: NextRequest) {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-                speed: effectiveSpeed,  // Use prosody-adjusted speed
-                brevity: guidance.brevity,
+                speed: effectiveSpeed,
+                brevity: effectiveBrevity,
                 wisdomDirective,
                 voice: effectiveVoice,
                 ttsProvider: memberTtsProvider,
+                skipPersonaPlex: isIosPwa,
+                ssml: chunkSSML,
               });
 
               if (result) {
-                if (!firstAudioEmitted) {
-                  timer.mark('tts_0_done');
-                  firstAudioEmitted = true;
-                }
-
-                const audioBytes = Buffer.from(result.audio, 'base64').length;
-                console.log(`🔊 [Audio] Sentence ${chunkIndex}: ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
-
-                emit('audio', {
-                  index: chunkIndex,
-                  audio: result.audio,
-                  format: result.format,
-                  text: chunkText,
-                  timestamp: Date.now(),
-                  source: result.source,
-                  prosody: {
-                    range: effectiveRange,
-                    pace: prosodyHints.pace,
-                    warmth: prosodyHints.warmth,
-                    emphasis: prosodyHints.emphasis,
-                    intentTag: prosodyHints.intentTag,
-                    speed: effectiveSpeed,
-                  },
-                });
-
-                if (chunkIndex === 0) {
-                  timer.mark('audio_0_emitted');
-                }
-
-                audioChunksEmitted++;
+                // Store result with its original text then drain in order
+                audioBuffer.set(chunkIndex, { ...result, text: chunkText });
+                drainAudioBuffer();
               } else {
                 console.warn(`[StreamConversation] TTS returned no audio for sentence index=${chunkIndex}`);
-                // Emit tts_error event so client knows voice is unavailable
+                audioBuffer.set(chunkIndex, null);
+                drainAudioBuffer();
                 emit('tts_error', {
                   index: chunkIndex,
                   text: chunkText,
@@ -935,6 +1121,9 @@ export async function POST(req: NextRequest) {
               }
             })().catch(e => {
               console.error('[StreamConversation] TTS error:', e);
+              // Unblock the drain loop so subsequent sentences can still emit
+              audioBuffer.set(chunkIndex, null);
+              drainAudioBuffer();
             });
 
             ttsPromises.push(ttsPromise);
@@ -971,7 +1160,7 @@ export async function POST(req: NextRequest) {
               },
               guidance: {
                 posture: guidance.posture,
-                brevity: guidance.brevity,
+                brevity: effectiveBrevity,
                 reason: guidance.reason,
                 modeLockMs: guidance.modeLockMs,
                 speakBias: guidance.speakBias,
@@ -999,18 +1188,32 @@ export async function POST(req: NextRequest) {
               const latencyMs = timer.timeTo('llm_done') || timer.timeTo('all_tts_done') || 0;
               logMaiaTurn(
                 effectiveSessionId,
-                voiceSession.turnCount,
+                voiceSession.metrics.totalTurns || 1,
                 message,
                 fullResponse.trim(),
                 'CORE', // Voice mode is typically CORE processing
-                'claude-3-sonnet', // Primary engine for voice
-                latencyMs,
-                wisdomPayload?.element || element,
-                [], // topic_tags - could extract from wisdom payload
-                [], // consciousness_layers
-                undefined, // consciousness_depth
-                true // used_claude_consult
+                {
+                  primaryEngine: 'claude-3-sonnet',
+                  latencyMs,
+                  element: wisdomPayload?.element || element,
+                  usedClaudeConsult: true,
+                }
               ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
+            }
+
+            // 🔭 FIELD MONITOR: Turn-level observability (fire-and-forget, never blocks stream)
+            if (!sanctuary && fullResponse.trim()) {
+              fireAndForgetFieldMonitor({
+                memberId: userId || '',
+                sessionId: effectiveSessionId,
+                route: 'stream',
+                responseText: fullResponse.trim(),
+                userMessage: message,
+                element: wisdomPayload?.element || element,
+                voiceMode: voiceSession.relationalStack.currentMode,
+                relationalStance: guidance.posture,
+                processingPath: 'CORE',
+              });
             }
 
             console.log(`[voice] LLM path: ${timer.summary()}${wisdomPayload?.sanctuary ? ' (sanctuary)' : ''}`);

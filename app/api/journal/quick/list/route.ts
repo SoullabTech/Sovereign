@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { createCapsule } from '@/lib/capsules/capsuleService';
 import { VectorEmbeddingService } from '@/lib/vector-embeddings';
 import crypto from 'crypto';
 
@@ -67,6 +68,42 @@ async function bridgeToEpisodicMemory(
   } catch (err) {
     // Non-fatal: journal save already succeeded
     console.error('[QuickJournal→Memory] Bridge failed (journal still saved):', err);
+  }
+}
+
+// Fire-and-forget: write a minimal capsule so the oracle context layer has this entry.
+// No LLM distillation — just a bridge artifact so MAIA holds the raw record.
+// source_id = journal entry UUID for deduplication if re-run.
+async function bridgeToCapsule(
+  userId: string,
+  entryId: string,
+  entryType: string,
+  content: string
+) {
+  try {
+    const isDream = entryType === 'dream';
+    const firstLine = content.trim().split(/[\n.!?]/)[0].slice(0, 80);
+    const title = isDream
+      ? `Dream: ${firstLine}`
+      : `Journal: ${firstLine}`;
+
+    await createCapsule({
+      userId,
+      sourceType: 'journal',
+      sourceId: entryId,
+      title,
+      summary: content.trim().slice(0, 1200),
+      signals: isDream
+        ? { element: 'water', tone: 'dream' }
+        : { tone: 'reflection' },
+      tags: ['auto-captured', entryType],
+      draft: true,
+    });
+
+    console.log(`[QuickJournal→Capsule] Bridged ${entryType} → capsule for user ${userId}`);
+  } catch (err) {
+    // Non-fatal: journal save already succeeded
+    console.error('[QuickJournal→Capsule] Bridge failed (journal still saved):', err);
   }
 }
 
@@ -191,6 +228,11 @@ export async function POST(request: NextRequest) {
       bridgeToEpisodicMemory(userId, entryType, content).catch(() => {});
     }
 
+    // Bridge to capsule layer so oracle context holds this entry (fire-and-forget)
+    if (content.trim().length >= 10) {
+      bridgeToCapsule(userId, entry.id, entryType, content).catch(() => {});
+    }
+
     return NextResponse.json({
       success: true,
       entryId: entry.id,
@@ -215,7 +257,8 @@ export async function GET(request: NextRequest) {
   }
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    // Accept userId from query param (QuickJournalSheet) or x-member-id header (Reflections page via apiFetch)
+    const userId = searchParams.get('userId') || request.headers.get('x-member-id');
     const entryType = searchParams.get('type'); // optional filter
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 

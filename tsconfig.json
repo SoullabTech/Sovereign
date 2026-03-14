@@ -40,6 +40,8 @@
   ],
   "exclude": [
     "node_modules",
+    "tests/**/*",
+    "test-*.ts",
     "apps/**/*",
     "**/backup*/**/*",
     "**/maia.sov-backup*/**/*",

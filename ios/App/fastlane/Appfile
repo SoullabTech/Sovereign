@@ -1,0 +1,10 @@
+# ios
+# fastlane/Appfile — MAIA iOS app identity
+# Location: ios/App/fastlane/Appfile
+
+app_identifier("life.soullab.maia")
+team_id("ZVK2X646Z2")
+
+# apple_id is not needed here when using App Store Connect API key auth
+# (configured in Prompt 4). Uncomment and set if using Apple ID login instead:
+# apple_id("your-apple-id@example.com")

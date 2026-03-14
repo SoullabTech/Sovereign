@@ -413,6 +413,30 @@ export async function deleteCapsule(params: DeleteCapsuleParams): Promise<boolea
 }
 
 // =============================================================================
+// ORACLE CONTEXT — lean retrieval for system prompt injection
+// =============================================================================
+
+/**
+ * Get recent capsules for oracle context injection.
+ *
+ * Returns non-archived capsules ordered by pinned first, then most recent.
+ * Intentionally lean — no cursor pagination, no full filtering, oracle-specific.
+ * Includes draft capsules so in-progress reflections still inform MAIA.
+ */
+export async function getRecentCapsules(userId: string, limit = 8): Promise<CapsuleDTO[]> {
+  const sql = `
+    SELECT *
+    FROM reflection_capsules
+    WHERE user_id = $1
+      AND archived = false
+    ORDER BY pinned DESC, created_at DESC
+    LIMIT $2
+  `;
+  const result = await query<CapsuleRow>(sql, [userId, limit]);
+  return result.rows.map(rowToDTO);
+}
+
+// =============================================================================
 // COUNT (for stats)
 // =============================================================================
 

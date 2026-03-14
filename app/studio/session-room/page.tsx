@@ -480,7 +480,7 @@ ${insightsSection}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="text-sm font-medium">{cfg.label}</span>
-                      <span className="text-[10px] leading-tight opacity-70">{cfg.description}</span>
+                      <span className="text-[10px] leading-tight text-stone-400">{cfg.description}</span>
                     </button>
                   );
                 })}
@@ -1062,7 +1062,7 @@ ${insightsSection}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm leading-relaxed opacity-90">
+                              <p className="text-sm leading-relaxed text-stone-200">
                                 {insight.content.slice(0, 200)}
                                 {insight.content.length > 200 && '...'}
                               </p>

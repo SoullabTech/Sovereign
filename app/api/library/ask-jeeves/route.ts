@@ -74,12 +74,18 @@ export async function POST(request: NextRequest) {
     console.log(`🎩 Ask Jeeves: "${query.slice(0, 50)}..." (facets: ${facets?.join(', ') || 'none'})`);
 
     const synthesis = await library.askJeeves(query, {
-      facets,
-      maxSourcesPerQuery: maxSources,
+      maxSources: maxSources,
       maxChunksPerSource: 3,
     });
 
     const totalTime = Date.now() - t0;
+
+    if (!synthesis) {
+      return NextResponse.json(
+        { error: 'Jeeves could not produce a synthesis', detail: 'No relevant sources found or synthesis failed' },
+        { status: 404 }
+      );
+    }
 
     console.log(`🎩 Jeeves synthesis complete: ${synthesis.sources_consulted} sources, ${totalTime}ms total`);
 

@@ -6,9 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Files that are intentionally excluded in Capacitor builds (dynamic routes)
+// Files that are intentionally excluded in Capacitor builds (dynamic routes or mobile-mode exclusions)
 const capacitorExcludedFiles = [
   'app/partner/[slug]/page.tsx',
+  'app/welcome/page.tsx',  // excluded by MOBILE_MODE allowlist (web-only route)
 ];
 
 // API routes are moved to .capacitor-api-backup during Capacitor builds

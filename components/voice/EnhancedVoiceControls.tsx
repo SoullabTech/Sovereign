@@ -6,7 +6,7 @@ import { Mic, MicOff, Settings, Volume2, Activity } from 'lucide-react';
 import { Analytics } from "@/lib/analytics/dbAnalytics";
 
 interface VoiceSettings {
-  provider: 'elevenlabs' | 'openai' | 'browser';
+  provider: 'sovereign' | 'browser';
   voice: string;
   speed: number;
   pitch: number;
@@ -18,8 +18,8 @@ interface VoiceSettings {
 }
 
 const DEFAULT_SETTINGS: VoiceSettings = {
-  provider: 'elevenlabs',
-  voice: 'nova', // More expressive voice
+  provider: 'sovereign',
+  voice: 'maia_core', // Default sovereign voice
   speed: 1.1, // Slightly faster for engagement
   pitch: 1.0,
   stability: 0.65, // More variation for expressiveness
@@ -29,25 +29,13 @@ const DEFAULT_SETTINGS: VoiceSettings = {
   silenceDuration: 1500 // ms of silence before auto-stop
 };
 
-// ElevenLabs voices with descriptions
-const ELEVENLABS_VOICES = [
-  { id: 'rachel', name: 'Rachel', description: 'Warm and conversational' },
-  { id: 'nova', name: 'Nova', description: 'Young and energetic' },
-  { id: 'bella', name: 'Bella', description: 'Soft and calming' },
-  { id: 'antoni', name: 'Antoni', description: 'Professional and clear' },
-  { id: 'elli', name: 'Elli', description: 'Friendly and expressive' },
-  { id: 'josh', name: 'Josh', description: 'Deep and authoritative' },
-  { id: 'domi', name: 'Domi', description: 'Mystical and ethereal' }
-];
-
-// OpenAI voices
-const OPENAI_VOICES = [
-  { id: 'nova', name: 'Nova', description: 'Friendly and conversational' },
-  { id: 'alloy', name: 'Alloy', description: 'Neutral and balanced' },
-  { id: 'shimmer', name: 'Shimmer', description: 'Warm and inviting' },
-  { id: 'echo', name: 'Echo', description: 'Smooth and confident' },
-  { id: 'fable', name: 'Fable', description: 'Expressive storyteller' },
-  { id: 'onyx', name: 'Onyx', description: 'Deep and resonant' }
+// Sovereign voice identities
+const SOVEREIGN_VOICE_OPTIONS = [
+  { id: 'maia_core', name: 'Maia (Kore)', description: 'Steady center. Neutral warmth.' },
+  { id: 'maia_warm', name: 'Maia (Warm)', description: 'Soft edge. Holds silence well.' },
+  { id: 'maia_clear', name: 'Maia (Clear)', description: 'Bright and precise. Cuts through.' },
+  { id: 'atlas', name: 'Atlas', description: 'Grounded resonance. Holds the line.' },
+  { id: 'atlas_deep', name: 'Atlas (Deep)', description: 'Low and slow. For deep water.' },
 ];
 
 interface EnhancedVoiceControlsProps {
@@ -375,8 +363,7 @@ export const EnhancedVoiceControls: React.FC<EnhancedVoiceControlsProps> = ({
               onChange={(e) => updateSettings({ provider: e.target.value as any })}
               className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg"
             >
-              <option value="elevenlabs">ElevenLabs (Most Expressive)</option>
-              <option value="openai">OpenAI (Fast & Clear)</option>
+              <option value="sovereign">Sovereign Voice (Local Neural)</option>
               <option value="browser">Browser (Offline)</option>
             </select>
           </div>
@@ -391,7 +378,7 @@ export const EnhancedVoiceControls: React.FC<EnhancedVoiceControlsProps> = ({
               onChange={(e) => updateSettings({ voice: e.target.value })}
               className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg"
             >
-              {(settings.provider === 'elevenlabs' ? ELEVENLABS_VOICES : OPENAI_VOICES).map(voice => (
+              {SOVEREIGN_VOICE_OPTIONS.map(voice => (
                 <option key={voice.id} value={voice.id}>
                   {voice.name} - {voice.description}
                 </option>
@@ -417,7 +404,7 @@ export const EnhancedVoiceControls: React.FC<EnhancedVoiceControlsProps> = ({
               />
             </div>
             
-            {settings.provider === 'elevenlabs' && (
+            {settings.provider === 'sovereign' && (
               <>
                 <div>
                   <label className="flex items-center justify-between text-sm text-gray-300 mb-1">

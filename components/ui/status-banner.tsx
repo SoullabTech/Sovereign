@@ -119,7 +119,7 @@ export function StatusBanner({
     
     const issues = [];
     if (!health.apiKeys.anthropic) issues.push('Claude unavailable');
-    if (!health.apiKeys.openai) issues.push('OpenAI unavailable');
+    if (!health.apiKeys.openai) issues.push('Voice synthesis unavailable');
     
     return `Pipeline: ${health.pipeline}
 Features: ${features.join(', ')}

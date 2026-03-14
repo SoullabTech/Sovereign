@@ -62,6 +62,8 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
+import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 
@@ -371,11 +373,11 @@ interface OracleConversationProps {
   initialCheckIns?: Record<string, number>;
   showAnalytics?: boolean;
   voiceEnabled?: boolean;
-  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
+  voice?: string; // Sovereign voice identity (maia_core, maia_warm, atlas, etc.)
   voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
-  voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
+  voiceModel?: string; // Sovereign voice model
   voiceVolume?: number; // Voice playback volume (0.0 - 1.0)
-  onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
+  onVoiceChange?: (voice: string) => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
   initialShowChatInterface?: boolean; // Control voice/text mode from parent
@@ -396,6 +398,10 @@ interface OracleConversationProps {
     clientId?: string;
     pathname?: string;
   };
+  // Field presence regulation — when true, oracle applies the Field calibration arc
+  fieldMode?: boolean;
+  // Field energy state — client-tracked, passed to oracle for constraint enforcement
+  fieldEnergyState?: 'arrival' | 'settling' | 'presence';
 }
 
 interface ConversationMessage {
@@ -491,9 +497,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   initialCheckIns = {},
   showAnalytics = false,
   voiceEnabled = true,
-  voice = 'alloy',
+  voice = 'maia_core',
   voiceSpeed = 0.95,
-  voiceModel = 'tts-1-hd',
+  voiceModel = 'maia_core',
   voiceVolume = 1.0,
   onVoiceChange,
   initialMode = 'normal',
@@ -510,6 +516,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   scribeSessionContext,
   surface,
   studioContext,
+  fieldMode,
+  fieldEnergyState,
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
@@ -702,9 +710,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceSettings, setVoiceSettings] = useState(() => {
     if (typeof window === 'undefined') {
       return {
-        voice: 'alloy',
+        voice: 'maia_core',
         speed: 1.0,
-        model: 'tts-1' as const,
+        model: 'maia_core',
         prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,
         archetype: 'AUTO' as string,
         conversationMode: 'her' as string,
@@ -712,10 +720,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       };
     }
     const settings = getAccountSettings();
+    // Migrate legacy vendor voice names to sovereign identities
+    const LEGACY_VOICE_MAP: Record<string, string> = {
+      alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear',
+      echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+    };
+    const rawVoice = settings.voice.openaiVoice;
     return {
-      voice: settings.voice.openaiVoice,
+      voice: LEGACY_VOICE_MAP[rawVoice] ?? rawVoice ?? 'maia_core',
       speed: settings.voice.speed,
-      model: settings.voice.model || 'tts-1' as const,
+      model: settings.voice.model || 'maia_core',
       prosodyRange: (settings.voice.prosodyRange ?? 1) as 0 | 1 | 2 | 3 | 4,
       archetype: settings.archetype || 'AUTO',
       conversationMode: settings.conversationMode || 'her',
@@ -725,6 +739,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Member's preferred name for MAIA (bonding affordance)
   const assistantName = useAssistantName();
+  // Admin-only diagnostics: SourceHalo, StateCard, level badges
+  const { isAdmin: showDiagnostics } = useSession();
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -1148,6 +1164,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     });
   }, [hasActivated, messages, isProcessing, isResponding]);
 
+  // 🧭 Navigation teardown: set a flag when this component unmounts due to client-side routing.
+  // React cleanup runs on client-side nav but NOT on F5/hard refresh — this lets
+  // loadConversationHistory distinguish "navigation return" from "fresh page load".
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem('maia_nav_teardown', 'true');
+    };
+  }, []);
+
   // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
   useEffect(() => {
     const handleNewConversation = () => {
@@ -1158,6 +1183,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       historicalMessagesRef.current = [];
       // Reset activation state to show welcome screen
       setHasActivated(false);
+      // Reset session-restored flag so the welcome greeting can show for the new conversation
+      sessionRestoredRef.current = false;
+      // Clear navigation flag so next mount doesn't restore the cleared conversation
+      sessionStorage.removeItem('maia_nav_teardown');
       // Clear localStorage for current session
       if (typeof window !== 'undefined' && sessionId) {
         const storageKey = `maia_conversation_${sessionId}`;
@@ -1283,6 +1312,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 💾 Historical messages for API context - separate from UI display
   // UI stays clean on load, but MAIA has access to conversation history for context
   const historicalMessagesRef = useRef<ConversationMessage[]>([]);
+  // 🔄 Track whether messages were restored from storage (prevents greeting from overwriting)
+  const sessionRestoredRef = useRef(false);
   const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
@@ -1504,7 +1535,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setVoiceAmplitude(0);
   }, []);
 
-  const maiaSpeak = useCallback(async (text: string, elementHint?: Element) => {
+  const maiaSpeak = useCallback(async (text: string, elementHint?: Element, ttsInstructions?: string) => {
     if (!text || typeof window === 'undefined') return;
 
     // Check if we need to show audio permission prompt
@@ -1585,7 +1616,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             text: text,
             voice: voiceSettings.voice,
             speed: voiceSettings.speed,
-            model: voiceSettings.model
+            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
           },
           responseType: 'arraybuffer',
         });
@@ -1666,7 +1698,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             text: text,
             voice: voiceSettings.voice,
             speed: voiceSettings.speed,
-            model: voiceSettings.model
+            model: ttsInstructions ? 'gpt-4o-mini-tts' : voiceSettings.model,
+            ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
           })
         });
 
@@ -2083,11 +2116,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
-      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
+      const LEGACY_MAP: Record<string, string> = { alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear' };
       setVoiceSettings({
-        voice: settings.voice.openaiVoice,
+        voice: LEGACY_MAP[settings.voice.openaiVoice] ?? settings.voice.openaiVoice ?? 'maia_core',
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
+        model: settings.voice.model || 'maia_core',
         prosodyRange: settings.voice.prosodyRange ?? 1,
         archetype: settings.archetype || 'AUTO',
         conversationMode: settings.conversationMode || 'her',
@@ -2097,11 +2130,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     loadVoiceSettings();
 
-    // Listen for settings changes (from MAIA Settings panel)
-    const handleSettingsChange = () => {
-      console.log('🔊 [VoiceSettings] Received settings change event');
-      loadVoiceSettings();
-    };
+    // Listen for settings changes (from MAIA Settings panel or AccountSettings)
+    const handleSettingsChange = () => loadVoiceSettings();
     window.addEventListener('maia-account-settings-changed', handleSettingsChange);
     window.addEventListener('maia-settings-changed', handleSettingsChange);
 
@@ -2250,6 +2280,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   });
 
+  // 🌊 STREAMING VOICE: Sync isAudioPlaying with actual playback state
+  // isStreamingPlaying comes from useStreamingVoice and is true ONLY when
+  // audio is actually playing through the Audio element — not during LLM
+  // processing or TTS generation. This prevents the watchdog from firing
+  // during the TTS generation gap (can be 60+ seconds with Kokoro).
+  useEffect(() => {
+    if (isStreamingPlaying && streamingVoiceMode) {
+      isAudioPlayingRef.current = true;
+      setIsAudioPlaying(true);
+    }
+  }, [isStreamingPlaying, streamingVoiceMode]);
+
   // 🌊 STREAMING VOICE: Resume mic when audio playback finishes
   const prevStreamingPlayingRef = useRef(isStreamingPlaying);
   const prevStreamingCompleteRef = useRef(streamingResponseComplete);
@@ -2340,8 +2382,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [stopStreamingVoice]);
 
   // 🛡️ VOICE WATCHDOG - Automatic recovery from stuck states
-  // If we're in "speaking" state (isAudioPlaying || isMicrophonePaused) for too long
-  // without any audio progress, force reset to listening. Prevents "stuck speaking" forever.
+  // Two-tier timeout:
+  //   - AUDIO tier (90s): If isAudioPlaying is true but no audio progress
+  //     for 90s, audio pipeline is broken. Kokoro TTS can take 60+ seconds
+  //     for long responses, so 15s was far too aggressive.
+  //   - PROCESSING tier (120s): If isResponding/isMicrophonePaused but NOT
+  //     isAudioPlaying for 120s, the LLM or TTS generation is stuck.
   const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioProgressRef = useRef<number>(Date.now());
 
@@ -2355,46 +2401,59 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       return;
     }
 
-    // Update last audio progress when audio is playing
+    // Update last audio progress when audio is actually playing
     if (isAudioPlaying) {
       lastAudioProgressRef.current = Date.now();
     }
 
-    // Check every 3 seconds if we're stuck
-    const WATCHDOG_TIMEOUT_MS = 15000; // 15 seconds max stuck in speaking
-    const WATCHDOG_CHECK_MS = 3000; // Check every 3 seconds
+    const AUDIO_STUCK_TIMEOUT_MS = 90000;    // 90s — audio playing but no progress
+    const PROCESSING_STUCK_TIMEOUT_MS = 120000; // 120s — waiting for TTS/LLM
+    const WATCHDOG_CHECK_MS = 5000;            // Check every 5 seconds
 
     if (!voiceWatchdogRef.current) {
       voiceWatchdogRef.current = setInterval(() => {
-        const isSpeakingStuck = isAudioPlayingRef.current || isMicrophonePausedRef.current;
+        const audioPlaying = isAudioPlayingRef.current;
+        const processingOrPaused = isRespondingRef.current || isMicrophonePausedRef.current;
         const timeSinceProgress = Date.now() - lastAudioProgressRef.current;
 
-        if (isSpeakingStuck && timeSinceProgress > WATCHDOG_TIMEOUT_MS) {
-          console.warn('🐕 [WATCHDOG] Voice state stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+        // Tier 1: Audio is "playing" but no progress for 90s — pipeline broken
+        if (audioPlaying && timeSinceProgress > AUDIO_STUCK_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Audio stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+          forceWatchdogReset('audio_stuck');
+          return;
+        }
 
-          // Force reset all voice state
-          isAudioPlayingRef.current = false;
-          isRespondingRef.current = false;
-          isMicrophonePausedRef.current = false;
-
-          setIsAudioPlaying(false);
-          setIsResponding(false);
-          setIsMicrophonePaused(false);
-          setIsListening(true);
-          setIsActivating(false);
-
-          // Reset the progress timer
-          lastAudioProgressRef.current = Date.now();
-
-          // 🔥 CRITICAL: Actually restart the mic - not just UI state!
-          if (voiceMicRef.current?.startListening) {
-            console.log('🐕 [WATCHDOG] Force-restarting microphone...');
-            voiceMicRef.current.startListening({ forceOverride: true });
-          }
-
-          toast('⚠️ Voice recovered', { duration: 2000 });
+        // Tier 2: Processing/paused but no audio started for 120s — LLM/TTS stuck
+        if (processingOrPaused && !audioPlaying && timeSinceProgress > PROCESSING_STUCK_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset');
+          forceWatchdogReset('processing_stuck');
+          return;
         }
       }, WATCHDOG_CHECK_MS);
+    }
+
+    function forceWatchdogReset(reason: string) {
+      // Force reset all voice state
+      isAudioPlayingRef.current = false;
+      isRespondingRef.current = false;
+      isMicrophonePausedRef.current = false;
+
+      setIsAudioPlaying(false);
+      setIsResponding(false);
+      setIsMicrophonePaused(false);
+      setIsListening(true);
+      setIsActivating(false);
+
+      // Reset the progress timer
+      lastAudioProgressRef.current = Date.now();
+
+      // Actually restart the mic
+      if (voiceMicRef.current?.startListening) {
+        console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
+        voiceMicRef.current.startListening({ forceOverride: true });
+      }
+
+      toast('⚠️ Voice recovered', { duration: 2000 });
     }
 
     return () => {
@@ -2518,9 +2577,31 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
 
-      // Store in ref for MAIA API context (not displayed in UI)
+      // Detect whether this mount is a client-side navigation return vs. a fresh page load.
+      // React cleanup runs on client-side nav unmount but NOT on F5/hard refresh.
+      // So: flag present = navigation return (restore), flag absent = fresh load (welcome overlay).
+      const wasNavigationReturn = sessionStorage.getItem('maia_nav_teardown') === 'true';
+      sessionStorage.removeItem('maia_nav_teardown'); // consume immediately
+
+      // Always populate historicalRef so MAIA has full context regardless of display mode
       historicalMessagesRef.current = loadedMessages;
-      console.log(`💾 [Context] MAIA has access to ${loadedMessages.length} historical messages`);
+
+      if (loadedMessages.length > 0) {
+        const hasRealMessages = loadedMessages.some(m => !m.id?.startsWith('greeting-'));
+
+        if (hasRealMessages && wasNavigationReturn) {
+          // Navigation return: restore UI + skip welcome overlay
+          sessionRestoredRef.current = true;
+          setHasActivated(true);
+          setMessages(loadedMessages);
+          console.log(`💾 [Context] Navigation return — restored ${loadedMessages.length} messages to UI`);
+        } else {
+          // Fresh load (F5, new tab, returning member): MAIA has context but UI starts clean
+          console.log(`💾 [Context] Fresh load — ${loadedMessages.length} messages loaded for context only`);
+        }
+      } else {
+        console.log(`💾 [Context] No previous messages for this session`);
+      }
     };
 
     loadConversationHistory();
@@ -2586,7 +2667,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               assistantMessage: nextMsg.text,
               userId,
               sessionId,
-              isSanctuary: false, // TODO: Check sanctuary mode
+              isSanctuary,
             }),
           })
             .then(res => res.json())
@@ -2838,7 +2919,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         source: 'maia'
       };
 
-      setMessages([greetingMessage]);
+      // Only initialize with greeting if messages weren't already restored from storage
+      // (prevents the greeting from overwriting an existing conversation on same-session navigation)
+      if (!sessionRestoredRef.current) {
+        setMessages([greetingMessage]);
+      }
       localStorage.setItem('lastSessionDate', new Date().toISOString());
     })();
 
@@ -2937,26 +3022,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return getAgentConfig();
   });
 
-  // Listen for conversation style preference changes
+  // Listen for conversation style preference changes (agentConfig only)
+  // Voice settings (setVoiceSettings) are handled by the maia-account-settings-changed
+  // listener above — do NOT duplicate that logic here to avoid feedback loops.
   useEffect(() => {
     const handleStorageChange = () => {
       const savedVoice = localStorage.getItem('selected_voice');
       const newConfig = getAgentConfig(savedVoice || undefined);
       setAgentConfig(newConfig);
-      console.log('🎭 Conversation style updated:', newConfig.voice);
-
-      // Also reload voice settings from account settings (all MAIA preferences)
-      const settings = getAccountSettings();
-      setVoiceSettings({
-        voice: settings.voice.openaiVoice,
-        speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1',
-        prosodyRange: settings.voice.prosodyRange ?? 1,
-        archetype: settings.archetype || 'AUTO',
-        conversationMode: settings.conversationMode || 'her',
-        memoryDepth: settings.memory?.depth || 'moderate',
-      });
-      console.log('🔊 Voice settings reloaded:', settings.voice, settings.archetype, settings.conversationMode);
+      console.log('🎭 Agent config updated:', newConfig.voice);
     };
 
     // Listen for storage events (from other tabs) and custom events (same tab)
@@ -4280,7 +4354,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Offline detected - using presence fallback');
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 
@@ -4407,6 +4481,10 @@ I'm not sure what I'm feeling yet.`;
           // 🏢 STUDIO SURFACE: When running inside Soullab Studio
           surface: surface ?? 'maia',
           studioContext: studioContext ?? undefined,
+
+          // Field presence regulation — signals oracle to apply regulation arc
+          fieldMode: fieldMode ?? false,
+          fieldEnergyState: fieldEnergyState ?? 'arrival',
         }),
         signal: controller.signal
       });
@@ -4416,7 +4494,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 
@@ -4461,6 +4539,8 @@ I'm not sure what I'm feeling yet.`;
         // 🚧 MAINTENANCE MODE: Show pause message when system is in maintenance
         if (response.status === 503) {
           const errData = await response.json().catch(() => null);
+          // Log actual error body (response.text() below would return "(no body)" since body already consumed)
+          console.error('[fetch] 503 error details:', errData);
           if (errData?.error === 'MAINTENANCE_MODE') {
             console.log('[OracleConversation] Maintenance mode active:', errData.message);
             const maintenanceMessage: ConversationMessage = {
@@ -4486,7 +4566,7 @@ I'm not sure what I'm feeling yet.`;
         console.log('[OracleConversation] Server error - using presence fallback');
         const fallbackText = generatePresenceFallback({
           userText: cleanedText,
-          mode: 'support',
+          mode: realtimeMode === 'counsel' ? 'support' : 'clarity',
           preferredName: userName || undefined,
         });
 
@@ -4519,6 +4599,8 @@ I'm not sure what I'm feeling yet.`;
       let responseText: string;
       let responseData: any = {};
       let element = 'aether'; // Default element, will be updated from metadata if available
+      let spokenTextForVoice: string = ''; // CI-shaped TTS text (falls back to responseText)
+      let ttsInstructionsForVoice: string = ''; // MAIA vocal intent for OpenAI TTS
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
       // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
@@ -4536,8 +4618,10 @@ I'm not sure what I'm feeling yet.`;
         let firstChunkReceived = false;
 
         // Import streaming audio utilities
-        const { StreamingAudioQueue, splitIntoSentences, generateAudioChunk } =
+        const { StreamingAudioQueue, splitIntoSentences, mergeShortSentences, generateAudioChunk } =
           await import('@/lib/voice/StreamingAudioQueue');
+        // Per-chunk prosody from PFI — element-aware, position-aware instructions
+        const { deriveChunkProsodyLegacy } = await import('@/lib/voice/prosodyFromPFI');
 
         // Initialize audio queue for voice mode
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
@@ -4663,6 +4747,7 @@ I'm not sure what I'm feeling yet.`;
                   const audio = await generateAudioChunk(partialSentence, {
                     agentVoice: 'maya',
                     element,
+                    instructions: ttsInstructionsForVoice,
                   });
                   audioQueue.enqueue({
                     audio,
@@ -4715,13 +4800,32 @@ I'm not sure what I'm feeling yet.`;
                       // Check if we have complete sentences (ending with . ! ?)
                       const sentenceEndMatch = partialSentence.match(/[.!?]+\s/);
                       if (sentenceEndMatch) {
-                        const sentences = splitIntoSentences(partialSentence);
+                        const rawSentences = splitIntoSentences(partialSentence);
+                        // Merge adjacent short sentences to reduce TTS API calls and stitching seams.
+                        // e.g. "Yes. I see." becomes one chunk instead of two.
+                        const _rawBatch = rawSentences.slice(0, -1);
+                        const completeSentences = mergeShortSentences(_rawBatch, 160);
+                        // Tell the queue how many raw sentences were collapsed this batch.
+                        // Feeds [pfi.voice] chunks_merged_count — if always 0, threshold is too high.
+                        if (audioQueue && _rawBatch.length > completeSentences.length) {
+                          audioQueue.noteMergedCount(_rawBatch.length - completeSentences.length);
+                        }
 
-                        // Process all complete sentences
-                        for (let i = 0; i < sentences.length - 1; i++) {
-                          const sentence = sentences[i].trim();
+                        // Process merged complete sentences
+                        for (let _ci = 0; _ci < completeSentences.length; _ci++) {
+                          const sentence = completeSentences[_ci];
                           if (sentence) {
                             console.log('🎤 [STREAM] Complete sentence, generating audio:', sentence.substring(0, 50));
+
+                            // Per-chunk prosody from PFI: element + position-aware instructions.
+                            // isFirstChunk/isLastChunk are relative to this SSE batch.
+                            const chunkTTSInstructions = deriveChunkProsodyLegacy({
+                              chunkText: sentence,
+                              baseTTSInstructions: ttsInstructionsForVoice || '',
+                              element: (element || 'aether') as any,
+                              isFirstChunk: _ci === 0,
+                              isLastChunk: _ci === completeSentences.length - 1,
+                            });
 
                             // 🔥 FIX: Track this pending TTS request
                             pendingTTSCount++;
@@ -4734,6 +4838,7 @@ I'm not sure what I'm feeling yet.`;
                                   return await generateAudioChunk(text, {
                                     agentVoice: 'maya',
                                     element,
+                                    instructions: chunkTTSInstructions,
                                   });
                                 } catch (err) {
                                   console.warn(`⚠️ [STREAM] TTS attempt ${attempt}/${retries} failed:`, err);
@@ -4769,8 +4874,8 @@ I'm not sure what I'm feeling yet.`;
                           }
                         }
 
-                        // Keep the last sentence (might be incomplete)
-                        partialSentence = sentences[sentences.length - 1] || '';
+                        // Keep the last raw sentence (might be incomplete — not merged)
+                        partialSentence = rawSentences[rawSentences.length - 1] || '';
                       }
                     }
                   }
@@ -4789,6 +4894,7 @@ I'm not sure what I'm feeling yet.`;
           }
 
           responseText = cleanMessage(fullText);
+          spokenTextForVoice = responseText; // Streaming has no CI shaping
           console.log(`✅ [STREAM] Complete response received (${fullText.length} chars)`);
 
         } catch (streamError) {
@@ -4817,6 +4923,10 @@ I'm not sure what I'm feeling yet.`;
         // Use normalized response for consistent field access
         const normalized = normalizeAIResponse(responseData);
         responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+
+        // MAIA Central: extract CI-shaped spoken text and vocal intent (if oracle/conversation route)
+        spokenTextForVoice = responseData.spokenText || responseText;
+        ttsInstructionsForVoice = responseData.ttsInstructions || '';
 
         // Extract opusAxioms and turnId for Gold Seal feature
         opusAxioms = responseData.opusAxioms;
@@ -5043,7 +5153,8 @@ I'm not sure what I'm feeling yet.`;
         setMaiaResponseText(responseText); // Update display text
 
         // Clean the response for voice - remove stage directions and markup
-        const cleanVoiceText = cleanMessageForVoice(responseText);
+        // Use CI-shaped spokenText if available (MAIA Central), otherwise fall back to responseText
+        const cleanVoiceText = cleanMessageForVoice(spokenTextForVoice || responseText);
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
@@ -5059,7 +5170,7 @@ I'm not sure what I'm feeling yet.`;
           // 🔥 FIX: No character-based timeout here! maiaSpeak now uses
           // the ACTUAL audio duration from metadata for its timeout,
           // which is much more reliable than estimating from text length.
-          await maiaSpeak(cleanVoiceText, element as Element);
+          await maiaSpeak(cleanVoiceText, element as Element, ttsInstructionsForVoice);
 
           const speakDuration = Date.now() - startSpeakTime;
           console.log(`🔇 Maia finished speaking after ${speakDuration}ms (${cleanVoiceText.length} chars)`);
@@ -5320,13 +5431,16 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // TRIPLE-PROCESSING FIX: Check if this exact transcript was just processed
+    // Window extended to 30s to survive the full MAIA response cycle
+    // (LLM generation + TTS + audio playback can take 10-20s)
     const now = Date.now();
     if (lastProcessedTranscriptRef.current) {
       const { text: lastText, timestamp: lastTime } = lastProcessedTranscriptRef.current;
       const timeSinceLastProcess = now - lastTime;
 
-      // If same transcript within 2 seconds, it's a duplicate
-      if (lastText === t && timeSinceLastProcess < 2000) {
+      // If same transcript within 30 seconds, it's a duplicate
+      // (covers the full MAIA response cycle: LLM + TTS + playback + mic restart)
+      if (lastText === t && timeSinceLastProcess < 30_000) {
         console.warn(`⚠️ Duplicate transcript detected (${timeSinceLastProcess}ms ago), ignoring:`, t);
         return;
       }
@@ -5877,9 +5991,13 @@ I'm not sure what I'm feeling yet.`;
         setMessages(nextMessagesForApi);
 
         // Set processing states
+        // NOTE: Do NOT set isAudioPlaying(true) here — it should only be true
+        // when audio is actually playing (see isStreamingPlaying sync below).
+        // Setting it prematurely triggers the watchdog (15s timeout) during
+        // TTS generation which can take 60+ seconds with Kokoro.
         setIsProcessing(true);
         setIsResponding(true);
-        setIsAudioPlaying(true);
+        setIsMicrophonePaused(true); // Signal ContinuousConversation to suppress mic
         setIsMuted(true); // Mute while MAIA speaks
 
         // Stop mic while processing
@@ -6104,6 +6222,8 @@ I'm not sure what I'm feeling yet.`;
     console.log('🧹 Clearing previous conversation for fresh session start');
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
+    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
+    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
     setHasActivated(false); // Reset to show welcome/greeting
     // Clear localStorage for previous conversation
     if (typeof window !== 'undefined' && sessionId) {
@@ -6227,6 +6347,8 @@ I'm not sure what I'm feeling yet.`;
     // 🧹 Clear previous conversation messages
     setMessages([]);
     historicalMessagesRef.current = []; // Clear API context too
+    sessionRestoredRef.current = false; // Allow greeting to run for fresh session
+    sessionStorage.removeItem('maia_nav_teardown'); // Don't restore on next navigation
     setHasActivated(false);
     if (typeof window !== 'undefined' && sessionId) {
       const storageKey = `maia_conversation_${sessionId}`;
@@ -7684,8 +7806,8 @@ I'm not sure what I'm feeling yet.`;
                           <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                             {message.role === 'user' ? (userName || 'You') : assistantName}
                           </div>
-                          {/* 🚪 AIN: Knowledge Gate source well indicator (suppressed in Sanctuary) */}
-                          {message.role === 'oracle' && !isSanctuary && message.ainState && (
+                          {/* 🚪 AIN: Knowledge Gate source well indicator (admin-only, suppressed in Sanctuary) */}
+                          {showDiagnostics && message.role === 'oracle' && !isSanctuary && message.ainState && (
                             <SourceHalo
                               sourceMix={message.ainState.sourceMix}
                               awarenessLevel={message.ainState.awarenessLevel}
@@ -7739,11 +7861,11 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
-                      {/* 🌀 STATE CARD: Consciousness state reading (mode-aware) */}
+                      {/* 🌀 STATE CARD: Consciousness state reading (admin-only diagnostic) */}
                       {/* Care = full (element + kairos + movement + practice) */}
                       {/* Talk = light (kairos + movement only — phenomenological, not prescriptive) */}
                       {/* Scribe = structural (full data, framed as session metadata) */}
-                      {message.role === 'oracle' && message.stateVector && (
+                      {showDiagnostics && message.role === 'oracle' && message.stateVector && (
                         <div className="mt-3">
                           <StateCard
                             stateVector={message.stateVector}
@@ -8078,22 +8200,6 @@ I'm not sure what I'm feeling yet.`;
 
 
 
-      {/* Bottom Right Lab Tools Button - Contains journal access */}
-      <button
-        onClick={() => {
-          console.log('🔬 Lab button clicked!');
-          setShowLabDrawer(true);
-        }}
-        className="fixed bottom-6 right-6 z-below-nav p-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 shadow-2xl shadow-amber-500/50 hover:scale-110 active:scale-95 border-2 border-amber-400/50"
-        style={{
-          paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-          minWidth: '70px',
-          minHeight: '70px',
-        }}
-        title="Open Lab Tools - Includes Journal Access"
-      >
-        <FlaskConical className="w-8 h-8 text-black drop-shadow-lg" />
-      </button>
 
       {/* Voice Selection Menu - Popup from bottom */}
       {showVoiceMenu && (
@@ -8168,9 +8274,9 @@ I'm not sure what I'm feeling yet.`;
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
             silenceThreshold={
-              listeningMode === 'session' ? 999999 : // Scribe mode: never auto-send (stay open to record)
-              listeningMode === 'patient' ? 8000 :   // Care mode: 8 seconds (patience for emotional processing)
-              2000                                    // Talk mode: 2 seconds (natural conversation pace)
+              listeningMode === 'session' ? VOICE_TIMING.WEB_SILENCE_SCRIBE_MS :
+              listeningMode === 'patient' ? VOICE_TIMING.WEB_SILENCE_CARE_MS :
+              VOICE_TIMING.WEB_SILENCE_TALK_MS
             }
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
             onHandsFreeFallback={() => {

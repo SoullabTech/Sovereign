@@ -116,7 +116,7 @@ export default function OnboardingPage() {
     users[existingUsername] = updatedUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
 
-    router.push('/maia');
+    router.push('/choose');
   };
 
   return (

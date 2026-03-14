@@ -1,36 +1,17 @@
 /**
- * Library of Alexandria - Semantic Wisdom Search
+ * Library of Alexandria — Adapter
  *
- * Searches Kelly's complete wisdom vault (6,388+ chunks) using semantic embeddings.
- * Finds relevant content by MEANING, not just keywords.
+ * LEGACY ADAPTER: This module previously used Supabase + OpenAI (both prohibited).
+ * It now delegates to LibraryService (local PostgreSQL + Ollama).
  *
- * This is the 4th wisdom hemisphere in the corpus callosum architecture.
+ * Downstream consumers (ResonanceField.ts, ProgressiveWisdomInjection.ts)
+ * import searchLibrary and LibraryChunk from here. This adapter preserves
+ * that interface while routing through the sovereign infrastructure.
+ *
+ * See: lib/library/LibraryService.ts for the canonical implementation.
  */
 
-import OpenAI from 'openai';
-
-// Lazy initialization to avoid env var issues
-let supabase: SupabaseClient;
-let openai: OpenAI;
-
-function getSupabase() {
-  if (!supabase) {
-    supabase = createClient(
-      process.env.NEXT_PUBLIC_DATABASE_URL!,
-      process.env.DATABASE_SERVICE_KEY!
-    );
-  }
-  return supabase;
-}
-
-function getOpenAI() {
-  if (!openai) {
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-    });
-  }
-  return openai;
-}
+import { libraryService } from '@/lib/library/LibraryService';
 
 export interface LibrarySearchOptions {
   query: string;
@@ -53,82 +34,38 @@ export interface LibraryChunk {
 }
 
 /**
- * Search the Library of Alexandria using semantic embeddings
+ * Search the Library of Alexandria using semantic embeddings.
+ * Delegates to LibraryService (local PostgreSQL + Ollama).
  */
 export async function searchLibrary(options: LibrarySearchOptions): Promise<LibraryChunk[]> {
   const {
     query,
     maxResults = 5,
-    minSimilarity = 0.5,
-    filterByCategory,
     filterByElement,
-    filterByLevel
   } = options;
 
   try {
-    // Generate embedding for query
-    const embeddingResponse = await getOpenAI().embeddings.create({
-      model: 'text-embedding-3-small',
-      input: query,
+    const context = await libraryService.search(query, {
+      limit: maxResults,
+      mode: 'deep',
     });
 
-    const queryEmbedding = embeddingResponse.data[0].embedding;
-
-    // Perform semantic search
-    const { data, error } = await getSupabase().rpc('match_file_chunks', {
-      query_embedding: queryEmbedding,
-      match_threshold: minSimilarity,
-      match_count: maxResults,
-    });
-
-    if (error) {
-      console.warn(`[Library] Search failed, using fallback: ${error.message}`);
-
-      // Fallback: return random relevant chunks (better than nothing)
-      const fallbackQuery = getSupabase()
-        .from('file_chunks')
-        .select('file_name, content, category, element, level, concepts, keywords')
-        .not('embedding', 'is', null)
-        .limit(maxResults);
-
-      if (filterByCategory) fallbackQuery.eq('category', filterByCategory);
-      if (filterByElement) fallbackQuery.eq('element', filterByElement);
-      if (filterByLevel) fallbackQuery.eq('level', filterByLevel);
-
-      const { data: fallbackData } = await fallbackQuery;
-
-      return (fallbackData || []).map(chunk => ({
-        ...chunk,
-        similarity: 0.6 // Placeholder similarity
-      }));
-    }
-
-    // Apply additional filters if needed
-    let results = data || [];
-
-    if (filterByCategory) {
-      results = results.filter((r: any) => r.category === filterByCategory);
-    }
-
-    if (filterByElement) {
-      results = results.filter((r: any) => r.element === filterByElement);
-    }
-
-    if (filterByLevel) {
-      results = results.filter((r: any) => r.level === filterByLevel);
-    }
-
-    return results.map((chunk: any) => ({
-      file_name: chunk.file_name,
-      content: chunk.content,
-      similarity: chunk.similarity,
-      category: chunk.category,
-      element: chunk.element,
-      level: chunk.level,
-      concepts: chunk.concepts,
-      keywords: chunk.keywords,
+    // Map LibrarySearchResult → legacy LibraryChunk interface
+    let results: LibraryChunk[] = context.chunks.map(chunk => ({
+      file_name: chunk.title || chunk.file_path || 'unknown',
+      content: chunk.excerpt,
+      similarity: chunk.score,
+      category: chunk.meta?.domain,
+      element: chunk.meta?.element,
+      level: chunk.meta?.phase,
     }));
 
+    // Apply legacy element filter if specified
+    if (filterByElement) {
+      results = results.filter(r => r.element === filterByElement);
+    }
+
+    return results;
   } catch (error) {
     console.error('[Library] Search exception:', error);
     return [];
@@ -136,7 +73,7 @@ export async function searchLibrary(options: LibrarySearchOptions): Promise<Libr
 }
 
 /**
- * Quick helper for CCCS queries - returns formatted wisdom string
+ * Quick helper for queries — returns formatted wisdom string.
  */
 export async function getRelevantWisdom(
   userQuery: string,
@@ -145,23 +82,19 @@ export async function getRelevantWisdom(
   const chunks = await searchLibrary({
     query: userQuery,
     maxResults: maxChunks,
-    minSimilarity: 0.6, // Higher threshold for quality
+    minSimilarity: 0.6,
   });
 
   if (chunks.length === 0) {
     return '';
   }
 
-  // Format for prompt injection
   const formattedWisdom = chunks.map((chunk, idx) => {
     let section = `### Wisdom Chunk ${idx + 1} (${(chunk.similarity * 100).toFixed(0)}% relevant)
 **Source:** ${chunk.file_name}`;
 
     if (chunk.category) section += `\n**Category:** ${chunk.category}`;
     if (chunk.element) section += `\n**Element:** ${chunk.element}`;
-    if (chunk.concepts && chunk.concepts.length > 0) {
-      section += `\n**Concepts:** ${chunk.concepts.slice(0, 5).join(', ')}`;
-    }
 
     section += `\n\n${chunk.content}\n`;
 
@@ -172,21 +105,21 @@ export async function getRelevantWisdom(
 }
 
 /**
- * Stats for monitoring
+ * Stats for monitoring — delegates to LibraryService.
  */
 export async function getLibraryStats() {
-  const { count } = await getSupabase()
-    .from('file_chunks')
-    .select('*', { count: 'exact', head: true });
-
-  const { count: withEmbeddings } = await getSupabase()
-    .from('file_chunks')
-    .select('*', { count: 'exact', head: true })
-    .not('embedding', 'is', null);
-
-  return {
-    totalChunks: count || 0,
-    withEmbeddings: withEmbeddings || 0,
-    ready: (withEmbeddings || 0) > 0,
-  };
+  try {
+    const stats = await libraryService.getStats();
+    return {
+      totalChunks: stats.chunks,
+      withEmbeddings: stats.chunks, // All chunks have embeddings in new system
+      ready: stats.chunks > 0,
+    };
+  } catch (error) {
+    return {
+      totalChunks: 0,
+      withEmbeddings: 0,
+      ready: false,
+    };
+  }
 }
