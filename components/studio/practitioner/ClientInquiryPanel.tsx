@@ -45,18 +45,24 @@ export default function ClientInquiryPanel({ decisionId, changeId, clientId, cli
       const params = new URLSearchParams();
       if (decisionId) params.set('decisionId', decisionId);
       if (changeId)   params.set('changeId', changeId);
-      const data = await apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`);
-      setResponses(data.responses || []);
+      const res = await apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setResponses(data.responses || []);
+      }
     } catch { /* graceful */ }
     finally { setLoading(false); }
   }
 
   async function loadPromptSets() {
     try {
-      const data = await apiFetch('/api/studio/client-inquiry/prompt-sets');
-      setPromptSets(data.promptSets || []);
-      if (data.promptSets?.length > 0 && !selectedSetId) {
-        setSelectedSetId(data.promptSets[0].id);
+      const res = await apiFetch('/api/studio/client-inquiry/prompt-sets');
+      if (res.ok) {
+        const data = await res.json();
+        setPromptSets(data.promptSets || []);
+        if (data.promptSets?.length > 0 && !selectedSetId) {
+          setSelectedSetId(data.promptSets[0].id);
+        }
       }
     } catch { /* graceful */ }
   }
@@ -78,7 +84,7 @@ export default function ClientInquiryPanel({ decisionId, changeId, clientId, cli
         answer: answers[q.id] || '',
       }));
 
-      const data = await apiFetch('/api/studio/client-inquiry/responses', {
+      const res = await apiFetch('/api/studio/client-inquiry/responses', {
         method: 'POST',
         body: JSON.stringify({
           decisionId: decisionId || null,
@@ -88,10 +94,13 @@ export default function ClientInquiryPanel({ decisionId, changeId, clientId, cli
           responses: responseList,
         }),
       });
-      setResponses((prev) => [data.response, ...prev]);
-      setAdding(false);
-      setAnswers({});
-      setExpandedResponse(data.response.id);
+      if (res.ok) {
+        const data = await res.json();
+        setResponses((prev) => [data.response, ...prev]);
+        setAdding(false);
+        setAnswers({});
+        setExpandedResponse(data.response.id);
+      }
     } catch { /* keep form open */ }
     finally { setSaving(false); }
   }
