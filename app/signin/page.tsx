@@ -38,6 +38,40 @@ function SigninContent() {
     console.log("[SignIn] userAgent:", navigator.userAgent.slice(0, 80));
   }, []);
 
+  // Already authenticated? Skip signin and go where they're headed.
+  // Skip on native (handled by /enter), skip if explicit re-auth is requested,
+  // skip if user explicitly signed out (signout latch).
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+
+    const signedOut = localStorage.getItem('maia_signed_out') === '1';
+    if (signedOut) return;
+
+    const betaUser = localStorage.getItem('beta_user');
+    if (!betaUser) return;
+
+    // Parse to confirm it's a real session, not corrupted data
+    try { JSON.parse(betaUser); } catch { return; }
+
+    // Honor forced re-auth reason codes — don't skip signin for these
+    const reason = getSearchParam('reason');
+    const forcedReauthReasons = ['invalid_session', 'expired_session', 'revoked_session'];
+    if (reason && forcedReauthReasons.includes(reason)) return;
+
+    // Validate and use ?next= if present, otherwise go to /maia
+    const next = getSearchParam('next');
+    const safeNext =
+      next &&
+      next.startsWith('/') &&
+      !next.startsWith('//') &&
+      !next.startsWith('/signin') // avoid loop
+        ? next
+        : '/maia';
+
+    console.log('[SignIn] Already authenticated - redirecting to', safeNext);
+    window.location.replace(safeNext);
+  }, []);
+
   // NATIVE: Clean up poison keys that cause redirect loops
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
