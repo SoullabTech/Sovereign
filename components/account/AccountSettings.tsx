@@ -40,6 +40,8 @@ import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/c
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+import ContinuityView from '@/components/consciousness/ContinuityView';
+import PatternLedger from '@/components/consciousness/PatternLedger';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -88,7 +90,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
 
 interface PractitionerProject {
   id: string;
@@ -146,6 +148,8 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'voice', label: 'Voice', icon: Mic },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
+  { id: 'continuity', label: 'Continuity', icon: Sparkles },
+  { id: 'patterns', label: 'Patterns', icon: BookOpen },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
   { id: 'membership', label: 'Membership', icon: Crown },
@@ -2442,6 +2446,22 @@ export function AccountSettings() {
             {activeSection === 'voice' && renderVoice()}
             {activeSection === 'data-privacy' && renderDataPrivacy()}
             {activeSection === 'sovereignty' && renderSovereignty()}
+            {activeSection === 'continuity' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Your Current Position</h2>
+                </div>
+                <ContinuityView />
+              </div>
+            )}
+            {activeSection === 'patterns' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Patterns</h2>
+                </div>
+                <PatternLedger />
+              </div>
+            )}
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
