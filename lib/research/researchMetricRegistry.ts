@@ -54,7 +54,8 @@ function scalarDirection(
 ): Direction {
   if (current === null || previous === null) return 'insufficient_data';
   const delta = current - previous;
-  if (Math.abs(delta) < minDelta) return 'stable';
+  if (delta === 0) return 'stable';                  // no change is always stable
+  if (Math.abs(delta) < minDelta) return 'stable';   // within threshold is stable
   return higherIsBetter
     ? delta > 0 ? 'improving' : 'degrading'
     : delta < 0 ? 'improving' : 'degrading';
