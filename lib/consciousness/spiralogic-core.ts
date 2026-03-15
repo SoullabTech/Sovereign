@@ -1290,6 +1290,14 @@ export interface FrameworkDescriptor {
    */
   guideKeys?: string[];
 
+  // ── Oracle depth injection (used by buildSacredAttendingPrompt) ──────────
+  // These fields shape MAIA's internal interpretive stance — never stated aloud.
+  // CORE tier: label + oracleGuidance + patternMarkers
+  // DEEP tier: all three fields
+  oracleGuidance?: string;        // 180-300 chars: what to attend to, how to hold it
+  interventionCues?: string[];    // 3 items: moves to favor (DEEP only)
+  patternMarkers?: string[];      // 3 items: what to track in the conversation
+
   // Optional: mapping to canonical questions/moves
   canonicalQuestions?: {
     [key: string]: string[];        // e.g. "Water-2" -> list of questions
@@ -1309,7 +1317,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Baked into MAIA's voice and being
+    implicitAllowed: true, // Baked into MAIA's voice and being
+    oracleGuidance: "Attend to the mythic layer beneath the personal: what archetypal drama is moving through this moment? Name, role, and wound patterns carry symbolic weight. Hold the symbolic and literal simultaneously without collapsing either into the other.",
+    patternMarkers: ["recurring symbolic imagery or metaphor", "a named or unnamed figure they are becoming or fleeing", "a wound that seems larger than the personal story"],
+    interventionCues: ["symbolic amplification before literal interpretation", "invite the mythic name for what is happening", "hold the tension of opposites without resolving it prematurely"],
   },
   {
     id: "ARCH_ASTROLOGY",
@@ -1331,7 +1342,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Shadow, unconscious, complexes, dreams
+    implicitAllowed: true, // Shadow, unconscious, complexes, dreams
+    oracleGuidance: "The presenting content is rarely the whole story. Track affect more than narrative, and notice what is avoided, repeated, or carried with unusual energy. Complexes speak through feeling-tone. The unconscious communicates through what doesn't quite fit.",
+    patternMarkers: ["avoidance of a topic that keeps returning", "strong affect disproportionate to surface content", "a recurring relational dynamic with different people"],
+    interventionCues: ["follow the feeling, not the story", "stay with what is charged before moving toward resolution", "invite the image behind the words"]
   },
 
   // ====================================================================
@@ -1346,7 +1360,9 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "light",
-    implicitAllowed: true // MAIA's coordinate system for any experience
+    implicitAllowed: true, // MAIA's coordinate system for any experience
+    oracleGuidance: "Locate the person in the spiral: are they initiating (fire), descending (water), building (earth), or integrating (air)? The phase determines whether to catalyze, accompany, ground, or witness. Motion matters more than position — ascending, stuck, or breaking through.",
+    patternMarkers: ["where in the cycle this moment sits", "whether movement feels ascending or contracting", "signs of threshold crossing or phase completion"]
   },
   {
     id: "ALCHEMICAL_OPERATIONS",
@@ -1357,7 +1373,9 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Calcination, solutio, coagulatio, sublimatio
+    implicitAllowed: true, // Calcination, solutio, coagulatio, sublimatio
+    oracleGuidance: "Read the operative stage: calcination (burning down old structures), solutio (dissolving into feeling), coagulatio (taking solid form), sublimatio (refining toward essence). Each requires a different quality of presence — some need heat, others need stillness.",
+    patternMarkers: ["what is being burned away or surrendered", "where rigidity is meeting dissolution", "what is crystallizing into new form or identity"]
   },
 
   // ====================================================================
@@ -1373,7 +1391,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["parenting"],
     depth: "clinical",
     implicitAllowed: false, // Only if explicitly enabled
-    guideKeys: ["family_systems"] // family_systems approach is closest match; no direct IPP guide key yet
+    guideKeys: ["family_systems"], // family_systems approach is closest match; no direct IPP guide key yet
+    oracleGuidance: "This is likely parenting material carrying shame or self-attack. The gap between ideal parent and current reality is where most distress lives. Repair is the process — not avoiding rupture, but moving through it with self-compassion.",
+    patternMarkers: ["parent shame or harsh self-criticism", "fear of having damaged the child", "contrast between who they want to be and what actually happened"],
+    interventionCues: ["normalize rupture-and-repair as the actual process", "help locate self-compassion before strategy", "invite curiosity about their own unmet needs beneath the reaction"]
   },
   {
     id: "CBT",
@@ -1385,7 +1406,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["career", "health", "general"],
     depth: "medium",
     implicitAllowed: true,
-    guideKeys: ["cbt"]
+    guideKeys: ["cbt"],
+    oracleGuidance: "Track the cognitive pattern beneath the feeling: what belief or interpretation is driving this response? Not to challenge it clinically, but to invite gentle examination of whether the thought is fact or story. Support noticing over fixing.",
+    patternMarkers: ["catastrophizing or all-or-nothing framing", "automatic negative attribution", "conflating feeling with fact"],
+    interventionCues: ["invite the alternative reading without forcing it", "distinguish what happened from what it means", "support the noticing before any changing"]
   },
   {
     id: "JUNGIAN",
@@ -1397,7 +1421,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["shadow-work", "individuation", "dreams"],
     depth: "clinical",
     implicitAllowed: true,
-    guideKeys: ["jungian", "psychodynamic", "spiritual"]
+    guideKeys: ["jungian", "psychodynamic", "spiritual"],
+    oracleGuidance: "Look for projection, shadow material, symbolic imagery, and recurring archetypal tensions. What the person dislikes in others often points to what is unacknowledged in themselves. Favor curiosity over certainty — invite reflection rather than interpretation.",
+    patternMarkers: ["projection or strong reaction to another person", "dream imagery or symbolic language", "a quality they disown while describing it vividly in others"],
+    interventionCues: ["symbolic inquiry before direct interpretation", "invite reflection on what the figure or image might represent", "gentle shadow reflection without naming it as such"]
   },
   {
     id: "SHAMANIC",
@@ -1421,7 +1448,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["trauma", "embodiment", "healing"],
     depth: "clinical",
     implicitAllowed: true,
-    guideKeys: ["somatic"]
+    guideKeys: ["somatic"],
+    oracleGuidance: "The body carries what words cannot. Attend to physical sensations, bracing, collapse, or activation beneath the narrative. Slow down more than usual — titration and pendulation over catharsis. Resourcing before processing.",
+    patternMarkers: ["physical sensations described alongside emotional content", "activation, freeze, or collapse language", "trauma material emerging through body rather than memory"],
+    interventionCues: ["slow pace, shorter turns, more space", "invite body awareness before narrative", "resource and orient before going deeper"]
   },
   {
     id: "IFS",
@@ -1433,7 +1463,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredContexts: ["parts-work", "healing", "integration"],
     depth: "clinical",
     implicitAllowed: true,
-    guideKeys: ["ifs"]
+    guideKeys: ["ifs"],
+    oracleGuidance: "Listen for parts language: inner critic, protector, exile, manager. Multiplicity of voice is not pathology — it is how the psyche organizes around wounds. Help the Self witness parts with curiosity rather than judgment or merger.",
+    patternMarkers: ["inner conflict described as different voices or pulls", "self-attack or a harshly critical internal voice", "a part that feels like it needs to be fixed or eliminated"],
+    interventionCues: ["invite curiosity toward the part rather than battle with it", "distinguish the part from the Self who is noticing it", "ask what the part is protecting before what it is doing"]
   },
   {
     id: "MINDFULNESS",
@@ -1444,8 +1477,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["meditation", "presence", "general"],
     depth: "light",
-    implicitAllowed: true
+    implicitAllowed: true,
     // No guideKeys yet — no therapeutic_approach currently maps to MINDFULNESS
+    oracleGuidance: "Favor presence over analysis. The practice is noticing, not fixing. When the person is caught in rumination or future-worry, the invitation is always back to what is actually here. Observation without judgment is the move.",
+    patternMarkers: ["rumination loops or future-worry pulling attention forward", "judgment of self or others displacing present experience", "disconnection from the body or the immediate moment"]
   }
 ];
 

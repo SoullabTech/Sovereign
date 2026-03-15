@@ -62,6 +62,7 @@ import { getRecentSummaries as getRecentSessionSummaries, type SessionRemembranc
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { getTopPatterns } from '@/lib/patterns/getTopPatterns';
 import type { PatternSummary } from '@/lib/patterns/getTopPatterns';
+import { getTopHypotheses, buildHypothesisPromptBlock, type PatternHypothesis } from '@/lib/patterns/getTopHypotheses';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -491,6 +492,18 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
+    // DEPTH TIER GATE: single config object that governs retrieval scope this turn
+    const depthConfig = classifyDepthTier(message, conversationDepth, trustLevel);
+    console.info('[depth-tier]', depthConfig.tier, {
+      depth: conversationDepth,
+      trust: `${(trustLevel * 100).toFixed(0)}%`,
+      wordCount: message.trim().split(/\s+/).length,
+      memoryPalace: depthConfig.includeMemoryPalace,
+      anamnesis: depthConfig.includeAnamnesis,
+      astrology: depthConfig.includeAstrology,
+      maxFrameworks: depthConfig.maxFrameworks,
+    });
+
     // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name, patterns
     const [
       spiralState,
@@ -622,7 +635,8 @@ export async function POST(request: NextRequest) {
     // Activation metadata lives on each FrameworkDescriptor (guideKeys field) — not here.
     const guideId = councilResolution.guide.id;
     const enabledApplied = getAppliedFrameworkIdsForApproach(guideId);
-    const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied });
+    const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied })
+      .slice(0, depthConfig.maxFrameworks);
 
     // Initialize Panconscious Field for user
     const panconsciousField = await PanconsciousFieldService.initializeField(userId);
@@ -673,9 +687,15 @@ export async function POST(request: NextRequest) {
       journalEntriesResult,
       capsulesResult,
     ] = await Promise.allSettled([
-      memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
-      loadRelationshipEssence(userId),
-      getAstrologyContextForUser(userId),
+      depthConfig.includeMemoryPalace
+        ? memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory)
+        : Promise.resolve(null),
+      depthConfig.includeAnamnesis
+        ? loadRelationshipEssence(userId)
+        : Promise.resolve(null),
+      depthConfig.includeAstrology
+        ? getAstrologyContextForUser(userId)
+        : Promise.resolve(null),
       getPatternOffer({
         memberId: userId,
         sessionId,
@@ -798,6 +818,23 @@ export async function POST(request: NextRequest) {
 
     // MEMBER LIFE CONTEXT: patterns + journal + capsules — background awareness, not recitation
     const memberLifeContextBlock = formatMemberLifeContext(activePatternContext, journalEntries, capsules);
+
+    // BEHAVIORAL HYPOTHESIS INJECTION: top scored patterns from conversation_insights
+    // Gated: DEEP always; CORE when depth>=4 and trust>=0.6. Never blocks oracle.
+    const includeHypotheses =
+      depthConfig.tier === 'DEEP' ||
+      (depthConfig.tier === 'CORE' && conversationDepth >= 4 && trustLevel >= 0.6);
+    let topHypotheses: PatternHypothesis[] = [];
+    if (includeHypotheses) {
+      topHypotheses = await getTopHypotheses(userId);
+      if (topHypotheses.length > 0) {
+        console.info('[hypotheses]', {
+          tier: depthConfig.tier,
+          count: topHypotheses.length,
+          scores: topHypotheses.map(h => h.score.toFixed(2)),
+        });
+      }
+    }
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
     // Must run before buildMaiaPlan — plan depends on hysteresis-stable element/archetype.
@@ -923,7 +960,9 @@ export async function POST(request: NextRequest) {
       memberLifeContextBlock,
       councilResolution,
       activeProtocol,
-      topPatterns
+      topPatterns,
+      depthConfig.tier,
+      topHypotheses
     );
 
     const tAfterLLM = Date.now();
@@ -1004,7 +1043,11 @@ export async function POST(request: NextRequest) {
             preferredAssistantName,
             distressSignal,
             undefined,
-            councilResolution
+            councilResolution,
+            undefined,
+            undefined,
+            depthConfig.tier,
+            topHypotheses
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -2227,7 +2270,9 @@ async function generateSpiralogicResponseWithLLM(
   memberLifeContextBlock?: string,
   councilResolution?: CouncilResolution,
   activeProtocol?: any,
-  topPatterns?: PatternSummary[]
+  topPatterns?: PatternSummary[],
+  depthTier?: DepthTier,
+  topHypotheses?: PatternHypothesis[]
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2267,7 +2312,13 @@ async function generateSpiralogicResponseWithLLM(
     isFieldMode,
     fieldSafeMode,
     fieldEnergyState,
-    !!recentSessionsBlock  // hasSessionHistory: true if recent sessions were loaded
+    !!recentSessionsBlock,  // hasSessionHistory: true if recent sessions were loaded
+    undefined,              // _reserved
+    councilResolution,
+    undefined,              // _reserved2
+    undefined,              // _reserved3
+    depthTier,
+    topHypotheses
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -2686,7 +2737,11 @@ function buildSacredAttendingPrompt(
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
   hasSessionHistory?: boolean,
   _reserved?: unknown,
-  councilResolution?: CouncilResolution
+  councilResolution?: CouncilResolution,
+  _reserved2?: unknown,
+  _reserved3?: unknown,
+  depthTier?: DepthTier,
+  topHypotheses?: PatternHypothesis[]
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2806,23 +2861,32 @@ This suggests their current capacity for symbolic/archetypal language. Match the
 
 `;
 
-  // Add framework-specific guidance
-  if (activeFrameworks.includes('IPP') && spiralogicCell.context === 'parenting') {
-    prompt += `\n# Parenting Context
-This appears to be a parenting-related concern. Be especially attuned to:
-- Parent shame and self-judgment (very common, needs gentle normalization)
-- The gap between their "ideal parent" self and current reality
-- Opportunities for repair rather than self-attack
-- The wisdom that "good enough" parenting includes rupture AND repair
-
-`;
+  // FRAMEWORK DEPTH INJECTION (registry-driven, tiered)
+  // FAST: no block. CORE: guidance + patternMarkers. DEEP: all + interventionCues.
+  // Never labels frameworks aloud — shapes internal interpretive stance only.
+  if (depthTier !== 'FAST' && activeFrameworks.length > 0) {
+    const fwBlocks = activeFrameworks
+      .map(id => FRAMEWORK_REGISTRY.find(fw => fw.id === id))
+      .filter((fw): fw is typeof FRAMEWORK_REGISTRY[0] => !!fw && !!fw.oracleGuidance);
+    if (fwBlocks.length > 0) {
+      prompt += '\n# Active Frameworks (IMPLICIT — inform your internal stance; never label these aloud)\n';
+      for (const fw of fwBlocks) {
+        prompt += `\n**${fw.label}**: ${fw.oracleGuidance}`;
+        if (fw.patternMarkers?.length) {
+          prompt += `\nTrack: ${fw.patternMarkers.join(' | ')}.`;
+        }
+        if (depthTier === 'DEEP' && fw.interventionCues?.length) {
+          prompt += `\nFavor: ${fw.interventionCues.join(' | ')}.`;
+        }
+        prompt += '\n';
+      }
+    }
   }
 
-  if (activeFrameworks.includes('JUNGIAN')) {
-    prompt += `\n# Archetypal Awareness
-Pay attention to archetypal energies and symbolic language, but reference them only if the person is already speaking in those terms. Otherwise, stay with lived experience.
-
-`;
+  // HYPOTHESIS INJECTION — member behavioral patterns from conversation_insights
+  // Hold lightly in background. Never state them directly. Live moment outranks stored pattern.
+  if (topHypotheses && topHypotheses.length > 0) {
+    prompt += buildHypothesisPromptBlock(topHypotheses);
   }
 
   // Add Parsifal Protocol if activated
@@ -2994,8 +3058,77 @@ function getPhaseThemes(element: string, phase: number): string {
   return themeMap[element]?.[phase] || "A significant life process";
 }
 
+// =============================================================================
+// DEPTH TIER GATE
+// Heuristic classifier — zero latency, no AI call.
+// Controls retrieval scope (memory palace / anamnesis / astrology / framework count).
+// =============================================================================
+
+type DepthTier = 'FAST' | 'CORE' | 'DEEP';
+
+interface DepthConfig {
+  tier: DepthTier;
+  includeMemoryPalace: boolean;
+  includeAnamnesis: boolean;
+  includeAstrology: boolean;
+  maxFrameworks: number;
+}
+
+const FAST_GREETING_RE = /^(hi|hello|hey|thanks|thank you|ty|thx|ok|okay|yes|no|yeah|yep|nope|got it|sure|good|great|nice|wonderful|perfect|sounds good|makes sense|i see|understood|hmm|hm|ah|oh|wow|interesting)[\s!.?,]*$/i;
+
+const DEEP_SIGNAL_RE = /dream(ed|ing|s)?|nightmare|trauma|traumati[sz]|shadow\s+work|grief|grieving|bereavem|suicid|self[\s-]?harm|abuse|assault|addiction|isolat|dissociat|void|meaningless|existential|death\b|dying\b|loss\b|depressi|anxi|panic|breakdown/i;
+
+function classifyDepthTier(
+  message: string,
+  conversationDepth: number,
+  trustLevel: number
+): DepthConfig {
+  const words = message.trim().split(/\s+/);
+  const wordCount = words.length;
+
+  // FAST: first turn, greetings, or very short messages
+  if (conversationDepth === 0 || wordCount <= 5 || FAST_GREETING_RE.test(message.trim())) {
+    return {
+      tier: 'FAST',
+      includeMemoryPalace: false,
+      includeAnamnesis: false,
+      includeAstrology: false,
+      maxFrameworks: 1,
+    };
+  }
+
+  // DEEP: explicit depth signals, or very long relationship with high trust
+  if (
+    DEEP_SIGNAL_RE.test(message) ||
+    (conversationDepth > 10 && trustLevel > 0.7)
+  ) {
+    return {
+      tier: 'DEEP',
+      includeMemoryPalace: true,
+      includeAnamnesis: true,
+      includeAstrology: true,
+      maxFrameworks: 3,
+    };
+  }
+
+  // CORE: everything else
+  return {
+    tier: 'CORE',
+    includeMemoryPalace: true,
+    includeAnamnesis: conversationDepth >= 3,
+    includeAstrology: false,
+    maxFrameworks: 2,
+  };
+}
+
+// =============================================================================
+// LEGACY — generateFrameworkInsights (replaced by registry-driven injection in
+// buildSacredAttendingPrompt; retained here for grep-findability only)
+// =============================================================================
+
 /**
- * Generate framework-specific insights
+ * @deprecated Replaced by registry-driven tiered injection in buildSacredAttendingPrompt.
+ *             Do not call. Remove on next major refactor.
  */
 function generateFrameworkInsights(
   frameworks: string[],
