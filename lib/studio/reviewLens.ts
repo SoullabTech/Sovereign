@@ -72,6 +72,12 @@ export interface LensAnalysis {
 }
 
 export interface CandidateMemory {
+  /**
+   * UUID assigned after the analyze route persists this candidate to
+   * pending_review_candidates. Present in the response; absent during
+   * in-memory processing before persistence.
+   */
+  id?: string;
   /** Always pending — this endpoint never writes to case_memories */
   status: 'pending';
   memoryType:

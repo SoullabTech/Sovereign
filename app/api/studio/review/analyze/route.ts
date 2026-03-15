@@ -8,7 +8,11 @@ export const maxDuration = 120;
  *
  * Practitioner-only endpoint: applies therapeutic review lenses to a completed
  * scribe session. Returns structured LensAnalysis[] and provisional
- * CandidateMemory[] (status: pending). Nothing is persisted in this route.
+ * CandidateMemory[] (status: pending).
+ *
+ * After all lenses complete, candidates are persisted to pending_review_candidates
+ * (7-day TTL) and returned with DB-assigned IDs. The save route promotes approved
+ * candidates by loading them from the pending store — never from client-submitted text.
  *
  * Each lens runs in parallel via Promise.allSettled — a single lens failure
  * does not abort the whole request. If ALL lenses fail, returns 502.
@@ -226,6 +230,66 @@ Provide your structured analysis now.`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Pending candidate persistence
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Persist candidates to pending_review_candidates and return them with DB IDs.
+ * Failures are logged but do not abort — candidates without IDs are still
+ * returned (they just can't be promoted via the save route).
+ */
+async function persistPendingCandidates(
+  sessionId: string,
+  practitionerId: string,
+  candidates: CandidateMemory[],
+): Promise<CandidateMemory[]> {
+  if (candidates.length === 0) return candidates;
+
+  try {
+    // Build a multi-row INSERT and return all IDs in order
+    const valueClauses: string[] = [];
+    const params: unknown[] = [];
+    let p = 1;
+
+    for (const cm of candidates) {
+      valueClauses.push(
+        `($${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++}, $${p++})`,
+      );
+      params.push(
+        sessionId,
+        practitionerId,
+        cm.sourceLensId,
+        cm.memoryType,
+        cm.content,
+        cm.significance,
+        // Clamp each tag to VARCHAR(20) limit — model sometimes generates longer
+        cm.elementTags ? cm.elementTags.map((t) => t.slice(0, 20)) : null,
+        cm.evidenceRef ?? null,
+      );
+    }
+
+    const result = await query<{ id: string }>(
+      `INSERT INTO pending_review_candidates
+         (session_id, practitioner_id, lens_id, memory_type, content,
+          significance, element_tags, evidence_ref)
+       VALUES ${valueClauses.join(', ')}
+       RETURNING id`,
+      params,
+    );
+
+    // Zip IDs back onto candidates in insertion order
+    return candidates.map((cm, i) => ({
+      ...cm,
+      id: result.rows[i]?.id,
+    }));
+  } catch (err) {
+    console.error('[Review Analyze] Failed to persist pending candidates:', err);
+    // Non-fatal — analysis output is still returned, just without IDs
+    return candidates;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Route handler
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -345,9 +409,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 9. Persist candidates → returns same array with DB-assigned IDs
+    const persistedCandidates = await persistPendingCandidates(
+      sessionId,
+      memberId,
+      candidateMemories,
+    );
+
+    const persistedCount = persistedCandidates.filter((c) => c.id).length;
     console.log(
       `[Review Analyze] Session ${sessionId}: ${lensAnalyses.length} lenses succeeded, ` +
-      `${partialFailures.length} failed, ${candidateMemories.length} candidate memories`,
+      `${partialFailures.length} failed, ${persistedCount}/${persistedCandidates.length} candidates persisted`,
     );
 
     return NextResponse.json({
@@ -360,7 +432,7 @@ export async function POST(request: NextRequest) {
         memory_policy: session.memory_policy,
       },
       lensAnalyses,
-      candidateMemories,
+      candidateMemories: persistedCandidates,
       analysisTimestamp: new Date().toISOString(),
       ...(partialFailures.length > 0 ? { partialFailures } : {}),
     });
