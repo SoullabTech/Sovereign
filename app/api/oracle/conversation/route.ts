@@ -60,6 +60,8 @@ import { extractObservations } from '@/lib/consciousness/observationExtractor';
 import type { LedgerRoutingView } from '@/lib/types/interpretive-ledger';
 import { getRecentSummaries as getRecentSessionSummaries, type SessionRemembrance } from '@/lib/scribe/sovereignSummarizer';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { getTopPatterns } from '@/lib/patterns/getTopPatterns';
+import type { PatternSummary } from '@/lib/patterns/getTopPatterns';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -489,13 +491,14 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
-    // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name
+    // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name, patterns
     const [
       spiralState,
       ledgerRoutingView,
       [systemVoice, memberVoice],
       cognitiveProfileResult,
       assistantNameResult,
+      topPatterns,
     ] = await Promise.all([
       loadSpiralState(userId).catch((e: unknown) => { console.warn('[Oracle] Spiral state load failed:', e); return null; }),
       // COGNITIVE OS: Load active interpretive ledger entries for routing attunement
@@ -505,6 +508,8 @@ export async function POST(request: NextRequest) {
       getCognitiveProfile(userId).catch((e: unknown) => { console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', e); return null; }),
       query(`SELECT preferred_assistant_name, therapeutic_approach FROM member_settings WHERE member_id = $1`, [userId])
         .catch((e: unknown) => { console.warn('⚠️ [Oracle] Could not fetch member settings:', e); return null; }),
+      // PATTERNS: Load practitioner-named patterns for oracle context (graceful fallback)
+      getTopPatterns(userId).catch(() => [] as PatternSummary[]),
     ]);
 
     const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
@@ -917,7 +922,8 @@ export async function POST(request: NextRequest) {
       recentSessionsBlock,
       memberLifeContextBlock,
       councilResolution,
-      activeProtocol
+      activeProtocol,
+      topPatterns
     );
 
     const tAfterLLM = Date.now();
@@ -2220,7 +2226,8 @@ async function generateSpiralogicResponseWithLLM(
   recentSessionsBlock?: string,
   memberLifeContextBlock?: string,
   councilResolution?: CouncilResolution,
-  activeProtocol?: any
+  activeProtocol?: any,
+  topPatterns?: PatternSummary[]
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2520,8 +2527,19 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking — MAIA proceeds without Library
   }
 
-  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
+  // Inject practitioner-named patterns (confirmed first, then offered) for depth context
+  let patternHint = '';
+  if (topPatterns && topPatterns.length > 0 && conversationDepth >= 2) {
+    const confirmed = topPatterns.filter((p) => p.status === 'confirmed').map((p) => p.theme);
+    const offered = topPatterns.filter((p) => p.status === 'offered').map((p) => p.theme);
+    const lines: string[] = [];
+    if (confirmed.length > 0) lines.push(`Confirmed patterns: ${confirmed.join(', ')}`);
+    if (offered.length > 0) lines.push(`Emerging patterns (offered): ${offered.join(', ')}`);
+    patternHint = `\n\n[Practitioner-Named Patterns]\n${lines.join('\n')}\nThese are recurring themes named by the practitioner. Let them inform depth of reflection — do not name them directly unless the member raises them.\n[End Patterns]\n`;
+  }
+
+  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint
+    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom
     : systemPrompt;
 
   // HARD CLAMP: Prevent context window overflow
