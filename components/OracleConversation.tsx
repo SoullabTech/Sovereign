@@ -2405,6 +2405,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   //     isAudioPlaying for 120s, the LLM or TTS generation is stuck.
   const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioProgressRef = useRef<number>(Date.now());
+  // Ref so interval callback always sees current text-streaming state (avoids stale closure)
+  const isStreamingVoiceRef_wd = useRef(isStreamingVoice);
+  useEffect(() => { isStreamingVoiceRef_wd.current = isStreamingVoice; }, [isStreamingVoice]);
+
+  // 🔥 FIX: Reset progress timer at TURN START so idle time before this turn doesn't count.
+  // Without this, lastAudioProgressRef holds the mount timestamp. After long idle (50+ min),
+  // timeSinceProgress is already huge — the watchdog fires within the first check of a new
+  // turn before TTS audio can realistically arrive (~4s observed). This caused a split-brain
+  // state where the watchdog reset mid-turn and audio then arrived into a broken state machine.
+  const prevMicPausedForWatchdogRef = useRef(false);
+  useEffect(() => {
+    if (isMicrophonePaused && !prevMicPausedForWatchdogRef.current) {
+      lastAudioProgressRef.current = Date.now();
+      console.log('[voice:watchdog] Turn start - reset progress timer');
+    }
+    prevMicPausedForWatchdogRef.current = isMicrophonePaused;
+  }, [isMicrophonePaused]);
 
   useEffect(() => {
     // Only run watchdog in voice mode
@@ -2438,9 +2455,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           return;
         }
 
-        // Tier 2: Processing/paused but no audio started for 120s — LLM/TTS stuck
+        // Tier 2: Processing/paused but no audio started — LLM/TTS stuck
         if (processingOrPaused && !audioPlaying && timeSinceProgress > PROCESSING_STUCK_TIMEOUT_MS) {
-          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset');
+          // If text is still streaming, the LLM is healthy — TTS is just slow.
+          // Defer instead of force-resetting to avoid corrupting a healthy turn.
+          if (isStreamingVoiceRef_wd.current) {
+            console.log('[voice:watchdog:deferred] Text still streaming - TTS pending, extending window', {
+              timeSinceProgressMs: Math.round(timeSinceProgress),
+            });
+            lastAudioProgressRef.current = Date.now();
+            return;
+          }
+          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset', {
+            isTextStreaming: isStreamingVoiceRef_wd.current,
+          });
           forceWatchdogReset('processing_stuck');
           return;
         }

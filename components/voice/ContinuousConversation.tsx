@@ -290,36 +290,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // Auto-restart listening when Maya stops speaking (WEB path only)
   // ONLY when handsFreeActive is true - default is push-to-talk
+  //
+  // 🔥 FIX: isListening is intentionally NOT required here. stopListening('internal') sets it
+  // to false BEFORE MAIA starts speaking, so requiring it creates a permanently dead path.
+  // We use handsFreeActiveRef as the authoritative gate instead.
   const prevIsSpeakingRef = useRef(isSpeaking);
   useEffect(() => {
     const wasSpeak = prevIsSpeakingRef.current;
     prevIsSpeakingRef.current = isSpeaking;
 
-    if (wasSpeak && !isSpeaking && isListening && !isRecording && !isProcessing) {
-      // 🎙️ POLICY: Only auto-resume if hands-free is active
-      if (!handsFreeActiveRef.current) {
-        console.log('🎤 [ContinuousConversation] MAIA stopped speaking - push-to-talk mode, mic stays off');
-        return;
-      }
-
-      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 300ms');
+    if (wasSpeak && !isSpeaking && handsFreeActiveRef.current && !isProcessingRef.current) {
+      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, re-arming mic in 600ms');
       setTimeout(() => {
-        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
-          try {
-            recognitionRef.current.start();
-            setIsRecording(true);
-            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
-          } catch (err: any) {
-            if (!err?.message?.includes('already started')) {
-              console.warn('⚠️ [ContinuousConversation] Error auto-resuming mic:', err);
-            }
-          }
+        if (!isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current && micStateRef.current === 'IDLE') {
+          console.log('🎙️ [ContinuousConversation] Hands-free re-arm: calling startListening');
+          startListeningFnRef.current?.({ forceOverride: true });
         } else {
-          console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
+          console.log('⏸️ [ContinuousConversation] Hands-free re-arm blocked', {
+            isSpeaking: isSpeakingRef.current,
+            isProcessing: isProcessingRef.current,
+            handsFree: handsFreeActiveRef.current,
+            micState: micStateRef.current,
+          });
         }
-      }, 300); // Reduced from 600ms — faster turn handoff for more natural conversation
+      }, 600);
     }
-  }, [isSpeaking, isListening, isRecording, isProcessing]);
+  }, [isSpeaking]);
 
   // Safari browser detection
   const isSafari = useCallback(() => {
@@ -2099,15 +2095,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       conversationTimeoutRef.current = null;
     }
 
-    // Stop audio monitoring
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach(track => track.stop());
-      micStreamRef.current = null;
-    }
+    // Stop audio monitoring — only fully destroy stream/context on explicit user exit.
+    // Internal stops (between turns) keep the audio stack alive so re-arm doesn't need
+    // a new getUserMedia() call, which is unreliable on Safari between turns.
+    if (options?.userExitMode) {
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => track.stop());
+        micStreamRef.current = null;
+      }
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
     }
 
     // Track analytics (disabled for Vercel build)
