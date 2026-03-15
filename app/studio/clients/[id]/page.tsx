@@ -23,6 +23,7 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
 import { CaseMemoryTimeline } from '@/components/studio/CaseMemoryTimeline';
+import { PatternLedgerEvolutionPanel } from '@/components/studio/PatternLedgerEvolutionPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -314,6 +315,12 @@ export default function ClientDetailPage() {
               <div className="bg-slate-900/30 border border-slate-800 rounded-xl overflow-hidden">
                 <CaseMemoryTimeline caseId={client.id} />
               </div>
+            </div>
+
+            {/* Pattern Ledger */}
+            <div>
+              <h2 className="text-sm font-medium text-slate-400 mb-3">Pattern Ledger</h2>
+              <PatternLedgerEvolutionPanel clientId={client.id} />
             </div>
 
             {/* Upcoming Sessions */}
