@@ -14,6 +14,7 @@ import {
   Briefcase,
   CheckSquare,
   CalendarDays,
+  Activity,
 } from 'lucide-react';
 import { TeamContextProvider } from '@/components/studio/TeamContextProvider';
 import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
@@ -255,6 +256,23 @@ export default function StudioLayout({
                 {/* Nav */}
                 <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
                   {visibleModules.map((mod) => renderNavLink(mod, () => setDrawerOpen(false)))}
+
+                  {/* Admin tools */}
+                  <div className="pt-2 mt-1 border-t border-slate-800/50">
+                    <Link
+                      href="/studio/element-nodes/integrity"
+                      onClick={() => setDrawerOpen(false)}
+                      className={`
+                        flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
+                        ${pathname?.startsWith('/studio/element-nodes/integrity')
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300'}
+                      `}
+                    >
+                      <Activity className="w-4 h-4 flex-shrink-0" />
+                      <span>Node Integrity</span>
+                    </Link>
+                  </div>
                 </nav>
               </motion.div>
             </div>
@@ -365,6 +383,22 @@ export default function StudioLayout({
               </Link>
             );
           })}
+
+          {/* Admin tools */}
+          <div className="pt-2 mt-1 border-t border-slate-800/50">
+            <Link
+              href="/studio/element-nodes/integrity"
+              className={`
+                flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm
+                ${pathname?.startsWith('/studio/element-nodes/integrity')
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300'}
+              `}
+            >
+              <Activity className="w-4 h-4 flex-shrink-0" />
+              {!collapsed && <span>Node Integrity</span>}
+            </Link>
+          </div>
         </nav>
 
         {/* Expand button when collapsed */}

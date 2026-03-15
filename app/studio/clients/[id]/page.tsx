@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
+import { SpiralogicFieldBoard } from '@/components/studio/SpiralogicFieldBoard';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -119,6 +120,8 @@ export default function ClientDetailPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [caseId, setCaseId] = useState<string | null>(null);
+  const [startingCase, setStartingCase] = useState(false);
 
   useEffect(() => {
     if (clientId) {
@@ -140,6 +143,16 @@ export default function ClientDetailPage() {
 
       setClient(data.client);
       setSessions(data.sessions || []);
+      // Look up linked practitioner case (graceful — no case = board hidden)
+      try {
+        const caseRes = await apiFetch(`/api/studio/clients/${clientId}/case-id`);
+        if (caseRes.ok) {
+          const caseData = await caseRes.json() as { caseId: string | null };
+          setCaseId(caseData.caseId ?? null);
+        }
+      } catch {
+        // No case linked yet — board will not render
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load client');
     } finally {
@@ -276,6 +289,47 @@ export default function ClientDetailPage() {
               profile={client.leadershipProfile}
               onUpdate={(profile) => setClient(prev => prev ? { ...prev, leadershipProfile: profile } : null)}
             />
+          </div>
+        )}
+
+        {/* Developmental Field Board */}
+        {caseId ? (
+          <div className="mb-6 bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+            <SpiralogicFieldBoard caseId={caseId} />
+          </div>
+        ) : (
+          <div className="mb-6 bg-slate-900/30 border border-slate-800/60 border-dashed rounded-2xl p-6
+            flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm text-slate-300 font-medium mb-1">Developmental Field</div>
+              <div className="text-xs text-slate-500">
+                Start a case to track this client&apos;s elemental trajectory and transformation nodes.
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                setStartingCase(true);
+                try {
+                  const res = await apiFetch(
+                    '/api/studio/cases',
+                    { method: 'POST', body: JSON.stringify({ clientId }) },
+                  );
+                  if (res.ok) {
+                    const data = await res.json() as { caseId: string };
+                    setCaseId(data.caseId);
+                  }
+                } catch {
+                  // silent — board stays hidden
+                } finally {
+                  setStartingCase(false);
+                }
+              }}
+              disabled={startingCase}
+              className="flex-shrink-0 px-4 py-2 text-xs text-purple-300 border border-purple-500/30
+                rounded-xl hover:border-purple-500/60 hover:text-white transition-colors disabled:opacity-50"
+            >
+              {startingCase ? 'Starting…' : 'Start Case'}
+            </button>
           </div>
         )}
 

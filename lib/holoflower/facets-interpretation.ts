@@ -1,7 +1,22 @@
 /**
- * Spiralogic Holoflower - 12 Facets Interpretation System
- * Each facet represents a dimension of human experience
- * Petal position indicates the current state/engagement level
+ * Spiralogic Holoflower — 12-Facet Visualization Layer
+ *
+ * This is the HOLOFLOWER visualization system: 12 facets across 4 elements
+ * (fire, water, earth, air), rendered as petals on an angular/radial display.
+ * Aether is not represented here — this is by design for this visualization.
+ *
+ * ─── Boundary note ───────────────────────────────────────────────────────
+ * This file is DISTINCT from the case_element_nodes ontology in:
+ *   lib/consciousness/facetRegistry.ts
+ *
+ * That system uses 15 facets (5 elements × 3 phases each, including Aether
+ * as a triadic center field). Do not conflate the two:
+ *
+ *   Holoflower (this file):  4 elements, 12 facets, petal visualization
+ *   Elemental Field Board:   5 elements, 15 facets, transformation signatures
+ *
+ * Changes to facetRegistry.ts do NOT affect this file and vice versa.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 
 export interface FacetInterpretation {
