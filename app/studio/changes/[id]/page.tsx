@@ -499,11 +499,17 @@ export default function ChangeDetailPage() {
   async function loadLoopState() {
     try {
       const params = new URLSearchParams({ changeId });
-      const [signalsData, inquiryData, obsData, expData] = await Promise.all([
+      const [signalsRes, inquiryRes, obsRes, expRes] = await Promise.all([
         apiFetch(`/api/studio/field-signals?${params.toString()}`),
         apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`),
         apiFetch(`/api/studio/practitioner-observations?${params.toString()}`),
         apiFetch(`/api/studio/changes/${changeId}/experiments`),
+      ]);
+      const [signalsData, inquiryData, obsData, expData] = await Promise.all([
+        signalsRes.json(),
+        inquiryRes.json(),
+        obsRes.json(),
+        expRes.json(),
       ]);
       setFieldSignalCount((signalsData.signals || []).length);
       setHasClientInquiry((inquiryData.responses || []).length > 0);
