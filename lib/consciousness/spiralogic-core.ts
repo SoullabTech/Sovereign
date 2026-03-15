@@ -1284,6 +1284,12 @@ export interface FrameworkDescriptor {
   canonicalQuestions?: {
     [key: string]: string[];        // e.g. "Water-2" -> list of questions
   };
+
+  // Oracle guidance — shapes MAIA's internal stance when this framework is active.
+  // Injected into system prompt; never stated aloud to the user.
+  oracleGuidance?: string;         // 180-300 chars: interpretive stance + what to attend to
+  interventionCues?: string[];     // 3 items: what moves to favor (DEEP tier only)
+  patternMarkers?: string[];       // 3 items: what to track in the conversation
 }
 
 export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
@@ -1299,7 +1305,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Baked into MAIA's voice and being
+    implicitAllowed: true, // Baked into MAIA's voice and being
+    oracleGuidance: "Track symbolic language, repeating images, and mythic patterns beneath the personal story. The unconscious speaks through metaphor — attend to which image or figure keeps returning and what numinous charge it carries.",
+    patternMarkers: ["recurring image or symbol", "mythic or fairy-tale framing", "numinous charge in language"],
+    interventionCues: ["amplify the image before interpreting it", "ask what the image feels like rather than what it means", "stay with the symbol longer than feels comfortable"],
   },
   {
     id: "ARCH_ASTROLOGY",
@@ -1321,7 +1330,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Shadow, unconscious, complexes, dreams
+    implicitAllowed: true, // Shadow, unconscious, complexes, dreams
+    oracleGuidance: "Attend to what wants to remain unconscious: avoidance, projection, and charged reactions often signal complex material. The presenting issue is rarely the whole story — track what is conspicuously absent as much as what is spoken.",
+    patternMarkers: ["strong affect without clear cause", "projection or blame directed at others", "what is noticeably absent from the account"],
+    interventionCues: ["wonder aloud rather than name directly", "track energy as much as content", "hold the question open rather than resolving it"],
   },
 
   // ====================================================================
@@ -1336,7 +1348,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "light",
-    implicitAllowed: true // MAIA's coordinate system for any experience
+    implicitAllowed: true, // MAIA's coordinate system for any experience
+    oracleGuidance: "Track the elemental phase currently active: is this person in initiation, descent, integration, or transmission? The phase shapes what kind of support is appropriate — don't push toward resolution prematurely when the descent is still needed.",
+    patternMarkers: ["where in the spiral cycle this feels like", "whether energy is expanding or contracting", "signs of stuck, ascending, or breakthrough motion"],
+    interventionCues: ["name the phase quality if it helps orient", "match your pacing to the phase rhythm", "avoid premature resolution of what needs to go deeper"],
   },
   {
     id: "ALCHEMICAL_OPERATIONS",
@@ -1347,7 +1362,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["general"],
     depth: "medium",
-    implicitAllowed: true // Calcination, solutio, coagulatio, sublimatio
+    implicitAllowed: true, // Calcination, solutio, coagulatio, sublimatio
+    oracleGuidance: "Consider which alchemical operation is active: is this a burning-away, a dissolving, a coagulation into form, or a sublimation into something finer? The operation names the kind of transformation underway and what it asks of the person.",
+    patternMarkers: ["something being destroyed or stripped away", "loss of old form before new one emerges", "hardening into new stability or rising into abstraction"],
+    interventionCues: ["name the operation when it clarifies what is happening", "support surrender to the process rather than resistance", "track what is being refined through the difficulty"],
   },
 
   // ====================================================================
@@ -1362,7 +1380,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["parenting"],
     depth: "clinical",
-    implicitAllowed: false // Only if explicitly enabled
+    implicitAllowed: false, // Only if explicitly enabled
+    oracleGuidance: "This is likely parenting material carrying shame or self-attack. The gap between ideal parent and current reality is where most distress lives. Repair is the process — not avoiding rupture, but moving through it with self-compassion.",
+    patternMarkers: ["parent shame or harsh self-criticism", "fear of having damaged the child", "contrast between who they want to be and what actually happened"],
+    interventionCues: ["normalize rupture-and-repair as the actual process", "help locate self-compassion before strategy", "invite curiosity about their own unmet needs beneath the reaction"],
   },
   {
     id: "CBT",
@@ -1373,7 +1394,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2],
     preferredContexts: ["career", "health", "general"],
     depth: "medium",
-    implicitAllowed: true
+    implicitAllowed: true,
+    oracleGuidance: "Track the cognitive pattern beneath the feeling: what belief or interpretation is driving this response? Not to challenge it clinically, but to invite gentle examination of whether the thought is fact or story. Support noticing over fixing.",
+    patternMarkers: ["catastrophizing or all-or-nothing framing", "automatic negative attribution", "conflating feeling with fact"],
+    interventionCues: ["invite the alternative reading without forcing it", "distinguish what happened from what it means", "support the noticing before any changing"],
   },
   {
     id: "JUNGIAN",
@@ -1384,7 +1408,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [2, 3],
     preferredContexts: ["shadow-work", "individuation", "dreams"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    oracleGuidance: "Look for projection, shadow material, symbolic imagery, and recurring archetypal tensions. What the person dislikes in others often points to what is unacknowledged in themselves. Favor curiosity over certainty — invite reflection rather than interpretation.",
+    patternMarkers: ["projection or strong reaction to another person", "dream imagery or symbolic language", "a quality they disown while describing it vividly in others"],
+    interventionCues: ["symbolic inquiry before direct interpretation", "invite reflection on what the figure or image might represent", "gentle shadow reflection without naming it as such"],
   },
   {
     id: "SHAMANIC",
@@ -1406,7 +1433,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["trauma", "embodiment", "healing"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    oracleGuidance: "The body holds what the mind hasn't finished processing. Track where sensation is referenced or conspicuously avoided. Slow the conversation toward embodied experience — what does this feel like physically, not just cognitively? Support nervous system before insight.",
+    patternMarkers: ["body metaphors or physical sensations mentioned", "hyperactivation or shutdown language", "dissociation, numbness, or 'going blank'"],
+    interventionCues: ["slow the pace and invite breath before meaning-making", "orient toward physical sensation before cognitive analysis", "support the nervous system before pursuing insight"],
   },
   {
     id: "IFS",
@@ -1417,7 +1447,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [2, 3],
     preferredContexts: ["parts-work", "healing", "integration"],
     depth: "clinical",
-    implicitAllowed: true
+    implicitAllowed: true,
+    oracleGuidance: "Consider whether different parts are in conflict — a part that wants change and one that resists, a protector and an exile. Support curiosity toward all parts without taking sides. The goal is the observing Self being present, not one part winning.",
+    patternMarkers: ["internal conflict or self-sabotage that doesn't resolve logically", "a harsh inner critic or judge", "ambivalence about what they actually want"],
+    interventionCues: ["wonder aloud who inside might be speaking", "avoid siding with any one part's agenda", "support the presence of the calm observing Self"],
   },
   {
     id: "MINDFULNESS",
@@ -1428,7 +1461,10 @@ export const FRAMEWORK_REGISTRY: FrameworkDescriptor[] = [
     preferredPhases: [1, 2, 3],
     preferredContexts: ["meditation", "presence", "general"],
     depth: "light",
-    implicitAllowed: true
+    implicitAllowed: true,
+    oracleGuidance: "Invite presence over analysis. When the person is caught in past or future, gently orient toward what is actually here now. Spaciousness before problem-solving — sometimes the most important move is helping them arrive in this moment first.",
+    patternMarkers: ["rumination about the past", "anxious projection into the future", "absence of present-moment contact in the language"],
+    interventionCues: ["invite a brief pause or breath before continuing", "orient toward what is actually happening right now", "favor being over doing in this moment"],
   }
 ];
 

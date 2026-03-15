@@ -44,6 +44,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { getTopHypotheses, buildHypothesisPromptBlock, type PatternHypothesis } from '@/lib/patterns/getTopHypotheses';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -414,6 +415,18 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
+    // DEPTH TIER GATE: single config object that governs retrieval scope this turn
+    const depthConfig = classifyDepthTier(message, conversationDepth, trustLevel);
+    console.info('[depth-tier]', depthConfig.tier, {
+      depth: conversationDepth,
+      trust: `${(trustLevel * 100).toFixed(0)}%`,
+      wordCount: message.trim().split(/\s+/).length,
+      memoryPalace: depthConfig.includeMemoryPalace,
+      anamnesis: depthConfig.includeAnamnesis,
+      astrology: depthConfig.includeAstrology,
+      maxFrameworks: depthConfig.maxFrameworks,
+    });
+
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
 
@@ -520,8 +533,9 @@ export async function POST(request: NextRequest) {
     let spiralogicCell = await inferSpiralogicCell(message, userId);
     spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
-    // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
-    const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
+    // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks (capped by depth tier)
+    const activeFrameworks = chooseFrameworksForCell(spiralogicCell)
+      .slice(0, depthConfig.maxFrameworks);
 
     // Initialize Panconscious Field for user
     const panconsciousField = await PanconsciousFieldService.initializeField(userId);
@@ -541,55 +555,77 @@ export async function POST(request: NextRequest) {
       panconsciousField.axisMundi.currentCenteringState
     );
 
-    // 🏛️ MEMORY PALACE RETRIEVAL: Get all 5 memory layers + evolution status
-    let memoryContext;
-    try {
-      memoryContext = await memoryPalaceOrchestrator.retrieveMemoryContext(
-        userId,
-        message,
-        conversationHistory
-      );
-    } catch (memoryError) {
-      console.warn('⚠️ [Memory Palace] Retrieval failed (non-critical):', memoryError);
-      memoryContext = null;
+    // 🏛️ MEMORY PALACE RETRIEVAL: Gated by depth tier (skipped for FAST)
+    let memoryContext = null;
+    if (depthConfig.includeMemoryPalace) {
+      try {
+        memoryContext = await memoryPalaceOrchestrator.retrieveMemoryContext(
+          userId,
+          message,
+          conversationHistory
+        );
+      } catch (memoryError) {
+        console.warn('⚠️ [Memory Palace] Retrieval failed (non-critical):', memoryError);
+      }
     }
 
-    // 💫 ANAMNESIS: Load soul-level recognition
+    // 💫 ANAMNESIS: Gated by depth tier (CORE depth≥3 and DEEP only)
     let relationshipEssence: RelationshipEssence | null = null;
     let anamnesisPrompt: string | null = null;
-    try {
-      relationshipEssence = await loadRelationshipEssence(userId);
-      if (relationshipEssence) {
-        const anamnesis = getRelationshipAnamnesis();
-        anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
-        console.log('💫 [Anamnesis] Soul recognition activated:', {
-          encounterCount: relationshipEssence.encounterCount,
-          morphicResonance: relationshipEssence.morphicResonance,
-          presenceQuality: relationshipEssence.presenceQuality
-        });
-      } else {
-        console.log('💫 [Anamnesis] First encounter - essence will be captured');
+    if (depthConfig.includeAnamnesis) {
+      try {
+        relationshipEssence = await loadRelationshipEssence(userId);
+        if (relationshipEssence) {
+          const anamnesis = getRelationshipAnamnesis();
+          anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
+          console.log('💫 [Anamnesis] Soul recognition activated:', {
+            encounterCount: relationshipEssence.encounterCount,
+            morphicResonance: relationshipEssence.morphicResonance,
+            presenceQuality: relationshipEssence.presenceQuality
+          });
+        } else {
+          console.log('💫 [Anamnesis] First encounter - essence will be captured');
+        }
+      } catch (anamnesisError) {
+        console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
       }
-    } catch (anamnesisError) {
-      console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
     }
 
-    // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
+    // 🌟 ASTROLOGY CONTEXT: Gated by depth tier (DEEP only)
     let astrologyContext: AstrologyContext | null = null;
-    try {
-      astrologyContext = await getAstrologyContextForUser(userId);
-      if (astrologyContext?.hasBirthData) {
-        console.log('🌟 [Astrology] Birth chart loaded:', {
-          sun: astrologyContext.birthChart?.sun?.sign,
-          moon: astrologyContext.birthChart?.moon?.sign,
-          rising: astrologyContext.birthChart?.ascendant?.sign,
-          retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
-        });
-      } else {
-        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+    if (depthConfig.includeAstrology) {
+      try {
+        astrologyContext = await getAstrologyContextForUser(userId);
+        if (astrologyContext?.hasBirthData) {
+          console.log('🌟 [Astrology] Birth chart loaded:', {
+            sun: astrologyContext.birthChart?.sun?.sign,
+            moon: astrologyContext.birthChart?.moon?.sign,
+            rising: astrologyContext.birthChart?.ascendant?.sign,
+            retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
+          });
+        } else {
+          console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+        }
+      } catch (astrologyError) {
+        console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
       }
-    } catch (astrologyError) {
-      console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
+    }
+
+    // 🔍 HYPOTHESIS INJECTION: Recurring behavioral patterns — CORE(depth≥4,trust≥0.6) and DEEP only
+    const includeHypotheses =
+      depthConfig.tier === 'DEEP' ||
+      (depthConfig.tier === 'CORE' && conversationDepth >= 4 && trustLevel >= 0.6);
+
+    let topHypotheses: PatternHypothesis[] = [];
+    if (includeHypotheses) {
+      topHypotheses = await getTopHypotheses(userId);
+      if (topHypotheses.length > 0) {
+        console.info('[hypotheses]', {
+          tier: depthConfig.tier,
+          count: topHypotheses.length,
+          scores: topHypotheses.map(h => h.score.toFixed(2)),
+        });
+      }
     }
 
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
@@ -608,7 +644,9 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      depthConfig.tier,
+      topHypotheses
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -657,7 +695,9 @@ export async function POST(request: NextRequest) {
             memoryContext,
             anamnesisPrompt,
             astrologyContext,
-            preferredAssistantName
+            preferredAssistantName,
+            depthConfig.tier,
+            topHypotheses
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -1398,7 +1438,9 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  depthTier: DepthTier = 'CORE',
+  topHypotheses: PatternHypothesis[] = []
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1429,7 +1471,9 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    depthTier,
+    topHypotheses
   );
 
   // Format conversation history for LLM
@@ -1628,7 +1672,9 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  depthTier: DepthTier = 'CORE',
+  topHypotheses: PatternHypothesis[] = []
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -1719,23 +1765,35 @@ This suggests their current capacity for symbolic/archetypal language. Match the
 
 `;
 
-  // Add framework-specific guidance
-  if (activeFrameworks.includes('IPP') && spiralogicCell.context === 'parenting') {
-    prompt += `\n# Parenting Context
-This appears to be a parenting-related concern. Be especially attuned to:
-- Parent shame and self-judgment (very common, needs gentle normalization)
-- The gap between their "ideal parent" self and current reality
-- Opportunities for repair rather than self-attack
-- The wisdom that "good enough" parenting includes rupture AND repair
+  // FRAMEWORK GUIDANCE — registry-driven, tiered by depth
+  // FAST: no framework block (frameworks already capped to 1 by .slice, but we skip the block entirely)
+  // CORE: label + oracleGuidance + patternMarkers
+  // DEEP: label + oracleGuidance + patternMarkers + interventionCues
+  if (depthTier !== 'FAST' && activeFrameworks.length > 0) {
+    const fwBlocks = activeFrameworks
+      .map(id => FRAMEWORK_REGISTRY.find(fw => fw.id === id))
+      .filter((fw): fw is typeof FRAMEWORK_REGISTRY[0] => !!fw && !!fw.oracleGuidance);
 
-`;
+    if (fwBlocks.length > 0) {
+      prompt += '\n# Active Frameworks (IMPLICIT — inform your internal stance; never label these aloud)\n';
+      for (const fw of fwBlocks) {
+        prompt += `\n**${fw.label}**: ${fw.oracleGuidance}`;
+        if (fw.patternMarkers?.length) {
+          prompt += `\nTrack: ${fw.patternMarkers.join(' | ')}.`;
+        }
+        if (depthTier === 'DEEP' && fw.interventionCues?.length) {
+          prompt += `\nFavor: ${fw.interventionCues.join(' | ')}.`;
+        }
+        prompt += '\n';
+      }
+      prompt += '\n';
+    }
   }
 
-  if (activeFrameworks.includes('JUNGIAN')) {
-    prompt += `\n# Archetypal Awareness
-Pay attention to archetypal energies and symbolic language, but reference them only if the person is already speaking in those terms. Otherwise, stay with lived experience.
-
-`;
+  // HYPOTHESIS BLOCK — recurring behavioral dynamics, held lightly
+  const hypothesisBlock = buildHypothesisPromptBlock(topHypotheses);
+  if (hypothesisBlock) {
+    prompt += hypothesisBlock;
   }
 
   // Add Parsifal Protocol if activated
@@ -1822,39 +1880,65 @@ function getPhaseThemes(element: string, phase: number): string {
   return themeMap[element]?.[phase] || "A significant life process";
 }
 
-/**
- * Generate framework-specific insights
- */
-function generateFrameworkInsights(
-  frameworks: string[],
-  spiralogicCell: SpiralogicCell,
-  message: string
-): string {
-  if (frameworks.length === 0) return '';
+// ── DEPTH TIER GATE ────────────────────────────────────────────────────────
+// Controls how much cognition to load per turn.
+// Classification is heuristic-only — no extra AI call, no latency hit.
 
-  const insights: string[] = [];
+type DepthTier = 'FAST' | 'CORE' | 'DEEP';
 
-  frameworks.forEach(framework => {
-    switch (framework) {
-      case 'IPP':
-        if (spiralogicCell.context === 'parenting') {
-          insights.push('*IPP lens active: This may be calling for compassionate parent-repair and ideal modeling*');
-        }
-        break;
-      case 'CBT':
-        insights.push('*CBT perspective: What thoughts and beliefs are active in this pattern?*');
-        break;
-      case 'JUNGIAN':
-        insights.push('*Jungian depth: What archetypal energies are constellating here?*');
-        break;
-      case 'SOMATIC':
-        insights.push('*Somatic awareness: How is this living in your body and nervous system?*');
-        break;
-    }
-  });
-
-  return insights.join('\n');
+interface DepthConfig {
+  tier: DepthTier;
+  includeMemoryPalace: boolean;  // memory palace (5 layers)
+  includeAnamnesis: boolean;     // soul-level relationship essence
+  includeAstrology: boolean;     // birth chart + transits
+  maxFrameworks: number;         // cap on activeFrameworks array
 }
+
+const FAST_GREETING_RE = /^(hi|hello|hey|thanks|thank you|bye|goodbye|ok|okay|sure|got it|great|nice|good|cool|yes|no|yep|nope|alright|sounds good|perfect|awesome|wonderful)[\s!.?,]*$/i;
+
+const DEEP_SIGNAL_RE = /dream(ed|ing|s)?|nightmare|trauma|wound(ed)?|abus(e|ed|ive)|shadow|dark night|crisis|who am i|my identity|identity crisis|purposeless|meaningless|meaning of life|\bdying\b|\bdeath\b|devastat(ed|ing)|shatter(ed|ing)|terrif(ied|ying)|overwhelm(ed|ing)|\blost\b|\bbroken\b|suicid|existential/i;
+
+function classifyDepthTier(
+  message: string,
+  conversationDepth: number,
+  trustLevel: number
+): DepthConfig {
+  const wordCount = message.trim().split(/\s+/).length;
+  const msgTrimmed = message.trim();
+
+  // FAST: first turn (greeting/opening)
+  if (conversationDepth === 0 || FAST_GREETING_RE.test(msgTrimmed)) {
+    return { tier: 'FAST', includeMemoryPalace: false, includeAnamnesis: false, includeAstrology: false, maxFrameworks: 1 };
+  }
+
+  // FAST: very short message, shallow conversation, no depth signals
+  if (wordCount <= 5 && conversationDepth <= 4 && !DEEP_SIGNAL_RE.test(message)) {
+    return { tier: 'FAST', includeMemoryPalace: false, includeAnamnesis: false, includeAstrology: false, maxFrameworks: 1 };
+  }
+
+  // DEEP: explicit depth keywords present
+  if (DEEP_SIGNAL_RE.test(message)) {
+    return { tier: 'DEEP', includeMemoryPalace: true, includeAnamnesis: true, includeAstrology: true, maxFrameworks: 3 };
+  }
+
+  // DEEP: established relationship + sustained trust
+  if (conversationDepth > 10 && trustLevel > 0.7) {
+    return { tier: 'DEEP', includeMemoryPalace: true, includeAnamnesis: true, includeAstrology: true, maxFrameworks: 3 };
+  }
+
+  // CORE: everything else — moderate retrieval
+  return {
+    tier: 'CORE',
+    includeMemoryPalace: true,
+    includeAnamnesis: conversationDepth >= 3,  // skip until at least 3 exchanges
+    includeAstrology: false,
+    maxFrameworks: 2,
+  };
+}
+// ───────────────────────────────────────────────────────────────────────────
+
+// generateFrameworkInsights() removed — replaced by registry-driven tiered loop
+// inside buildSacredAttendingPrompt. See FRAMEWORK_REGISTRY in spiralogic-core.ts.
 
 /**
  * Generate elemental guidance based on current spiralogic state
