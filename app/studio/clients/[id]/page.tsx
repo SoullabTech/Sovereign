@@ -18,6 +18,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Mic,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
@@ -285,6 +286,13 @@ export default function ClientDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
+              <Link
+                href={`/studio/session-room?caseId=${client.id}`}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 rounded-xl hover:bg-emerald-400 transition-colors font-medium"
+              >
+                <Mic className="w-4 h-4" />
+                Start Session
+              </Link>
               <button className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 transition-colors font-medium">
                 <Plus className="w-4 h-4" />
                 Schedule Session

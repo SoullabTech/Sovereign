@@ -15,6 +15,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mic,
@@ -156,6 +157,10 @@ const getInsightColor = (type: string) => {
 // ---------------------------------------------------------------------------
 
 export default function SessionRoomPage() {
+  // ── Query params (case context) ───────────────────────────────────────
+  const searchParams = useSearchParams();
+  const caseId = searchParams.get('caseId');
+
   // ── Context (global recording state) ──────────────────────────────────
   const ctx = useRecordingContext();
 
@@ -1230,6 +1235,7 @@ ${insightsSection}
               reviewedSessionId={ctx.scribeSessionId || ctx.sessionId}
               segmentCount={ctx.segments.length}
               duration={ctx.duration}
+              caseId={caseId}
             />
 
             {/* New session button */}

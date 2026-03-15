@@ -40,6 +40,7 @@ interface SessionReviewChatProps {
   reviewedSessionId: string;
   segmentCount: number;
   duration: number;
+  caseId?: string | null;
 }
 
 type Lens = 'core' | 'spiralogic' | 'mentor';
@@ -80,7 +81,7 @@ const quickPromptsByLens: Record<Lens, QuickPrompt[]> = {
   ],
 };
 
-export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }: SessionReviewChatProps) {
+export function SessionReviewChat({ reviewedSessionId, segmentCount, duration, caseId }: SessionReviewChatProps) {
   const [messages, setMessages] = useState<ReviewMessage[]>([
     {
       id: '1',
