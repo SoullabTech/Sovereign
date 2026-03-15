@@ -44,6 +44,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { getTopPatterns } from '@/lib/patterns/getTopPatterns';
+import type { PatternSummary } from '@/lib/patterns/getTopPatterns';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -417,6 +419,9 @@ export async function POST(request: NextRequest) {
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
 
+    // PATTERNS: Load practitioner-named patterns for oracle context
+    const topPatterns = await getTopPatterns(userId);
+
     // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
@@ -608,7 +613,8 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      topPatterns
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1398,7 +1404,8 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  topPatterns?: PatternSummary[]
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1518,8 +1525,19 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
+  // Inject practitioner-named patterns (confirmed first, then offered) for depth context
+  let patternHint = '';
+  if (topPatterns && topPatterns.length > 0 && conversationDepth >= 2) {
+    const confirmed = topPatterns.filter((p) => p.status === 'confirmed').map((p) => p.theme);
+    const offered = topPatterns.filter((p) => p.status === 'offered').map((p) => p.theme);
+    const lines: string[] = [];
+    if (confirmed.length > 0) lines.push(`Confirmed patterns: ${confirmed.join(', ')}`);
+    if (offered.length > 0) lines.push(`Emerging patterns (offered): ${offered.join(', ')}`);
+    patternHint = `\n\n[Practitioner-Named Patterns]\n${lines.join('\n')}\nThese are recurring themes named by the practitioner. Let them inform depth of reflection — do not name them directly unless the member raises them.\n[End Patterns]\n`;
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom || patternHint
+    ? systemPrompt + patternHint + councilInsights + collectiveWisdom
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
