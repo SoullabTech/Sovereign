@@ -482,9 +482,9 @@ export default function ChangeDetailPage() {
 
   // Practitioner loop state — counts for the loop progress indicator
   const [fieldSignalCount, setFieldSignalCount] = useState(0);
-  const [hasClientInquiry, setHasClientInquiry] = useState(false);
+  const [inquiryCount, setInquiryCount] = useState(0);
   const [observationCount, setObservationCount] = useState(0);
-  const [hasExperiment, setHasExperiment] = useState(false);
+  const [experimentCount, setExperimentCount] = useState(0);
   const [evidenceOpen, setEvidenceOpen] = useState(true);
 
   // Protocol + occupancy tracking
@@ -512,9 +512,9 @@ export default function ChangeDetailPage() {
         expRes.json(),
       ]);
       setFieldSignalCount((signalsData.signals || []).length);
-      setHasClientInquiry((inquiryData.responses || []).length > 0);
+      setInquiryCount((inquiryData.responses || []).length);
       setObservationCount((obsData.observations || []).length);
-      setHasExperiment((expData.experiments || []).length > 0);
+      setExperimentCount((expData.experiments || []).length);
     } catch { /* graceful — loop indicator stays empty */ }
   }
 
@@ -634,11 +634,13 @@ export default function ChangeDetailPage() {
 
   const loopState: PractitionerLoopState = {
     fieldSignalCount,
-    hasClientInquiry,
+    inquiryCount,
     observationCount,
-    hasCouncilSynthesis: !!council,
-    hasExperiment,
+    councilIterationCount: change.iterationCount,
+    experimentCount,
+    hasMentorReflection: !!(change.mentorReflection),
     hasFollowUp: !!(change.followUpIntention),
+    currentOccupancyScore,
   };
   const hasIterations = (change.iterations?.length || 0) > 1;
   const priorIterations = change.iterations?.slice(0, -1) || [];

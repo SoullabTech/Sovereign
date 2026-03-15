@@ -252,11 +252,11 @@ export interface OccupancyTrend {
  * Used to render the visual workflow tracker.
  */
 export interface PractitionerLoopState {
-  hasClientInquiry: boolean;
   fieldSignalCount: number;
+  inquiryCount: number;
   observationCount: number;
-  hasCouncilSynthesis: boolean;
-  hasExperiment: boolean;
+  councilIterationCount: number;
+  experimentCount: number;
   hasMentorReflection: boolean;
   hasFollowUp: boolean;
   currentOccupancyScore?: number | null;
