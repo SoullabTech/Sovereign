@@ -55,7 +55,7 @@ import {
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
 import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
-import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
+import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT, AINShapeContext } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
@@ -3010,7 +3010,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       meta?.rewritePass === true || meta?.ainRewritePass === true;
 
     if (telemetryEnabled && !isRewritePass) {
-      let shape = assessAINResponseShape(input, text);
+      const shapeContext: AINShapeContext = { counselMode: normalizeMode((meta as any)?.mode) === 'counsel' };
+      let shape = assessAINResponseShape(input, text, shapeContext);
 
       if (!shape.pass) {
         console.warn('[AIN SHAPE WARNING]', {
@@ -3045,7 +3046,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
               console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
               text = rewritten.trim();
               // Recompute shape for accurate telemetry
-              shape = assessAINResponseShape(input, text);
+              shape = assessAINResponseShape(input, text, shapeContext);
             }
           } catch (rewriteErr) {
             console.warn('[AIN SHAPE REWRITE ERROR]', rewriteErr);

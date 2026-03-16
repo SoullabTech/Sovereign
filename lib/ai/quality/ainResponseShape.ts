@@ -52,6 +52,10 @@ export type AINShapeResult = {
   notes: string[];
 };
 
+export type AINShapeContext = {
+  counselMode?: boolean; // true when mode === 'counsel' — enables structural bridge detection
+};
+
 const STOPWORDS = new Set([
   'the','a','an','and','or','but','if','then','so','to','of','in','on','for','with','at','by',
   'is','are','was','were','be','been','being','it','this','that','these','those','i','you',
@@ -230,7 +234,7 @@ function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSign
   };
 }
 
-export function assessAINResponseShape(input: string, output: string): AINShapeResult {
+export function assessAINResponseShape(input: string, output: string, context?: AINShapeContext): AINShapeResult {
   const notes: string[] = [];
   const out = (output || '').trim();
   const firstChunk = out.slice(0, 350);
@@ -244,8 +248,11 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   // 2) BRIDGE: "another lens" gently, or explicit cross-framework signposts
   // Broadened to catch natural bridging/reframing language clinicians use
   const bridgePhrases =
-    /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming))/i;
-  const bridge = bridgePhrases.test(out);
+    /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming)|what\si\snotice\b|i\snotice\sthat|i'?m\snoticing\b|the\sthing\si\s(notice|hear|see)\sis|there'?s\sa\s(pattern|thread|tension|gap|pull|shift)\b|here'?s\swhat\sstands\sout|the\sgap\syou'?re\s\w+ing|worth\snoticing|another\sway\sto\s(understand|see|frame|look\sat)\s(this|it|that))/i;
+  // Structural bridge: counsel mode + established mirror + substantive response length
+  // In Counsel, a mirrored deepening question/reflection is itself a bridge
+  const structuralBridge = !!(context?.counselMode && mirror && out.length > 180);
+  const bridge = bridgePhrases.test(out) || structuralBridge;
   if (!bridge) notes.push('Missing bridge: no sign of a gentle cross-lens weave.');
 
   // 3) PERMISSION: micro-permission / consent-seeking language
