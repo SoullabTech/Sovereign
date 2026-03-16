@@ -103,6 +103,7 @@ import {
   clearPendingOffer,
   processPatternResponse,
 } from '@/lib/patterns/PatternResponseService';
+import { routeRequest } from '@/lib/consciousness/modelRouter';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -133,7 +134,7 @@ import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 export const runtime = 'nodejs';
 export const maxDuration = 60; // seconds
 
-const ORACLE_PROFILE = 'DEEP' as const;
+/** Default level used in pre-routing logs (auth failures, rate limits) */
 const ORACLE_LEVEL = 5 as const;
 
 // Optional hard gate for the premium endpoint (recommended for beta)
@@ -372,6 +373,7 @@ export async function POST(request: NextRequest) {
   let conversationDepth = 0;
   let trustLevel = 0;
   let body: ConversationBody | undefined;
+  let routedLevel = ORACLE_LEVEL; // updated by router once depth/message are known
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -600,9 +602,27 @@ export async function POST(request: NextRequest) {
     const tAfterEarlyDb = Date.now();
     console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'early_db', ms: tAfterEarlyDb - t0 }));
 
-    // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
-    const processingProfile = ORACLE_PROFILE;
-    const consciousnessLevel = ORACLE_LEVEL;
+    // ── Signal detectors ─────────────────────────────────────────────────
+    const FRAGILE_KEYWORDS = ['grief','loss','trauma','suicidal','crisis','shame','abuse','dying','devastated','hopeless'];
+    const URGENCY_KEYWORDS = ['right now','immediately','urgent','i can\'t do this','i\'m not okay','help me','please help','i don\'t know what to do'];
+    const ARCHITECTURAL_KEYWORDS = ['architecture','refactor','routing','provider','schema','migration','orchestration','docker','deployment','telemetry','fallback','agent','system design'];
+    const msgLower = message.toLowerCase();
+    const hasFragileSignals = FRAGILE_KEYWORDS.some(k => msgLower.includes(k));
+    const hasUrgencySignals = URGENCY_KEYWORDS.some(k => msgLower.includes(k));
+    const isArchitectural = ARCHITECTURAL_KEYWORDS.some(k => msgLower.includes(k));
+
+    // ── Route request to appropriate model tier ───────────────────────────
+    const routing = routeRequest({
+      conversationDepth,
+      voiceMode: 'Talk', // oracle route is always Talk mode
+      messageLength: message.length,
+      hasFragileSignals,
+      hasUrgencySignals,
+      isArchitectural,
+    });
+    routedLevel = routing.level;
+    const consciousnessLevel = routing.level;
+    const processingProfile = routing.tier.toUpperCase();
 
     console.info(
       JSON.stringify({
@@ -610,7 +630,13 @@ export async function POST(request: NextRequest) {
         requestId,
         ip,
         processingProfile,
+        tier: routing.tier,
         level: consciousnessLevel,
+        confidence: routing.confidence,
+        routingReasons: routing.reasons,
+        fallbackChain: routing.fallback,
+        localEnabled: process.env.LOCAL_TIER_ENABLED === 'true',
+        forceCloud: process.env.ORACLE_FORCE_CLOUD === 'true',
         userId: userId.substring(0, 8) + '...',
         messageLength: message.length,
         conversationDepth,
@@ -1804,7 +1830,7 @@ export async function POST(request: NextRequest) {
         tag: 'oracle.response',
         requestId,
         durationMs,
-        level: ORACLE_LEVEL,
+        level: routedLevel,
         provider: maiaResponse.providerMetadata.providerUsed,
         model: maiaResponse.providerMetadata.modelUsed,
         usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
@@ -1818,7 +1844,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId,
       ip,
-      level: ORACLE_LEVEL,
+      level: routedLevel,
       provider: maiaResponse.providerMetadata.providerUsed,
       model: maiaResponse.providerMetadata.modelUsed,
       usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
@@ -1940,7 +1966,7 @@ export async function POST(request: NextRequest) {
       userId: body?.userId,
       sessionId: body?.sessionId,
       ip,
-      level: ORACLE_LEVEL,
+      level: routedLevel, // uses routing decision if available, else pre-routing default (5)
       status: 'error',
       durationMs,
     }).catch(err => console.warn('[oracle] logging failed:', err));
