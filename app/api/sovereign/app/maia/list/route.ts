@@ -99,6 +99,9 @@ import { scoreKnowledgeGate, type SourceContribution, type KnowledgeGateInput } 
 import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
 import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
 import { pool } from '@/lib/db/postgres';
+import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
+import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
+import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -692,6 +695,63 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const providerUsed = rawProvider || 'unknown';
     const modelUsed = rawModel || 'unknown';
 
+    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair (ported from between/chat)
+    // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
+    // Applied before telemetry so the shape evaluator sees the final anchored text.
+    let sovereignText = orchestratorResult.text ?? '';
+    const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
+    const _convHistory = (meta as any)?.conversationHistory;
+    const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const isCareAnchorEligible =
+      _conversationMode === 'counsel' &&
+      _historyLen >= 2 &&
+      sovereignText.length > 120 &&
+      !isSanctuary &&
+      !ANCHOR_ALREADY_PRESENT.test(sovereignText);
+    if (isCareAnchorEligible) {
+      const anchor = sovereignText.trimEnd().endsWith('?')
+        ? '\n\nSit with that for a moment.'
+        : '\n\nYou might sit with that tonight and see what arrives.';
+      sovereignText = sovereignText + anchor;
+      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
+        _historyLen + 1, sovereignText.length);
+    }
+
+    // 📐 AIN SHAPE TELEMETRY: Continuity-stack metrics (fire-and-forget, never blocks)
+    // Written from the sovereign route so continuity fields are populated for production traffic.
+    if (!isSanctuary && sovereignText &&
+        (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production')) {
+      // _conversationMode and _convHistory already defined above (anchor block)
+      const _voiceMode = _conversationMode;
+      const _turnIndex = _historyLen;
+      const _text = sovereignText;
+      const _ainShape = assessAINResponseShape(message as string, _text);
+      logAINShapeTelemetry({
+        pass: _ainShape.pass,
+        score: _ainShape.score,
+        flags: _ainShape.flags,
+        menuSignals: _ainShape.signals ?? null,
+        route: 'sovereign/app/maia/list',
+        model: rawModel ?? undefined,
+        explorerId: effectiveUserId ?? undefined,
+        sessionId: session.id,
+        turnIndex: _turnIndex,
+        mode: _voiceMode,
+        activeThreadPresent: null,
+        activeThreadConfidence: null,
+        correctionDetected: _ainShape.flags.mirror === false &&
+          /\b(i'?m sorry|let me clarify|that came out wrong|let me try that again|let'?s reset|i misspoke)\b/i.test(_text),
+        optionResolutionMatched: null,
+        optionResolutionNearMiss: null,
+        ruptureFlag: false,
+        ruptureType: null,
+        assistantTurnType: classifyAssistantTurn(_text),
+      }).catch((err) => {
+        console.warn('[sovereign/maia/list] AIN shape telemetry write failed:', err?.message);
+      });
+    }
+
     // 💫 ANAMNESIS WRITE (fire-and-forget): Capture relationship essence after each turn.
     // This ensures relationship_essences is updated even when using the sovereign route.
     if (effectiveUserId && !isSanctuary && orchestratorResult.text) {
@@ -733,7 +793,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
 
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
-      message: orchestratorResult.text,
+      message: sovereignText,  // Uses closing-anchored text for counsel mode turns
       // 🌀 STATE VECTOR: Consciousness state reading (if check-in detected)
       stateVector: orchestratorResult.stateVector || null,
       // 🌿 PRACTICE: Recommended practice from state vector routing

@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "production",
+      "runtimeExecutable": "echo",
+      "runtimeArgs": ["production server already running via Docker+Caddy"],
+      "port": 80
+    },
+    {
       "name": "dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],

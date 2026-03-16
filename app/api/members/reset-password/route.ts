@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
     }
 
-    // Find member by email
+    // Find member by email (case-insensitive)
     const result = await query(
       'SELECT id, name, username FROM members WHERE LOWER(email) = LOWER($1)',
       [email]

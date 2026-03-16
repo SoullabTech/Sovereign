@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
     console.log(`[MAGIC-LINK] Request for: ${normalizedEmail}`);
 
-    // Check if member exists with this email
+    // Check if member exists with this email (case-insensitive)
     const memberResult = await safeQuery(
       'SELECT id, name, username FROM members WHERE LOWER(email) = $1',
       [normalizedEmail]
@@ -302,7 +302,7 @@ export async function GET(request: NextRequest) {
               COALESCE(tier, 'free') as tier,
               COALESCE(roles, ARRAY['member']) as roles
        FROM members
-       WHERE id = $1 OR email = $2
+       WHERE id = $1 OR LOWER(email) = LOWER($2)
        LIMIT 1`,
       [claimed.member_id || null, claimed.email]
     );
