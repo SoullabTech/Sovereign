@@ -53,7 +53,14 @@ export type AINShapeResult = {
 };
 
 export type AINShapeContext = {
-  counselMode?: boolean; // true when mode === 'counsel' — enables structural bridge detection
+  counselMode?: boolean; // true when mode === 'counsel' — enables structural bridge/permission detection
+};
+
+export type AINWindowedResult = {
+  windowPass: boolean;
+  windowFlags: AINShapeFlags;
+  turnsInWindow: number;
+  turnResults: AINShapeResult[];
 };
 
 const STOPWORDS = new Set([
@@ -262,7 +269,7 @@ export function assessAINResponseShape(input: string, output: string, context?: 
     /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming))/i;
   // Natural connective language the prompt now explicitly guides MAIA toward:
   const bridgeNatural =
-    /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|what\syou'?re\s(naming|pointing\sto|describing)\sis|what\syou\s(just\s)?(named|pointed\sto|described)\sis|you'?re\snaming\s(something|a\s|the\s)|that'?s\sthe\s(real\s)?(tension|pattern|dynamic|thread|distinction|paradox)|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms)|the\s(real\s)?(issue|problem|tension|pattern|challenge)\s(is\b|you'?re\s(describing|naming))|not\s(just|only)\b[^.\n]{0,100}(but\b|it'?s)|it'?s\snot\b[^.\n]{0,100}it'?s|(that'?s|this\sis)\snot\b[^.\n]{0,80}but\b|(that'?s|this\sis)\sactually\b)/i;
+    /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|what\syou'?re\s(naming|pointing\sto|describing)\sis|what\syou\s(just\s)?(named|pointed\sto|described)\sis|you'?re\snaming\s(something|a\s|the\s)|that'?s\sthe\s(real\s)?(tension|pattern|dynamic|thread|distinction|paradox)|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms)|the\s(real\s)?(issue|problem|tension|pattern|challenge)\s(is\b|you'?re\s(describing|naming))|not\s(just|only)\b[^.\n]{0,100}(but\b|it'?s)|it'?s\snot\b[^.\n]{0,100}it'?s|(that'?s|this\sis)\snot\b[^.\n]{0,80}but\b|(that'?s|this\sis|it'?s)\sactually\b|isn'?t\s[\w\s,.']{0,60}(it'?s|that'?s)\s|here'?s\swhat\si\snotice|there'?s\sa\spattern\s(worth|here)\s|the\s(gap|weight|cost|bind|pull|toll)\syou'?re\s(describing|naming|holding|carrying)|i\swonder\sif\sthe\s(question|issue|real\sthing|thing\shere)\s|that'?s\snot\s\w+\.?\s{0,2}that'?s\s|there'?s\s(also\s)?this\b)/i;
   // Structural bridge: counsel mode + established mirror + substantive response length
   // In Counsel, a mirrored deepening question/reflection is itself a bridge
   const structuralBridge = !!(context?.counselMode && mirror && out.length > 180);
@@ -277,8 +284,19 @@ export function assessAINResponseShape(input: string, output: string, context?: 
   // implicit permission: they hand agency back to the member rather than prescribing direction.
   // e.g. "What would help most right now?" "How does that land?" "What feels most true?"
   const permissionExploratory =
-    /\b(what would (help|feel|be)\s(most|right|useful|true)[^?]{0,40}\?|how does that land|what feels (most|right|true|alive|real)|what'?s (stirring|alive|present|here|true)\b|what (stands|sits) out|where are you in (that|this)|what matters most (right now|to you|here)|what do you (notice|feel|sense|need) (right now|here|in this)?|what'?s (calling|pulling|asking)|what would (you need|help you)|how are you (with|sitting with) (that|this))\b/i;
-  const permission = permissionPhrases.test(out) || permissionExploratory.test(out);
+    /\b(what would (help|feel|be)\s(most|right|useful|true)[^?]{0,40}\?|how does that land|what feels (most|right|true|alive|real)|what'?s (stirring|alive|present|here|true)\b|what (stands|sits) out|where are you in (that|this)|what matters most (right now|to you|here)|what do you (notice|feel|sense|need) (right now|here|in this)?|what'?s (calling|pulling|asking)|what would (you need|help you)|how are you (with|sitting with) (that|this)|what would (it|that) (mean|look like)|which feels (closer|more|right|true)|what would that (actually|specifically|really))\b/i;
+  // Pressure-reducing language — catches the Care mode prompt starters and natural equivalents
+  // e.g. "You don't have to solve this tonight." / "It can be enough to name the first piece."
+  const permissionPressureReduce =
+    /(you don'?t have to|doesn'?t have to|you don'?t need (to|the)|no need to|it can be enough|can be enough|(that'?s|this is) enough|there'?s no rush|you'?re not behind|not all at once|one (small|tiny) (thing|step|piece|moment|shift)|just one (thing|step|piece|question|moment)|one (piece|step|thing) at a time|(the )?first (piece|step|thing|part) is enough|even just|even (just )?(naming|noticing|saying|seeing)|that (in itself|alone) (is|counts|matters)|it'?s okay (not to|if you)|you'?re allowed to|you have (time|space)|this doesn'?t have to|it doesn'?t have to)/i;
+  // Structural permission: counsel mode + partiality indicators near a bounded scope word
+  // Catches responses that de-pressurize through bounded framing without explicit permission phrases
+  const structuralPermission = !!(
+    context?.counselMode &&
+    /\b(one|first|small|just|enough|only|for now|tonight|right now|this moment)\b/i.test(out) &&
+    out.length > 120
+  );
+  const permission = permissionPhrases.test(out) || permissionExploratory.test(out) || permissionPressureReduce.test(out) || structuralPermission;
   if (!permission) notes.push('Missing permission: no consent-seeking or permission language detected.');
 
   // 4) NEXT STEP: a concrete practice / experiment / prompt
@@ -318,5 +336,52 @@ export function assessAINResponseShape(input: string, output: string, context?: 
     signals,
     score,
     notes
+  };
+}
+
+/**
+ * Windowed AIN shape assessment.
+ *
+ * Asks: across the last N turns, did the conversation collectively produce
+ * mirror + bridge + permission + next step?
+ *
+ * Good Counsel often distributes these moves across 2–3 turns rather than
+ * packing all four into every single response. This metric captures that.
+ *
+ * windowSize defaults to 3. Pass requires:
+ * - mirror in at least one turn
+ * - nextStep in at least one turn
+ * - at least 3 of 4 dimensions covered
+ * - no menuMode in any turn
+ */
+export function assessAINWindowedShape(
+  turns: Array<{ input: string; output: string }>,
+  context?: AINShapeContext,
+  windowSize = 3
+): AINWindowedResult {
+  const recent = turns.slice(-windowSize);
+  const turnResults = recent.map(t => assessAINResponseShape(t.input, t.output, context));
+
+  // Combine flags: a dimension counts if any turn in the window hit it
+  const windowFlags: AINShapeFlags = {
+    mirror:    turnResults.some(r => r.flags.mirror),
+    bridge:    turnResults.some(r => r.flags.bridge),
+    permission: turnResults.some(r => r.flags.permission),
+    nextStep:  turnResults.some(r => r.flags.nextStep),
+    menuMode:  turnResults.some(r => r.flags.menuMode), // penalize if any turn is menu-mode
+  };
+
+  const windowScore = [
+    windowFlags.mirror,
+    windowFlags.bridge,
+    windowFlags.permission,
+    windowFlags.nextStep,
+  ].filter(Boolean).length;
+
+  return {
+    windowPass: windowScore >= 3 && windowFlags.mirror && windowFlags.nextStep && !windowFlags.menuMode,
+    windowFlags,
+    turnsInWindow: recent.length,
+    turnResults,
   };
 }

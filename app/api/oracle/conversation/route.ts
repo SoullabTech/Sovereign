@@ -2799,7 +2799,7 @@ async function generateSpiralogicResponseWithLLM(
 
     // AIN shape evaluation + full telemetry write (fire-and-forget)
     if (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production') {
-      const ainShape = assessAINResponseShape(message, coreMessage);
+      const ainShape = assessAINResponseShape(message, coreMessage, { counselMode: clientMode === 'counsel' });
       logAINShapeTelemetry({
         pass: ainShape.pass,
         score: ainShape.score,
