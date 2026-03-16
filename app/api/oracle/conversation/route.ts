@@ -44,6 +44,9 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { detectThemes, storeThemeSignal, buildParticipatorryHint, findRecurringThemes, getRecentThemes } from '@/lib/consciousness/participatoryRealityHelper';
+import type { ThemeSignal } from '@/lib/consciousness/participatoryReality';
+import { PARTICIPATORY_ORACLE_BLOCK } from '@/lib/maia/prompts/participatoryRealityPrompt';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -1084,6 +1087,11 @@ export async function POST(request: NextRequest) {
       intensity: voiceHint.intensity,
     });
 
+    // PARTICIPATORY REALITY: Store detected theme signals (fire-and-forget)
+    for (const signal of maiaResponse.detectedThemes) {
+      storeThemeSignal(userId, signal, { sessionId });
+    }
+
     // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
     const relationalHint: RelationalHint = decideRelationalHint({
       memberId: userId,
@@ -1403,6 +1411,7 @@ async function generateSpiralogicResponseWithLLM(
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
   elementalGuidance: string;
+  detectedThemes: ThemeSignal[];
   providerMetadata: {
     providerUsed: 'anthropic' | 'ollama' | 'fallback';
     modelUsed: string;
@@ -1518,8 +1527,46 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
+  // ------------------------------------------------------------
+  // PARTICIPATORY REALITY: Detect themes + build soft hint
+  // Follows same non-blocking pattern as collectiveWisdom above.
+  // Activation: ≥1 language marker hit; never in crisis; one lens max.
+  // ------------------------------------------------------------
+  let participatoryBlock = '';
+  let detectedThemes: ThemeSignal[] = [];
+  try {
+    const scored = detectThemes(message, spiralogicCell?.element);
+    // Only inject if top signal meets minimum resonance threshold
+    if (scored.length > 0 && scored[0].resonance_strength >= 0.55) {
+      detectedThemes = scored.slice(0, 1); // one lens per response
+      const hint = buildParticipatorryHint(
+        findRecurringThemes(scored.map((s, i) => ({
+          id: i,
+          member_id: '',
+          session_id: null,
+          journal_entry_id: null,
+          theme: s.theme,
+          signal_type: s.signal_type,
+          resonance_strength: s.resonance_strength,
+          element: s.element,
+          context: {},
+          detected_at: new Date(),
+        }))),
+        1 // single-turn recurrence threshold (history checked at storage time)
+      );
+      if (hint) {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}\n\n${hint}`;
+      } else {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}`;
+      }
+    }
+  } catch (participatoryError) {
+    console.warn('[participatory] Theme detection failed (non-critical):', participatoryError);
+    // Non-blocking — MAIA proceeds without participatory lens
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom || participatoryBlock
+    ? systemPrompt + councilInsights + collectiveWisdom + participatoryBlock
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
@@ -1601,6 +1648,7 @@ async function generateSpiralogicResponseWithLLM(
     coreMessage,
     suggestedActions,
     elementalGuidance,
+    detectedThemes,
     providerMetadata: {
       providerUsed,
       modelUsed,
