@@ -44,6 +44,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { getPatternHint } from '@/lib/consciousness/patternHint';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -297,6 +298,11 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  maiaMode?: {
+    mode: 'talk' | 'care' | 'scribe';
+    subMode?: string;
+    systemPromptModifier?: string;
+  };
 };
 
 export async function POST(request: NextRequest) {
@@ -357,7 +363,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId, sessionId } = parsed;
+    const { message, userId, sessionId, maiaMode } = parsed;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -592,7 +598,13 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
-    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
+    // PATTERN HINT: Load active patterns for oracle attention (Tier B/C only)
+    // Tier A is determined by conversationDepth < 4 as a lightweight proxy until
+    // the full depth classifier is available. Fire-and-forget; never blocks oracle.
+    const isTierA = conversationDepth < 4;
+    const patternHint = await getPatternHint(userId, { tierA: isTierA }).catch(() => null);
+
+    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology + patterns
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -608,7 +620,9 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      patternHint,
+      maiaMode?.systemPromptModifier ?? null
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1398,7 +1412,9 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  patternHint?: string | null,
+  modeModifier?: string | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1414,7 +1430,7 @@ async function generateSpiralogicResponseWithLLM(
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
-  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
+  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology + patterns
   const systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
@@ -1429,7 +1445,9 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    patternHint,
+    modeModifier
   );
 
   // Format conversation history for LLM
@@ -1628,7 +1646,9 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  patternHint?: string | null,
+  modeModifier?: string | null
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -1703,6 +1723,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 ` : ''}
 ${anamnesisPrompt ? anamnesisPrompt : ''}
 ${astrologyContext?.formattedContext ? astrologyContext.formattedContext : ''}
+${patternHint ? patternHint : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
@@ -1761,6 +1782,35 @@ The person seems to be experiencing shame about a parenting moment. This is an o
 
 `;
     }
+  }
+
+  // TIER CONTEXT: Qualitative relational stage awareness
+  const tierLabel = conversationDepth === 0
+    ? 'First contact'
+    : conversationDepth <= 3
+    ? 'Tier A — Early exchange'
+    : conversationDepth <= 15
+    ? 'Tier B — Building trust'
+    : 'Tier C — Deep territory';
+
+  const tierGuidance = conversationDepth === 0
+    ? 'This is first contact. A simple, warm, unhurried greeting only. No framing, no questions, no interpretation.'
+    : conversationDepth <= 3
+    ? 'Tier A — Early exchange. Orient toward them first. Light touch. Stay with what they bring. Do not surface patterns or symbolic interpretations yet. Ask at most one gentle question.'
+    : conversationDepth <= 15
+    ? 'Tier B — Trust is forming. You can follow their lead into deeper territory when they invite it. Reflections and gentle questions welcome. Archetypal language only if they use it first.'
+    : 'Tier C — Deep territory. Trust is established. You can name patterns you have observed, use symbolic and archetypal language, and ask questions that reach to the root. Lead from depth, not surface.';
+
+  prompt += `\n# Relational Tier (IMPLICIT)
+${tierLabel}: ${tierGuidance}
+
+`;
+
+  // MODE MODIFIER: Injected from client mode selection (Talk/Care/Scribe sub-modes)
+  // This overrides or supplements the default response stance.
+  // For Talk mode the modifier is empty string, so nothing is injected.
+  if (modeModifier) {
+    prompt += `\n# Active Mode\n${modeModifier}\n`;
   }
 
   // Add depth-calibrated response guidelines
