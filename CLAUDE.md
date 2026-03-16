@@ -37,15 +37,20 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-03-12
-- **Current milestone**: Depth routing + therapeutic lens persistence shipped
-- **Last change**: Three orthogonal axes now fully wired and deployed:
-  1. **Depth Classifier** (`lib/consciousness/depthClassifier.ts`) — 3-tier routing (threshold/core/deep), 7 awareness levels, Care mode early-exchange bias, relational phase 1 bias. lightweightContext flag gates memory palace / anamnesis / astrology for Tier A. 46 tests passing.
-  2. **Mode/Tier wiring** — Talk/Care/Scribe stance sections injected into system prompt. Tier adjusts voiceHint (speed/timbre). depthHint returned in oracle response.
-  3. **Therapeutic Lens** — `therapeutic_lens` column in `member_settings` (migration applied + registered). Settings API GET/PUT wired. Oracle route loads lens, activates FRAMEWORK_REGISTRY applied frameworks, injects compact lens hint into prompt for core/deep tiers only (threshold always lens-neutral). `FrameworkSelector` persists to server on select; syncs from server on mount for cross-device consistency. 27 matrix tests covering tier discipline, lens differentiation, mode differentiation, Care mode bias.
-- **Next action**: Settings page astrology section (add/edit/remove birth data, consent-aware UI). Sweeper cron on Mac Studio host (`*/15 * * * * docker exec maia-sovereign sh -c 'cd /app && node_modules/.bin/tsx scripts/sweep-stale-sessions.ts'`). Research ledger crons: `0 2 * * * docker exec maia-sovereign sh -c 'cd /app && node_modules/.bin/tsx scripts/run-daily-research-ledger.ts'` and `0 3 * * 0 docker exec maia-sovereign sh -c 'cd /app && node_modules/.bin/tsx scripts/run-weekly-research-ledger.ts'`.
-- **Underlying question**: Does every member get a coherent, sovereignty-respecting experience across devices and after localStorage clears?
-- **State of the system**: Depth routing live. Therapeutic lens end-to-end live. Memory pipeline live. Onboarding astrology step sovereign. Pending: Settings astrology UI + sweeper cron.
+- **Date**: 2026-03-16
+- **Current milestone**: System Intelligence Research Layer complete. AIN shape prompt-evaluator contract patched (3 commits).
+- **Last change**: Three prompt/evaluator fixes landed in sequence:
+  1. `6cbc71c7` — **next_step + permission gap**: INVITE step now instructs explicit signal phrases ("Next step:", "Try this:", etc.). `ainResponseShape.ts` extended with `nextStepNatural` regex.
+  2. `ff37a7d2` — **bridge gap**: ILLUMINATE rewritten — now explicitly the connective move from mirror → meaning. `ainResponseShape.ts` extended with `bridgeNatural` regex. Primary failure analysis: bridge=65%, mirror=25%, permission=10%, next_step=0.8% across 1007 turns.
+  3. **Research Layer** (Phases 1-3): `system_research_ledger` + `system_directives` tables live. Daily/weekly cron at 02:00/03:00 registered. Directive `ain_shape_degraded` opened (0% pass rate, 18 turns), condition_cleared_at set (false clear — 0 turns today). `pattern_accumulation_stall` directive also open.
+- **Next action**: Wait for post-fix MAIA turns, then run 6-hour shape aggregate to measure bridge/next_step/permission improvement. Settings page astrology section still pending.
+- **Underlying question**: Did the ILLUMINATE and INVITE prompt changes reshape MAIA's output structure? Does bridge_rate move from 22% toward 50%+?
+- **State of the system**: All five layers live: telemetry → ledger → directives → admin panel → prompt/evaluator. Awaiting first post-fix telemetry. Crons registered. Admin panel at `/admin/research`.
+- **AIN shape baselines (pre-fix, 1007 turns)**: mirror=75%, bridge=22%, permission=6%, next_step=1%, pass=0.2%.
+- **Measurement query** (run after 5+ turns):
+  ```bash
+  docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT COUNT(*) as turns, ROUND(100.0*AVG(CASE WHEN mirror THEN 1 ELSE 0 END),1) as mirror_rate, ROUND(100.0*AVG(CASE WHEN bridge THEN 1 ELSE 0 END),1) as bridge_rate, ROUND(100.0*AVG(CASE WHEN permission THEN 1 ELSE 0 END),1) as permission_rate, ROUND(100.0*AVG(CASE WHEN next_step THEN 1 ELSE 0 END),1) as next_step_rate, ROUND(100.0*AVG(CASE WHEN pass THEN 1 ELSE 0 END),1) as pass_rate FROM ain_shape_telemetry WHERE formed_at > NOW() - interval '6 hours';"
+  ```
 
 ## Re-entry vow (for this session)
 
