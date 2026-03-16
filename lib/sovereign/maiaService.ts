@@ -57,6 +57,8 @@ import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemory
 import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
+import { deriveActiveThread } from '../consciousness/activeThread';
+import { detectCorrectionSignal } from '../consciousness/correctionDetection';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
 import {
@@ -3055,6 +3057,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       // Persist structure-only telemetry (no text) - reflects final delivered shape
       try {
+        // Compute continuity signals for telemetry (deterministic, no LLM)
+        // Map ConversationExchange to { role, content } pairs for deriveActiveThread
+        const recentTurnsForThread = conversationHistory.slice(-5).flatMap((ex: any) => [
+          { role: 'user', content: ex.userMessage ?? '' },
+          { role: 'assistant', content: ex.maiaResponse ?? '' },
+        ]);
+        const continuityThread = recentTurnsForThread.length >= 2
+          ? deriveActiveThread({ recentTurns: recentTurnsForThread, latestUserMessage: input })
+          : null;
+        const continuityCorrection = detectCorrectionSignal(input);
+
         await logAINShapeTelemetry({
           pass: shape.pass,
           score: shape.score,
@@ -3063,7 +3076,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           route: 'maiaService',
           processingProfile,
           explorerId: effectiveUserId ?? undefined,
-          sessionId
+          sessionId,
+          continuity: continuityThread ? {
+            hadActiveThread: true,
+            activeThreadConfidence: continuityThread.confidence,
+            hadCorrectionSignal: continuityCorrection.hasCorrectionSignal,
+            correctionType: continuityCorrection.correctionType,
+          } : null,
         });
       } catch (err) {
         // Never break the response if telemetry fails

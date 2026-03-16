@@ -47,6 +47,9 @@ import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralSt
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { deriveActiveThread, buildActiveThreadBlock } from '@/lib/consciousness/activeThread';
+import { detectCorrectionSignal } from '@/lib/consciousness/correctionDetection';
+import { validateResponseAgainstActiveThread, buildRepairInstruction } from '@/lib/consciousness/responseThreadCheck';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -1518,8 +1521,21 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
+  // CONTINUITY LAYER: Compute active thread + correction signal
+  // Gated on depth >= 2 so first turns are unaffected
+  let activeThreadBlock = '';
+  let activeThreadResult = null;
+  let correctionResult = null;
+  if (conversationDepth >= 2) {
+    const recentTurns = conversationHistory.slice(-5);
+    activeThreadResult = deriveActiveThread({ recentTurns, latestUserMessage: message });
+    correctionResult = detectCorrectionSignal(message);
+    activeThreadBlock = buildActiveThreadBlock(activeThreadResult, correctionResult.hasCorrectionSignal);
+    console.log('[CONTINUITY] active_thread:', activeThreadResult.activeThread, 'confidence:', activeThreadResult.confidence.toFixed(2), 'correction:', correctionResult.hasCorrectionSignal);
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom || activeThreadBlock
+    ? systemPrompt + (councilInsights ?? '') + (collectiveWisdom ?? '') + activeThreadBlock
     : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
@@ -1537,6 +1553,34 @@ async function generateSpiralogicResponseWithLLM(
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;
+
+    // CONTINUITY VALIDATION: Check draft before accepting it
+    if (activeThreadResult && conversationDepth >= 2) {
+      const threadCheck = validateResponseAgainstActiveThread({
+        activeThread: activeThreadResult.activeThread,
+        assistantDraft: coreMessage,
+        latestUserMessage: message,
+        recentTurns: conversationHistory.slice(-5),
+        hadCorrectionSignal: correctionResult?.hasCorrectionSignal ?? false,
+      });
+      if (!threadCheck.passes) {
+        console.warn('[CONTINUITY] Thread validation failed:', threadCheck.failureReasons, '— retrying once');
+        try {
+          const repairInstruction = buildRepairInstruction(threadCheck);
+          const retryResponse = await llmProvider.generate({
+            systemPrompt: finalSystemPrompt + repairInstruction,
+            userInput: fullUserInput,
+            level: consciousnessLevel as any,
+          });
+          if (retryResponse.text && retryResponse.text.length > 20) {
+            coreMessage = retryResponse.text;
+            console.log('[CONTINUITY] Retry succeeded, issues resolved:', threadCheck.detectedIssues);
+          }
+        } catch (retryErr) {
+          console.warn('[CONTINUITY] Retry failed, using original response:', retryErr);
+        }
+      }
+    }
 
     // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
