@@ -266,7 +266,12 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   // Broadened to catch natural therapeutic consent patterns
   const permissionPhrases =
     /(would you like|are you open to|do you want|should we|may i|is it okay if|let me know if|if you're (comfortable|ready|willing)|want me to|if you'd like|does that feel|sound good|feel free to|whenever you're ready|only if you want|no pressure|take your time|at your own pace|when you're ready|if that resonates|map this into|fire\/water\/earth\/air\/aether|spiralogic)/i;
-  const permission = permissionPhrases.test(out);
+  // Exploratory invitation detection — therapeutic open-question forms that function as
+  // implicit permission: they hand agency back to the member rather than prescribing direction.
+  // e.g. "What would help most right now?" "How does that land?" "What feels most true?"
+  const permissionExploratory =
+    /\b(what would (help|feel|be)\s(most|right|useful|true)[^?]{0,40}\?|how does that land|what feels (most|right|true|alive|real)|what'?s (stirring|alive|present|here|true)\b|what (stands|sits) out|where are you in (that|this)|what matters most (right now|to you|here)|what do you (notice|feel|sense|need) (right now|here|in this)?|what'?s (calling|pulling|asking)|what would (you need|help you)|how are you (with|sitting with) (that|this))\b/i;
+  const permission = permissionPhrases.test(out) || permissionExploratory.test(out);
   if (!permission) notes.push('Missing permission: no consent-seeking or permission language detected.');
 
   // 4) NEXT STEP: a concrete practice / experiment / prompt
