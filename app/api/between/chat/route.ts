@@ -82,6 +82,7 @@ import {
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -1860,6 +1861,18 @@ This user is in guest mode (no authenticated identity).
 
     if (consultationResult) {
       console.log(`[AIN Council] 🏛️ Consultation complete: ${consultationResult.insights.length} insights, ${consultationResult.tensions.length} tensions, emergence: ${consultationResult.emergenceRating || 'recombination'}`);
+    }
+
+    // PARTICIPATORY REALITY: Detect and persist theme signals (fire-and-forget)
+    // Runs after orchestrator so it never blocks the response. Sanctuary excluded.
+    // UUID_REGEX: only store for recognised members (valid UUID = exists in members table).
+    const isRecognisedMember = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId ?? '');
+    if (!isSanctuary && isRecognisedMember) {
+      const currentElement = orchestratorResult.metadata?.stateVector?.primary?.element as string | undefined;
+      const scored = detectThemes(message, currentElement as any);
+      if (scored.length > 0 && scored[0].resonance_strength >= 0.55) {
+        storeThemeSignal(effectiveUserId!, scored[0], { sessionId: safeSessionId });
+      }
     }
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)

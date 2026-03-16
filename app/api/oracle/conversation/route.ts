@@ -973,7 +973,8 @@ export async function POST(request: NextRequest) {
       activeProtocol,
       topPatterns,
       depthConfig.tier,
-      topHypotheses
+      topHypotheses,
+      isVoiceMode
     );
 
     const tAfterLLM = Date.now();
@@ -2292,7 +2293,8 @@ async function generateSpiralogicResponseWithLLM(
   activeProtocol?: any,
   topPatterns?: PatternSummary[],
   depthTier?: DepthTier,
-  topHypotheses?: PatternHypothesis[]
+  topHypotheses?: PatternHypothesis[],
+  isVoiceMode?: boolean
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
