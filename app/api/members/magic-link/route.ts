@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Check if member exists with this email
     const memberResult = await safeQuery(
-      'SELECT id, name, username FROM members WHERE email = $1',
+      'SELECT id, name, username FROM members WHERE LOWER(email) = $1',
       [normalizedEmail]
     );
 

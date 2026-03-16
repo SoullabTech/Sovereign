@@ -1870,9 +1870,15 @@ This user is in guest mode (no authenticated identity).
     if (!isSanctuary && isRecognisedMember) {
       const currentElement = orchestratorResult.metadata?.stateVector?.primary?.element as string | undefined;
       const scored = detectThemes(message, currentElement as any);
-      if (scored.length > 0 && scored[0].resonance_strength >= 0.55) {
-        storeThemeSignal(effectiveUserId!, scored[0], { sessionId: safeSessionId });
+      const topSignal = scored.length > 0 ? scored[0] : null;
+      console.info('[participatory] member=%s element=%s topTheme=%s resonance=%s',
+        effectiveUserId?.slice(0, 8), currentElement ?? 'none',
+        topSignal?.theme ?? 'none', topSignal?.resonance_strength?.toFixed(2) ?? '0.00');
+      if (topSignal && topSignal.resonance_strength >= 0.55) {
+        storeThemeSignal(effectiveUserId!, topSignal, { sessionId: safeSessionId });
       }
+    } else {
+      console.info('[participatory] skipped — anon=%s sanctuary=%s', !isRecognisedMember, isSanctuary);
     }
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)

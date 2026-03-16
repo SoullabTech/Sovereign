@@ -105,7 +105,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { passkey, username, password, name, email, preferredName, birthDate } = body;
+    const { passkey, username, password, name, email: rawEmail, preferredName, birthDate } = body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     console.log(`[MEMBERS] Registration attempt: passkey=${passkey}, username=${username}`);
 
