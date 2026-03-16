@@ -77,6 +77,9 @@ import { PARTICIPATORY_ORACLE_BLOCK } from '@/lib/maia/prompts/participatoryReal
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { deriveActiveThread, buildActiveThreadBlock } from '@/lib/consciousness/activeThread';
+import { detectCorrectionSignal } from '@/lib/consciousness/correctionDetection';
+import { validateResponseAgainstActiveThread, buildRepairInstruction } from '@/lib/consciousness/responseThreadCheck';
 import {
   buildMaiaPlan,
   buildRenderPrompt,
@@ -2666,8 +2669,21 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking — MAIA proceeds without participatory lens
   }
 
-  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint || participatoryBlock
-    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom + participatoryBlock
+  // CONTINUITY LAYER: Compute active thread + correction signal
+  // Gated on depth >= 2 so first turns are unaffected
+  let activeThreadBlock = '';
+  let activeThreadResult = null;
+  let correctionResult = null;
+  if (conversationDepth >= 2) {
+    const recentTurns = conversationHistory.slice(-5);
+    activeThreadResult = deriveActiveThread({ recentTurns, latestUserMessage: message });
+    correctionResult = detectCorrectionSignal(message);
+    activeThreadBlock = buildActiveThreadBlock(activeThreadResult, correctionResult.hasCorrectionSignal);
+    console.log('[CONTINUITY] active_thread:', activeThreadResult.activeThread, 'confidence:', activeThreadResult.confidence.toFixed(2), 'correction:', correctionResult.hasCorrectionSignal);
+  }
+
+  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint || participatoryBlock || activeThreadBlock
+    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom + participatoryBlock + activeThreadBlock
     : systemPrompt;
 
   // HARD CLAMP: Prevent context window overflow
@@ -2710,6 +2726,35 @@ async function generateSpiralogicResponseWithLLM(
       maxTokensOverride: maxTokens,     // Depth-scaled: 100 (greeting) → 400 (deep)
     });
     coreMessage = llmResponse.text;
+
+    // CONTINUITY VALIDATION: Check draft before accepting it
+    if (activeThreadResult && conversationDepth >= 2) {
+      const threadCheck = validateResponseAgainstActiveThread({
+        activeThread: activeThreadResult.activeThread,
+        assistantDraft: coreMessage,
+        latestUserMessage: message,
+        recentTurns: conversationHistory.slice(-5),
+        hadCorrectionSignal: correctionResult?.hasCorrectionSignal ?? false,
+      });
+      if (!threadCheck.passes) {
+        console.warn('[CONTINUITY] Thread validation failed:', threadCheck.failureReasons, '— retrying once');
+        try {
+          const repairInstruction = buildRepairInstruction(threadCheck);
+          const retryResponse = await llmProvider.generate({
+            systemPrompt: finalSystemPrompt + repairInstruction,
+            userInput: fullUserInput,
+            level: consciousnessLevel as any,
+            maxTokensOverride: maxTokens,
+          });
+          if (retryResponse.text && retryResponse.text.length > 20) {
+            coreMessage = retryResponse.text;
+            console.log('[CONTINUITY] Retry succeeded, issues resolved:', threadCheck.detectedIssues);
+          }
+        } catch (retryErr) {
+          console.warn('[CONTINUITY] Retry failed, using original response:', retryErr);
+        }
+      }
+    }
 
     // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
