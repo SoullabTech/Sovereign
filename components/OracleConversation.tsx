@@ -3250,7 +3250,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
   // Also don't refocus if already focused (causes keyboard flicker on iOS)
   useEffect(() => {
-    if (showChatInterface && !isProcessing && textInputRef.current) {
+    if (showChatInterface && !isProcessing && !isResponding && textInputRef.current) {
       // Check if already focused to prevent iOS keyboard issues
       if (document.activeElement !== textInputRef.current) {
         // Small delay to ensure DOM is ready
@@ -3260,7 +3260,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [showChatInterface, isProcessing]); // Removed messages.length - was causing iOS freeze
+  }, [showChatInterface, isProcessing, isResponding]); // isResponding covers text mode response completion
 
   // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
   useEffect(() => {
