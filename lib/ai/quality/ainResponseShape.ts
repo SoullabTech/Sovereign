@@ -277,10 +277,10 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   // 4) NEXT STEP: a concrete practice / experiment / prompt
   // Primary phrases (explicit signal words — highest confidence):
   const nextStepPhrases =
-    /(next step|try this|one small experiment|here's a practice|practice:|do this now|for the next 24 hours|journal prompt|a question to sit with|step 1)/i;
+    /(next step|try this|one small (experiment|thing)|here's a practice|practice:|do this now|for the next 24 hours|journal prompt|a question to sit with|step 1|one thing to try|start (collecting|noticing|tracking))/i;
   // Secondary phrases (natural invitation language MAIA uses):
   const nextStepNatural =
-    /(notice what happens|sit with (this|that|it)|take one (slow |deep |breath|moment)|pause (for a moment|and notice)|i invite you to|you might (try|notice|sit|explore|spend|take)|spend (a moment|5 minutes|a few minutes)|write (one|a) sentence|ask yourself|place (a hand|your hand)|breathe (and|in|out|gently)|for the next (few|60|30|90) (seconds?|minutes?))/i;
+    /(notice what happens|sit with (this|that|it)|take one (slow |deep |breath|moment)|pause (for a moment|and notice)|i invite you to|you might (try|notice|sit|explore|spend|take)|spend (a moment|5 minutes|a few minutes)|write (one|a) sentence|ask yourself|place (a hand|your hand)|breathe (and|in|out|gently)|for the next (few|60|30|90) (seconds?|minutes?)|what would it look like to|what if you (tried|noticed|tracked)|keep a (note|record|log))/i;
   const hasActionList = /\n\s*[-*]\s+/.test(out.slice(Math.max(0, out.length - 500))); // bullets near end
   const nextStep = nextStepPhrases.test(out) || nextStepNatural.test(out) || hasActionList;
   if (!nextStep) notes.push('Missing next step: no clear action, practice, or prompt.');
