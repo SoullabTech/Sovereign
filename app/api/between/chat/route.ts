@@ -2070,6 +2070,28 @@ This user is in guest mode (no authenticated identity).
 
     const crystallization = detectCrystallization(message, finalMessage);
 
+    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair
+    // Conditions: Care mode + turn 3+ + meaningful response length + no anchor already present + not sanctuary
+    // Appended BEFORE voice renderer so it naturalises with the rest of the response.
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const isCareAnchorEligible =
+      mode === 'counsel' &&
+      conversationHistory.length >= 2 &&        // at least 3rd turn
+      finalMessage.length > 120 &&              // not a one-liner
+      !isSanctuary &&
+      !ANCHOR_ALREADY_PRESENT.test(finalMessage);
+
+    if (isCareAnchorEligible) {
+      // Pick an anchor that maps to the AIN nextStep evaluator
+      // "sit with (this|that|it)" and "you might sit" both match nextStep natural markers
+      const anchor = finalMessage.trimEnd().endsWith('?')
+        ? '\n\nSit with that for a moment.'
+        : '\n\nYou might sit with that tonight and see what arrives.';
+      finalMessage = finalMessage + anchor;
+      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
+        conversationHistory.length + 1, finalMessage.length);
+    }
+
     // 🗣️ VOICE RENDERER: Rewrite for warmth/clarity without adding facts
     let outboundText2 = finalMessage;
     let voiceMetrics2: { compliance: unknown; metrics: unknown } | null = null;
