@@ -180,6 +180,10 @@ export const THEME_DISPLAY: Record<ParticipatoryTheme, ThemeDisplayMeta> = {
  * NOTE: These are soft signals — always low confidence unless multiple markers cluster.
  * Never override member framing with a theme name without bridge framing.
  */
+// Marker expansion (March 2026)
+// Lists intentionally include conversational paraphrases alongside precise philosophical phrases.
+// Goal: detect natural language expressions of themes as they actually appear in member speech.
+// Detection threshold unchanged — single marker hit still qualifies (resonance ≥ 0.55).
 export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
   field_awareness: [
     'the room feels',
@@ -192,6 +196,17 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'field',
     'shared',
     'relational pattern',
+    // natural conversational variants
+    'something feels off',
+    'the energy feels',
+    'the vibe',
+    'this feels heavy',
+    'the room felt',
+    'something shifted between',
+    'there\'s something in the',
+    'feels different here',
+    'the whole mood',
+    'something is off',
   ],
   pattern_recurrence: [
     'again',
@@ -206,6 +221,21 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'repeat',
     'echo',
     'once more',
+    // natural conversational variants
+    'this keeps happening',
+    'same thing again',
+    'back here again',
+    'this always happens',
+    'why does this keep',
+    'always do this',
+    'keep ending up',
+    'every time',
+    'happens every',
+    'find myself here',
+    'here we go again',
+    'same pattern',
+    'doing this again',
+    'caught in the same',
   ],
   embodied_coherence: [
     'not aligned',
@@ -221,6 +251,19 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'feel one way',
     'tight',
     'tense',
+    // natural conversational variants
+    'this doesn\'t feel true',
+    'something feels out of alignment',
+    'not being honest with myself',
+    'this feels off in my body',
+    'what I\'m saying and what I feel',
+    'two different things',
+    'my gut says',
+    'doesn\'t sit right',
+    'feels wrong but',
+    'out of sync',
+    'not showing up as',
+    'betraying myself',
   ],
   adaptive_unfolding: [
     'if I approach it',
@@ -233,6 +276,20 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'frame',
     'choose to see',
     'my part in',
+    // natural conversational variants
+    'how I respond',
+    'what if I',
+    'different way to see',
+    'reframe',
+    'shift how',
+    'look at it differently',
+    'what this means',
+    'the way I\'m thinking',
+    'how I\'m holding',
+    'another way to',
+    'what I can control',
+    'my role in',
+    'how I\'m approaching',
   ],
   wise_acceptance: [
     'can\'t change',
@@ -245,6 +302,21 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'hard to accept',
     'against it',
     'struggling to accept',
+    // natural conversational variants
+    'can\'t control',
+    'have to accept',
+    'let it go',
+    'what it is',
+    'nothing I can do',
+    'have to live with',
+    'just how it is',
+    'pushing against',
+    'fighting against',
+    'stop fighting',
+    'resistance',
+    'surrender',
+    'this is hard to sit with',
+    'keeping me from accepting',
   ],
   ripeness: [
     'is now the time',
@@ -259,6 +331,21 @@ export const THEME_LANGUAGE_MARKERS: Record<ParticipatoryTheme, string[]> = {
     'before I can',
     'feel ready',
     'sense that',
+    // natural conversational variants
+    'i think i\'m ready',
+    'not ready yet',
+    'almost ready',
+    'something is about to change',
+    'i can feel something shifting',
+    'something is shifting',
+    'about to make a decision',
+    'on the edge of',
+    'feels like a turning point',
+    'not sure if this is the time',
+    'waiting for the right',
+    'the moment when',
+    'something is moving',
+    'ripening',
   ],
 };
 
