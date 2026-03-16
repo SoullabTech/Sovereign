@@ -71,6 +71,9 @@ import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
 import { getTopPatterns } from '@/lib/patterns/getTopPatterns';
 import type { PatternSummary } from '@/lib/patterns/getTopPatterns';
 import { getTopHypotheses, buildHypothesisPromptBlock, type PatternHypothesis } from '@/lib/patterns/getTopHypotheses';
+import { detectThemes, storeThemeSignal, buildParticipatorryHint, findRecurringThemes, getRecentThemes } from '@/lib/consciousness/participatoryRealityHelper';
+import type { ThemeSignal } from '@/lib/consciousness/participatoryReality';
+import { PARTICIPATORY_ORACLE_BLOCK } from '@/lib/maia/prompts/participatoryRealityPrompt';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -1682,6 +1685,15 @@ export async function POST(request: NextRequest) {
       insights: extractedInsights,
     });
 
+    // PARTICIPATORY REALITY: Store detected theme signals (fire-and-forget)
+    // Persists themes detected pre-generation to DB for longitudinal pattern analysis.
+    // Sanctuary excluded — no content stored from sanctuary sessions.
+    if (!isSanctuary && maiaResponse.detectedThemes?.length) {
+      for (const signal of maiaResponse.detectedThemes) {
+        storeThemeSignal(userId, signal, { sessionId });
+      }
+    }
+
     // 🛡️ IDENTITY SOVEREIGNTY: Sanitize response text to prevent MAIA identity breach
     // This ensures that no matter what the model generates, we remove forbidden phrases
     // that would identify MAIA as Claude or Anthropic (breaking the identity contract)
@@ -2285,6 +2297,7 @@ async function generateSpiralogicResponseWithLLM(
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
   elementalGuidance: string;
+  detectedThemes: ThemeSignal[];
   providerMetadata: {
     providerUsed: 'anthropic' | 'ollama' | 'fallback';
     modelUsed: string;
@@ -2614,8 +2627,45 @@ async function generateSpiralogicResponseWithLLM(
     patternHint = `\n\n[Practitioner-Named Patterns]\n${lines.join('\n')}\nThese are recurring themes named by the practitioner. Let them inform depth of reflection — do not name them directly unless the member raises them.\n[End Patterns]\n`;
   }
 
-  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint
-    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom
+  // PARTICIPATORY REALITY: Detect themes + build soft hint for system prompt
+  // Follows same non-blocking pattern as collectiveWisdom above.
+  // Activation: ≥1 language marker hit; never in crisis; one lens max.
+  // ------------------------------------------------------------
+  let participatoryBlock = '';
+  let detectedThemes: ThemeSignal[] = [];
+  try {
+    const scored = detectThemes(message, spiralogicCell?.element);
+    // Only inject if top signal meets minimum resonance threshold
+    if (scored.length > 0 && scored[0].resonance_strength >= 0.55) {
+      detectedThemes = scored.slice(0, 1); // one lens per response
+      const hint = buildParticipatorryHint(
+        findRecurringThemes(scored.map((s, i) => ({
+          id: i,
+          member_id: '',
+          session_id: null,
+          journal_entry_id: null,
+          theme: s.theme,
+          signal_type: s.signal_type,
+          resonance_strength: s.resonance_strength,
+          element: s.element,
+          context: {},
+          detected_at: new Date(),
+        }))),
+        1 // single-turn recurrence threshold (history checked at storage time)
+      );
+      if (hint) {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}\n\n${hint}`;
+      } else {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}`;
+      }
+    }
+  } catch (participatoryError) {
+    console.warn('[participatory] Theme detection failed (non-critical):', participatoryError);
+    // Non-blocking — MAIA proceeds without participatory lens
+  }
+
+  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint || participatoryBlock
+    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom + participatoryBlock
     : systemPrompt;
 
   // HARD CLAMP: Prevent context window overflow
@@ -2764,6 +2814,7 @@ async function generateSpiralogicResponseWithLLM(
     coreMessage,
     suggestedActions,
     elementalGuidance,
+    detectedThemes,
     providerMetadata: {
       providerUsed,
       modelUsed,

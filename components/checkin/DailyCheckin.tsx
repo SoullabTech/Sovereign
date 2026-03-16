@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles } from 'lucide-react';
+import { ELEMENT_TO_CHECKIN_THEME, CHECKIN_PARTICIPATORY_QUESTIONS } from '@/lib/maia/prompts/participatoryRealityPrompt';
 
 /**
  * Daily Check-in Component
@@ -62,14 +63,18 @@ interface DailyCheckinProps {
     state: EmotionalState;
     intensity: number;
     note?: string;
+    reflectionTheme?: string;
+    reflectionResponse?: string;
   }) => void;
+  showReflectionStep?: boolean; // participatoryReality feature flag — default false
 }
 
-export function DailyCheckin({ isOpen, onClose, onComplete }: DailyCheckinProps) {
-  const [step, setStep] = useState<'state' | 'intensity' | 'note'>('state');
+export function DailyCheckin({ isOpen, onClose, onComplete, showReflectionStep = false }: DailyCheckinProps) {
+  const [step, setStep] = useState<'state' | 'intensity' | 'note' | 'reflection'>('state');
   const [selectedState, setSelectedState] = useState<EmotionalState | null>(null);
   const [intensity, setIntensity] = useState(3);
   const [note, setNote] = useState('');
+  const [reflectionResponse, setReflectionResponse] = useState('');
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
 
   const handleStateSelect = (state: EmotionalState) => {
@@ -82,32 +87,37 @@ export function DailyCheckin({ isOpen, onClose, onComplete }: DailyCheckinProps)
     setStep('note');
   };
 
-  const handleComplete = () => {
+  const resetAll = () => {
+    setStep('state');
+    setSelectedState(null);
+    setIntensity(3);
+    setNote('');
+    setReflectionResponse('');
+  };
+
+  const handleComplete = (skipReflection = false) => {
     if (selectedState) {
+      const reflectionThemeKey = ELEMENT_TO_CHECKIN_THEME[selectedState.element];
       onComplete({
         state: selectedState,
         intensity,
         note: note.trim() || undefined,
+        reflectionTheme: (!skipReflection && reflectionResponse.trim()) ? reflectionThemeKey : undefined,
+        reflectionResponse: (!skipReflection && reflectionResponse.trim()) ? reflectionResponse.trim() : undefined,
       });
     }
-    // Reset for next time
-    setStep('state');
-    setSelectedState(null);
-    setIntensity(3);
-    setNote('');
+    resetAll();
   };
 
   const handleSkipNote = () => {
-    if (selectedState) {
-      onComplete({
-        state: selectedState,
-        intensity,
-      });
+    if (selectedState && showReflectionStep) {
+      setStep('reflection');
+      return;
     }
-    setStep('state');
-    setSelectedState(null);
-    setIntensity(3);
-    setNote('');
+    if (selectedState) {
+      onComplete({ state: selectedState, intensity });
+    }
+    resetAll();
   };
 
   // Group states by element
@@ -156,6 +166,7 @@ export function DailyCheckin({ isOpen, onClose, onComplete }: DailyCheckinProps)
                     {step === 'state' && 'How are you arriving?'}
                     {step === 'intensity' && `How strong is this ${selectedState?.label.toLowerCase()}?`}
                     {step === 'note' && 'Anything else present?'}
+                    {step === 'reflection' && 'One more thing —'}
                   </h2>
                 </div>
                 <button
@@ -330,10 +341,16 @@ export function DailyCheckin({ isOpen, onClose, onComplete }: DailyCheckinProps)
                           Skip
                         </button>
                         <button
-                          onClick={handleComplete}
+                          onClick={() => {
+                            if (showReflectionStep) {
+                              setStep('reflection');
+                            } else {
+                              handleComplete();
+                            }
+                          }}
                           className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium hover:from-amber-500 hover:to-amber-400 transition-all"
                         >
-                          Begin Session
+                          {showReflectionStep ? 'Continue' : 'Begin Session'}
                         </button>
                       </div>
 
@@ -345,6 +362,55 @@ export function DailyCheckin({ isOpen, onClose, onComplete }: DailyCheckinProps)
                       </button>
                     </motion.div>
                   )}
+                  {/* Step 4: Optional reflection question (participatory lens) */}
+                  {step === 'reflection' && selectedState && (() => {
+                    const themeKey = ELEMENT_TO_CHECKIN_THEME[selectedState.element];
+                    const question = CHECKIN_PARTICIPATORY_QUESTIONS[themeKey];
+                    return (
+                      <motion.div
+                        key="reflection"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-6"
+                      >
+                        <p className="text-sm text-stone-400 text-center italic">
+                          {question}
+                        </p>
+
+                        <textarea
+                          value={reflectionResponse}
+                          onChange={(e) => setReflectionResponse(e.target.value)}
+                          placeholder="A few words, or nothing at all..."
+                          className="w-full h-24 p-4 rounded-xl bg-stone-800/50 border border-stone-700/50
+                                     text-stone-200 placeholder:text-stone-600 resize-none
+                                     focus:outline-none focus:border-amber-500/50"
+                        />
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleComplete(true)}
+                            className="flex-1 py-3 rounded-xl bg-stone-800 text-stone-300 hover:bg-stone-700 transition-colors"
+                          >
+                            Skip
+                          </button>
+                          <button
+                            onClick={() => handleComplete(false)}
+                            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-white font-medium hover:from-amber-500 hover:to-amber-400 transition-all"
+                          >
+                            Begin Session
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => setStep('note')}
+                          className="text-sm text-stone-500 hover:text-amber-300 transition-colors"
+                        >
+                          ← Back
+                        </button>
+                      </motion.div>
+                    );
+                  })()}
                 </AnimatePresence>
               </div>
             </div>
