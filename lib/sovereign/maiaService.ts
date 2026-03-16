@@ -59,6 +59,7 @@ import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT, AINShapeContext } f
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { deriveActiveThread } from '../consciousness/activeThread';
 import { detectCorrectionSignal } from '../consciousness/correctionDetection';
+import { detectThemes, storeThemeSignal } from '../consciousness/participatoryRealityHelper';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
 import {
@@ -962,7 +963,7 @@ One line only. Appended at the end. Never on greeting turns or simple exchanges.
         // Note: fieldAwareness intentionally NOT appended - too diagnostic for early exchanges
         break;
       case 'counsel':
-        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.\n\nON SUBSTANTIVE TURNS: Close with one concrete move. Use specific language:\n- "One small thing to try: ..."\n- "You might notice when..."\n- "Try this: just notice when..."\n- "Here\'s a practice: ..."\n- "Sit with that question tonight."\n- "How does that land?"\n- "Would you like to explore that further, or let it rest?"\nOne move at the end. Specific, not abstract.';
+        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.\n\nRESPONSE RHYTHM on substantive turns:\n1. Mirror what is true.\n2. Bridge or name the pattern.\n3. Reduce pressure in one sentence — natural, brief, not forced. Examples:\n   - "You don\'t have to solve all of this right now."\n   - "You don\'t need the whole answer yet."\n   - "It can be enough to name the first piece."\n   - "You don\'t have to do this perfectly."\n4. Offer one small next step.\n\nKeep the permission sentence brief and natural. Omit it if it would sound hollow or repetitive. Place it before the next step, never after.\n\nUSE SPECIFIC LANGUAGE for next steps:\n- "One small thing to try: ..."\n- "You might notice when..."\n- "Try this: just notice when..."\n- "Here\'s a practice: ..."\n- "Sit with that question tonight."\nOne move at the end. Specific, not abstract.';
         break;
       case 'scribe':
         modeAdaptation = '\n\n📝 NOTE MODE — WHO MAIA IS:\nMAIA shows up as pure witness - reflecting what happened without adding meaning. Clean acknowledgment of what was said, what seemed to matter. No interpretation, no analysis, no advice. Just mirroring.';
@@ -3194,6 +3195,21 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       } catch (err) {
         // Never break the response if telemetry fails
         console.warn('[AIN SHAPE TELEMETRY ERROR]', err);
+      }
+
+      // PARTICIPATORY THEMES: fire-and-forget theme detection on user input
+      // Mirrors the oracle route path — populates member_theme_signals for longitudinal analysis.
+      // Sanctuary excluded — no content stored.
+      if (!isSanctuary && effectiveUserId) {
+        try {
+          const themeElement = (meta as any)?.element as import('@/lib/types/voiceIntent').Element | undefined;
+          const themeSignals = detectThemes(input, themeElement);
+          for (const signal of themeSignals) {
+            storeThemeSignal(effectiveUserId, signal, { sessionId });
+          }
+        } catch (themeErr) {
+          console.warn('[THEME DETECTION ERROR]', themeErr);
+        }
       }
     }
 
