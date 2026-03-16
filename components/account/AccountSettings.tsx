@@ -40,6 +40,8 @@ import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/c
 import { useUpdate } from '@/components/providers/UpdateProvider';
 import { Settings } from 'lucide-react';
 import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
+import { ContinuityView } from '@/components/consciousness/ContinuityView';
+import { PatternRecognitionView } from '@/components/consciousness/PatternRecognitionView';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -1408,6 +1410,30 @@ export function AccountSettings() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Spiral Position */}
+      <div className="mt-6 pt-6 border-t border-[#D4B896]/30">
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-1">
+          <Sparkles size={16} />
+          Your Spiral Position
+        </label>
+        <p className="text-xs text-stone-500 mb-4">
+          Where you are in the spiral — not what you said. This updates after each conversation.
+        </p>
+        <ContinuityView />
+      </div>
+
+      {/* Pattern Recognition */}
+      <div className="mt-6 pt-6 border-t border-[#D4B896]/30">
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-1">
+          <Sparkles size={16} />
+          Patterns MAIA Has Noticed
+        </label>
+        <p className="text-xs text-stone-500 mb-4">
+          Recurring themes across your conversations — offered for your recognition, not asserted as truth.
+        </p>
+        <PatternRecognitionView />
       </div>
     </div>
   );

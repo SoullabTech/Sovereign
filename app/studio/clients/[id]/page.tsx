@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
+import { PatternLedgerPanel } from '@/components/studio/PatternLedgerPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -40,6 +41,7 @@ interface Client {
   birthLocation: string | null;
   leadershipProfile: LeadershipProfile | null;
   clientTypes: string[];
+  memberId: string | null;
   createdAt: string;
 }
 
@@ -383,6 +385,12 @@ export default function ClientDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* Pattern Observations */}
+            <PatternLedgerPanel
+              clientId={client.id}
+              memberId={client.memberId}
+            />
           </div>
 
           {/* Sidebar */}

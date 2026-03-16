@@ -26,6 +26,7 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
 import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
+import { CouncilSynthesisPanel } from '@/components/studio/CouncilSynthesisPanel';
 
 interface SessionDetail {
   id: string;
@@ -45,6 +46,9 @@ interface SessionDetail {
   google_event_id: string | null;
   calendar_sync_status: string | null;
   scribe_session_id: string | null;
+  session_notes: string | null;
+  session_summary: string | null;
+  session_focus: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -423,6 +427,12 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
             clientName={session.client_name || null}
             isOpen={true}
             onClose={() => {}}
+          />
+
+          {/* Council Synthesis — three-lens AI analysis, manual trigger only */}
+          <CouncilSynthesisPanel
+            sessionId={sessionId}
+            hasNotes={!!(session.session_notes || session.session_summary || session.session_focus)}
           />
         </div>
 

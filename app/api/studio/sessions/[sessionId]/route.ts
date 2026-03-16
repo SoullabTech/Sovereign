@@ -8,15 +8,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
-import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-
-async function getPractitionerId(): Promise<string | null> {
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
+import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 
 export async function GET(
   req: NextRequest,
@@ -25,15 +17,12 @@ export async function GET(
   try {
     const { sessionId } = await params;
 
-    const memberId = await getMemberIdFromRequest(req);
-    if (!memberId) {
+    const identity = await getCurrentPractitioner(req);
+    if (!identity) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
-    if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
-    }
+    const practitionerId = identity.practitionerId;
 
     const result = await db.query(
       `SELECT
@@ -53,6 +42,9 @@ export async function GET(
         s.google_event_id,
         s.calendar_sync_status,
         s.scribe_session_id,
+        s.session_notes,
+        s.session_summary,
+        s.session_focus,
         s.created_at,
         s.updated_at,
         s.completed_at,
@@ -88,6 +80,9 @@ export async function GET(
       google_event_id: row.google_event_id,
       calendar_sync_status: row.calendar_sync_status,
       scribe_session_id: row.scribe_session_id,
+      session_notes: row.session_notes ?? null,
+      session_summary: row.session_summary ?? null,
+      session_focus: row.session_focus ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
       completed_at: row.completed_at,

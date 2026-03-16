@@ -43,6 +43,7 @@ export async function GET(
         c.chart_image_url,
         c.leadership_profile,
         c.client_types,
+        c.member_id,
         c.created_at,
         c.updated_at,
         c.last_session_at
@@ -125,6 +126,7 @@ export async function GET(
       chartImageUrl: row.chart_image_url,
       leadershipProfile: row.leadership_profile,
       clientTypes: row.client_types || [],
+      memberId: row.member_id ?? null,
       lastSessionAt: row.last_session_at,
       nextSessionAt: nextSession?.scheduledAt || null,
       totalSessions: sessions.filter(s => s.status === 'completed').length,

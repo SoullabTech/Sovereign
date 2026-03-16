@@ -327,6 +327,13 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
 
+  // Member state APIs (authenticated members, any tier)
+  { exact: '/api/members/spiral-state', minTier: 'free', notes: 'Member spiral state (Continuity View)' },
+  { prefix: '/api/members/patterns', minTier: 'free', notes: 'Member pattern ledger' },
+
+  // Studio APIs (practitioners only)
+  { prefix: '/api/studio', minTier: 'pro', rolesAnyOf: ['practitioner', 'admin'], notes: 'Studio API — practitioner-only' },
+
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
