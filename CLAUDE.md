@@ -37,18 +37,22 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-03-16
-- **Current milestone**: AIN shape prompt-evaluator contract fully patched and deployed. 4-phase sequencing live.
-- **Last change**: Two commits in sequence (this session):
-  1. `db40b67c` — **bridgeNatural evaluator extension**: catches "The thing I notice is...", "worth noticing", IFS/Jungian/elemental lens references, "another way to understand/see". All 14 shape tests pass. Test file moved to canonical `tests/ai/`.
-  2. `07cd5ef3` — **4-phase prompt sequencing**: Sacred attending prompt restructured from 3-step ATTUNE/ILLUMINATE/INVITE to explicit mirror → bridge → permission → next step with concrete starters per phase, "never skip from mirror to advice" constraint, and conditional next step (not forced in minimal replies).
-- **Next action**: After 5+ new oracle turns, run measurement query below. Expected: bridge_rate 40–60%, then permission, then next_step, then pass_rate. Settings page astrology section is **already complete** (consent states, birth data CRUD, geocode search, remove — all live in `AccountSettings.tsx`; `BirthDataStep` wired into onboarding).
-- **Underlying question**: Does the 4-phase sequencing instruction move bridge_rate off 20% and unlock permission + next_step?
-- **State of the system**: All layers live: telemetry → ledger → directives → admin panel → prompt → evaluator. Crons registered (daily 02:00, weekly 03:00, sweeper every 15min). Admin panel at `/admin/research`. Astrology settings: complete. Onboarding astrology step: complete.
-- **AIN shape baselines**: pre-fix 1007 turns: mirror=75%, bridge=22%, permission=6%, next_step=1%, pass=0.2%. Post-evaluator-fix (5 turns): mirror=100%, bridge=20%, permission=0%, next_step=0%, pass=0%.
-- **Measurement query** (run after 5+ turns):
+- **Date**: 2026-03-16 (evening)
+- **Current milestone**: 4-phase sequencing confirmed working. Participatory theme detection deployed. Typecheck clean.
+- **Last changes** (this session, commits on `main`):
+  1. `d0097f39` — **participatory marker expansion**: ~60 natural-language variants added to `THEME_LANGUAGE_MARKERS` across all 6 themes. Ops script (`scripts/check-maia-state.sh`) and email normalization tests committed.
+  2. `725216b1` — **typecheck fix**: removed untyped continuity-stack fields from `between/chat` AIN telemetry call. Typecheck now zero errors.
+- **AIN shape results** (4-phase sequencing is working):
+  - 2h window (330 turns): mirror=70%, bridge=33%, next_step=**30.7%**, pass=**13.6%**
+  - Baseline was: bridge=22%, next_step=1%, pass=0.2%
+  - Question answered: yes, 4-phase sequencing moved next_step from 1% → 30%
+- **Participatory theme signals**: 0 rows after rebuild (expected — new markers not yet exercised). Check again after 24–48h of traffic using `./scripts/check-maia-state.sh`.
+- **Next action**: Observe theme signal volume over next 24–48h. Run `./scripts/check-maia-state.sh 48` to evaluate marker expansion impact.
+- **Underlying question**: Do expanded participatory markers produce 10–25 signals per 170 turns (vs 1 previously)?
+- **State of the system**: All layers live. Container rebuilt with expanded markers. Worktrees pruned (~120 stale removed). 34 commits ahead of origin/main pushed. Typecheck clean.
+- **Ops diagnostic**:
   ```bash
-  docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT COUNT(*) as turns, ROUND(100.0*AVG(CASE WHEN mirror THEN 1 ELSE 0 END),1) as mirror_rate, ROUND(100.0*AVG(CASE WHEN bridge THEN 1 ELSE 0 END),1) as bridge_rate, ROUND(100.0*AVG(CASE WHEN permission THEN 1 ELSE 0 END),1) as permission_rate, ROUND(100.0*AVG(CASE WHEN next_step THEN 1 ELSE 0 END),1) as next_step_rate, ROUND(100.0*AVG(CASE WHEN pass THEN 1 ELSE 0 END),1) as pass_rate FROM ain_shape_telemetry WHERE formed_at > NOW() - interval '6 hours';"
+  ./scripts/check-maia-state.sh 48   # theme signals + AIN aggregate
   ```
 
 ## Re-entry vow (for this session)
