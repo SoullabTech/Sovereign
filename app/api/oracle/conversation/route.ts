@@ -52,6 +52,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { resolveConversationState, buildStateHint } from '@/lib/conversation/conversationStateResolver';
 import { loadActiveProtocol, buildProtocolContextHeader, buildProtocolListeningGuidance } from '@/lib/studio/patternInquiryProtocol';
 import { loadLedgerForRouting, promoteToLedger, loadLedgerSummaries } from '@/lib/consciousness/interpretiveLedger';
 import { loadActiveHypotheses, persistGateResult, enqueueObservation, enqueueContradiction } from '@/lib/consciousness/hypothesisBuffer';
@@ -2365,6 +2366,20 @@ async function generateSpiralogicResponseWithLLM(
       'Always end on a complete sentence with natural terminal punctuation (. ! ?). ' +
       'Never end mid-clause or mid-thought. If you are close to your length limit, ' +
       'finish the current sentence and stop — do not trail off.';
+  }
+
+  // CONVERSATION STATE RESOLVER: Deterministic Layer 0 — thread coherence before generation.
+  // Runs on the last 4 turns + current message. Resolves: option selections, yes/no
+  // confirmations, pronoun references. Injects a compact # Turn Context hint so the model
+  // never has to guess what "design", "yes it would", or "it" refers to.
+  {
+    const resolverTurns = (conversationHistory || []).slice(-4);
+    const resolvedState = resolveConversationState(resolverTurns, message);
+    const stateHint = buildStateHint(resolvedState);
+    if (stateHint) {
+      // Appended last (highest recency) — overrides ambiguous thread-tracking in body of prompt.
+      systemPrompt += '\n\n' + stateHint;
+    }
   }
 
   // Format conversation history for LLM
