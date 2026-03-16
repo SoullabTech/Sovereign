@@ -89,8 +89,18 @@ function countInlineNumbered(text: string): number {
 }
 
 function countInlineDashOptions(text: string): number {
-  // Counts inline " - thing" / " – thing" / " — thing" patterns
-  // Avoids double-counting lines that already begin as bullets.
+  // Counts dash constructions that function as list-option bullets.
+  //
+  // MAIA uses em-dashes heavily as a rhetorical device mid-sentence
+  // ("clarity that comes — not from thinking about doing") which must NOT
+  // be counted as list items. Only count dashes that appear at a true
+  // clause boundary:
+  //   1. Line starts with optional whitespace then a dash  (line-level bullet)
+  //   2. Dash appears immediately after sentence-ending punctuation (.!?)
+  //      e.g. "...write the first honest sentence that comes.  — If it's fear of..."
+  //
+  // Hyphens ( - with surrounding spaces) keep prior behaviour because
+  // space-hyphen-space mid-sentence is rare in natural prose.
   let n = 0;
 
   for (const line of text.split('\n')) {
@@ -98,13 +108,14 @@ function countInlineDashOptions(text: string): number {
     if (/^\s*[-*•]\s+\S/.test(line)) continue;
     if (/^\s*\d{1,2}[\).]\s+\S/.test(line)) continue;
 
+    // Hyphen: space-hyphen-space mid-line (rare in natural prose — keep as-is)
     const hyphen = line.match(/\s-\s+\S+/g);
-    const enDash = line.match(/\s–\s+\S+/g);
-    const emDash = line.match(/\s—\s+\S+/g);
-
     if (hyphen) n += hyphen.length;
-    if (enDash) n += enDash.length;
-    if (emDash) n += emDash.length;
+
+    // En-dash / em-dash: only count at line start OR after sentence-end punctuation
+    if (/^\s*[–—]\s+\S/.test(line)) n++;
+    const afterSentence = line.match(/[.!?]\s+[–—]\s+\S/g);
+    if (afterSentence) n += afterSentence.length;
   }
 
   return n;
@@ -247,7 +258,7 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
     /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming))/i;
   // Natural connective language the prompt now explicitly guides MAIA toward:
   const bridgeNatural =
-    /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms))/i;
+    /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|what\syou'?re\s(naming|pointing\sto|describing)\sis|what\syou\s(just\s)?(named|pointed\sto|described)\sis|you'?re\snaming\s(something|a\s|the\s)|that'?s\sthe\s(real\s)?(tension|pattern|dynamic|thread|distinction|paradox)|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms))/i;
   const bridge = bridgePhrases.test(out) || bridgeNatural.test(out);
   if (!bridge) notes.push('Missing bridge: no sign of a gentle cross-lens weave.');
 
