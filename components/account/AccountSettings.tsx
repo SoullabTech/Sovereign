@@ -43,6 +43,7 @@ import VoiceSettingsPanel from '@/components/settings/VoiceSettingsPanel';
 import { NostrMessagingSection } from '@/components/nostr/NostrMessagingSection';
 import ContinuityView from '@/components/consciousness/ContinuityView';
 import PatternLedger from '@/components/consciousness/PatternLedger';
+import RecurringThemesCard from '@/components/consciousness/RecurringThemesCard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -2781,6 +2782,7 @@ export function AccountSettings() {
                 <div>
                   <h2 className="text-xl font-semibold text-white">Patterns</h2>
                 </div>
+                <RecurringThemesCard />
                 <PatternLedger />
               </div>
             )}
