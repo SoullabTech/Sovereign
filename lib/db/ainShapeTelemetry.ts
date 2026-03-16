@@ -28,6 +28,17 @@ export type AINShapeTelemetryRow = {
   sessionId?: string;
   // Optional flow telemetry — populated when oracle route runs state resolver
   flowTelemetry?: ConversationFlowTelemetry | null;
+  // Continuity-stack fields (nullable — between/chat route)
+  turnIndex?: number | null;
+  mode?: string | null;
+  activeThreadPresent?: boolean | null;
+  activeThreadConfidence?: number | null;
+  correctionDetected?: boolean | null;
+  optionResolutionMatched?: boolean | null;
+  optionResolutionNearMiss?: boolean | null;
+  ruptureFlag?: boolean | null;
+  ruptureType?: string | null;
+  assistantTurnType?: string | null;
 };
 
 export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<void> {
@@ -42,6 +53,16 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
     explorerId,
     sessionId,
     flowTelemetry,
+    turnIndex,
+    mode,
+    activeThreadPresent,
+    activeThreadConfidence,
+    correctionDetected,
+    optionResolutionMatched,
+    optionResolutionNearMiss,
+    ruptureFlag,
+    ruptureType,
+    assistantTurnType,
   } = row;
 
   // Guard: require valid sessionId to prevent orphan rows
@@ -64,10 +85,14 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
        route, processing_profile, model, explorer_id, session_id,
        flow_outcome, flow_confidence, flow_reason,
        state_resolver_fired, resolver_rule, resolver_confidence,
-       clarification_blocked, model_asked_clarification, clarification_was_needed, repair_signal)
+       clarification_blocked, model_asked_clarification, clarification_was_needed, repair_signal,
+       turn_index, mode, active_thread_present, active_thread_confidence,
+       correction_detected, option_resolution_matched, option_resolution_near_miss,
+       rupture_flag, rupture_type, assistant_turn_type)
     VALUES
       ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-       $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+       $14, $15, $16, $17, $18, $19, $20, $21, $22, $23,
+       $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
     `,
     [
       pass,
@@ -94,6 +119,17 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
       ft?.modelAskedClarification ?? null,
       ft?.clarificationWasNeeded ?? null,
       ft?.repairSignal ?? null,
+      // Continuity-stack fields (nullable — between/chat route)
+      turnIndex ?? null,
+      mode ?? null,
+      activeThreadPresent ?? null,
+      activeThreadConfidence ?? null,
+      correctionDetected ?? null,
+      optionResolutionMatched ?? null,
+      optionResolutionNearMiss ?? null,
+      ruptureFlag ?? null,
+      ruptureType ?? null,
+      assistantTurnType ?? null,
     ]
   );
 }

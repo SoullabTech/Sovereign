@@ -83,6 +83,9 @@ import {
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
+import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
+import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
+import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -2203,6 +2206,39 @@ This user is in guest mode (no authenticated identity).
     }
 
     cleanedText = cleanedText.trim();
+
+    // 📐 AIN SHAPE TELEMETRY: Continuity-stack metrics (fire-and-forget, never blocks)
+    if (!isSanctuary && (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production')) {
+      const _ainShape = assessAINResponseShape(message, cleanedText);
+      logAINShapeTelemetry({
+        pass: _ainShape.pass,
+        score: _ainShape.score,
+        flags: _ainShape.flags,
+        menuSignals: _ainShape.signals ?? null,
+        route: 'between/chat',
+        processingProfile: undefined,
+        model: orchestratorResult.metadata?.provider?.model ?? undefined,
+        explorerId: effectiveUserId ?? undefined,
+        sessionId: safeSessionId,
+        // Continuity-stack fields
+        turnIndex: conversationHistory.length,
+        mode: mode ?? null,
+        // threadTracker not yet wired — null until lib/consciousness/threadTracker.ts exists
+        activeThreadPresent: null,
+        activeThreadConfidence: null,
+        // Self-correction heuristic from repair_signal pattern in response
+        correctionDetected: _ainShape.flags.mirror === false && /\b(i'?m sorry|let me clarify|that came out wrong|let me try that again|let'?s reset|i misspoke)\b/i.test(cleanedText),
+        // optionResolver not yet wired — null until lib/consciousness/optionResolver.ts exists
+        optionResolutionMatched: null,
+        optionResolutionNearMiss: null,
+        // Rupture from ruptureDetectionService (already computed above)
+        ruptureFlag: ruptureDetection.ruptureDetected,
+        ruptureType: ruptureDetection.ruptureDetected ? (ruptureDetection.ruptureType ?? null) : null,
+        assistantTurnType: classifyAssistantTurn(cleanedText),
+      }).catch((err) => {
+        console.warn('[between/chat] AIN shape telemetry write failed:', err?.message);
+      });
+    }
 
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {
