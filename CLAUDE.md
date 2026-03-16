@@ -38,15 +38,14 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 ## Current priority thread (update each session)
 
 - **Date**: 2026-03-16
-- **Current milestone**: System Intelligence Research Layer complete. AIN shape prompt-evaluator contract patched (3 commits).
-- **Last change**: Three prompt/evaluator fixes landed in sequence:
-  1. `6cbc71c7` — **next_step + permission gap**: INVITE step now instructs explicit signal phrases ("Next step:", "Try this:", etc.). `ainResponseShape.ts` extended with `nextStepNatural` regex.
-  2. `ff37a7d2` — **bridge gap**: ILLUMINATE rewritten — now explicitly the connective move from mirror → meaning. `ainResponseShape.ts` extended with `bridgeNatural` regex. Primary failure analysis: bridge=65%, mirror=25%, permission=10%, next_step=0.8% across 1007 turns.
-  3. **Research Layer** (Phases 1-3): `system_research_ledger` + `system_directives` tables live. Daily/weekly cron at 02:00/03:00 registered. Directive `ain_shape_degraded` opened (0% pass rate, 18 turns), condition_cleared_at set (false clear — 0 turns today). `pattern_accumulation_stall` directive also open.
-- **Next action**: Wait for post-fix MAIA turns, then run 6-hour shape aggregate to measure bridge/next_step/permission improvement. Settings page astrology section still pending.
-- **Underlying question**: Did the ILLUMINATE and INVITE prompt changes reshape MAIA's output structure? Does bridge_rate move from 22% toward 50%+?
-- **State of the system**: All five layers live: telemetry → ledger → directives → admin panel → prompt/evaluator. Awaiting first post-fix telemetry. Crons registered. Admin panel at `/admin/research`.
-- **AIN shape baselines (pre-fix, 1007 turns)**: mirror=75%, bridge=22%, permission=6%, next_step=1%, pass=0.2%.
+- **Current milestone**: AIN shape prompt-evaluator contract fully patched and deployed. 4-phase sequencing live.
+- **Last change**: Two commits in sequence (this session):
+  1. `db40b67c` — **bridgeNatural evaluator extension**: catches "The thing I notice is...", "worth noticing", IFS/Jungian/elemental lens references, "another way to understand/see". All 14 shape tests pass. Test file moved to canonical `tests/ai/`.
+  2. `07cd5ef3` — **4-phase prompt sequencing**: Sacred attending prompt restructured from 3-step ATTUNE/ILLUMINATE/INVITE to explicit mirror → bridge → permission → next step with concrete starters per phase, "never skip from mirror to advice" constraint, and conditional next step (not forced in minimal replies).
+- **Next action**: After 5+ new oracle turns, run measurement query below. Expected: bridge_rate 40–60%, then permission, then next_step, then pass_rate. Settings page astrology section is **already complete** (consent states, birth data CRUD, geocode search, remove — all live in `AccountSettings.tsx`; `BirthDataStep` wired into onboarding).
+- **Underlying question**: Does the 4-phase sequencing instruction move bridge_rate off 20% and unlock permission + next_step?
+- **State of the system**: All layers live: telemetry → ledger → directives → admin panel → prompt → evaluator. Crons registered (daily 02:00, weekly 03:00, sweeper every 15min). Admin panel at `/admin/research`. Astrology settings: complete. Onboarding astrology step: complete.
+- **AIN shape baselines**: pre-fix 1007 turns: mirror=75%, bridge=22%, permission=6%, next_step=1%, pass=0.2%. Post-evaluator-fix (5 turns): mirror=100%, bridge=20%, permission=0%, next_step=0%, pass=0%.
 - **Measurement query** (run after 5+ turns):
   ```bash
   docker exec maia-postgres psql -U soullab maia_consciousness -c "SELECT COUNT(*) as turns, ROUND(100.0*AVG(CASE WHEN mirror THEN 1 ELSE 0 END),1) as mirror_rate, ROUND(100.0*AVG(CASE WHEN bridge THEN 1 ELSE 0 END),1) as bridge_rate, ROUND(100.0*AVG(CASE WHEN permission THEN 1 ELSE 0 END),1) as permission_rate, ROUND(100.0*AVG(CASE WHEN next_step THEN 1 ELSE 0 END),1) as next_step_rate, ROUND(100.0*AVG(CASE WHEN pass THEN 1 ELSE 0 END),1) as pass_rate FROM ain_shape_telemetry WHERE formed_at > NOW() - interval '6 hours';"
