@@ -53,6 +53,13 @@ import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
 import { resolveConversationState, buildStateHint } from '@/lib/conversation/conversationStateResolver';
+import {
+  buildFlowTelemetry,
+  detectClarificationQuestion,
+  detectRepairSignal,
+} from '@/lib/consciousness/flowTelemetry';
+import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
+import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { loadActiveProtocol, buildProtocolContextHeader, buildProtocolListeningGuidance } from '@/lib/studio/patternInquiryProtocol';
 import { loadLedgerForRouting, promoteToLedger, loadLedgerSummaries } from '@/lib/consciousness/interpretiveLedger';
 import { loadActiveHypotheses, persistGateResult, enqueueObservation, enqueueContradiction } from '@/lib/consciousness/hypothesisBuffer';
@@ -2372,15 +2379,18 @@ async function generateSpiralogicResponseWithLLM(
   // Runs on the last 4 turns + current message. Resolves: option selections, yes/no
   // confirmations, pronoun references. Injects a compact # Turn Context hint so the model
   // never has to guess what "design", "yes it would", or "it" refers to.
-  {
-    const resolverTurns = (conversationHistory || []).slice(-4);
-    const resolvedState = resolveConversationState(resolverTurns, message);
-    const stateHint = buildStateHint(resolvedState);
-    if (stateHint) {
-      // Appended last (highest recency) — overrides ambiguous thread-tracking in body of prompt.
-      systemPrompt += '\n\n' + stateHint;
-    }
+  const resolverTurns = (conversationHistory || []).slice(-4);
+  const resolvedState = resolveConversationState(resolverTurns, message);
+  const stateHint = buildStateHint(resolvedState);
+  if (stateHint) {
+    // Appended last (highest recency) — overrides ambiguous thread-tracking in body of prompt.
+    systemPrompt += '\n\n' + stateHint;
   }
+  // Layer 0 metadata for flow telemetry (populated post-generation)
+  const stateResolverFired = resolvedState.resolverRule !== 'none';
+  const clarificationBlocked = resolvedState.shouldClarify === false && stateResolverFired;
+  // Repair signal: does the CURRENT user message correct a prior misunderstanding?
+  const incomingRepairSignal = detectRepairSignal(message);
 
   // Format conversation history for LLM
   // CLAMP: Keep last 10 turns max to prevent context window overflow
@@ -2658,6 +2668,19 @@ async function generateSpiralogicResponseWithLLM(
     usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
 
     // Turn-level instrumentation: stop_reason is the key truncation signal
+    const modelAskedClarification = detectClarificationQuestion(coreMessage);
+    const clarificationWasNeeded = !stateResolverFired && modelAskedClarification;
+
+    const flowTelemetry = buildFlowTelemetry({
+      stateResolverFired,
+      resolverRule: resolvedState.resolverRule,
+      resolverConfidence: resolvedState.resolverConfidence,
+      clarificationBlocked,
+      modelAskedClarification,
+      clarificationWasNeeded,
+      repairSignal: incomingRepairSignal,
+    });
+
     console.info(JSON.stringify({
       tag: 'oracle.turn', phase: 'llm_complete',
       is_voice: isVoiceMode, depth: conversationDepth,
@@ -2666,8 +2689,35 @@ async function generateSpiralogicResponseWithLLM(
       stop_reason: llmResponse.metadata?.stopReason,
       truncated: llmResponse.metadata?.stopReason === 'max_tokens',
       generation_ms: llmResponse.metadata?.generationTime,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Flow telemetry (Layer 0 + generation-side)
+      flowOutcome: flowTelemetry.flowOutcome,
+      flowConfidence: flowTelemetry.flowConfidence,
+      flowReason: flowTelemetry.flowReason,
+      stateResolverFired,
+      resolverRule: resolvedState.resolverRule,
+      modelAskedClarification,
+      repairSignal: incomingRepairSignal,
     }));
+
+    // AIN shape evaluation + full telemetry write (fire-and-forget)
+    if (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production') {
+      const ainShape = assessAINResponseShape(message, coreMessage);
+      logAINShapeTelemetry({
+        pass: ainShape.pass,
+        score: ainShape.score,
+        flags: ainShape.flags,
+        menuSignals: ainShape.signals ?? null,
+        route: 'oracle',
+        processingProfile: depthTier,
+        model: llmResponse.model,
+        explorerId: userId ?? undefined,
+        sessionId,
+        flowTelemetry,
+      }).catch((err) => {
+        console.warn('[oracle] AIN shape telemetry write failed:', err?.message);
+      });
+    }
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
     usedProviderFallback = true;

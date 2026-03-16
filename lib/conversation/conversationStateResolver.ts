@@ -20,6 +20,7 @@
  */
 
 export type QuestionType = 'yes_no' | 'either_or' | 'multi_choice' | 'open';
+export type ResolverRule = 'yes_no' | 'either_or' | 'pronoun' | 'none';
 
 export type ConversationState = {
   lastAssistantQuestionType?: QuestionType | null;
@@ -29,6 +30,9 @@ export type ConversationState = {
   localReferent?: string | null;
   shouldAdvanceThread: boolean;
   shouldClarify: boolean;
+  // Layer 0 metadata — consumed by flow telemetry layer
+  resolverRule: ResolverRule;
+  resolverConfidence: number; // 0–1
 };
 
 export type Turn = { role: 'user' | 'assistant'; content: string };
@@ -131,6 +135,8 @@ export function resolveConversationState(
     shouldClarify: false,
     selectedOption: null,
     localReferent: null,
+    resolverRule: 'none',
+    resolverConfidence: 0,
   };
 
   if (!currentUserMessage?.trim()) return state;
@@ -154,6 +160,8 @@ export function resolveConversationState(
       state.userLikelyAnsweredPriorQuestion = true;
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'pronoun';
+      state.resolverConfidence = 0.80;
     }
   }
 
@@ -169,6 +177,8 @@ export function resolveConversationState(
       state.userLikelyAnsweredPriorQuestion = true;
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'yes_no';
+      state.resolverConfidence = 0.90;
       if (!state.localReferent) {
         state.localReferent = extractReferentFromQuestion(lastQuestion);
       }
@@ -176,6 +186,8 @@ export function resolveConversationState(
       state.userLikelyAnsweredPriorQuestion = true;
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'yes_no';
+      state.resolverConfidence = 0.88;
     }
   }
 
@@ -187,16 +199,22 @@ export function resolveConversationState(
       state.selectedOption = match;
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'either_or';
+      state.resolverConfidence = 0.93;
     } else if (/\bboth\b/i.test(userText)) {
       state.userLikelyAnsweredPriorQuestion = true;
       state.selectedOption = 'both';
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'either_or';
+      state.resolverConfidence = 0.88;
     } else if (AFFIRMATIVE_RE.test(userText)) {
       // "yes" to an either/or — ambiguous but treat as answered
       state.userLikelyAnsweredPriorQuestion = true;
       state.shouldAdvanceThread = true;
       state.shouldClarify = false;
+      state.resolverRule = 'yes_no';
+      state.resolverConfidence = 0.75;
     }
   }
 
