@@ -52,6 +52,10 @@ export type AINShapeResult = {
   notes: string[];
 };
 
+export type AINShapeContext = {
+  counselMode?: boolean; // true when mode === 'counsel' — enables structural bridge detection
+};
+
 const STOPWORDS = new Set([
   'the','a','an','and','or','but','if','then','so','to','of','in','on','for','with','at','by',
   'is','are','was','were','be','been','being','it','this','that','these','those','i','you',
@@ -241,7 +245,7 @@ function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSign
   };
 }
 
-export function assessAINResponseShape(input: string, output: string): AINShapeResult {
+export function assessAINResponseShape(input: string, output: string, context?: AINShapeContext): AINShapeResult {
   const notes: string[] = [];
   const out = (output || '').trim();
   const firstChunk = out.slice(0, 350);
@@ -259,7 +263,10 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   // Natural connective language the prompt now explicitly guides MAIA toward:
   const bridgeNatural =
     /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|what\syou'?re\s(naming|pointing\sto|describing)\sis|what\syou\s(just\s)?(named|pointed\sto|described)\sis|you'?re\snaming\s(something|a\s|the\s)|that'?s\sthe\s(real\s)?(tension|pattern|dynamic|thread|distinction|paradox)|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms)|the\s(real\s)?(issue|problem|tension|pattern|challenge)\s(is\b|you'?re\s(describing|naming))|not\s(just|only)\b[^.\n]{0,100}(but\b|it'?s)|it'?s\snot\b[^.\n]{0,100}it'?s|(that'?s|this\sis)\snot\b[^.\n]{0,80}but\b|(that'?s|this\sis)\sactually\b)/i;
-  const bridge = bridgePhrases.test(out) || bridgeNatural.test(out);
+  // Structural bridge: counsel mode + established mirror + substantive response length
+  // In Counsel, a mirrored deepening question/reflection is itself a bridge
+  const structuralBridge = !!(context?.counselMode && mirror && out.length > 180);
+  const bridge = bridgePhrases.test(out) || bridgeNatural.test(out) || structuralBridge;
   if (!bridge) notes.push('Missing bridge: no sign of a gentle cross-lens weave.');
 
   // 3) PERMISSION: micro-permission / consent-seeking language
