@@ -12,6 +12,7 @@ export interface MemberPattern {
   memberRespondedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  source?: 'practitioner' | 'maia';
 }
 
 const SELECT_COLS = `
@@ -52,5 +53,57 @@ export async function getMemberVisiblePatterns(memberId: string): Promise<Member
      ORDER BY created_at DESC`,
     [memberId]
   );
-  return result.rows;
+  return result.rows.map((r) => ({ ...r, source: 'practitioner' as const }));
+}
+
+// For member: MAIA-detected patterns from pattern_ledger (confidence >= 0.5, not retired)
+export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberPattern[]> {
+  const result = await query<{
+    id: string;
+    member_id: string;
+    statement: string;
+    scope: string;
+    confidence: number;
+    status: string;
+    member_response: string | null;
+    member_response_at: Date | null;
+    recurrence_count: number;
+    created_at: Date;
+    updated_at: Date;
+  }>(
+    `SELECT
+       id,
+       member_id,
+       statement,
+       scope,
+       confidence,
+       status,
+       member_response,
+       member_response_at,
+       recurrence_count,
+       created_at,
+       updated_at
+     FROM pattern_ledger
+     WHERE member_id = $1
+       AND confidence >= 0.5
+       AND status NOT IN ('retired')
+     ORDER BY confidence DESC, last_evidence_at DESC
+     LIMIT 20`,
+    [memberId]
+  );
+
+  return result.rows.map((r) => ({
+    id: r.id,
+    memberId: r.member_id,
+    practitionerId: '',
+    theme: r.statement,
+    description: null,
+    status: (r.status === 'emerging' ? 'offered' : r.status) as MemberPattern['status'],
+    confidence: Number(r.confidence),
+    memberResponse: r.member_response,
+    memberRespondedAt: r.member_response_at,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    source: 'maia' as const,
+  }));
 }

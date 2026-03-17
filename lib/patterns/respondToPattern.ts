@@ -7,7 +7,8 @@ export async function respondToPattern(params: {
   response: 'confirmed' | 'rejected';
   responseText?: string;
 }): Promise<MemberPattern | null> {
-  return queryOne<MemberPattern>(
+  // Try practitioner-named patterns first
+  const practitionerResult = await queryOne<MemberPattern>(
     `UPDATE member_patterns
      SET
        status               = $1,
@@ -30,4 +31,57 @@ export async function respondToPattern(params: {
        updated_at           AS "updatedAt"`,
     [params.response, params.responseText ?? null, params.patternId, params.memberId]
   );
+
+  if (practitionerResult) {
+    return { ...practitionerResult, source: 'practitioner' };
+  }
+
+  // Fall back to MAIA-detected patterns in pattern_ledger
+  const maiaResult = await queryOne<{
+    id: string;
+    member_id: string;
+    statement: string;
+    confidence: number;
+    status: string;
+    member_response: string | null;
+    member_response_at: Date | null;
+    created_at: Date;
+    updated_at: Date;
+  }>(
+    `UPDATE pattern_ledger
+     SET
+       status             = $1,
+       member_response    = $2,
+       member_response_at = now()
+     WHERE id        = $3
+       AND member_id = $4
+     RETURNING
+       id,
+       member_id,
+       statement,
+       confidence,
+       status,
+       member_response,
+       member_response_at,
+       created_at,
+       updated_at`,
+    [params.response, params.responseText ?? null, params.patternId, params.memberId]
+  );
+
+  if (!maiaResult) return null;
+
+  return {
+    id: maiaResult.id,
+    memberId: maiaResult.member_id,
+    practitionerId: '',
+    theme: maiaResult.statement,
+    description: null,
+    status: maiaResult.status as MemberPattern['status'],
+    confidence: Number(maiaResult.confidence),
+    memberResponse: maiaResult.member_response,
+    memberRespondedAt: maiaResult.member_response_at,
+    createdAt: maiaResult.created_at,
+    updatedAt: maiaResult.updated_at,
+    source: 'maia',
+  };
 }

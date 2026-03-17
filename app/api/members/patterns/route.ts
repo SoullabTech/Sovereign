@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { getMemberVisiblePatterns } from '@/lib/patterns/getMemberPatterns';
+import { getMemberVisiblePatterns, getMaiaDetectedPatterns } from '@/lib/patterns/getMemberPatterns';
 
 export async function GET() {
   try {
@@ -12,7 +12,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const patterns = await getMemberVisiblePatterns(session.memberId);
+    const [practitionerPatterns, maiaPatterns] = await Promise.all([
+      getMemberVisiblePatterns(session.memberId),
+      getMaiaDetectedPatterns(session.memberId),
+    ]);
+
+    // Deduplicate: if a maia pattern was already surfaced by a practitioner, skip it
+    const practitionerThemes = new Set(practitionerPatterns.map((p) => p.theme.toLowerCase()));
+    const filteredMaia = maiaPatterns.filter(
+      (p) => !practitionerThemes.has(p.theme.toLowerCase())
+    );
+
+    const patterns = [...practitionerPatterns, ...filteredMaia];
     return NextResponse.json({ patterns }, { status: 200 });
   } catch (error) {
     console.error('GET /api/members/patterns failed:', error);

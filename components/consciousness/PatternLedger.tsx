@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 type PatternStatus = 'offered' | 'confirmed' | 'rejected';
+type PatternSource = 'practitioner' | 'maia';
 
 interface MemberPattern {
   id: string;
@@ -14,6 +15,7 @@ interface MemberPattern {
   memberRespondedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  source?: PatternSource;
 }
 
 function PatternLedgerSkeleton() {
@@ -138,7 +140,7 @@ export default function PatternLedger() {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <p className="text-sm text-white/70">
-          No patterns offered yet. Your practitioner can name patterns they observe over time.
+          No patterns noticed yet. Patterns emerge through conversation over time.
         </p>
       </div>
     );
@@ -149,11 +151,15 @@ export default function PatternLedger() {
       {patterns.map((pattern) => {
         const isOffered = pattern.status === 'offered';
         const isSubmitting = submittingId === pattern.id;
+        const isMaia = pattern.source === 'maia';
 
         return (
           <div key={pattern.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
+                {isMaia ? (
+                  <p className="mb-1 text-xs text-white/40">MAIA is noticing</p>
+                ) : null}
                 <h3 className="text-base font-medium text-white">{pattern.theme}</h3>
 
                 {pattern.description ? (
