@@ -68,6 +68,12 @@ import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
 import { useVoiceSession } from '@/hooks/useVoiceSession';
+import dynamic from 'next/dynamic';
+
+const CareEvaluatorSheet = dynamic(
+  () => import('@/components/care/CareEvaluatorSheet').then(m => m.CareEvaluatorSheet),
+  { ssr: false }
+);
 
 /**
  * Detect Safari PWA environment for PWA-specific voice handling
@@ -829,6 +835,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
+
+  // Care evaluator (tester tool — gated by localStorage flag)
+  const [showEvaluator, setShowEvaluator] = useState(false);
+  const [evaluatorEnabled, setEvaluatorEnabled] = useState(false);
 
   // ✨ CAPTURE THE SPIRIT: Reflection Capsules
   const [showCapturePanel, setShowCapturePanel] = useState(false);
@@ -2741,6 +2751,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [isResponding]);
 
   // All state declarations and refs moved earlier (lines 138-197) to avoid hook ordering issues
+
+  // Care evaluator gate — read localStorage flag once on mount
+  useEffect(() => {
+    setEvaluatorEnabled(localStorage.getItem('maia.careEvaluator.enabled') === '1');
+  }, []);
 
   // Client-side only check
   useEffect(() => {
@@ -5129,6 +5144,11 @@ I'm not sure what I'm feeling yet.`;
         setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
 
+        // Care evaluator: show sheet after response in counsel mode (tester tool)
+        if (realtimeMode === 'counsel' && evaluatorEnabled) {
+          setShowEvaluator(true);
+        }
+
         // Process Oracle message for Field Protocol if recording
         if (isFieldRecording) {
           processFieldMessage({
@@ -6493,6 +6513,19 @@ I'm not sure what I'm feeling yet.`;
   }, [sessionTimer]);
 
   // DIAGNOSTIC LOGGING - Removed to reduce console noise and improve performance
+
+  // Care evaluator mode label helper
+  function getModeLabel(
+    rtMode: string,
+    framework: string,
+    isMentor: boolean,
+  ): 'care' | 'care+ifs' | 'mentor' | 'mentor+ifs' {
+    const hasFramework = !!framework && framework !== 'auto';
+    if (isMentor && hasFramework) return 'mentor+ifs';
+    if (isMentor) return 'mentor';
+    if (hasFramework) return 'care+ifs';
+    return 'care';
+  }
 
   return (
     <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
@@ -8887,6 +8920,18 @@ I'm not sure what I'm feeling yet.`;
         defaultTitle={circleOffer.artifact.title}
         defaultSummary={circleOffer.artifact.summary}
       />
+
+      {/* Care evaluator sheet — tester tool, gated by localStorage flag */}
+      {showEvaluator && evaluatorEnabled && realtimeMode === 'counsel' && (
+        <CareEvaluatorSheet
+          sessionId={sessionId}
+          userId={userId || ''}
+          mode={getModeLabel(realtimeMode, getCounselFramework(), false)}
+          therapeuticFramework={getCounselFramework() !== 'auto' ? getCounselFramework() : undefined}
+          mentorStance={false}
+          onSubmitted={() => setShowEvaluator(false)}
+        />
+      )}
     </div>
   );
 };
