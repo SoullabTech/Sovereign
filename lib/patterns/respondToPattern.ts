@@ -5,6 +5,7 @@ export async function respondToPattern(params: {
   patternId: string;
   memberId: string;
   response: 'confirmed' | 'rejected';
+  resonanceResponse?: string;
   responseText?: string;
 }): Promise<MemberPattern | null> {
   // Try practitioner-named patterns first
@@ -50,11 +51,14 @@ export async function respondToPattern(params: {
   }>(
     `UPDATE pattern_ledger
      SET
-       status             = $1,
-       member_response    = $2,
-       member_response_at = now()
-     WHERE id        = $3
-       AND member_id = $4
+       status              = CASE WHEN $1 = 'confirmed' THEN 'confirmed'
+                                  WHEN $1 = 'rejected'  THEN 'rejected'
+                                  ELSE status END,
+       member_response     = $2,
+       resonance_response  = $3,
+       member_response_at  = now()
+     WHERE id        = $4
+       AND member_id = $5
      RETURNING
        id,
        member_id,
@@ -62,10 +66,11 @@ export async function respondToPattern(params: {
        confidence,
        status,
        member_response,
+       resonance_response,
        member_response_at,
        created_at,
        updated_at`,
-    [params.response, params.responseText ?? null, params.patternId, params.memberId]
+    [params.response, params.responseText ?? null, params.resonanceResponse ?? null, params.patternId, params.memberId]
   );
 
   if (!maiaResult) return null;

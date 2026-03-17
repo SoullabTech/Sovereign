@@ -1,4 +1,5 @@
 import { query } from '@/lib/db/postgres';
+import { generateIfMissing } from './generatePatternIntelligence';
 
 export interface MemberPattern {
   id: string;
@@ -6,6 +7,7 @@ export interface MemberPattern {
   practitionerId: string;
   theme: string;
   description: string | null;
+  integrationPrompt?: string | null;
   status: 'emerging' | 'offered' | 'confirmed' | 'rejected';
   confidence: number | null;
   memberResponse: string | null;
@@ -65,6 +67,8 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
     scope: string;
     confidence: number;
     status: string;
+    description: string | null;
+    integration_prompt: string | null;
     member_response: string | null;
     member_response_at: Date | null;
     recurrence_count: number;
@@ -78,6 +82,8 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
        scope,
        confidence,
        status,
+       description,
+       integration_prompt,
        member_response,
        member_response_at,
        recurrence_count,
@@ -92,12 +98,13 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
     [memberId]
   );
 
-  return result.rows.map((r) => ({
+  const patterns = result.rows.map((r) => ({
     id: r.id,
     memberId: r.member_id,
     practitionerId: '',
     theme: r.statement,
-    description: null,
+    description: r.description,
+    integrationPrompt: r.integration_prompt,
     status: (r.status === 'emerging' ? 'offered' : r.status) as MemberPattern['status'],
     confidence: Number(r.confidence),
     memberResponse: r.member_response,
@@ -106,4 +113,13 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
     updatedAt: r.updated_at,
     source: 'maia' as const,
   }));
+
+  // Inline fallback: schedule generation for any pattern missing description that meets threshold
+  for (const r of result.rows) {
+    if (!r.description && Number(r.confidence) >= 0.6 && r.recurrence_count >= 2) {
+      generateIfMissing(r.id); // fire-and-forget
+    }
+  }
+
+  return patterns;
 }

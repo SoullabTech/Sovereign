@@ -18,17 +18,22 @@ export async function POST(
     const { id } = await context.params;
     const body = await request.json();
 
-    const response =
-      body.response === 'confirmed' || body.response === 'rejected'
-        ? (body.response as 'confirmed' | 'rejected')
-        : null;
+    const VALID_RESONANCE = ['fits', 'partly', 'not_now', 'no', 'explore'] as const;
+    type ResonanceResponse = typeof VALID_RESONANCE[number];
 
-    if (!response) {
-      return NextResponse.json(
-        { error: 'Response must be confirmed or rejected' },
-        { status: 400 }
-      );
-    }
+    const resonanceResponse = VALID_RESONANCE.includes(body.resonanceResponse)
+      ? (body.resonanceResponse as ResonanceResponse)
+      : null;
+
+    // Derive status from resonance if not explicitly provided
+    const responseValue: 'confirmed' | 'rejected' =
+      body.response === 'confirmed' || body.response === 'rejected'
+        ? body.response
+        : resonanceResponse === 'fits'
+          ? 'confirmed'
+          : resonanceResponse === 'no'
+            ? 'rejected'
+            : 'confirmed'; // partly/explore/not_now keep as confirmed to preserve status
 
     const responseText =
       typeof body.responseText === 'string' && body.responseText.trim().length > 0
@@ -38,7 +43,8 @@ export async function POST(
     const pattern = await respondToPattern({
       patternId: id,
       memberId: session.memberId,
-      response,
+      response: responseValue,
+      resonanceResponse: resonanceResponse ?? undefined,
       responseText,
     });
 
