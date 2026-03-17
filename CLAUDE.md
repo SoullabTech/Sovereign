@@ -37,12 +37,16 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-02-13
-- **Current milestone**: Bridge D implemented — spiral state persistence layer complete
-- **Last change**: Added `member_spiral_state` table + fire-and-forget persistence to prevent treating returning members as new
-- **Next action**: Run migration, verify continuity across server restarts
-- **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
-- **State of the system**: Bridge D landed. Anti-regression infrastructure in place. Structural continuity without content surveillance.
+- **Date**: 2026-03-17 (evening)
+- **Current milestone**: Three-PR capability stack complete. Ready to merge all three and begin practitioner beta testing.
+- **PRs open on `feat/mentor-stance-block`**:
+  - **#156** — Care lens (therapeuticFramework → oracle route) — merge-ready, behaviorally verified
+  - **#157** — Canon compliance telemetry (heuristic PERSUASION/AUTHORITY/CERTAINTY flags) — merge-ready, runtime-clean
+  - **#158** — Mentor stance block (supervision mode in Care, localStorage toggle, `MentorStanceToggle` UI badge, beta tester guide) — merge-ready, compile-verified
+- **Next action**: Merge all three PRs. Run beta test with 2–5 practitioners using `docs/testing/mentor-stance-beta-test.md`. Watch 24-48h: `lensBlockIncluded` rate, `[Canon] drift detected` frequency, Mentor option quality.
+- **Do NOT build next**: No weighted blending, no new modes, no framework registry yet. Watch real usage first.
+- **Underlying question**: When Mentor stance is on, does MAIA produce two genuinely distinct supervisory options — or does it flatten into sophisticated-sounding Care?
+- **State of the system**: Full practitioner capability stack live. Doorway (#156) + sensing (#157) + elevation (#158). Client activation via `localStorage.setItem('maia.mentorStance.enabled', '1')` or UI toggle in Care mode.
 
 ## Re-entry vow (for this session)
 
