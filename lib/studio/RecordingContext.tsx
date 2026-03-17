@@ -417,6 +417,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         formData.append('startMs', String(startMs));
         formData.append('endMs', String(endMs));
         formData.append('speaker', 'Speaker 1');
+        formData.append('chunkIndex', String(idx));
 
         try {
           await fetch(apiUrl('/api/supervision/transcript/stream'), {

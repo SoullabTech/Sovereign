@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
+import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
 export const runtime = 'nodejs';
@@ -9,6 +9,7 @@ export const revalidate = false;
 // Whisper endpoint (local container)
 const WHISPER_URL = process.env.WHISPER_URL || 'http://maia-whisper:8000';
 const MAX_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB max per audio chunk
+const SILENCE_GATE_BYTES = 1500; // below this = almost certainly silence
 
 interface WhisperResponse {
   text: string;
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
     const startMs = parseInt(formData.get('startMs') as string || '0', 10);
     const endMs = parseInt(formData.get('endMs') as string || '0', 10);
     const speaker = formData.get('speaker') as string || 'unknown';
+    const chunkIndex = parseInt(formData.get('chunkIndex') as string ?? '-1', 10);
 
     if (!sessionId) {
       return NextResponse.json({
@@ -95,15 +97,33 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Silence gate: skip Whisper for near-empty chunks (avoids hallucination on silence/noise)
+    const audioSizeBytes = audioFile.size;
+    if (audioSizeBytes < SILENCE_GATE_BYTES) {
+      console.log(`[SupervisionTranscript] Chunk skipped (silence gate): ${audioSizeBytes} bytes`);
+      return NextResponse.json({ success: true, skipped: true, reason: 'silence', chunkIndex });
+    }
+
+    // Fire parallel DB query for previous chunk tail (Whisper context anchoring)
+    const previousTailPromise = getLastChunkTail(sessionId);
+
     // Prepare audio for Whisper
     const audioBuffer = await audioFile.arrayBuffer();
     const audioBlob = new Blob([audioBuffer], { type: audioFile.type });
+
+    // Resolve previous tail for context prompt
+    const previousTail = await previousTailPromise;
+
+    console.log(`[SupervisionTranscript] chunk=${chunkIndex} size=${audioSizeBytes}B whisperPrompt=${!!previousTail}`);
 
     // Send to local Whisper for transcription
     const whisperFormData = new FormData();
     whisperFormData.append('file', audioBlob, 'audio.webm');
     whisperFormData.append('response_format', 'verbose_json');
     whisperFormData.append('language', 'en');
+    if (previousTail) {
+      whisperFormData.append('prompt', previousTail);
+    }
 
     let transcriptText = '';
     let confidence = 0.9;
@@ -146,12 +166,16 @@ export async function POST(request: NextRequest) {
         endMs,
         text: transcriptText,
         transcriptionConfidence: confidence,
+        chunkIndex,
       });
 
-      console.log(`📝 [TranscriptStream] Stored: "${transcriptText.slice(0, 50)}..."`);
+      console.log(`[TranscriptStream] Stored chunk=${chunkIndex}: "${transcriptText.slice(0, 50)}..."`);
 
       return NextResponse.json({
         success: true,
+        chunkIndex,
+        silenceSkipped: false,
+        whisperPromptUsed: !!previousTail,
         segment: {
           id: segment.id,
           text: transcriptText,
@@ -166,6 +190,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      chunkIndex,
+      silenceSkipped: false,
+      whisperPromptUsed: !!previousTail,
       segment: null,
       message: 'No speech detected in this chunk'
     });
