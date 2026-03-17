@@ -29,6 +29,7 @@ import {
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getFrameworkPromptAddendum, type TherapeuticFramework } from '@/lib/consciousness/therapeuticFrameworks';
 import { evaluateCanonCompliance } from '@/lib/consciousness/canonComplianceEvaluator';
+import { getMentorStancePrompt } from '@/lib/maia/mentorStanceVoice';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -300,6 +301,7 @@ type ConversationBody = {
   element?: string;
   userName?: string;
   therapeuticFramework?: string; // Care lens selected by user (ifs|cbt|jungian|somatic|etc.)
+  mentorStance?: boolean;        // Supervision mode: MAIA as clinical thinking partner
 };
 
 export async function POST(request: NextRequest) {
@@ -360,7 +362,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId, sessionId, therapeuticFramework } = parsed;
+    const { message, userId, sessionId, therapeuticFramework, mentorStance } = parsed;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -612,7 +614,8 @@ export async function POST(request: NextRequest) {
       anamnesisPrompt,
       astrologyContext,
       preferredAssistantName,
-      therapeuticFramework
+      therapeuticFramework,
+      mentorStance
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -647,6 +650,7 @@ export async function POST(request: NextRequest) {
 
         try {
           const llmProvider = new MultiLLMProvider();
+          const repairMentorBlock = mentorStance ? getMentorStancePrompt() : '';
           const repairLensBlock = therapeuticFramework
             ? getFrameworkPromptAddendum(therapeuticFramework as TherapeuticFramework) ?? ''
             : '';
@@ -665,7 +669,7 @@ export async function POST(request: NextRequest) {
             anamnesisPrompt,
             astrologyContext,
             preferredAssistantName
-          ) + (repairLensBlock ? `\n\n${repairLensBlock}` : '') + `\n\n${validationResult.repairPrompt}`;
+          ) + (repairMentorBlock ? `\n\n${repairMentorBlock}` : '') + (repairLensBlock ? `\n\n${repairLensBlock}` : '') + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
             .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
@@ -1411,7 +1415,8 @@ async function generateSpiralogicResponseWithLLM(
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
-  careLens?: string // Care mode therapeutic framework (ifs|cbt|jungian|somatic|etc.) — injected as elemental filter
+  careLens?: string, // Care mode therapeutic framework (ifs|cbt|jungian|somatic|etc.) — injected as elemental filter
+  isMentorStance?: boolean // Supervision mode: MAIA as clinical thinking partner (counsel + mentorStance)
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1531,6 +1536,13 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
+  // Mentor stance: supervision layer — sits between Care base and framework lens.
+  // Active only when counselling mode AND mentorStance flag is true.
+  const mentorBlock = isMentorStance ? getMentorStancePrompt() : null;
+  if (isMentorStance) {
+    console.log('[Oracle] mentor-stance active');
+  }
+
   // Care lens: appended after elemental/spiralogic foundation per Canon §VIII.
   // Spiral Core (always Part 1 of the addendum) re-states elemental awareness before
   // the framework block — lens renders through elements, not instead of them.
@@ -1540,7 +1552,7 @@ async function generateSpiralogicResponseWithLLM(
     lensBlockIncluded: !!lensBlock,
     lensBlockLength: lensBlock?.length ?? 0,
   });
-  const finalSystemPrompt = [systemPrompt, councilInsights, collectiveWisdom, lensBlock]
+  const finalSystemPrompt = [systemPrompt, councilInsights, collectiveWisdom, mentorBlock, lensBlock]
     .filter(Boolean)
     .join('');
 
