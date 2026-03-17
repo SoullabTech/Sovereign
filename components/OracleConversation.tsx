@@ -221,6 +221,19 @@ function setCanonWrapEnabled(enabled: boolean) {
   window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
 }
 
+// Mentor stance localStorage helpers (default-off — explicit practitioner opt-in)
+const MENTOR_STANCE_KEY = 'maia.mentorStance.enabled';
+
+function getMentorStanceEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(MENTOR_STANCE_KEY) === '1';
+}
+
+export function setMentorStanceEnabled(enabled: boolean) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(MENTOR_STANCE_KEY, enabled ? '1' : '0');
+}
+
 // ============================================================================
 // Welcome Greeting Helpers (Track 1: personalized greetings)
 // ============================================================================
@@ -4361,6 +4374,10 @@ I'm not sure what I'm feeling yet.`;
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
+
+          // Mentor stance: supervision mode for practitioners (care-mode only, explicit opt-in)
+          mentorStance: isCareMode && getMentorStanceEnabled(),
+
           allowRemoteRendering: false,
           voiceEngine: 'local',
 
