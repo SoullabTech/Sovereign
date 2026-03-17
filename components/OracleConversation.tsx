@@ -138,7 +138,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens, getMentorStance } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -4468,6 +4468,9 @@ I'm not sure what I'm feeling yet.`;
             ? pendingLensConsent.switchTo
             : (realtimeMode === 'counsel' ? getCounselFramework() : undefined),
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
+
+          // 🎓 MENTOR STANCE: Practitioner supervision mode (Care only)
+          mentorStance: realtimeMode === 'counsel' ? getMentorStance() : false,
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
           lensConsent: pendingLensConsent?.consent || null,
