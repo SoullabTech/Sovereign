@@ -19,14 +19,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { runAssembly } from '@/lib/supervision/transcriptAssembler';
 
+/**
+ * Is this request coming from within the Docker-internal network?
+ * Port 3000 is not published to the host, so requests without x-forwarded-for
+ * that come from localhost are safe to treat as internal admin calls.
+ */
+function isDockerInternalRequest(request: NextRequest): boolean {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const host = request.headers.get('host') ?? '';
+  return !forwarded && (host.startsWith('localhost') || host.startsWith('127.'));
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const memberId = await getMemberIdFromRequest(request);
-    if (!memberId) {
-      return NextResponse.json(
-        { error: 'Authentication required', code: 'AUTH_REQUIRED' },
-        { status: 401 }
-      );
+    // Allow unauthenticated calls from within Docker (port 3000 is internal-only)
+    const isInternal = isDockerInternalRequest(request);
+
+    if (!isInternal) {
+      const memberId = await getMemberIdFromRequest(request);
+      if (!memberId) {
+        return NextResponse.json(
+          { error: 'Authentication required', code: 'AUTH_REQUIRED' },
+          { status: 401 }
+        );
+      }
     }
 
     const body = await request.json();
@@ -39,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Assembler] Manual assembly triggered for session ${sessionId} by member ${memberId}`);
+    console.log(`[Assembler] Assembly triggered for session ${sessionId} (internal=${isInternal})`);
 
     const result = await runAssembly(sessionId);
 

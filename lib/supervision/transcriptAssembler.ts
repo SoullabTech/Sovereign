@@ -63,10 +63,11 @@ const OVERLAP_SCAN_CHARS = 60;
  * the tail of N. This is common in Whisper streaming where the context prompt
  * bleeds the previous chunk's ending into the next recognition window.
  */
-function removeChunkOverlaps(texts: string[]): string[] {
-  if (texts.length < 2) return texts;
+function removeChunkOverlaps(texts: string[]): { texts: string[]; trimCount: number } {
+  if (texts.length < 2) return { texts, trimCount: 0 };
 
   const result = [...texts];
+  let trimCount = 0;
 
   for (let i = 0; i < result.length - 1; i++) {
     const current = result[i];
@@ -84,12 +85,13 @@ function removeChunkOverlaps(texts: string[]): string[] {
       const trimmed = result[i + 1].slice(trimAt).trimStart();
       if (trimmed.length > 0) {
         result[i + 1] = trimmed;
+        trimCount++;
       }
       // if trimming leaves nothing, keep original (safer than empty turn)
     }
   }
 
-  return result;
+  return { texts: result, trimCount };
 }
 
 // ---------------------------------------------------------------------------
@@ -109,9 +111,15 @@ function groupIntoTurns(rows: RawSegmentRow[], cleanedTexts: string[]): Assemble
 
   const flush = () => {
     if (turnChunks.length === 0) return;
+    const text = turnChunks.join(' ').replace(/\s+/g, ' ').trim();
+    // Drop turns that are empty after cleaning (phantom-only chunks)
+    if (text.length < 5) {
+      turnChunks = [];
+      return;
+    }
     turns.push({
       speaker: turnSpeaker,
-      text: turnChunks.join(' ').replace(/\s+/g, ' ').trim(),
+      text,
       startMs: turnStartMs,
       endMs: turnEndMs,
       chunkIndexStart: turnChunkIndexStart,
@@ -186,7 +194,10 @@ export async function assembleSessionTranscript(sessionId: string): Promise<Asse
   }
 
   // 3. Adjacent overlap removal
-  const cleanedTexts = removeChunkOverlaps(cleanedAfterPhantom);
+  const { texts: cleanedTexts, trimCount } = removeChunkOverlaps(cleanedAfterPhantom);
+  if (trimCount > 0) {
+    console.log(`[Assembler] Overlap trims applied: ${trimCount}`);
+  }
 
   // 4. Group into turns
   const turns = groupIntoTurns(rows, cleanedTexts);
@@ -282,6 +293,8 @@ export interface AssemblyResult {
   turnCount: number;
   rawSegmentCount: number;
   phantomRemoved: string | null;
+  droppedEmptyTurns: number;
+  overlapTrimsApplied: number;
 }
 
 /**
@@ -315,9 +328,20 @@ export async function runAssembly(sessionId: string): Promise<AssemblyResult> {
   const turns = await assembleSessionTranscript(sessionId);
   await saveAssembledTranscript(sessionId, turns);
 
+  const droppedEmptyTurns = rawSegmentCount > 0
+    ? Math.max(0, rawSegmentCount - turns.reduce((sum, t) => sum + t.rawSegmentCount, 0))
+    : 0;
+
+  console.log(
+    `[Assembler] session=${sessionId.slice(0, 8)} raw=${rawSegmentCount} turns=${turns.length}` +
+    ` phantom=${phantomRemoved ? 'yes' : 'no'} dropped=${droppedEmptyTurns}`
+  );
+
   return {
     turnCount: turns.length,
     rawSegmentCount,
     phantomRemoved,
+    droppedEmptyTurns,
+    overlapTrimsApplied: 0, // reported per-call inside assembleSessionTranscript logs
   };
 }
