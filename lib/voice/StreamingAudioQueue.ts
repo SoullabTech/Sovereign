@@ -34,6 +34,8 @@ export class StreamingAudioQueue {
   // 🔥 FIX: Track audio chunks through pipeline
   private chunksEnqueued: number = 0;
   private chunksPlayed: number = 0;
+  // Safari fix: track safety timeouts so stop() can clear them
+  private activeSafetyTimeouts: Set<NodeJS.Timeout> = new Set();
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -189,15 +191,45 @@ export class StreamingAudioQueue {
       // 🔍 DEBUG: Track playback progress to detect unexpected cutoffs
       let playbackStarted = false;
       let expectedDuration = 0;
+      // Safari fix: guard against double-resolve if safety timeout + onended both fire
+      let chunkResolved = false;
+      let safetyTimeout: NodeJS.Timeout | null = null;
+
+      const setSafetyTimeout = (ms: number, label: string) => {
+        if (safetyTimeout) { clearTimeout(safetyTimeout); this.activeSafetyTimeouts.delete(safetyTimeout); }
+        const tid = setTimeout(() => {
+          this.activeSafetyTimeouts.delete(tid);
+          console.warn(`⚠️ [StreamingQueue] Safari safety timeout (${label}): onended didn't fire — forcing next chunk`);
+          finishChunk(`safari_safety_${label}`);
+        }, ms);
+        safetyTimeout = tid;
+        this.activeSafetyTimeouts.add(tid);
+      };
+
+      const finishChunk = (reason: string) => {
+        if (chunkResolved) return;
+        chunkResolved = true;
+        if (safetyTimeout) { clearTimeout(safetyTimeout); this.activeSafetyTimeouts.delete(safetyTimeout); safetyTimeout = null; }
+        this.chunksPlayed++;
+        resolve();
+        this.playNext();
+      };
 
       item.audio.onloadedmetadata = () => {
         expectedDuration = item.audio.duration;
         console.log(`⏱️ [StreamingQueue] Chunk metadata loaded: ${expectedDuration.toFixed(1)}s duration`);
+        // Refine safety timeout now that we know the real duration
+        if (playbackStarted && isFinite(expectedDuration) && expectedDuration > 0) {
+          setSafetyTimeout(expectedDuration * 1000 + 3000, `${(expectedDuration + 3).toFixed(1)}s`);
+        }
       };
 
       item.audio.onplay = () => {
         playbackStarted = true;
         console.log(`▶️ [StreamingQueue] Chunk playback started`);
+        // Safari sometimes never fires onended — set a 30s fallback safety net
+        // onloadedmetadata may refine this to a tighter timeout
+        setSafetyTimeout(30000, '30s_fallback');
       };
 
       // 🔍 DEBUG: Detect unexpected pause (before audio ends naturally)
@@ -212,28 +244,18 @@ export class StreamingAudioQueue {
       item.audio.onended = () => {
         const playedTime = item.audio.currentTime;
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
-        // 🔥 FIX: Track successfully played chunks
-        this.chunksPlayed++;
         if (completionRatio < 0.9) {
-          console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
+          console.warn(`⚠️ [StreamingQueue] Chunk may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
         } else {
-          console.log(`✅ [StreamingQueue] Chunk #${this.chunksPlayed}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
+          console.log(`✅ [StreamingQueue] Chunk ${this.chunksPlayed + 1}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
         }
-        // DON'T unregister - we never registered it
-        // this.feedbackPrevention.unregisterAudioElement(item.audio);
-        resolve();
-        this.playNext(); // Play next chunk
+        finishChunk('onended');
       };
 
       item.audio.onerror = (error) => {
-        // 🔥 FIX: Still count failed chunks so we don't wait forever
-        this.chunksPlayed++;
-        console.error(`❌ [StreamingQueue] Audio error on chunk #${this.chunksPlayed}:`, error);
+        console.error(`❌ [StreamingQueue] Audio error on chunk ${this.chunksPlayed + 1}:`, error);
         console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`);
-        // DON'T unregister - we never registered it
-        // this.feedbackPrevention.unregisterAudioElement(item.audio);
-        resolve();
-        this.playNext(); // Continue to next chunk even on error
+        finishChunk('onerror');
       };
 
       // Start playback with retry logic for iOS audio unlock issues
@@ -241,12 +263,10 @@ export class StreamingAudioQueue {
 
       if (!playSucceeded) {
         // All retries failed - count as failed and move on
-        this.chunksPlayed++;
-        console.error(`❌ [StreamingQueue] All play attempts failed for chunk #${this.chunksPlayed}`);
-        resolve();
-        this.playNext();
+        console.error(`❌ [StreamingQueue] All play attempts failed for chunk ${this.chunksPlayed + 1}`);
+        finishChunk('play_failed');
       }
-      // If playback started, the onended/onerror handlers will call resolve() and playNext()
+      // If playback started, finishChunk() will be called by onended/onerror/safety timeout
     });
   }
 
@@ -255,6 +275,10 @@ export class StreamingAudioQueue {
    */
   stop(): void {
     console.log(`🛑 [StreamingQueue] Stopping playback and clearing queue (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
+
+    // Clear any Safari safety timeouts to prevent them firing on a fresh stream
+    this.activeSafetyTimeouts.forEach(t => clearTimeout(t));
+    this.activeSafetyTimeouts.clear();
 
     // Stop current audio (no feedback prevention registration for streaming)
     if (this.currentAudio) {
