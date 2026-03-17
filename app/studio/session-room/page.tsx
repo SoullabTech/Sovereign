@@ -14,7 +14,7 @@
  * Review: SessionReviewChat + markers timeline + export
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -50,6 +50,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -222,6 +223,15 @@ export default function SessionRoomPage() {
   // ── Derived ─────────────────────────────────────────────────────────
   // When recording/review, use context values; when idle, use local state
   const phase = ctx.phase;
+
+  // Cleaned transcript texts for the review-phase "View transcript" panel.
+  // Apply phantom prefix stripping client-side so the practitioner sees clean
+  // text even before the server-side assembler has re-run.
+  const cleanedSegmentTexts = useMemo(() => {
+    if (ctx.segments.length === 0) return [] as string[];
+    const raw = ctx.segments.map(s => s.text);
+    return cleanTranscriptTexts(raw).texts;
+  }, [ctx.segments]);
   const container = phase === 'idle' ? localContainer : ctx.container;
   const memoryPolicy = phase === 'idle' ? localMemoryPolicy : ctx.memoryPolicy;
   const needsConsent = container === 'witness' || container === 'practitioner';
@@ -1365,13 +1375,13 @@ ${insightsSection}
                     className="overflow-hidden"
                   >
                     <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-4 max-h-[400px] overflow-y-auto space-y-2">
-                      {ctx.segments.map((seg) => (
+                      {ctx.segments.map((seg, idx) => (
                         <div key={seg.id} className="p-2.5 rounded-lg bg-slate-800/30 border border-slate-700/20">
                           <div className="flex items-center gap-2 mb-0.5">
                             <span className="text-xs font-medium text-amber-400 uppercase">{seg.speaker}</span>
                             <span className="text-xs text-slate-600">{formatDuration(Math.floor(seg.startMs / 1000))}</span>
                           </div>
-                          <p className="text-sm text-slate-300">{seg.text}</p>
+                          <p className="text-sm text-slate-300">{cleanedSegmentTexts[idx] ?? seg.text}</p>
                         </div>
                       ))}
                     </div>
