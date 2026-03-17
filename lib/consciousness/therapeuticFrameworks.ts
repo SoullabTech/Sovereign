@@ -2173,3 +2173,22 @@ export function setScribeLens(lens: ReflectionLens): void {
     detail: { lens }
   }));
 }
+
+const MENTOR_STANCE_KEY = 'maia.mentorStance.enabled';
+
+export function getMentorStance(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(MENTOR_STANCE_KEY) === '1';
+}
+
+export function setMentorStance(enabled: boolean): void {
+  if (typeof window === 'undefined') return;
+  if (enabled) {
+    localStorage.setItem(MENTOR_STANCE_KEY, '1');
+  } else {
+    localStorage.removeItem(MENTOR_STANCE_KEY);
+  }
+  window.dispatchEvent(new CustomEvent('maia-mentor-stance-changed', {
+    detail: { enabled }
+  }));
+}
