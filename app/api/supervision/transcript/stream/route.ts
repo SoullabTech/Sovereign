@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
+import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { query } from '@/lib/db/postgres';
-
-/**
- * Whisper hallucination guard.
- * When audio is silent/noisy, Whisper loops a short phrase into every chunk.
- * Returns true if `text` is too similar to `prev` (>70% word overlap, case-insensitive).
- */
-function isLikelyHallucination(text: string, prev: string): boolean {
-  if (!prev || !text) return false;
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').split(/\s+/).filter(Boolean);
-  const a = normalize(text);
-  const b = normalize(prev);
-  if (a.length === 0 || b.length === 0) return false;
-  const setB = new Set(b);
-  const overlap = a.filter(w => setB.has(w)).length;
-  const ratio = overlap / Math.max(a.length, b.length);
-  return ratio > 0.70;
-}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,6 +9,7 @@ export const revalidate = false;
 // Whisper endpoint (local container)
 const WHISPER_URL = process.env.WHISPER_URL || 'http://maia-whisper:8000';
 const MAX_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB max per audio chunk
+const SILENCE_GATE_BYTES = 1500; // below this = almost certainly silence
 
 interface WhisperResponse {
   text: string;
@@ -74,7 +57,7 @@ export async function POST(request: NextRequest) {
     const startMs = parseInt(formData.get('startMs') as string || '0', 10);
     const endMs = parseInt(formData.get('endMs') as string || '0', 10);
     const speaker = formData.get('speaker') as string || 'unknown';
-    const chunkIndex = parseInt(formData.get('chunkIndex') as string || '-1', 10);
+    const chunkIndex = parseInt(formData.get('chunkIndex') as string ?? '-1', 10);
 
     if (!sessionId) {
       return NextResponse.json({
@@ -114,18 +97,33 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const chunkKb = (audioFile.size / 1024).toFixed(1);
-    console.log(`🎙️ [TranscriptStream] chunk #${chunkIndex} session=${sessionId.slice(0, 8)} size=${chunkKb}kb t=${startMs}-${endMs}ms`);
+    // Silence gate: skip Whisper for near-empty chunks (avoids hallucination on silence/noise)
+    const audioSizeBytes = audioFile.size;
+    if (audioSizeBytes < SILENCE_GATE_BYTES) {
+      console.log(`[SupervisionTranscript] Chunk skipped (silence gate): ${audioSizeBytes} bytes`);
+      return NextResponse.json({ success: true, skipped: true, reason: 'silence', chunkIndex });
+    }
+
+    // Fire parallel DB query for previous chunk tail (Whisper context anchoring)
+    const previousTailPromise = getLastChunkTail(sessionId);
 
     // Prepare audio for Whisper
     const audioBuffer = await audioFile.arrayBuffer();
     const audioBlob = new Blob([audioBuffer], { type: audioFile.type });
+
+    // Resolve previous tail for context prompt
+    const previousTail = await previousTailPromise;
+
+    console.log(`[SupervisionTranscript] chunk=${chunkIndex} size=${audioSizeBytes}B whisperPrompt=${!!previousTail}`);
 
     // Send to local Whisper for transcription
     const whisperFormData = new FormData();
     whisperFormData.append('file', audioBlob, 'audio.webm');
     whisperFormData.append('response_format', 'verbose_json');
     whisperFormData.append('language', 'en');
+    if (previousTail) {
+      whisperFormData.append('prompt', previousTail);
+    }
 
     let transcriptText = '';
     let confidence = 0.9;
@@ -149,10 +147,8 @@ export async function POST(request: NextRequest) {
           );
           confidence = totalConfidence / whisperResult.segments.length;
         }
-        console.log(`✅ [TranscriptStream] chunk #${chunkIndex} whisper=${transcriptText.length}chars lang=${language} conf=${confidence.toFixed(2)}`);
       } else {
-        const whisperErr = await whisperResponse.text();
-        console.error(`❌ [TranscriptStream] chunk #${chunkIndex} Whisper error (${whisperResponse.status}):`, whisperErr.slice(0, 200));
+        console.error('[TranscriptStream] Whisper error:', await whisperResponse.text());
       }
     } catch (whisperError) {
       console.error('[TranscriptStream] Whisper connection error:', whisperError);
@@ -162,18 +158,6 @@ export async function POST(request: NextRequest) {
 
     // Only store if we have text
     if (transcriptText) {
-      // Hallucination guard: skip if too similar to last stored segment
-      const lastResult = await query(
-        `SELECT text FROM supervision_transcript_segments
-         WHERE session_id = $1 ORDER BY start_ms DESC LIMIT 1`,
-        [sessionId]
-      );
-      const lastText = lastResult.rows[0]?.text || '';
-      if (isLikelyHallucination(transcriptText, lastText)) {
-        console.log(`⚠️ [TranscriptStream] chunk #${chunkIndex} hallucination skipped — "${transcriptText.slice(0, 50)}"`);
-        return NextResponse.json({ success: true, segment: null, message: 'Duplicate segment suppressed' });
-      }
-
       const segment = await addTranscriptSegment({
         sessionId,
         speaker,
@@ -182,12 +166,16 @@ export async function POST(request: NextRequest) {
         endMs,
         text: transcriptText,
         transcriptionConfidence: confidence,
+        chunkIndex,
       });
 
-      console.log(`📝 [TranscriptStream] chunk #${chunkIndex} stored: "${transcriptText.slice(0, 60)}..."`);
+      console.log(`[TranscriptStream] Stored chunk=${chunkIndex}: "${transcriptText.slice(0, 50)}..."`);
 
       return NextResponse.json({
         success: true,
+        chunkIndex,
+        silenceSkipped: false,
+        whisperPromptUsed: !!previousTail,
         segment: {
           id: segment.id,
           text: transcriptText,
@@ -200,9 +188,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log(`🔇 [TranscriptStream] chunk #${chunkIndex} silence/empty — no text stored`);
     return NextResponse.json({
       success: true,
+      chunkIndex,
+      silenceSkipped: false,
+      whisperPromptUsed: !!previousTail,
       segment: null,
       message: 'No speech detected in this chunk'
     });

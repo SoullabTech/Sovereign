@@ -45,6 +45,9 @@ import {
   Monitor,
   Calendar,
   LinkIcon,
+  History,
+  ArrowLeft,
+  AlertCircle,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
@@ -65,6 +68,19 @@ import {
 // ---------------------------------------------------------------------------
 
 type RailTab = 'markers' | 'maia' | 'insights';
+
+interface PastSession {
+  id: string;
+  container: string;
+  title: string | null;
+  started_at: string;
+  ended_at: string | null;
+  memory_policy: string;
+  transcript_enabled: boolean;
+  duration_seconds: number;
+  segment_count: number;
+  marker_count: number;
+}
 
 interface BookingOption {
   id: string;
@@ -170,6 +186,13 @@ export default function SessionRoomPage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
+
+  // Past sessions / history review
+  const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
+  const [pastSessionsLoading, setPastSessionsLoading] = useState(false);
+  const [pastSessionsOpen, setPastSessionsOpen] = useState(false);
+  const [historyReviewId, setHistoryReviewId] = useState<string | null>(null);
+  const [historyReviewMeta, setHistoryReviewMeta] = useState<{ segmentCount: number; duration: number }>({ segmentCount: 0, duration: 0 });
 
   // Booking picker (practitioner only)
   const [bookings, setBookings] = useState<BookingOption[]>([]);
@@ -347,6 +370,34 @@ export default function SessionRoomPage() {
     }
   };
 
+  // ── Past sessions ───────────────────────────────────────────────────
+
+  const fetchPastSessions = useCallback(async () => {
+    if (pastSessionsLoading) return;
+    setPastSessionsLoading(true);
+    try {
+      const resp = await apiFetch('/api/scribe/sessions');
+      const data = await resp.json();
+      if (data.sessions) setPastSessions(data.sessions);
+    } catch (err) {
+      console.error('[Session Room] Failed to load past sessions:', err);
+    } finally {
+      setPastSessionsLoading(false);
+    }
+  }, [pastSessionsLoading]);
+
+  const togglePastSessions = useCallback(() => {
+    if (!pastSessionsOpen && pastSessions.length === 0) {
+      fetchPastSessions();
+    }
+    setPastSessionsOpen(v => !v);
+  }, [pastSessionsOpen, pastSessions.length, fetchPastSessions]);
+
+  const openHistoryReview = useCallback((session: PastSession) => {
+    setHistoryReviewId(session.id);
+    setHistoryReviewMeta({ segmentCount: session.segment_count, duration: session.duration_seconds });
+  }, []);
+
   // ── Export helpers ──────────────────────────────────────────────────
 
   const buildTranscriptText = () =>
@@ -443,7 +494,7 @@ ${insightsSection}
       <div className="max-w-7xl mx-auto">
 
         {/* ── IDLE PHASE ───────────────────────────────────────────── */}
-        {phase === 'idle' && (
+        {phase === 'idle' && !historyReviewId && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -695,6 +746,105 @@ ${insightsSection}
               {captureTabAudio && ' You\'ll also be asked to select a tab for session audio.'}
               {' '}All transcription runs locally.
             </p>
+
+            {/* Past sessions */}
+            <div className="mt-8 border-t border-slate-800/50 pt-6">
+              <button
+                onClick={togglePastSessions}
+                className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors w-full"
+              >
+                <History className="w-4 h-4" />
+                <span>{pastSessionsOpen ? 'Hide' : 'Show'} past sessions</span>
+                {pastSessions.length > 0 && (
+                  <span className="ml-auto text-xs text-slate-600">{pastSessions.length} sessions</span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {pastSessionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden mt-3"
+                  >
+                    {pastSessionsLoading ? (
+                      <p className="text-xs text-slate-600 text-center py-4">Loading…</p>
+                    ) : pastSessions.length === 0 ? (
+                      <p className="text-xs text-slate-600 text-center py-4">No past sessions found.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {pastSessions.map((s) => {
+                          const startDate = new Date(s.started_at);
+                          const durMin = Math.floor(s.duration_seconds / 60);
+                          const durSec = s.duration_seconds % 60;
+                          const label = s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
+                          return (
+                            <div
+                              key={s.id}
+                              className="flex items-center gap-3 p-3 bg-[#1e1e38] border border-slate-800/50 rounded-xl"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-white truncate">{label}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-slate-500">
+                                    {startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                  </span>
+                                  <span className="text-xs text-slate-600">·</span>
+                                  <span className="text-xs text-slate-500">
+                                    {durMin > 0 ? `${durMin}m ` : ''}{durSec}s
+                                  </span>
+                                  <span className="text-xs text-slate-600">·</span>
+                                  <span className="text-xs text-slate-500">{s.segment_count} segments</span>
+                                  {s.marker_count > 0 && (
+                                    <>
+                                      <span className="text-xs text-slate-600">·</span>
+                                      <span className="text-xs text-amber-600">{s.marker_count} markers</span>
+                                    </>
+                                  )}
+                                  {!s.transcript_enabled && (
+                                    <AlertCircle className="w-3 h-3 text-orange-500/60 ml-auto flex-shrink-0" title="Transcript not enabled" />
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => openHistoryReview(s)}
+                                className="flex-shrink-0 px-3 py-1.5 bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs rounded-lg hover:bg-teal-500/25 transition-colors"
+                              >
+                                Review
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── HISTORY REVIEW (past session opened from idle) ─────────── */}
+        {phase === 'idle' && historyReviewId && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto pt-4"
+          >
+            <button
+              onClick={() => setHistoryReviewId(null)}
+              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to session setup
+            </button>
+
+            <SessionReviewChat
+              reviewedSessionId={historyReviewId}
+              segmentCount={historyReviewMeta.segmentCount}
+              duration={historyReviewMeta.duration}
+            />
           </motion.div>
         )}
 
