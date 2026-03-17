@@ -34,6 +34,7 @@ import {
   type ScribeSessionState,
 } from '@/lib/voice/voiceCommands';
 import { QuickModeToggle } from './ui/QuickModeToggle';
+import { MentorStanceToggle } from './ui/MentorStanceToggle';
 // import MaiaChatInterface from './chat/MaiaChatInterface'; // File doesn't exist
 import { EmergencyChatInterface } from './ui/EmergencyChatInterface';
 import { SimpleVoiceMic } from './ui/SimpleVoiceMic';
@@ -8164,6 +8165,11 @@ I'm not sure what I'm feeling yet.`;
 
       {/* 🧭 Therapeutic Framework Selector - Mode-specific (Counsel/Scribe)
           Now handled by FrameworkSelector component, accessed contextually */}
+
+      {/* Mentor Stance Toggle — visible only in Care/Counsel mode, top-left */}
+      <div className="fixed top-4 left-4 z-50">
+        <MentorStanceToggle isCareMode={realtimeMode === 'counsel'} />
+      </div>
 
       {/* Floating Quick Settings Button */}
       {/* QuickSettingsButton removed - now in bottom nav bar */}
