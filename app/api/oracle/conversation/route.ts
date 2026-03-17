@@ -28,6 +28,7 @@ import {
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getFrameworkPromptAddendum, type TherapeuticFramework } from '@/lib/consciousness/therapeuticFrameworks';
+import { evaluateCanonCompliance } from '@/lib/consciousness/canonComplianceEvaluator';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -804,6 +805,10 @@ export async function POST(request: NextRequest) {
 
     // 🎓 APPRENTICE LEARNING: Log Claude's wisdom for sovereign system to learn from
     try {
+      const canonResult = evaluateCanonCompliance(maiaResponse.coreMessage);
+      if (canonResult.flags.length > 0) {
+        console.warn('[Canon] drift detected', { flags: canonResult.flags, score: canonResult.score });
+      }
       await logMaiaTurn(
         sessionId,
         conversationDepth,
@@ -832,7 +837,8 @@ export async function POST(request: NextRequest) {
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
             evolutionTriggers: suggestedInterventions.map(i => i.flowId)
-          }
+          },
+          canon: canonResult
         }
       );
       console.log('🎓 [Apprentice Learning] Claude wisdom logged for sovereign learning');
