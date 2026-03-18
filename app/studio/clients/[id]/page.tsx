@@ -299,7 +299,10 @@ export default function ClientDetailPage() {
                 <Plus className="w-4 h-4" />
                 Schedule Session
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors">
+              <button
+                onClick={() => router.push(`/caseload/${client.id}/notes/new`)}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-xl hover:bg-slate-700 transition-colors"
+              >
                 <FileText className="w-4 h-4" />
                 Add Note
               </button>
