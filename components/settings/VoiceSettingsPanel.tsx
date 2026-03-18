@@ -3,13 +3,21 @@
 /**
  * VoiceSettingsPanel — member voice preference controls.
  *
+ * Voice character picker: choose from all sovereign voices (3 female, 2 male).
  * 5 sliders that gently bias MAIA's baseline voice.
  * MAIA can still self-regulate during HOLD states.
  * Member preferences are offsets, not overrides.
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  SOVEREIGN_VOICES,
+  getSovereignVoice,
+  resolveToKokoro,
+  resolveToOpenAI,
+  type SovereignVoiceId,
+} from '@/lib/voice/sovereignVoices';
 import type { TTSProviderPref } from '@/lib/types/voiceControls';
 
 const TTS_PROVIDER_OPTIONS: { id: TTSProviderPref; label: string; desc: string }[] = [
@@ -36,6 +44,40 @@ const DEFAULT_OFFSETS: Offsets = {
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/** Element badges for visual identification */
+const ELEMENT_ICONS: Record<string, string> = {
+  earth: '🌍',
+  water: '💧',
+  fire: '🔥',
+  air: '🌬️',
+  aether: '✨',
+};
+
+/**
+ * Build preview text that varies with the chosen archetype.
+ */
+function buildPreviewText(o: Offsets): string {
+  // Pace
+  const pace =
+    o.pace < -0.1 ? 'I can slow down and let each word land.'
+    : o.pace > 0.1 ? 'I can pick up the pace when the moment calls for it.'
+    : 'I will keep a steady, natural pace.';
+
+  // Warmth
+  const warmth =
+    o.warmth < -0.1 ? 'My tone stays clear and measured.'
+    : o.warmth > 0.1 ? 'There is warmth in how I hold this space with you.'
+    : 'My warmth is balanced and present.';
+
+  // Energy
+  const energy =
+    o.energy < -0.1 ? 'The energy is soft and close.'
+    : o.energy > 0.1 ? 'There is brightness in the way I speak.'
+    : 'The energy feels grounded.';
+
+  return `${pace} ${warmth} ${energy}`;
+}
+
 export default function VoiceSettingsPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,7 +86,7 @@ export default function VoiceSettingsPanel() {
   const [previewError, setPreviewError] = useState<string | null>(null);
 
   const [offset, setOffset] = useState<Offsets>({ ...DEFAULT_OFFSETS });
-  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia');
+  const [systemVoiceId, setSystemVoiceId] = useState<string>('maia_core');
   const [voiceIdOverride, setVoiceIdOverride] = useState<string | null>(null);
   const [ttsProvider, setTtsProvider] = useState<TTSProviderPref>('auto');
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -56,8 +98,19 @@ export default function VoiceSettingsPanel() {
         const res = await apiFetch('/api/settings/voice');
         if (res.ok) {
           const data = await res.json();
-          setSystemVoiceId(data.system?.voiceId ?? 'maia');
-          setVoiceIdOverride(data.member?.voiceIdOverride ?? null);
+          // Migrate legacy voice IDs on load
+          const rawVoiceId = data.member?.voiceIdOverride ?? data.system?.voiceId ?? 'maia_core';
+          const LEGACY_MAP: Record<string, string> = {
+            maia: 'maia_core', alloy: 'maia_core', shimmer: 'maia_warm',
+            nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+          };
+          const migratedVoice = LEGACY_MAP[rawVoiceId] ?? rawVoiceId;
+
+          setSystemVoiceId(data.system?.voiceId ?? 'maia_core');
+          setVoiceIdOverride(data.member?.voiceIdOverride ? migratedVoice : null);
+          if (!data.member?.voiceIdOverride && migratedVoice !== (data.system?.voiceId ?? 'maia_core')) {
+            setVoiceIdOverride(migratedVoice);
+          }
           setOffset(data.member?.offset ?? { ...DEFAULT_OFFSETS });
           setTtsProvider(data.member?.ttsProvider ?? 'auto');
         }
@@ -74,9 +127,19 @@ export default function VoiceSettingsPanel() {
     [voiceIdOverride, systemVoiceId],
   );
 
+  const selectedVoice = useMemo(
+    () => getSovereignVoice(effectiveVoiceId),
+    [effectiveVoiceId],
+  );
+
   const setOne = (k: keyof Offsets, v: number) => {
     setSaved(false);
     setOffset((prev) => ({ ...prev, [k]: clamp(v, -0.3, 0.3) }));
+  };
+
+  const onSelectVoice = (voiceId: SovereignVoiceId) => {
+    setSaved(false);
+    setVoiceIdOverride(voiceId);
   };
 
   const onSave = async () => {
@@ -85,7 +148,7 @@ export default function VoiceSettingsPanel() {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride, ttsProvider, offset }),
+        body: JSON.stringify({ voiceIdOverride: voiceIdOverride ?? effectiveVoiceId, ttsProvider, offset }),
       });
       if (res.ok) {
         setSaved(true);
@@ -104,18 +167,20 @@ export default function VoiceSettingsPanel() {
     setOffset({ ...DEFAULT_OFFSETS });
     setSaved(false);
 
-    // Auto-save the reset, then preview so the member hears "home"
     setSaving(true);
     try {
       const res = await apiFetch('/api/settings/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ voiceIdOverride: null, ttsProvider: 'auto', offset: { ...DEFAULT_OFFSETS } }),
+        body: JSON.stringify({
+          voiceIdOverride: systemVoiceId,
+          ttsProvider: 'auto',
+          offset: { ...DEFAULT_OFFSETS },
+        }),
       });
       if (res.ok) {
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
-        // Fire preview at baseline so member hears the clean home sound
         setTimeout(() => onPreview(), 300);
       }
     } catch (e) {
@@ -129,11 +194,13 @@ export default function VoiceSettingsPanel() {
     setPreviewing(true);
     setPreviewError(null);
     try {
-      const sampleText =
-        "Here is a quick voice preview. I will keep a steady pace, warmth, and clarity so you can feel what changes.";
-
-      // Map pace offset to speed within the same clamp range as the conductor
+      const sampleText = buildPreviewText(offset);
       const speed = clamp(1.0 + offset.pace * 0.15, 0.94, 1.06);
+
+      // Use the selected sovereign voice's provider-specific voice for preview
+      const previewVoice = ttsProvider === 'cloud'
+        ? resolveToOpenAI(effectiveVoiceId)
+        : resolveToKokoro(effectiveVoiceId);
 
       // POST to preview endpoint → get { audioUrl } (real URL, not blob)
       // This path works reliably on iOS WKWebView + Android WebView
@@ -142,7 +209,7 @@ export default function VoiceSettingsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: sampleText,
-          voiceId: effectiveVoiceId === 'maia' ? 'alloy' : effectiveVoiceId,
+          voiceId: previewVoice,
           speed,
           ttsProvider,
         }),
@@ -161,16 +228,12 @@ export default function VoiceSettingsPanel() {
       const { audioUrl } = await res.json();
       if (!audioRef.current || !audioUrl) return;
 
-      // Stop any currently playing preview
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-
-      // Cache-bust so iOS doesn't serve stale audio
       audioRef.current.src = `${audioUrl}?t=${Date.now()}`;
       try {
         await audioRef.current.play();
       } catch (playErr: any) {
-        // iOS WKWebView rejects play() if not user-gesture-initiated or muted
         console.warn('[voice-settings] play() rejected:', playErr);
         setPreviewError('Audio blocked. Tap Preview again or check your mute switch.');
         return;
@@ -190,6 +253,10 @@ export default function VoiceSettingsPanel() {
   if (loading) {
     return <div className="text-sm text-stone-400">Loading voice settings...</div>;
   }
+
+  // Split voices into female (maia_*) and male (atlas*) groups
+  const femaleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('maia_'));
+  const maleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('atlas'));
 
   return (
     <div className="space-y-6 font-sans">
@@ -221,7 +288,82 @@ export default function VoiceSettingsPanel() {
         </div>
       </div>
 
+      {/* ── Voice Character Picker ──────────────────────────────────── */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-sm font-medium text-stone-300 mb-3">Voice Character</div>
+
+        {/* Female voices */}
+        <div className="text-xs text-stone-400 uppercase tracking-wider mb-2">Female</div>
+        <div className="grid grid-cols-1 gap-2 mb-4">
+          {femaleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Male voices */}
+        <div className="text-xs text-stone-400 uppercase tracking-wider mb-2">Male</div>
+        <div className="grid grid-cols-1 gap-2">
+          {maleVoices.map((voice) => {
+            const isSelected = effectiveVoiceId === voice.id;
+            return (
+              <button
+                key={voice.id}
+                onClick={() => onSelectVoice(voice.id)}
+                className={`
+                  text-left rounded-xl border p-3 transition-all
+                  ${isSelected
+                    ? 'border-amber-500/60 bg-amber-500/10'
+                    : 'border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-stone-100">{voice.label}</span>
+                    <span className="text-xs">
+                      {voice.elements.map(e => ELEMENT_ICONS[e] ?? '').join(' ')}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <span className="text-xs text-amber-400 font-medium">Active</span>
+                  )}
+                </div>
+                <div className="text-xs text-stone-400 mt-1">{voice.description}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Voice Tone Offsets ──────────────────────────────────────── */}
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-5">
+        <div className="text-sm font-medium text-stone-300 mb-1">Tone Offsets</div>
         <VoiceSlider
           label="Pace"
           value={offset.pace}
@@ -259,7 +401,7 @@ export default function VoiceSettingsPanel() {
         />
       </div>
 
-      <p className="text-xs text-stone-500 px-1">
+      <p className="text-xs text-stone-400 px-1">
         Offsets are bounded (&plusmn;0.30) and combined with MAIA&apos;s current elemental pacing.
         Changes are gentle &mdash; sovereignty means the system breathes, not obeys.
       </p>
@@ -342,7 +484,7 @@ function VoiceSlider({
           onChange(Math.round(v * 100) / 100); // round to 2 decimal places
         }}
       />
-      <div className="mt-1 flex justify-between text-xs text-stone-500">
+      <div className="mt-1 flex justify-between text-xs text-stone-400">
         <span>{left}</span>
         <span>{right}</span>
       </div>

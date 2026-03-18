@@ -52,6 +52,17 @@ export type AINShapeResult = {
   notes: string[];
 };
 
+export type AINShapeContext = {
+  counselMode?: boolean; // true when mode === 'counsel' — enables structural bridge/permission detection
+};
+
+export type AINWindowedResult = {
+  windowPass: boolean;
+  windowFlags: AINShapeFlags;
+  turnsInWindow: number;
+  turnResults: AINShapeResult[];
+};
+
 const STOPWORDS = new Set([
   'the','a','an','and','or','but','if','then','so','to','of','in','on','for','with','at','by',
   'is','are','was','were','be','been','being','it','this','that','these','those','i','you',
@@ -89,8 +100,18 @@ function countInlineNumbered(text: string): number {
 }
 
 function countInlineDashOptions(text: string): number {
-  // Counts inline " - thing" / " – thing" / " — thing" patterns
-  // Avoids double-counting lines that already begin as bullets.
+  // Counts dash constructions that function as list-option bullets.
+  //
+  // MAIA uses em-dashes heavily as a rhetorical device mid-sentence
+  // ("clarity that comes — not from thinking about doing") which must NOT
+  // be counted as list items. Only count dashes that appear at a true
+  // clause boundary:
+  //   1. Line starts with optional whitespace then a dash  (line-level bullet)
+  //   2. Dash appears immediately after sentence-ending punctuation (.!?)
+  //      e.g. "...write the first honest sentence that comes.  — If it's fear of..."
+  //
+  // Hyphens ( - with surrounding spaces) keep prior behaviour because
+  // space-hyphen-space mid-sentence is rare in natural prose.
   let n = 0;
 
   for (const line of text.split('\n')) {
@@ -98,13 +119,14 @@ function countInlineDashOptions(text: string): number {
     if (/^\s*[-*•]\s+\S/.test(line)) continue;
     if (/^\s*\d{1,2}[\).]\s+\S/.test(line)) continue;
 
+    // Hyphen: space-hyphen-space mid-line (rare in natural prose — keep as-is)
     const hyphen = line.match(/\s-\s+\S+/g);
-    const enDash = line.match(/\s–\s+\S+/g);
-    const emDash = line.match(/\s—\s+\S+/g);
-
     if (hyphen) n += hyphen.length;
-    if (enDash) n += enDash.length;
-    if (emDash) n += emDash.length;
+
+    // En-dash / em-dash: only count at line start OR after sentence-end punctuation
+    if (/^\s*[–—]\s+\S/.test(line)) n++;
+    const afterSentence = line.match(/[.!?]\s+[–—]\s+\S/g);
+    if (afterSentence) n += afterSentence.length;
   }
 
   return n;
@@ -230,7 +252,7 @@ function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSign
   };
 }
 
-export function assessAINResponseShape(input: string, output: string): AINShapeResult {
+export function assessAINResponseShape(input: string, output: string, context?: AINShapeContext): AINShapeResult {
   const notes: string[] = [];
   const out = (output || '').trim();
   const firstChunk = out.slice(0, 350);
@@ -241,25 +263,51 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   const mirror = mirrorPhrases.test(firstChunk) || overlapScore(input, firstChunk) >= 0.20;
   if (!mirror) notes.push('Missing mirror: no empathic reflection and low early overlap with user language.');
 
-  // 2) BRIDGE: "another lens" gently, or explicit cross-framework signposts
-  // Broadened to catch natural bridging/reframing language clinicians use
+  // 2) BRIDGE: the connective move from mirror to meaning
+  // Catches cross-framework signposts, reframing language, and natural interpretive connectives
   const bridgePhrases =
     /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming))/i;
-  const bridge = bridgePhrases.test(out);
+  // Natural connective language the prompt now explicitly guides MAIA toward:
+  const bridgeNatural =
+    /(what\s(i'?m|i\sam)\snoticing\sis|the\sthing\s(i\snotice|i'?m\snoticing|that\sstrikes\sme)\sis|i'?m\snoticing\s(that|a\s|the\s|how\s)|i\snotice\s(that|a\s|the\s|how\s)|worth\snoticing|what\syou'?re\s(naming|pointing\sto|describing)\sis|what\syou\s(just\s)?(named|pointed\sto|described)\sis|you'?re\snaming\s(something|a\s|the\s)|that'?s\sthe\s(real\s)?(tension|pattern|dynamic|thread|distinction|paradox)|this\s(points\sto|suggests|looks\slike|feels\slike\sa)|there'?s\ssomething\s(here\sabout|underneath|deeper)|what'?s\sunderneath\s(this|that|here)|one\sway\sto\s(read|hold|see|understand)\sthis|another\sway\sto\s(read|hold|see|understand|view)|in\sother\swords|what\sthis\s(reflects|reveals|shows)\sis|the\s(pattern|dynamic|tendency|thread)\shere\sis|what\s(sits|lives|hides)\sunderneath|this\s(kind\sof|pattern\sof)\s|underneath\s(this|that|the)\s|(ifs|jungian|somatic|cbt|elemental|spiralogic)\s+(lens|frame|perspective|terms)|the\s(real\s)?(issue|problem|tension|pattern|challenge)\s(is\b|you'?re\s(describing|naming))|not\s(just|only)\b[^.\n]{0,100}(but\b|it'?s)|it'?s\snot\b[^.\n]{0,100}it'?s|(that'?s|this\sis)\snot\b[^.\n]{0,80}but\b|(that'?s|this\sis|it'?s)\sactually\b|isn'?t\s[\w\s,.']{0,60}(it'?s|that'?s)\s|here'?s\swhat\si\snotice|there'?s\sa\spattern\s(worth|here)\s|the\s(gap|weight|cost|bind|pull|toll)\syou'?re\s(describing|naming|holding|carrying)|i\swonder\sif\sthe\s(question|issue|real\sthing|thing\shere)\s|that'?s\snot\s\w+\.?\s{0,2}that'?s\s|there'?s\s(also\s)?this\b)/i;
+  // Structural bridge: counsel mode + established mirror + substantive response length
+  // In Counsel, a mirrored deepening question/reflection is itself a bridge
+  const structuralBridge = !!(context?.counselMode && mirror && out.length > 180);
+  const bridge = bridgePhrases.test(out) || bridgeNatural.test(out) || structuralBridge;
   if (!bridge) notes.push('Missing bridge: no sign of a gentle cross-lens weave.');
 
   // 3) PERMISSION: micro-permission / consent-seeking language
   // Broadened to catch natural therapeutic consent patterns
   const permissionPhrases =
     /(would you like|are you open to|do you want|should we|may i|is it okay if|let me know if|if you're (comfortable|ready|willing)|want me to|if you'd like|does that feel|sound good|feel free to|whenever you're ready|only if you want|no pressure|take your time|at your own pace|when you're ready|if that resonates|map this into|fire\/water\/earth\/air\/aether|spiralogic)/i;
-  const permission = permissionPhrases.test(out);
+  // Exploratory invitation detection — therapeutic open-question forms that function as
+  // implicit permission: they hand agency back to the member rather than prescribing direction.
+  // e.g. "What would help most right now?" "How does that land?" "What feels most true?"
+  const permissionExploratory =
+    /\b(what would (help|feel|be)\s(most|right|useful|true)[^?]{0,40}\?|how does that land|what feels (most|right|true|alive|real)|what'?s (stirring|alive|present|here|true)\b|what (stands|sits) out|where are you in (that|this)|what matters most (right now|to you|here)|what do you (notice|feel|sense|need) (right now|here|in this)?|what'?s (calling|pulling|asking)|what would (you need|help you)|how are you (with|sitting with) (that|this)|what would (it|that) (mean|look like)|which feels (closer|more|right|true)|what would that (actually|specifically|really))\b/i;
+  // Pressure-reducing language — catches the Care mode prompt starters and natural equivalents
+  // e.g. "You don't have to solve this tonight." / "It can be enough to name the first piece."
+  const permissionPressureReduce =
+    /(you don'?t have to|doesn'?t have to|you don'?t need (to|the)|no need to|it can be enough|can be enough|(that'?s|this is) enough|there'?s no rush|you'?re not behind|not all at once|one (small|tiny) (thing|step|piece|moment|shift)|just one (thing|step|piece|question|moment)|one (piece|step|thing) at a time|(the )?first (piece|step|thing|part) is enough|even just|even (just )?(naming|noticing|saying|seeing)|that (in itself|alone) (is|counts|matters)|it'?s okay (not to|if you)|you'?re allowed to|you have (time|space)|this doesn'?t have to|it doesn'?t have to)/i;
+  // Structural permission: counsel mode + partiality indicators near a bounded scope word
+  // Catches responses that de-pressurize through bounded framing without explicit permission phrases
+  const structuralPermission = !!(
+    context?.counselMode &&
+    /\b(one|first|small|just|enough|only|for now|tonight|right now|this moment)\b/i.test(out) &&
+    out.length > 120
+  );
+  const permission = permissionPhrases.test(out) || permissionExploratory.test(out) || permissionPressureReduce.test(out) || structuralPermission;
   if (!permission) notes.push('Missing permission: no consent-seeking or permission language detected.');
 
   // 4) NEXT STEP: a concrete practice / experiment / prompt
+  // Primary phrases (explicit signal words — highest confidence):
   const nextStepPhrases =
-    /(next step|try this|one small experiment|here's a practice|practice:|do this now|for the next 24 hours|journal prompt|a question to sit with|step 1)/i;
+    /(next step|try this|one small (experiment|thing)|here's a practice|practice:|do this now|for the next 24 hours|journal prompt|a question to sit with|step 1|one thing to try|start (collecting|noticing|tracking))/i;
+  // Secondary phrases (natural invitation language MAIA uses):
+  const nextStepNatural =
+    /(notice what happens|sit with (this|that|it)|take one (slow |deep |breath|moment)|pause (for a moment|and notice)|i invite you to|you might (try|notice|sit|explore|spend|take)|spend (a moment|5 minutes|a few minutes)|write (one|a) sentence|ask yourself|place (a hand|your hand)|breathe (and|in|out|gently)|for the next (few|60|30|90) (seconds?|minutes?)|what would it look like to|what if you (tried|noticed|tracked)|keep a (note|record|log))/i;
   const hasActionList = /\n\s*[-*]\s+/.test(out.slice(Math.max(0, out.length - 500))); // bullets near end
-  const nextStep = nextStepPhrases.test(out) || hasActionList;
+  const nextStep = nextStepPhrases.test(out) || nextStepNatural.test(out) || hasActionList;
   if (!nextStep) notes.push('Missing next step: no clear action, practice, or prompt.');
 
   // 5) MENU MODE: penalize list-heavy, options-heavy responses
@@ -288,5 +336,52 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
     signals,
     score,
     notes
+  };
+}
+
+/**
+ * Windowed AIN shape assessment.
+ *
+ * Asks: across the last N turns, did the conversation collectively produce
+ * mirror + bridge + permission + next step?
+ *
+ * Good Counsel often distributes these moves across 2–3 turns rather than
+ * packing all four into every single response. This metric captures that.
+ *
+ * windowSize defaults to 3. Pass requires:
+ * - mirror in at least one turn
+ * - nextStep in at least one turn
+ * - at least 3 of 4 dimensions covered
+ * - no menuMode in any turn
+ */
+export function assessAINWindowedShape(
+  turns: Array<{ input: string; output: string }>,
+  context?: AINShapeContext,
+  windowSize = 3
+): AINWindowedResult {
+  const recent = turns.slice(-windowSize);
+  const turnResults = recent.map(t => assessAINResponseShape(t.input, t.output, context));
+
+  // Combine flags: a dimension counts if any turn in the window hit it
+  const windowFlags: AINShapeFlags = {
+    mirror:    turnResults.some(r => r.flags.mirror),
+    bridge:    turnResults.some(r => r.flags.bridge),
+    permission: turnResults.some(r => r.flags.permission),
+    nextStep:  turnResults.some(r => r.flags.nextStep),
+    menuMode:  turnResults.some(r => r.flags.menuMode), // penalize if any turn is menu-mode
+  };
+
+  const windowScore = [
+    windowFlags.mirror,
+    windowFlags.bridge,
+    windowFlags.permission,
+    windowFlags.nextStep,
+  ].filter(Boolean).length;
+
+  return {
+    windowPass: windowScore >= 3 && windowFlags.mirror && windowFlags.nextStep && !windowFlags.menuMode,
+    windowFlags,
+    turnsInWindow: recent.length,
+    turnResults,
   };
 }

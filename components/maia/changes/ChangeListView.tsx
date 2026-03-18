@@ -160,10 +160,10 @@ export default function ChangeListView({
                   {/* Meta Info */}
                   <div className="flex items-center gap-3 text-xs text-stone-500">
                     <span>{STATUS_LABELS[change.status as keyof typeof STATUS_LABELS]}</span>
-                    {change.experienceCount !== undefined && change.experienceCount > 0 && (
+                    {(change.experiences?.length ?? 0) > 0 && (
                       <>
                         <span>·</span>
-                        <span>{change.experienceCount} experience{change.experienceCount !== 1 ? 's' : ''}</span>
+                        <span>{change.experiences!.length} experience{change.experiences!.length !== 1 ? 's' : ''}</span>
                       </>
                     )}
                     <span>·</span>

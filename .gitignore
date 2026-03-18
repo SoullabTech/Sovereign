@@ -1,6 +1,13 @@
 # MAIA-SOVEREIGN .gitignore
 # Comprehensive ignore file for Next.js, Node.js, and consciousness technology
 
+# ── iOS / App Store Connect secrets ──────────────────────────────────────────
+# Apple private keys (.p8) — NEVER commit these
+*.p8
+AuthKey_*.p8
+# Local env overrides for Fastlane
+ios/App/.env.local
+
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -331,6 +338,9 @@ beta-tester-email.md
 # Production backups
 backups/
 
+# Admin credentials (separate from runtime keys — never commit)
+.env.admin
+
 # Allow production deployment templates (but not actual secrets)
 !.env.docker.template
 !docker-compose.production.yml
@@ -396,3 +406,11 @@ scripts/maia-cli/node_modules/
 
 # Claude worktrees (never track)
 .claude/worktrees/
+ios/App/fastlane/README.md
+ios/App/fastlane/report.xml
+ios/App/fastlane/test_output/
+ios/App/fastlane/screenshots/
+ios/App/fastlane/metadata/
+ios/App/ios/
+essence
+.claire/

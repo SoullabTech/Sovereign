@@ -157,20 +157,34 @@ export async function finalizeSession(
   });
 
   // 2. Enqueue summary generation job (if queue table exists)
+  // Guard: only enqueue if session has ≥2 turns — prevents "done but empty" jobs.
+  // The sweeper will capture the session later if it becomes summarizable.
   let queued = false;
   try {
-    await query(
-      `
-      INSERT INTO session_summary_queue (member_id, session_id, mode_used, ended_at)
-      VALUES ($1, $2, 'continuity', $3)
-      ON CONFLICT (session_id) DO NOTHING
-      `,
-      [memberId, sessionId, endedAt ? new Date(endedAt) : new Date()]
+    const turnCountResult = await query<{ turn_count: string }>(
+      `SELECT COUNT(*) AS turn_count FROM conversation_turns WHERE session_id = $1`,
+      [sessionId]
     );
-    queued = true;
-    console.log(
-      `📝 [SessionFinalizer] Continuity session ${sessionId} finalized, summary job queued`
-    );
+    const turnCount = parseInt(turnCountResult.rows[0]?.turn_count ?? '0', 10);
+
+    if (turnCount < 2) {
+      console.log(
+        `[SessionFinalizer] SKIP_ENQUEUE_TOO_FEW_TURNS: ${sessionId} has ${turnCount} turn(s) — sweeper will handle`
+      );
+    } else {
+      await query(
+        `
+        INSERT INTO session_summary_queue (member_id, session_id, mode_used, ended_at)
+        VALUES ($1, $2, 'continuity', $3)
+        ON CONFLICT (session_id) DO NOTHING
+        `,
+        [memberId, sessionId, endedAt ? new Date(endedAt) : new Date()]
+      );
+      queued = true;
+      console.log(
+        `📝 [SessionFinalizer] Continuity session ${sessionId} finalized, summary job queued (${turnCount} turns)`
+      );
+    }
   } catch (queueErr) {
     // Queue table might not exist yet or FK constraint failed
     // Session is still finalized, just won't get auto-summary

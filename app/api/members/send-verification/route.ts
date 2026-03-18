@@ -28,7 +28,8 @@ function getResend(): Resend {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId, email } = body;
+    const { memberId, email: rawEmail } = body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : undefined;
 
     if (!memberId) {
       return NextResponse.json(

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  MAIA Sovereign — Anthropic API Key Rotation (launchd)
+  ═══════════════════════════════════════════════════════
+  Runs: quarterly, 1st of Jan/Apr/Jul/Oct at 03:00 local time
+  Script: ~/MAIA-SOVEREIGN/scripts/rotate-anthropic-key.sh
+  Logs:   ~/MAIA-SOVEREIGN/logs/key-rotation-launchd.log
+          ~/MAIA-SOVEREIGN/logs/key-rotation-launchd.error.log
+
+  Install:
+    bash ~/MAIA-SOVEREIGN/scripts/install-key-rotation-launchd.sh
+
+  Uninstall:
+    launchctl unload ~/Library/LaunchAgents/life.soullab.anthropic-key-rotation.plist
+    rm ~/Library/LaunchAgents/life.soullab.anthropic-key-rotation.plist
+
+  Force a manual run now:
+    launchctl start life.soullab.anthropic-key-rotation
+
+  Check status:
+    launchctl list | grep anthropic
+
+  To change cadence: edit StartCalendarInterval below, then re-run the installer.
+    Monthly  = [{Month: 1..12, Day: 1, Hour: 3, Minute: 0}] — simplify to {Day: 1, Hour: 3, Minute: 0}
+    Quarterly (current) = Jan/Apr/Jul/Oct 1st at 03:00
+    Annually = {Month: 1, Day: 1, Hour: 3, Minute: 0}
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>life.soullab.anthropic-key-rotation</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/soullab/MAIA-SOVEREIGN/scripts/rotate-anthropic-key.sh</string>
+        <string>--key-name</string>
+        <!-- Key name includes the rotation date for traceability in the Anthropic console -->
+        <string>maia-prod-auto</string>
+    </array>
+
+    <!--
+      Quarterly schedule: 1st of Jan, Apr, Jul, Oct at 03:00
+      launchd fires on the first matching time after the machine is awake.
+      If the machine was asleep at 03:00, it fires at next wake that day.
+    -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Month</key><integer>1</integer>
+            <key>Day</key><integer>1</integer>
+            <key>Hour</key><integer>3</integer>
+            <key>Minute</key><integer>0</integer>
+        </dict>
+        <dict>
+            <key>Month</key><integer>4</integer>
+            <key>Day</key><integer>1</integer>
+            <key>Hour</key><integer>3</integer>
+            <key>Minute</key><integer>0</integer>
+        </dict>
+        <dict>
+            <key>Month</key><integer>7</integer>
+            <key>Day</key><integer>1</integer>
+            <key>Hour</key><integer>3</integer>
+            <key>Minute</key><integer>0</integer>
+        </dict>
+        <dict>
+            <key>Month</key><integer>10</integer>
+            <key>Day</key><integer>1</integer>
+            <key>Hour</key><integer>3</integer>
+            <key>Minute</key><integer>0</integer>
+        </dict>
+    </array>
+
+    <!-- Logs (stdout + stderr separate so errors are easy to grep) -->
+    <key>StandardOutPath</key>
+    <string>/Users/soullab/MAIA-SOVEREIGN/logs/key-rotation-launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/soullab/MAIA-SOVEREIGN/logs/key-rotation-launchd.error.log</string>
+
+    <!--
+      PATH must include:
+        /opt/homebrew/bin  — jq, curl (Apple Silicon Homebrew)
+        /usr/local/bin     — Docker CLI, Intel Homebrew fallback
+        /usr/bin /bin      — standard tools (sed, grep, date, cp)
+    -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/soullab</string>
+    </dict>
+
+    <!-- Do NOT restart on failure — a failed rotation should be investigated, not retried in a loop -->
+    <key>KeepAlive</key>
+    <false/>
+
+    <!-- Do NOT run immediately on load — only on schedule or manual trigger -->
+    <key>RunAtLoad</key>
+    <false/>
+
+</dict>
+</plist>

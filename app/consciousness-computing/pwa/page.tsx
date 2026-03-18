@@ -73,7 +73,7 @@ export default function ConsciousnessComputingPWA() {
 
     // Register service worker for consciousness computing (production only)
     if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/consciousness-sw.js')
+      navigator.serviceWorker.register('/consciousness-sw.js', { updateViaCache: 'none' })
         .then(registration => {
           console.log('🧠 Consciousness computing service worker registered');
         })

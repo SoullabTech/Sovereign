@@ -178,7 +178,7 @@ export default function ChangesPage() {
                             <HexagramGlyph
                               lines={hexagram.lines.map(l => l.isYang)}
                               size="sm"
-                              className="opacity-70"
+                              className="opacity-70" /* Intentional: SVG uses hardcoded fills, not currentColor */
                             />
                             <span>{hexagram.number}. {hexagram.english}</span>
                           </span>

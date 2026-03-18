@@ -17,7 +17,7 @@ interface PartnerProfile {
     communicationStyle: 'gentle' | 'direct' | 'playful' | 'deep';
     sessionLength: 'brief' | 'standard' | 'extended';
     focus: 'support' | 'growth' | 'exploration' | 'healing';
-    voice: 'shimmer' | 'fable' | 'nova' | 'alloy' | 'echo' | 'onyx';
+    voice: string; // Sovereign voice identity
   };
   relationship: {
     connectionLevel: number; // 0-100

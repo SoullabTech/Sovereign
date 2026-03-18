@@ -120,6 +120,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Handle API requests with offline fallback
+  // CRITICAL: Bypass SSE/streaming endpoints entirely — do NOT intercept them.
+  // Safari PWA may buffer service-worker-intercepted responses, breaking SSE.
+  const SSE_BYPASS = [
+    '/api/voice/stream-conversation',
+    '/api/sovereign/app/maia',
+    '/api/oracle/',
+    '/api/between/',
+  ];
+  const isSSEEndpoint = SSE_BYPASS.some(prefix => url.pathname.startsWith(prefix));
+  if (isSSEEndpoint) {
+    // Let the browser handle streaming endpoints natively — no SW interception
+    return;
+  }
+
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request).catch(() => {

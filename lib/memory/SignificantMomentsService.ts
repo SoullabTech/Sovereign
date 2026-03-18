@@ -135,36 +135,47 @@ export async function loadBreakthroughs(
 }
 
 /**
- * Load journal entries for a user
- * Note: Journal table may not exist yet - gracefully handle
+ * Load journal entries for a user.
+ *
+ * Reads from the two live journal tables:
+ *   quick_journal_entries   — dream / day / handwriting captures (QuickJournalSheet)
+ *   elemental_journal_entries — practice-linked elemental journal
+ *
+ * The legacy `journal_entries` table was never created and is intentionally
+ * not queried here. All new writes go to quick_journal_entries.
  */
 export async function loadJournals(
   userId: string,
   limit = 10
 ): Promise<JournalEntry[]> {
   try {
-    // Check if journal table exists first
-    const tableCheck = await dbQuery(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables
-        WHERE table_name = 'journal_entries'
-      ) as exists
-    `);
-
-    if (!tableCheck.rows[0]?.exists) {
-      return []; // Table doesn't exist yet
-    }
-
     const result = await dbQuery<{
       id: string;
       content: string;
-      mood: string | null;
-      themes: string[] | null;
+      entry_type: string | null;
+      tags: string[] | null;
       created_at: Date;
     }>(`
-      SELECT id, content, mood, themes, created_at
-      FROM journal_entries
+      SELECT
+        id::text,
+        content,
+        entry_type,
+        tags,
+        created_at
+      FROM quick_journal_entries
       WHERE user_id = $1
+
+      UNION ALL
+
+      SELECT
+        id::text,
+        content,
+        'elemental' AS entry_type,
+        tags,
+        created_at
+      FROM elemental_journal_entries
+      WHERE user_id = $1
+
       ORDER BY created_at DESC
       LIMIT $2
     `, [userId, limit]);
@@ -172,9 +183,12 @@ export async function loadJournals(
     return result.rows.map(row => ({
       id: row.id,
       content: row.content,
-      mood: row.mood || undefined,
-      themes: row.themes || undefined,
-      createdAt: new Date(row.created_at)
+      // Surface entry_type as a theme tag so MAIA knows "dream" vs "day" vs "elemental"
+      themes: [
+        ...(row.entry_type ? [row.entry_type] : []),
+        ...(row.tags ?? []),
+      ].filter(Boolean).slice(0, 5) || undefined,
+      createdAt: new Date(row.created_at),
     }));
   } catch (error) {
     console.warn('[SignificantMoments] Error loading journals:', error);

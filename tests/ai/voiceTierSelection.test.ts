@@ -8,8 +8,8 @@
  */
 
 // Mock the environment before imports
-process.env.CLAUDE_PRIMARY_MODEL = 'claude-opus-4-5-20251101';
-process.env.CLAUDE_SECONDARY_MODEL = 'claude-sonnet-4-5-20250929';
+process.env.CLAUDE_PRIMARY_MODEL = 'claude-opus-4-6';
+process.env.CLAUDE_SECONDARY_MODEL = 'claude-sonnet-4-6';
 process.env.MAIA_OPUS_USER_IDS = 'kelly,kelly-nezat,local-dev';
 
 // Import after env setup

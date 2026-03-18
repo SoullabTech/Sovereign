@@ -55,7 +55,7 @@ export function calculateClaudeMetrics(options: {
     confidence,
     learningRate,
     semanticAlignment,
-    model: 'claude-sonnet-4-5',
+    model: 'claude-sonnet-4-6',
     taskType: 'code-assistance',
     contextWindow: conversationHistory?.reduce((sum, msg) =>
       sum + msg.content.length, 0) || responseText.length

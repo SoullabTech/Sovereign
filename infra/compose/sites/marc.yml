@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  marc:
+    image: marc-web:latest
+    container_name: marc-web
+    restart: unless-stopped
+    networks:
+      - maia-network
+    depends_on:
+      - caddy
+
+networks:
+  maia-network:
+    external: true

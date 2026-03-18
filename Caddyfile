@@ -40,9 +40,9 @@ www.soullab.life {
     redir https://soullab.life{uri} permanent
 }
 
-# Redirect maia subdomain to apex
+# MAIA application
 maia.soullab.life {
-    redir https://soullab.life{uri} permanent
+    reverse_proxy maia-sovereign:3000
 }
 
 soullab.life {
@@ -168,7 +168,35 @@ soullab.life {
         }
     }
 
-    # Regular reverse proxy for non-API requests
+    # Hashed static assets — cache forever (immutable)
+    @static_hashed {
+        path /_next/static/*
+    }
+    handle @static_hashed {
+        header Cache-Control "public, max-age=31536000, immutable"
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # HTML pages — never cache, always get fresh chunk references
+    @html_pages {
+        not path /api/* /_next/* /icons/* /*.json /*.ico /*.png /*.svg /*.jpg /*.webp /*.woff2
+    }
+    handle @html_pages {
+        header Cache-Control "no-cache, no-store, must-revalidate"
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Regular reverse proxy for remaining requests (favicon, etc.)
     reverse_proxy maia-sovereign:3000 {
         # Health checks
         health_uri /api/consciousness/health
@@ -190,12 +218,36 @@ soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         # Prevent clickjacking
         X-Frame-Options "SAMEORIGIN"
-        # XSS protection
         X-Content-Type-Options "nosniff"
-        X-XSS-Protection "1; mode=block"
+        # Referrer: send nothing cross-origin (privacy + SSRF reduction)
+        Referrer-Policy "no-referrer"
+        # Allow mic + camera on soullab.life (MAIA voice + Session Room recording)
+        # Other features remain restricted. Geolocation stays denied — not used.
+        Permissions-Policy "microphone=(self), camera=(self), geolocation=()"
+        # X-XSS-Protection intentionally omitted — deprecated, can amplify XSS in legacy IE
         # Remove server header
         -Server
     }
+
+    # ── Admin route protection (Tailscale / VPN — enable when ready) ───────────
+    # Uncomment to restrict /api/admin/* to Tailscale IPs (100.x.x.x) only.
+    # Without Tailscale: replace with your static IP (home/office).
+    #
+    # @admin_path {
+    #     path /api/admin/*
+    # }
+    # handle @admin_path {
+    #     @not_tailscale {
+    #         not remote_ip 100.64.0.0/10 127.0.0.1/32
+    #     }
+    #     respond @not_tailscale "Forbidden" 403
+    #     reverse_proxy maia-sovereign:3000 {
+    #         header_up Host {host}
+    #         header_up X-Real-IP {remote_host}
+    #         header_up X-Forwarded-For {remote_host}
+    #         header_up X-Forwarded-Proto {scheme}
+    #     }
+    # }
 
     # Compression (exclude SSE which is handled above)
     encode gzip zstd
@@ -226,6 +278,8 @@ oldhead.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -363,6 +417,8 @@ loralee.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -393,6 +449,8 @@ demo.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -407,9 +465,14 @@ demo.soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Palisades Master Handyman - Jeremy Larson's Business Site
+# Jeremy Larson's Business Site (Palisades Master Handyman)
+# jlmasterhandyman.com is canonical; jeremy.soullab.life redirects to it
 # ═══════════════════════════════════════════════════════════════════════════════
-palisades.soullab.life {
+jlmasterhandyman.com, www.jlmasterhandyman.com {
+    redir https://jeremy.soullab.life{uri} permanent
+}
+
+jeremy.soullab.life {
     # Reverse proxy to Palisades Handyman container
     reverse_proxy palisades:4321 {
         header_up Host {host}
@@ -423,6 +486,8 @@ palisades.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -462,6 +527,8 @@ api.soullab.life {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
         -Server
     }
 
@@ -469,6 +536,106 @@ api.soullab.life {
 
     log {
         output file /var/log/caddy/api-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Marc Studio - Music Production Site
+# ═══════════════════════════════════════════════════════════════════════════════
+marc.soullab.life {
+    reverse_proxy app:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/marc-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Rude Boy Baking - Artisan Bakery Site
+# ═══════════════════════════════════════════════════════════════════════════════
+rudeboy.soullab.life {
+    reverse_proxy rudeboy-baking:4323 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/rudeboy-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Nostr Relay — wss://nostr.soullab.life
+# ═══════════════════════════════════════════════════════════════════════════════
+# WebSocket gateway to the self-hosted strfry relay (maia-nostr-relay:7777).
+# TLS terminated here by Caddy; backend uses plain WebSocket over Docker network.
+nostr.soullab.life {
+    @ws {
+        header Connection *Upgrade*
+        header Upgrade        websocket
+    }
+    handle @ws {
+        reverse_proxy maia-nostr-relay:7777 {
+            header_up Host      {host}
+            header_up X-Real-IP {remote_host}
+            # Disable buffering for persistent WebSocket connections
+            flush_interval -1
+        }
+    }
+    # HTTP fallback (NIP-11 relay info endpoint)
+    handle {
+        reverse_proxy maia-nostr-relay:7777 {
+            header_up Host      {host}
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
+        Referrer-Policy           "no-referrer"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/nostr-access.log {
             roll_size 10mb
             roll_keep 5
         }

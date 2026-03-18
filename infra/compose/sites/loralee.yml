@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  loralee:
+    image: loralee-web:latest
+    container_name: loralee-web
+    restart: unless-stopped
+    networks:
+      - maia-network
+    depends_on:
+      - caddy
+
+networks:
+  maia-network:
+    external: true

@@ -40,7 +40,7 @@ import { Capacitor } from '@capacitor/core';
 
 // iOS-specific Capacitor plugins
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 // Custom iOS bridges (these would be implemented as Capacitor plugins)
 interface HealthKitBridge {
@@ -510,7 +510,8 @@ export class iOSPlatformAdapter implements PlatformAdapter {
       await Filesystem.writeFile({
         path: 'seven-layer-offline-queue.json',
         data: JSON.stringify(this.offlineQueue),
-        directory: Directory.Documents
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8
       });
     } catch (error) {
       console.error('Failed to store iOS offline queue:', error);
@@ -530,7 +531,8 @@ export class iOSPlatformAdapter implements PlatformAdapter {
       await Filesystem.writeFile({
         path: `biometric-${Date.now()}.json`,
         data: JSON.stringify(biometricData),
-        directory: Directory.Documents
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8
       });
     } catch (error) {
       console.error('Failed to collect and store biometric data:', error);

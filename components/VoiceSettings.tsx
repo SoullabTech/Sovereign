@@ -1,6 +1,9 @@
 /**
  * Voice Settings Component
  * Allows users to customize MAIA's voice characteristics and options
+ *
+ * SOVEREIGNTY: No vendor names. No provider nouns. No trust leaks.
+ * Voice identities are sovereign archetypes resolved from lib/voice/sovereignVoices.ts
  */
 
 'use client';
@@ -12,11 +15,19 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Volume2, Mic, Settings, Play, Pause } from 'lucide-react';
+import { Volume2, Settings, Play, Pause } from 'lucide-react';
+import {
+  SOVEREIGN_VOICES,
+  VOICE_PROVIDERS,
+  migrateLegacyVoice,
+  migrateLegacyProvider,
+  type SovereignVoiceId,
+  type VoiceProvider,
+} from '@/lib/voice/sovereignVoices';
 
 export interface VoiceConfiguration {
-  provider: 'openai' | 'neural' | 'web_speech';
-  voice: string;
+  provider: VoiceProvider;
+  voice: SovereignVoiceId | string;
   speed: number;
   pitch: number;
   volume: number;
@@ -30,63 +41,33 @@ interface VoiceSettingsProps {
   onTestVoice: (text: string) => Promise<void>;
 }
 
-const VOICE_PROVIDERS = {
-  openai: {
-    name: 'OpenAI TTS (Recommended)',
-    description: 'Natural, human-like voices with emotional range',
-    voices: {
-      alloy: 'Alloy - Neutral, balanced (MAIA Default)',
-      echo: 'Echo - Male, clear and direct',
-      fable: 'Fable - British accent, warm',
-      onyx: 'Onyx - Deep, authoritative male',
-      nova: 'Nova - Young, energetic female',
-      shimmer: 'Shimmer - Soft, gentle, soothing'
-    }
-  },
-  neural: {
-    name: 'Neural TTS (Local)',
-    description: 'High-performance local synthesis, completely private',
-    voices: {
-      tacotron2: 'Tacotron2 - Professional neural synthesis',
-      fastspeech: 'FastSpeech - Efficient local synthesis'
-    }
-  },
-  web_speech: {
-    name: 'Browser Speech',
-    description: 'System voices, instant but basic quality',
-    voices: {
-      system: 'System Default Voice'
-    }
-  }
-};
-
 const ELEMENTAL_PRESETS = {
   fire: {
-    name: '🔥 Fire - Passionate & Energetic',
+    name: 'Fire - Passionate & Energetic',
     speed: 1.1,
     pitch: 1.05,
     description: 'Dynamic, inspiring, catalytic energy'
   },
   water: {
-    name: '💧 Water - Flowing & Empathetic',
+    name: 'Water - Flowing & Empathetic',
     speed: 0.9,
     pitch: 0.95,
     description: 'Emotional depth, fluid, healing'
   },
   earth: {
-    name: '🌍 Earth - Grounded & Stable',
+    name: 'Earth - Grounded & Stable',
     speed: 0.85,
     pitch: 0.9,
     description: 'Practical, stable, nurturing foundation'
   },
   air: {
-    name: '💨 Air - Light & Intellectual',
+    name: 'Air - Light & Intellectual',
     speed: 1.05,
     pitch: 1.1,
     description: 'Quick thinking, communicative, clear'
   },
   aether: {
-    name: '🌌 Aether - Transcendent & Wise',
+    name: 'Aether - Transcendent & Wise',
     speed: 0.95,
     pitch: 1.0,
     description: 'Sacred emergence, unified consciousness'
@@ -98,13 +79,24 @@ const VoiceSettings: React.FC<VoiceSettingsProps> = ({
   onConfigChange,
   onTestVoice
 }) => {
-  const [config, setConfig] = useState<VoiceConfiguration>(currentConfig);
+  const [config, setConfig] = useState<VoiceConfiguration>(() => {
+    // Migrate legacy vendor names on first load
+    return {
+      ...currentConfig,
+      provider: migrateLegacyProvider(currentConfig.provider),
+      voice: migrateLegacyVoice(currentConfig.voice),
+    };
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>('');
 
   // Update local config when props change
   useEffect(() => {
-    setConfig(currentConfig);
+    setConfig({
+      ...currentConfig,
+      provider: migrateLegacyProvider(currentConfig.provider),
+      voice: migrateLegacyVoice(currentConfig.voice),
+    });
   }, [currentConfig]);
 
   const updateConfig = (updates: Partial<VoiceConfiguration>) => {
@@ -142,8 +134,8 @@ const VoiceSettings: React.FC<VoiceSettingsProps> = ({
 
   const resetToDefaults = () => {
     updateConfig({
-      provider: 'openai',
-      voice: 'alloy',
+      provider: 'sovereign',
+      voice: 'maia_core',
       speed: 0.95,
       pitch: 1.0,
       volume: 0.8,
@@ -159,38 +151,15 @@ const VoiceSettings: React.FC<VoiceSettingsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Volume2 className="h-5 w-5" />
-            MAIA Voice Configuration
+            Voice Identity
           </CardTitle>
           <CardDescription>
-            Customize MAIA's voice characteristics for your optimal experience
+            Choose MAIA&apos;s voice character and customize prosody
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
 
-          {/* Voice Provider Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="provider">Voice Provider</Label>
-            <Select
-              value={config.provider}
-              onValueChange={(value) => updateConfig({ provider: value as any })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select voice provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(VOICE_PROVIDERS).map(([key, provider]) => (
-                  <SelectItem key={key} value={key}>
-                    <div>
-                      <div className="font-medium">{provider.name}</div>
-                      <div className="text-xs text-gray-500">{provider.description}</div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Voice Selection */}
+          {/* Voice Identity Selection */}
           <div className="space-y-2">
             <Label htmlFor="voice">Voice Character</Label>
             <Select
@@ -198,12 +167,38 @@ const VoiceSettings: React.FC<VoiceSettingsProps> = ({
               onValueChange={(value) => updateConfig({ voice: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select voice" />
+                <SelectValue placeholder="Select voice character" />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(VOICE_PROVIDERS[config.provider]?.voices || {}).map(([key, name]) => (
-                  <SelectItem key={key} value={key}>
-                    {name}
+                {SOVEREIGN_VOICES.map((voice) => (
+                  <SelectItem key={voice.id} value={voice.id}>
+                    <div>
+                      <div className="font-medium">{voice.label}</div>
+                      <div className="text-xs text-gray-500">{voice.description}</div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Voice Engine Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="provider">Synthesis Engine</Label>
+            <Select
+              value={config.provider}
+              onValueChange={(value) => updateConfig({ provider: value as VoiceProvider })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select synthesis engine" />
+              </SelectTrigger>
+              <SelectContent>
+                {VOICE_PROVIDERS.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.id}>
+                    <div>
+                      <div className="font-medium">{provider.label}</div>
+                      <div className="text-xs text-gray-500">{provider.description}</div>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -284,7 +279,7 @@ const VoiceSettings: React.FC<VoiceSettingsProps> = ({
             Elemental Voice Presets
           </CardTitle>
           <CardDescription>
-            Apply elemental characteristics to MAIA's voice based on the four spheres + aether
+            Apply elemental characteristics to MAIA&apos;s voice based on the four spheres + aether
           </CardDescription>
         </CardHeader>
         <CardContent>

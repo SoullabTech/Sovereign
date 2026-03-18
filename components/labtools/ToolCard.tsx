@@ -103,7 +103,7 @@ export function ToolCard({ tool, compact = false }: ToolCardProps) {
         {!tool.comingSoon && (
           <ChevronRight
             className={`
-              flex-shrink-0 text-[#D4B896]/40 group-hover:text-[#D4B896]
+              flex-shrink-0 text-amber-400 group-hover:text-amber-300
               transition-all duration-300 group-hover:translate-x-1
               ${compact ? 'w-4 h-4' : 'w-5 h-5'}
             `}

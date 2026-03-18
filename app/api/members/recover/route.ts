@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
 
     // Find member by email
     const result = await query(
-      'SELECT passkey, name, username FROM members WHERE email = $1',
-      [email.toLowerCase()]
+      'SELECT passkey, name, username FROM members WHERE LOWER(email) = LOWER($1)',
+      [email]
     );
 
     // Always return success to prevent email enumeration

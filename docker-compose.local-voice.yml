@@ -26,7 +26,7 @@ services:
   #         --output test.mp3
   kokoro-tts:
     image: ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
-    container_name: maia-kokoro-tts
+    # No container_name — let compose auto-name to avoid ghost collisions
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -52,25 +52,37 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
-  # Sesame CSM (Phase 2 - Deep Presence Voice)
+  # Sesame CSM - Deep Presence Voice
   # ═════════════════════════════════════════════════════════════════════════════
-  # Uncomment when ready. Requires ~8GB RAM on Apple Silicon via MLX.
-  # More expressive, "thinking out loud" quality. Good for CORE/DEEP paths.
-  #
-  # sesame-tts:
-  #   build:
-  #     context: ./services/sesame-tts
-  #     dockerfile: Dockerfile
-  #   container_name: maia-sesame-tts
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8881:8000"
-  #   environment:
-  #     DEVICE: "mps"  # Apple Silicon GPU
-  #   networks:
-  #     - maia-network
+  # Build context: app/api/_backend/csm (Coqui TTS + FastAPI server)
+  # API: POST /tts  { text, voice, format, speed, element, context }
+  # Exposes port 8881 externally → container port 8000
+  # DEVICE: mps → Apple Silicon GPU for fast inference
+  sesame-tts:
+    build:
+      context: ./app/api/_backend/csm
+      dockerfile: Dockerfile.simple
+    container_name: maia-sesame-tts
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "8881:8000"
+    environment:
+      DEVICE: "mps"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 90s
+    networks:
+      - maia-network
 
 networks:
   maia-network:
     external: true
-    name: maia-sovereign_maia-network
+    name: maia-sovereign_maia-internal

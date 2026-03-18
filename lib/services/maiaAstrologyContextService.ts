@@ -39,6 +39,12 @@ import {
   type CompleteMayanProfile,
   type MayanBirthSign,
 } from '@/lib/astrology/mayanAstrology';
+import {
+  computeCelestialEvents,
+  type CelestialEventsSnapshot,
+  type EclipseEvent,
+  type LunationEvent,
+} from '@/lib/astrology/celestialEvents';
 
 // ==================== TYPES ====================
 
@@ -75,9 +81,15 @@ export interface AstrologyContext {
   currentTransits: CurrentTransit[];
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
-  events: AstroEvent[];              // locked event table — authoritative, no model inference
-  payload: AstrologyContextPayload;  // typed, source-tagged — use for dashboards, reports, API
-  formattedContext: string;          // prose rendering for oracle system prompt
+  events?: AstroEvent[];             // locked event table — authoritative, no model inference
+  payload?: AstrologyContextPayload; // typed, source-tagged — use for dashboards, reports, API
+  /** Always-included status directive (~250 chars). Never truncate this. */
+  contextHeader: string;
+  /** Prioritized detail — natal identity first, cosmic weather last. Can be capped. */
+  contextDetail: string;
+  /** contextHeader + contextDetail (backward compat) */
+  formattedContext: string;
+  celestialEvents: CelestialEventsSnapshot | null;
 }
 
 // ==================== TRANSIT SIGNIFICANCE ====================
@@ -126,6 +138,7 @@ const CHIRON_HOUSE_WOUNDS: Record<number, string> = {
  * Get complete astrology context for a user
  */
 export async function getAstrologyContextForUser(memberId: string): Promise<AstrologyContext | null> {
+  console.log(`[AstrologyContext] Loading for member: ${memberId?.substring(0, 8)}...`);
   try {
     // Fetch birth data from members table
     const result = await query(
@@ -136,11 +149,19 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     );
 
     if (result.rows.length === 0) {
+      console.warn(`[AstrologyContext] No member found for id: ${memberId?.substring(0, 8)}...`);
       return null;
     }
 
     const member = result.rows[0];
     const hasBirthData = !!member.birth_date;
+
+    // pg driver returns DATE columns as JS Date objects — normalise to YYYY-MM-DD string
+    // so that calculateBirthChart always receives the expected format
+    if (member.birth_date instanceof Date) {
+      member.birth_date = member.birth_date.toISOString().split('T')[0];
+    }
+    console.log(`[AstrologyContext] Member found. hasBirthData=${hasBirthData}, hasBirthLocation=${!!(member.birth_location_lat && member.birth_location_lng)}`);
 
     let birthChart: BirthChart | null = null;
     let mayanProfile: CompleteMayanProfile | null = null;
@@ -186,12 +207,9 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     // Load upcoming astronomical events from locked table (60-day window)
     const events = getUpcomingEvents(ASTRO_EVENTS_2026, 60);
 
-    // Format the context for MAIA
-    // Build structured transit impacts (needed by both payload and formattedContext)
-    const transitImpacts = birthChart ? buildTransitImpacts(birthChart, currentTransits) : [];
-
     // Build typed payload — source/confidence tagged, separated by layer
     const moonPhase = getMoonPhaseFromEphemeris();
+    const transitImpacts = birthChart ? buildTransitImpacts(birthChart, currentTransits) : [];
     const payload = buildAstrologyPayload({
       currentTransits,
       moonPhase,
@@ -199,16 +217,31 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       impacts: transitImpacts,
     });
 
-    const formattedContext = formatAstrologyContextForMAIA(
+    // Celestial events: eclipses, exact lunations, retrograde stations, seasonal markers
+    let celestialEvents: CelestialEventsSnapshot | null = null;
+    try {
+      const observer = (member.birth_location_lat && member.birth_location_lng)
+        ? { lat: parseFloat(member.birth_location_lat), lng: parseFloat(member.birth_location_lng) }
+        : undefined;
+      celestialEvents = computeCelestialEvents(new Date(), observer);
+      const eclipseCount = celestialEvents.eclipses.length;
+      console.log(`[AstrologyContext] Celestial events loaded: ${eclipseCount} eclipses, eclipse season: ${celestialEvents.eclipseSeasonActive}`);
+    } catch (celestialError) {
+      console.warn('[AstrologyContext] Celestial events calculation failed (non-critical):', celestialError);
+    }
+
+    // Format the context for MAIA
+    const { header: contextHeader, detail: contextDetail } = formatAstrologyContextForMAIA({
+      hasBirthData,
       birthChart,
       mayanProfile,
       todaysMayanSign,
       currentTransits,
       transitHighlights,
       relevantPatterns,
-      !member.birth_time, // Flag if birth time is unknown
-      events
-    );
+      birthTimeUnknown: !member.birth_time,
+      celestialEvents,
+    });
 
     return {
       hasBirthData,
@@ -220,7 +253,10 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       relevantPatterns,
       events,
       payload,
-      formattedContext,
+      contextHeader,
+      contextDetail,
+      formattedContext: contextHeader + contextDetail, // backward compat
+      celestialEvents,
     };
   } catch (error) {
     console.error('[AstrologyContext] Error fetching context:', error);
@@ -368,228 +404,346 @@ function generateTransitHighlights(
   return highlights;
 }
 
+interface FormattedAstrologyContext {
+  /** Always-included status directive. Never truncate. ~200-300 chars. */
+  header: string;
+  /** Prioritized rich detail. Natal identity first so truncation harms least. */
+  detail: string;
+}
+
 /**
- * Format astrology context as a section for MAIA's system prompt
+ * Format astrology context as two blocks for MAIA's system prompt.
+ *
+ * BLOCK A (header): status directive — always included, never capped.
+ *   Uses hasBirthData (DB presence) not birthChart (calculation result) as the
+ *   authoritative gate. MAIA must not re-ask for data that is stored.
+ *
+ * BLOCK B (detail): natal identity first, cosmic weather last.
+ *   Priority order ensures truncation harms the least important data.
  */
-function formatAstrologyContextForMAIA(
-  birthChart: BirthChart | null,
-  mayanProfile: CompleteMayanProfile | null,
-  todaysMayanSign: MayanBirthSign | null,
-  currentTransits: CurrentTransit[],
-  transitHighlights: TransitHighlight[],
-  relevantPatterns: string[],
-  birthTimeUnknown: boolean,
-  events: AstroEvent[] = []
-): string {
-  let context = '\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n';
-
-  // ── ASTRONOMICAL EVENTS (authoritative — locked table) ────────────────────
-  const activeEvents = getActiveEvents(events, 4);
-  const upcomingEvents = events.filter(e => new Date(e.date + 'T12:00:00Z') > new Date());
-
-  if (activeEvents.length > 0 || upcomingEvents.length > 0) {
-    context += '## Astronomical Events (Authoritative — Verified Data)\n';
-    context += '*Only reference events listed here. Do not state eclipse or lunation dates from training.*\n\n';
-
-    if (activeEvents.length > 0) {
-      context += '**Active Now (within ±4 days):**\n';
-      activeEvents.forEach(e => {
-        context += `- ${e.description} — ${e.date} ${confidenceLabel(e.confidence)}\n`;
-      });
-      context += '\n';
-    }
-
-    if (upcomingEvents.length > 0) {
-      context += '**Upcoming (next 60 days):**\n';
-      upcomingEvents.slice(0, 8).forEach(e => {
-        context += `- ${e.description} — ${e.date} ${confidenceLabel(e.confidence)}\n`;
-      });
-      context += '\n';
-    }
-  }
-
-  // Current sky (always available)
-  context += '## Current Cosmic Weather\n';
-
-  // ── FULL CURRENT SKY SNAPSHOT (calculated from ephemeris) ─────────────────
-  // These are the authoritative positions MAIA should reference for any
-  // "where is X right now?" question. Do not answer from training data.
-  if (currentTransits.length > 0) {
-    context += '**Current Planet Positions (Verified — Calculated from Ephemeris):**\n';
-    const planetOrder = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'];
-    planetOrder.forEach(name => {
-      const t = currentTransits.find(t => t.planet === name);
-      if (t) {
-        const status = t.retrograde ? ' ℞' : '';
-        context += `- ${name}: ${Math.round(t.degree)}° ${t.sign}${status}\n`;
-      }
-    });
-    context += '\n';
-  }
-
-  // Moon phase — calculated from ephemeris (astronomy-engine), not approximated
-  const moonPhase = getMoonPhaseFromEphemeris();
-  context += `**Current Moon Phase:** ${moonPhase.phase} (${moonPhase.percentage}% illuminated)\n`;
-  context += `- Emotional tone: ${moonPhase.meaning}\n\n`;
-
-  const retrogradePlanets = currentTransits.filter(t => t.retrograde);
-  if (retrogradePlanets.length > 0) {
-    context += `**Currently Retrograde:** ${retrogradePlanets.map(p => p.planet).join(', ')}\n`;
-  }
-
-  transitHighlights.forEach(h => {
-    if (h.relevance === 'high') {
-      context += `- ${h.description}\n`;
-    }
-  });
-
-  // Structured transit impacts (if we have birth chart) — replaces generic string list
-  if (birthChart) {
-    const transitImpacts = buildTransitImpacts(birthChart, currentTransits);
-    if (transitImpacts.length > 0) {
-      context += formatTransitImpacts(transitImpacts);
+function formatAstrologyContextForMAIA({
+  hasBirthData,
+  birthChart,
+  mayanProfile,
+  todaysMayanSign,
+  currentTransits,
+  transitHighlights,
+  relevantPatterns,
+  birthTimeUnknown,
+  celestialEvents,
+}: {
+  hasBirthData: boolean;
+  birthChart: BirthChart | null;
+  mayanProfile: CompleteMayanProfile | null;
+  todaysMayanSign: MayanBirthSign | null;
+  currentTransits: CurrentTransit[];
+  transitHighlights: TransitHighlight[];
+  relevantPatterns: string[];
+  birthTimeUnknown: boolean;
+  celestialEvents?: CelestialEventsSnapshot | null;
+}): FormattedAstrologyContext {
+  // ── BLOCK A: Status directive ─────────────────────────────────────────────
+  // Short, unambiguous, always survives any cap on block B.
+  let statusDirective: string;
+  if (hasBirthData) {
+    if (birthChart) {
+      statusDirective =
+        '**BIRTH DATA: ON FILE** — Do not ask for birth date, time, or location. ' +
+        'You already have their natal chart — reference it directly. ' +
+        'If uncertain about a specific detail, proceed with what is available and ' +
+        'suggest /astrology (Cosmic Blueprint) or /journey (Spiralogic map) for ' +
+        'verification. Never re-ask.';
     } else {
-      // Fallback: legacy string-based transits
-      const approachingTransits = getApproachingTransits(birthChart, currentTransits);
-      if (approachingTransits.length > 0) {
-        context += '\n**Significant Transits Active/Approaching:**\n';
-        approachingTransits.forEach(t => { context += `- ${t}\n`; });
-      }
-    }
-  }
-
-  // Today's Mayan energy
-  if (todaysMayanSign) {
-    context += `\n**Today's Mayan Day Sign:** ${todaysMayanSign.tone} ${todaysMayanSign.daySign.name} (${todaysMayanSign.daySign.glyph})\n`;
-    context += `- Energy: ${todaysMayanSign.daySign.meaning}\n`;
-    context += `- Tone ${todaysMayanSign.tone}: ${getToneMeaning(todaysMayanSign.tone)}\n`;
-  }
-  context += '\n';
-
-  // Birth chart (if available)
-  if (birthChart) {
-    context += '## This Person\'s Western Birth Chart\n';
-    if (birthTimeUnknown) {
-      context += '*Note: Birth time unknown, house placements are approximate*\n\n';
-    }
-
-    context += `**Core Placements (Personal Planets):**\n`;
-    context += `- Sun: ${birthChart.sun.sign} (House ${birthChart.sun.house}) - Core identity, vitality\n`;
-    context += `- Moon: ${birthChart.moon.sign} (House ${birthChart.moon.house}) - Emotional nature, inner needs\n`;
-    context += `- Rising: ${birthChart.ascendant.sign} - How they meet the world\n`;
-    context += `- Mercury: ${birthChart.mercury.sign} (House ${birthChart.mercury.house}) - Mind, communication\n`;
-    context += `- Venus: ${birthChart.venus.sign} (House ${birthChart.venus.house}) - Love, values, pleasure\n`;
-    context += `- Mars: ${birthChart.mars.sign} (House ${birthChart.mars.house}) - Drive, action, desire\n\n`;
-
-    context += `**Outer Planets (Generational & Transpersonal Forces):**\n`;
-    context += `- Jupiter: ${birthChart.jupiter.sign} (House ${birthChart.jupiter.house}) - Expansion, faith, abundance\n`;
-    context += `- Saturn: ${birthChart.saturn.sign} (House ${birthChart.saturn.house}) - Structure, discipline, mastery through challenge\n`;
-    context += `- Uranus: ${birthChart.uranus.sign} (House ${birthChart.uranus.house}) - Liberation, awakening, sudden change\n`;
-    context += `- Neptune: ${birthChart.neptune.sign} (House ${birthChart.neptune.house}) - Transcendence, imagination, dissolution\n`;
-    context += `- Pluto: ${birthChart.pluto.sign} (House ${birthChart.pluto.house}) - Transformation, power, death/rebirth\n\n`;
-
-    context += `**Soul Purpose (Nodal Axis):**\n`;
-    context += `- North Node: ${birthChart.northNode.sign} (House ${birthChart.northNode.house}) - Soul's growth direction, what to develop\n`;
-    context += `- South Node: ${birthChart.southNode.sign} (House ${birthChart.southNode.house}) - Past life gifts & patterns to release\n\n`;
-
-    context += `**Healing & Feminine Archetypes:**\n`;
-    context += `- Chiron: ${birthChart.chiron.sign} (House ${birthChart.chiron.house}) - Core wound & healing gift\n`;
-    if (birthChart.lilith) context += `- Lilith: ${birthChart.lilith.sign} (House ${birthChart.lilith.house}) - Primal feminine, shadow integration\n`;
-    context += '\n';
-
-    // Elemental balance
-    const elementCounts = calculateElementalBalance(birthChart);
-    context += `**Elemental Temperament:**\n`;
-    context += `- Fire (${elementCounts.fire}): ${elementCounts.fire >= 4 ? 'Strong' : elementCounts.fire >= 2 ? 'Moderate' : 'Low'} - initiative, passion, spirit\n`;
-    context += `- Earth (${elementCounts.earth}): ${elementCounts.earth >= 4 ? 'Strong' : elementCounts.earth >= 2 ? 'Moderate' : 'Low'} - grounding, practicality, embodiment\n`;
-    context += `- Air (${elementCounts.air}): ${elementCounts.air >= 4 ? 'Strong' : elementCounts.air >= 2 ? 'Moderate' : 'Low'} - intellect, communication, connection\n`;
-    context += `- Water (${elementCounts.water}): ${elementCounts.water >= 4 ? 'Strong' : elementCounts.water >= 2 ? 'Moderate' : 'Low'} - emotion, intuition, depth\n`;
-    const dominant = Object.entries(elementCounts).sort((a, b) => b[1] - a[1])[0];
-    const weakest = Object.entries(elementCounts).sort((a, b) => a[1] - b[1])[0];
-    context += `- **Dominant:** ${dominant[0].charAt(0).toUpperCase() + dominant[0].slice(1)} | **Growth Edge:** ${weakest[0].charAt(0).toUpperCase() + weakest[0].slice(1)}\n\n`;
-
-    // Natal aspects
-    if (birthChart.aspects && birthChart.aspects.length > 0) {
-      context += '**Key Natal Aspects:**\n';
-      const significantAspects = birthChart.aspects.filter(a => {
-        const keyPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'saturn', 'chiron', 'northnode'];
-        return keyPlanets.includes(a.planet1.toLowerCase()) || keyPlanets.includes(a.planet2.toLowerCase());
-      }).slice(0, 10);
-
-      significantAspects.forEach(aspect => {
-        const aspectMeaning = getAspectMeaning(aspect.type);
-        context += `- ${aspect.planet1} ${aspect.type} ${aspect.planet2} (${aspect.orb.toFixed(1)}°) - ${aspectMeaning}\n`;
-      });
-      context += '\n';
-    }
-
-    if (relevantPatterns.length > 0) {
-      context += '**Relevant Patterns:**\n';
-      relevantPatterns.forEach(p => {
-        context += `- ${p}\n`;
-      });
-      context += '\n';
+      statusDirective =
+        '**BIRTH DATA: ON FILE** (natal chart temporarily unavailable due to a ' +
+        'calculation issue — this is a system matter, not a data gap) — Do NOT ask ' +
+        'for birth date, time, or location. The data is stored server-side. Use ' +
+        'the Mayan profile and cosmic weather below for this conversation. You can ' +
+        'tell them their full Western chart is viewable at soullab.life/astrology. ' +
+        'Never re-ask for birth data.';
     }
   } else {
-    context += '*No Western birth chart data available - use general cosmic weather only*\n\n';
+    statusDirective =
+      '**NO BIRTH DATA ON FILE** — You may gently invite the person to share birth ' +
+      'details or visit /astrology to enter them, but only if cosmically relevant.';
   }
 
-  // Mayan profile (if available)
+  const header = `\n# Astrological Context (IMPLICIT)\n\n${statusDirective}\n`;
+
+  // ── BLOCK B: Detail — natal identity first ────────────────────────────────
+  let detail = '';
+
+  // 1. Natal identity — most important, goes first so truncation can't touch it
+  if (birthChart) {
+    detail += '\n## Natal Identity\n';
+    if (birthTimeUnknown) {
+      detail += '*Birth time unknown — house placements are approximate*\n';
+    }
+    detail += `- **Sun:** ${birthChart.sun.sign} H${birthChart.sun.house} — core identity, vitality\n`;
+    detail += `- **Moon:** ${birthChart.moon.sign} H${birthChart.moon.house} — emotional nature, inner needs\n`;
+    detail += `- **Rising:** ${birthChart.ascendant.sign} — how they meet the world\n`;
+
+    detail += '\n## Personal Planets\n';
+    detail += `- Mercury: ${birthChart.mercury.sign} H${birthChart.mercury.house} — mind, communication\n`;
+    detail += `- Venus: ${birthChart.venus.sign} H${birthChart.venus.house} — love, values, pleasure\n`;
+    detail += `- Mars: ${birthChart.mars.sign} H${birthChart.mars.house} — drive, action, desire\n`;
+
+    detail += '\n## Outer Planets\n';
+    detail += `- Jupiter ${birthChart.jupiter.sign} H${birthChart.jupiter.house} · Saturn ${birthChart.saturn.sign} H${birthChart.saturn.house}\n`;
+    detail += `- Uranus ${birthChart.uranus.sign} H${birthChart.uranus.house} · Neptune ${birthChart.neptune.sign} H${birthChart.neptune.house} · Pluto ${birthChart.pluto.sign} H${birthChart.pluto.house}\n`;
+
+    detail += '\n## Soul Axis & Wounds\n';
+    detail += `- North Node: ${birthChart.northNode.sign} H${birthChart.northNode.house} — growth direction\n`;
+    detail += `- South Node: ${birthChart.southNode.sign} H${birthChart.southNode.house} — past patterns\n`;
+    detail += `- Chiron: ${birthChart.chiron.sign} H${birthChart.chiron.house} — ${CHIRON_HOUSE_WOUNDS[birthChart.chiron.house] || 'core wound & healing gift'}\n`;
+    if (birthChart.lilith) {
+      detail += `- Lilith: ${birthChart.lilith.sign} H${birthChart.lilith.house} — primal feminine, shadow\n`;
+    }
+
+    // Key aspects (top 5 only — compact)
+    if (birthChart.aspects && birthChart.aspects.length > 0) {
+      const keyPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'saturn', 'chiron', 'northnode'];
+      const significantAspects = birthChart.aspects
+        .filter(a => keyPlanets.includes(a.planet1.toLowerCase()) || keyPlanets.includes(a.planet2.toLowerCase()))
+        .slice(0, 5);
+      if (significantAspects.length > 0) {
+        detail += '\n## Key Aspects\n';
+        significantAspects.forEach(a => {
+          detail += `- ${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°) — ${getAspectMeaning(a.type)}\n`;
+        });
+      }
+    }
+
+    // Elemental balance (condensed to one line)
+    const el = calculateElementalBalance(birthChart);
+    const dom = Object.entries(el).sort((a, b) => b[1] - a[1])[0];
+    const weak = Object.entries(el).sort((a, b) => a[1] - b[1])[0];
+    detail += `\n**Elemental Temperament:** Fire ${el.fire} · Earth ${el.earth} · Air ${el.air} · Water ${el.water} | Dominant: ${dom[0]} · Growth edge: ${weak[0]}\n`;
+
+    if (relevantPatterns.length > 0) {
+      detail += '\n**Patterns:**\n';
+      relevantPatterns.forEach(p => { detail += `- ${p}\n`; });
+    }
+  }
+
+  // 2. Mayan profile (condensed — 3 key lines)
   if (mayanProfile) {
-    context += '## This Person\'s Mayan Astrology Profile\n\n';
-
-    // Main Tzolk'in sign
-    context += `**Birth Day Sign (Tzolk'in):** ${mayanProfile.tzolkin.tone} ${mayanProfile.tzolkin.daySign.name} (${mayanProfile.tzolkin.daySign.glyph})\n`;
-    context += `- Core essence: ${mayanProfile.tzolkin.daySign.meaning}\n`;
-    context += `- Tone ${mayanProfile.tzolkin.tone} quality: ${getToneMeaning(mayanProfile.tzolkin.tone)}\n\n`;
-
-    // Path of Life (Three Pillars)
-    context += `**Path of Life (Three Pillars):**\n`;
-    context += `- Youth Pillar (birth to ~26): ${mayanProfile.pathOfLife.youth.tone} ${mayanProfile.pathOfLife.youth.daySign.name} - ${mayanProfile.pathOfLife.youth.daySign.meaning}\n`;
-    context += `- Adulthood Pillar (main life): ${mayanProfile.pathOfLife.adulthood.tone} ${mayanProfile.pathOfLife.adulthood.daySign.name} - ${mayanProfile.pathOfLife.adulthood.daySign.meaning}\n`;
-    context += `- Future Pillar (~52+): ${mayanProfile.pathOfLife.future.tone} ${mayanProfile.pathOfLife.future.daySign.name} - ${mayanProfile.pathOfLife.future.daySign.meaning}\n\n`;
-
-    // Life cycle insight
-    context += `**Current Life Phase Insight:** ${mayanProfile.lifeCycleInsight}\n\n`;
-
-    // Cardinal direction
-    context += `**Cardinal Direction:** ${mayanProfile.cardinalDirection.direction.charAt(0).toUpperCase() + mayanProfile.cardinalDirection.direction.slice(1)} (${mayanProfile.cardinalDirection.color})\n`;
-    context += `- Activity: ${mayanProfile.cardinalDirection.activity}\n`;
-    context += `- Meaning: ${mayanProfile.cardinalDirection.description}\n\n`;
-
-    // Haab solar calendar
-    context += `**Haab Solar Calendar:** ${mayanProfile.haab.day} ${mayanProfile.haab.monthName}\n`;
-    context += `- Month meaning: ${mayanProfile.haab.monthMeaning}\n\n`;
+    detail += '\n## Mayan Profile\n';
+    detail += `- Birth sign: ${mayanProfile.tzolkin.tone} ${mayanProfile.tzolkin.daySign.name} — ${mayanProfile.tzolkin.daySign.meaning}\n`;
+    detail += `- Adulthood pillar: ${mayanProfile.pathOfLife.adulthood.tone} ${mayanProfile.pathOfLife.adulthood.daySign.name}\n`;
+    detail += `- Life phase: ${mayanProfile.lifeCycleInsight}\n`;
   }
 
-  context += `## How to Use This (IMPORTANT)
-- In REGULAR CONVERSATION: Do not proactively mention astrology unless they ask
-- In FULL ASSESSMENTS: Weave astrological insights implicitly into your holistic understanding
-- If they EXPLICITLY ASK about astrology: Share insights openly and specifically
-- MAYAN ASTROLOGY: The Three Pillars (Youth/Adulthood/Future) reveal life phases - you can reference which phase they're currently in based on their age
-- This context informs your deeper understanding of their patterns and timing
-- Never lecture or make astrology the focus unless requested
-- Always prioritize their lived experience - astrology is one lens among many
+  // 3. Current sky — after personal data so natal identity is prioritised
+  detail += '\n## Current Sky\n';
+  if (celestialEvents?.currentMoonPhase) {
+    const mp = celestialEvents.currentMoonPhase;
+    detail += `**Moon:** ${mp.phase} (${mp.illumination}% illuminated) — ${mp.meaning}\n`;
+  } else {
+    const mp = getMoonPhase();
+    detail += `**Moon:** ${mp.phase} (${mp.percentage}% illuminated) — ${mp.meaning}\n`;
+  }
 
-## Epistemic Guardrail (MANDATORY)
-- ECLIPSES: Only reference an eclipse if it appears in the "Astronomical Events" section above
-- LUNATIONS: Only state specific new/full moon dates if they are listed above
-- PLANET POSITIONS: If asked where a planet is now, use the "Current Planet Positions" table above — do not infer from training data
-- DO NOT draw on training data to fill astronomical gaps — training data contains errors on specific dates
-- Confidence labels: "(verified)" = authoritative; "(calculated, ±1 day)" = accurate but approximate; never state "(unverified)" events
+  const retrogrades = currentTransits.filter(t => t.retrograde);
+  if (retrogrades.length > 0) {
+    detail += `**Retrograde:** ${retrogrades.map(p => p.planet).join(', ')}\n`;
+  }
 
-## Uncertainty Protocol (Phase 4)
-When asked about an astronomical event or date NOT present in this context:
-1. State clearly: "I don't have verified data for that specific date in my current context"
-2. Do NOT estimate or infer — not even approximately
-3. Offer the general pattern if useful (e.g. "Solar eclipses occur roughly every 6–18 months")
-4. Suggest verification: timeanddate.com or astro.com for precise dates
-5. Never present uncertainty as confidence — the person deserves to know when you're outside your verified data
+  transitHighlights.filter(h => h.relevance === 'high').forEach(h => {
+    detail += `- ${h.description}\n`;
+  });
 
-`;
+  if (birthChart) {
+    const approaching = getApproachingTransits(birthChart, currentTransits);
+    if (approaching.length > 0) {
+      detail += '**Active Transits:**\n';
+      approaching.forEach(t => { detail += `- ${t}\n`; });
+    }
+  }
 
-  return context;
+  if (todaysMayanSign) {
+    detail += `**Today's Mayan Day:** ${todaysMayanSign.tone} ${todaysMayanSign.daySign.name} — ${todaysMayanSign.daySign.meaning}\n`;
+  }
+
+  // 4. Celestial events
+  if (celestialEvents) {
+    const eventsSection = formatCelestialEventsSection(celestialEvents);
+    if (eventsSection) detail += '\n' + eventsSection;
+  }
+
+  // 5. Usage notes (least critical — truncation here is acceptable)
+  detail += `\n## Usage\n`;
+  detail += `- Regular conversation: don't proactively mention astrology unless asked\n`;
+  detail += `- Full assessments: weave astrological insights implicitly\n`;
+  detail += `- Explicit requests: share openly and specifically\n`;
+  detail += `- Always prioritise their lived experience — astrology is one lens\n`;
+
+  return { header, detail };
 }
+
+// ==================== CELESTIAL EVENTS FORMATTING ====================
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Format celestial events as a system prompt section.
+ * Only emits content when there are meaningful events to report.
+ */
+function formatCelestialEventsSection(events: CelestialEventsSnapshot): string {
+  const nearEclipses = events.eclipses.filter(e => Math.abs(e.daysFromNow) <= 45);
+  const nearLunations = events.lunations.filter(
+    l => (l.type === 'new_moon' || l.type === 'full_moon') && Math.abs(l.daysFromNow) <= 14
+  );
+  const nearSeasons = events.seasonalMarkers.filter(m => Math.abs(m.daysFromNow) <= 7);
+  const nearStations = events.retrogradeStations.filter(s => Math.abs(s.daysFromNow) <= 14);
+
+  const hasMajorEvents = nearEclipses.length > 0 || nearLunations.length > 0 ||
+    nearSeasons.length > 0 || nearStations.length > 0;
+
+  if (!hasMajorEvents && !events.eclipseSeasonActive) return '';
+
+  let section = '## Major Celestial Events (FACTUAL \u2014 cite dates exactly as given)\n\n';
+
+  // Eclipse season notice
+  if (events.eclipseSeasonActive) {
+    section += '**Eclipse Season Active** \u2014 The Sun is near the lunar nodes. Eclipses are possible during this window.\n\n';
+  }
+
+  // Eclipses
+  if (nearEclipses.length > 0) {
+    section += '**Eclipses:**\n';
+    for (const eclipse of nearEclipses) {
+      const dateStr = eclipse.peakTime.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const timeStr = eclipse.peakTime.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+      const typeLabel = `${capitalize(eclipse.kind)} ${capitalize(eclipse.type)} Eclipse`;
+      const proximity = formatProximity(eclipse.daysFromNow);
+
+      section += `- ${typeLabel} in ${eclipse.sign}: ${dateStr} at ${timeStr} (${proximity})\n`;
+
+      if (eclipse.localVisibility) {
+        if (eclipse.localVisibility.visible) {
+          section += `  - Visible from this member's location (${Math.round((eclipse.localVisibility.localObscuration || 0) * 100)}% obscuration)\n`;
+        } else {
+          section += `  - NOT visible from this member's location\n`;
+        }
+      }
+
+      section += `  - Meaning: ${getEclipseMeaning(eclipse)}\n`;
+    }
+    section += '\n';
+  }
+
+  // Exact lunation times
+  if (nearLunations.length > 0) {
+    section += '**Exact Lunation Times:**\n';
+    for (const lun of nearLunations) {
+      const label = lun.type === 'new_moon' ? 'New Moon' : 'Full Moon';
+      const dateStr = lun.time.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const timeStr = lun.time.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+      });
+      const proximity = formatProximity(lun.daysFromNow);
+
+      section += `- ${label} in ${lun.sign}: ${dateStr} at ${timeStr} (${proximity})\n`;
+      section += `  - Meaning: ${getLunationMeaning(lun)}\n`;
+    }
+    section += '\n';
+  }
+
+  // Seasonal markers
+  if (nearSeasons.length > 0) {
+    section += '**Seasonal Markers:**\n';
+    for (const marker of nearSeasons) {
+      const dateStr = marker.time.toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+      const proximity = formatProximity(marker.daysFromNow);
+      section += `- ${marker.name}: ${dateStr} (${proximity})\n`;
+    }
+    section += '\n';
+  }
+
+  // Retrograde stations
+  if (nearStations.length > 0) {
+    section += '**Planetary Stations:**\n';
+    for (const station of nearStations) {
+      const label = station.event === 'station_retrograde'
+        ? `${station.planet} stations Retrograde in ${station.sign}`
+        : `${station.planet} stations Direct in ${station.sign}`;
+      const dateStr = station.approximateDate.toLocaleDateString('en-US', {
+        month: 'long', day: 'numeric'
+      });
+      const proximity = formatProximity(station.daysFromNow);
+      section += `- ${label}: ~${dateStr} (${proximity})\n`;
+    }
+    section += '\n';
+  }
+
+  section += 'IMPORTANT: When discussing celestial events, use the EXACT dates listed above. Do NOT guess or approximate dates for eclipses, lunations, or seasonal markers. If asked about an event not listed here, say you are not certain of the exact date rather than guessing.\n\n';
+
+  return section;
+}
+
+function formatProximity(daysFromNow: number): string {
+  const absDays = Math.abs(Math.round(daysFromNow));
+  if (absDays === 0 || Math.abs(daysFromNow) < 0.5) return 'TODAY';
+  if (daysFromNow < 0) {
+    if (absDays === 1) return 'yesterday';
+    return `${absDays} days ago`;
+  }
+  if (absDays === 1) return 'tomorrow';
+  return `in ${absDays} days`;
+}
+
+function getEclipseMeaning(eclipse: EclipseEvent): string {
+  if (eclipse.type === 'solar') {
+    const meanings: Record<string, string> = {
+      total: 'Powerful new beginning; old identity structures dissolve to make way for the new. A threshold crossing.',
+      annular: 'A ring of fire \u2014 illumination around a hidden center. Something old is framed by something emerging.',
+      partial: 'Partial reset \u2014 some aspect of life direction seeks realignment.',
+    };
+    return meanings[eclipse.kind] || 'Solar eclipse: new beginnings, reset of direction.';
+  } else {
+    const meanings: Record<string, string> = {
+      total: 'Deep emotional culmination; what has been hidden in shadow comes fully into view. Release and revelation.',
+      partial: 'Partial emotional release \u2014 some feeling or pattern surfaces for integration.',
+      penumbral: 'Subtle emotional shift \u2014 barely perceptible but meaningful. A quiet recalibration beneath awareness.',
+    };
+    return meanings[eclipse.kind] || 'Lunar eclipse: emotional culmination and release.';
+  }
+}
+
+function getLunationMeaning(lun: LunationEvent): string {
+  const signMeanings: Record<string, string> = {
+    Aries: 'initiative, identity, courage',
+    Taurus: 'stability, values, embodiment',
+    Gemini: 'communication, curiosity, connection',
+    Cancer: 'home, nurturing, emotional security',
+    Leo: 'creativity, self-expression, heart',
+    Virgo: 'service, health, discernment',
+    Libra: 'relationships, balance, beauty',
+    Scorpio: 'transformation, depth, power',
+    Sagittarius: 'meaning, freedom, expansion',
+    Capricorn: 'structure, ambition, mastery',
+    Aquarius: 'community, innovation, liberation',
+    Pisces: 'transcendence, compassion, imagination',
+  };
+  const signTheme = signMeanings[lun.sign] || '';
+  if (lun.type === 'new_moon') {
+    return `Seeding intentions around ${signTheme}`;
+  }
+  return `Culmination and illumination of themes around ${signTheme}`;
+}
+
+// ==================== MAYAN & OTHER HELPERS ====================
 
 /**
  * Get the meaning of a Mayan tone (1-13)
@@ -890,6 +1044,83 @@ export function detectAstrologicalRelevance(
   ) {
     const dir = context.mayanProfile.cardinalDirection;
     relevantInsights.push(`Their Mayan cardinal direction is ${dir.direction} (${dir.color}) - their soul's activity is to ${dir.activity.toLowerCase()}`);
+  }
+
+  // Eclipse themes — ground MAIA in factual dates
+  if (
+    lowerMessage.includes('eclipse') ||
+    lowerMessage.includes('blood moon') ||
+    lowerMessage.includes('eclipse season')
+  ) {
+    if (context.celestialEvents) {
+      const nearEclipses = context.celestialEvents.eclipses.filter(e => Math.abs(e.daysFromNow) <= 45);
+      if (nearEclipses.length > 0) {
+        for (const eclipse of nearEclipses) {
+          const dateStr = eclipse.peakTime.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+          relevantInsights.push(
+            `There is a ${eclipse.kind} ${eclipse.type} eclipse on ${dateStr} in ${eclipse.sign} \u2014 use this exact date, do not guess`
+          );
+        }
+      } else {
+        relevantInsights.push(
+          'No eclipses in the immediate window. If the member mentions one, acknowledge their experience rather than guessing the date.'
+        );
+      }
+    }
+  }
+
+  // Lunation themes (full moon, new moon)
+  if (
+    lowerMessage.includes('full moon') ||
+    lowerMessage.includes('new moon') ||
+    lowerMessage.includes('moon phase') ||
+    lowerMessage.includes('lunar')
+  ) {
+    if (context.celestialEvents) {
+      const keyLunations = context.celestialEvents.lunations.filter(
+        l => (l.type === 'new_moon' || l.type === 'full_moon') && Math.abs(l.daysFromNow) <= 14
+      );
+      for (const lun of keyLunations) {
+        const label = lun.type === 'new_moon' ? 'New Moon' : 'Full Moon';
+        const dateStr = lun.time.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`The nearest ${label} is in ${lun.sign} on ${dateStr}`);
+      }
+    }
+  }
+
+  // Solstice/equinox themes
+  if (
+    lowerMessage.includes('solstice') ||
+    lowerMessage.includes('equinox') ||
+    lowerMessage.includes('shortest day') ||
+    lowerMessage.includes('longest day')
+  ) {
+    if (context.celestialEvents) {
+      const nearby = context.celestialEvents.seasonalMarkers.filter(m => Math.abs(m.daysFromNow) <= 30);
+      for (const marker of nearby) {
+        const dateStr = marker.time.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`${marker.name} falls on ${dateStr}`);
+      }
+    }
+  }
+
+  // Retrograde station themes
+  if (
+    lowerMessage.includes('retrograde') ||
+    lowerMessage.includes('station') ||
+    lowerMessage.includes('goes direct') ||
+    lowerMessage.includes('turns retrograde')
+  ) {
+    if (context.celestialEvents) {
+      const nearStations = context.celestialEvents.retrogradeStations.filter(s => Math.abs(s.daysFromNow) <= 14);
+      for (const station of nearStations) {
+        const label = station.event === 'station_retrograde'
+          ? `${station.planet} stations retrograde`
+          : `${station.planet} stations direct`;
+        const dateStr = station.approximateDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+        relevantInsights.push(`${label} around ${dateStr} in ${station.sign}`);
+      }
+    }
   }
 
   return relevantInsights;

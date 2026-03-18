@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Caddy - Automatic HTTPS Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: maia-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - maia-network
+
+  # Cloudflared - Cloudflare Tunnel for public access
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: maia-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - maia-network
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  maia-network:
+    driver: bridge

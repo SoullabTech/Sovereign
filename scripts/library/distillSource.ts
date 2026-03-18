@@ -42,7 +42,7 @@ const USE_KIMI = process.env.USE_KIMI_FOR_LIBRARY === 'true';
 
 const CONFIG = {
   // Default models
-  DEFAULT_CLAUDE_MODEL: 'claude-opus-4-5-20251101',
+  DEFAULT_CLAUDE_MODEL: 'claude-opus-4-6',
   DEFAULT_KIMI_MODEL: process.env.MOONSHOT_MODEL || 'kimi-k2.5',
 
   // Chunk limits for distillation prompt

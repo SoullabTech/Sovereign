@@ -5,11 +5,15 @@ import { apiFetch } from '@/lib/http/apiBase';
 // Team Context
 // ============================================================================
 
+export type StudioMode = 'personal' | 'practice';
+
 interface TeamContextValue {
   currentTeamId: string | null;
   setCurrentTeamId: (teamId: string | null) => void;
   includePersonal: boolean;
   setIncludePersonal: (include: boolean) => void;
+  studioMode: StudioMode;
+  setStudioMode: (mode: StudioMode) => void;
 }
 
 const TeamContext = createContext<TeamContextValue>({
@@ -17,6 +21,8 @@ const TeamContext = createContext<TeamContextValue>({
   setCurrentTeamId: () => {},
   includePersonal: true,
   setIncludePersonal: () => {},
+  studioMode: 'practice',
+  setStudioMode: () => {},
 });
 
 export function useTeamContext() {

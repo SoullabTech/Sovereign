@@ -152,14 +152,14 @@ const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<v
   })
 }
 
-// OpenAI TTS voices
-const READING_VOICE = 'onyx'   // Deep, rich voice for book reading
-const MAIA_VOICE = 'alloy'     // For MAIA responses when discussing sections
+// Sovereign voice identities
+const READING_VOICE = 'atlas_deep'   // Deep, contemplative voice for book reading
+const MAIA_VOICE = 'maia_core'      // For MAIA responses when discussing sections
 
 // Track if reading should stop
 let shouldStopReading = false
 
-// High-quality TTS using OpenAI via API (single chunk)
+// High-quality TTS using sovereign voice synthesis (single chunk)
 const speakChunk = async (text: string, element: string = 'earth'): Promise<boolean> => {
   if (!text || shouldStopReading) return false
 
@@ -203,7 +203,7 @@ const speakChunk = async (text: string, element: string = 'earth'): Promise<bool
     })
 
   } catch (error) {
-    console.log('OpenAI TTS unavailable, using browser TTS:', error)
+    console.log('Voice synthesis unavailable, using browser TTS:', error)
     await speakWithBrowserTTS(text, element)
     return !shouldStopReading
   }

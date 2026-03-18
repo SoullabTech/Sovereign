@@ -7,6 +7,7 @@
  */
 
 import { query, queryOne } from '../../database/postgres';
+import { upsertPatternLedger } from '@/lib/patterns/upsertPatternLedger';
 
 interface SessionPattern {
   id?: string;
@@ -133,8 +134,8 @@ export class SessionMemoryServicePostgres {
 
     try {
       const results = await Promise.all(
-        insightRecords.map(insight =>
-          queryOne<ConversationInsight>(
+        insightRecords.map(async insight => {
+          const row = await queryOne<ConversationInsight>(
             `INSERT INTO conversation_insights (
               session_id, user_id, insight_text, insight_type,
               consciousness_field_influence, conversation_context,
@@ -150,8 +151,27 @@ export class SessionMemoryServicePostgres {
               insight.conversationContext,
               insight.insightSignificance
             ]
-          )
-        )
+          );
+
+          // Fire-and-forget ledger write for pattern and growth_edge insight types
+          if (
+            row &&
+            (row as any).id &&
+            (insight.insightType === 'pattern' || insight.insightType === 'growth_edge')
+          ) {
+            upsertPatternLedger({
+              memberId: insight.userId,
+              insightId: (row as any).id,
+              insightType: insight.insightType as 'pattern' | 'growth_edge',
+              insightText: insight.insightText,
+              significance: insight.insightSignificance,
+              createdAt: new Date().toISOString(),
+              triggerContext: null,
+            }).catch(err => console.warn('[PatternLedger] Write failed (non-critical):', err));
+          }
+
+          return row;
+        })
       );
 
       return results.filter(r => r !== null) as ConversationInsight[];

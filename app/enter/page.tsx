@@ -2,18 +2,60 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Capacitor } from '@capacitor/core';
+
+// 🔍 MODULE BEACON — fires if this JS chunk loads at all (no React needed)
+// If you never see this in Safari console, the chunk itself isn't executing.
+if (typeof window !== 'undefined') {
+  console.log('[ENTER:chunk] loaded url=' + window.location.pathname + ' t=' + Date.now());
+}
+
+async function hideSplash() {
+  try {
+    const { SplashScreen } = await import('@capacitor/splash-screen');
+    await SplashScreen.hide({ fadeOutDuration: 300 });
+  } catch {
+    // Not running in Capacitor — no-op
+  }
+}
 
 export default function EnterPage() {
   const router = useRouter();
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
+  // 🔍 RENDER BEACON — fires synchronously if React mounts this component.
+  // If you see [ENTER:chunk] but NOT [ENTER:render], React is failing before mount.
+  if (typeof document !== 'undefined') {
+    (window as any).__maia_enter_rendered = true;
+    document.documentElement.setAttribute('data-maia-enter', '1');
+    console.log('[ENTER:render] component mounted t=' + Date.now());
+  }
+
   useEffect(() => {
+    // Hide splash immediately — this page is the iOS entry point.
+    // If we don't call this here, the brown splash stays forever because
+    // this page routes without painting, and WKWebView never gets unblocked.
+    hideSplash();
+    // NATIVE: On iOS, app-open is always a fresh start — clear web signout latch.
+    // The web signout latch prevents auto-redirects on the browser, but native iOS
+    // app restarts are not web-session restores. Clearing it lets the normal
+    // routing logic run (beta_user → /maia, clean → /begin, etc.)
+    if (Capacitor.isNativePlatform()) {
+      localStorage.removeItem('maia_signed_out');
+      console.log('[ENTER PAGE] Native: cleared web signout latch');
+    }
+
     // ONE-SHOT REDIRECT GUARD: Redirect once per app session, then become inert
     // Uses sessionStorage (cleared on app restart, survives page reloads)
     const onceKey = 'maia_root_redirect_once';
     if (sessionStorage.getItem(onceKey) === '1') {
-      console.warn('[ENTER PAGE] Redirect guard tripped — refusing to redirect again this session');
-      setDebugInfo('Redirect already performed this session. Staying on enter page.');
+      console.warn('[ENTER PAGE] Redirect guard tripped — routing to safe destination');
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        router.replace('/maia');
+      } else {
+        router.replace('/signin');
+      }
       return;
     }
     sessionStorage.setItem(onceKey, '1');
@@ -23,10 +65,13 @@ export default function EnterPage() {
 
     // SIGNOUT LATCH: If user explicitly signed out, route to signin immediately
     // This latch survives iOS WebView restore and overrides all "returning user" logic
+    // NOTE: On native iOS this is cleared above; this path only runs on web builds.
     const signedOut = localStorage.getItem('maia_signed_out') === '1';
     if (signedOut) {
       console.log('[NAV] /enter -> /signin (reason: signout latch active)');
-      window.location.replace('/signin?from=signed_out_latch');
+      // Use router.replace (client-side) — never window.location on iOS because
+      // full document reloads re-trigger index.html → /enter → infinite loop.
+      router.replace('/signin');
       return;
     }
 

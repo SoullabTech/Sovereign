@@ -55,8 +55,11 @@ import {
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
 import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
-import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
+import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT, AINShapeContext } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
+import { deriveActiveThread } from '../consciousness/activeThread';
+import { detectCorrectionSignal } from '../consciousness/correctionDetection';
+import { detectThemes, storeThemeSignal } from '../consciousness/participatoryRealityHelper';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
 import {
@@ -71,6 +74,8 @@ import { persistDecision, type Candidate } from '../services/decisionPersistence
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
+import { buildFieldContext, formatFieldAddendum } from '../field/fieldOrchestrator';
+import { logFieldOrchestratorTelemetry } from '../field/fieldOrchestratorTelemetry';
 import {
   STATE_VECTOR_OUTPUT_CONTRACT,
   isLikelyCheckin,
@@ -582,7 +587,7 @@ async function validateAndRepairResponse(
           decision: validation.decision,
           is_gold: validation.isGold,
           passes: validation.passes,
-          ruptures: validation.ruptures,
+          ruptures: JSON.stringify(validation.ruptures),
           rupture_count: validation.ruptures.length,
           critical_count: validation.ruptures.filter((r: any) => r.severity === 'CRITICAL').length,
           violation_count: validation.ruptures.filter((r: any) => r.severity === 'VIOLATION').length,
@@ -944,11 +949,21 @@ TOO FAST: "It sounds like you're experiencing some fragmentation."
 RIGHT: "All over the place - like how?"
 
 User (after 10 exchanges about stress): "I keep coming back to this work thing"
-NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"`;
+NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"
+
+🎯 CLOSING ANCHOR (turn 3+ with real depth only):
+After your response or question, append one short closing line. This is in ADDITION to what you've said — not instead of it. Examples of closing anchor lines:
+  "Sit with that one tonight."
+  "You might notice what surfaces when you hold that question."
+  "How does that land?"
+  "Would you like to stay with this, or let it rest here?"
+  "One small thing to try: just notice when that feeling comes up this week."
+
+One line only. Appended at the end. Never on greeting turns or simple exchanges.`;
         // Note: fieldAwareness intentionally NOT appended - too diagnostic for early exchanges
         break;
       case 'counsel':
-        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
+        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.\n\nRESPONSE RHYTHM on substantive turns:\n1. Mirror what is true.\n2. Bridge or name the pattern.\n3. Reduce pressure in one sentence — natural, brief, not forced. Examples:\n   - "You don\'t have to solve all of this right now."\n   - "You don\'t need the whole answer yet."\n   - "It can be enough to name the first piece."\n   - "You don\'t have to do this perfectly."\n4. Offer one small next step.\n\nKeep the permission sentence brief and natural. Omit it if it would sound hollow or repetitive. Place it before the next step, never after.\n\nUSE SPECIFIC LANGUAGE for next steps:\n- "One small thing to try: ..."\n- "You might notice when..."\n- "Try this: just notice when..."\n- "Here\'s a practice: ..."\n- "Sit with that question tonight."\nOne move at the end. Specific, not abstract.';
         break;
       case 'scribe':
         modeAdaptation = '\n\n📝 NOTE MODE — WHO MAIA IS:\nMAIA shows up as pure witness - reflecting what happened without adding meaning. Clean acknowledgment of what was said, what seemed to matter. No interpretation, no analysis, no advice. Just mirroring.';
@@ -1108,6 +1123,18 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🚪 [FAST] Knowledge Gate addendum applied: source well modulation injected`);
   }
 
+  // 🕸️ MEMBER WEB: Patterns + session summaries + journals — the threads of the web
+  const memberWebAddendum = (meta as any)?.memberWebAddendum as string | undefined;
+  if (memberWebAddendum) {
+    console.log(`🕸️ [FAST] Member web injected: patterns+summaries+journals context active`);
+  }
+
+  // 🌟 ASTROLOGY: Natal chart + cosmic weather context
+  const astrologyAddendum = (meta as any)?.astrologyAddendum as string | undefined;
+  if (astrologyAddendum) {
+    console.log(`🌟 [FAST] Astrology addendum applied: birth chart + cosmic context injected`);
+  }
+
   // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
   const fieldWisdomAddendum = (meta as any)?.fieldWisdomAddendum as string | undefined;
   if (fieldWisdomAddendum) {
@@ -1146,7 +1173,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1156,6 +1183,33 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to FAST path`);
     }
+  }
+
+  // 🌊 FIELD INTELLIGENCE: Wire PFI → Unified → Resonance into prompt
+  try {
+    const fieldContext = await buildFieldContext({
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      isSanctuary: !!(meta as any)?.sanctuary,
+      depth: conversationHistory.length,
+      text: input,
+      conversationHistory: conversationHistory.map((h: any) => ({
+        role: h.role ?? 'user',
+        content: h.userMessage ?? h.maiaResponse ?? h.content ?? '',
+      })),
+      cognitiveProfile: (meta as any)?.cognitiveProfile ?? null,
+      element: (meta as any)?.element,
+    });
+    baseSystemPrompt += formatFieldAddendum(fieldContext);
+    console.info('[field-orchestrator] [FAST]', fieldContext?.meta);
+    // Fire-and-forget telemetry persistence for Command Center
+    logFieldOrchestratorTelemetry(fieldContext, {
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      path: 'FAST',
+    });
+  } catch {
+    // Field intelligence must never break the hot path
   }
 
   // Use single model call with complete MAIA intelligence stack
@@ -1207,6 +1261,7 @@ async function corePathResponse(
   mindContext?: MindContext
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
+  const coreT0 = Date.now();
 
   // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
   const userId = (meta as any).userId;
@@ -1217,13 +1272,65 @@ async function corePathResponse(
     (meta as any)?.memberId ??
     (meta as any)?.user?.id ??
     null;
-  const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
   // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
   const isSanctuary = (meta as any)?.sanctuary === true;
   if (isSanctuary) {
     console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
   }
+
+  // ⚡ LATENCY FIX: Run independent DB queries in parallel instead of sequentially.
+  // Previously these ran one after another (~200-500ms each = 1-2s total).
+  // Now they all fire at once, so we pay only the cost of the slowest one.
+  const [policy, relationshipMemory, crossSessionTurns, elementalResult] = await Promise.all([
+    // 1. Consciousness policy
+    effectiveUserId
+      ? getConsciousnessPolicy(effectiveUserId, input).catch(err => {
+          console.warn('⚠️ [CORE] Consciousness policy failed:', err);
+          return null;
+        })
+      : Promise.resolve(null),
+
+    // 2. Relationship memory
+    (userId && !isSanctuary)
+      ? loadRelationshipMemory(userId, {
+          includeThemes: true,
+          includeBreakthroughs: true,
+          includePatterns: true,
+          maxThemes: 5,
+          maxBreakthroughs: 2
+        }).catch(err => {
+          console.warn('⚠️ Could not load relationship memory for CORE path:', err);
+          return null;
+        })
+      : Promise.resolve(null),
+
+    // 3. Cross-session recall (only if current session is empty)
+    (conversationHistory.length === 0 && effectiveUserId && !isSanctuary)
+      ? TurnsStore.getRecentTurns(effectiveUserId, 8).catch(err => {
+          console.warn('⚠️ Could not load cross-session turns for CORE path:', err);
+          return [] as any[];
+        })
+      : Promise.resolve([] as any[]),
+
+    // 4. Elemental oracle (pattern matching, ~50ms)
+    (async () => {
+      try {
+        const elementalOracle = new ElementalOracleBridge();
+        await elementalOracle.activate();
+        return await elementalOracle.processAll({
+          input,
+          includeAll: true,
+          fastMode: true,
+        });
+      } catch (err) {
+        console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
+        return null;
+      }
+    })(),
+  ]);
+
+  console.log(`⚡ [CORE] Parallel fetch complete in ${Date.now() - coreT0}ms`);
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -1232,82 +1339,38 @@ async function corePathResponse(
     (meta as any).consciousnessPolicy = policy;
   }
 
-  // 🌊 RELATIONSHIP MEMORY (load relational context for CORE path)
-  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
-  let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId && !isSanctuary) {
-    try {
-      relationshipMemory = await loadRelationshipMemory(userId, {
-        includeThemes: true,
-        includeBreakthroughs: true,
-        includePatterns: true, // CORE path: include patterns
-        maxThemes: 5,
-        maxBreakthroughs: 2
-      });
-      console.log(`🌊 [Relationship Memory CORE] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes`);
-      (meta as any).relationshipMemory = relationshipMemory;
-    } catch (error) {
-      console.warn('⚠️ Could not load relationship memory for CORE path:', error);
-    }
+  if (relationshipMemory) {
+    console.log(`🌊 [Relationship Memory CORE] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes`);
+    (meta as any).relationshipMemory = relationshipMemory;
   }
 
-  // 🔥 ELEMENTAL ORACLE (CORE path): Quick pattern-based elemental classification
-  let elementalResult: ElementalResponse | null = null;
-  try {
-    const elementalOracle = new ElementalOracleBridge();
-    await elementalOracle.activate();
-
-    console.log(`🌋 [ElementalOracle CORE] Starting pattern-based classification...`);
-    const elementalStart = Date.now();
-
-    elementalResult = await elementalOracle.processAll({
-      input,
-      includeAll: true,
-      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
-    });
-
-    const elementalLatency = Date.now() - elementalStart;
-    console.log(
-      `🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant} | ` +
-      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
-    );
-
+  if (elementalResult) {
+    console.log(`🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant}`);
     (meta as any).elementalResult = elementalResult;
-  } catch (err) {
-    console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
   }
 
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
   const selfletContext = (meta as any)?.selfletContext;
   const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
-  // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
-  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
+  // 🔄 CROSS-SESSION RECALL: Convert fetched turns to conversation exchanges
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuary) {
-    try {
-      const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 8);
-      if (crossSessionTurns.length > 0) {
-        // Convert turns to conversation exchange format
-        const pairs: any[] = [];
-        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
-          const userTurn = crossSessionTurns[i];
-          const assistantTurn = crossSessionTurns[i + 1];
-          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
-            pairs.push({
-              userMessage: userTurn.content,
-              maiaResponse: assistantTurn.content,
-              timestamp: userTurn.createdAt
-            });
-          }
-        }
-        if (pairs.length > 0) {
-          effectiveHistory = pairs.slice(-4); // Last 4 exchanges
-          console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
-        }
+  if (crossSessionTurns && crossSessionTurns.length > 0 && conversationHistory.length === 0) {
+    const pairs: any[] = [];
+    for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+      const userTurn = crossSessionTurns[i];
+      const assistantTurn = crossSessionTurns[i + 1];
+      if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+        pairs.push({
+          userMessage: userTurn.content,
+          maiaResponse: assistantTurn.content,
+          timestamp: userTurn.createdAt
+        });
       }
-    } catch (err) {
-      console.warn('⚠️ Could not load cross-session turns for CORE path:', err);
+    }
+    if (pairs.length > 0) {
+      effectiveHistory = pairs.slice(-4);
+      console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
     }
   }
 
@@ -1354,6 +1417,10 @@ async function corePathResponse(
     scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
     // 🚪 KNOWLEDGE GATE: AIN source well modulation
     knowledgeGateAddendum: (meta as any)?.knowledgeGateAddendum as string | undefined,
+    // 🕸️ MEMBER WEB: Patterns + session summaries + journals
+    memberWebAddendum: (meta as any)?.memberWebAddendum as string | undefined,
+    // 🌟 ASTROLOGY: Natal chart + cosmic weather context
+    astrologicalContextAddendum: (meta as any)?.astrologyAddendum as string | undefined,
     // 🏛️ CONSULTATION: AIN council multi-perspective synthesis
     consultationAddendum: (meta as any)?.consultationAddendum as string | undefined,
     // 🌀 FIELD WISDOM: Collective Spiralogic field intelligence
@@ -1415,6 +1482,13 @@ The current user has not provided their name. Address them as "friend" or "there
     adaptivePrompt = adaptivePrompt + '\n\n' + wuxingSnapshotAddendumCore;
   }
 
+  // 🌟 ASTROLOGY ADDENDUM: Natal chart + cosmic weather context
+  const astrologyAddendumCore = (meta as any)?.astrologyAddendum as string | undefined;
+  if (astrologyAddendumCore) {
+    console.log(`🌟 [CORE] Astrology addendum applied: birth chart + cosmic context injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + astrologyAddendumCore;
+  }
+
   // 🏢 STUDIO ADDENDUM: Practitioner prompt cap when running in Studio
   const studioAddendumCore = (meta as any)?.studioAddendum as string | undefined;
   if (studioAddendumCore) {
@@ -1443,6 +1517,36 @@ The current user has not provided their name. Address them as "friend" or "there
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to CORE path`);
     }
+  }
+
+  // 🌊 FIELD INTELLIGENCE: Wire PFI → Unified → Resonance into prompt
+  try {
+    const fieldContext = await buildFieldContext({
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      isSanctuary: isSanctuaryCore === true,
+      depth: conversationHistory.length,
+      text: input,
+      conversationHistory: conversationHistory.map((h: any) => ({
+        role: h.role ?? 'user',
+        content: h.userMessage ?? h.maiaResponse ?? h.content ?? '',
+      })),
+      cognitiveProfile: (meta as any)?.cognitiveProfile ?? null,
+      element: elementalResult?.dominant ?? (meta as any)?.element,
+      facet: (meta as any)?.facet,
+      archetype: (meta as any)?.archetype,
+      bloomLevel: (meta as any)?.bloomLevel,
+    });
+    adaptivePrompt += formatFieldAddendum(fieldContext);
+    console.info('[field-orchestrator] [CORE]', fieldContext?.meta);
+    // Fire-and-forget telemetry persistence for Command Center
+    logFieldOrchestratorTelemetry(fieldContext, {
+      memberId: effectiveUserId || sessionId,
+      sessionId,
+      path: 'CORE',
+    });
+  } catch {
+    // Field intelligence must never break the hot path
   }
 
   const { text: response, provider: coreProvider } = await generateText({
@@ -1876,6 +1980,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
         // 🌿 WU XING: Five Elements elemental awareness
         wuxingSnapshotAddendum: (meta as any)?.wuxingSnapshotAddendum as string | undefined,
+        // 🌟 ASTROLOGY: Natal chart + cosmic weather context (maps to MaiaContext.astrologicalContextAddendum)
+        astrologicalContextAddendum: (meta as any)?.astrologyAddendum as string | undefined,
         // 🏢 STUDIO: Practitioner prompt cap
         studioAddendum: (meta as any)?.studioAddendum as string | undefined,
         // 🚪 KNOWLEDGE GATE: AIN source well modulation
@@ -2014,12 +2120,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       (meta as any)?.user?.id ??
       null;
 
-    let cognitiveProfile: CognitiveProfile | null = null;
+    // ⚡ LATENCY: Reuse cognitiveProfile from route if already fetched (avoid duplicate DB call)
+    let cognitiveProfile: CognitiveProfile | null = (meta as any).cognitiveProfile ?? null;
     let fieldSafety: FieldSafetyDecision | null = null;
 
     if (userId || sessionId) {
       try {
-        cognitiveProfile = await getCognitiveProfile(userId || sessionId);
+        if (!cognitiveProfile) {
+          cognitiveProfile = await getCognitiveProfile(userId || sessionId);
+        }
 
         if (cognitiveProfile) {
           fieldSafety = enforceFieldSafety({
@@ -3010,7 +3119,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       meta?.rewritePass === true || meta?.ainRewritePass === true;
 
     if (telemetryEnabled && !isRewritePass) {
-      let shape = assessAINResponseShape(input, text);
+      const shapeContext: AINShapeContext = { counselMode: normalizeMode((meta as any)?.mode) === 'counsel' };
+      let shape = assessAINResponseShape(input, text, shapeContext);
 
       if (!shape.pass) {
         console.warn('[AIN SHAPE WARNING]', {
@@ -3045,7 +3155,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
               console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
               text = rewritten.trim();
               // Recompute shape for accurate telemetry
-              shape = assessAINResponseShape(input, text);
+              shape = assessAINResponseShape(input, text, shapeContext);
             }
           } catch (rewriteErr) {
             console.warn('[AIN SHAPE REWRITE ERROR]', rewriteErr);
@@ -3055,6 +3165,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       // Persist structure-only telemetry (no text) - reflects final delivered shape
       try {
+        // Compute continuity signals for telemetry (deterministic, no LLM)
+        // Map ConversationExchange to { role, content } pairs for deriveActiveThread
+        const recentTurnsForThread = conversationHistory.slice(-5).flatMap((ex: any) => [
+          { role: 'user', content: ex.userMessage ?? '' },
+          { role: 'assistant', content: ex.maiaResponse ?? '' },
+        ]);
+        const continuityThread = recentTurnsForThread.length >= 2
+          ? deriveActiveThread({ recentTurns: recentTurnsForThread, latestUserMessage: input })
+          : null;
+        const continuityCorrection = detectCorrectionSignal(input);
+
         await logAINShapeTelemetry({
           pass: shape.pass,
           score: shape.score,
@@ -3063,11 +3184,32 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           route: 'maiaService',
           processingProfile,
           explorerId: effectiveUserId ?? undefined,
-          sessionId
+          sessionId,
+          continuity: continuityThread ? {
+            hadActiveThread: true,
+            activeThreadConfidence: continuityThread.confidence,
+            hadCorrectionSignal: continuityCorrection.hasCorrectionSignal,
+            correctionType: continuityCorrection.correctionType,
+          } : null,
         });
       } catch (err) {
         // Never break the response if telemetry fails
         console.warn('[AIN SHAPE TELEMETRY ERROR]', err);
+      }
+
+      // PARTICIPATORY THEMES: fire-and-forget theme detection on user input
+      // Mirrors the oracle route path — populates member_theme_signals for longitudinal analysis.
+      // Sanctuary excluded — no content stored.
+      if (!isSanctuary && effectiveUserId) {
+        try {
+          const themeElement = (meta as any)?.element as import('@/lib/types/voiceIntent').Element | undefined;
+          const themeSignals = detectThemes(input, themeElement);
+          for (const signal of themeSignals) {
+            storeThemeSignal(effectiveUserId, signal, { sessionId });
+          }
+        } catch (themeErr) {
+          console.warn('[THEME DETECTION ERROR]', themeErr);
+        }
       }
     }
 

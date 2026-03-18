@@ -15,6 +15,7 @@ import {
   upsertMemberVoicePreferences,
   mergeVoiceIntent,
 } from '@/lib/voice/voiceControlsService';
+import { isValidArchetype } from '@/lib/voice/voiceArchetypes';
 import type { TTSProviderPref } from '@/lib/types/voiceControls';
 
 const VALID_TTS_PROVIDERS: TTSProviderPref[] = ['auto', 'cloud', 'local'];
@@ -96,6 +97,9 @@ export async function POST(request: NextRequest) {
       ? body.voiceIdOverride.slice(0, 64)
       : null;
 
+    // Voice archetype: validate if provided, null if not set or invalid
+    const voiceArchetype = isValidArchetype(body.voiceArchetype) ? body.voiceArchetype : null;
+
     // TTS provider preference: auto, cloud, or local
     const ttsProvider: TTSProviderPref | null =
       typeof body.ttsProvider === 'string' && VALID_TTS_PROVIDERS.includes(body.ttsProvider as TTSProviderPref)
@@ -104,6 +108,7 @@ export async function POST(request: NextRequest) {
 
     await upsertMemberVoicePreferences(memberId, {
       voiceIdOverride,
+      voiceArchetype,
       ttsProvider,
       offset,
     });

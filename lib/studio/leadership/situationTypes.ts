@@ -9,6 +9,7 @@
 
 import type { Council, FramingDomain } from '@/lib/ain/types';
 import type { DecisionContext, TimePressure, IterationContext } from './types';
+import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -150,16 +151,28 @@ export function getSituationConfig(type?: string | null): SituationConfig {
 
 /**
  * Build a structured question from decision context, oriented by situation type.
- * This replaces the leadership-only buildDecisionQuestion.
  *
- * When iterationContext is provided, the question includes the arc:
- * prior tensions, recommendation, insights, and what happened since.
- * The council sees the full trajectory, not just the current snapshot.
+ * When a DecisionInputBundle is provided, the question is assembled from
+ * segmented evidence sources — client inquiry, field signals, practitioner
+ * observations — rather than a flat practitioner summary.
+ *
+ * Each source is kept distinct in the prompt to reduce projection and prompt blur.
+ * If a source is absent, the council proceeds with what is available.
+ *
+ * PROMPT CONSTRAINTS (applied to all assemblies):
+ * - Distinguish direct evidence from inference. Label inferences as such.
+ * - Do not over-pathologize. Describe patterns, not diagnoses.
+ * - Prioritize phenomenological data when available (client's own words).
+ * - Identify tensions and uncertainties. Name what is not known.
+ * - Offer the next smallest useful intervention hypothesis, not a grand theory.
+ * - If client inquiry is sparse, say so. If field signals are missing, do not fill with false certainty.
  */
 export function buildSituationQuestion(
   d: DecisionContext,
   config: SituationConfig,
-  iteration?: IterationContext
+  iteration?: IterationContext,
+  inputBundle?: DecisionInputBundle,
+  councilBias?: string
 ): string {
   const parts: string[] = [
     `SITUATION: ${d.title}`,
@@ -193,7 +206,66 @@ export function buildSituationQuestion(
     }
   }
 
-  // Include iteration context — the council sees the arc
+  // ─── Evidence Bundle (when available) ──────────────────────────────
+  // Each source is kept separate. The council labels inferences, not direct evidence.
+  if (inputBundle) {
+    parts.push('', '--- EVIDENCE BUNDLE ---');
+    parts.push('Note: Synthesize from direct evidence first. Label inferences as such.');
+    parts.push('If a source is absent or sparse, acknowledge that gap rather than filling it.');
+
+    // CLIENT INQUIRY (first-person phenomenological data)
+    const inquiry = inputBundle.clientInquiry;
+    if (inquiry && inquiry.responses.length > 0) {
+      parts.push('', `CLIENT INQUIRY (${inquiry.promptSetTitle}):`);
+      parts.push('Source: client self-report — first-person phenomenology. Treat as primary evidence.');
+      for (const r of inquiry.responses) {
+        if (r.answer?.trim()) {
+          parts.push(`  Q: ${r.questionText}`);
+          parts.push(`  A: ${r.answer.trim()}`);
+        }
+      }
+      if (inquiry.summaryText) {
+        parts.push(`  Practitioner summary: ${inquiry.summaryText}`);
+      }
+    } else {
+      parts.push('', 'CLIENT INQUIRY: Not available for this council. Do not infer client experience from practitioner summary alone.');
+    }
+
+    // FIELD SIGNALS (discrete signals between sessions)
+    const signals = inputBundle.fieldSignals;
+    if (signals && signals.length > 0) {
+      parts.push('', 'FIELD SIGNALS (observed between sessions):');
+      parts.push('Source: discrete observations — somatic, relational, behavioral, emotional, symbolic, cognitive.');
+      for (const sig of signals) {
+        const intensity = sig.intensity != null ? ` [intensity: ${Math.round(sig.intensity * 10)}/10]` : '';
+        parts.push(`  [${sig.type}/${sig.source}]${intensity} ${sig.title}: ${sig.content}`);
+      }
+    } else {
+      parts.push('', 'FIELD SIGNALS: None recorded between sessions.');
+    }
+
+    // PRACTITIONER OBSERVATIONS (second-person relational data)
+    const observations = inputBundle.practitionerObservations;
+    if (observations && observations.length > 0) {
+      parts.push('', 'PRACTITIONER OBSERVATIONS (second-person, in-session or relational field):');
+      parts.push('Source: practitioner — observe for possible projection; treat as hypothesis-generating rather than confirmed fact.');
+      for (const obs of observations) {
+        parts.push(`  [${obs.observationType}] ${obs.content}`);
+      }
+    } else {
+      parts.push('', 'PRACTITIONER OBSERVATIONS: None recorded.');
+    }
+
+    // EXISTING NOTES
+    if (inputBundle.existingNotes?.trim()) {
+      parts.push('', 'NOTES / PRIOR CONTEXT:');
+      parts.push(inputBundle.existingNotes.trim());
+    }
+
+    parts.push('', '--- END EVIDENCE BUNDLE ---');
+  }
+
+  // ─── Iteration Arc ──────────────────────────────────────────────────
   if (iteration && iteration.iterationNumber > 1) {
     parts.push('', `--- PRIOR COUNCIL (iteration ${iteration.iterationNumber - 1}) ---`);
 
@@ -226,6 +298,28 @@ export function buildSituationQuestion(
   } else {
     parts.push('', config.closingQuestion);
   }
+
+  // ─── Protocol Clinical Frame (injected when a protocol is active) ──
+  if (councilBias) {
+    parts.push(
+      '',
+      '--- PROTOCOL CLINICAL FRAME ---',
+      'A clinical protocol is active for this session. This frame orients the council without overriding the evidence.',
+      councilBias,
+      '--- END PROTOCOL FRAME ---',
+    );
+  }
+
+  // ─── Prompt Discipline Reminder ────────────────────────────────────
+  parts.push(
+    '',
+    '--- SYNTHESIS INSTRUCTIONS ---',
+    'When synthesizing:',
+    '- Prioritize direct evidence (client inquiry, field signals) over practitioner interpretation.',
+    '- Name tensions and uncertainties explicitly. Do not resolve them prematurely.',
+    '- Suggest the next smallest useful intervention hypothesis, not a complete theory.',
+    '- If data is absent or sparse, say so. Honest uncertainty is more useful than confident inference.',
+  );
 
   return parts.join('\n');
 }

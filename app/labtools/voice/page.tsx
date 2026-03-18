@@ -2,6 +2,9 @@
 /**
  * LabTools Voice Configuration Page
  * Advanced voice modulation and testing interface for MAIA
+ *
+ * SOVEREIGNTY: No vendor names. No provider nouns. No trust leaks.
+ * Voice identities are sovereign archetypes resolved from lib/voice/sovereignVoices.ts
  */
 
 'use client';
@@ -14,11 +17,18 @@ import { Badge } from '@/components/ui/badge';
 import VoiceSettings, { VoiceConfiguration } from '@/components/VoiceSettings';
 import { Mic, BarChart, Settings2, TestTube, Sparkles } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import {
+  SOVEREIGN_VOICES,
+  VOICE_PROVIDERS,
+  getSovereignVoice,
+  migrateLegacyVoice,
+  migrateLegacyProvider,
+} from '@/lib/voice/sovereignVoices';
 
 export default function VoiceLabPage() {
   const [voiceConfig, setVoiceConfig] = useState<VoiceConfiguration>({
-    provider: 'openai',
-    voice: 'alloy',
+    provider: 'sovereign',
+    voice: 'maia_core',
     speed: 0.95,
     pitch: 1.0,
     volume: 0.8,
@@ -34,12 +44,18 @@ export default function VoiceLabPage() {
     duration: number;
   }>>([]);
 
-  // Load saved voice configuration
+  // Load saved voice configuration, migrating legacy vendor names
   useEffect(() => {
     const savedConfig = localStorage.getItem('maia_voice_config');
     if (savedConfig) {
       try {
-        setVoiceConfig(JSON.parse(savedConfig));
+        const parsed = JSON.parse(savedConfig);
+        // Migrate legacy vendor names to sovereign identities
+        setVoiceConfig({
+          ...parsed,
+          provider: migrateLegacyProvider(parsed.provider || 'sovereign'),
+          voice: migrateLegacyVoice(parsed.voice || 'maia_core'),
+        });
       } catch (error) {
         console.error('Failed to load voice config:', error);
       }
@@ -315,29 +331,29 @@ export default function VoiceLabPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                   {
-                    name: 'MAIA Default',
-                    description: 'Natural, warm, conversational - perfect for daily interactions',
-                    config: { provider: 'openai', voice: 'alloy', speed: 0.95, pitch: 1.0 }
+                    name: 'Maia (Kore)',
+                    description: 'Steady center. Neutral warmth. Clear attunement.',
+                    config: { provider: 'sovereign', voice: 'maia_core', speed: 0.95, pitch: 1.0 }
                   },
                   {
-                    name: 'Deep Wisdom',
-                    description: 'Slower, more contemplative for profound insights',
-                    config: { provider: 'openai', voice: 'alloy', speed: 0.85, pitch: 0.95 }
+                    name: 'Maia (Warm)',
+                    description: 'Soft edge. Holds silence well. For when you need room.',
+                    config: { provider: 'sovereign', voice: 'maia_warm', speed: 0.9, pitch: 0.95 }
                   },
                   {
-                    name: 'Energetic Guide',
-                    description: 'Upbeat, encouraging for motivation and inspiration',
-                    config: { provider: 'openai', voice: 'nova', speed: 1.05, pitch: 1.05 }
+                    name: 'Maia (Clear)',
+                    description: 'Bright and precise. Cuts through. For direction.',
+                    config: { provider: 'sovereign', voice: 'maia_clear', speed: 1.05, pitch: 1.05 }
                   },
                   {
-                    name: 'Grounding Presence',
-                    description: 'Stable, calming voice for anxiety and overwhelm',
-                    config: { provider: 'openai', voice: 'alloy', speed: 0.9, pitch: 0.98 }
+                    name: 'Atlas',
+                    description: 'Grounded resonance. Steady weight. Holds the line.',
+                    config: { provider: 'sovereign', voice: 'atlas', speed: 0.9, pitch: 0.98 }
                   },
                   {
-                    name: 'Sovereign Mode',
-                    description: 'Completely local neural TTS for maximum privacy',
-                    config: { provider: 'neural', voice: 'tacotron2', speed: 1.0, pitch: 1.0 }
+                    name: 'Atlas (Deep)',
+                    description: 'Low and slow. For thresholds and deep water.',
+                    config: { provider: 'sovereign', voice: 'atlas_deep', speed: 0.85, pitch: 0.95 }
                   }
                 ].map((preset, index) => (
                   <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
@@ -373,18 +389,18 @@ export default function VoiceLabPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 border rounded-lg">
-                  <h3 className="font-semibold text-sm text-gray-700 mb-2">Current Provider</h3>
-                  <p className="text-2xl font-bold">{voiceConfig.provider}</p>
+                  <h3 className="font-semibold text-sm text-gray-700 mb-2">Synthesis Engine</h3>
+                  <p className="text-2xl font-bold">
+                    {VOICE_PROVIDERS.find(p => p.id === voiceConfig.provider)?.label || voiceConfig.provider}
+                  </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    {voiceConfig.provider === 'openai' ? 'Cloud-based, high quality' :
-                     voiceConfig.provider === 'neural' ? 'Local neural synthesis' :
-                     'Browser speech API'}
+                    {VOICE_PROVIDERS.find(p => p.id === voiceConfig.provider)?.description || 'Local sovereign synthesis'}
                   </p>
                 </div>
 
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold text-sm text-gray-700 mb-2">Voice Character</h3>
-                  <p className="text-2xl font-bold">{voiceConfig.voice}</p>
+                  <p className="text-2xl font-bold">{getSovereignVoice(voiceConfig.voice).label}</p>
                   <p className="text-sm text-gray-600 mt-1">
                     Speed: {voiceConfig.speed}x, Pitch: {voiceConfig.pitch}x
                   </p>

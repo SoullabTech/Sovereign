@@ -1,0 +1,167 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Caddy Configuration for MinisForum
+# ═══════════════════════════════════════════════════════════════════════════════
+# Host-based routing for multiple subdomain builds
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Local development - no TLS
+:80 {
+    # Route to different services based on hostname
+    handle_path / {
+        # jeremy.soullab.life
+        @jeremy {
+            host jeremy.soullab.life
+        }
+        handle @jeremy {
+            reverse_proxy jeremy:3000
+        }
+
+        # oldhead.soullab.life
+        @oldhead {
+            host oldhead.soullab.life
+        }
+        handle @oldhead {
+            reverse_proxy oldhead:4321
+        }
+
+        # loralee.soullab.life
+        @loralee {
+            host loralee.soullab.life
+        }
+        handle @loralee {
+            reverse_proxy loralee:3000
+        }
+
+        # marc.soullab.life
+        @marc {
+            host marc.soullab.life
+        }
+        handle @marc {
+            reverse_proxy marc:3000
+        }
+
+        # rudeboy.soullab.life
+        @rudeboy {
+            host rudeboy.soullab.life
+        }
+        handle @rudeboy {
+            reverse_proxy rudeboy:4323
+        }
+
+        # api.soullab.life
+        @api {
+            host api.soullab.life
+        }
+        handle @api {
+            reverse_proxy maia-api:3001
+        }
+
+        # Default to main MAIA app
+        reverse_proxy maia:3000
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign"
+    }
+
+    encode gzip zstd
+}
+
+# api.soullab.life - Direct API routing
+api.soullab.life {
+    reverse_proxy maia-api:3001
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-api"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# jeremy.soullab.life
+jeremy.soullab.life {
+    reverse_proxy jeremy:3000
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-jeremy"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# oldhead.soullab.life
+oldhead.soullab.life {
+    reverse_proxy oldhead:4321
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-oldhead"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# loralee.soullab.life
+loralee.soullab.life {
+    reverse_proxy loralee:3000
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-loralee"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# marc.soullab.life
+marc.soullab.life {
+    reverse_proxy marc:3000
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-marc"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# rudeboy.soullab.life - Preserve existing routing
+rudeboy.soullab.life {
+    reverse_proxy rudeboy:4323
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-rudeboy"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
+# Health check endpoint for load balancers
+:8080 {
+    respond /health 200
+}

@@ -137,6 +137,7 @@ export async function GET(request: NextRequest) {
         `SELECT
           m.id, m.username, m.name, m.preferred_name, m.email,
           m.onboarded, m.onboarding_step, m.created_at, m.last_sign_in,
+          m.tier, m.roles,
           ms.circle_tier, m.has_webauthn, m.preferred_auth_method
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -190,6 +191,8 @@ export async function GET(request: NextRequest) {
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         circleTier: member.circle_tier || 'explorer',
+        tier: member.tier || 'free',
+        roles: member.roles || ['member'],
         createdAt: member.created_at,
         lastSignIn: member.last_sign_in,
         hasWebauthn: member.has_webauthn || false,

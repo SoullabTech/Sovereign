@@ -266,8 +266,11 @@ export async function healIdentity(): Promise<HealedIdentity | null> {
 
     // Also update legacy keys that other parts of the app might read
     localStorage.setItem('explorerId', profile.id);
-    if (profile.name || profile.preferredName) {
-      localStorage.setItem('explorerName', profile.preferredName || profile.name);
+    const displayName = (profile.preferredName || profile.name || '').trim();
+    if (displayName) {
+      localStorage.setItem('explorerName', displayName);
+      // CRITICAL: Also set explorerPreferredName — getInitialUserData() checks this first
+      localStorage.setItem('explorerPreferredName', displayName);
     }
 
     console.log('[healIdentity] Identity healed successfully:', {
@@ -438,6 +441,10 @@ export function getOrCreateVisitorId(): string {
  * For Capacitor/iOS native:
  * - Uses CapacitorHttp with x-member-id header
  *
+ * Shell context header:
+ * - When sessionStorage['field_shell'] === '1', adds X-App-Shell: field
+ *   so the server can enforce the Field/Studio boundary.
+ *
  * Usage:
  *   import { apiFetch } from '@/lib/http/apiBase';
  *   const response = await apiFetch('/api/sovereign/app/maia', {
@@ -451,6 +458,17 @@ export async function apiFetch(
 ): Promise<Response> {
   const url = apiUrl(path);
   console.log('[apiFetch]', options.method || 'GET', url);
+
+  // Inject X-App-Shell: field when running in Field shell context.
+  // Set sessionStorage['field_shell'] = '1' at Field boot to activate.
+  // This enables server-side enforcement of the Field/Studio boundary.
+  if (typeof window !== 'undefined' && sessionStorage.getItem('field_shell') === '1') {
+    const existingHeaders = options.headers instanceof Headers
+      ? options.headers
+      : new Headers(options.headers as HeadersInit);
+    existingHeaders.set('X-App-Shell', 'field');
+    options = { ...options, headers: existingHeaders };
+  }
 
   // Check if we need header-based auth (Safari or iOS)
   const needsHeaderAuth = isSafari() || isNativeCapacitor();

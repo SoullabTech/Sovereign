@@ -887,7 +887,12 @@ export async function calculateTransits(date: Date): Promise<Record<string, Plan
 
   for (const bodyName of bodies) {
     const body = Astronomy.Body[bodyName as keyof typeof Astronomy.Body];
-    const lon = Astronomy.EclipticLongitude(body, time);
+
+    // EclipticLongitude does not work for the Sun (no heliocentric reference for itself).
+    // Use SunPosition() which returns geocentric ecliptic coordinates.
+    const lon = bodyName === 'Sun'
+      ? Astronomy.SunPosition(time).elon
+      : Astronomy.EclipticLongitude(body, time);
 
     transits[bodyName.toLowerCase()] = {
       ...longitudeToZodiac(lon),

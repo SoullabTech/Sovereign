@@ -276,9 +276,23 @@ Every family that implements these practices contributes to the collective heali
 - Research-Backed Implementation: `/04-Practices/Clinical/Research-Backed-Parenting-Implementation.md`
 - Facilitation Guide: `/04-Practices/Clinical/Archetypal-Parenting-Facilitation-Guide.md`
 
+### **Source Library (Alexander Training)**
+- Parenting Source Library Reference: `/06-Resources/Parenting-Source-Library.md`
+- Full Source Texts: `~/Obsidian Vaults/MAIA-Consciousness/01-Sources/Parenting-Library/`
+- Library Index: `~/Obsidian Vaults/MAIA-Consciousness/01-Sources/Parenting-Library/00-INDEX.md`
+
+**11 source texts** (books, workbooks, clinical manuals, assessments) covering:
+- Positive discipline and connection-based parenting
+- Mindfulness parenting (including ADHD-specific)
+- Whole-brain child development (Siegel & Bryson)
+- Play therapy techniques (clinical and parent-facing)
+- Developmental psychology (child through adolescent)
+- Parenting style self-assessment
+- Mindful parenting across stages (Kabat-Zinn)
+
 ### **Integration with Reciprocal Learning**
 All documents include community contribution sections and connections to the reciprocal learning system for ongoing wisdom sharing and collective evolution.
 
 ---
 
-*© 2024 Soullab Community Commons - Evidence-Based Soul Development*
+*© 2024-2026 Soullab Community Commons - Evidence-Based Soul Development*

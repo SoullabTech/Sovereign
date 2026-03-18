@@ -15,6 +15,7 @@ import { query, queryOne, transaction } from '@/lib/database/postgres';
 import { generateLocalEmbedding } from '@/lib/memory/embeddings';
 import { generateWithKimi, isKimiAvailable } from '@/lib/ai/kimiClient';
 import { randomUUID } from 'crypto';
+import type { SpiralContext } from './dynamicRange';
 
 // =============================================================================
 // TYPES
@@ -183,6 +184,7 @@ export class LibraryService {
       mode?: 'fast' | 'deep';  // fast = distillates first, deep = raw chunks
       memberId?: string;
       sessionId?: string;
+      spiralContext?: SpiralContext;  // Dynamic range: tune retrieval to spiral state
     } = {}
   ): Promise<LibraryContext> {
     const {
@@ -190,7 +192,8 @@ export class LibraryService {
       sourceTypes,
       mode = 'fast',
       memberId,
-      sessionId
+      sessionId,
+      spiralContext
     } = options;
 
     const startTime = Date.now();
@@ -198,8 +201,8 @@ export class LibraryService {
     let distillate: DistillatePayload | null = null;
 
     try {
-      // Phase 1: Try semantic search with embeddings
-      chunks = await this.semanticSearch(queryText, limit, sourceTypes);
+      // Phase 1: Try semantic search with embeddings (with optional element boost)
+      chunks = await this.semanticSearch(queryText, limit, sourceTypes, spiralContext?.element);
 
       // If semantic search returns nothing, fall back to full-text
       if (chunks.length === 0) {
@@ -209,7 +212,7 @@ export class LibraryService {
       // In fast mode, also fetch distillate from top source
       if (mode === 'fast' && chunks.length > 0) {
         const topSourceId = chunks[0].source_id;
-        distillate = await this.getDistillate(topSourceId);
+        distillate = await this.getDistillate(topSourceId, spiralContext);
       }
 
       // Log the search for learning
@@ -250,7 +253,8 @@ export class LibraryService {
   private async semanticSearch(
     queryText: string,
     limit: number,
-    sourceTypes?: string[]
+    sourceTypes?: string[],
+    elementBoost?: string
   ): Promise<LibrarySearchResult[]> {
     try {
       // Generate embedding for query
@@ -260,7 +264,14 @@ export class LibraryService {
         return [];
       }
 
-      // Build query with optional source type filter
+      // Build element boost SQL if spiral context provides element
+      const validElements = ['fire', 'water', 'earth', 'air', 'aether'];
+      const hasElementBoost = elementBoost && validElements.includes(elementBoost.toLowerCase());
+      const boostClause = hasElementBoost
+        ? `+ CASE WHEN c.meta->>'element' = '${elementBoost!.toLowerCase()}' THEN 0.15 WHEN c.meta->>'element_secondary' = '${elementBoost!.toLowerCase()}' THEN 0.08 ELSE 0 END`
+        : '';
+
+      // Build query with optional source type filter and element boost
       let sql = `
         SELECT
           c.id as chunk_id,
@@ -272,7 +283,7 @@ export class LibraryService {
           s.author,
           s.file_path,
           s.type as source_type,
-          1 - (c.embedding <=> $1::vector) as score
+          (1 - (c.embedding <=> $1::vector)) ${boostClause} as score
         FROM library_chunks c
         JOIN library_sources s ON c.source_id = s.id
         WHERE s.ingestion_status = 'completed'
@@ -287,7 +298,7 @@ export class LibraryService {
       }
 
       sql += `
-        ORDER BY c.embedding <=> $1::vector
+        ORDER BY (1 - (c.embedding <=> $1::vector)) ${boostClause} DESC
         LIMIT ${limit}
       `;
 
@@ -381,8 +392,22 @@ export class LibraryService {
   /**
    * Get distillate for a source
    */
-  async getDistillate(sourceId: string): Promise<DistillatePayload | null> {
+  async getDistillate(sourceId: string, spiralContext?: SpiralContext): Promise<DistillatePayload | null> {
     try {
+      // If we have spiral context, prefer distillates matching the member's facet
+      if (spiralContext?.element && spiralContext?.phase) {
+        const facetTag = `${spiralContext.element.toUpperCase()}_${spiralContext.phase}`;
+        const facetResult = await queryOne<{ payload: DistillatePayload }>(
+          `SELECT payload FROM library_distillates
+           WHERE source_id = $1 AND level = 'source'
+             AND payload->'facet_tags' ? $2
+           ORDER BY created_at DESC LIMIT 1`,
+          [sourceId, facetTag]
+        );
+        if (facetResult?.payload) return facetResult.payload;
+      }
+
+      // Fallback: any distillate for this source
       const result = await queryOne<{ payload: DistillatePayload }>(
         `SELECT payload FROM library_distillates
          WHERE source_id = $1 AND level = 'source'

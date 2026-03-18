@@ -361,6 +361,24 @@ cmd_deploy() {
         exit 1
     fi
 
+    # Dependency security audit — block deploy on moderate+ vulnerabilities
+    log_info "Running dependency security audit..."
+    if command -v pnpm >/dev/null 2>&1; then
+        if ! pnpm audit --prod --audit-level=moderate 2>&1; then
+            log_error "Dependency audit failed — vulnerable packages detected."
+            log_error "Fix vulnerabilities or run: pnpm audit --fix"
+            log_error "To skip (NOT recommended): SKIP_AUDIT=1 ./scripts/deploy-production.sh deploy"
+            if [ "${SKIP_AUDIT:-0}" != "1" ]; then
+                exit 1
+            fi
+            log_warn "SKIP_AUDIT=1 set — proceeding despite vulnerabilities"
+        else
+            log_success "Dependency audit passed"
+        fi
+    else
+        log_warn "pnpm not found — skipping dependency audit"
+    fi
+
     # Build and start
     log_info "Building Docker images..."
     export GIT_COMMIT="$(git rev-parse --short HEAD)"
@@ -427,6 +445,23 @@ cmd_update() {
     git pull
 
     log_info "Rebuilding and redeploying..."
+
+    # Dependency security audit
+    log_info "Running dependency security audit..."
+    if command -v pnpm >/dev/null 2>&1; then
+        if ! pnpm audit --prod --audit-level=moderate 2>&1; then
+            log_error "Dependency audit failed — vulnerable packages detected."
+            if [ "${SKIP_AUDIT:-0}" != "1" ]; then
+                exit 1
+            fi
+            log_warn "SKIP_AUDIT=1 set — proceeding despite vulnerabilities"
+        else
+            log_success "Dependency audit passed"
+        fi
+    else
+        log_warn "pnpm not found — skipping dependency audit"
+    fi
+
     export GIT_COMMIT="$(git rev-parse --short HEAD)"
     export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
