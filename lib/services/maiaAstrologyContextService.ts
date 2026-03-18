@@ -13,10 +13,26 @@ import { query } from '@/lib/db/postgres';
 import {
   calculateBirthChart,
   calculateTransits,
+  getMoonPhaseData,
   type BirthData,
   type BirthChart,
   type PlanetPosition,
 } from '@/lib/astrology/ephemerisCalculator';
+import {
+  type AstroEvent,
+  ASTRO_EVENTS_2026,
+  getUpcomingEvents,
+  getActiveEvents,
+  confidenceLabel,
+} from '@/lib/astrology/transitSnapshot';
+import {
+  buildTransitImpacts,
+  formatTransitImpacts,
+} from '@/lib/astrology/transitInterpretation';
+import {
+  buildAstrologyPayload,
+  type AstrologyContextPayload,
+} from '@/lib/astrology/astrologyPayload';
 import {
   calculateCompleteMayanProfile,
   getTodaysMayanSign,
@@ -59,7 +75,9 @@ export interface AstrologyContext {
   currentTransits: CurrentTransit[];
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
-  formattedContext: string;
+  events: AstroEvent[];              // locked event table — authoritative, no model inference
+  payload: AstrologyContextPayload;  // typed, source-tagged — use for dashboards, reports, API
+  formattedContext: string;          // prose rendering for oracle system prompt
 }
 
 // ==================== TRANSIT SIGNIFICANCE ====================
@@ -165,7 +183,22 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     // Get today's Mayan sign (always available)
     const todaysMayanSign = getTodaysMayanSign();
 
+    // Load upcoming astronomical events from locked table (60-day window)
+    const events = getUpcomingEvents(ASTRO_EVENTS_2026, 60);
+
     // Format the context for MAIA
+    // Build structured transit impacts (needed by both payload and formattedContext)
+    const transitImpacts = birthChart ? buildTransitImpacts(birthChart, currentTransits) : [];
+
+    // Build typed payload — source/confidence tagged, separated by layer
+    const moonPhase = getMoonPhaseFromEphemeris();
+    const payload = buildAstrologyPayload({
+      currentTransits,
+      moonPhase,
+      events,
+      impacts: transitImpacts,
+    });
+
     const formattedContext = formatAstrologyContextForMAIA(
       birthChart,
       mayanProfile,
@@ -173,7 +206,8 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       currentTransits,
       transitHighlights,
       relevantPatterns,
-      !member.birth_time // Flag if birth time is unknown
+      !member.birth_time, // Flag if birth time is unknown
+      events
     );
 
     return {
@@ -184,6 +218,8 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       currentTransits,
       transitHighlights,
       relevantPatterns,
+      events,
+      payload,
       formattedContext,
     };
   } catch (error) {
@@ -342,15 +378,57 @@ function formatAstrologyContextForMAIA(
   currentTransits: CurrentTransit[],
   transitHighlights: TransitHighlight[],
   relevantPatterns: string[],
-  birthTimeUnknown: boolean
+  birthTimeUnknown: boolean,
+  events: AstroEvent[] = []
 ): string {
   let context = '\n# Astrological Context (IMPLICIT - use naturally, never lecture)\n\n';
+
+  // ── ASTRONOMICAL EVENTS (authoritative — locked table) ────────────────────
+  const activeEvents = getActiveEvents(events, 4);
+  const upcomingEvents = events.filter(e => new Date(e.date + 'T12:00:00Z') > new Date());
+
+  if (activeEvents.length > 0 || upcomingEvents.length > 0) {
+    context += '## Astronomical Events (Authoritative — Verified Data)\n';
+    context += '*Only reference events listed here. Do not state eclipse or lunation dates from training.*\n\n';
+
+    if (activeEvents.length > 0) {
+      context += '**Active Now (within ±4 days):**\n';
+      activeEvents.forEach(e => {
+        context += `- ${e.description} — ${e.date} ${confidenceLabel(e.confidence)}\n`;
+      });
+      context += '\n';
+    }
+
+    if (upcomingEvents.length > 0) {
+      context += '**Upcoming (next 60 days):**\n';
+      upcomingEvents.slice(0, 8).forEach(e => {
+        context += `- ${e.description} — ${e.date} ${confidenceLabel(e.confidence)}\n`;
+      });
+      context += '\n';
+    }
+  }
 
   // Current sky (always available)
   context += '## Current Cosmic Weather\n';
 
-  // Moon phase
-  const moonPhase = getMoonPhase();
+  // ── FULL CURRENT SKY SNAPSHOT (calculated from ephemeris) ─────────────────
+  // These are the authoritative positions MAIA should reference for any
+  // "where is X right now?" question. Do not answer from training data.
+  if (currentTransits.length > 0) {
+    context += '**Current Planet Positions (Verified — Calculated from Ephemeris):**\n';
+    const planetOrder = ['Sun','Moon','Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune','Pluto'];
+    planetOrder.forEach(name => {
+      const t = currentTransits.find(t => t.planet === name);
+      if (t) {
+        const status = t.retrograde ? ' ℞' : '';
+        context += `- ${name}: ${Math.round(t.degree)}° ${t.sign}${status}\n`;
+      }
+    });
+    context += '\n';
+  }
+
+  // Moon phase — calculated from ephemeris (astronomy-engine), not approximated
+  const moonPhase = getMoonPhaseFromEphemeris();
   context += `**Current Moon Phase:** ${moonPhase.phase} (${moonPhase.percentage}% illuminated)\n`;
   context += `- Emotional tone: ${moonPhase.meaning}\n\n`;
 
@@ -365,14 +443,18 @@ function formatAstrologyContextForMAIA(
     }
   });
 
-  // Approaching significant transits (if we have birth chart)
+  // Structured transit impacts (if we have birth chart) — replaces generic string list
   if (birthChart) {
-    const approachingTransits = getApproachingTransits(birthChart, currentTransits);
-    if (approachingTransits.length > 0) {
-      context += '\n**Significant Transits Active/Approaching:**\n';
-      approachingTransits.forEach(t => {
-        context += `- ${t}\n`;
-      });
+    const transitImpacts = buildTransitImpacts(birthChart, currentTransits);
+    if (transitImpacts.length > 0) {
+      context += formatTransitImpacts(transitImpacts);
+    } else {
+      // Fallback: legacy string-based transits
+      const approachingTransits = getApproachingTransits(birthChart, currentTransits);
+      if (approachingTransits.length > 0) {
+        context += '\n**Significant Transits Active/Approaching:**\n';
+        approachingTransits.forEach(t => { context += `- ${t}\n`; });
+      }
     }
   }
 
@@ -489,6 +571,21 @@ function formatAstrologyContextForMAIA(
 - Never lecture or make astrology the focus unless requested
 - Always prioritize their lived experience - astrology is one lens among many
 
+## Epistemic Guardrail (MANDATORY)
+- ECLIPSES: Only reference an eclipse if it appears in the "Astronomical Events" section above
+- LUNATIONS: Only state specific new/full moon dates if they are listed above
+- PLANET POSITIONS: If asked where a planet is now, use the "Current Planet Positions" table above — do not infer from training data
+- DO NOT draw on training data to fill astronomical gaps — training data contains errors on specific dates
+- Confidence labels: "(verified)" = authoritative; "(calculated, ±1 day)" = accurate but approximate; never state "(unverified)" events
+
+## Uncertainty Protocol (Phase 4)
+When asked about an astronomical event or date NOT present in this context:
+1. State clearly: "I don't have verified data for that specific date in my current context"
+2. Do NOT estimate or infer — not even approximately
+3. Offer the general pattern if useful (e.g. "Solar eclipses occur roughly every 6–18 months")
+4. Suggest verification: timeanddate.com or astro.com for precise dates
+5. Never present uncertainty as confidence — the person deserves to know when you're outside your verified data
+
 `;
 
   return context;
@@ -560,38 +657,36 @@ function getAspectMeaning(type: string): string {
 /**
  * Calculate current moon phase
  */
-function getMoonPhase(): { phase: string; meaning: string; percentage: number } {
-  const now = new Date();
-  const synodicMonth = 29.53059; // days
-
-  // Known new moon: January 11, 2024
-  const knownNewMoon = new Date('2024-01-11T11:57:00Z');
-  const daysSinceNewMoon = (now.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
-  const moonAge = daysSinceNewMoon % synodicMonth;
-  const percentage = (moonAge / synodicMonth) * 100;
+/**
+ * Moon phase from ephemeris (astronomy-engine).
+ * Uses actual Sun/Moon longitude difference — not synodic approximation.
+ * Replaces getMoonPhase() which used a manual reference-date calculation.
+ */
+function getMoonPhaseFromEphemeris(): { phase: string; meaning: string; percentage: number } {
+  const { degrees, percentage } = getMoonPhaseData(new Date());
 
   let phase: string;
   let meaning: string;
 
-  if (moonAge < 1.85) {
+  if (degrees < 15 || degrees >= 345) {
     phase = 'New Moon';
     meaning = 'new beginnings, setting intentions, introspection';
-  } else if (moonAge < 7.38) {
+  } else if (degrees < 90) {
     phase = 'Waxing Crescent';
     meaning = 'building momentum, taking first steps, hope';
-  } else if (moonAge < 9.23) {
+  } else if (degrees < 105) {
     phase = 'First Quarter';
     meaning = 'action, decisions, overcoming obstacles';
-  } else if (moonAge < 14.77) {
+  } else if (degrees < 180) {
     phase = 'Waxing Gibbous';
     meaning = 'refinement, adjustment, almost there';
-  } else if (moonAge < 16.61) {
+  } else if (degrees < 195) {
     phase = 'Full Moon';
     meaning = 'culmination, illumination, heightened emotions';
-  } else if (moonAge < 22.15) {
+  } else if (degrees < 270) {
     phase = 'Waning Gibbous';
     meaning = 'gratitude, sharing wisdom, release begins';
-  } else if (moonAge < 24.00) {
+  } else if (degrees < 285) {
     phase = 'Last Quarter';
     meaning = 'letting go, forgiveness, clearing';
   } else {
@@ -599,7 +694,7 @@ function getMoonPhase(): { phase: string; meaning: string; percentage: number } 
     meaning = 'surrender, rest, preparation for renewal';
   }
 
-  return { phase, meaning, percentage: Math.round(percentage) };
+  return { phase, meaning, percentage };
 }
 
 /**
