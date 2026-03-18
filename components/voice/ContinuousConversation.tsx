@@ -586,6 +586,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
+      // If VFP aborted recognition (zombie flag set), preserve listening — auto-resume handles restart
+      // This is the case where MAIA started speaking mid-listen and recognition ran >500ms before abort
+      if (recognitionNeedsRefreshRef.current) {
+        console.log('⏸️ [onend] VFP abort detected (zombie flag set, ran >500ms) - preserving isListening for auto-resume');
+        return;
+      }
+
       // In Care/Scribe modes, ALWAYS restart to stay open for the user
       if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
         console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
