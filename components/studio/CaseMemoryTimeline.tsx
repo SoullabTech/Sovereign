@@ -85,7 +85,7 @@ export function CaseMemoryTimeline({ caseId }: CaseMemoryTimelineProps) {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiFetch(`/api/studio/review/memories?caseId=${caseId}`);
+      const response = await apiFetch(`/api/caseload/${caseId}/memories/list`);
       const data = await response.json();
 
       if (!response.ok) {
