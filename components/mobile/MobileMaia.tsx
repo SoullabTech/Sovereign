@@ -14,6 +14,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, MessageCircle, Heart, Brain, Compass, Menu, X } from 'lucide-react';
+import { useIOSDeliveryMode } from '@/hooks/useIOSDeliveryMode';
+import { SafariPromptBanner } from '@/components/mobile/SafariPromptBanner';
 
 interface MobileMaiaProps {
   userId: string;
@@ -23,8 +25,11 @@ interface MobileMaiaProps {
 }
 
 export function MobileMaia({ userId, userName, onConversationStart, className = '' }: MobileMaiaProps) {
+  const { voiceInputAvailable, isIOSPWA } = useIOSDeliveryMode();
   const [isListening, setIsListening] = useState(false);
-  const [quickMode, setQuickMode] = useState<'voice' | 'text' | 'touch'>('voice');
+  const [quickMode, setQuickMode] = useState<'voice' | 'text' | 'touch'>(
+    voiceInputAvailable ? 'voice' : 'text'
+  );
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [currentVibe, setCurrentVibe] = useState<'support' | 'exploration' | 'growth' | 'healing'>('support');
 
@@ -64,40 +69,46 @@ export function MobileMaia({ userId, userName, onConversationStart, className = 
     }
   ];
 
-  // Voice button - center of mobile experience
-  const VoiceButton = () => (
-    <motion.button
-      onTouchStart={() => setIsListening(true)}
-      onTouchEnd={() => setIsListening(false)}
-      className={`w-24 h-24 rounded-full flex items-center justify-center relative ${
-        isListening
-          ? 'bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-400/40'
-          : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
-      }`}
-      whilePressed={{ scale: 0.95 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      {isListening ? (
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 1 }}
-        >
-          <Mic className="w-10 h-10 text-white" />
-        </motion.div>
-      ) : (
-        <Mic className="w-10 h-10 text-amber-400" />
-      )}
+  // Voice button - center of mobile experience.
+  // In iOS PWA standalone mode, voice input is unavailable (Apple platform limit).
+  // Show the inline Safari prompt instead of a non-functional mic button.
+  const VoiceButton = () => {
+    if (!voiceInputAvailable) {
+      return <SafariPromptBanner variant="inline" />;
+    }
 
-      {/* Listening indicator */}
-      {isListening && (
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-green-400/60"
-          animate={{ scale: [1, 1.5, 1] }}
-          transition={{ repeat: Infinity, duration: 0.8 }}
-        />
-      )}
-    </motion.button>
-  );
+    return (
+      <motion.button
+        onTouchStart={() => setIsListening(true)}
+        onTouchEnd={() => setIsListening(false)}
+        className={`w-24 h-24 rounded-full flex items-center justify-center relative ${
+          isListening
+            ? 'bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg shadow-green-400/40'
+            : 'bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30'
+        }`}
+        whileTap={{ scale: 0.95 }}
+      >
+        {isListening ? (
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          >
+            <Mic className="w-10 h-10 text-white" />
+          </motion.div>
+        ) : (
+          <Mic className="w-10 h-10 text-amber-400" />
+        )}
+
+        {isListening && (
+          <motion.div
+            className="absolute inset-0 rounded-full border-4 border-green-400/60"
+            animate={{ scale: [1, 1.5, 1] }}
+            transition={{ repeat: Infinity, duration: 0.8 }}
+          />
+        )}
+      </motion.button>
+    );
+  };
 
   // Quick action tiles
   const QuickActionTile = ({ action }: { action: typeof quickActions[0] }) => {
@@ -122,6 +133,9 @@ export function MobileMaia({ userId, userName, onConversationStart, className = 
 
   return (
     <div className={`mobile-maia h-screen flex flex-col ${className}`}>
+      {/* iOS PWA voice guidance banner — only shown in standalone PWA mode */}
+      {isIOSPWA && <SafariPromptBanner variant="banner" />}
+
       {/* Mobile Header - Minimal */}
       <div className="flex-shrink-0 p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -149,7 +163,11 @@ export function MobileMaia({ userId, userName, onConversationStart, className = 
 
           <div className="text-center">
             <p className="text-white/80 text-sm">
-              {isListening ? 'Listening...' : 'Hold to speak with MAIA'}
+              {!voiceInputAvailable
+                ? 'Type to speak with MAIA'
+                : isListening
+                ? 'Listening...'
+                : 'Hold to speak with MAIA'}
             </p>
             <p className="text-amber-400/60 text-xs mt-1">
               Your consciousness companion

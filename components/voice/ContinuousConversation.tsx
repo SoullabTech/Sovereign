@@ -10,7 +10,9 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
+// =============================================================================
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
+// =============================================================================
 // Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
 // Everything else (OracleConversation, StreamingVoice, etc.) emits events
 // that ContinuousConversation processes. No external code touches mic directly.
@@ -204,7 +206,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
   const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
   const wantsContinuousConversationRef = useRef(false); // 🔥 FIX: Track if user wants continuous conversation (persists through MAIA responses)
+  // ==========================================================================
   // 🎙️ STATE MACHINE — Single source of truth for mic lifecycle
+  // ==========================================================================
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
@@ -292,8 +296,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               recognitionRef.current.onresult = null;
               recognitionRef.current.onerror = null;
               recognitionRef.current.onend = null;
-              // Unregister from VFP so it doesn't abort the new object too
-              VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
             }
             recognitionRef.current = initializeSpeechRecognition();
             recognitionNeedsRefreshRef.current = false;
@@ -305,7 +307,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
           if (!recognitionRef.current) return;
           try {
-            console.log('🚀 recognition.start() called on fresh object');
             recognitionRef.current.start();
             setIsRecording(true);
             console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
@@ -519,11 +520,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setIsListening(false);
         // Note: onError is not defined in props, removed the call
       } else if (event.error === 'aborted') {
-        // Aborted = VFP killed recognition because MAIA started speaking.
-        // Chrome zombie bug: calling .start() on this object again silently fails (onresult never fires).
-        // Flag it NOW so the auto-resume path recreates a fresh object instead of reusing the zombie.
-        console.log('⏹️ Recognition aborted — flagging zombie for recreation on next start');
-        recognitionNeedsRefreshRef.current = true;
+        // Aborted is normal when stopping/restarting - don't log as error
+        console.log('⏹️ Recognition aborted (normal during restart)');
         // Don't trigger any restart logic here - let onend handle it
       }
     };
@@ -586,27 +584,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
-      // If VFP aborted recognition (zombie flag set), preserve listening — auto-resume handles restart
-      // This is the case where MAIA started speaking mid-listen and recognition ran >500ms before abort
-      if (recognitionNeedsRefreshRef.current) {
-        console.log('⏸️ [onend] VFP abort detected (zombie flag set, ran >500ms) - preserving isListening for auto-resume');
-        return;
-      }
-
-      // Only bail out on silence timeout if user has NOT started an active conversation.
-      // wantsContinuousConversationRef is set true when user taps mic, false only when user explicitly stops.
-      // If it's true, we're in an active convo and must keep restarting between turns.
-      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current && !wantsContinuousConversationRef.current) {
-        console.log('🔕 [onend] No recent speech and no active conversation - stopping to prevent blink');
+      // In Care/Scribe modes, ALWAYS restart to stay open for the user
+      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
+        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
         onRecordingStateChange?.(false);
         return;
-      }
-
-      if (!hasRecentSpeech && !hasAccumulatedTranscript && wantsContinuousConversationRef.current) {
-        console.log('🔄 [onend] No recent speech but active conversation — restarting mic for next turn');
       }
 
       // Log if persistent mode is keeping us open
