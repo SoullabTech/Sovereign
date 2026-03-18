@@ -597,60 +597,88 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
-    // ── Phase 19: Symbolic telemetry ──────────────────────────────────────────
-    // Record governed prompt ingress for each symbolic domain present in this call.
-    // Fire-and-forget — never blocks the oracle, never propagates errors to the user.
-    // Records post-assembly, pre-LLM: captures what governance would allow to reach
-    // each surface (prompt, practitioner view, user view, memory).
+    // ── Phase 20: Symbolic telemetry — item-level ingress recording ───────────
+    // One event per governed symbolic item, not one per domain.
+    // Governance (buildPromptIngressItem) runs per item so promptRole,
+    // allowedIn* surfaces, and blocked status reflect real per-item decisions.
+    // Fire-and-forget — never blocks the oracle, never propagates errors.
     try {
-      const _symbolicIngressItems = [];
+      let _telemetryCount = 0;
 
-      // Astrology domain — authoritative when birth data is present, fallback for
-      // cosmic-weather-only (no birth chart on file).
+      // Build, record, and count one item. Returns the governed item.
+      const _record = (input) => {
+        const item = buildPromptIngressItem(input);
+        recordSymbolicEvent(telemetryFromIngressItem(item, sessionId));
+        _telemetryCount++;
+        return item;
+      };
+
+      // ── Astrology ──
       if (astrologyContext) {
-        _symbolicIngressItems.push(buildPromptIngressItem({
-          traceId: `astro-${randomUUID()}`,
-          domain: 'astrology',
-          authority: astrologyContext.hasBirthData ? 'authoritative' : 'fallback',
-          renderBlocked: false,
-          claimTypes: [],
-          content: astrologyContext.formattedContext ?? '',
-        }));
+        if (astrologyContext.hasBirthData) {
+          // Birth chart — authoritative (backed by ephemeris + real birth data)
+          _record({
+            traceId: `astro-natal-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'authoritative',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.birthChart
+              ? `${astrologyContext.birthChart.sun?.sign} sun · ${astrologyContext.birthChart.moon?.sign} moon · ${astrologyContext.birthChart.ascendant?.sign} rising`
+              : '',
+          });
+
+          // Transit highlights — derived (interpretations, one item per highlight)
+          for (const highlight of astrologyContext.transitHighlights ?? []) {
+            _record({
+              traceId: `astro-transit-${randomUUID()}`,
+              domain: 'astrology',
+              authority: 'derived',
+              renderBlocked: false,
+              claimTypes: [],
+              content: highlight.description ?? '',
+            });
+          }
+        } else {
+          // No birth data — cosmic weather only, fallback authority
+          _record({
+            traceId: `astro-cosmic-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'fallback',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.formattedContext ?? '',
+          });
+        }
       }
 
-      // Field sensing domain — derived (always inference from observed field state).
+      // ── Field sensing ── (single derived item — one field state per call)
       if (panconsciousField?.axisMundi) {
-        _symbolicIngressItems.push(buildPromptIngressItem({
+        _record({
           traceId: `field-${randomUUID()}`,
           domain: 'field',
           authority: 'derived',
           renderBlocked: false,
           claimTypes: [],
-        }));
+        });
       }
 
-      // Pattern / symbol domain — derived when patterns detected; fallback if none.
-      if (symbolPatterns?.length > 0) {
-        _symbolicIngressItems.push(buildPromptIngressItem({
+      // ── Symbol patterns ── (one item per detected pattern, governed independently)
+      // Each pattern gets its own promptRole assignment — some may become question_seed,
+      // others interpretation, depending on content framing and authority.
+      for (const pattern of symbolPatterns ?? []) {
+        _record({
           traceId: `pattern-${randomUUID()}`,
           domain: 'pattern_ledger',
           authority: 'derived',
           renderBlocked: false,
           claimTypes: ['recurring_pattern'],
-          content: symbolPatterns.map((p) => p.description ?? p.archetypalCore ?? '').join(' '),
-        }));
-      }
-
-      for (const _item of _symbolicIngressItems) {
-        recordSymbolicEvent(telemetryFromIngressItem(_item, sessionId));
-      }
-
-      if (_symbolicIngressItems.length > 0) {
-        console.log('[Symbolic Telemetry]', {
-          domains: _symbolicIngressItems.map(i => i.domain),
-          authorities: _symbolicIngressItems.map(i => i.authority),
-          promptRoles: _symbolicIngressItems.map(i => i.promptRole),
+          content: pattern.description ?? pattern.archetypalCore ?? '',
         });
+      }
+
+      if (_telemetryCount > 0) {
+        console.log('[Symbolic Telemetry]', { itemCount: _telemetryCount, sessionId });
       }
     } catch {
       // Telemetry must never disrupt the oracle pipeline
