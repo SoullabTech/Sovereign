@@ -13,6 +13,8 @@
 
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
+import { generateInviteCode, hashInviteCode } from '@/lib/portal/invites';
+import { sendPortalClaimEmail } from '@/lib/portal/notifications';
 
 // ============================================================================
 // Tool Definitions for Claude
@@ -455,6 +457,12 @@ export async function createBooking(
       );
     }
 
+    // Auto-invite: send claim link if client hasn't claimed portal access yet
+    // Fire-and-forget — never blocks the booking confirmation
+    sendPortalInviteIfNeeded(ctx, clientId, name, email).catch((err) => {
+      console.error('[BookingTools] Auto-invite failed (non-blocking):', err);
+    });
+
     return {
       success: true,
       data: {
@@ -475,6 +483,81 @@ export async function createBooking(
       error: 'Failed to create booking. Please try again.',
     };
   }
+}
+
+/**
+ * Auto-invite helper: generates (or reuses) a portal claim invite for unclaimed clients.
+ *
+ * Rules:
+ * - If already claimed → do nothing
+ * - If active unexpired invite exists → revoke it, generate fresh (plaintext not stored)
+ * - Always sends one invite per booking flow; never piles up duplicates
+ */
+async function sendPortalInviteIfNeeded(
+  ctx: ToolContext,
+  clientId: string,
+  clientName: string,
+  clientEmail: string
+): Promise<void> {
+  // Check claimed status directly on practitioner_clients (view omits this column)
+  const claimedResult = await db.query(
+    `SELECT portal_claimed_at FROM practitioner_clients WHERE id = $1`,
+    [clientId]
+  );
+
+  const claimed = claimedResult.rows[0]?.portal_claimed_at;
+  if (claimed) {
+    // Already has portal access — booking confirmation only
+    return;
+  }
+
+  // Revoke any existing active invites to avoid sprawl
+  await db.query(
+    `UPDATE client_invites
+     SET status = 'revoked'
+     WHERE client_id = $1 AND status = 'unused' AND expires_at > NOW()`,
+    [clientId]
+  );
+
+  // Generate new invite
+  const code = generateInviteCode();
+  const codeHash = hashInviteCode(code);
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 90); // 90 days
+
+  await db.query(
+    `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, expires_at)
+     VALUES ($1, $2, $3, 'unused', $4)`,
+    [ctx.practitionerId, clientId, codeHash, expiresAt]
+  );
+
+  // Fetch practitioner info for the email
+  const practitionerResult = await db.query(
+    `SELECT name, email, business_name, slug
+     FROM practitioners
+     WHERE id = $1 OR member_id = $1
+     LIMIT 1`,
+    [ctx.practitionerId]
+  );
+
+  const p = practitionerResult.rows[0];
+  if (!p) {
+    console.warn('[BookingTools] Auto-invite: practitioner not found, skipping email');
+    return;
+  }
+
+  const claimUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://soullab.life'}/portal/${ctx.portalSlug}/claim?code=${encodeURIComponent(code)}&email=${encodeURIComponent(clientEmail)}`;
+
+  await sendPortalClaimEmail(
+    { clientName, clientEmail, claimUrl },
+    {
+      name: p.name,
+      email: p.email,
+      portalSlug: ctx.portalSlug,
+      businessName: p.business_name ?? undefined,
+    }
+  );
+
+  console.log(`[BookingTools] Auto-invite sent to ${clientEmail} for portal/${ctx.portalSlug}`);
 }
 
 /**
