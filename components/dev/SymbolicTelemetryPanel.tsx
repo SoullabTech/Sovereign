@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Symbolic Telemetry Panel — Phase 22
+ * Symbolic Telemetry Panel — Phase 23
  *
  * Inline debug/calibration surface for the governed symbolic pipeline.
  * Supports live (in-memory) and historical (DB) modes.
@@ -26,6 +26,7 @@ import type {
 import type {
   TelemetryWindowRow,
   TelemetryTrendRow,
+  TelemetryModeRow,
 } from '@/lib/symbolic/symbolicTelemetryPersistence';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -60,12 +61,21 @@ interface DbTrendResponse {
   generatedAt: string;
 }
 
+interface DbModeResponse {
+  ok: boolean;
+  source: 'db';
+  windowHours: number;
+  modeRows: TelemetryModeRow[];
+  generatedAt: string;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTROLS
 // ─────────────────────────────────────────────────────────────────────────────
 
 type SourceMode = 'live' | '24' | '72' | '168';
 type DomainFilter = 'all' | 'astrology' | 'journal' | 'pattern_ledger' | 'field';
+type ModeFilter = 'all' | 'fire' | 'water' | 'earth' | 'air' | 'aether';
 
 const SOURCE_OPTIONS: { value: SourceMode; label: string }[] = [
   { value: 'live', label: 'Live' },
@@ -80,6 +90,15 @@ const DOMAIN_OPTIONS: { value: DomainFilter; label: string }[] = [
   { value: 'journal',       label: 'Journal' },
   { value: 'pattern_ledger', label: 'Patterns' },
   { value: 'field',         label: 'Field' },
+];
+
+const MODE_OPTIONS: { value: ModeFilter; label: string }[] = [
+  { value: 'all',    label: 'All' },
+  { value: 'fire',   label: 'Fire' },
+  { value: 'water',  label: 'Water' },
+  { value: 'earth',  label: 'Earth' },
+  { value: 'air',    label: 'Air' },
+  { value: 'aether', label: 'Aether' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,12 +211,64 @@ function PillButton({ active, onClick, children }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MODE BREAKDOWN SECTION (Phase 23)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ModeBreakdownSection({ modeRows }: { modeRows: TelemetryModeRow[] }) {
+  if (modeRows.length === 0) {
+    return (
+      <div>
+        <SectionLabel>By Mode (element)</SectionLabel>
+        <div className="text-[11px] text-white/30">
+          No mode-attributed events. Attribution requires Phase 23 wiring + new oracle calls.
+        </div>
+      </div>
+    );
+  }
+
+  // Aggregate per mode label (collapse domain/authority detail for top-level view)
+  const byMode: Record<string, { total: number; blocked: number; memory: number; fallback: number }> = {};
+  for (const r of modeRows) {
+    const key = r.mode ?? '(none)';
+    if (!byMode[key]) byMode[key] = { total: 0, blocked: 0, memory: 0, fallback: 0 };
+    byMode[key].total += r.event_count;
+    byMode[key].blocked += r.blocked;
+    byMode[key].memory += r.memory_eligible;
+    byMode[key].fallback += r.fallback_count;
+  }
+
+  const entries = Object.entries(byMode).sort(([, a], [, b]) => b.total - a.total);
+  const maxTotal = Math.max(...entries.map(([, v]) => v.total), 1);
+
+  return (
+    <div>
+      <SectionLabel>By Mode (element) — {entries.length} modes</SectionLabel>
+      {entries.map(([mode, v]) => (
+        <div key={mode} className="mb-2">
+          <div className="flex items-center justify-between text-[12px] mb-0.5">
+            <span className="text-white/70 capitalize">{mode}</span>
+            <span className="tabular-nums text-white/60 text-[11px]">
+              {v.total} total
+              <span className="ml-2 text-red-400/70">{pct(v.blocked, v.total)} blocked</span>
+              <span className="ml-2 text-emerald-400/70">{pct(v.memory, v.total)} mem</span>
+              {v.fallback > 0 && <span className="ml-2 text-amber-400/60">{v.fallback} fallback</span>}
+            </span>
+          </div>
+          <MiniBar value={v.total} max={maxTotal} color="bg-indigo-400/40" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // DB MODE VIEW
 // ─────────────────────────────────────────────────────────────────────────────
 
-function DbModeView({ rows, trendRows, windowHours, generatedAt }: {
+function DbModeView({ rows, trendRows, modeRows, windowHours, generatedAt }: {
   rows: TelemetryWindowRow[];
   trendRows: TelemetryTrendRow[];
+  modeRows: TelemetryModeRow[];
   windowHours: number;
   generatedAt: string;
 }) {
@@ -329,6 +400,9 @@ function DbModeView({ rows, trendRows, windowHours, generatedAt }: {
           ))
         )}
       </div>
+
+      {/* Mode breakdown (Phase 23) */}
+      <ModeBreakdownSection modeRows={modeRows} />
 
       {/* Hourly trend (if trend data available) */}
       {trendEntries.length > 0 && (
@@ -476,22 +550,25 @@ export interface SymbolicTelemetryPanelProps {
 export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelemetryPanelProps) {
   const [source, setSource] = React.useState<SourceMode>('live');
   const [domain, setDomain] = React.useState<DomainFilter>('all');
+  const [mode, setMode] = React.useState<ModeFilter>('all');
 
   const [liveData, setLiveData] = React.useState<LiveResponse | null>(null);
   const [dbData, setDbData] = React.useState<DbSummaryResponse | null>(null);
   const [trendData, setTrendData] = React.useState<DbTrendResponse | null>(null);
+  const [modeData, setModeData] = React.useState<DbModeResponse | null>(null);
 
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [lastFetch, setLastFetch] = React.useState<Date | null>(null);
 
-  const buildUrl = React.useCallback((src: SourceMode, dom: DomainFilter) => {
+  const buildUrl = React.useCallback((src: SourceMode, dom: DomainFilter, mod: ModeFilter) => {
     const params = new URLSearchParams();
     if (src !== 'live') {
       params.set('source', 'db');
       params.set('window', src);
     }
     if (dom !== 'all') params.set('domain', dom);
+    if (mod !== 'all') params.set('mode', mod);
     const q = params.toString();
     return `/api/debug/symbolic-telemetry${q ? `?${q}` : ''}`;
   }, []);
@@ -500,7 +577,8 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(buildUrl(source, domain));
+      const base = buildUrl(source, domain, mode);
+      const res = await fetch(base);
       if (res.status === 404) {
         setError('Debug endpoint not available. Set MAIA_DEBUG_PANEL_ENABLED=true.');
         return;
@@ -512,12 +590,14 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
         setLiveData(json as LiveResponse);
       } else {
         setDbData(json as DbSummaryResponse);
-        // Fetch trend data in parallel for DB modes
-        const trendRes = await fetch(`${buildUrl(source, domain)}&trend=1`);
-        if (trendRes.ok) {
-          const trendJson = await trendRes.json();
-          setTrendData(trendJson as DbTrendResponse);
-        }
+        // Fetch trend + mode breakdown in parallel for DB modes
+        const dbBase = `${base}${base.includes('?') ? '&' : '?'}`;
+        const [trendRes, modeRes] = await Promise.all([
+          fetch(`${dbBase}trend=1`),
+          fetch(`${dbBase}byMode=1`),
+        ]);
+        if (trendRes.ok) setTrendData((await trendRes.json()) as DbTrendResponse);
+        if (modeRes.ok)  setModeData((await modeRes.json()) as DbModeResponse);
       }
       setLastFetch(new Date());
     } catch (e) {
@@ -525,7 +605,7 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
     } finally {
       setLoading(false);
     }
-  }, [source, domain, buildUrl]);
+  }, [source, domain, mode, buildUrl]);
 
   // Refetch on control changes
   React.useEffect(() => { fetch_(); }, [fetch_]);
@@ -571,7 +651,7 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
         </div>
 
         {/* Source toggle */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <span className="text-[10px] text-white/30 mr-1">Source:</span>
           {SOURCE_OPTIONS.map(o => (
             <PillButton key={o.value} active={source === o.value} onClick={() => setSource(o.value)}>
@@ -584,6 +664,16 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
               {o.label}
             </PillButton>
           ))}
+          {source !== 'live' && (
+            <>
+              <span className="ml-3 text-[10px] text-white/30 mr-1">Mode:</span>
+              {MODE_OPTIONS.map(o => (
+                <PillButton key={o.value} active={mode === o.value} onClick={() => setMode(o.value)}>
+                  {o.label}
+                </PillButton>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
@@ -611,6 +701,7 @@ export function SymbolicTelemetryPanel({ autoRefreshMs = 30_000 }: SymbolicTelem
         <DbModeView
           rows={dbData.rows}
           trendRows={trendData?.trendRows ?? []}
+          modeRows={modeData?.modeRows ?? []}
           windowHours={dbData.windowHours}
           generatedAt={dbData.generatedAt}
         />

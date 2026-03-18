@@ -30,6 +30,12 @@ export interface TelemetryPersistContext {
   memberId?: string;
   /** Oracle sessionId — stored as session_id */
   sessionId?: string;
+  /** Oracle route identifier (e.g. 'oracle/conversation') */
+  route?: string;
+  /** Active element/mode during the call (fire|water|earth|air|aether) */
+  mode?: string;
+  /** Per-request UUID — ties all items from one oracle call together */
+  requestId?: string;
 }
 
 /**
@@ -55,8 +61,9 @@ async function _doBatchInsert(
   events: SymbolicTelemetryEvent[],
   ctx: TelemetryPersistContext
 ): Promise<void> {
-  // 13 columns per row — build positional placeholders ($1, $2, ...)
-  const colCount = 13;
+  // 16 columns per row — build positional placeholders ($1, $2, ...)
+  const colCount = 16;
+  const now = new Date().toISOString();
   const placeholders = events
     .map((_, i) => {
       const base = i * colCount;
@@ -78,7 +85,10 @@ async function _doBatchInsert(
     e.allowedInPractitionerView,
     e.allowedInUserView,
     e.allowedInMemory,
-    new Date().toISOString(),
+    now,
+    ctx.route ?? null,
+    ctx.mode ?? null,
+    ctx.requestId ?? null,
   ]);
 
   await query(
@@ -88,7 +98,7 @@ async function _doBatchInsert(
         render_blocked, block_reason,
         allowed_in_prompt, allowed_in_practitioner_view,
         allowed_in_user_view, allowed_in_memory,
-        created_at)
+        created_at, route, mode, request_id)
      VALUES ${placeholders}`,
     values
   );
@@ -115,7 +125,7 @@ export interface TelemetryWindowRow {
  */
 export async function queryTelemetrySummary(
   windowHours: number = 24,
-  filters: { memberId?: string; sessionId?: string } = {}
+  filters: { memberId?: string; sessionId?: string; route?: string; mode?: string; domain?: string } = {}
 ): Promise<TelemetryWindowRow[]> {
   const cutoff = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
   const params: unknown[] = [cutoff];
@@ -129,6 +139,18 @@ export async function queryTelemetrySummary(
   if (filters.sessionId) {
     conditions.push(`session_id = $${paramIdx++}`);
     params.push(filters.sessionId);
+  }
+  if (filters.route) {
+    conditions.push(`route = $${paramIdx++}`);
+    params.push(filters.route);
+  }
+  if (filters.mode) {
+    conditions.push(`mode = $${paramIdx++}`);
+    params.push(filters.mode);
+  }
+  if (filters.domain) {
+    conditions.push(`domain = $${paramIdx++}`);
+    params.push(filters.domain);
   }
 
   const where = `WHERE ${conditions.join(' AND ')}`;
@@ -167,7 +189,7 @@ export interface TelemetryTrendRow {
  */
 export async function queryTelemetryTrend(
   windowHours: number = 72,
-  filters: { memberId?: string; domain?: string } = {}
+  filters: { memberId?: string; domain?: string; route?: string; mode?: string } = {}
 ): Promise<TelemetryTrendRow[]> {
   const cutoff = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
   const params: unknown[] = [cutoff];
@@ -181,6 +203,14 @@ export async function queryTelemetryTrend(
   if (filters.domain) {
     conditions.push(`domain = $${paramIdx++}`);
     params.push(filters.domain);
+  }
+  if (filters.route) {
+    conditions.push(`route = $${paramIdx++}`);
+    params.push(filters.route);
+  }
+  if (filters.mode) {
+    conditions.push(`mode = $${paramIdx++}`);
+    params.push(filters.mode);
   }
 
   const where = `WHERE ${conditions.join(' AND ')}`;
@@ -197,6 +227,65 @@ export async function queryTelemetryTrend(
      ${where}
      GROUP BY DATE_TRUNC('hour', created_at), domain, authority
      ORDER BY hour_bucket DESC, event_count DESC`,
+    params
+  );
+
+  return result.rows;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// READ — Mode Breakdown Query (Phase 23)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface TelemetryModeRow {
+  mode: string | null;
+  domain: string;
+  authority: string;
+  event_count: number;
+  blocked: number;
+  memory_eligible: number;
+  prompt_eligible: number;
+  fallback_count: number;
+}
+
+/**
+ * Aggregate telemetry grouped by mode (element) for a time window.
+ * Answers: does fire mode produce more blocked items than water mode?
+ */
+export async function queryTelemetryByMode(
+  windowHours: number = 72,
+  filters: { route?: string; domain?: string } = {}
+): Promise<TelemetryModeRow[]> {
+  const cutoff = new Date(Date.now() - windowHours * 60 * 60 * 1000).toISOString();
+  const params: unknown[] = [cutoff];
+  const conditions: string[] = ['created_at >= $1'];
+  let paramIdx = 2;
+
+  if (filters.route) {
+    conditions.push(`route = $${paramIdx++}`);
+    params.push(filters.route);
+  }
+  if (filters.domain) {
+    conditions.push(`domain = $${paramIdx++}`);
+    params.push(filters.domain);
+  }
+
+  const where = `WHERE ${conditions.join(' AND ')}`;
+
+  const result = await query<TelemetryModeRow>(
+    `SELECT
+       mode,
+       domain,
+       authority,
+       COUNT(*)::int                                             AS event_count,
+       COUNT(*) FILTER (WHERE render_blocked)::int              AS blocked,
+       COUNT(*) FILTER (WHERE allowed_in_memory)::int           AS memory_eligible,
+       COUNT(*) FILTER (WHERE allowed_in_prompt)::int           AS prompt_eligible,
+       COUNT(*) FILTER (WHERE authority = 'fallback')::int      AS fallback_count
+     FROM symbolic_telemetry_events
+     ${where}
+     GROUP BY mode, domain, authority
+     ORDER BY event_count DESC`,
     params
   );
 

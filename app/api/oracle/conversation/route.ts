@@ -683,8 +683,14 @@ export async function POST(request: NextRequest) {
 
       if (_telemetryCount > 0) {
         console.log('[Symbolic Telemetry]', { itemCount: _telemetryCount, sessionId });
-        // Phase 21: persist to DB for time-window calibration queries (fire-and-forget)
-        persistSymbolicTelemetryBatch(_telemetryEvents, { memberId: userId, sessionId });
+        // Phase 21–23: persist to DB with route/mode/requestId attribution (fire-and-forget)
+        persistSymbolicTelemetryBatch(_telemetryEvents, {
+          memberId: userId,
+          sessionId,
+          route: 'oracle/conversation',
+          mode: body?.element ?? undefined,
+          requestId,
+        });
       }
     } catch {
       // Telemetry must never disrupt the oracle pipeline
