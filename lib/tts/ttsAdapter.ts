@@ -153,23 +153,67 @@ export function mapProsodyToSpeed(baseSpeed: number, hints: ProsodyHints): numbe
 }
 
 /**
- * Generate SSML markup if the provider supports it.
- * Currently returns null — enable when we have an SSML-capable provider.
+ * Generate SSML markup for engines that support it (e.g. Kokoro-FastAPI).
+ *
+ * Returns null when ssmlOk is false so callers can fall back to plain text
+ * shaping without branching.
+ *
+ * Supported elements:
+ *   <prosody rate="">  — pace → 85% / 100% / 110%
+ *   <break time="ms"/> — before/after sentence pauses
+ *   <emphasis level=""> — selective / strong emphasis on the whole sentence
+ *
+ * NOT included (day-one): pitch, volume, phonemes, say-as.
+ * Add those once we confirm the engine parses them correctly.
+ *
+ * NOTE: Do NOT send SSML to OpenAI TTS — it has no SSML parser and will
+ * read the XML tags aloud.  PersonaPlex uses wisdomDirective instead.
+ * Kokoro-FastAPI (localhost:8880) does support a meaningful SSML subset.
  */
 export function generateSSML(text: string, hints: ProsodyHints): string | null {
   if (!hints.ssmlOk) return null;
+  if (!text.trim()) return null;
 
-  // TODO: Implement SSML generation when we have a provider that supports it
-  // Example structure:
-  // <speak>
-  //   <prosody rate="${speed}" pitch="${pitch}">
-  //     <break time="${hints.pauseMs?.beforeSentence}ms"/>
-  //     ${text}
-  //     <break time="${hints.pauseMs?.afterSentence}ms"/>
-  //   </prosody>
-  // </speak>
+  // ── RATE ────────────────────────────────────────────────────────────────
+  // Map pace hint to a percentage that the SSML <prosody> element accepts.
+  // Keep adjustments tight — warmth comes from content, not speed extremes.
+  const rate =
+    hints.pace === 'slow'  ? '88%' :
+    hints.pace === 'brisk' ? '108%' :
+    '100%';                             // steady
 
-  return null;
+  // ── EMPHASIS ─────────────────────────────────────────────────────────────
+  // Wrap the body in <emphasis> when prosody hints call for it.
+  // 'minimal' → no wrapper (keep prose natural).
+  const emphasisLevel =
+    hints.emphasis === 'strong'    ? 'strong' :
+    hints.emphasis === 'selective' ? 'moderate' :
+    null; // minimal — no emphasis wrapper
+
+  // ── PAUSES ───────────────────────────────────────────────────────────────
+  // Cap at 600 ms; most SSML engines clip longer breaks silently.
+  const beforeMs = Math.min(hints.pauseMs?.beforeSentence ?? 0, 600);
+  const afterMs  = Math.min(hints.pauseMs?.afterSentence  ?? 0, 600);
+
+  // ── ESCAPE XML ───────────────────────────────────────────────────────────
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+  // ── ASSEMBLE ─────────────────────────────────────────────────────────────
+  const body = emphasisLevel
+    ? `<emphasis level="${emphasisLevel}">${escaped}</emphasis>`
+    : escaped;
+
+  const parts: string[] = ['<speak>'];
+  if (beforeMs > 0) parts.push(`<break time="${beforeMs}ms"/>`);
+  parts.push(`<prosody rate="${rate}">${body}</prosody>`);
+  if (afterMs > 0)  parts.push(`<break time="${afterMs}ms"/>`);
+  parts.push('</speak>');
+
+  return parts.join('');
 }
 
 /**

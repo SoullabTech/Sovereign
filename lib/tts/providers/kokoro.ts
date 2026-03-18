@@ -22,11 +22,16 @@ function getKokoroUrl(): string {
  * Don't ship product promises based on this list; it varies by version/fork.
  */
 export const KOKORO_VOICES = [
+  'af_kore',    // Female, primary MAIA voice
   'af_heart',   // Female, warm
+  'af_kore',    // Female, balanced (Maia Kore — primary voice)
   'af_bella',   // Female, clear
-  'af_sarah',   // Female, neutral
+  'af_sarah',   // Female, neutral (Maia Warm)
+  'af_nicole',  // Female, direct (Maia Clear)
   'am_adam',    // Male, warm
-  'am_michael', // Male, clear
+  'am_michael', // Male, clear (Atlas)
+  'am_puck',    // Male, playful (Puck)
+  'bm_lewis',   // Male, deep (Atlas Deep)
 ] as const;
 
 export type KokoroVoice = typeof KOKORO_VOICES[number] | string;
@@ -36,12 +41,12 @@ export type KokoroVoice = typeof KOKORO_VOICES[number] | string;
  * This lets existing code that requests "alloy" or "nova" work without changes.
  */
 const OPENAI_TO_KOKORO: Record<string, string> = {
-  alloy: 'af_heart',
+  alloy: 'af_kore',
   nova: 'af_bella',
   shimmer: 'af_sarah',
   echo: 'am_adam',
   onyx: 'am_michael',
-  fable: 'af_heart',
+  fable: 'af_kore',
 };
 
 function resolveVoice(voice: string): string {
@@ -66,7 +71,7 @@ export async function synthesize(params: KokoroSynthesisParams): Promise<{
 }> {
   const {
     text,
-    voice = 'af_heart',
+    voice = 'af_kore',
     format = 'mp3',
     speed = 1.0,
   } = params;
@@ -122,7 +127,7 @@ export async function healthCheck(): Promise<{
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         input: 'ok',
-        voice: 'af_heart',
+        voice: 'af_kore',
         model: 'kokoro',
       }),
       signal: AbortSignal.timeout(10_000),

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
-type SpreadType = 'three-card' | 'celtic-cross' | 'single-card';
+type SpreadType = 'single' | 'three-card' | 'mind-body-spirit' | 'elemental' | 'spiralogic' | 'relationship' | 'shadow-work' | 'chakra' | 'celtic-cross' | 'year-ahead' | 'decision' | 'career';
 type ReadingPhase = 'question' | 'spread-selection' | 'drawing' | 'reveal' | 'interpretation';
 
 interface TarotCard {
@@ -50,31 +50,115 @@ interface TarotReading {
 }
 
 const SPREAD_OPTIONS = [
+  // Beginner
   {
-    id: 'single-card',
+    id: 'single',
     name: 'Single Card',
     description: 'Quick guidance for today',
     positions: 1,
     icon: Star,
-    recommended: 'Daily insight'
+    badge: 'Daily insight',
+    difficulty: 'beginner'
   },
   {
     id: 'three-card',
-    name: 'Three-Card Spread',
+    name: 'Three-Card',
     description: 'Past, Present, Future',
     positions: 3,
     icon: Sparkles,
-    recommended: 'Most popular'
+    badge: 'Most popular',
+    difficulty: 'beginner'
+  },
+  {
+    id: 'mind-body-spirit',
+    name: 'Mind, Body, Spirit',
+    description: 'Holistic self-reflection',
+    positions: 3,
+    icon: Heart,
+    badge: 'Wellness',
+    difficulty: 'beginner'
+  },
+  // Intermediate
+  {
+    id: 'elemental',
+    name: 'Elemental Cross',
+    description: 'Elemental balance & forces at play',
+    positions: 5,
+    icon: Wand2,
+    badge: 'Balance',
+    difficulty: 'intermediate'
+  },
+  {
+    id: 'relationship',
+    name: 'Relationship',
+    description: 'Connection & dynamics',
+    positions: 5,
+    icon: Heart,
+    badge: 'Connections',
+    difficulty: 'intermediate'
+  },
+  {
+    id: 'decision',
+    name: 'Decision',
+    description: 'Clarity for crossroads',
+    positions: 5,
+    icon: Swords,
+    badge: 'Choice',
+    difficulty: 'intermediate'
+  },
+  {
+    id: 'chakra',
+    name: 'Chakra',
+    description: '7 energy center reading',
+    positions: 7,
+    icon: Coins,
+    badge: 'Energy',
+    difficulty: 'intermediate'
+  },
+  // Advanced
+  {
+    id: 'shadow-work',
+    name: 'Shadow Work',
+    description: 'Unconscious patterns revealed',
+    positions: 6,
+    icon: Moon,
+    badge: 'Deep dive',
+    difficulty: 'advanced'
+  },
+  {
+    id: 'career',
+    name: 'Career Path',
+    description: 'Professional direction',
+    positions: 6,
+    icon: BookOpen,
+    badge: 'Purpose',
+    difficulty: 'advanced'
   },
   {
     id: 'celtic-cross',
     name: 'Celtic Cross',
     description: 'Comprehensive 10-card reading',
     positions: 10,
-    icon: Moon,
-    recommended: 'Deep dive'
+    icon: Star,
+    badge: 'Classic',
+    difficulty: 'advanced'
+  },
+  {
+    id: 'year-ahead',
+    name: 'Year Ahead',
+    description: 'Monthly breakdown for the year',
+    positions: 13,
+    icon: RefreshCw,
+    badge: 'Long-term',
+    difficulty: 'advanced'
   }
-];
+] as const;
+
+const DIFFICULTY_GROUPS = [
+  { key: 'beginner', label: 'Beginner', color: 'text-emerald-400', borderColor: 'border-emerald-400/30', badgeColor: 'bg-emerald-400/15 text-emerald-400' },
+  { key: 'intermediate', label: 'Intermediate', color: 'text-amber-400', borderColor: 'border-amber-400/30', badgeColor: 'bg-amber-400/15 text-amber-400' },
+  { key: 'advanced', label: 'Advanced', color: 'text-violet-400', borderColor: 'border-violet-400/30', badgeColor: 'bg-violet-400/15 text-violet-400' }
+] as const;
 
 export default function TarotOraclePage() {
   const router = useRouter();
@@ -184,9 +268,18 @@ export default function TarotOraclePage() {
     try {
       // Map spread type to API format
       const spreadTypeMap: Record<string, string> = {
-        'single-card': 'single',
+        'single': 'single',
         'three-card': 'three_card',
-        'celtic-cross': 'celtic_cross'
+        'mind-body-spirit': 'mind_body_spirit',
+        'elemental': 'elemental',
+        'relationship': 'relationship',
+        'shadow-work': 'shadow_work',
+        'chakra': 'chakra',
+        'spiralogic': 'spiralogic',
+        'celtic-cross': 'celtic_cross',
+        'year-ahead': 'year_ahead',
+        'decision': 'decision',
+        'career': 'career'
       };
 
       const response = await apiFetch('/api/divination/save', {
@@ -362,42 +455,107 @@ export default function TarotOraclePage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {SPREAD_OPTIONS.map((spread, index) => {
-                    const Icon = spread.icon;
+                {/* Featured: Spiralogic Draw */}
+                <motion.button
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                  onClick={() => handleSpreadSelect('spiralogic')}
+                  className="w-full mb-8 group relative p-6 rounded-2xl border border-[#D4B896]/40 bg-gradient-to-br from-[#D4B896]/10 via-[#C4A886]/5 to-[#B49876]/10 hover:border-[#D4B896]/70 hover:shadow-2xl hover:shadow-[#D4B896]/20 transition-all duration-300 text-left overflow-hidden"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  {/* Background glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#D4B896]/5 via-transparent to-[#D4B896]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  <div className="relative flex items-start justify-between gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Image src="/holoflower-amber.png" alt="Spiralogic" width={20} height={20} className="opacity-80" />
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#D4B896]/60">Spiralogic Draw</span>
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">Five Elements of Transformation</h3>
+                      <p className="text-[#D4B896]/60 text-sm leading-relaxed max-w-lg">
+                        Earth · Water · Fire · Air · Aether — each card names a phase of the spiral you are currently moving through.
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <div className="flex gap-1.5">
+                        {[
+                          { label: 'E', color: 'bg-amber-700/60' },
+                          { label: 'W', color: 'bg-blue-500/60' },
+                          { label: 'F', color: 'bg-orange-500/60' },
+                          { label: 'A', color: 'bg-sky-400/60' },
+                          { label: '✦', color: 'bg-violet-400/60' },
+                        ].map(({ label, color }) => (
+                          <div key={label} className={`w-7 h-7 rounded-md ${color} flex items-center justify-center text-white text-[10px] font-bold`}>
+                            {label}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[#D4B896]/30 text-[10px] mt-1">5 cards</span>
+                    </div>
+                  </div>
+                </motion.button>
+
+                <div className="space-y-8">
+                  {DIFFICULTY_GROUPS.map((group) => {
+                    const spreads = SPREAD_OPTIONS.filter(s => s.difficulty === group.key);
                     return (
-                      <motion.button
-                        key={spread.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-                        className="group p-6 bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-2xl hover:border-[#D4B896]/40 hover:shadow-2xl hover:shadow-[#D4B896]/20 transition-all duration-300"
-                        whileHover={{ y: -4, scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="flex flex-col items-center text-center">
-                          <div className="w-16 h-16 rounded-full bg-[#D4B896]/20 group-hover:bg-[#D4B896]/30 flex items-center justify-center mb-4 transition-colors">
-                            <Icon className="w-8 h-8 text-[#D4B896]" />
-                          </div>
-
-                          <h3 className="text-xl font-bold text-white mb-2">
-                            {spread.name}
-                          </h3>
-
-                          <span className="inline-block px-3 py-1 bg-[#D4B896]/15 text-[#D4B896] text-xs rounded-full mb-3">
-                            {spread.recommended}
+                      <div key={group.key}>
+                        <div className={`flex items-center gap-3 mb-4`}>
+                          <div className={`h-px flex-1 ${group.borderColor} border-t`} />
+                          <span className={`text-sm font-semibold uppercase tracking-widest ${group.color}`}>
+                            {group.label}
                           </span>
-
-                          <p className="text-[#D4B896]/70 text-sm mb-3">
-                            {spread.description}
-                          </p>
-
-                          <div className="text-[#D4B896]/40 text-xs">
-                            {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
-                          </div>
+                          <div className={`h-px flex-1 ${group.borderColor} border-t`} />
                         </div>
-                      </motion.button>
+                        <div className={`grid grid-cols-1 gap-4 ${
+                          spreads.length === 3 ? 'md:grid-cols-3' :
+                          spreads.length === 4 ? 'md:grid-cols-4' :
+                          'md:grid-cols-3'
+                        }`}>
+                          {spreads.map((spread, index) => {
+                            const Icon = spread.icon;
+                            return (
+                              <motion.button
+                                key={spread.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.08 }}
+                                onClick={() => handleSpreadSelect(spread.id as SpreadType)}
+                                className="group p-5 bg-white/[0.03] backdrop-blur-xl border border-[#D4B896]/20 rounded-xl hover:border-[#D4B896]/40 hover:shadow-xl hover:shadow-[#D4B896]/10 transition-all duration-300 text-left"
+                                whileHover={{ y: -3, scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                <div className="flex items-start gap-4">
+                                  <div className="w-10 h-10 rounded-lg bg-[#D4B896]/20 group-hover:bg-[#D4B896]/30 flex items-center justify-center flex-shrink-0 transition-colors">
+                                    <Icon className="w-5 h-5 text-[#D4B896]" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="text-base font-semibold text-white truncate">
+                                        {spread.name}
+                                      </h3>
+                                    </div>
+                                    <p className="text-[#D4B896]/60 text-xs mb-2 leading-relaxed">
+                                      {spread.description}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                      <span className={`px-2 py-0.5 text-[10px] rounded-full ${group.badgeColor}`}>
+                                        {spread.badge}
+                                      </span>
+                                      <span className="text-[#D4B896]/30 text-[10px]">
+                                        {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -452,7 +610,12 @@ export default function TarotOraclePage() {
                   <div className={`grid gap-6 ${
                     reading.cards.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' :
                     reading.cards.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
-                    'grid-cols-2 md:grid-cols-5'
+                    reading.cards.length <= 4 ? 'grid-cols-2 md:grid-cols-4' :
+                    reading.cards.length <= 5 ? 'grid-cols-2 md:grid-cols-5' :
+                    reading.cards.length <= 6 ? 'grid-cols-2 md:grid-cols-3' :
+                    reading.cards.length <= 7 ? 'grid-cols-2 md:grid-cols-4' :
+                    reading.cards.length <= 10 ? 'grid-cols-2 md:grid-cols-5' :
+                    'grid-cols-3 md:grid-cols-5'
                   }`}>
                     {reading.cards.map((card, index) => (
                       <motion.div

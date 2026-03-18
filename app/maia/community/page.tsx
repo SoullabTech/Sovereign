@@ -278,7 +278,7 @@ export default function CommunityBBSPage() {
                 onClick={() => router.push('/maia')}
                 className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 text-amber-400" />
                 <span>Return to MAIA</span>
               </button>
               <div className="w-px h-6 bg-white/10" />

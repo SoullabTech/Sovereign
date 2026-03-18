@@ -59,13 +59,13 @@ export function setSessionCookies(
   // Tier (for middleware access checks)
   response.cookies.set('maia_tier', session.tier, {
     ...COOKIE_OPTIONS,
-    httpOnly: false, // Allow client to read for UI gating
+    httpOnly: true,
   });
 
   // Roles (for middleware access checks)
   response.cookies.set('maia_roles', JSON.stringify(session.roles), {
     ...COOKIE_OPTIONS,
-    httpOnly: false, // Allow client to read for UI gating
+    httpOnly: true,
   });
 
   return response;
@@ -94,7 +94,7 @@ export function clearSessionCookies(response: NextResponse): NextResponse {
 export function updateTierCookie(response: NextResponse, tier: Tier): NextResponse {
   response.cookies.set('maia_tier', tier, {
     ...COOKIE_OPTIONS,
-    httpOnly: false,
+    httpOnly: true,
   });
   return response;
 }
@@ -105,7 +105,7 @@ export function updateTierCookie(response: NextResponse, tier: Tier): NextRespon
 export function updateRolesCookie(response: NextResponse, roles: Role[]): NextResponse {
   response.cookies.set('maia_roles', JSON.stringify(roles), {
     ...COOKIE_OPTIONS,
-    httpOnly: false,
+    httpOnly: true,
   });
   return response;
 }

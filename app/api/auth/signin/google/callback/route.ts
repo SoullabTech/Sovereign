@@ -244,7 +244,7 @@ export async function GET(req: NextRequest) {
     // Set tier and roles cookies
     const cookieStore = await cookies();
     cookieStore.set('maia_tier', accessTier, {
-      httpOnly: false, // Allow client to read for UI gating
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
@@ -252,7 +252,7 @@ export async function GET(req: NextRequest) {
     });
 
     cookieStore.set('maia_roles', JSON.stringify(roles), {
-      httpOnly: false, // Allow client to read for UI gating
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',

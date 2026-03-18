@@ -45,7 +45,7 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE user_id = $1
-      ORDER BY created_at DESC
+      ORDER BY created_at DESC, seq DESC
       LIMIT $2
       `,
       [userId, limit]
@@ -69,7 +69,7 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE session_id = $1
-      ORDER BY created_at ASC
+      ORDER BY created_at ASC, seq ASC
       `,
       [sessionId]
     );
@@ -81,10 +81,11 @@ export const TurnsStore = {
    * Store a new turn
    */
   async addTurn(turn: Omit<ConversationTurn, 'id' | 'createdAt'>): Promise<string | null> {
+    // Note: meta and parent_turn_id are not in the production schema — omitted
     const result = await query<{ id: string }>(
       `
-      INSERT INTO conversation_turns (user_id, session_id, role, content, meta, parent_turn_id)
-      VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+      INSERT INTO conversation_turns (user_id, session_id, role, content)
+      VALUES ($1, $2, $3, $4)
       RETURNING id
       `,
       [
@@ -92,8 +93,6 @@ export const TurnsStore = {
         turn.sessionId ?? null,
         turn.role,
         turn.content,
-        turn.meta ? JSON.stringify(turn.meta) : '{}',
-        turn.parentTurnId ?? null,
       ]
     );
     return result.rows[0]?.id ?? null;
@@ -137,22 +136,41 @@ export const TurnsStore = {
   },
 
   /**
-   * Store a user message and assistant response pair
+   * Store a user message and assistant response pair.
+   *
+   * Uses two sequential INSERTs so created_at timestamps differ by at least
+   * one clock tick — guarantees user < assistant ordering when sorted by
+   * (created_at ASC, seq ASC).
+   *
+   * exchangeId: supply the same UUID to make the write idempotent on retry.
+   * ON CONFLICT DO NOTHING drops a duplicate silently when exchange_id is set.
+   * Omitting exchangeId falls back to the original non-idempotent behaviour.
    */
   async addExchange(
     userId: string,
     sessionId: string | undefined,
     userMessage: string,
-    assistantResponse: string
+    assistantResponse: string,
+    exchangeId?: string
   ): Promise<void> {
+    if (!exchangeId) {
+      console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
+    }
+    const eid = exchangeId ?? null;
+    // User turn first (seq=0) — use clock_timestamp() so each INSERT gets its
+    // own wall-clock value even inside the same transaction.
     await query(
-      `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES
-        ($1, $2, 'user', $3),
-        ($1, $2, 'assistant', $4)
-      `,
-      [userId, sessionId ?? null, userMessage, assistantResponse]
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
+       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp())
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+      [userId, sessionId ?? null, userMessage, eid]
+    );
+    // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
+    await query(
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
+       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp())
+       ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
+      [userId, sessionId ?? null, assistantResponse, eid]
     );
   },
 

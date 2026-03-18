@@ -248,6 +248,13 @@ export function processThreshold(input: ThresholdInput): ThresholdResult {
     };
   }
 
+  // Greetings always go to LLM — "hi Maya" (8 chars) must not get "Mm." as response
+  const greetingPattern = /^(hi|hey|hello|good\s+(morning|afternoon|evening|night)|hiya|howdy|morning|afternoon|evening)(\s+\w+)*[!.?]?$/i;
+  if (greetingPattern.test(trimmedText)) {
+    newState.consecutiveMinimal = 0;
+    return { response: null, state: newState, skipLLM: false };
+  }
+
   // Check for minimal input by length (but not matching specific patterns)
   if (trimmedText.length <= config.minimalInputMaxLength) {
     // Very short input that's not a pattern - could be partial thought
@@ -300,15 +307,19 @@ export function processThreshold(input: ThresholdInput): ThresholdResult {
 /**
  * Timing utility for voice pipeline instrumentation
  */
-export function createVoiceTimer() {
+export function createVoiceTimer(opts?: { turnId?: string; host?: string }) {
   const t0 = Date.now();
   const marks: { label: string; time: number }[] = [];
+  const prefix = ['[voice]',
+    opts?.turnId ? `turn=${opts.turnId.slice(0, 8)}` : '',
+    opts?.host ? `host=${opts.host}` : '',
+  ].filter(Boolean).join(' ');
 
   return {
     mark(label: string) {
       const elapsed = Date.now() - t0;
       marks.push({ label, time: elapsed });
-      console.log(`[voice] ${label} +${elapsed}ms`);
+      console.log(`${prefix} ${label} +${elapsed}ms`);
     },
 
     getMarks() {

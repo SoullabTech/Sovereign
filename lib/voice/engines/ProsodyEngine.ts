@@ -18,6 +18,11 @@ import { Element } from './ElementalEngine';
 
 export type Emotion = 'joy' | 'sadness' | 'anger' | 'fear' | 'neutral';
 
+// Provider guard: addPauses/addEmphasis insert literal dots/periods as "pauses".
+// This works only for engines that interpret ellipsis as breaks (e.g. AVSpeechSynthesizer).
+// For OpenAI TTS (gpt-4o-mini-tts), dots are spoken aloud — guard them out.
+export type ProsodyProvider = 'openai' | 'kokoro' | 'apple' | 'unknown';
+
 export class ProsodyEngine {
   /**
    * Add prosodic markers to text for natural speech
@@ -25,13 +30,14 @@ export class ProsodyEngine {
    * @param text - Raw text response
    * @param element - Current elemental tone
    * @param emotion - Detected emotion
+   * @param provider - TTS provider (default 'openai' — matches current production engine)
    * @returns Text with prosodic markers (pauses, emphasis)
    */
-  modulate(text: string, element: Element, emotion: Emotion = 'neutral'): string {
+  modulate(text: string, element: Element, emotion: Emotion = 'neutral', provider: ProsodyProvider = 'openai'): string {
     let processed = text;
 
     // Step 1: Add pauses for rhythm
-    processed = this.addPauses(processed, element);
+    processed = this.addPauses(processed, element, provider);
 
     // Step 2: Adjust pacing based on element
     processed = this.adjustPacing(processed, element);
@@ -40,7 +46,7 @@ export class ProsodyEngine {
     processed = this.addEmotionalMarkers(processed, emotion);
 
     // Step 4: Add emphasis to key words
-    processed = this.addEmphasis(processed, element);
+    processed = this.addEmphasis(processed, element, provider);
 
     return processed;
   }
@@ -53,7 +59,9 @@ export class ProsodyEngine {
    * - Comma: Medium pause (.. = ~300ms)
    * - Question/Exclamation: Long pause + emphasis
    */
-  private addPauses(text: string, element: Element): string {
+  private addPauses(text: string, element: Element, provider: ProsodyProvider = 'openai'): string {
+    // Guard: OpenAI TTS speaks literal dots aloud. Never inject dot-pauses for openai.
+    if (provider === 'openai') return text;
     // Element affects pause length
     const pauseMultiplier: Record<Element, number> = {
       fire: 0.7, // Shorter pauses (faster)
@@ -138,7 +146,10 @@ export class ProsodyEngine {
    * @param element - Current element
    * @returns Text with emphasis markers
    */
-  private addEmphasis(text: string, element: Element): string {
+  private addEmphasis(text: string, element: Element, provider: ProsodyProvider = 'openai'): string {
+    // Guard: emphasis inserts `. word` (period-prefix micro-pause) which creates false sentence
+    // boundaries in OpenAI TTS and can cause the voice to read "dot" aloud.
+    if (provider === 'openai') return text;
     // Element-specific emphasis patterns
     const emphasisWords: Record<Element, string[]> = {
       fire: ['transform', 'power', 'breakthrough', 'ignite', 'now'],

@@ -38,6 +38,14 @@ import ChangeMentorPanelComponent from '@/components/studio/changes/ChangeMentor
 import ChangeExperienceTimelineComponent from '@/components/studio/changes/ChangeExperienceTimeline';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
+import PractitionerLoopIndicator from '@/components/studio/practitioner/PractitionerLoopIndicator';
+import FieldSignalsPanel from '@/components/studio/practitioner/FieldSignalsPanel';
+import PractitionerObservationsPanel from '@/components/studio/practitioner/PractitionerObservationsPanel';
+import ClientInquiryPanel from '@/components/studio/practitioner/ClientInquiryPanel';
+import OccupancyRatingWidget from '@/components/studio/practitioner/OccupancyRatingWidget';
+import ChangeExperimentPanel from '@/components/studio/practitioner/ChangeExperimentPanel';
+import ProtocolSelector from '@/components/studio/practitioner/ProtocolSelector';
+import type { PractitionerLoopState } from '@/lib/studio/practitioner/types';
 
 const CHANGE_TYPE_ICONS: Record<string, typeof Wind> = {
   dissolution: Droplets,
@@ -472,9 +480,43 @@ export default function ChangeDetailPage() {
   const councilRef = useRef<HTMLDivElement>(null);
   const circleOffer = useOfferToCircle();
 
+  // Practitioner loop state — counts for the loop progress indicator
+  const [fieldSignalCount, setFieldSignalCount] = useState(0);
+  const [inquiryCount, setInquiryCount] = useState(0);
+  const [observationCount, setObservationCount] = useState(0);
+  const [experimentCount, setExperimentCount] = useState(0);
+  const [evidenceOpen, setEvidenceOpen] = useState(true);
+
+  // Protocol + occupancy tracking
+  const [selectedProtocolId, setSelectedProtocolId] = useState<string | null>(null);
+  const [currentOccupancyScore, setCurrentOccupancyScore] = useState<number | null>(null);
+
   useEffect(() => {
     loadChange();
-  }, [changeId]);
+    loadLoopState();
+  }, [changeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadLoopState() {
+    try {
+      const params = new URLSearchParams({ changeId });
+      const [signalsRes, inquiryRes, obsRes, expRes] = await Promise.all([
+        apiFetch(`/api/studio/field-signals?${params.toString()}`),
+        apiFetch(`/api/studio/client-inquiry/responses?${params.toString()}`),
+        apiFetch(`/api/studio/practitioner-observations?${params.toString()}`),
+        apiFetch(`/api/studio/changes/${changeId}/experiments`),
+      ]);
+      const [signalsData, inquiryData, obsData, expData] = await Promise.all([
+        signalsRes.json(),
+        inquiryRes.json(),
+        obsRes.json(),
+        expRes.json(),
+      ]);
+      setFieldSignalCount((signalsData.signals || []).length);
+      setInquiryCount((inquiryData.responses || []).length);
+      setObservationCount((obsData.observations || []).length);
+      setExperimentCount((expData.experiments || []).length);
+    } catch { /* graceful — loop indicator stays empty */ }
+  }
 
   async function loadChange() {
     setLoading(true);
@@ -499,6 +541,7 @@ export default function ChangeDetailPage() {
       if (sessionNotes?.trim()) body.sessionNotes = sessionNotes.trim();
       if (emotionalState?.trim()) body.emotionalState = emotionalState.trim();
       if (recast) body.recast = true;
+      if (selectedProtocolId) body.protocolId = selectedProtocolId;
 
       const res = await apiFetch(`/api/studio/changes/${changeId}/consult`, {
         method: 'POST',
@@ -588,6 +631,17 @@ export default function ChangeDetailPage() {
   const council = change.councilResult;
   const config = getChangeTypeConfig(change.changeType);
   const Icon = CHANGE_TYPE_ICONS[change.changeType] || Wind;
+
+  const loopState: PractitionerLoopState = {
+    fieldSignalCount,
+    inquiryCount,
+    observationCount,
+    councilIterationCount: change.iterationCount,
+    experimentCount,
+    hasMentorReflection: !!(change.mentorReflection),
+    hasFollowUp: !!(change.followUpIntention),
+    currentOccupancyScore,
+  };
   const hasIterations = (change.iterations?.length || 0) > 1;
   const priorIterations = change.iterations?.slice(0, -1) || [];
   const isComplete = change.status === 'complete';
@@ -632,6 +686,11 @@ export default function ChangeDetailPage() {
           </div>
         </div>
 
+        {/* Practitioner Loop Indicator */}
+        <div className="mb-4">
+          <PractitionerLoopIndicator state={loopState} />
+        </div>
+
         {/* Context */}
         <div className="rounded-lg border border-slate-800/60 bg-slate-900/30 p-4 mb-6">
           <div className="flex items-start gap-3 mb-2">
@@ -654,6 +713,40 @@ export default function ChangeDetailPage() {
               </span>
             )}
           </div>
+        </div>
+
+        {/* Evidence — Field Signals, Client Inquiry, Practitioner Observations */}
+        <div className="mb-6 rounded-lg border border-slate-800/60 bg-slate-900/20 overflow-hidden">
+          <button
+            onClick={() => setEvidenceOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-slate-900/40 transition-colors"
+          >
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Evidence</span>
+            <span className="text-xs text-slate-600">{evidenceOpen ? 'hide' : 'show'}</span>
+          </button>
+          {evidenceOpen && (
+            <div className="px-4 pb-4 border-t border-slate-800/60 pt-4 space-y-6">
+              {/* Protocol selector — persisted, orients the evidence loop and biases the council */}
+              <ProtocolSelector
+                changeId={changeId}
+                clientId={change.clientId || null}
+                occupancyScore={currentOccupancyScore}
+                onProtocolChange={setSelectedProtocolId}
+              />
+              <div className="border-t border-slate-800/60 pt-6">
+                <FieldSignalsPanel changeId={changeId} />
+              </div>
+              <div className="border-t border-slate-800/60 pt-6">
+                <ClientInquiryPanel
+                  changeId={changeId}
+                  clientName={change.clientName || null}
+                />
+              </div>
+              <div className="border-t border-slate-800/60 pt-6">
+                <PractitionerObservationsPanel changeId={changeId} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Council Error */}
@@ -769,6 +862,16 @@ export default function ChangeDetailPage() {
               <Users className="w-3.5 h-3.5" />
               Offer to Circle
             </button>
+          </div>
+        )}
+
+        {/* Relational Occupancy Rating (post-session) */}
+        {council && (
+          <div className="mt-4 rounded-lg border border-slate-800/60 bg-slate-900/20 p-4">
+            <OccupancyRatingWidget
+              changeId={changeId}
+              onRated={setCurrentOccupancyScore}
+            />
           </div>
         )}
 
@@ -943,6 +1046,11 @@ export default function ChangeDetailPage() {
             {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : saved ? 'Saved' : 'Save Notes & Questions'}
           </button>
+        </div>
+
+        {/* Intervention Design */}
+        <div className="mt-8 pt-6 border-t border-slate-800/60">
+          <ChangeExperimentPanel changeId={changeId} />
         </div>
 
         <ShareToCircleModal

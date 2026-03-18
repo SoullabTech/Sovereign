@@ -916,7 +916,8 @@ Synthesize wisdom that:
 Keep response concise (2-4 sentences) and grounded in their actual data.`;
 
     try {
-      const response = await fetch('http://localhost:11434/api/generate', {
+      const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

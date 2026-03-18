@@ -17,7 +17,7 @@ export default function LibraryPage() {
   const [showContributeModal, setShowContributeModal] = useState(false);
 
   return (
-    <main className="min-h-screen bg-[#1a1a1a]">
+    <main className="min-h-screen font-sans bg-[#1a1a1a]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Top Navigation */}
         {!selectedArticle && (

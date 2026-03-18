@@ -40,7 +40,8 @@ export type PortalType =
   | 'bodywork'
   | 'groups'
   | 'clinician'
-  | 'consultant';
+  | 'consultant'
+  | 'personal';
 
 export type ModuleSlug =
   | 'command_center'
@@ -347,6 +348,7 @@ const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   bodywork: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 
 // ─── Helpers ────────────────────────────────────────────

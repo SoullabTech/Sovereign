@@ -175,13 +175,13 @@ export async function POST() {
 
     cookieStore.set('maia_tier', member.tier, {
       ...COOKIE_OPTIONS,
-      httpOnly: false,
+      httpOnly: true,
       expires: expiresAt,
     });
 
     cookieStore.set('maia_roles', JSON.stringify(member.roles), {
       ...COOKIE_OPTIONS,
-      httpOnly: false,
+      httpOnly: true,
       expires: expiresAt,
     });
 

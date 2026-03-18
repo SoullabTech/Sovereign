@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  oldhead:
+    image: oldhead-web:latest
+    container_name: oldhead-web
+    restart: unless-stopped
+    networks:
+      - maia-network
+    depends_on:
+      - caddy
+
+networks:
+  maia-network:
+    external: true

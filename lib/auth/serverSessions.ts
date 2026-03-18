@@ -255,13 +255,13 @@ export async function setAccessCookies(
   // Tier (for middleware access checks)
   cookieStore.set('maia_tier', tier || 'free', {
     ...cookieOptions,
-    httpOnly: false, // Allow client to read for UI gating
+    httpOnly: true,
   });
 
   // Roles (for middleware access checks)
   cookieStore.set('maia_roles', JSON.stringify(roles || ['member']), {
     ...cookieOptions,
-    httpOnly: false, // Allow client to read for UI gating
+    httpOnly: true,
   });
 }
 

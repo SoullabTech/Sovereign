@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = await request.json();
-    const { username, password, email, name, explorerId } = body;
+    const { username, password, email: rawEmail, name, explorerId } = body;
+    const email = rawEmail ? rawEmail.toLowerCase().trim() : null;
 
     // Validate required fields
     if (!username || !password) {

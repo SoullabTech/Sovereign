@@ -3,10 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { DevNoServiceWorker } from "./DevNoServiceWorker";
-import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 import { AethericConsciousnessProvider } from "@/components/consciousness/AethericConsciousnessProvider";
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
+import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
+import { CapacitorBoot } from "@/components/CapacitorBoot";
+import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -63,7 +66,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#ffffff" }
+    { media: "(prefers-color-scheme: dark)", color: "#1A1513" }
   ]
 };
 
@@ -75,6 +78,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* 🔍 DIAGNOSTIC: Global error listeners — catch crashes before React boundary */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            console.log('[LAYOUT:head] script executing url=' + location.pathname);
+            window.addEventListener('error', function(e) {
+              console.log('[LAYOUT:error] ' + e.message + ' @ ' + e.filename + ':' + e.lineno);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+              console.log('[LAYOUT:rejection] ' + String(e.reason));
+            });
+          })();
+        `}} />
         {/* 🔖 BUILD STAMP v6 + PWA Audio Unlock */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
@@ -171,21 +186,23 @@ export default function RootLayout({
           })();
         `}} />
       </head>
-      <body className={`${inter.className}`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
+        <CapacitorBoot />
         <FlagsDebug />
+        <AppErrorBoundary>
         <SubscriptionProvider>
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
             <AethericConsciousnessProvider>
-              <SevenLayerArchitectureProvider
-                autoSync={true}
-                syncInterval={30000}
-              >
-                {children}
-              </SevenLayerArchitectureProvider>
+              <FeatureTooltipProvider>
+                <MobileRouteGuard>
+                  {children}
+                </MobileRouteGuard>
+              </FeatureTooltipProvider>
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
         </SubscriptionProvider>
+        </AppErrorBoundary>
       </body>
     </html>
   );

@@ -38,19 +38,26 @@ export function synthesizeAspect(
  * Handles order (Sun-Saturn and Saturn-Sun both work)
  */
 function createAspectKey(planet1: string, planet2: string, aspectType: AspectType): string {
-  const p1 = planet1.toLowerCase();
-  const p2 = planet2.toLowerCase();
+  const p1 = planet1.toLowerCase().replace(/\s+/g, '').replace('northnode', 'northnode').replace('southnode', 'southnode');
+  const p2 = planet2.toLowerCase().replace(/\s+/g, '').replace('northnode', 'northnode').replace('southnode', 'southnode');
 
-  // Normalize order: Sun always first, then Moon, then outer planets
-  const order = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  // Normalize order: classical planets first, then modern, then asteroids/points
+  const order = [
+    'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto',
+    'chiron', 'northnode', 'southnode', 'lilith', 'ceres', 'pallas', 'juno', 'vesta'
+  ];
   const idx1 = order.indexOf(p1);
   const idx2 = order.indexOf(p2);
 
-  if (idx1 < idx2) {
-    return `${p1}-${p2}-${aspectType}`;
-  } else {
-    return `${p2}-${p1}-${aspectType}`;
+  // Both in order list: use order
+  if (idx1 !== -1 && idx2 !== -1) {
+    return idx1 <= idx2 ? `${p1}-${p2}-${aspectType}` : `${p2}-${p1}-${aspectType}`;
   }
+  // Only one in list: put the listed one first
+  if (idx1 !== -1) return `${p1}-${p2}-${aspectType}`;
+  if (idx2 !== -1) return `${p2}-${p1}-${aspectType}`;
+  // Neither in list: alphabetical
+  return p1 <= p2 ? `${p1}-${p2}-${aspectType}` : `${p2}-${p1}-${aspectType}`;
 }
 
 /**
@@ -120,6 +127,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: deep understanding of how identity and emotional needs can dance together, the capacity to hold space for both self and other",
     practicePrompt: "When your will and your feelings conflict, what happens if you honor both without choosing? What larger wisdom might hold them?",
     bodyAwareness: "Feel the pull between solar plexus (will, identity) and chest/belly (emotion, need). What happens if you let both speak?"
+  },
+
+  'sun-moon-trine': {
+    essence: "Essence and emotional life flow together in natural rhythm—who you are and what you feel are in easy conversation. There's a quality of inner coherence: your instincts generally align with your direction, and vulnerability tends to emerge naturally in the right moments rather than being managed or suppressed. The invitation is to honor this gift by not taking it for granted.",
+    coreQuestion: "Am I using the natural wholeness I carry, or coasting on it?",
+    elementalDynamic: "Fire and Water in harmonious dialogue",
+    shadowExpression: "When unconscious: the ease of inner coherence can lead to complacency, avoiding growth that requires friction, or failing to develop the harder wisdom that comes from inner conflict",
+    giftExpression: "When integrated: natural authenticity and emotional intelligence, the capacity to be both expressive and feeling without one overwhelming the other, a wholeness that others find grounding",
+    practicePrompt: "Where in your life are you genuinely aligned—where what you want and what you feel actually agree? What becomes possible from that alignment?",
+    bodyAwareness: "There's often a quality of ease in the chest—a sense that your center and your feeling body are on speaking terms. Notice this presence when it's available."
+  },
+
+  'sun-moon-square': {
+    essence: "The productive war between who you're becoming and what you need. Will and feeling don't naturally agree here—identity pulls toward expression while the emotional body wants something different. This friction is the forge: you learn yourself most deeply by navigating the ongoing tension between essence and instinct, between what you want to become and what you need to feel safe.",
+    coreQuestion: "What do I discover about myself in the space between my will and my feelings?",
+    elementalDynamic: "Fire and Water in productive friction",
+    shadowExpression: "When unconscious: suppressing emotional needs in service of ego goals, or flooding identity with feeling, difficulty knowing where self ends and emotion begins",
+    giftExpression: "When integrated: deep self-knowledge earned through inner negotiation, the capacity to honor both aspiration and need, psychological complexity that understands the inner life",
+    practicePrompt: "Notice when your drive and your feelings pull in different directions. Instead of choosing one, can you stay present to both? What does the tension reveal?",
+    bodyAwareness: "Notice the distinct sensations of will (often solar plexus or chest expansion) versus emotional need (often heart, throat, or belly). Can you feel them as separate channels rather than competing forces?"
+  },
+
+  'sun-moon-sextile': {
+    essence: "A gentle opening between essence and feeling—will and emotion are available to each other, though the conversation requires some conscious effort to develop. There's latent harmony here, a natural capacity for authenticity and emotional intelligence that rewards attention and cultivation.",
+    coreQuestion: "What becomes available when I actively bridge my drive and my feeling life?",
+    elementalDynamic: "Fire and Water in offered harmony",
+    shadowExpression: "When unconscious: this harmonious potential goes undeveloped because it doesn't demand attention—a quiet gift that never quite blooms",
+    giftExpression: "When integrated: genuine emotional-expressive coherence, the ability to be both heartfelt and directed, will that knows how to serve feeling and feeling that clarifies will",
+    practicePrompt: "Where have your emotional responses actually guided you well? How can you develop a more conscious relationship between what you feel and what you choose?",
+    bodyAwareness: "Notice the gentle resonance when will and feeling happen to align. This subtle coherence is available more often than it seems—what helps you access it?"
   },
 
   'sun-mars-conjunction': {
@@ -334,6 +371,26 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: emotional maturity that holds space for what's hard, the capacity to metabolize feeling slowly and thoroughly, presence that others trust with their pain",
     practicePrompt: "What feelings have accumulated that might benefit from release rather than further integration? What would emotional lightness feel like without bypassing depth?",
     bodyAwareness: "Notice where emotional weight settles in the body—often chest, shoulders, or belly. What would happen if you let some of it lift while keeping your ground?"
+  },
+
+  'moon-saturn-trine': {
+    essence: "Emotional depth in easy conversation with structure and discipline. The feelings you carry have been weathered and refined—there's a natural maturity to how you process experience, a sense that emotion can serve as wisdom rather than chaos. This doesn't mean coldness; it means the capacity to be fully present to feeling while remaining grounded.",
+    coreQuestion: "What becomes possible when emotion and wisdom flow together naturally?",
+    elementalDynamic: "Water emotion in harmonious rhythm with Earth endurance",
+    shadowExpression: "When unconscious: taking this gift for granted—emotional maturity that never quite deepens because it comes too easily, a subtle bypassing of raw feeling in favor of the composed version",
+    giftExpression: "When integrated: reliable emotional wisdom that others seek out, the capacity to stay present through difficulty without drama, feelings that age into insight",
+    practicePrompt: "Notice where you're naturally emotionally steady. Is this genuine maturity or a habit of composure? What would it be like to be both grounded and raw?",
+    bodyAwareness: "There's often a solid, rooted quality when emotions arise. Notice what it feels like to be emotionally moved without losing your footing."
+  },
+
+  'moon-saturn-opposition': {
+    essence: "A mirror between feeling and form, between inner life and outer structure. Authority and emotion stand across from each other—at times the disciplined mind overrides the feeling body, at times deep feeling rebels against imposed structure. The path is negotiation: learning that neither feeling nor form has to win.",
+    coreQuestion: "Where do structure and feeling support each other rather than compete?",
+    elementalDynamic: "Water responding to Earth across the divide",
+    shadowExpression: "When unconscious: oscillating between emotional flooding and rigid control, projecting either coldness or neediness onto others, authority figures triggering deep emotional responses",
+    giftExpression: "When integrated: understanding that feeling and discipline each have their season, the capacity to be emotionally present with others while maintaining your own boundaries",
+    practicePrompt: "Where have feelings and structure been at war in you? What would a truce look like—not suppression, but genuine cooperation?",
+    bodyAwareness: "Notice what happens in your body when authority and emotion arise together. Can you feel both the structure and the flow without having to resolve the tension immediately?"
   },
 
   'moon-pluto-conjunction': {
@@ -652,6 +709,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     bodyAwareness: "There's often a gravitational pull in the belly or pelvis when this energy activates. Notice what happens when you feel it without acting on it—can you be with intensity without merging?"
   },
 
+  'venus-pluto-square': {
+    essence: "Desire pressed up against transformation's demand. Relationships carry a quality of life-or-death intensity—love isn't casual, attraction isn't surface, and whatever you value tends to be pulled into Pluto's crucible whether you consent or not. This aspect asks: can you let love transform you without it destroying you? The friction is productive, but it requires willingness to face what hides beneath longing.",
+    coreQuestion: "What would love look like if it didn't require someone to be broken down?",
+    elementalDynamic: "Water heart meeting volcanic pressure",
+    shadowExpression: "When unconscious: compulsive attraction to what harms, using love as a battlefield for power, intensity mistaken for depth, possessiveness or jealousy that erodes what you love",
+    giftExpression: "When integrated: love as genuine alchemical encounter, the capacity to hold intensity without collapsing, relationships as honest mirrors for transformation",
+    practicePrompt: "Where does love trigger your survival instincts? What would it feel like to want deeply without needing to control the outcome?",
+    bodyAwareness: "There's often a tightening sensation when attraction and threat arise together. Notice this in your gut or chest—what does it protect? What would ease feel like here?"
+  },
+
+  'venus-pluto-opposition': {
+    essence: "The mirror between what you love and what transforms you. Others may become agents of profound change—relationships carry destiny, and what you're drawn to tends to be exactly what challenges your deepest patterns. The task is remaining present through the transformation rather than fleeing to safer terrain or becoming consumed.",
+    coreQuestion: "Can I see who's in front of me without projecting my depths onto them?",
+    elementalDynamic: "Water meeting volcanic power across the axis",
+    shadowExpression: "When unconscious: projecting power or transformational energy onto partners, experiencing love as something that happens to you rather than with you, choosing relationships that repeat cycles of intensity and loss",
+    giftExpression: "When integrated: relationships as genuine co-evolution, the capacity to be changed by love without losing yourself, seeing others clearly even through the intensity",
+    practicePrompt: "Who has changed you most through love? What did those encounters reveal about your own depths—not theirs?",
+    bodyAwareness: "Notice the gravitational quality of deep attraction—where does it pull in your body? Practice staying present there without moving toward or away."
+  },
+
+  'venus-pluto-trine': {
+    essence: "Depth and desire flow together naturally. There's an innate capacity for intimacy that reaches below the surface—genuine connection, transformational love, and the ability to hold others through their darkness without flinching. This gift may not feel special because it comes so naturally; the invitation is to consciously develop what flows effortlessly.",
+    coreQuestion: "Are you using the depth you're capable of, or skating along the surface where it's safer?",
+    elementalDynamic: "Water and volcanic power in natural harmony",
+    shadowExpression: "When unconscious: taking profound relational capacity for granted, using depth as currency rather than offering, withdrawing into solitary intensity because connection requires less",
+    giftExpression: "When integrated: a rare capacity for genuine intimate transformation, love that includes the shadow, the ability to accompany others through their most difficult passages",
+    practicePrompt: "Where are you in shallow water when you have the capacity for depth? What would it mean to bring your full relational intensity to bear here?",
+    bodyAwareness: "Notice the pull toward depth when you're in connection. There's often a physical sense of recognition—a resonance in chest or belly. Trust that as a reliable signal."
+  },
+
   'venus-uranus-square': {
     essence: "Friction between the heart's desire for connection and the soul's need for freedom. There's often a craving for intimacy that simultaneously resists constraint—wanting closeness but needing space to breathe, to change, to become. This isn't commitment-phobia but a genuine need for relationships that honor evolution over expectation. The tension can create breakthrough or breakup.",
     coreQuestion: "Can I commit without losing my wings?",
@@ -724,6 +811,36 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: endurance that serves long-term goals, action refined by patience, the ability to push through resistance without burning out, mastery earned through time",
     practicePrompt: "Where do you feel blocked in your drive? Is the obstacle external or internal? What would patient assertion look like rather than frustrated force?",
     bodyAwareness: "Notice where frustration accumulates—often shoulders, jaw, or lower back. What happens if you breathe into the resistance rather than fighting it?"
+  },
+
+  'mars-saturn-conjunction': {
+    essence: "Will and endurance fused into a single force. Action here doesn't rush—it builds. There's a quality of patient power, of driving toward goals with methodical discipline rather than impulsive heat. The warrior and the elder occupy the same body. This can create formidable capacity and sustained achievement, and it can also mean chronic suppression of spontaneous desire in service of long-range goals.",
+    coreQuestion: "What can I build when my fire learns patience?",
+    elementalDynamic: "Fire drive contained and shaped by Earth endurance",
+    shadowExpression: "When unconscious: repressed anger accumulating into rigidity, perfectionism that kills momentum, effort as punishment, difficulty knowing when to rest",
+    giftExpression: "When integrated: sustained power that outlasts obstacles, will that knows how to pace itself, mastery born through consistent effort over time",
+    practicePrompt: "Where has patience amplified your power? Where has discipline become its own prison? What's the difference between productive perseverance and exhausting control?",
+    bodyAwareness: "Notice where tension and drive live together in your body—often in the lower back, jaw, or core. What happens when you breathe into your own endurance rather than fighting it?"
+  },
+
+  'mars-saturn-trine': {
+    essence: "Discipline and drive in natural conversation—effort flows with a quality of sustainable strength. There's an instinct for knowing when to push and when to consolidate, a natural pacing that allows for achievement without burning out. The work is taking this gift seriously and not letting ease breed complacency.",
+    coreQuestion: "What would you attempt if you trusted your own endurance?",
+    elementalDynamic: "Fire and Earth in rhythmic partnership",
+    shadowExpression: "When unconscious: using reliability as a reason not to stretch, taking your own resilience for granted, effort that never reaches its edge because safety feels like virtue",
+    giftExpression: "When integrated: consistent, sustainable power in service of meaningful work, ability to persist through difficulty without drama, achievement that comes from disciplined application of genuine drive",
+    practicePrompt: "What project deserves your sustained effort right now? What would you build if you knew you had the endurance for it?",
+    bodyAwareness: "There's often a quality of solidity when you move from this place—a sense of being in your own body's strength. Notice how it feels to act from endurance rather than urgency."
+  },
+
+  'mars-saturn-opposition': {
+    essence: "Action and constraint in dialogue across the axis. At times drive pushes hard and structure resists; at times structure disciplines what would otherwise scatter. The work is learning that these forces need each other—that will without form exhausts itself, and form without will calcifies. They are arguing partners who make each other stronger.",
+    coreQuestion: "What becomes possible when drive and discipline stop fighting and start collaborating?",
+    elementalDynamic: "Fire desire and Earth caution across the horizon",
+    shadowExpression: "When unconscious: chronic frustration with external authority that mirrors inner suppression, alternating between impulsive action and paralyzed restraint, blaming limits for your own reluctance",
+    giftExpression: "When integrated: understanding the rhythm of effort and rest, knowing when to assert and when to consolidate, the wisdom that comes from repeatedly navigating this tension",
+    practicePrompt: "Where have limits actually protected your energy? Where have they genuinely held you back? How do you tell the difference from the inside?",
+    bodyAwareness: "Notice the physical sensations of wanting to act and feeling held back. Can you be present to both without immediately resolving the tension?"
   },
 
   'mars-pluto-conjunction': {
@@ -858,6 +975,272 @@ const ASPECT_INTERPRETATIONS: Record<string, AspectInterpretation> = {
     giftExpression: "When integrated: conscious participation in cycles of spiritual death-rebirth, serving the dissolution of what needs to end, grounded presence while vast changes move through",
     practicePrompt: "What is dissolving in your lifetime that needed to end? How do you serve that dissolution without losing yourself in it?",
     bodyAwareness: "There's often a sense of vastness and depth that exceeds personal scale. Notice this quality. Can you feel your own body while also sensing what moves through all of us?"
+  },
+
+  // ============== CHIRON ASPECTS ==============
+
+  'sun-chiron-conjunction': {
+    essence: "The wound and the identity are inseparable — your core sense of self is built around and through your deepest vulnerability. This isn't a flaw; it's the source of your most authentic power. The healer emerges precisely because the wound is so close to the center.",
+    coreQuestion: "How has my wound shaped who I am, and what would I offer the world if I stopped hiding it?",
+    elementalDynamic: "Core identity fused with wounded wisdom",
+    shadowExpression: "When unconscious: identity built around victimhood or wounding, performing strength to hide deep vulnerability, helping others to avoid healing yourself",
+    giftExpression: "When integrated: the wounded healer archetype — your authenticity and hard-won wisdom become a beacon for others navigating similar territory",
+    practicePrompt: "What part of your story do you most avoid telling? That may be exactly where your gift lives.",
+    bodyAwareness: "Notice where identity tension lives in the body. Often the solar plexus holds this — the place where self-expression meets tender wound."
+  },
+
+  'sun-chiron-square': {
+    essence: "Your sense of identity is in dynamic tension with your core wound — who you are and what has hurt you pull in different directions. This friction, though uncomfortable, is the engine of genuine self-discovery. The square demands you forge identity that includes rather than hides the wound.",
+    coreQuestion: "What identity am I building to compensate for my wound — and what identity might emerge if I stopped?",
+    elementalDynamic: "Identity drive in friction with wounded wisdom",
+    shadowExpression: "When unconscious: overcompensation — building a self-image directly opposite the wound, exhausting performance of wholeness",
+    giftExpression: "When integrated: a nuanced, hard-forged sense of self that has genuinely grappled with vulnerability and emerged more real for it",
+    practicePrompt: "Where are you most defensive about your identity? The defensiveness often points directly to the wound underneath.",
+  },
+
+  'sun-chiron-trine': {
+    essence: "Your identity flows naturally toward healing — there's a gift-like quality to how your wounds inform your purpose. Self-expression and the wisdom born from pain work together rather than against each other. This trine suggests someone who can share vulnerable truth with grace.",
+    coreQuestion: "How is my wound already serving others, even in ways I haven't fully recognized?",
+    elementalDynamic: "Identity harmonizing with wounded wisdom",
+    shadowExpression: "When unconscious: the ease of this flow can lead to spiritual bypassing — touching the wound lightly without going deep enough",
+    giftExpression: "When integrated: a natural healer whose authenticity and vulnerability are assets, who can hold others' pain with both empathy and groundedness",
+  },
+
+  'moon-chiron-conjunction': {
+    essence: "Emotional life and the core wound are intimately entangled — feeling deeply and hurting deeply are two sides of the same gift. The emotional body carries ancestral as well as personal wounds. What you feel most intensely often connects to both your greatest tenderness and your deepest healing capacity.",
+    coreQuestion: "What do I feel that I've been told not to feel — and what healing lives there?",
+    elementalDynamic: "Emotional depth fused with wounded feeling",
+    shadowExpression: "When unconscious: emotional reactivity rooted in unhealed wounds, caretaking others' feelings to avoid your own, emotional overwhelm that connects to old pain",
+    giftExpression: "When integrated: extraordinary emotional intelligence and empathy born from genuine suffering — the capacity to meet others in their pain because you know the territory",
+    practicePrompt: "What feeling do you most resist? Sit with it gently. It may be the door to your greatest emotional wisdom.",
+    bodyAwareness: "The chest and belly often hold emotional-wound memory. Notice what tightens when you're most emotionally triggered — that's the body remembering."
+  },
+
+  'moon-chiron-square': {
+    essence: "Emotional expression and the core wound are in friction — feelings and vulnerability don't flow together easily. Sometimes emotions trigger the wound; sometimes the wound blocks emotional access. The square calls for developing emotional courage — the willingness to feel through the tender places.",
+    coreQuestion: "What emotion am I most afraid to let myself feel fully?",
+    elementalDynamic: "Emotional needs in tension with wounded feeling",
+    shadowExpression: "When unconscious: emotional numbing to avoid wound activation, or emotional flooding when the wound breaks through all containment",
+    giftExpression: "When integrated: hard-won emotional resilience — the capacity to feel deeply without being destroyed by it, developed through genuine work",
+  },
+
+  'venus-chiron-conjunction': {
+    essence: "Love, beauty, and the core wound are fused — the capacity to give and receive love is inseparable from the place that has been most hurt. This can manifest as deep compassion, unusual sensitivity in relationship, or a wound that reopens precisely in intimacy. The invitation is to let love heal what love has wounded.",
+    coreQuestion: "What do I most need in relationship that I'm afraid to ask for?",
+    elementalDynamic: "Love nature fused with relational wound",
+    shadowExpression: "When unconscious: attracting dynamics that repeat the wound, giving love freely while blocking receiving it, relationship patterns that confirm unworthiness",
+    giftExpression: "When integrated: the capacity for healing love — presence in relationship so tender and attuned that it becomes genuinely restorative for both parties",
+    practicePrompt: "Where did you first learn that love hurts? That story is still running. What would you write differently now?",
+  },
+
+  'mars-chiron-conjunction': {
+    essence: "Drive, will, and the core wound are merged — taking action and asserting yourself are intimately connected to where you've been hurt. Either action feels charged with wound-energy, or the wound paralyzes action. The invitation is to develop will that serves healing rather than compensates for pain.",
+    coreQuestion: "What am I afraid to fight for — and is that fear the wound speaking?",
+    elementalDynamic: "Will and drive fused with wounded action",
+    shadowExpression: "When unconscious: aggression rooted in wound, fighting battles that aren't yours, anger as defended vulnerability, paralyzed action from fear of repeating old pain",
+    giftExpression: "When integrated: warrior energy in service of healing — acting with precise force exactly where it's needed, especially in defense of the vulnerable",
+  },
+
+  'chiron-saturn-conjunction': {
+    essence: "The wound and structure are fused — authority, discipline, and limitation are intimately connected to where you've been hurt. The wound often came through structures (family, institutions, fathers), and healing requires building your own. The gift is extraordinary capacity to create structures that genuinely hold rather than harm.",
+    coreQuestion: "What structures in my life were built to compensate for the wound rather than express who I truly am?",
+    elementalDynamic: "Structural authority fused with wounded wisdom",
+    shadowExpression: "When unconscious: harsh self-discipline as punishment, authority relationships that repeat old wounds, building structures that imprison rather than support",
+    giftExpression: "When integrated: the capacity to build containers that hold genuine healing — structures, organizations, or practices that support others' growth because they emerged from your own",
+  },
+
+  'chiron-saturn-square': {
+    essence: "The wound and structure are in productive friction — discipline and limitation keep colliding with vulnerability. Often there's a harsh inner critic voice that sounds like an authority figure. The square demands developing internal authority that doesn't weaponize the wound against the self.",
+    coreQuestion: "Whose critical voice have I internalized — and does it actually serve me?",
+    elementalDynamic: "Authority in friction with wounded wisdom",
+    shadowExpression: "When unconscious: self-punishment disguised as discipline, harsh standards rooted in shame, building walls where boundaries would serve better",
+    giftExpression: "When integrated: earned authority — the capacity to set genuine limits and hold genuine structures born from understanding both wound and strength",
+  },
+
+  'chiron-uranus-conjunction': {
+    essence: "Wound and awakening are fused — disruption and liberation run through the same channel as vulnerability. Often the wound comes through difference, originality, or not fitting in. The gift is revolutionary healing — the capacity to disrupt unhealthy systems because you've survived them.",
+    coreQuestion: "How has my difference been the wound — and how is it also the gift?",
+    elementalDynamic: "Revolutionary awakening fused with wounded wisdom",
+    shadowExpression: "When unconscious: radical behavior as defended vulnerability, using disruption to avoid intimacy, wound expressed as sudden breaks and departures",
+    giftExpression: "When integrated: the wounded revolutionary — changing systems from lived experience, disrupting what harms because you know exactly how it harms",
+  },
+
+  'chiron-neptune-conjunction': {
+    essence: "Wound and transcendence are merged — spiritual sensitivity and vulnerability run through the same deep channel. The wound often touches the boundary between self and other, personal and universal. The gift is compassion so vast it can feel cosmic — the capacity to meet suffering with genuine presence.",
+    coreQuestion: "Where does my wound open into something larger than personal pain?",
+    elementalDynamic: "Spiritual dissolution fused with wounded wisdom",
+    shadowExpression: "When unconscious: spiritual bypassing of real wounds, dissolving into others' pain, using transcendence to avoid embodied healing",
+    giftExpression: "When integrated: the mystic healer — touching collective wounds with compassion born from personal suffering, serving as a bridge between pain and grace",
+  },
+
+  'chiron-pluto-conjunction': {
+    essence: "Wound and transformation are fused — the capacity for deep change runs directly through the place of greatest vulnerability. The wound often involves power — being overpowered, loss, death, or profound change. The gift is regenerative healing — entering the underworld and emerging transformed.",
+    coreQuestion: "What transformation has my wound already initiated in me, even though I didn't choose it?",
+    elementalDynamic: "Transformative power fused with wounded wisdom",
+    shadowExpression: "When unconscious: using wound as weapon or armor, compulsive transformation without integration, control rooted in the fear of being wounded again",
+    giftExpression: "When integrated: the shaman archetype — having traveled through real darkness and returned with genuine medicine for others navigating similar territory",
+  },
+
+  // ============== NORTH NODE ASPECTS ==============
+
+  'sun-northnode-conjunction': {
+    essence: "Your core identity points directly toward your soul's evolutionary direction — who you are and where you're meant to grow are beautifully aligned. This is a powerful configuration suggesting your authentic self-expression is precisely what evolution is asking of you.",
+    coreQuestion: "How does being most fully yourself serve your highest path?",
+    elementalDynamic: "Identity aligned with soul's direction",
+    shadowExpression: "When unconscious: ego inflation, believing your personal agenda is always cosmically endorsed",
+    giftExpression: "When integrated: a person whose authentic self-expression naturally evolves them forward — confidence grounded in genuine alignment",
+  },
+
+  'moon-northnode-conjunction': {
+    essence: "Emotional instincts and soul evolution are aligned — following your gut leads toward growth. What you're drawn to emotionally tends to serve your highest development, even when it doesn't make logical sense.",
+    coreQuestion: "What does my body know about where I'm meant to go?",
+    elementalDynamic: "Emotional truth aligned with soul's direction",
+    shadowExpression: "When unconscious: mistaking habit for instinct, following emotional comfort rather than genuine soul calling",
+    giftExpression: "When integrated: emotional intelligence in service of genuine growth — the capacity to feel your way forward with accuracy",
+  },
+
+  'sun-southnode-conjunction': {
+    essence: "Your core identity has deep roots in past patterns and previous mastery — there's tremendous natural talent here, but also the pull of what's familiar. The invitation is to bring forward your gifts without being held back by patterns that have already been fully lived.",
+    coreQuestion: "What mastery am I carrying that still serves me — and what am I clinging to that no longer does?",
+    elementalDynamic: "Identity rooted in past mastery",
+    shadowExpression: "When unconscious: retreating into past patterns when growth is difficult, expressing brilliance only in familiar territory",
+    giftExpression: "When integrated: bringing genuine depth and mastery from the past into service of present growth — talent without attachment",
+  },
+
+  // ============== LILITH ASPECTS ==============
+
+  'sun-lilith-conjunction': {
+    essence: "Core identity and raw, untamed feminine power are fused — there's a wildness at the center of who you are that cannot be civilized. Lilith here gives fierce authenticity and an instinctive refusal to submit to what doesn't resonate as true. This energy can be polarizing and is always powerful.",
+    coreQuestion: "What part of myself have I been told to hide — and what would happen if I stopped?",
+    elementalDynamic: "Identity fused with wild, uncontained power",
+    shadowExpression: "When unconscious: rage at being contained, destructive rebellion, identifying entirely with the outcast rather than integrating the wild energy",
+    giftExpression: "When integrated: sovereign authenticity — the capacity to be fully yourself without apology, including the parts that others find uncomfortable",
+  },
+
+  'moon-lilith-conjunction': {
+    essence: "Emotional life and untamed feminine power are merged — feelings run deep, wild, and fierce. There's an instinctive emotional sovereignty here that refuses to perform acceptable feeling. Emotional authenticity can feel dangerous but is ultimately the source of genuine connection.",
+    coreQuestion: "What do I feel that I've been told is too much, too dark, or too wild?",
+    elementalDynamic: "Emotional depth fused with raw power",
+    shadowExpression: "When unconscious: emotional intensity that overwhelms, volcanic anger, emotional manipulation from unacknowledged power",
+    giftExpression: "When integrated: fierce emotional honesty and depth — the capacity to feel fully and express authentically without shame",
+  },
+
+  'venus-lilith-conjunction': {
+    essence: "Love, attraction, and untamed feminine power are fused — relationships carry a wild charge that defies convention. There's magnetic attraction energy here, along with a refusal to play the conventional relational role. Love on your terms or not at all.",
+    coreQuestion: "What in relationship am I refusing to compromise — and is that a boundary or a wound?",
+    elementalDynamic: "Love nature fused with sovereign power",
+    shadowExpression: "When unconscious: relationship sabotage from the fear of being controlled, using sexuality or attraction as power over others",
+    giftExpression: "When integrated: magnetic, sovereign relating — the capacity to love deeply on authentic terms, refusing dynamics that require self-betrayal",
+  },
+
+  // ============== ASTEROID ASPECTS ==============
+
+  'sun-ceres-conjunction': {
+    essence: "Identity and the principle of nourishment are merged — who you are is deeply tied to how you nurture and are nurtured. There may be powerful themes around mothering, feeding, abundance, and loss. Your sense of self is expressed through care.",
+    coreQuestion: "What does it mean to truly nourish — yourself and others?",
+    elementalDynamic: "Identity fused with nurturing principle",
+    shadowExpression: "When unconscious: smothering care, self-worth tied to being needed, grief or emptiness around nourishment",
+    giftExpression: "When integrated: profound nurturing capacity — creating environments where people and things can genuinely flourish",
+  },
+
+  'sun-pallas-conjunction': {
+    essence: "Identity and strategic wisdom are fused — who you are is expressed through creative intelligence and pattern recognition. There's a gift for seeing the whole picture, finding creative solutions, and bringing wisdom to complex problems.",
+    coreQuestion: "Where does my intelligence most want to serve?",
+    elementalDynamic: "Identity fused with creative wisdom",
+    shadowExpression: "When unconscious: intellectualizing to avoid feeling, using intelligence to control rather than serve",
+    giftExpression: "When integrated: the wise strategist — bringing genuine intelligence and creative vision to serve both personal and collective needs",
+  },
+
+  'sun-juno-conjunction': {
+    essence: "Identity and the principle of committed partnership are fused — who you are is deeply expressed through how you partner. There's a powerful need for genuine commitment and an instinct for knowing when partnership serves your highest expression.",
+    coreQuestion: "What does authentic partnership ask of you that you haven't yet given?",
+    elementalDynamic: "Identity fused with partnership principle",
+    shadowExpression: "When unconscious: over-identification with partner, losing self in relationship, or refusing commitment from fear of losing identity",
+    giftExpression: "When integrated: the devoted partner who brings their full self to commitment — enhancing rather than diminishing both people",
+  },
+
+  'sun-vesta-conjunction': {
+    essence: "Identity and sacred devotion are fused — who you are is expressed through what you dedicate yourself to. There's a priestess or monk quality here — the capacity for focused, devoted service that goes beyond personal gain.",
+    coreQuestion: "What are you truly called to serve?",
+    elementalDynamic: "Identity fused with sacred devotion",
+    shadowExpression: "When unconscious: self-denial disguised as devotion, using dedication to avoid relationship or pleasure",
+    giftExpression: "When integrated: sacred focus — the capacity to hold a flame of devotion steadily, bringing genuine consecration to work and service",
+  },
+
+  // ============== CHIRON-ASTEROID ASPECTS ==============
+
+  'chiron-ceres-conjunction': {
+    essence: "The wound and the principle of nourishment are fused — early experiences of being fed, held, or cared for carry deep pain and deep wisdom. The healing path runs through learning to truly nourish and be nourished.",
+    coreQuestion: "What does genuine nourishment feel like — and do you allow yourself to receive it?",
+    elementalDynamic: "Wounded wisdom fused with nurturing",
+    shadowExpression: "When unconscious: nourishing others compulsively to avoid your own hunger, grief expressed as inability to receive care",
+    giftExpression: "When integrated: the healing nurturer — someone who understands nourishment's absence so deeply that their presence of care is profoundly restorative",
+  },
+
+  'chiron-pallas-conjunction': {
+    essence: "Wounded wisdom and creative intelligence are fused — your intelligence carries the marks of where it has been dismissed, undervalued, or misused. The gift is hard-won wisdom that goes beyond clever — genuine understanding earned through experience.",
+    coreQuestion: "How has my intelligence been wounded — and how has that made it wiser?",
+    elementalDynamic: "Wounded wisdom fused with creative intelligence",
+    shadowExpression: "When unconscious: using intelligence to defend against vulnerability, overthinking as a way to avoid feeling the wound",
+    giftExpression: "When integrated: wounded wisdom transformed into genuine insight — the kind of understanding that can only come from having lived through something",
+  },
+
+  'chiron-juno-conjunction': {
+    essence: "The wound and committed partnership are intimately connected — relationship is both where the wound lives and where healing happens. Partnership patterns carry old pain, and genuine healing requires bringing that wound into conscious relationship rather than hiding it.",
+    coreQuestion: "What wound am I bringing into relationship — and what healing am I asking my partner to provide?",
+    elementalDynamic: "Wounded wisdom fused with partnership",
+    shadowExpression: "When unconscious: repeating wound-dynamics in relationship, choosing partners who will recreate familiar pain",
+    giftExpression: "When integrated: the capacity for healing relationship — bringing both wound and wisdom to partnership, creating genuine mutual healing",
+  },
+
+  'chiron-vesta-conjunction': {
+    essence: "The wound and sacred devotion are fused — where you dedicate yourself carries both pain and profound meaning. Service and vocation may connect directly to your wound, and the healing path runs through finding devotion that genuinely serves rather than compensates.",
+    coreQuestion: "Is my devotion coming from my wound or from my wholeness?",
+    elementalDynamic: "Wounded wisdom fused with sacred service",
+    shadowExpression: "When unconscious: self-sacrifice as wound expression, using devotion to avoid self-care or intimacy",
+    giftExpression: "When integrated: sacred service born from genuine understanding — devotion that heals both the devoted and those served",
+  },
+
+  // ============== NODE-PLANET ASPECTS ==============
+
+  'mercury-northnode-conjunction': {
+    essence: "Communication and intellectual expression point directly toward soul evolution — how you think and speak is the vehicle for your highest growth. Your words, ideas, and way of understanding carry evolutionary weight.",
+    coreQuestion: "What truth are you being called to articulate more fully?",
+    elementalDynamic: "Intellectual expression aligned with soul's direction",
+    shadowExpression: "When unconscious: mistaking verbal facility for genuine wisdom, talking around growth rather than through it",
+    giftExpression: "When integrated: teaching, writing, or communicating in ways that serve genuine evolution — your words landing exactly where they need to",
+  },
+
+  'venus-northnode-conjunction': {
+    essence: "Love, relationship, and values are aligned with soul evolution — what you're drawn to and who you love are part of your highest path. Following your heart is following your soul here.",
+    coreQuestion: "How is love calling you forward?",
+    elementalDynamic: "Love nature aligned with soul's direction",
+    shadowExpression: "When unconscious: using relationship as a destination rather than a vehicle, confusing pleasure with growth",
+    giftExpression: "When integrated: love as spiritual path — genuine connection that evolves both people toward their highest expression",
+  },
+
+  'mars-northnode-conjunction': {
+    essence: "Will, drive, and action are aligned with soul evolution — what you fight for and how you act carries evolutionary significance. Your assertiveness, when authentic, moves you forward.",
+    coreQuestion: "What are you being called to act on that your soul knows is right?",
+    elementalDynamic: "Will and drive aligned with soul's direction",
+    shadowExpression: "When unconscious: confusing ego drive with soul calling, aggressive pursuit of growth without discernment",
+    giftExpression: "When integrated: purposeful action — fighting for what genuinely matters, with the force of someone who knows why",
+  },
+
+  'jupiter-northnode-conjunction': {
+    essence: "Expansion, wisdom, and abundance are aligned with soul evolution — growth, learning, and broadening your worldview are literally your path. Trust your philosophical instincts here; they're taking you somewhere important.",
+    coreQuestion: "Where is expansion calling you?",
+    elementalDynamic: "Wisdom and expansion aligned with soul's direction",
+    shadowExpression: "When unconscious: restless seeking that never arrives, inflating personal growth into spiritual grandiosity",
+    giftExpression: "When integrated: genuine wisdom-seeking that serves both personal evolution and the broader world",
+  },
+
+  'saturn-northnode-conjunction': {
+    essence: "Discipline, structure, and responsibility are aligned with soul evolution — the hard work you're being called to do is exactly what your soul needs. Maturity and accountability are your evolutionary path.",
+    coreQuestion: "What responsibility are you being called to take on that you've been avoiding?",
+    elementalDynamic: "Structure and discipline aligned with soul's direction",
+    shadowExpression: "When unconscious: equating suffering with growth, creating unnecessary difficulty in the name of evolution",
+    giftExpression: "When integrated: mastery through dedicated effort — building something that genuinely serves, one careful step at a time",
   },
 };
 

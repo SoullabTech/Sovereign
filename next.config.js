@@ -1,5 +1,22 @@
+const { execSync } = require('child_process');
+
+// Capture git SHA at build time — surfaced as NEXT_PUBLIC_BUILD_SHA in the client
+let BUILD_SHA = 'dev';
+let BUILD_DATE = new Date().toISOString().slice(0, 10);
+try {
+  BUILD_SHA = execSync('git rev-parse --short HEAD', { stdio: ['pipe', 'pipe', 'ignore'] })
+    .toString()
+    .trim();
+} catch {
+  // Not a git repo or git unavailable — keep 'dev'
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_SHA: BUILD_SHA,
+    NEXT_PUBLIC_BUILD_DATE: BUILD_DATE,
+  },
   typescript: {
     // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
     // Excludes _backend, labtools, and tests
@@ -35,6 +52,15 @@ const nextConfig = {
       return [
         {
           source: '/sw.js',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'no-cache, no-store, must-revalidate'
+            }
+          ]
+        },
+        {
+          source: '/consciousness-sw.js',
           headers: [
             {
               key: 'Cache-Control',

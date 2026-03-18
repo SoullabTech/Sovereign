@@ -43,6 +43,8 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     activation < 0.55 ? 'medium' :
     activation < 0.75 ? 'high' : 'very_high';
 
+  const modeUpper = mode.toUpperCase();
+
   // ─── WARMTH (from posture + sanctuary + mode) ───
   let warmth: ProsodyWarmth = 'neutral';
   if (sanctuary) {
@@ -51,9 +53,9 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     warmth = 'warm';
   } else if (posture.includes('WITNESS')) {
     warmth = 'very_warm';
-  } else if (mode.toUpperCase().includes('CARE')) {
-    warmth = 'warm';
-  } else if (mode.toUpperCase().includes('REGULATOR')) {
+  } else if (modeUpper.includes('CARE')) {
+    warmth = 'very_warm'; // Care mode is always fully warm
+  } else if (modeUpper.includes('REGULATOR')) {
     warmth = activation > 0.5 ? 'warm' : 'neutral';
   }
 
@@ -71,7 +73,7 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     brevity === 'expansive' ? 'slow' : 'steady';
 
   // High activation with regulator mode → slow down to settle
-  if (activation > 0.6 && mode.toUpperCase().includes('REGULATOR')) {
+  if (activation > 0.6 && modeUpper.includes('REGULATOR')) {
     pace = 'slow';
   }
 
@@ -79,7 +81,7 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
   let clarity: ProsodyClarity = 'clear';
   if (posture.includes('HOLD') || sanctuary) {
     clarity = 'soft';
-  } else if (mode.toUpperCase().includes('NOTE')) {
+  } else if (modeUpper.includes('NOTE') || modeUpper.includes('SCRIBE')) {
     clarity = 'crisp'; // Scribe mode is clear and precise
   }
 
@@ -87,17 +89,52 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
   let emphasis: ProsodyEmphasis = 'minimal';
   if (posture.includes('LEAD') || posture.includes('GUIDE')) {
     emphasis = 'selective';
-  } else if (mode.toUpperCase().includes('NAVIGATOR')) {
+  } else if (modeUpper.includes('NAVIGATOR')) {
     emphasis = 'selective';
-  } else if (mode.toUpperCase().includes('MYTHOPOET')) {
+  } else if (modeUpper.includes('MYTHOPOET')) {
     emphasis = activation > 0.4 ? 'selective' : 'minimal';
+  } else if (modeUpper.includes('NOTE') || modeUpper.includes('SCRIBE')) {
+    emphasis = 'selective'; // Scribe highlights key terms precisely
+  }
+
+  // ─── MODE SHAPING (apply mode-level corrections over relational stack values) ───
+  //
+  // The relational stack (posture, activation, element) drives the base values.
+  // Mode shaping ensures the primary voice mode always has a clearly audible
+  // character — Care feels genuinely different from Note and Talk even when
+  // relational state is similar.
+  //
+  // CARE: slow breathing, soft edges, deep warmth — counsel with presence
+  if (modeUpper.includes('CARE')) {
+    // Care is never brisk — even brief responses settle rather than rush
+    if (pace === 'brisk') pace = 'steady';
+    // Care softens delivery edges when not already soft
+    if (clarity === 'clear') clarity = 'soft';
+  }
+
+  // NOTE / SCRIBE: efficient, precise, clear — information delivery without warmth inflation
+  if (modeUpper.includes('NOTE') || modeUpper.includes('SCRIBE')) {
+    // Note never lingers — slow becomes steady, steady becomes brisk
+    if (pace === 'slow') pace = 'steady';
+    else if (pace === 'steady') pace = 'brisk';
+    // Note never over-warms — very_warm is reserved for Care/sanctuary
+    if (warmth === 'very_warm') warmth = 'warm';
+    else if (warmth === 'warm' && !posture.includes('HOLD') && !posture.includes('MEET')) {
+      warmth = 'neutral';
+    }
   }
 
   // ─── PAUSE TIMING (base values, scaled by range later) ───
-  const pauseMs = {
-    beforeSentence: sanctuary ? 120 : 80,
-    afterSentence: sanctuary ? 180 : 120,
-  };
+  // Sanctuary: deepest pauses (full breathing room)
+  // Care: longer pauses (settle between sentences, hold space)
+  // Note: short pauses (efficient delivery, no lingering)
+  // Default: moderate conversational pauses
+  const pauseMs = (() => {
+    if (sanctuary) return { beforeSentence: 120, afterSentence: 180 };
+    if (modeUpper.includes('CARE')) return { beforeSentence: 100, afterSentence: 160 };
+    if (modeUpper.includes('NOTE') || modeUpper.includes('SCRIBE')) return { beforeSentence: 50, afterSentence: 80 };
+    return { beforeSentence: 80, afterSentence: 120 };
+  })();
 
   // ─── INTENT TAG (what kind of delivery this is) ───
   let intentTag: ProsodyIntentTag | undefined;
@@ -107,9 +144,11 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     intentTag = 'attune';
   } else if (posture.includes('LEAD')) {
     intentTag = 'encourage';
-  } else if (mode.toUpperCase().includes('NOTE')) {
+  } else if (modeUpper.includes('CARE')) {
+    intentTag = 'attune'; // Care is always an attuning presence
+  } else if (modeUpper.includes('NOTE') || modeUpper.includes('SCRIBE')) {
     intentTag = 'instruct';
-  } else if (mode.toUpperCase().includes('MYTHOPOET')) {
+  } else if (modeUpper.includes('MYTHOPOET')) {
     intentTag = 'play';
   } else {
     intentTag = 'attune'; // Default: warm presence
@@ -161,6 +200,9 @@ export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
     emphasis,
     pauseMs,
     intentTag,
-    ssmlOk: false, // Only enable for engines we explicitly trust
+    // ssmlOk: true  — SSML is generated but only consumed by engines that
+    // support it (Kokoro-FastAPI).  OpenAI and PersonaPlex paths in
+    // synthesizeWithFallback always use plain text; they never see SSML.
+    ssmlOk: true,
   };
 }

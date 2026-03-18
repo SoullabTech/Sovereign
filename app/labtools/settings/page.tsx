@@ -71,7 +71,7 @@ export default function LabToolsSettingsPage() {
     tools: {
       autoSaveJournal: true,
       defaultOracleSystem: 'iching',
-      voiceProvider: 'openai',
+      voiceProvider: 'sovereign',
       showBetaFeatures: false,
     },
   });
@@ -148,7 +148,7 @@ export default function LabToolsSettingsPage() {
         tools: {
           autoSaveJournal: true,
           defaultOracleSystem: 'iching',
-          voiceProvider: 'openai',
+          voiceProvider: 'sovereign',
           showBetaFeatures: false,
         },
       });

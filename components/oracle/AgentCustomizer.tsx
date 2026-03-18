@@ -191,7 +191,7 @@ export const AgentCustomizer: React.FC<AgentCustomizerProps> = ({
               <button
                 onClick={async () => {
                   try {
-                    // Use OpenAI TTS for preview - NO browser TTS fallback
+                    // Use sovereign TTS for preview
                     const text = `Hello, I'm ${customName}. ${config.voice === 'maya'
                       ? "It's good to see you."
                       : "Good to meet you."}`;
@@ -201,7 +201,7 @@ export const AgentCustomizer: React.FC<AgentCustomizerProps> = ({
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         text,
-                        voice: 'alloy' // OpenAI Alloy voice
+                        voice: 'maia_core' // Sovereign voice identity
                       })
                     });
 
