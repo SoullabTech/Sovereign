@@ -503,7 +503,7 @@ export default function PortalHomePage() {
                 icon: TrendingUp,
                 step: '03',
                 title: 'Track your progress',
-                desc: 'Patterns emerge across sessions. You'll see your own movement clearly over time.',
+                desc: "Patterns emerge across sessions. You'll see your own movement clearly over time.",
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative pl-10">
