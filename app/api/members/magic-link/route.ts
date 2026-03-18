@@ -137,8 +137,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build magic link
-    const magicLink = `https://soullab.life/api/members/magic-link?token=${token}`;
+    // Build magic link — points to client-side page, NOT the API directly.
+    // Email scanners (Gmail, ProtonMail, Outlook) prefetch links in emails.
+    // If the link hit the API, scanners would consume the token before the user clicks.
+    // The /magic-link page shows a button; only a real user click redeems the token.
+    const baseOrigin = process.env.NEXTAUTH_URL || process.env.BASE_URL || 'https://soullab.life';
+    const magicLink = `${baseOrigin}/magic-link?token=${token}`;
 
     // Determine flow: existing member or new user
     const isExistingMember = !!member;
