@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowLeft, Clock, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface Service {
@@ -15,7 +15,8 @@ interface Service {
 }
 
 interface TimeSlot {
-  time: string;
+  start: string;
+  end: string;
   available: boolean;
 }
 
@@ -30,394 +31,420 @@ function BookingContent() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [step, setStep] = useState<'service' | 'datetime' | 'confirm'>('service');
+  const [step, setStep] = useState<'service' | 'datetime' | 'info' | 'confirm'>('service');
+
+  const [clientName, setClientName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientNotes, setClientNotes] = useState('');
 
   // Fetch services
   useEffect(() => {
-    async function fetchServices() {
-      try {
-        const res = await fetch(`/api/portal/${slug}/services`);
-        if (res.ok) {
-          const data = await res.json();
-          setServices(data.services || []);
-
-          // Pre-select service if provided in URL
-          if (serviceId && data.services) {
-            const service = data.services.find((s: Service) => s.id === serviceId);
-            if (service) {
-              setSelectedService(service);
-              setStep('datetime');
-            }
-          }
+    if (!slug) return;
+    fetch(`/api/portal/${slug}/services`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setServices(data.services || []);
+        if (serviceId) {
+          const svc = (data.services || []).find((s: Service) => s.id === serviceId);
+          if (svc) { setSelectedService(svc); setStep('datetime'); }
         }
-      } catch (err) {
-        console.error('Failed to load services:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (slug) {
-      fetchServices();
-    }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [slug, serviceId]);
 
-  // Fetch availability when date changes
+  // Fetch time slots when date changes
   useEffect(() => {
-    async function fetchAvailability() {
-      if (!selectedDate || !selectedService) return;
-
-      try {
-        const dateStr = selectedDate.toISOString().split('T')[0];
-        const res = await fetch(
-          `/api/portal/${slug}/availability?date=${dateStr}&service_id=${selectedService.id}`
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setTimeSlots(data.slots || []);
-        }
-      } catch (err) {
-        console.error('Failed to load availability:', err);
-        // Mock some slots for demo
-        setTimeSlots([
-          { time: '10:00', available: true },
-          { time: '11:00', available: true },
-          { time: '14:00', available: true },
-          { time: '15:00', available: false },
-          { time: '16:00', available: true },
-        ]);
-      }
-    }
-
-    fetchAvailability();
+    if (!selectedDate || !selectedService) { setTimeSlots([]); return; }
+    setLoadingSlots(true);
+    setSelectedTime(null);
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    fetch(`/api/portal/${slug}/availability?date=${dateStr}&service=${selectedService.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setTimeSlots(data?.slots || []))
+      .catch(() => setTimeSlots([]))
+      .finally(() => setLoadingSlots(false));
   }, [selectedDate, selectedService, slug]);
 
   // Calendar helpers
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDay = firstDay.getDay();
-
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days: (Date | null)[] = [];
-
-    // Add empty days for padding
-    for (let i = 0; i < startingDay; i++) {
-      days.push(null);
-    }
-
-    // Add actual days
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
     return days;
   };
 
-  const isDateAvailable = (date: Date) => {
+  const isDateSelectable = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date >= today && date.getDay() !== 0; // Not in past and not Sunday
+    return date >= today;
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const formatTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
   };
+
+  async function handleConfirm() {
+    if (!selectedService || !selectedDate || !selectedTime || !clientName || !clientEmail) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const res = await fetch(`/api/portal/${slug}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: selectedService.id,
+          date: dateStr,
+          time: selectedTime,
+          clientName,
+          clientEmail,
+          notes: clientNotes,
+        }),
+      });
+      if (res.ok) {
+        setConfirmed(true);
+      } else {
+        const d = await res.json();
+        setError(d.error || 'Something went wrong. Please try again.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const STEPS = ['service', 'datetime', 'info', 'confirm'] as const;
+  const stepIndex = STEPS.indexOf(step);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D0B14] flex items-center justify-center">
+      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (confirmed) {
+    return (
+      <div className="min-h-screen bg-[#09090F] flex items-center justify-center px-6">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full text-center"
         >
-          <Sparkles className="w-12 h-12 text-[#D4AF37]" />
+          <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
+            <Check size={24} className="text-emerald-400" />
+          </div>
+          <h1 className="text-2xl font-semibold text-white mb-2">Booking confirmed</h1>
+          <p className="text-sm text-zinc-400 mb-2">
+            {selectedService?.name} on {selectedDate && formatDate(selectedDate)} at {selectedTime && formatTime(selectedTime)}
+          </p>
+          <p className="text-sm text-zinc-500 mb-8">
+            A confirmation email has been sent to {clientEmail}.
+          </p>
+          <Link
+            href={`/portal/${slug}`}
+            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Back to portal
+          </Link>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen py-12 px-4"
-      style={{
-        background: 'linear-gradient(180deg, #0D0B14 0%, #1A1625 50%, #0D0B14 100%)',
-      }}
-    >
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-[#09090F] text-white">
+      <div className="max-w-2xl mx-auto px-6 py-12">
+
+        {/* Back */}
         <div className="mb-8">
           <Link
-            href={`/portal/${slug}/services`}
-            className="inline-flex items-center text-[#9D8EC7] hover:text-[#D4AF37] mb-6 transition-colors"
+            href={`/portal/${slug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Services
+            <ArrowLeft size={14} />
+            Back
           </Link>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-cinzel text-3xl md:text-4xl text-[#F5F0FF] text-center"
-          >
-            Book a Reading
-          </motion.h1>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-12">
-          {['service', 'datetime', 'confirm'].map((s, i) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-quicksand
-                          ${step === s || ['datetime', 'confirm'].indexOf(step) > ['datetime', 'confirm'].indexOf(s)
-                            ? 'bg-[#D4AF37] text-[#0D0B14]'
-                            : 'bg-[#251F33] text-[#6B6280]'
-                          }`}
-              >
-                {i + 1}
+        <h1 className="text-2xl font-semibold text-white mb-2">Book a session</h1>
+
+        {/* Progress */}
+        <div className="flex items-center gap-2 mb-10">
+          {(['Service', 'Date & Time', 'Your info', 'Review'] as const).map((label, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                ${i <= stepIndex ? 'bg-white text-zinc-900' : 'bg-zinc-800 text-zinc-500'}`}>
+                {i < stepIndex ? <Check size={12} /> : i + 1}
               </div>
-              {i < 2 && (
-                <div
-                  className={`w-12 h-0.5 ${
-                    ['datetime', 'confirm'].indexOf(step) > i
-                      ? 'bg-[#D4AF37]'
-                      : 'bg-[#3A3347]'
-                  }`}
-                />
-              )}
+              <span className={`text-xs hidden sm:block ${i <= stepIndex ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                {label}
+              </span>
+              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-zinc-500' : 'bg-zinc-800'}`} />}
             </div>
           ))}
         </div>
 
-        {/* Step 1: Select Service */}
+        {/* Step 1: Service */}
         {step === 'service' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h2 className="font-cinzel text-xl text-[#F5F0FF] mb-6 text-center">
-              Select a Service
-            </h2>
-            <div className="space-y-4">
-              {services.map((service) => (
+          <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
+            <h2 className="text-sm font-medium text-zinc-400 mb-4 uppercase tracking-wider">Choose a service</h2>
+            <div className="space-y-3">
+              {services.map(svc => (
                 <button
-                  key={service.id}
-                  onClick={() => {
-                    setSelectedService(service);
-                    setStep('datetime');
-                  }}
-                  className={`w-full p-6 rounded-xl text-left transition-all duration-300
-                            ${selectedService?.id === service.id
-                              ? 'bg-[#251F33] border-2 border-[#D4AF37]'
-                              : 'bg-[#1A1625]/80 border border-[#3A3347] hover:border-[#9D8EC7]/50'
-                            }`}
+                  key={svc.id}
+                  onClick={() => { setSelectedService(svc); setStep('datetime'); }}
+                  className="w-full text-left p-5 rounded-xl bg-zinc-900 border border-zinc-800
+                             hover:border-zinc-500 transition-colors group"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-cinzel text-lg text-[#F5F0FF]">{service.name}</h3>
-                    <span className="font-quicksand text-[#E8B4CB]">
-                      ${(service.price_cents / 100).toFixed(0)}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-white group-hover:text-zinc-100 mb-1">{svc.name}</p>
+                      {svc.description && (
+                        <p className="text-xs text-zinc-500 line-clamp-2 mb-2">{svc.description}</p>
+                      )}
+                      <div className="flex items-center gap-1 text-xs text-zinc-600">
+                        <Clock size={11} />
+                        {svc.duration_minutes} min
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-white ml-4 flex-shrink-0">
+                      ${(svc.price_cents / 100).toFixed(0)}
                     </span>
-                  </div>
-                  <p className="font-quicksand text-sm text-[#A89FC4] mb-2">
-                    {service.description}
-                  </p>
-                  <div className="flex items-center text-xs text-[#6B6280]">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {service.duration_minutes} minutes
                   </div>
                 </button>
               ))}
+              {services.length === 0 && (
+                <p className="text-sm text-zinc-500 text-center py-8">No services available yet.</p>
+              )}
             </div>
           </motion.div>
         )}
 
-        {/* Step 2: Select Date & Time */}
+        {/* Step 2: Date & Time */}
         {step === 'datetime' && selectedService && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {/* Selected Service Summary */}
-            <div className="mb-8 p-4 rounded-xl bg-[#251F33]/50 border border-[#3A3347]">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-cinzel text-[#F5F0FF]">{selectedService.name}</p>
-                  <p className="text-sm text-[#6B6280]">{selectedService.duration_minutes} min</p>
-                </div>
-                <button
-                  onClick={() => setStep('service')}
-                  className="text-sm text-[#9D8EC7] hover:text-[#D4AF37]"
-                >
-                  Change
-                </button>
+          <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
+            {/* Service summary */}
+            <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+              <div>
+                <p className="text-sm font-medium text-white">{selectedService.name}</p>
+                <p className="text-xs text-zinc-500">{selectedService.duration_minutes} min · ${(selectedService.price_cents / 100).toFixed(0)}</p>
               </div>
+              <button onClick={() => setStep('service')} className="text-xs text-zinc-500 hover:text-white transition-colors">
+                Change
+              </button>
             </div>
 
             {/* Calendar */}
-            <div className="mb-8">
+            <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  className="p-2 text-[#9D8EC7] hover:text-[#D4AF37]"
+                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft size={18} />
                 </button>
-                <h3 className="font-cinzel text-lg text-[#F5F0FF]">
+                <span className="text-sm font-medium text-white">
                   {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                </h3>
+                </span>
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  className="p-2 text-[#9D8EC7] hover:text-[#D4AF37]"
+                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight size={18} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center text-xs text-[#6B6280] py-2">
-                    {day}
-                  </div>
+              <div className="grid grid-cols-7 gap-1 mb-1">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                  <div key={d} className="text-center text-xs text-zinc-600 py-1.5">{d}</div>
                 ))}
               </div>
 
               <div className="grid grid-cols-7 gap-1">
-                {getDaysInMonth(currentMonth).map((date, i) => (
-                  <button
-                    key={i}
-                    disabled={!date || !isDateAvailable(date)}
-                    onClick={() => date && setSelectedDate(date)}
-                    className={`aspect-square rounded-lg text-sm font-quicksand transition-all
-                              ${!date ? 'invisible' : ''}
-                              ${date && !isDateAvailable(date) ? 'text-[#3A3347] cursor-not-allowed' : ''}
-                              ${date && isDateAvailable(date) && selectedDate?.toDateString() === date.toDateString()
-                                ? 'bg-[#D4AF37] text-[#0D0B14]'
-                                : date && isDateAvailable(date)
-                                ? 'text-[#F5F0FF] hover:bg-[#251F33]'
-                                : ''
-                              }`}
-                  >
-                    {date?.getDate()}
-                  </button>
-                ))}
+                {getDaysInMonth(currentMonth).map((date, i) => {
+                  const isSelected = date && selectedDate?.toDateString() === date.toDateString();
+                  const isSelectable = date && isDateSelectable(date);
+                  return (
+                    <button
+                      key={i}
+                      disabled={!date || !isSelectable}
+                      onClick={() => date && setSelectedDate(date)}
+                      className={`aspect-square rounded-lg text-sm font-medium transition-colors
+                        ${!date ? 'invisible' : ''}
+                        ${date && !isSelectable ? 'text-zinc-700 cursor-not-allowed' : ''}
+                        ${isSelected ? 'bg-white text-zinc-900' : ''}
+                        ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-zinc-800' : ''}
+                      `}
+                    >
+                      {date?.getDate()}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Time Slots */}
+            {/* Time slots */}
             {selectedDate && (
               <div>
-                <h4 className="font-cinzel text-lg text-[#F5F0FF] mb-4">
-                  {formatDate(selectedDate)}
-                </h4>
-                <div className="grid grid-cols-3 gap-3">
-                  {timeSlots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      disabled={!slot.available}
-                      onClick={() => setSelectedTime(slot.time)}
-                      className={`py-3 rounded-lg font-quicksand text-sm transition-all
-                                ${!slot.available ? 'bg-[#1A1625] text-[#3A3347] cursor-not-allowed' : ''}
-                                ${slot.available && selectedTime === slot.time
-                                  ? 'bg-[#D4AF37] text-[#0D0B14]'
-                                  : slot.available
-                                  ? 'bg-[#251F33] text-[#F5F0FF] hover:bg-[#3A3347]'
-                                  : ''
-                                }`}
-                    >
-                      {slot.time}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-xs text-zinc-500 mb-3">{formatDate(selectedDate)}</p>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-5 h-5 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+                  </div>
+                ) : timeSlots.length === 0 ? (
+                  <p className="text-sm text-zinc-500 text-center py-6">No available times on this date.</p>
+                ) : (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {timeSlots.filter(s => s.available).map(slot => (
+                      <button
+                        key={slot.start}
+                        onClick={() => setSelectedTime(slot.start)}
+                        className={`py-2.5 rounded-lg text-sm font-medium transition-colors
+                          ${selectedTime === slot.start
+                            ? 'bg-white text-zinc-900'
+                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
+                          }`}
+                      >
+                        {formatTime(slot.start)}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Continue Button */}
             {selectedDate && selectedTime && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6">
                 <button
-                  onClick={() => setStep('confirm')}
-                  className="w-full py-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#C9A962]
-                           text-[#0D0B14] font-quicksand font-semibold
-                           hover:shadow-lg hover:shadow-[#D4AF37]/20 transition-all"
+                  onClick={() => setStep('info')}
+                  className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
                 >
-                  Continue to Confirmation
+                  Continue
                 </button>
               </motion.div>
             )}
           </motion.div>
         )}
 
-        {/* Step 3: Confirmation */}
-        {step === 'confirm' && selectedService && selectedDate && selectedTime && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="p-8 rounded-2xl bg-[#1A1625]/80 border border-[#3A3347] mb-8">
-              <h2 className="font-cinzel text-2xl text-[#F5F0FF] mb-6 text-center">
-                Confirm Your Booking
-              </h2>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between py-3 border-b border-[#3A3347]">
-                  <span className="text-[#A89FC4]">Service</span>
-                  <span className="text-[#F5F0FF] font-quicksand">{selectedService.name}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[#3A3347]">
-                  <span className="text-[#A89FC4]">Date</span>
-                  <span className="text-[#F5F0FF] font-quicksand">{formatDate(selectedDate)}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[#3A3347]">
-                  <span className="text-[#A89FC4]">Time</span>
-                  <span className="text-[#F5F0FF] font-quicksand">{selectedTime}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[#3A3347]">
-                  <span className="text-[#A89FC4]">Duration</span>
-                  <span className="text-[#F5F0FF] font-quicksand">{selectedService.duration_minutes} minutes</span>
-                </div>
-                <div className="flex justify-between py-3">
-                  <span className="text-[#A89FC4]">Total</span>
-                  <span className="text-[#E8B4CB] font-cinzel text-xl">
-                    ${(selectedService.price_cents / 100).toFixed(0)}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#C9A962]
-                         text-[#0D0B14] font-quicksand font-semibold
-                         hover:shadow-lg hover:shadow-[#D4AF37]/20 transition-all"
-              >
-                <Calendar className="w-5 h-5 inline mr-2" />
-                Confirm Booking
-              </button>
-
-              <button
-                onClick={() => setStep('datetime')}
-                className="w-full mt-4 py-3 text-[#9D8EC7] hover:text-[#D4AF37] transition-colors"
-              >
-                Go Back
-              </button>
+        {/* Step 3: Your Info */}
+        {step === 'info' && (
+          <motion.div initial={{ y: 8 }} animate={{ y: 0 }} className="space-y-4">
+            <h2 className="text-sm font-medium text-zinc-400 mb-4 uppercase tracking-wider">Your information</h2>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1.5">Full name</label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={e => setClientName(e.target.value)}
+                placeholder="Your name"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+              />
             </div>
-
-            <p className="text-center text-sm text-[#6B6280]">
-              You&apos;ll receive a confirmation email with details and meeting link.
-            </p>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1.5">Email address</label>
+              <input
+                type="email"
+                value={clientEmail}
+                onChange={e => setClientEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1.5">Notes (optional)</label>
+              <textarea
+                value={clientNotes}
+                onChange={e => setClientNotes(e.target.value)}
+                placeholder="Anything you'd like to share before the session"
+                rows={3}
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+              />
+            </div>
+            <button
+              onClick={() => setStep('confirm')}
+              disabled={!clientName || !clientEmail}
+              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+                         transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+            >
+              Review booking
+            </button>
           </motion.div>
         )}
+
+        {/* Step 4: Confirm */}
+        {step === 'confirm' && selectedService && selectedDate && selectedTime && (
+          <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
+            <h2 className="text-sm font-medium text-zinc-400 mb-6 uppercase tracking-wider">Review & confirm</h2>
+            <div className="rounded-xl border border-zinc-800 overflow-hidden mb-6">
+              {[
+                { label: 'Service', value: selectedService.name },
+                { label: 'Date', value: formatDate(selectedDate) },
+                { label: 'Time', value: formatTime(selectedTime) },
+                { label: 'Duration', value: `${selectedService.duration_minutes} min` },
+                { label: 'Name', value: clientName },
+                { label: 'Email', value: clientEmail },
+                { label: 'Total', value: `$${(selectedService.price_cents / 100).toFixed(0)}` },
+              ].map((row, i, arr) => (
+                <div
+                  key={row.label}
+                  className={`flex items-center justify-between px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-zinc-800' : ''}`}
+                >
+                  <span className="text-xs text-zinc-500">{row.label}</span>
+                  <span className={`text-sm font-medium ${row.label === 'Total' ? 'text-white' : 'text-zinc-300'}`}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-400 mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                {error}
+              </p>
+            )}
+
+            <button
+              onClick={handleConfirm}
+              disabled={submitting}
+              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+                         transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Booking…' : 'Confirm booking'}
+            </button>
+            <button
+              onClick={() => setStep('info')}
+              className="w-full mt-3 py-2.5 text-sm text-zinc-500 hover:text-white transition-colors"
+            >
+              Go back
+            </button>
+          </motion.div>
+        )}
+
       </div>
     </div>
   );
@@ -426,8 +453,8 @@ function BookingContent() {
 export default function PortalBookPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0D0B14] flex items-center justify-center">
-        <Sparkles className="w-12 h-12 text-[#D4AF37] animate-spin" />
+      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
       </div>
     }>
       <BookingContent />
