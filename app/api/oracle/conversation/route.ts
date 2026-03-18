@@ -119,6 +119,12 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
+/** Phase 19–21: Symbolic telemetry wiring */
+import { buildPromptIngressItem } from '@/lib/symbolic/promptIngressGovernance';
+import { telemetryFromIngressItem } from '@/lib/symbolic/symbolicTelemetry';
+import { recordSymbolicEvent } from '@/lib/symbolic/telemetryStore';
+import { persistSymbolicTelemetryBatch } from '@/lib/symbolic/symbolicTelemetryPersistence';
+
 // Skip during static export (Capacitor builds)
 
 /**
@@ -787,6 +793,104 @@ export async function POST(request: NextRequest) {
       });
     } else if (astrologyContextResult.status === 'fulfilled') {
       console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+    }
+
+    // ── Phase 20: Symbolic telemetry — item-level ingress recording ───────────
+    // One event per governed symbolic item, not one per domain.
+    // Governance (buildPromptIngressItem) runs per item so promptRole,
+    // allowedIn* surfaces, and blocked status reflect real per-item decisions.
+    // Fire-and-forget — never blocks the oracle, never propagates errors.
+    try {
+      let _telemetryCount = 0;
+      const _telemetryEvents = [];
+
+      // Build, record to in-memory store, collect for DB batch, and count.
+      const _record = (input) => {
+        const item = buildPromptIngressItem(input);
+        const event = telemetryFromIngressItem(item, sessionId);
+        recordSymbolicEvent(event);
+        _telemetryEvents.push(event);
+        _telemetryCount++;
+        return item;
+      };
+
+      // ── Astrology ──
+      if (astrologyContext) {
+        if (astrologyContext.hasBirthData) {
+          // Birth chart — authoritative (backed by ephemeris + real birth data)
+          _record({
+            traceId: `astro-natal-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'authoritative',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.birthChart
+              ? `${astrologyContext.birthChart.sun?.sign} sun · ${astrologyContext.birthChart.moon?.sign} moon · ${astrologyContext.birthChart.ascendant?.sign} rising`
+              : '',
+          });
+
+          // Transit highlights — derived (interpretations, one item per highlight)
+          for (const highlight of astrologyContext.transitHighlights ?? []) {
+            _record({
+              traceId: `astro-transit-${randomUUID()}`,
+              domain: 'astrology',
+              authority: 'derived',
+              renderBlocked: false,
+              claimTypes: [],
+              content: highlight.description ?? '',
+            });
+          }
+        } else {
+          // No birth data — cosmic weather only, fallback authority
+          _record({
+            traceId: `astro-cosmic-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'fallback',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.formattedContext ?? '',
+          });
+        }
+      }
+
+      // ── Field sensing ── (single derived item — one field state per call)
+      if (panconsciousField?.axisMundi) {
+        _record({
+          traceId: `field-${randomUUID()}`,
+          domain: 'field',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: [],
+        });
+      }
+
+      // ── Symbol patterns ── (one item per detected pattern, governed independently)
+      // Each pattern gets its own promptRole assignment — some may become question_seed,
+      // others interpretation, depending on content framing and authority.
+      for (const pattern of symbolPatterns ?? []) {
+        _record({
+          traceId: `pattern-${randomUUID()}`,
+          domain: 'pattern_ledger',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: ['recurring_pattern'],
+          content: pattern.description ?? pattern.archetypalCore ?? '',
+        });
+      }
+
+      if (_telemetryCount > 0) {
+        console.log('[Symbolic Telemetry]', { itemCount: _telemetryCount, sessionId });
+        // Phase 21–23: persist to DB with route/mode/requestId attribution (fire-and-forget)
+        persistSymbolicTelemetryBatch(_telemetryEvents, {
+          memberId: userId,
+          sessionId,
+          route: 'oracle/conversation',
+          mode: body?.element ?? undefined,
+          requestId,
+        });
+      }
+    } catch {
+      // Telemetry must never disrupt the oracle pipeline
     }
 
     let patternOffer: Awaited<ReturnType<typeof getPatternOffer>> = null;

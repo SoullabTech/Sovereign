@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   BarChart3,
@@ -15,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useDailyLog, useProofSignals, DailyLog } from '@/hooks/useStudioData';
+import { SymbolicTelemetryPanel } from '@/components/dev/SymbolicTelemetryPanel';
 
 const targetHours = 8;
 
@@ -26,6 +28,8 @@ function getDayName(dateString: string): string {
 
 export default function MetricsPage() {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
+  const searchParams = useSearchParams();
+  const showSymbolic = searchParams.get('symbolic') === '1';
   const { logs, loading: logsLoading, refetch: refetchLogs } = useDailyLog();
   const { current: proofSignals, loading: signalsLoading, refetch: refetchSignals } = useProofSignals();
 
@@ -330,6 +334,13 @@ export default function MetricsPage() {
           </div>
         </div>
       </div>
+
+      {/* Symbolic Telemetry — add ?symbolic=1 to URL to show */}
+      {showSymbolic && (
+        <div className="mt-6">
+          <SymbolicTelemetryPanel />
+        </div>
+      )}
     </div>
   );
 }

@@ -13,10 +13,26 @@ import { query } from '@/lib/db/postgres';
 import {
   calculateBirthChart,
   calculateTransits,
+  getMoonPhaseData,
   type BirthData,
   type BirthChart,
   type PlanetPosition,
 } from '@/lib/astrology/ephemerisCalculator';
+import {
+  type AstroEvent,
+  ASTRO_EVENTS_2026,
+  getUpcomingEvents,
+  getActiveEvents,
+  confidenceLabel,
+} from '@/lib/astrology/transitSnapshot';
+import {
+  buildTransitImpacts,
+  formatTransitImpacts,
+} from '@/lib/astrology/transitInterpretation';
+import {
+  buildAstrologyPayload,
+  type AstrologyContextPayload,
+} from '@/lib/astrology/astrologyPayload';
 import {
   calculateCompleteMayanProfile,
   getTodaysMayanSign,
@@ -65,6 +81,8 @@ export interface AstrologyContext {
   currentTransits: CurrentTransit[];
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
+  events?: AstroEvent[];             // locked event table — authoritative, no model inference
+  payload?: AstrologyContextPayload; // typed, source-tagged — use for dashboards, reports, API
   /** Always-included status directive (~250 chars). Never truncate this. */
   contextHeader: string;
   /** Prioritized detail — natal identity first, cosmic weather last. Can be capped. */
@@ -186,6 +204,19 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     // Get today's Mayan sign (always available)
     const todaysMayanSign = getTodaysMayanSign();
 
+    // Load upcoming astronomical events from locked table (60-day window)
+    const events = getUpcomingEvents(ASTRO_EVENTS_2026, 60);
+
+    // Build typed payload — source/confidence tagged, separated by layer
+    const moonPhase = getMoonPhaseFromEphemeris();
+    const transitImpacts = birthChart ? buildTransitImpacts(birthChart, currentTransits) : [];
+    const payload = buildAstrologyPayload({
+      currentTransits,
+      moonPhase,
+      events,
+      impacts: transitImpacts,
+    });
+
     // Celestial events: eclipses, exact lunations, retrograde stations, seasonal markers
     let celestialEvents: CelestialEventsSnapshot | null = null;
     try {
@@ -220,6 +251,8 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       currentTransits,
       transitHighlights,
       relevantPatterns,
+      events,
+      payload,
       contextHeader,
       contextDetail,
       formattedContext: contextHeader + contextDetail, // backward compat
@@ -778,38 +811,36 @@ function getAspectMeaning(type: string): string {
 /**
  * Calculate current moon phase
  */
-function getMoonPhase(): { phase: string; meaning: string; percentage: number } {
-  const now = new Date();
-  const synodicMonth = 29.53059; // days
-
-  // Known new moon: January 11, 2024
-  const knownNewMoon = new Date('2024-01-11T11:57:00Z');
-  const daysSinceNewMoon = (now.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
-  const moonAge = daysSinceNewMoon % synodicMonth;
-  const percentage = (moonAge / synodicMonth) * 100;
+/**
+ * Moon phase from ephemeris (astronomy-engine).
+ * Uses actual Sun/Moon longitude difference — not synodic approximation.
+ * Replaces getMoonPhase() which used a manual reference-date calculation.
+ */
+function getMoonPhaseFromEphemeris(): { phase: string; meaning: string; percentage: number } {
+  const { degrees, percentage } = getMoonPhaseData(new Date());
 
   let phase: string;
   let meaning: string;
 
-  if (moonAge < 1.85) {
+  if (degrees < 15 || degrees >= 345) {
     phase = 'New Moon';
     meaning = 'new beginnings, setting intentions, introspection';
-  } else if (moonAge < 7.38) {
+  } else if (degrees < 90) {
     phase = 'Waxing Crescent';
     meaning = 'building momentum, taking first steps, hope';
-  } else if (moonAge < 9.23) {
+  } else if (degrees < 105) {
     phase = 'First Quarter';
     meaning = 'action, decisions, overcoming obstacles';
-  } else if (moonAge < 14.77) {
+  } else if (degrees < 180) {
     phase = 'Waxing Gibbous';
     meaning = 'refinement, adjustment, almost there';
-  } else if (moonAge < 16.61) {
+  } else if (degrees < 195) {
     phase = 'Full Moon';
     meaning = 'culmination, illumination, heightened emotions';
-  } else if (moonAge < 22.15) {
+  } else if (degrees < 270) {
     phase = 'Waning Gibbous';
     meaning = 'gratitude, sharing wisdom, release begins';
-  } else if (moonAge < 24.00) {
+  } else if (degrees < 285) {
     phase = 'Last Quarter';
     meaning = 'letting go, forgiveness, clearing';
   } else {
@@ -817,7 +848,7 @@ function getMoonPhase(): { phase: string; meaning: string; percentage: number } 
     meaning = 'surrender, rest, preparation for renewal';
   }
 
-  return { phase, meaning, percentage: Math.round(percentage) };
+  return { phase, meaning, percentage };
 }
 
 /**
