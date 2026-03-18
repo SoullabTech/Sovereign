@@ -212,6 +212,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
+  const recognitionNeedsRefreshRef = useRef(false); // True after VFP abort — Chrome reused objects silently fail
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
   const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
 
@@ -542,6 +543,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Preserve isListening so the auto-resume effect can restart after TTS ends.
         if (isSpeakingRef.current || inputSuppressedRef.current) {
           console.log('⏸️ [onend] Recognition aborted quickly because MAIA started speaking - preserving listening state');
+          // 🔥 FIX: Mark for refresh. Chrome's Web Speech API silently fails onresult
+          // when start() is called on a previously-aborted object. Force fresh object next session.
+          recognitionNeedsRefreshRef.current = true;
           return;
         }
         console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
@@ -1769,8 +1773,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('📡 [Web] Permissions OK - showing listening state');
 
     // Initialize speech recognition
-    if (!recognitionRef.current) {
+    // 🔥 FIX: Always create a fresh recognition object if the previous one was aborted by VFP.
+    // Chrome's Web Speech API silently fails onresult when start() is called on an aborted object —
+    // recognition appears to start (onstart fires) but onresult never fires for user speech.
+    if (!recognitionRef.current || recognitionNeedsRefreshRef.current) {
+      if (recognitionRef.current && recognitionNeedsRefreshRef.current) {
+        console.log('🔄 [ContinuousConversation] Refreshing recognition object (was aborted by VFP)');
+        VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
+        recognitionRef.current = null;
+      }
       recognitionRef.current = initializeSpeechRecognition();
+      recognitionNeedsRefreshRef.current = false;
       console.log('🔧 [ContinuousConversation] Speech recognition initialized');
     }
 
