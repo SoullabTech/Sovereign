@@ -340,6 +340,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
       onRecordingStateChange?.(true);
+      // Web speech confirmed live — exit ARMING into LISTENING
+      if (micStateRef.current === 'ARMING') {
+        setMicState('LISTENING', 'web_recognition_started');
+        if (armingTimeoutRef.current) {
+          clearTimeout(armingTimeoutRef.current);
+          armingTimeoutRef.current = null;
+        }
+      }
       accumulatedTranscript.current = "";
 
       // Clear conversation timeout when user starts speaking
@@ -1192,6 +1200,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🛡️ CRASH PREVENTION: Track startup state to prevent concurrent starts
   const isStartingRef = useRef(false);
   const lastStartAttemptRef = useRef(0);
+  const armingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Hard timeout to exit ARMING
+  const startAttemptTokenRef = useRef(0); // Increments each attempt; stale async paths check this
 
   // Start listening
   const startListening = useCallback(async (options?: { forceOverride?: boolean }) => {
@@ -1228,13 +1238,26 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     lastStartAttemptRef.current = now;
 
-    // 🛡️ CRASH PREVENTION: Don't start if already starting
-    if (isStartingRef.current) {
-      console.log('🚫 [ContinuousConversation] Already starting - ignoring duplicate call');
+    // 🛡️ CRASH PREVENTION: Don't start if already starting or still in ARMING
+    if (isStartingRef.current || micStateRef.current === 'ARMING') {
+      console.log('🚫 [ContinuousConversation] Already starting / ARMING - ignoring duplicate tap');
       return;
     }
     isStartingRef.current = true;
+    const attemptToken = ++startAttemptTokenRef.current; // Unique token for this attempt
     setMicState('ARMING', 'startListening');
+
+    // 🛡️ Hard ARMING timeout: if mic hasn't confirmed within 2s, reset to IDLE.
+    // Prevents any async failure from leaving state stuck in ARMING.
+    if (armingTimeoutRef.current) clearTimeout(armingTimeoutRef.current);
+    armingTimeoutRef.current = setTimeout(() => {
+      if (startAttemptTokenRef.current === attemptToken && micStateRef.current === 'ARMING') {
+        console.warn('⏱️ [ContinuousConversation] ARMING timeout — resetting to IDLE');
+        setMicState('IDLE', 'arming_timeout');
+        isStartingRef.current = false;
+      }
+      armingTimeoutRef.current = null;
+    }, 2000);
 
     // 🔄 CRITICAL: Determine platform at START time
     const platform = Capacitor.getPlatform();
@@ -1251,6 +1274,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (isSpeakingRef.current && !options?.forceOverride) {
       console.log('🚫 [ContinuousConversation] BLOCKED: Cannot start listening while MAIA is speaking');
       isStartingRef.current = false;
+      setMicState('IDLE', 'start_blocked_maia_speaking');
       return;
     }
 
@@ -1281,6 +1305,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setVoiceError(ready.reason || 'Speech recognition not available');
           // DON'T show "Listening..." if we can't actually listen
           isStartingRef.current = false;
+          setMicState('IDLE', 'permissions_failed');
           return;
         }
 
