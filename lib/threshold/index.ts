@@ -248,6 +248,13 @@ export function processThreshold(input: ThresholdInput): ThresholdResult {
     };
   }
 
+  // Greetings always go to LLM — "hi Maya" (8 chars) must not get "Mm." as response
+  const greetingPattern = /^(hi|hey|hello|good\s+(morning|afternoon|evening|night)|hiya|howdy|morning|afternoon|evening)(\s+\w+)*[!.?]?$/i;
+  if (greetingPattern.test(trimmedText)) {
+    newState.consecutiveMinimal = 0;
+    return { response: null, state: newState, skipLLM: false };
+  }
+
   // Check for minimal input by length (but not matching specific patterns)
   if (trimmedText.length <= config.minimalInputMaxLength) {
     // Very short input that's not a pattern - could be partial thought
