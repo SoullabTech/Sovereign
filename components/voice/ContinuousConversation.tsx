@@ -305,6 +305,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
           if (!recognitionRef.current) return;
           try {
+            console.log('🚀 recognition.start() called on fresh object');
             recognitionRef.current.start();
             setIsRecording(true);
             console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech (hands-free)');
