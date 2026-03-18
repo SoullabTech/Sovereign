@@ -296,6 +296,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               recognitionRef.current.onresult = null;
               recognitionRef.current.onerror = null;
               recognitionRef.current.onend = null;
+              // Unregister from VFP so it doesn't abort the new object too
+              VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
             }
             recognitionRef.current = initializeSpeechRecognition();
             recognitionNeedsRefreshRef.current = false;
