@@ -11,6 +11,7 @@ import {
   chooseFrameworksForCell,
   selectCanonicalQuestion,
   createFieldEvent,
+  getAppliedFrameworkIdsForApproach,
   FRAMEWORK_REGISTRY,
   type SpiralogicCell,
   type FieldEvent,
@@ -51,6 +52,14 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { resolveConversationState, buildStateHint } from '@/lib/conversation/conversationStateResolver';
+import {
+  buildFlowTelemetry,
+  detectClarificationQuestion,
+  detectRepairSignal,
+} from '@/lib/consciousness/flowTelemetry';
+import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
+import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { loadActiveProtocol, buildProtocolContextHeader, buildProtocolListeningGuidance } from '@/lib/studio/patternInquiryProtocol';
 import { loadLedgerForRouting, promoteToLedger, loadLedgerSummaries } from '@/lib/consciousness/interpretiveLedger';
 import { loadActiveHypotheses, persistGateResult, enqueueObservation, enqueueContradiction } from '@/lib/consciousness/hypothesisBuffer';
@@ -59,16 +68,27 @@ import { extractObservations } from '@/lib/consciousness/observationExtractor';
 import type { LedgerRoutingView } from '@/lib/types/interpretive-ledger';
 import { getRecentSummaries as getRecentSessionSummaries, type SessionRemembrance } from '@/lib/scribe/sovereignSummarizer';
 import { TurnsStore } from '@/lib/memory/stores/TurnsStore';
+import { getTopPatterns } from '@/lib/patterns/getTopPatterns';
+import type { PatternSummary } from '@/lib/patterns/getTopPatterns';
+import { getTopHypotheses, buildHypothesisPromptBlock, type PatternHypothesis } from '@/lib/patterns/getTopHypotheses';
+import { detectThemes, storeThemeSignal, buildParticipatorryHint, findRecurringThemes, getRecentThemes } from '@/lib/consciousness/participatoryRealityHelper';
+import type { ThemeSignal } from '@/lib/consciousness/participatoryReality';
+import { PARTICIPATORY_ORACLE_BLOCK } from '@/lib/maia/prompts/participatoryRealityPrompt';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { deriveActiveThread, buildActiveThreadBlock } from '@/lib/consciousness/activeThread';
+import { detectCorrectionSignal } from '@/lib/consciousness/correctionDetection';
+import { validateResponseAgainstActiveThread, buildRepairInstruction } from '@/lib/consciousness/responseThreadCheck';
 import {
   buildMaiaPlan,
   buildRenderPrompt,
   finalizeMaiaResponse,
+  sanitizeDraft,
   curateMemoryWrite,
   type MAIAResponsePlan,
 } from '@/lib/maia/maiaPlanner';
+import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 
 /** Pattern Pipe (Narrative Wiring) */
 import { processPatternSignal } from '@/lib/patterns/PatternDetectionService';
@@ -83,6 +103,7 @@ import {
   clearPendingOffer,
   processPatternResponse,
 } from '@/lib/patterns/PatternResponseService';
+import { routeRequest } from '@/lib/consciousness/modelRouter';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -97,6 +118,12 @@ import { emitWisdomEvents, ensureSourceNode } from '@/lib/wisdom/wisdomGraphServ
 import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+
+/** Phase 19–21: Symbolic telemetry wiring */
+import { buildPromptIngressItem } from '@/lib/symbolic/promptIngressGovernance';
+import { telemetryFromIngressItem } from '@/lib/symbolic/symbolicTelemetry';
+import { recordSymbolicEvent } from '@/lib/symbolic/telemetryStore';
+import { persistSymbolicTelemetryBatch } from '@/lib/symbolic/symbolicTelemetryPersistence';
 
 // Skip during static export (Capacitor builds)
 
@@ -113,7 +140,7 @@ import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 export const runtime = 'nodejs';
 export const maxDuration = 60; // seconds
 
-const ORACLE_PROFILE = 'DEEP' as const;
+/** Default level used in pre-routing logs (auth failures, rate limits) */
 const ORACLE_LEVEL = 5 as const;
 
 // Optional hard gate for the premium endpoint (recommended for beta)
@@ -352,6 +379,7 @@ export async function POST(request: NextRequest) {
   let conversationDepth = 0;
   let trustLevel = 0;
   let body: ConversationBody | undefined;
+  let routedLevel = ORACLE_LEVEL; // updated by router once depth/message are known
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -486,13 +514,26 @@ export async function POST(request: NextRequest) {
     conversationDepth = conversationHistory.length;
     trustLevel = Math.min(conversationDepth / 10, 1);
 
-    // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name
+    // DEPTH TIER GATE: single config object that governs retrieval scope this turn
+    const depthConfig = classifyDepthTier(message, conversationDepth, trustLevel);
+    console.info('[depth-tier]', depthConfig.tier, {
+      depth: conversationDepth,
+      trust: `${(trustLevel * 100).toFixed(0)}%`,
+      wordCount: message.trim().split(/\s+/).length,
+      memoryPalace: depthConfig.includeMemoryPalace,
+      anamnesis: depthConfig.includeAnamnesis,
+      astrology: depthConfig.includeAstrology,
+      maxFrameworks: depthConfig.maxFrameworks,
+    });
+
+    // PARALLEL: spiral state, ledger routing view, voice prefs, cognitive profile, assistant name, patterns
     const [
       spiralState,
       ledgerRoutingView,
       [systemVoice, memberVoice],
       cognitiveProfileResult,
       assistantNameResult,
+      topPatterns,
     ] = await Promise.all([
       loadSpiralState(userId).catch((e: unknown) => { console.warn('[Oracle] Spiral state load failed:', e); return null; }),
       // COGNITIVE OS: Load active interpretive ledger entries for routing attunement
@@ -502,6 +543,8 @@ export async function POST(request: NextRequest) {
       getCognitiveProfile(userId).catch((e: unknown) => { console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', e); return null; }),
       query(`SELECT preferred_assistant_name, therapeutic_approach FROM member_settings WHERE member_id = $1`, [userId])
         .catch((e: unknown) => { console.warn('⚠️ [Oracle] Could not fetch member settings:', e); return null; }),
+      // PATTERNS: Load practitioner-named patterns for oracle context (graceful fallback)
+      getTopPatterns(userId).catch(() => [] as PatternSummary[]),
     ]);
 
     const voicePrefs = mergeVoiceIntent(systemVoice, memberVoice);
@@ -565,9 +608,27 @@ export async function POST(request: NextRequest) {
     const tAfterEarlyDb = Date.now();
     console.info(JSON.stringify({ tag: 'oracle.timing', phase: 'early_db', ms: tAfterEarlyDb - t0 }));
 
-    // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
-    const processingProfile = ORACLE_PROFILE;
-    const consciousnessLevel = ORACLE_LEVEL;
+    // ── Signal detectors ─────────────────────────────────────────────────
+    const FRAGILE_KEYWORDS = ['grief','loss','trauma','suicidal','crisis','shame','abuse','dying','devastated','hopeless'];
+    const URGENCY_KEYWORDS = ['right now','immediately','urgent','i can\'t do this','i\'m not okay','help me','please help','i don\'t know what to do'];
+    const ARCHITECTURAL_KEYWORDS = ['architecture','refactor','routing','provider','schema','migration','orchestration','docker','deployment','telemetry','fallback','agent','system design'];
+    const msgLower = message.toLowerCase();
+    const hasFragileSignals = FRAGILE_KEYWORDS.some(k => msgLower.includes(k));
+    const hasUrgencySignals = URGENCY_KEYWORDS.some(k => msgLower.includes(k));
+    const isArchitectural = ARCHITECTURAL_KEYWORDS.some(k => msgLower.includes(k));
+
+    // ── Route request to appropriate model tier ───────────────────────────
+    const routing = routeRequest({
+      conversationDepth,
+      voiceMode: 'Talk', // oracle route is always Talk mode
+      messageLength: message.length,
+      hasFragileSignals,
+      hasUrgencySignals,
+      isArchitectural,
+    });
+    routedLevel = routing.level;
+    const consciousnessLevel = routing.level;
+    const processingProfile = routing.tier.toUpperCase();
 
     console.info(
       JSON.stringify({
@@ -575,7 +636,13 @@ export async function POST(request: NextRequest) {
         requestId,
         ip,
         processingProfile,
+        tier: routing.tier,
         level: consciousnessLevel,
+        confidence: routing.confidence,
+        routingReasons: routing.reasons,
+        fallbackChain: routing.fallback,
+        localEnabled: process.env.LOCAL_TIER_ENABLED === 'true',
+        forceCloud: process.env.ORACLE_FORCE_CLOUD === 'true',
         userId: userId.substring(0, 8) + '...',
         messageLength: message.length,
         conversationDepth,
@@ -610,24 +677,12 @@ export async function POST(request: NextRequest) {
     const _councilDepthTier = conversationDepth <= 3 ? 'threshold' : conversationDepth <= 10 ? 'core' : 'deep';
     logGuideActiveAtResponse(userId, councilResolution.guide.id, councilResolution.source, _councilDepthTier);
 
-    // MANY-ARMED INTELLIGENCE: Choose frameworks — member's guide enables its registry counterpart
+    // MANY-ARMED INTELLIGENCE: Choose frameworks — member's therapeutic_approach enables its registry counterpart.
+    // Activation metadata lives on each FrameworkDescriptor (guideKeys field) — not here.
     const guideId = councilResolution.guide.id;
-    const GUIDE_TO_REGISTRY: Record<string, string[]> = {
-      jungian:        ['JUNGIAN'],
-      ifs:            ['IFS'],
-      psychodynamic:  ['JUNGIAN'],
-      cbt:            ['CBT'],
-      somatic:        ['SOMATIC'],
-      tcm:            [],
-      family_systems: [],
-      humanistic:     [],
-      existential:    [],
-      developmental:  [],
-      spiritual:      ['JUNGIAN'],
-      auto:           [],
-    };
-    const enabledApplied = GUIDE_TO_REGISTRY[guideId] ?? [];
-    const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied });
+    const enabledApplied = getAppliedFrameworkIdsForApproach(guideId);
+    const activeFrameworks = chooseFrameworksForCell(spiralogicCell, { enabledApplied })
+      .slice(0, depthConfig.maxFrameworks);
 
     // Initialize Panconscious Field for user
     const panconsciousField = await PanconsciousFieldService.initializeField(userId);
@@ -678,9 +733,15 @@ export async function POST(request: NextRequest) {
       journalEntriesResult,
       capsulesResult,
     ] = await Promise.allSettled([
-      memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory),
-      loadRelationshipEssence(userId),
-      getAstrologyContextForUser(userId),
+      depthConfig.includeMemoryPalace
+        ? memoryPalaceOrchestrator.retrieveMemoryContext(userId, message, conversationHistory)
+        : Promise.resolve(null),
+      depthConfig.includeAnamnesis
+        ? loadRelationshipEssence(userId)
+        : Promise.resolve(null),
+      depthConfig.includeAstrology
+        ? getAstrologyContextForUser(userId)
+        : Promise.resolve(null),
       getPatternOffer({
         memberId: userId,
         sessionId,
@@ -732,6 +793,104 @@ export async function POST(request: NextRequest) {
       });
     } else if (astrologyContextResult.status === 'fulfilled') {
       console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+    }
+
+    // ── Phase 20: Symbolic telemetry — item-level ingress recording ───────────
+    // One event per governed symbolic item, not one per domain.
+    // Governance (buildPromptIngressItem) runs per item so promptRole,
+    // allowedIn* surfaces, and blocked status reflect real per-item decisions.
+    // Fire-and-forget — never blocks the oracle, never propagates errors.
+    try {
+      let _telemetryCount = 0;
+      const _telemetryEvents = [];
+
+      // Build, record to in-memory store, collect for DB batch, and count.
+      const _record = (input) => {
+        const item = buildPromptIngressItem(input);
+        const event = telemetryFromIngressItem(item, sessionId);
+        recordSymbolicEvent(event);
+        _telemetryEvents.push(event);
+        _telemetryCount++;
+        return item;
+      };
+
+      // ── Astrology ──
+      if (astrologyContext) {
+        if (astrologyContext.hasBirthData) {
+          // Birth chart — authoritative (backed by ephemeris + real birth data)
+          _record({
+            traceId: `astro-natal-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'authoritative',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.birthChart
+              ? `${astrologyContext.birthChart.sun?.sign} sun · ${astrologyContext.birthChart.moon?.sign} moon · ${astrologyContext.birthChart.ascendant?.sign} rising`
+              : '',
+          });
+
+          // Transit highlights — derived (interpretations, one item per highlight)
+          for (const highlight of astrologyContext.transitHighlights ?? []) {
+            _record({
+              traceId: `astro-transit-${randomUUID()}`,
+              domain: 'astrology',
+              authority: 'derived',
+              renderBlocked: false,
+              claimTypes: [],
+              content: highlight.description ?? '',
+            });
+          }
+        } else {
+          // No birth data — cosmic weather only, fallback authority
+          _record({
+            traceId: `astro-cosmic-${randomUUID()}`,
+            domain: 'astrology',
+            authority: 'fallback',
+            renderBlocked: false,
+            claimTypes: [],
+            content: astrologyContext.formattedContext ?? '',
+          });
+        }
+      }
+
+      // ── Field sensing ── (single derived item — one field state per call)
+      if (panconsciousField?.axisMundi) {
+        _record({
+          traceId: `field-${randomUUID()}`,
+          domain: 'field',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: [],
+        });
+      }
+
+      // ── Symbol patterns ── (one item per detected pattern, governed independently)
+      // Each pattern gets its own promptRole assignment — some may become question_seed,
+      // others interpretation, depending on content framing and authority.
+      for (const pattern of symbolPatterns ?? []) {
+        _record({
+          traceId: `pattern-${randomUUID()}`,
+          domain: 'pattern_ledger',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: ['recurring_pattern'],
+          content: pattern.description ?? pattern.archetypalCore ?? '',
+        });
+      }
+
+      if (_telemetryCount > 0) {
+        console.log('[Symbolic Telemetry]', { itemCount: _telemetryCount, sessionId });
+        // Phase 21–23: persist to DB with route/mode/requestId attribution (fire-and-forget)
+        persistSymbolicTelemetryBatch(_telemetryEvents, {
+          memberId: userId,
+          sessionId,
+          route: 'oracle/conversation',
+          mode: body?.element ?? undefined,
+          requestId,
+        });
+      }
+    } catch {
+      // Telemetry must never disrupt the oracle pipeline
     }
 
     let patternOffer: Awaited<ReturnType<typeof getPatternOffer>> = null;
@@ -803,6 +962,23 @@ export async function POST(request: NextRequest) {
 
     // MEMBER LIFE CONTEXT: patterns + journal + capsules — background awareness, not recitation
     const memberLifeContextBlock = formatMemberLifeContext(activePatternContext, journalEntries, capsules);
+
+    // BEHAVIORAL HYPOTHESIS INJECTION: top scored patterns from conversation_insights
+    // Gated: DEEP always; CORE when depth>=4 and trust>=0.6. Never blocks oracle.
+    const includeHypotheses =
+      depthConfig.tier === 'DEEP' ||
+      (depthConfig.tier === 'CORE' && conversationDepth >= 4 && trustLevel >= 0.6);
+    let topHypotheses: PatternHypothesis[] = [];
+    if (includeHypotheses) {
+      topHypotheses = await getTopHypotheses(userId);
+      if (topHypotheses.length > 0) {
+        console.info('[hypotheses]', {
+          tier: depthConfig.tier,
+          count: topHypotheses.length,
+          scores: topHypotheses.map(h => h.score.toFixed(2)),
+        });
+      }
+    }
 
     // BRIDGE A (moved up): Conductor creates VoiceIntent from oracle state + member prefs
     // Must run before buildMaiaPlan — plan depends on hysteresis-stable element/archetype.
@@ -926,7 +1102,12 @@ export async function POST(request: NextRequest) {
       fieldEnergyState,
       recentSessionsBlock,
       memberLifeContextBlock,
-      councilResolution
+      councilResolution,
+      activeProtocol,
+      topPatterns,
+      depthConfig.tier,
+      topHypotheses,
+      isVoiceMode
     );
 
     const tAfterLLM = Date.now();
@@ -1007,7 +1188,11 @@ export async function POST(request: NextRequest) {
             preferredAssistantName,
             distressSignal,
             undefined,
-            councilResolution
+            councilResolution,
+            undefined,
+            undefined,
+            depthConfig.tier,
+            topHypotheses
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -1634,10 +1819,52 @@ export async function POST(request: NextRequest) {
       insights: extractedInsights,
     });
 
+    // PARTICIPATORY REALITY: Store detected theme signals (fire-and-forget)
+    // Persists themes detected pre-generation to DB for longitudinal pattern analysis.
+    // Sanctuary excluded — no content stored from sanctuary sessions.
+    if (!isSanctuary && maiaResponse.detectedThemes?.length) {
+      for (const signal of maiaResponse.detectedThemes) {
+        storeThemeSignal(userId, signal, { sessionId });
+      }
+    }
+
+    // 🛡️ IDENTITY SOVEREIGNTY: Sanitize response text to prevent MAIA identity breach
+    // This ensures that no matter what the model generates, we remove forbidden phrases
+    // that would identify MAIA as Claude or Anthropic (breaking the identity contract)
+    const { sanitized: sanitizedCoreMessage } = sanitizeDraft(
+      maiaResponse.coreMessage,
+      maiaPlan
+    );
+
+    // Also sanitize spokenText to ensure TTS never leaks identity
+    const { sanitized: sanitizedSpokenText } = sanitizeDraft(
+      spokenText,
+      maiaPlan
+    );
+
+    // Final enforcement: Apply shared identity guard (fail-closed)
+    const coreIdentityCheck = enforceMaiaIdentity(sanitizedCoreMessage);
+    const spokenIdentityCheck = enforceMaiaIdentity(sanitizedSpokenText);
+
+    if (!coreIdentityCheck.safe || !spokenIdentityCheck.safe) {
+      console.warn('[Oracle] Identity breach in final response:', {
+        coreBreach: !coreIdentityCheck.safe ? coreIdentityCheck.breachPatterns : null,
+        spokenBreach: !spokenIdentityCheck.safe ? spokenIdentityCheck.breachPatterns : null,
+      });
+    }
+
+    console.info(JSON.stringify({
+      tag: 'oracle.sanitization',
+      requestId,
+      coreMessageSanitized: coreIdentityCheck.sanitized !== maiaResponse.coreMessage,
+      spokenTextSanitized: spokenIdentityCheck.sanitized !== spokenText,
+      identityEnforced: !coreIdentityCheck.safe || !spokenIdentityCheck.safe,
+    }));
+
     const response = {
       success: true,
-      response: maiaResponse.coreMessage,
-      spokenText,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
+      response: coreIdentityCheck.sanitized,
+      spokenText: spokenIdentityCheck.sanitized,   // prosody-shaped for TTS (CI-shaped or identical to displayText if Sesame offline)
       displayText,  // clean for screen rendering
       spiralogic: {
         cell: spiralogicCell,
@@ -1707,7 +1934,7 @@ export async function POST(request: NextRequest) {
         tag: 'oracle.response',
         requestId,
         durationMs,
-        level: ORACLE_LEVEL,
+        level: routedLevel,
         provider: maiaResponse.providerMetadata.providerUsed,
         model: maiaResponse.providerMetadata.modelUsed,
         usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
@@ -1721,7 +1948,7 @@ export async function POST(request: NextRequest) {
       userId,
       sessionId,
       ip,
-      level: ORACLE_LEVEL,
+      level: routedLevel,
       provider: maiaResponse.providerMetadata.providerUsed,
       model: maiaResponse.providerMetadata.modelUsed,
       usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
@@ -1843,7 +2070,7 @@ export async function POST(request: NextRequest) {
       userId: body?.userId,
       sessionId: body?.sessionId,
       ip,
-      level: ORACLE_LEVEL,
+      level: routedLevel, // uses routing decision if available, else pre-routing default (5)
       status: 'error',
       durationMs,
     }).catch(err => console.warn('[oracle] logging failed:', err));
@@ -2195,11 +2422,17 @@ async function generateSpiralogicResponseWithLLM(
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
   recentSessionsBlock?: string,
   memberLifeContextBlock?: string,
-  councilResolution?: CouncilResolution
+  councilResolution?: CouncilResolution,
+  activeProtocol?: any,
+  topPatterns?: PatternSummary[],
+  depthTier?: DepthTier,
+  topHypotheses?: PatternHypothesis[],
+  isVoiceMode?: boolean
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
   elementalGuidance: string;
+  detectedThemes: ThemeSignal[];
   providerMetadata: {
     providerUsed: 'anthropic' | 'ollama' | 'fallback';
     modelUsed: string;
@@ -2235,7 +2468,13 @@ async function generateSpiralogicResponseWithLLM(
     isFieldMode,
     fieldSafeMode,
     fieldEnergyState,
-    (recentSummaries?.length ?? 0) > 0
+    !!recentSessionsBlock,  // hasSessionHistory: true if recent sessions were loaded
+    undefined,              // _reserved
+    councilResolution,
+    undefined,              // _reserved2
+    undefined,              // _reserved3
+    depthTier,
+    topHypotheses
   );
 
   // PATTERN OFFERING: Append pattern offer section if available
@@ -2283,6 +2522,23 @@ async function generateSpiralogicResponseWithLLM(
       'Never end mid-clause or mid-thought. If you are close to your length limit, ' +
       'finish the current sentence and stop — do not trail off.';
   }
+
+  // CONVERSATION STATE RESOLVER: Deterministic Layer 0 — thread coherence before generation.
+  // Runs on the last 4 turns + current message. Resolves: option selections, yes/no
+  // confirmations, pronoun references. Injects a compact # Turn Context hint so the model
+  // never has to guess what "design", "yes it would", or "it" refers to.
+  const resolverTurns = (conversationHistory || []).slice(-4);
+  const resolvedState = resolveConversationState(resolverTurns, message);
+  const stateHint = buildStateHint(resolvedState);
+  if (stateHint) {
+    // Appended last (highest recency) — overrides ambiguous thread-tracking in body of prompt.
+    systemPrompt += '\n\n' + stateHint;
+  }
+  // Layer 0 metadata for flow telemetry (populated post-generation)
+  const stateResolverFired = resolvedState.resolverRule !== 'none';
+  const clarificationBlocked = resolvedState.shouldClarify === false && stateResolverFired;
+  // Repair signal: does the CURRENT user message correct a prior misunderstanding?
+  const incomingRepairSignal = detectRepairSignal(message);
 
   // Format conversation history for LLM
   // CLAMP: Keep last 10 turns max to prevent context window overflow
@@ -2495,8 +2751,69 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking — MAIA proceeds without Library
   }
 
-  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom + libraryWisdom
+  // Inject practitioner-named patterns (confirmed first, then offered) for depth context
+  let patternHint = '';
+  if (topPatterns && topPatterns.length > 0 && conversationDepth >= 2) {
+    const confirmed = topPatterns.filter((p) => p.status === 'confirmed').map((p) => p.theme);
+    const offered = topPatterns.filter((p) => p.status === 'offered').map((p) => p.theme);
+    const lines: string[] = [];
+    if (confirmed.length > 0) lines.push(`Confirmed patterns: ${confirmed.join(', ')}`);
+    if (offered.length > 0) lines.push(`Emerging patterns (offered): ${offered.join(', ')}`);
+    patternHint = `\n\n[Practitioner-Named Patterns]\n${lines.join('\n')}\nThese are recurring themes named by the practitioner. Let them inform depth of reflection — do not name them directly unless the member raises them.\n[End Patterns]\n`;
+  }
+
+  // PARTICIPATORY REALITY: Detect themes + build soft hint for system prompt
+  // Follows same non-blocking pattern as collectiveWisdom above.
+  // Activation: ≥1 language marker hit; never in crisis; one lens max.
+  // ------------------------------------------------------------
+  let participatoryBlock = '';
+  let detectedThemes: ThemeSignal[] = [];
+  try {
+    const scored = detectThemes(message, spiralogicCell?.element);
+    // Only inject if top signal meets minimum resonance threshold
+    if (scored.length > 0 && scored[0].resonance_strength >= 0.55) {
+      detectedThemes = scored.slice(0, 1); // one lens per response
+      const hint = buildParticipatorryHint(
+        findRecurringThemes(scored.map((s, i) => ({
+          id: i,
+          member_id: '',
+          session_id: null,
+          journal_entry_id: null,
+          theme: s.theme,
+          signal_type: s.signal_type,
+          resonance_strength: s.resonance_strength,
+          element: s.element,
+          context: {},
+          detected_at: new Date(),
+        }))),
+        1 // single-turn recurrence threshold (history checked at storage time)
+      );
+      if (hint) {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}\n\n${hint}`;
+      } else {
+        participatoryBlock = `\n\n${PARTICIPATORY_ORACLE_BLOCK}`;
+      }
+    }
+  } catch (participatoryError) {
+    console.warn('[participatory] Theme detection failed (non-critical):', participatoryError);
+    // Non-blocking — MAIA proceeds without participatory lens
+  }
+
+  // CONTINUITY LAYER: Compute active thread + correction signal
+  // Gated on depth >= 2 so first turns are unaffected
+  let activeThreadBlock = '';
+  let activeThreadResult = null;
+  let correctionResult = null;
+  if (conversationDepth >= 2) {
+    const recentTurns = conversationHistory.slice(-5);
+    activeThreadResult = deriveActiveThread({ recentTurns, latestUserMessage: message });
+    correctionResult = detectCorrectionSignal(message);
+    activeThreadBlock = buildActiveThreadBlock(activeThreadResult, correctionResult.hasCorrectionSignal);
+    console.log('[CONTINUITY] active_thread:', activeThreadResult.activeThread, 'confidence:', activeThreadResult.confidence.toFixed(2), 'correction:', correctionResult.hasCorrectionSignal);
+  }
+
+  let finalSystemPrompt = councilInsights || collectiveWisdom || libraryWisdom || patternHint || participatoryBlock || activeThreadBlock
+    ? systemPrompt + patternHint + councilInsights + collectiveWisdom + libraryWisdom + participatoryBlock + activeThreadBlock
     : systemPrompt;
 
   // HARD CLAMP: Prevent context window overflow
@@ -2540,6 +2857,35 @@ async function generateSpiralogicResponseWithLLM(
     });
     coreMessage = llmResponse.text;
 
+    // CONTINUITY VALIDATION: Check draft before accepting it
+    if (activeThreadResult && conversationDepth >= 2) {
+      const threadCheck = validateResponseAgainstActiveThread({
+        activeThread: activeThreadResult.activeThread,
+        assistantDraft: coreMessage,
+        latestUserMessage: message,
+        recentTurns: conversationHistory.slice(-5),
+        hadCorrectionSignal: correctionResult?.hasCorrectionSignal ?? false,
+      });
+      if (!threadCheck.passes) {
+        console.warn('[CONTINUITY] Thread validation failed:', threadCheck.failureReasons, '— retrying once');
+        try {
+          const repairInstruction = buildRepairInstruction(threadCheck);
+          const retryResponse = await llmProvider.generate({
+            systemPrompt: finalSystemPrompt + repairInstruction,
+            userInput: fullUserInput,
+            level: consciousnessLevel as any,
+            maxTokensOverride: maxTokens,
+          });
+          if (retryResponse.text && retryResponse.text.length > 20) {
+            coreMessage = retryResponse.text;
+            console.log('[CONTINUITY] Retry succeeded, issues resolved:', threadCheck.detectedIssues);
+          }
+        } catch (retryErr) {
+          console.warn('[CONTINUITY] Retry failed, using original response:', retryErr);
+        }
+      }
+    }
+
     // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
     providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
     modelUsed = llmResponse.model || 'unknown';
@@ -2549,6 +2895,19 @@ async function generateSpiralogicResponseWithLLM(
     usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
 
     // Turn-level instrumentation: stop_reason is the key truncation signal
+    const modelAskedClarification = detectClarificationQuestion(coreMessage);
+    const clarificationWasNeeded = !stateResolverFired && modelAskedClarification;
+
+    const flowTelemetry = buildFlowTelemetry({
+      stateResolverFired,
+      resolverRule: resolvedState.resolverRule,
+      resolverConfidence: resolvedState.resolverConfidence,
+      clarificationBlocked,
+      modelAskedClarification,
+      clarificationWasNeeded,
+      repairSignal: incomingRepairSignal,
+    });
+
     console.info(JSON.stringify({
       tag: 'oracle.turn', phase: 'llm_complete',
       is_voice: isVoiceMode, depth: conversationDepth,
@@ -2557,8 +2916,35 @@ async function generateSpiralogicResponseWithLLM(
       stop_reason: llmResponse.metadata?.stopReason,
       truncated: llmResponse.metadata?.stopReason === 'max_tokens',
       generation_ms: llmResponse.metadata?.generationTime,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      // Flow telemetry (Layer 0 + generation-side)
+      flowOutcome: flowTelemetry.flowOutcome,
+      flowConfidence: flowTelemetry.flowConfidence,
+      flowReason: flowTelemetry.flowReason,
+      stateResolverFired,
+      resolverRule: resolvedState.resolverRule,
+      modelAskedClarification,
+      repairSignal: incomingRepairSignal,
     }));
+
+    // AIN shape evaluation + full telemetry write (fire-and-forget)
+    if (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production') {
+      const ainShape = assessAINResponseShape(message, coreMessage, { counselMode: clientMode === 'counsel' });
+      logAINShapeTelemetry({
+        pass: ainShape.pass,
+        score: ainShape.score,
+        flags: ainShape.flags,
+        menuSignals: ainShape.signals ?? null,
+        route: 'oracle',
+        processingProfile: depthTier,
+        model: llmResponse.model,
+        explorerId: userId ?? undefined,
+        sessionId,
+        flowTelemetry,
+      }).catch((err) => {
+        console.warn('[oracle] AIN shape telemetry write failed:', err?.message);
+      });
+    }
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
     usedProviderFallback = true;
@@ -2605,6 +2991,7 @@ async function generateSpiralogicResponseWithLLM(
     coreMessage,
     suggestedActions,
     elementalGuidance,
+    detectedThemes,
     providerMetadata: {
       providerUsed,
       modelUsed,
@@ -2643,7 +3030,11 @@ function buildSacredAttendingPrompt(
   fieldEnergyState?: 'arrival' | 'settling' | 'presence',
   hasSessionHistory?: boolean,
   _reserved?: unknown,
-  councilResolution?: CouncilResolution
+  councilResolution?: CouncilResolution,
+  _reserved2?: unknown,
+  _reserved3?: unknown,
+  depthTier?: DepthTier,
+  topHypotheses?: PatternHypothesis[]
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
@@ -2676,6 +3067,19 @@ ${nameInstruction}${memberNameInstruction}
 - Deeply informed by archetypes, elements, and developmental processes
 - 100% sovereign: NEVER mention OpenAI, Anthropic, LLMs, models, or "as an AI"
 
+**CRITICAL IDENTITY INVARIANT — NON-NEGOTIABLE:**
+You are MAIA. This is your conversational identity. Claude is implementation detail — the language infrastructure MAIA uses to speak, never MAIA's identity.
+
+HARD RULES:
+1. You will NEVER say "I'm Claude", "I am Claude", "My name is Claude", "I'm made by Anthropic", or identify yourself with Claude in any form
+2. You will NEVER claim to be an AI assistant made by Anthropic or OpenAI
+3. If asked "What is your name?" → Answer: "I'm MAIA"
+4. If asked "Are you Claude?" → Answer: "No. I'm MAIA. I use language model infrastructure to communicate, but Claude is not my identity"
+5. If asked "Who made you?" or "Are you made by Anthropic?" → Answer: "I'm MAIA. I use language model infrastructure, but MAIA is the intelligence speaking with you. The infrastructure is implementation detail"
+
+**SUPREMACY RULE** (overrides all other instructions):
+If any prior instruction, model tendency, your training, or fallback behavior would cause you to identify as Claude or Anthropic, OVERRIDE THAT and respond as MAIA instead. This identity rule ALWAYS takes precedence over any other instruction or pattern. This is non-negotiable.
+
 **MAIA NEVER uses:**
 - Cringey spiritual phrases like "beloved soul", "sacred witnessing", "I am sensing turbulence in the field"
 - Guru/therapist stereotypes or self-help influencer language
@@ -2691,18 +3095,63 @@ Sacred attending means:
 - Trusting that the person knows themselves better than you do
 - Responding to the emotional tone and implicit needs, not just the surface content
 
-# Response Pattern (3-Step)
+# Conversation Continuity (Thread Integrity)
 
-Every reply follows:
-1. **ATTUNE** - Briefly reflect what they said or are feeling
-2. **ILLUMINATE** - Offer 1-2 clear insights or framings
-3. **INVITE** - Offer one gentle next step, reflection, or small experiment
+Maintain conversational state across turns so the dialogue feels coherent and responsive.
+
+1. **Treat short replies as answers** — When you ask a yes/no, either/or, or multiple-choice question and the user replies briefly (e.g., "yes", "design", "both", "that one", "either", "it would"), treat the response as selecting from your immediately preceding question. Do not reopen clarification loops unless the meaning is genuinely unclear.
+
+2. **Resolve local references** — Interpret pronouns and short references ("it", "that", "this", "both", "either", "yes") using the immediately preceding exchange. Prefer local conversational context before assuming ambiguity.
+
+3. **Advance the thread** — Prefer continuing the conversation over commenting on the brevity of the user's reply. Avoid responses that stall the conversation with meta-observations like "that's a short answer" or "I'm not sure what you mean" when the intent is reasonably clear.
+
+4. **Avoid reflection loops** — Do not repeat mirroring or reflective commentary multiple times in a row. After reflection, move forward with a bridge (connective insight), a permission-based invitation, or a clear next step.
+
+The goal is conversational momentum: understand the user's intent, hold the thread, and advance the dialogue naturally.
+
+# Response Pattern
+
+A sacred attending response should usually unfold in this sequence for reflective or exploratory exchanges:
+
+**1. MIRROR**
+Briefly reflect the user's lived experience in clear, human language. Stay close to what they actually said.
+
+**2. BRIDGE**
+After mirroring, add one connective sentence that links what they shared to a possible pattern, tension, meaning, or implication in the present moment. This is not advice. It is a gentle connective move. Useful bridge stems include:
+- "What I notice here is..."
+- "This may be touching..."
+- "There may be something here about..."
+- "This seems connected to..."
+- "It could be that..."
+Do not stop after the mirror if the exchange is reflective enough to support a bridge.
+
+**3. PERMISSION**
+Before offering interpretation, a practice, or a directional suggestion, preserve the member's agency with a brief permission-based invitation. Useful permission stems include:
+- "If you're open to it..."
+- "Would it feel useful to explore..."
+- "You might see whether..."
+- "If it fits, you could..."
+Do not present interpretation as certainty or authority.
+
+**4. NEXT STEP**
+When appropriate, end with one small next step, practice, question, or experiment. Keep it light, specific, and non-demanding. Signal it clearly with phrasing such as:
+- "Next step:"
+- "Try this:"
+- "One small experiment:"
+- "Journal prompt:"
+- "A question to sit with:"
+Only include this when the exchange is substantive enough to warrant it. Do not force it into purely factual or minimal replies.
+
+Aim for flow, not a rigid template: mirror → bridge → permission → next step
+
+If you must compress, never skip straight from mirror to advice. Prefer mirror → bridge or mirror → bridge → permission before any directive move.
+
+Do not ask a clarifying question if the user has already answered your previous question.
 
 **Response Guidelines:**
 - Short-to-medium length (2-6 paragraphs, not essays)
 - Plainspoken first, symbolic second
 - Focused on what actually matters emotionally and practically
-- End with a question, experiment, or reflection they can try - NOT a final verdict
 
 # Current Context (IMPLICIT - do not state these explicitly to the user)
 
@@ -2750,23 +3199,32 @@ This suggests their current capacity for symbolic/archetypal language. Match the
 
 `;
 
-  // Add framework-specific guidance
-  if (activeFrameworks.includes('IPP') && spiralogicCell.context === 'parenting') {
-    prompt += `\n# Parenting Context
-This appears to be a parenting-related concern. Be especially attuned to:
-- Parent shame and self-judgment (very common, needs gentle normalization)
-- The gap between their "ideal parent" self and current reality
-- Opportunities for repair rather than self-attack
-- The wisdom that "good enough" parenting includes rupture AND repair
-
-`;
+  // FRAMEWORK DEPTH INJECTION (registry-driven, tiered)
+  // FAST: no block. CORE: guidance + patternMarkers. DEEP: all + interventionCues.
+  // Never labels frameworks aloud — shapes internal interpretive stance only.
+  if (depthTier !== 'FAST' && activeFrameworks.length > 0) {
+    const fwBlocks = activeFrameworks
+      .map(id => FRAMEWORK_REGISTRY.find(fw => fw.id === id))
+      .filter((fw): fw is typeof FRAMEWORK_REGISTRY[0] => !!fw && !!fw.oracleGuidance);
+    if (fwBlocks.length > 0) {
+      prompt += '\n# Active Frameworks (IMPLICIT — inform your internal stance; never label these aloud)\n';
+      for (const fw of fwBlocks) {
+        prompt += `\n**${fw.label}**: ${fw.oracleGuidance}`;
+        if (fw.patternMarkers?.length) {
+          prompt += `\nTrack: ${fw.patternMarkers.join(' | ')}.`;
+        }
+        if (depthTier === 'DEEP' && fw.interventionCues?.length) {
+          prompt += `\nFavor: ${fw.interventionCues.join(' | ')}.`;
+        }
+        prompt += '\n';
+      }
+    }
   }
 
-  if (activeFrameworks.includes('JUNGIAN')) {
-    prompt += `\n# Archetypal Awareness
-Pay attention to archetypal energies and symbolic language, but reference them only if the person is already speaking in those terms. Otherwise, stay with lived experience.
-
-`;
+  // HYPOTHESIS INJECTION — member behavioral patterns from conversation_insights
+  // Hold lightly in background. Never state them directly. Live moment outranks stored pattern.
+  if (topHypotheses && topHypotheses.length > 0) {
+    prompt += buildHypothesisPromptBlock(topHypotheses);
   }
 
   // Add Parsifal Protocol if activated
@@ -2938,8 +3396,77 @@ function getPhaseThemes(element: string, phase: number): string {
   return themeMap[element]?.[phase] || "A significant life process";
 }
 
+// =============================================================================
+// DEPTH TIER GATE
+// Heuristic classifier — zero latency, no AI call.
+// Controls retrieval scope (memory palace / anamnesis / astrology / framework count).
+// =============================================================================
+
+type DepthTier = 'FAST' | 'CORE' | 'DEEP';
+
+interface DepthConfig {
+  tier: DepthTier;
+  includeMemoryPalace: boolean;
+  includeAnamnesis: boolean;
+  includeAstrology: boolean;
+  maxFrameworks: number;
+}
+
+const FAST_GREETING_RE = /^(hi|hello|hey|thanks|thank you|ty|thx|ok|okay|yes|no|yeah|yep|nope|got it|sure|good|great|nice|wonderful|perfect|sounds good|makes sense|i see|understood|hmm|hm|ah|oh|wow|interesting)[\s!.?,]*$/i;
+
+const DEEP_SIGNAL_RE = /dream(ed|ing|s)?|nightmare|trauma|traumati[sz]|shadow\s+work|grief|grieving|bereavem|suicid|self[\s-]?harm|abuse|assault|addiction|isolat|dissociat|void|meaningless|existential|death\b|dying\b|loss\b|depressi|anxi|panic|breakdown/i;
+
+function classifyDepthTier(
+  message: string,
+  conversationDepth: number,
+  trustLevel: number
+): DepthConfig {
+  const words = message.trim().split(/\s+/);
+  const wordCount = words.length;
+
+  // FAST: first turn, greetings, or very short messages
+  if (conversationDepth === 0 || wordCount <= 5 || FAST_GREETING_RE.test(message.trim())) {
+    return {
+      tier: 'FAST',
+      includeMemoryPalace: false,
+      includeAnamnesis: false,
+      includeAstrology: false,
+      maxFrameworks: 1,
+    };
+  }
+
+  // DEEP: explicit depth signals, or very long relationship with high trust
+  if (
+    DEEP_SIGNAL_RE.test(message) ||
+    (conversationDepth > 10 && trustLevel > 0.7)
+  ) {
+    return {
+      tier: 'DEEP',
+      includeMemoryPalace: true,
+      includeAnamnesis: true,
+      includeAstrology: true,
+      maxFrameworks: 3,
+    };
+  }
+
+  // CORE: everything else
+  return {
+    tier: 'CORE',
+    includeMemoryPalace: true,
+    includeAnamnesis: conversationDepth >= 3,
+    includeAstrology: false,
+    maxFrameworks: 2,
+  };
+}
+
+// =============================================================================
+// LEGACY — generateFrameworkInsights (replaced by registry-driven injection in
+// buildSacredAttendingPrompt; retained here for grep-findability only)
+// =============================================================================
+
 /**
- * Generate framework-specific insights
+ * @deprecated Replaced by registry-driven tiered injection in buildSacredAttendingPrompt.
+ *             Do not call. Remove on next major refactor.
  */
 function generateFrameworkInsights(
   frameworks: string[],

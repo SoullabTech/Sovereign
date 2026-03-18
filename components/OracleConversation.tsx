@@ -9,6 +9,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
+import { VoiceInteractionBar } from './voice/VoiceInteractionBar';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
 // TEMPORARILY DISABLED - causing ReferenceError crash
 // import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
@@ -66,6 +67,7 @@ import { VOICE_TIMING } from '@/lib/voice/voiceTiming';
 import useSession from '@/lib/hooks/useSession';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
+import { useVoiceSession } from '@/hooks/useVoiceSession';
 
 /**
  * Detect Safari PWA environment for PWA-specific voice handling
@@ -136,7 +138,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens, getMentorStance } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -674,6 +676,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
+  // Derived UI voice state for VoiceInteractionBar
+  const voiceInteractionState: import('./voice/VoiceInteractionBar').VoiceInteractionState =
+    (isProcessing || isResponding) ? 'thinking' :
+    isAudioPlaying ? 'speaking' :
+    isListening ? 'listening' :
+    isActivating ? 'recovering' :
+    'idle';
+
   // 🎤 PWA VOICE STATE MACHINE: Separate, first-class voice loop for Safari PWA
   // This provides confirmed transitions only - no "hopeful" state changes
   // TEMPORARILY DISABLED to debug crash
@@ -760,6 +770,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     userMessage: string;
   } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
+  const [interimTranscript, setInterimTranscript] = useState('');
 
   // Sync local state with parent when prop changes
   useEffect(() => {
@@ -1316,6 +1327,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const sessionRestoredRef = useRef(false);
   const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
+
+  // 🔊 Voice seam: Use the clean interface instead of reaching into voiceMicRef internals
+  const voiceSession = useVoiceSession(voiceMicRef, isAudioPlaying || isMicrophonePaused, isProcessing);
+
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -2235,10 +2250,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         setStreamingResponseComplete(true);
         // Resume mic after short delay
         setTimeout(() => {
-          if (voiceMicRef.current?.startListening) {
+          if (voiceSession.state.capabilities.canStartListening) {
             console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
             setIsMuted(false);
-            voiceMicRef.current.startListening({ forceOverride: true });
+            voiceSession.methods.startListening('stream_failure_recovery');
           }
         }, 500);
         return;
@@ -2271,10 +2286,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       isMicrophonePausedRef.current = false;
       // Resume mic after short delay
       setTimeout(() => {
-        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+        if (voiceSession.state.capabilities.canStartListening && !showChatInterface && streamingVoiceMode) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
-          voiceMicRef.current.startListening({ forceOverride: true });
+          voiceSession.methods.startListening('streaming_force_recovery');
         }
       }, 500);
     }
@@ -2331,9 +2346,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         setIsActivating(false);
 
         setTimeout(() => {
-          if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          if (voiceSession.state.capabilities.canStartListening && !showChatInterface && streamingVoiceMode) {
             setIsMuted(false);
-            voiceMicRef.current.startListening({ forceOverride: true });
+            voiceSession.methods.startListening('streaming_response_complete');
           }
         }, 300);
       }
@@ -2390,6 +2405,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   //     isAudioPlaying for 120s, the LLM or TTS generation is stuck.
   const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
   const lastAudioProgressRef = useRef<number>(Date.now());
+  // Ref so interval callback always sees current text-streaming state (avoids stale closure)
+  const isStreamingVoiceRef_wd = useRef(isStreamingVoice);
+  useEffect(() => { isStreamingVoiceRef_wd.current = isStreamingVoice; }, [isStreamingVoice]);
+
+  // 🔥 FIX: Reset progress timer at TURN START so idle time before this turn doesn't count.
+  // Without this, lastAudioProgressRef holds the mount timestamp. After long idle (50+ min),
+  // timeSinceProgress is already huge — the watchdog fires within the first check of a new
+  // turn before TTS audio can realistically arrive (~4s observed). This caused a split-brain
+  // state where the watchdog reset mid-turn and audio then arrived into a broken state machine.
+  const prevMicPausedForWatchdogRef = useRef(false);
+  useEffect(() => {
+    if (isMicrophonePaused && !prevMicPausedForWatchdogRef.current) {
+      lastAudioProgressRef.current = Date.now();
+      console.log('[voice:watchdog] Turn start - reset progress timer');
+    }
+    prevMicPausedForWatchdogRef.current = isMicrophonePaused;
+  }, [isMicrophonePaused]);
 
   useEffect(() => {
     // Only run watchdog in voice mode
@@ -2423,9 +2455,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           return;
         }
 
-        // Tier 2: Processing/paused but no audio started for 120s — LLM/TTS stuck
+        // Tier 2: Processing/paused but no audio started — LLM/TTS stuck
         if (processingOrPaused && !audioPlaying && timeSinceProgress > PROCESSING_STUCK_TIMEOUT_MS) {
-          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset');
+          // If text is still streaming, the LLM is healthy — TTS is just slow.
+          // Defer instead of force-resetting to avoid corrupting a healthy turn.
+          if (isStreamingVoiceRef_wd.current) {
+            console.log('[voice:watchdog:deferred] Text still streaming - TTS pending, extending window', {
+              timeSinceProgressMs: Math.round(timeSinceProgress),
+            });
+            lastAudioProgressRef.current = Date.now();
+            return;
+          }
+          console.warn('🐕 [WATCHDOG] Processing stuck for', Math.round(timeSinceProgress/1000), 's (no audio ever arrived) - forcing reset', {
+            isTextStreaming: isStreamingVoiceRef_wd.current,
+          });
           forceWatchdogReset('processing_stuck');
           return;
         }
@@ -2448,9 +2491,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       lastAudioProgressRef.current = Date.now();
 
       // Actually restart the mic
-      if (voiceMicRef.current?.startListening) {
+      if (voiceSession.state.capabilities.canStartListening) {
         console.log(`🐕 [WATCHDOG] Force-restarting microphone (${reason})...`);
-        voiceMicRef.current.startListening({ forceOverride: true });
+        voiceSession.methods.startListening('watchdog_recovery');
       }
 
       toast('⚠️ Voice recovered', { duration: 2000 });
@@ -3207,7 +3250,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
   // Also don't refocus if already focused (causes keyboard flicker on iOS)
   useEffect(() => {
-    if (showChatInterface && !isProcessing && textInputRef.current) {
+    if (showChatInterface && !isProcessing && !isResponding && textInputRef.current) {
       // Check if already focused to prevent iOS keyboard issues
       if (document.activeElement !== textInputRef.current) {
         // Small delay to ensure DOM is ready
@@ -3217,7 +3260,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [showChatInterface, isProcessing]); // Removed messages.length - was causing iOS freeze
+  }, [showChatInterface, isProcessing, isResponding]); // isResponding covers text mode response completion
 
   // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
   useEffect(() => {
@@ -4000,8 +4043,8 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // IMMEDIATELY stop microphone to prevent Maia from hearing herself
-    if (voiceMicRef.current && voiceMicRef.current.stopListening) {
-      voiceMicRef.current.stopListening();
+    if (voiceSession.state.capabilities.canStopListening) {
+      voiceSession.methods.stopListening();
       console.log('🔇 PREEMPTIVE STOP: Microphone disabled before processing');
     }
 
@@ -4426,6 +4469,9 @@ I'm not sure what I'm feeling yet.`;
             : (realtimeMode === 'counsel' ? getCounselFramework() : undefined),
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
 
+          // 🎓 MENTOR STANCE: Practitioner supervision mode (Care only)
+          mentorStance: realtimeMode === 'counsel' ? getMentorStance() : false,
+
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
           lensConsent: pendingLensConsent?.consent || null,
 
@@ -4681,13 +4727,13 @@ I'm not sure what I'm feeling yet.`;
                 // Check if hands-free is active
                 const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
 
-                if (isHandsFree && voiceMicRef.current?.startListening) {
+                if (isHandsFree && voiceSession.state.capabilities.canStartListening) {
                   // Hands-free: single restart attempt after React flush
                   requestAnimationFrame(() => {
                     if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
                       setIsMuted(false);
                       console.log('🎤 [STREAM] Hands-free: requesting mic restart');
-                      voiceMicRef.current?.startListening({ forceOverride: true });
+                      voiceSession.methods.startListening('hands_free_stream_restart');
                     }
                   });
                 } else {
@@ -5247,16 +5293,16 @@ I'm not sure what I'm feeling yet.`;
                     isMicrophonePausedRef.current = false;
                     // Final attempt after forced reset
                     setTimeout(() => {
-                      if (voiceMicRef.current?.startListening) {
+                      if (voiceSession.state.capabilities.canStartListening) {
                         console.log('🎤 [NON-STREAM] Final attempt after state reset...');
                         setIsMuted(false);
-                        voiceMicRef.current.startListening({ forceOverride: true });
+                        voiceSession.methods.startListening('non_stream_final_reset');
                       }
                     }, 500);
                     return;
                   }
 
-                  if (voiceMicRef.current?.startListening) {
+                  if (voiceSession.state.capabilities.canStartListening) {
                     // Check ALL blocking conditions including mic pause and audio states
                     const canRestart = !isProcessingRef.current &&
                                        !isRespondingRef.current &&
@@ -5267,10 +5313,10 @@ I'm not sure what I'm feeling yet.`;
 
                     if (canRestart) {
                       console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      voiceMicRef.current.startListening({ forceOverride: true });
+                      voiceSession.methods.startListening('non_stream_restart_attempt');
                       // Verify mic actually started after a brief delay
                       setTimeout(() => {
-                        if (voiceMicRef.current?.isListening) {
+                        if (voiceSession.state.phase === 'listening') {
                           console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
                         } else {
                           console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
@@ -5408,6 +5454,7 @@ I'm not sure what I'm feeling yet.`;
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
     console.log('🎤 handleVoiceTranscript called with:', transcript);
+    setInterimTranscript(''); // Clear interim display on final submit
     const t = transcript?.trim();
     if (!t) {
       console.log('⚠️ Empty transcript, returning');
@@ -6001,9 +6048,7 @@ I'm not sure what I'm feeling yet.`;
         setIsMuted(true); // Mute while MAIA speaks
 
         // Stop mic while processing
-        if (voiceMicRef.current?.stopListening) {
-          voiceMicRef.current.stopListening();
-        }
+        voiceSession.methods.stopListening();
 
         // Send via streaming voice system (includes historical context)
         const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
@@ -6201,9 +6246,7 @@ I'm not sure what I'm feeling yet.`;
 
     // Mute the microphone - user emergency stop
     setIsMuted(true);
-    if (voiceMicRef.current?.stopListening) {
-      voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated emergency stop
-    }
+    voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated emergency stop
 
     // Reset all states
     setIsResponding(false);
@@ -6958,7 +7001,7 @@ I'm not sure what I'm feeling yet.`;
                     isListening,
                     showChatInterface,
                     hasVoiceMicRef: !!voiceMicRef.current,
-                    hasStartListening: !!voiceMicRef.current?.startListening,
+                    hasVoiceSession: !!voiceSession,
                     isInterrupt,
                   });
                   toast('🎤 Activating voice...', { duration: 2000 });
@@ -6986,9 +7029,9 @@ I'm not sure what I'm feeling yet.`;
                   }, 5000);
 
                   // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
-                  // 🔥 FIX: Pass forceOverride when interrupting to bypass speaking check
+                  // 🔥 FIX: Pass interrupt flag when interrupting MAIA
                   try {
-                    await voiceMicRef.current.startListening(isInterrupt ? { forceOverride: true } : undefined);
+                    await voiceSession.methods.startListening(isInterrupt ? 'user_interrupt' : 'user_gesture');
                     console.log('[voice] startListening resolved OK');
                     // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
                   } catch (error: any) {
@@ -7034,7 +7077,7 @@ I'm not sure what I'm feeling yet.`;
                   console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
                   // Note: isHandsFreeMode stays true (default) — ContinuousConversation refs reinitialize on remount
-                  voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
+                  voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
                   console.log('✅ Voice stopped successfully (user exit mode)');
                 }
               } else {
@@ -7529,137 +7572,7 @@ I'm not sure what I'm feeling yet.`;
               </motion.div>
             )}
 
-            {/* Status text below holoflower - always show listening indicator */}
-            {isMounted && !showChatInterface && voiceEnabled && (
-              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
-                {/* Elemental Mode Indicator - TEMPORARILY DISABLED
-                {voiceMicRef.current?.elementalMode && (
-                  <motion.div
-                    className="absolute -top-10 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full backdrop-blur-sm"
-                    style={{
-                      backgroundColor: `${voiceMicRef.current.elementalMode === 'fire' ? 'rgba(239, 68, 68, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'water' ? 'rgba(107, 155, 209, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'earth' ? 'rgba(161, 98, 7, 0.2)' :
-                        voiceMicRef.current.elementalMode === 'air' ? 'rgba(212, 184, 150, 0.2)' :
-                        'rgba(147, 51, 234, 0.2)'}`,
-                      border: `1px solid ${voiceMicRef.current.elementalMode === 'fire' ? 'rgba(239, 68, 68, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'water' ? 'rgba(107, 155, 209, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'earth' ? 'rgba(161, 98, 7, 0.4)' :
-                        voiceMicRef.current.elementalMode === 'air' ? 'rgba(212, 184, 150, 0.4)' :
-                        'rgba(147, 51, 234, 0.4)'}`
-                    }}
-                  >
-                    <span className="text-xs font-medium" style={{
-                      color: voiceMicRef.current.elementalMode === 'fire' ? '#ef4444' :
-                        voiceMicRef.current.elementalMode === 'water' ? '#6B9BD1' :
-                        voiceMicRef.current.elementalMode === 'earth' ? '#a16207' :
-                        voiceMicRef.current.elementalMode === 'air' ? '#D4B896' :
-                        '#9333ea'
-                    }}>
-                      {voiceMicRef.current.elementalMode === 'fire' ? '🔥 Fire' :
-                        voiceMicRef.current.elementalMode === 'water' ? '💧 Water' :
-                        voiceMicRef.current.elementalMode === 'earth' ? '🌍 Earth' :
-                        voiceMicRef.current.elementalMode === 'air' ? '🌬️ Air' :
-                        '✨ Aether'}
-                    </span>
-                  </motion.div>
-                )} */}
-                {/* Status messages - Processing state takes priority */}
-                <AnimatePresence mode="wait">
-                  {(isResponding || isAudioPlaying || isProcessing) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{
-                        opacity: [0.7, 1, 0.7],
-                        y: 0,
-                        scale: [0.98, 1, 0.98]
-                      }}
-                      transition={{
-                        opacity: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/95 text-sm font-medium drop-shadow-[0_0_10px_rgba(252,211,77,0.6)]"
-                    >
-                      {isProcessing && !isResponding && !isAudioPlaying ? '✨ Thinking...' :
-                       isResponding && !isAudioPlaying ? '🎵 Preparing voice...' :
-                       '💫 Speaking...'}
-                    </motion.div>
-                  )}
-                  {/* Activating state - waiting for mic confirmation */}
-                  {isActivating && !isListening && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{
-                        opacity: [0.6, 0.9, 0.6],
-                        y: 0
-                      }}
-                      transition={{
-                        opacity: { duration: 1.0, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/90 text-sm font-medium drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                    >
-                      🎤 Activating...
-                    </motion.div>
-                  )}
-                  {/* Listening state - mic is CONFIRMED live (orange dot should be visible) */}
-                  {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <div className="flex flex-col items-center gap-2">
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{
-                          opacity: [0.8, 1, 0.8],
-                          y: 0
-                        }}
-                        transition={{
-                          opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-                        }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="text-emerald-300/95 text-sm font-medium drop-shadow-[0_0_8px_rgba(110,231,183,0.5)]"
-                      >
-                        🎤 Listening...
-                      </motion.div>
-                      {/* Keep Recording button - subtle, only when recording */}
-                      {voiceMicRef.current?.isRecording && (
-                        <motion.button
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 0.7, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          whileHover={{ opacity: 1, scale: 1.05 }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            voiceMicRef.current?.extendRecording();
-                          }}
-                          className="px-3 py-1 text-xs bg-emerald-500/20 text-emerald-300/90 rounded-full backdrop-blur-sm
-                                   border border-emerald-400/30 hover:bg-emerald-500/30 hover:border-emerald-400/50
-                                   transition-all duration-200 drop-shadow-[0_0_6px_rgba(110,231,183,0.3)]"
-                        >
-                          ⏱️ Keep Recording
-                        </motion.button>
-                      )}
-                    </div>
-                  )}
-                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
-                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{
-                        opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                      className="text-violet-300/80 text-sm font-light drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]"
-                    >
-                      Tap holoflower to speak
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Hands-free toggle removed — holoflower IS the tap-to-talk affordance.
-                   Default is hands-free; user taps holoflower to mute/unmute. */}
-              </div>
-            )}
+            {/* Voice state display moved to VoiceInteractionBar (fixed bottom zone) */}
 
             {/* OLD BUTTON REMOVED - Holoflower itself is now clickable */}
           </div>
@@ -8200,6 +8113,34 @@ I'm not sure what I'm feeling yet.`;
 
 
 
+      {/* Unified Voice Interaction Bar — state display, transcript, interruption, lab access */}
+      {isMounted && voiceEnabled && !showChatInterface && (
+        <VoiceInteractionBar
+          voiceState={voiceInteractionState}
+          interimTranscript={interimTranscript}
+          onStop={() => {
+            streamVoice.stop();
+            voiceSession.methods.stopListening();
+            setIsListening(false);
+          }}
+          onInterrupt={handleVoiceInterrupt}
+          onOpenLab={() => setShowLabDrawer(true)}
+          onTextSubmit={(text) => handleTextMessage(text)}
+        />
+      )}
+
+      {/* Lab access in chat mode — compact FAB since VoiceInteractionBar is voice-only */}
+      {isMounted && showChatInterface && (
+        <button
+          onClick={() => setShowLabDrawer(true)}
+          className="fixed bottom-20 right-4 z-40 p-3 rounded-full bg-amber-500/20 text-amber-400
+                     border border-amber-500/30 hover:bg-amber-500/30 active:scale-95 transition-all backdrop-blur-sm"
+          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
+          title="Open Lab"
+        >
+          <FlaskConical className="w-5 h-5" />
+        </button>
+      )}
 
       {/* Voice Selection Menu - Popup from bottom */}
       {showVoiceMenu && (
@@ -8264,6 +8205,7 @@ I'm not sure what I'm feeling yet.`;
           <ContinuousConversation
             ref={voiceMicRef}
             onTranscript={handleVoiceTranscript}
+            onInterimTranscript={(t) => setInterimTranscript(t)}
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
             onInterrupt={handleVoiceInterrupt}
@@ -8423,10 +8365,8 @@ I'm not sure what I'm feeling yet.`;
             if (!isMuted) {
               // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
-              if (voiceMicRef.current?.stopListening) {
-                voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated exit
-                console.log('🔇 Microphone OFF (user toggle)');
-              }
+              voiceSession.methods.stopListening(); // 🔥 FIX: User-initiated exit
+              console.log('🔇 Microphone OFF (user toggle)');
             } else {
               // Turn mic ON - but only if MAIA isn't speaking
               if (isAudioPlayingRef.current) {
@@ -8459,11 +8399,8 @@ I'm not sure what I'm feeling yet.`;
               setIsMuted(false);
               enableAudio().then(() => {
                 setTimeout(async () => {
-                  if (voiceMicRef.current?.startListening &&
-                      !isProcessingRef.current &&
-                      !isRespondingRef.current &&
-                      !isAudioPlayingRef.current) {
-                    await voiceMicRef.current.startListening({ forceOverride: true });
+                  if (voiceSession.state.capabilities.canStartListening) {
+                    await voiceSession.methods.startListening('audio_enable_resume');
                     console.log('🎤 Microphone ON');
                   }
                 }, 100);

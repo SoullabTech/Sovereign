@@ -434,6 +434,155 @@ ${inquiry.email ? `Reply to: ${inquiry.email}` : ''}
 }
 
 // ============================================================================
+// Portal Claim Invite (Client)
+// ============================================================================
+
+export interface ClaimInviteDetails {
+  clientName: string;
+  clientEmail: string;
+  claimUrl: string; // /portal/[slug]/claim?code=...
+}
+
+/**
+ * Send portal claim link to a new client after booking
+ */
+export async function sendPortalClaimEmail(
+  invite: ClaimInviteDetails,
+  practitioner: PractitionerInfo
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+
+  try {
+    const result = await resend.emails.send({
+      from: `${practitionerDisplay} <bookings@soullab.life>`,
+      replyTo: practitioner.email,
+      to: invite.clientEmail,
+      subject: `Set up your client portal access — ${practitionerDisplay}`,
+      html: generateClaimInviteHtml(invite, practitioner),
+      text: generateClaimInviteText(invite, practitioner),
+      tags: [
+        { name: 'type', value: 'portal-claim-invite' },
+        { name: 'portal', value: practitioner.portalSlug },
+      ],
+    });
+
+    console.log(`[Portal Notifications] Claim invite sent to ${invite.clientEmail}`);
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send claim invite:', message);
+    return { success: false, error: message };
+  }
+}
+
+function generateClaimInviteHtml(
+  invite: ClaimInviteDetails,
+  practitioner: PractitionerInfo
+): string {
+  const practitionerDisplay = practitioner.businessName || practitioner.name;
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1A2F24 0%, #2C5530 100%); padding: 32px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">Your Client Portal</h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 16px; color: #333; font-size: 16px; line-height: 1.6;">
+                Hi ${invite.clientName},
+              </p>
+
+              <p style="margin: 0 0 24px; color: #333; font-size: 16px; line-height: 1.6;">
+                ${practitioner.name} has set up a private portal for you. You can use it to access session materials, intake forms, and more.
+              </p>
+
+              <p style="margin: 0 0 32px; color: #333; font-size: 16px; line-height: 1.6;">
+                Click the button below to create your password and access your portal. This link expires in 90 days.
+              </p>
+
+              <!-- CTA -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
+                <tr>
+                  <td align="center">
+                    <a href="${invite.claimUrl}" style="display: inline-block; background: #2C5530; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Set Up Portal Access
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 8px; color: #999; font-size: 13px; line-height: 1.5;">
+                If the button doesn't work, copy and paste this link:
+              </p>
+              <p style="margin: 0; color: #666; font-size: 12px; word-break: break-all;">
+                ${invite.claimUrl}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; background-color: #f8faf9; border-top: 1px solid #e5e5e5; text-align: center;">
+              <p style="margin: 0; color: #666; font-size: 14px;">
+                ${practitionerDisplay}
+              </p>
+              <p style="margin: 8px 0 0; color: #999; font-size: 12px;">
+                Powered by Soullab
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
+function generateClaimInviteText(
+  invite: ClaimInviteDetails,
+  practitioner: PractitionerInfo
+): string {
+  return `
+Hi ${invite.clientName},
+
+${practitioner.name} has set up a private client portal for you.
+
+Click the link below to create your password and access your portal.
+This link expires in 90 days.
+
+${invite.claimUrl}
+
+--
+${practitioner.businessName || practitioner.name}
+Powered by Soullab
+  `.trim();
+}
+
+// ============================================================================
 // Utilities
 // ============================================================================
 

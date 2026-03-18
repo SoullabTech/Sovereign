@@ -9,6 +9,15 @@
 
 import { query } from './postgres';
 
+export type ContinuityData = {
+  hadActiveThread: boolean;
+  activeThreadConfidence: number;
+  hadCorrectionSignal: boolean;
+  correctionType?: string | null;
+  validationPassed?: boolean;
+  detectedIssues?: string[];
+};
+
 export type AINShapeTelemetryRow = {
   pass: boolean;
   score: number;
@@ -25,6 +34,7 @@ export type AINShapeTelemetryRow = {
   model?: string;
   explorerId?: string;
   sessionId?: string;
+  continuity?: ContinuityData | null;
 };
 
 export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<void> {
@@ -37,7 +47,8 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
     processingProfile,
     model,
     explorerId,
-    sessionId
+    sessionId,
+    continuity,
   } = row;
 
   // Guard: require valid sessionId to prevent orphan rows
@@ -54,9 +65,9 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
   await query(
     `
     INSERT INTO ain_shape_telemetry
-      (pass, score, mirror, bridge, permission, next_step, menu_mode, menu_signals, route, processing_profile, model, explorer_id, session_id)
+      (pass, score, mirror, bridge, permission, next_step, menu_mode, menu_signals, route, processing_profile, model, explorer_id, session_id, continuity_data)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     `,
     [
       pass,
@@ -71,7 +82,8 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
       processingProfile ?? null,
       model ?? null,
       explorerId ?? null,
-      normalizedSessionId
+      normalizedSessionId,
+      continuity ? JSON.stringify(continuity) : null,
     ]
   );
 }

@@ -72,9 +72,12 @@ export default function ChangeExperimentPanel({ changeId }: Props) {
   async function loadExperiments() {
     setLoading(true);
     try {
-      const data = await apiFetch(`/api/studio/changes/${changeId}/experiments`);
-      setExperiments(data.experiments || []);
-      if (data.experiments?.length > 0) setExpanded(data.experiments[0].id);
+      const res = await apiFetch(`/api/studio/changes/${changeId}/experiments`);
+      if (res.ok) {
+        const data = await res.json();
+        setExperiments(data.experiments || []);
+        if (data.experiments?.length > 0) setExpanded(data.experiments[0].id);
+      }
     } catch { /* graceful */ }
     finally { setLoading(false); }
   }
@@ -83,7 +86,7 @@ export default function ChangeExperimentPanel({ changeId }: Props) {
     if (!form.title.trim() || !form.hypothesis.trim() || !form.instructions.trim() || !form.observationWindow.trim()) return;
     setSaving(true);
     try {
-      const data = await apiFetch(`/api/studio/changes/${changeId}/experiments`, {
+      const res = await apiFetch(`/api/studio/changes/${changeId}/experiments`, {
         method: 'POST',
         body: JSON.stringify({
           ...form,
@@ -92,10 +95,13 @@ export default function ChangeExperimentPanel({ changeId }: Props) {
           followUpIntention: form.followUpIntention.trim() || null,
         }),
       });
-      setExperiments((prev) => [data.experiment, ...prev]);
-      setForm(EMPTY_FORM);
-      setAdding(false);
-      setExpanded(data.experiment.id);
+      if (res.ok) {
+        const data = await res.json();
+        setExperiments((prev) => [data.experiment, ...prev]);
+        setForm(EMPTY_FORM);
+        setAdding(false);
+        setExpanded(data.experiment.id);
+      }
     } catch { /* keep open */ }
     finally { setSaving(false); }
   }

@@ -8,12 +8,15 @@
  * - Structural detection only (no interpretation, no diagnosis)
  * - Fire-and-forget (never blocks oracle response)
  * - Evidence-bounded (max 8 evidence per pattern)
+ * - Schedules description generation (via generatePatternIntelligence) when
+ *   confidence >= 0.6 AND recurrence_count >= 2 and description is missing
  * - Idempotent (same signal twice = increment, not duplicate)
  *
  * Philosophy: "Notice structure. Never name meaning."
  */
 
 import { query } from '@/lib/db/postgres';
+import { schedulePatternGeneration } from './generatePatternIntelligence';
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -315,19 +318,24 @@ async function _upsertPatternCandidateAsync(
       return;
     }
 
-    // Increment confidence slightly (capped at 0.9)
-    const newConfidence = Math.min(
-      Number(row.confidence) + 0.05,
-      0.9
-    );
+    // Increment confidence slightly (capped at 0.9) and recurrence count
+    const newConfidence = Math.min(Number(row.confidence) + 0.05, 0.9);
 
-    await query(
+    const updated = await query<{ confidence: number; recurrence_count: number }>(
       `UPDATE pattern_ledger
-       SET confidence = $1,
+       SET confidence       = $1,
+           recurrence_count = recurrence_count + 1,
            last_evidence_at = NOW()
-       WHERE id = $2`,
+       WHERE id = $2
+       RETURNING confidence, recurrence_count`,
       [newConfidence, patternId]
     );
+
+    // Schedule description generation when thresholds are crossed
+    const u = updated.rows[0];
+    if (u && Number(u.confidence) >= 0.6 && Number(u.recurrence_count) >= 2) {
+      schedulePatternGeneration(patternId);
+    }
   } else {
     // Insert new emerging pattern
     const result = await query(

@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { DevNoServiceWorker } from "./DevNoServiceWorker";
-import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 import { AethericConsciousnessProvider } from "@/components/consciousness/AethericConsciousnessProvider";
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
 import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
@@ -195,16 +194,11 @@ export default function RootLayout({
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
             <AethericConsciousnessProvider>
-              <SevenLayerArchitectureProvider
-                autoSync={true}
-                syncInterval={30000}
-              >
-                <FeatureTooltipProvider>
-                  <MobileRouteGuard>
-                    {children}
-                  </MobileRouteGuard>
-                </FeatureTooltipProvider>
-              </SevenLayerArchitectureProvider>
+              <FeatureTooltipProvider>
+                <MobileRouteGuard>
+                  {children}
+                </MobileRouteGuard>
+              </FeatureTooltipProvider>
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
         </SubscriptionProvider>

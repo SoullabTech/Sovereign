@@ -44,6 +44,8 @@ import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
 import {
   getCounselFramework,
   getScribeLens,
+  getMentorStance,
+  setMentorStance,
   type TherapeuticFramework,
   type ReflectionLens,
   THERAPEUTIC_FRAMEWORKS,
@@ -382,6 +384,7 @@ function MAIAPageContent() {
   const [frameworkSelectorMode, setFrameworkSelectorMode] = useState<'counsel' | 'scribe'>('counsel');
   const [currentCounselFramework, setCurrentCounselFramework] = useState<TherapeuticFramework>('auto');
   const [currentScribeLens, setCurrentScribeLens] = useState<ReflectionLens>('auto');
+  const [mentorStanceEnabled, setMentorStanceEnabled] = useState(false);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -542,17 +545,21 @@ function MAIAPageContent() {
     // Load initial values
     setCurrentCounselFramework(getCounselFramework());
     setCurrentScribeLens(getScribeLens());
+    setMentorStanceEnabled(getMentorStance());
 
     // Listen for changes
     const handleCounselChange = () => setCurrentCounselFramework(getCounselFramework());
     const handleScribeChange = () => setCurrentScribeLens(getScribeLens());
+    const handleMentorChange = (e: Event) => setMentorStanceEnabled((e as CustomEvent).detail.enabled);
 
     window.addEventListener('maia-counsel-framework-changed', handleCounselChange);
     window.addEventListener('maia-scribe-lens-changed', handleScribeChange);
+    window.addEventListener('maia-mentor-stance-changed', handleMentorChange);
 
     return () => {
       window.removeEventListener('maia-counsel-framework-changed', handleCounselChange);
       window.removeEventListener('maia-scribe-lens-changed', handleScribeChange);
+      window.removeEventListener('maia-mentor-stance-changed', handleMentorChange);
     };
   }, []);
 
@@ -798,6 +805,32 @@ function MAIAPageContent() {
                       <span className="text-[9px] opacity-40">▾</span>
                     )}
                   </motion.button>
+
+                  {/* Mentor stance toggle — Care mode only */}
+                  {maiaMode === 'patient' && (
+                    <motion.button
+                      onClick={() => {
+                        const next = !mentorStanceEnabled;
+                        setMentorStance(next);
+                        if ('vibrate' in navigator) navigator.vibrate(5);
+                      }}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0 ${
+                        mentorStanceEnabled
+                          ? 'bg-amber-500/20 border border-amber-500/50 text-amber-300'
+                          : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                      }`}
+                      title="Mentor stance — For practitioner supervision and case consultation"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <span className="text-xs">Mentor</span>
+                      {mentorStanceEnabled && currentCounselFramework !== 'auto' && (
+                        <span className="text-[9px] opacity-70">· {currentCounselFramework.toUpperCase()}</span>
+                      )}
+                    </motion.button>
+                  )}
+
                   <motion.button
                     onClick={() => setMaiaMode('session')}
                     onTouchStart={(e) => {
@@ -1050,6 +1083,34 @@ function MAIAPageContent() {
                       )}
                     </motion.button>
                   </FeatureTooltip>
+
+                  {/* Mentor stance toggle — Care mode only (desktop) */}
+                  {maiaMode === 'patient' && (
+                    <motion.button
+                      onClick={() => {
+                        const next = !mentorStanceEnabled;
+                        setMentorStance(next);
+                        if ('vibrate' in navigator) navigator.vibrate(5);
+                      }}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                        mentorStanceEnabled
+                          ? 'bg-amber-500/20 border border-amber-500/50 text-amber-300'
+                          : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      title="Mentor stance — For practitioner supervision and case consultation"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      Mentor
+                      {mentorStanceEnabled && currentCounselFramework !== 'auto' && (
+                        <span className="text-[10px] opacity-70">· {currentCounselFramework.toUpperCase()}</span>
+                      )}
+                    </motion.button>
+                  )}
+
                   <FeatureTooltip featureId="mode-scribe" side="bottom">
                     <motion.button
                       onClick={() => setMaiaMode('session')}

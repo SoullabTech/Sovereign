@@ -18,6 +18,7 @@ import {
 } from '@/lib/supervision/SupervisionStore';
 import { analyzeSession } from '@/lib/supervision/ClinicalSupervisionEngine';
 import { runSessionSynthesis } from '@/lib/supervision/SessionSynthesizer';
+import { runAssembly } from '@/lib/supervision/transcriptAssembler';
 
 interface StopSessionRequest {
   sessionId: string;
@@ -39,6 +40,11 @@ export async function POST(request: NextRequest) {
 
     // Stop the session
     const session = await stopSession(body.sessionId);
+
+    // Fire-and-forget transcript assembly — must not block the stop response
+    runAssembly(body.sessionId).catch(err =>
+      console.error('[Assembler] Post-stop assembly failed:', err)
+    );
 
     if (!session) {
       // Check if session exists but is already stopped

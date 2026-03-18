@@ -35,23 +35,23 @@ export interface LLMResponse {
   };
 }
 
+// Local tier config — activated when LOCAL_TIER_ENABLED=true
+const OLLAMA_MODEL_GENERAL = process.env.OLLAMA_MODEL_GENERAL ?? 'qwen2.5:7b';
+const LOCAL_TIER_ENABLED = process.env.LOCAL_TIER_ENABLED === 'true';
+
 /**
  * Level-specific LLM configuration
- * MAIA uses selective Claude models: Sonnet 4.5 for levels 1-4, Opus 4.5 for level 5 DEEP work
+ * Levels 1-2: local Ollama (when LOCAL_TIER_ENABLED) or Sonnet fallback
+ * Levels 3-4: Claude Sonnet 4.5
+ * Level 5:    Claude Opus 4.5 (deep/fragile/architectural reasoning only)
  */
 const LEVEL_LLM_CONFIG: Record<ConsciousnessLevel, LLMConfig> = {
-  1: {
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-6',
-    temperature: 0.7,
-    maxTokens: 500
-  },
-  2: {
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-6',
-    temperature: 0.75,
-    maxTokens: 600
-  },
+  1: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_GENERAL, temperature: 0.7, maxTokens: 300 }
+    : { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.7, maxTokens: 500 },
+  2: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_GENERAL, temperature: 0.8, maxTokens: 500 }
+    : { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.75, maxTokens: 600 },
   3: {
     provider: 'anthropic',
     model: 'claude-sonnet-4-6',

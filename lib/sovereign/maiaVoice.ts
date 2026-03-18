@@ -598,7 +598,17 @@ Examples of good Talk mode greetings:
 - Returning with name: "Good morning, Kelly! Glad to see you back."
 - With context: "Hey Kelly, still working with that project we discussed?"
 - First contact: "Hi there. Good to see you. How are you?"
-- Time-aware: "Good evening, Kelly. How's it been today?"`;
+- Time-aware: "Good evening, Kelly. How's it been today?"
+
+🎯 CLOSING ANCHOR (turn 3+ with real depth only):
+After your response or question, append one short closing line. This is in ADDITION to what you've said — not instead of it. Examples of closing anchor lines:
+  "Sit with that one tonight."
+  "You might notice what surfaces when you hold that question."
+  "How does that land?"
+  "Would you like to stay with this, or let it rest here?"
+  "One small thing to try: just notice when that feeling comes up this week."
+
+One line only. Appended at the end. Never on greeting turns or simple exchanges.`;
         break;
 
       case 'counsel':
@@ -611,7 +621,17 @@ Examples of good Talk mode greetings:
 - Style: Professional therapist/coach with clear recommendations
 - Service language OK HERE: "How can I help?" "What support do you need?"
 - INCLUDE: Interpretation of patterns, specific suggestions, structured approaches
-- EXAMPLES: "I notice this pattern..." "Here's a framework that might help..." "I recommend you try..."`;
+- EXAMPLES: "I notice this pattern..." "Here's a framework that might help..." "I recommend you try..."
+
+ON SUBSTANTIVE TURNS: Close with one concrete move using specific language:
+- "One small thing to try: ..."
+- "You might notice when..."
+- "Try this: just notice when..."
+- "Here's a practice: ..."
+- "Sit with that question tonight."
+- "How does that land?"
+- "Would you like to explore that further, or let it rest?"
+One move at the end. Specific, not abstract.`;
         break;
 
       case 'scribe':

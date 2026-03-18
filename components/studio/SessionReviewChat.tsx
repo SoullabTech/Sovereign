@@ -1,40 +1,44 @@
 'use client';
 
 /**
- * SessionReviewChat — Post-session practitioner review toolkit
+ * SessionReviewChat — Post-session conversation with MAIA
  *
- * Fathom-equivalent for Spiralogic practitioners.
- * Three lenses on the same session:
- *   Core      — clinical documentation (SOAP/DAP, themes, patterns)
- *   Spiralogic — elemental map, spiral phase, Council Report
- *   Mentor     — MAIA as supervisor: practitioner development + training edge
+ * Flow after session ends:
+ *  1. MAIA asks for client name (or skip)
+ *  2. After name is set, MAIA auto-sends a layered session overview
+ *  3. Full option menu is shown so practitioner can explore further
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
   Sparkles,
+  FileText,
   ClipboardList,
   TrendingUp,
   Search,
-  Layers,
-  BookOpen,
-  GraduationCap,
-  Flame,
-  ListChecks,
-  Users,
-  Download,
+  Zap,
+  Globe,
+  Eye,
+  ArrowRight,
+  AlertTriangle,
+  CheckCircle,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface ReviewMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  lens?: 'core' | 'spiralogic' | 'mentor';
 }
+
+type ReviewLens = 'core' | 'spiralogic' | 'mentor';
 
 interface SessionReviewChatProps {
   reviewedSessionId: string;
@@ -42,219 +46,306 @@ interface SessionReviewChatProps {
   duration: number;
 }
 
-type Lens = 'core' | 'spiralogic' | 'mentor';
+// ---------------------------------------------------------------------------
+// Quick options — shown after overview loads
+// ---------------------------------------------------------------------------
 
-interface QuickPrompt {
-  icon: React.ElementType;
-  label: string;
-  prompt: string;
-}
-
-const lenses: { id: Lens; label: string; icon: React.ElementType; color: string }[] = [
-  { id: 'core',       label: 'Core',       icon: ClipboardList, color: 'text-teal-400' },
-  { id: 'spiralogic', label: 'Spiralogic', icon: Flame,         color: 'text-amber-400' },
-  { id: 'mentor',     label: 'Mentor',     icon: GraduationCap, color: 'text-violet-400' },
+const CORE_PROMPTS = [
+  { label: 'SOAP note', prompt: 'Generate a SOAP note for this session.' },
+  { label: 'DAP note', prompt: 'Generate a DAP note for this session.' },
+  { label: 'Next session', prompt: 'What would you focus on in the next session based on this?' },
+  { label: 'Action items', prompt: 'What are the key action items from this session?' },
 ];
 
-const quickPromptsByLens: Record<Lens, QuickPrompt[]> = {
-  core: [
-    { icon: Search,      label: 'Session themes',  prompt: 'What were the main themes in this session?' },
-    { icon: ClipboardList, label: 'SOAP note',     prompt: 'Generate a professional SOAP note for this session.' },
-    { icon: BookOpen,    label: 'DAP note',         prompt: 'Generate a DAP note for this session.' },
-    { icon: TrendingUp,  label: 'Next session',     prompt: 'Based on this session, what do you recommend focusing on next session?' },
-    { icon: ListChecks,  label: 'Action items',     prompt: 'Extract all action items, intentions, and commitments from this session.' },
-  ],
-  spiralogic: [
-    { icon: Flame,   label: 'Elemental map',    prompt: 'Map the dominant elements in this session. Where did the energy start, where did it move, and how did it resolve?' },
-    { icon: Layers,  label: 'Spiral phase',     prompt: 'Assess the spiral phase of this client based on what emerged in the session. What is their current developmental edge?' },
-    { icon: Users,   label: 'Council Report',   prompt: 'Generate a Spiralogic Council Report for this session. Offer perspectives from at least three council voices (e.g. Fire/Initiation, Water/Depth, Earth/Ground, Air/Clarity) on the session themes. Format as a structured report.' },
-    { icon: Sparkles, label: 'Archetypal map',  prompt: 'What archetypal patterns or mythic themes are present in this session? How do they inform the developmental work?' },
-    { icon: Search,  label: 'Shadow moments',   prompt: 'Where in this session did shadow or avoidance appear? What was the client moving away from, and what might that be protecting?' },
-  ],
-  mentor: [
-    { icon: GraduationCap, label: 'Practitioner edge', prompt: 'From a practitioner training perspective, what did I navigate well in this session, and what is my growing edge?' },
-    { icon: Sparkles,      label: 'Intervention review', prompt: 'Review the key interventions in this session. Which were most effective? Where might I have moved differently?' },
-    { icon: Layers,        label: 'Case formulation',   prompt: 'Generate a Spiralogic case formulation for this client based on today\'s session. Include presenting pattern, elemental imbalance, relational phase, and suggested direction.' },
-    { icon: Search,        label: 'Blind spots',        prompt: 'As my supervisor, what blind spots or countertransference moments do you notice in this session from my side as practitioner?' },
-    { icon: BookOpen,      label: 'Training note',      prompt: 'Write a brief training note I could use for CPD (continuing professional development) based on what this session surfaced in my practice.' },
-  ],
+const SPIRALOGIC_PROMPTS = [
+  { label: 'Elemental map', prompt: 'Map this session through the five elements (Fire, Water, Earth, Air, Aether).' },
+  { label: 'Spiral phase', prompt: 'Which spiral phase does this person appear to be in, and why?' },
+  { label: 'Council report', prompt: 'Generate a Council Report for this session — one voice per element.' },
+  { label: 'Shadow moments', prompt: 'Identify the shadow moments in this session.' },
+];
+
+const MENTOR_PROMPTS = [
+  { label: 'Practitioner edge', prompt: 'What was my growing edge as a practitioner in this session?' },
+  { label: 'Intervention review', prompt: 'Review my interventions — what landed, what missed?' },
+  { label: 'Blind spots', prompt: 'What blind spots might I have had in this session?' },
+  { label: 'Training note', prompt: 'Write a reflective training note I could use for CPD.' },
+];
+
+const LENS_PROMPTS: Record<ReviewLens, typeof CORE_PROMPTS> = {
+  core: CORE_PROMPTS,
+  spiralogic: SPIRALOGIC_PROMPTS,
+  mentor: MENTOR_PROMPTS,
 };
 
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }: SessionReviewChatProps) {
+  const durationMin = Math.floor(duration / 60);
+  const durationSec = Math.floor(duration % 60);
+
+  // Name collection phase
+  const [clientName, setClientName] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const [namePhase, setNamePhase] = useState<'asking' | 'done'>('asking');
+
+  // Chat state
   const [messages, setMessages] = useState<ReviewMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: `Session captured — ${segmentCount} segments across ${Math.floor(duration / 60)}m ${Math.floor(duration % 60)}s. I have the full transcript and markers. Choose a lens to begin, or ask anything directly.`,
+      content: `Session captured — ${segmentCount} segments across ${durationMin}m ${durationSec}s.\n\nWho was this session with? Enter a name, or press Enter to skip.`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
-  const [activeLens, setActiveLens] = useState<Lens>('core');
-  const [isExporting, setIsExporting] = useState(false);
+  const [activeLens, setActiveLens] = useState<ReviewLens>('core');
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [transcriptQuality, setTranscriptQuality] = useState<{
+    phantomRemoved: string | null;
+    sampled: boolean;
+    segmentCount: number;
+    segmentsSampled: number;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const hasAutoOverview = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async (content?: string, lens?: Lens) => {
-    const messageContent = content || input;
-    if (!messageContent.trim() || isLoading) return;
+  useEffect(() => {
+    nameInputRef.current?.focus();
+  }, []);
 
-    const usedLens = lens || activeLens;
+  // ---------------------------------------------------------------------------
+  // API call
+  // ---------------------------------------------------------------------------
 
-    const userMessage: ReviewMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: messageContent,
-      timestamp: new Date(),
-      lens: usedLens,
-    };
+  const sendToMaia = useCallback(
+    async (question: string, overrideName?: string) => {
+      if (isLoading) return;
+      setIsLoading(true);
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
+      const nextQ = questionCount + 1;
+      setQuestionCount(nextQ);
 
-    const nextQuestionNumber = questionCount + 1;
-    setQuestionCount(nextQuestionNumber);
+      try {
+        const response = await apiFetch('/api/scribe/review-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reviewedSessionId,
+            currentSessionId: `studio-review-${reviewedSessionId}`,
+            question,
+            questionNumber: nextQ,
+            lens: activeLens,
+            clientName: overrideName !== undefined ? overrideName : clientName,
+          }),
+        });
 
-    try {
-      const response = await apiFetch('/api/scribe/review-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reviewedSessionId,
-          currentSessionId: `studio-review-${reviewedSessionId}`,
-          question: messageContent,
-          questionNumber: nextQuestionNumber,
-          lens: usedLens,
-        }),
-      });
+        const data = await response.json();
 
-      const data = await response.json();
+        // Capture transcript quality info from first response
+        if (data._meta && !transcriptQuality) {
+          setTranscriptQuality({
+            phantomRemoved: data._meta.phantomPrefixRemoved || null,
+            sampled: data._meta.segmentsSampled < data._meta.segmentCount,
+            segmentCount: data._meta.segmentCount,
+            segmentsSampled: data._meta.segmentsSampled,
+          });
+        }
 
-      const assistantMessage: ReviewMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.success
-          ? data.response
-          : 'I was unable to process that question. The session data may still be loading — try again in a moment.',
+        const assistantMessage: ReviewMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: data.success
+            ? data.response
+            : `I wasn't able to load the session data. ${data.error ? `(${data.error})` : 'Please try again.'}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        setOptionsVisible(true);
+      } catch (err) {
+        console.error('[SessionReview]', err);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: 'Connection error. Please check the server is running and try again.',
+            timestamp: new Date(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, questionCount, reviewedSessionId, activeLens, clientName, transcriptQuality]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Name submission → trigger auto-overview
+  // ---------------------------------------------------------------------------
+
+  const handleNameSubmit = useCallback(
+    (rawName: string) => {
+      if (namePhase === 'done') return;
+      setNamePhase('done');
+
+      const trimmed = rawName.trim();
+      const resolvedName = trimmed === '' || trimmed.toLowerCase() === 'skip' ? null : trimmed;
+      setClientName(resolvedName);
+
+      // Echo user choice
+      const userMsg: ReviewMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: resolvedName || '(anonymous)',
         timestamp: new Date(),
-        lens: usedLens,
       };
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (err) {
-      console.error('[SessionReview] Error:', err);
-      setMessages(prev => [...prev, {
+
+      const bridgeMsg: ReviewMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Connection error. Please check that the server is running and try again.',
+        content: resolvedName
+          ? `Got it — session with ${resolvedName}. Building an overview now…`
+          : 'Anonymous session. Building an overview now…',
         timestamp: new Date(),
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      };
 
-  const handleExportReport = async () => {
-    if (isExporting) return;
-    setIsExporting(true);
-    try {
-      const response = await apiFetch('/api/scribe/export-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: reviewedSessionId,
-          lens: 'full',
-          format: 'markdown',
-        }),
-      });
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `session-report-${reviewedSessionId.slice(0, 8)}.md`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('[SessionReview] Export error:', err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
+      setMessages(prev => [...prev, userMsg, bridgeMsg]);
 
-  const activeLensConfig = lenses.find(l => l.id === activeLens)!;
-  const activePrompts = quickPromptsByLens[activeLens];
+      if (!hasAutoOverview.current) {
+        hasAutoOverview.current = true;
+        setTimeout(() => {
+          sendToMaia('Provide a layered overview of this session.', resolvedName ?? undefined);
+        }, 200);
+      }
+    },
+    [namePhase, sendToMaia]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Regular message send
+  // ---------------------------------------------------------------------------
+
+  const handleSend = useCallback(
+    async (content?: string) => {
+      const messageContent = content || input;
+      if (!messageContent.trim() || isLoading) return;
+
+      if (namePhase === 'asking') {
+        handleNameSubmit(messageContent);
+        setInput('');
+        return;
+      }
+
+      const userMessage: ReviewMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: messageContent,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setInput('');
+      await sendToMaia(messageContent);
+    },
+    [input, isLoading, namePhase, handleNameSubmit, sendToMaia]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+
+  const currentPrompts = LENS_PROMPTS[activeLens];
 
   return (
     <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: '680px' }}>
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-800/50 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      {/* Header + Lens tabs */}
+      <div className="px-4 py-3 border-b border-slate-800/50">
+        <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-4 h-4 text-teal-400" />
           <span className="text-sm font-medium text-white">Review with MAIA</span>
+          {clientName && (
+            <span className="ml-auto text-xs text-slate-500">with {clientName}</span>
+          )}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-500">{segmentCount} segments · {Math.floor(duration / 60)}m</span>
-          <button
-            onClick={handleExportReport}
-            disabled={isExporting}
-            title="Export full session report as Markdown"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800/60 hover:bg-slate-700 border border-slate-700/50 rounded-lg text-xs text-slate-400 hover:text-white transition-colors disabled:opacity-40"
-          >
-            <Download className="w-3 h-3" />
-            {isExporting ? 'Generating…' : 'Export report'}
-          </button>
-        </div>
-      </div>
-
-      {/* Lens selector */}
-      <div className="px-4 py-2 border-b border-slate-800/30 flex items-center gap-1">
-        {lenses.map(lens => {
-          const Icon = lens.icon;
-          const isActive = activeLens === lens.id;
-          return (
+        <div className="flex gap-1">
+          {(['core', 'spiralogic', 'mentor'] as ReviewLens[]).map(lens => (
             <button
-              key={lens.id}
-              onClick={() => setActiveLens(lens.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                isActive
-                  ? 'bg-slate-700 text-white'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+              key={lens}
+              onClick={() => setActiveLens(lens)}
+              className={`px-3 py-1 rounded text-xs capitalize transition-colors ${
+                activeLens === lens
+                  ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              <Icon className={`w-3 h-3 ${isActive ? lens.color : ''}`} />
-              {lens.label}
+              {lens}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Quick Prompts for active lens */}
-      <div className="px-4 py-2 border-b border-slate-800/20 flex items-center gap-2 overflow-x-auto">
-        {activePrompts.map((qp, idx) => {
-          const Icon = qp.icon;
-          return (
-            <button
-              key={idx}
-              onClick={() => handleSend(qp.prompt, activeLens)}
-              disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-xs text-slate-400 whitespace-nowrap transition-colors disabled:opacity-50"
-            >
-              <Icon className={`w-3 h-3 ${activeLensConfig.color}`} />
-              {qp.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Transcript quality banner */}
+      <AnimatePresence>
+        {transcriptQuality && (transcriptQuality.phantomRemoved || transcriptQuality.sampled) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="px-4 py-2 border-b border-slate-800/30"
+          >
+            <div className="flex items-start gap-2 text-xs text-slate-500">
+              <AlertTriangle className="w-3 h-3 text-amber-500/70 mt-0.5 flex-shrink-0" />
+              <div className="space-y-0.5">
+                {transcriptQuality.phantomRemoved && (
+                  <p>Transcript cleaned: repeated phrase removed from segments.</p>
+                )}
+                {transcriptQuality.sampled && (
+                  <p>
+                    Long session — using {transcriptQuality.segmentsSampled} of {transcriptQuality.segmentCount} segments
+                    (head + sampled middle + tail).
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Quick option chips — shown after overview */}
+      <AnimatePresence>
+        {optionsVisible && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 border-b border-slate-800/30 flex items-center gap-2 overflow-x-auto"
+          >
+            {currentPrompts.map((qp, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(qp.prompt)}
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 rounded-lg text-xs text-slate-400 whitespace-nowrap transition-colors disabled:opacity-50"
+              >
+                {qp.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '250px' }}>
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '280px' }}>
         <AnimatePresence>
-          {messages.map((message) => (
+          {messages.map(message => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 8 }}
@@ -262,15 +353,12 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[88%] rounded-xl px-3.5 py-2.5 ${
+                className={`max-w-[90%] rounded-xl px-3.5 py-2.5 ${
                   message.role === 'user'
                     ? 'bg-teal-500/15 text-teal-100'
                     : 'bg-slate-800/70 text-slate-200'
                 }`}
               >
-                {message.lens && message.role === 'assistant' && (
-                  <div className="text-xs text-slate-500 mb-1 capitalize">{message.lens}</div>
-                )}
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
                   {message.content}
                 </div>
@@ -280,11 +368,7 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
         </AnimatePresence>
 
         {isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
             <div className="bg-slate-800/70 rounded-xl px-3.5 py-2.5">
               <div className="flex items-center gap-1.5 text-slate-500">
                 <div className="w-1.5 h-1.5 bg-teal-400 rounded-full animate-pulse" />
@@ -300,28 +384,52 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-slate-800/50">
-        <div className="flex items-end gap-2">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder={`Ask through the ${activeLens} lens...`}
-            className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:border-teal-500/50 min-h-[40px] max-h-24"
-            rows={1}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isLoading}
-            className="p-2 bg-teal-500/80 text-white rounded-lg hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
+        {namePhase === 'asking' ? (
+          <div className="flex items-center gap-2">
+            <input
+              ref={nameInputRef}
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  handleNameSubmit(nameInput);
+                  setNameInput('');
+                }
+              }}
+              placeholder="Client name or press Enter to skip…"
+              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+            />
+            <button
+              onClick={() => { handleNameSubmit(nameInput); setNameInput(''); }}
+              className="p-2 bg-teal-500/80 text-white rounded-lg hover:bg-teal-500 transition-colors"
+            >
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-end gap-2">
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={`Ask through the ${activeLens} lens…`}
+              className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 resize-none focus:outline-none focus:border-teal-500/50 min-h-[40px] max-h-24"
+              rows={1}
+            />
+            <button
+              onClick={() => handleSend()}
+              disabled={!input.trim() || isLoading}
+              className="p-2 bg-teal-500/80 text-white rounded-lg hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

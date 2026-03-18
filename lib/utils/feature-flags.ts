@@ -11,6 +11,9 @@ export interface FeatureFlags {
   masteryVoice: boolean;
   sacredGeometry: boolean;
   maiaOrchestratorV2: boolean;  // New orchestrator architecture
+  participatoryReality: boolean;        // Phase 1: types + prompt blocks ready; oracle wiring pending
+  participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
+  participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -21,6 +24,9 @@ const DEFAULT_FLAGS: FeatureFlags = {
   masteryVoice: true,
   sacredGeometry: true,
   maiaOrchestratorV2: false,  // Default off, opt-in for beta testers
+  participatoryReality: false,        // Off until Phase 2 wiring complete
+  participatoryJournalingLens: false, // Off until Phase 2
+  participatoryPractitioner: false,   // Off until Phase 3
 };
 
 /**

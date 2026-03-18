@@ -27,6 +27,7 @@ import {
   DoorOpen,
   Scale,
   Wind,
+  Globe,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -64,7 +65,8 @@ export type ModuleSlug =
   | 'teams'
   | 'maia'
   | 'tools'
-  | 'settings';
+  | 'settings'
+  | 'portal';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -135,6 +137,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/groups',
     category: 'clients',
     description: 'Group programs, circles, and cohorts',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'portal',
+    label: 'Client Portal',
+    icon: Globe,
+    href: '/studio/portal',
+    category: 'clients',
+    description: 'Manage client portal access and invites',
     alwaysOn: false,
     mode: 'practice',
   },
@@ -329,13 +341,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
-  astrology: ['clients', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
   personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 

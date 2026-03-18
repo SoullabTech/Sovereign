@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * DESIGN:
  * - Works for both existing members and new signups
  * - Always succeeds from user's perspective (no email enumeration)
- * - 15 minute expiration for security
+ * - 1 hour expiration for security
  * - Graceful degradation if tables missing
  */
 
@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
     console.log(`[MAGIC-LINK] Request for: ${normalizedEmail}`);
 
-    // Check if member exists with this email
+    // Check if member exists with this email (case-insensitive)
     const memberResult = await safeQuery(
-      'SELECT id, name, username FROM members WHERE email = $1',
+      'SELECT id, name, username FROM members WHERE LOWER(email) = $1',
       [normalizedEmail]
     );
 
@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
     const memberId = member?.id as string | null;
     const memberName = (member?.name as string) || 'Beautiful Soul';
 
-    // Generate token with 15 minute expiration
+    // Generate token with 1 hour expiration
     const token = generateToken();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Invalidate any existing tokens for this email
     await safeQuery(
@@ -137,8 +137,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build magic link
-    const magicLink = `https://soullab.life/api/members/magic-link?token=${token}`;
+    // Build magic link — points to client-side page, NOT the API directly.
+    // Email scanners (Gmail, ProtonMail, Outlook) prefetch links in emails.
+    // If the link hit the API, scanners would consume the token before the user clicks.
+    // The /magic-link page shows a button; only a real user click redeems the token.
+    const baseOrigin = process.env.NEXTAUTH_URL || process.env.BASE_URL || 'https://soullab.life';
+    const magicLink = `${baseOrigin}/magic-link?token=${token}`;
 
     // Determine flow: existing member or new user
     const isExistingMember = !!member;
@@ -184,7 +188,7 @@ export async function POST(request: NextRequest) {
             </div>
 
             <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-              This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+              This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
             </p>
 
             <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
@@ -209,7 +213,7 @@ ${bodyText}
 
 ${magicLink}
 
-This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
 
 With presence,
 The Soullab Team
@@ -302,7 +306,7 @@ export async function GET(request: NextRequest) {
               COALESCE(tier, 'free') as tier,
               COALESCE(roles, ARRAY['member']) as roles
        FROM members
-       WHERE id = $1 OR email = $2
+       WHERE id = $1 OR LOWER(email) = LOWER($2)
        LIMIT 1`,
       [claimed.member_id || null, claimed.email]
     );

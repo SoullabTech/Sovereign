@@ -37,15 +37,23 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-03-12
-- **Current milestone**: Depth routing + therapeutic lens persistence shipped
-- **Last change**: Three orthogonal axes now fully wired and deployed:
-  1. **Depth Classifier** (`lib/consciousness/depthClassifier.ts`) — 3-tier routing (threshold/core/deep), 7 awareness levels, Care mode early-exchange bias, relational phase 1 bias. lightweightContext flag gates memory palace / anamnesis / astrology for Tier A. 46 tests passing.
-  2. **Mode/Tier wiring** — Talk/Care/Scribe stance sections injected into system prompt. Tier adjusts voiceHint (speed/timbre). depthHint returned in oracle response.
-  3. **Therapeutic Lens** — `therapeutic_lens` column in `member_settings` (migration applied + registered). Settings API GET/PUT wired. Oracle route loads lens, activates FRAMEWORK_REGISTRY applied frameworks, injects compact lens hint into prompt for core/deep tiers only (threshold always lens-neutral). `FrameworkSelector` persists to server on select; syncs from server on mount for cross-device consistency. 27 matrix tests covering tier discipline, lens differentiation, mode differentiation, Care mode bias.
-- **Next action**: Settings page astrology section (add/edit/remove birth data, consent-aware UI). Sweeper cron on Mac Studio host (`*/15 * * * * docker exec maia-sovereign npx ts-node /app/scripts/sweep-stale-sessions.ts`).
-- **Underlying question**: Does every member get a coherent, sovereignty-respecting experience across devices and after localStorage clears?
-- **State of the system**: Depth routing live. Therapeutic lens end-to-end live. Memory pipeline live. Onboarding astrology step sovereign. Pending: Settings astrology UI + sweeper cron.
+- **Date**: 2026-03-16 (evening)
+- **Current milestone**: 4-phase sequencing confirmed working. Participatory theme detection deployed. Typecheck clean.
+- **Last changes** (this session, commits on `main`):
+  1. `d0097f39` — **participatory marker expansion**: ~60 natural-language variants added to `THEME_LANGUAGE_MARKERS` across all 6 themes. Ops script (`scripts/check-maia-state.sh`) and email normalization tests committed.
+  2. `725216b1` — **typecheck fix**: removed untyped continuity-stack fields from `between/chat` AIN telemetry call. Typecheck now zero errors.
+- **AIN shape results** (4-phase sequencing is working):
+  - 2h window (330 turns): mirror=70%, bridge=33%, next_step=**30.7%**, pass=**13.6%**
+  - Baseline was: bridge=22%, next_step=1%, pass=0.2%
+  - Question answered: yes, 4-phase sequencing moved next_step from 1% → 30%
+- **Participatory theme signals**: 0 rows after rebuild (expected — new markers not yet exercised). Check again after 24–48h of traffic using `./scripts/check-maia-state.sh`.
+- **Next action**: Observe theme signal volume over next 24–48h. Run `./scripts/check-maia-state.sh 48` to evaluate marker expansion impact.
+- **Underlying question**: Do expanded participatory markers produce 10–25 signals per 170 turns (vs 1 previously)?
+- **State of the system**: All layers live. Container rebuilt with expanded markers. Worktrees pruned (~120 stale removed). 34 commits ahead of origin/main pushed. Typecheck clean.
+- **Ops diagnostic**:
+  ```bash
+  ./scripts/check-maia-state.sh 48   # theme signals + AIN aggregate
+  ```
 
 ## Re-entry vow (for this session)
 

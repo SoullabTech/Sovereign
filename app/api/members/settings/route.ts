@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { isValidReviewLensId, type ReviewLensId } from '@/lib/studio/reviewLens';
 
 /**
  * GET /api/members/settings
@@ -85,6 +86,8 @@ export async function GET(request: NextRequest) {
       },
       // Storage consent (server-authoritative)
       storageConsent: settings.storage_consent || {},
+      // Practitioner review lens preferences
+      preferredReviewLenses: (settings.preferred_review_lenses ?? []) as ReviewLensId[],
     });
   } catch (error) {
     console.error('[Settings API] Error:', error);
@@ -195,6 +198,21 @@ export async function PUT(request: NextRequest) {
     if (updates.circleAmount !== undefined) {
       setClauses.push(`circle_amount = $${paramIndex++}`);
       values.push(updates.circleAmount);
+    }
+
+    // Practitioner review lens preferences
+    if (updates.preferredReviewLenses !== undefined) {
+      if (
+        !Array.isArray(updates.preferredReviewLenses) ||
+        updates.preferredReviewLenses.some((l: unknown) => typeof l !== 'string' || !isValidReviewLensId(l))
+      ) {
+        return NextResponse.json(
+          { error: 'preferredReviewLenses must be an array of valid ReviewLensId values', code: 'INVALID_LENS_IDS' },
+          { status: 400 },
+        );
+      }
+      setClauses.push(`preferred_review_lenses = $${paramIndex++}`);
+      values.push(updates.preferredReviewLenses);
     }
 
     // Storage consent (server-authoritative)

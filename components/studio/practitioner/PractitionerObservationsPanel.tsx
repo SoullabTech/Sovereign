@@ -56,8 +56,11 @@ export default function PractitionerObservationsPanel({ decisionId, changeId, cl
       if (decisionId) params.set('decisionId', decisionId);
       if (changeId)   params.set('changeId', changeId);
       if (clientId)   params.set('clientId', clientId);
-      const data = await apiFetch(`/api/studio/practitioner-observations?${params.toString()}`);
-      setObservations(data.observations || []);
+      const res = await apiFetch(`/api/studio/practitioner-observations?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setObservations(data.observations || []);
+      }
     } catch { /* graceful */ }
     finally { setLoading(false); }
   }
@@ -66,7 +69,7 @@ export default function PractitionerObservationsPanel({ decisionId, changeId, cl
     if (!form.content.trim()) return;
     setSaving(true);
     try {
-      const data = await apiFetch('/api/studio/practitioner-observations', {
+      const res = await apiFetch('/api/studio/practitioner-observations', {
         method: 'POST',
         body: JSON.stringify({
           decisionId: decisionId || null,
@@ -77,9 +80,12 @@ export default function PractitionerObservationsPanel({ decisionId, changeId, cl
           tags: [],
         }),
       });
-      setObservations((prev) => [data.observation, ...prev]);
-      setForm({ observationType: 'in_session', content: '' });
-      setAdding(false);
+      if (res.ok) {
+        const data = await res.json();
+        setObservations((prev) => [data.observation, ...prev]);
+        setForm({ observationType: 'in_session', content: '' });
+        setAdding(false);
+      }
     } catch { /* keep form open */ }
     finally { setSaving(false); }
   }

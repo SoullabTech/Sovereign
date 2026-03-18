@@ -333,6 +333,7 @@ export default function ProtocolSelector({
 
     setLoading(true);
     apiFetch(`/api/studio/protocol-assignments?${scope}`)
+      .then((r) => r.json())
       .then((data) => {
         const a: ProtocolAssignment | null = data.assignment ?? null;
         setAssignment(a);
@@ -361,10 +362,11 @@ export default function ProtocolSelector({
         decisionId: decisionId || null,
         changeId:   changeId   || null,
       };
-      const data = await apiFetch('/api/studio/protocol-assignments', {
+      const res = await apiFetch('/api/studio/protocol-assignments', {
         method: 'POST',
         body: JSON.stringify(body),
       });
+      const data = await res.json();
       const a: ProtocolAssignment | null = data.assignment ?? null;
       setAssignment(a);
       onProtocolChange?.(a?.protocolId ?? null);
@@ -383,12 +385,15 @@ export default function ProtocolSelector({
 
     setAdvancing(true);
     try {
-      const data = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
+      const res = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ activeStageNumber: newStage }),
       });
-      if (data.assignment) {
-        setAssignment(data.assignment);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.assignment) {
+          setAssignment(data.assignment);
+        }
       }
     } catch { /* keep current stage */ }
     finally { setAdvancing(false); }
@@ -399,12 +404,15 @@ export default function ProtocolSelector({
     if (!assignment) return;
     setStatusMenuOpen(false);
     try {
-      const data = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
+      const res = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
-      if (data.assignment) {
-        setAssignment(data.assignment);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.assignment) {
+          setAssignment(data.assignment);
+        }
       }
     } catch { /* keep current status */ }
   }
@@ -414,13 +422,16 @@ export default function ProtocolSelector({
     if (!assignment || !notesDirty) return;
     const trimmed = notes.trim() || null;
     try {
-      const data = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
+      const res = await apiFetch(`/api/studio/protocol-assignments/${assignment.id}`, {
         method: 'PATCH',
         body: JSON.stringify({ notes: trimmed }),
       });
-      if (data.assignment) {
-        setAssignment(data.assignment);
-        setNotesDirty(false);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.assignment) {
+          setAssignment(data.assignment);
+          setNotesDirty(false);
+        }
       }
     } catch { /* keep local state */ }
   }
@@ -433,10 +444,13 @@ export default function ProtocolSelector({
     if (opening && !snapshot && !snapshotLoading) {
       setSnapshotLoading(true);
       try {
-        const data = await apiFetch(
+        const res = await apiFetch(
           `/api/studio/protocol-assignments/${assignment.id}/snapshot`
         );
-        if (data.snapshot) setSnapshot(data.snapshot);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.snapshot) setSnapshot(data.snapshot);
+        }
       } catch { /* show nothing */ }
       finally { setSnapshotLoading(false); }
     }

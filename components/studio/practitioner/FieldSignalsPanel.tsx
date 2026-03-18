@@ -61,8 +61,11 @@ export default function FieldSignalsPanel({ decisionId, changeId, clientId }: Pr
       const params = new URLSearchParams();
       if (decisionId) params.set('decisionId', decisionId);
       if (changeId)   params.set('changeId', changeId);
-      const data = await apiFetch(`/api/studio/field-signals?${params.toString()}`);
-      setSignals(data.signals || []);
+      const res = await apiFetch(`/api/studio/field-signals?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSignals(data.signals || []);
+      }
     } catch {
       // Graceful degradation — signals panel is non-blocking
     } finally {
@@ -74,7 +77,7 @@ export default function FieldSignalsPanel({ decisionId, changeId, clientId }: Pr
     if (!form.title.trim() || !form.content.trim()) return;
     setSaving(true);
     try {
-      const data = await apiFetch('/api/studio/field-signals', {
+      const res = await apiFetch('/api/studio/field-signals', {
         method: 'POST',
         body: JSON.stringify({
           decisionId: decisionId || null,
@@ -88,9 +91,12 @@ export default function FieldSignalsPanel({ decisionId, changeId, clientId }: Pr
           tags: [],
         }),
       });
-      setSignals((prev) => [data.signal, ...prev]);
-      setForm({ source: 'practitioner', type: 'somatic', title: '', content: '', intensity: '' });
-      setAdding(false);
+      if (res.ok) {
+        const data = await res.json();
+        setSignals((prev) => [data.signal, ...prev]);
+        setForm({ source: 'practitioner', type: 'somatic', title: '', content: '', intensity: '' });
+        setAdding(false);
+      }
     } catch {
       // keep form open on error
     } finally {

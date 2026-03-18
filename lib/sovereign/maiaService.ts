@@ -55,8 +55,11 @@ import {
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
 import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
-import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
+import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT, AINShapeContext } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
+import { deriveActiveThread } from '../consciousness/activeThread';
+import { detectCorrectionSignal } from '../consciousness/correctionDetection';
+import { detectThemes, storeThemeSignal } from '../consciousness/participatoryRealityHelper';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
 import {
@@ -946,11 +949,21 @@ TOO FAST: "It sounds like you're experiencing some fragmentation."
 RIGHT: "All over the place - like how?"
 
 User (after 10 exchanges about stress): "I keep coming back to this work thing"
-NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"`;
+NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"
+
+🎯 CLOSING ANCHOR (turn 3+ with real depth only):
+After your response or question, append one short closing line. This is in ADDITION to what you've said — not instead of it. Examples of closing anchor lines:
+  "Sit with that one tonight."
+  "You might notice what surfaces when you hold that question."
+  "How does that land?"
+  "Would you like to stay with this, or let it rest here?"
+  "One small thing to try: just notice when that feeling comes up this week."
+
+One line only. Appended at the end. Never on greeting turns or simple exchanges.`;
         // Note: fieldAwareness intentionally NOT appended - too diagnostic for early exchanges
         break;
       case 'counsel':
-        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
+        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.\n\nRESPONSE RHYTHM on substantive turns:\n1. Mirror what is true.\n2. Bridge or name the pattern.\n3. Reduce pressure in one sentence — natural, brief, not forced. Examples:\n   - "You don\'t have to solve all of this right now."\n   - "You don\'t need the whole answer yet."\n   - "It can be enough to name the first piece."\n   - "You don\'t have to do this perfectly."\n4. Offer one small next step.\n\nKeep the permission sentence brief and natural. Omit it if it would sound hollow or repetitive. Place it before the next step, never after.\n\nUSE SPECIFIC LANGUAGE for next steps:\n- "One small thing to try: ..."\n- "You might notice when..."\n- "Try this: just notice when..."\n- "Here\'s a practice: ..."\n- "Sit with that question tonight."\nOne move at the end. Specific, not abstract.';
         break;
       case 'scribe':
         modeAdaptation = '\n\n📝 NOTE MODE — WHO MAIA IS:\nMAIA shows up as pure witness - reflecting what happened without adding meaning. Clean acknowledgment of what was said, what seemed to matter. No interpretation, no analysis, no advice. Just mirroring.';
@@ -3106,7 +3119,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       meta?.rewritePass === true || meta?.ainRewritePass === true;
 
     if (telemetryEnabled && !isRewritePass) {
-      let shape = assessAINResponseShape(input, text);
+      const shapeContext: AINShapeContext = { counselMode: normalizeMode((meta as any)?.mode) === 'counsel' };
+      let shape = assessAINResponseShape(input, text, shapeContext);
 
       if (!shape.pass) {
         console.warn('[AIN SHAPE WARNING]', {
@@ -3141,7 +3155,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
               console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
               text = rewritten.trim();
               // Recompute shape for accurate telemetry
-              shape = assessAINResponseShape(input, text);
+              shape = assessAINResponseShape(input, text, shapeContext);
             }
           } catch (rewriteErr) {
             console.warn('[AIN SHAPE REWRITE ERROR]', rewriteErr);
@@ -3151,6 +3165,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       // Persist structure-only telemetry (no text) - reflects final delivered shape
       try {
+        // Compute continuity signals for telemetry (deterministic, no LLM)
+        // Map ConversationExchange to { role, content } pairs for deriveActiveThread
+        const recentTurnsForThread = conversationHistory.slice(-5).flatMap((ex: any) => [
+          { role: 'user', content: ex.userMessage ?? '' },
+          { role: 'assistant', content: ex.maiaResponse ?? '' },
+        ]);
+        const continuityThread = recentTurnsForThread.length >= 2
+          ? deriveActiveThread({ recentTurns: recentTurnsForThread, latestUserMessage: input })
+          : null;
+        const continuityCorrection = detectCorrectionSignal(input);
+
         await logAINShapeTelemetry({
           pass: shape.pass,
           score: shape.score,
@@ -3159,11 +3184,32 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           route: 'maiaService',
           processingProfile,
           explorerId: effectiveUserId ?? undefined,
-          sessionId
+          sessionId,
+          continuity: continuityThread ? {
+            hadActiveThread: true,
+            activeThreadConfidence: continuityThread.confidence,
+            hadCorrectionSignal: continuityCorrection.hasCorrectionSignal,
+            correctionType: continuityCorrection.correctionType,
+          } : null,
         });
       } catch (err) {
         // Never break the response if telemetry fails
         console.warn('[AIN SHAPE TELEMETRY ERROR]', err);
+      }
+
+      // PARTICIPATORY THEMES: fire-and-forget theme detection on user input
+      // Mirrors the oracle route path — populates member_theme_signals for longitudinal analysis.
+      // Sanctuary excluded — no content stored.
+      if (!isSanctuary && effectiveUserId) {
+        try {
+          const themeElement = (meta as any)?.element as import('@/lib/types/voiceIntent').Element | undefined;
+          const themeSignals = detectThemes(input, themeElement);
+          for (const signal of themeSignals) {
+            storeThemeSignal(effectiveUserId, signal, { sessionId });
+          }
+        } catch (themeErr) {
+          console.warn('[THEME DETECTION ERROR]', themeErr);
+        }
       }
     }
 

@@ -1,34 +1,39 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db/postgres';
 
 export const revalidate = false;
 
-// Skip during static export (Capacitor builds)
-
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
-  // Handle static generation gracefully
+
   let soulSignature = 'unknown';
   try {
-    const searchParams = request.nextUrl.searchParams;
-    soulSignature = searchParams.get('soulSignature') || 'unknown';
+    soulSignature = request.nextUrl.searchParams.get('soulSignature') || 'unknown';
   } catch {
     // During static export, searchParams may not be available
   }
 
-  // Default relationship essence for any soul signature
-  const defaultEssence = {
-    soulSignature,
-    relationshipEssence: 'sacred_witnessing',
-    depth: 0.7,
-    resonance: 0.8,
-    trust: 0.9,
-    connectionType: 'consciousness_development',
-    lastUpdate: new Date().toISOString()
-  };
+  try {
+    const result = await query(
+      `SELECT soul_signature, user_id, user_name, presence_quality,
+              archetypal_resonances, spiral_position, relationship_field,
+              first_encounter, last_encounter, encounter_count, morphic_resonance
+       FROM relationship_essences
+       WHERE soul_signature = $1
+       LIMIT 1`,
+      [soulSignature]
+    );
 
-  return NextResponse.json(defaultEssence);
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(result.rows[0]);
+  } catch (error) {
+    console.error('[relationship-essence] DB error:', error);
+    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+  }
 }

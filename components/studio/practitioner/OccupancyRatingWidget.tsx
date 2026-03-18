@@ -65,8 +65,11 @@ export default function OccupancyRatingWidget({ decisionId, changeId, clientId, 
       if (decisionId) params.set('decisionId', decisionId);
       if (changeId)   params.set('changeId', changeId);
       params.set('limit', '10');
-      const data = await apiFetch(`/api/studio/occupancy-ratings?${params.toString()}`);
-      setTrend({ ratings: data.ratings || [], current: data.current || null, trajectory: data.trajectory || 'unknown' });
+      const res = await apiFetch(`/api/studio/occupancy-ratings?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTrend({ ratings: data.ratings || [], current: data.current || null, trajectory: data.trajectory || 'unknown' });
+      }
     } catch { /* graceful */ }
     finally { setLoading(false); }
   }
@@ -75,7 +78,7 @@ export default function OccupancyRatingWidget({ decisionId, changeId, clientId, 
     if (!form.score) return;
     setSaving(true);
     try {
-      const data = await apiFetch('/api/studio/occupancy-ratings', {
+      const res = await apiFetch('/api/studio/occupancy-ratings', {
         method: 'POST',
         body: JSON.stringify({
           clientId: clientId || null,
@@ -87,6 +90,8 @@ export default function OccupancyRatingWidget({ decisionId, changeId, clientId, 
           notes: form.notes.trim() || null,
         }),
       });
+      if (!res.ok) throw new Error('save failed');
+      const data = await res.json();
       const newRating: OccupancyRating = data.rating;
       setTrend((prev) => {
         if (!prev) return { ratings: [newRating], current: newRating, trajectory: 'unknown' };
