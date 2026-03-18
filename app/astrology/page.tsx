@@ -738,6 +738,28 @@ export default function AstrologyPage() {
             </div>
           </div>
 
+          {/* Spiralogic Evolutionary Report CTA */}
+          <div className="mb-8">
+            <Link
+              href="/astrology/report"
+              className="flex items-center justify-between w-full p-5 border transition-colors group"
+              style={{ borderColor: '#D88A2D60', backgroundColor: 'rgba(216,138,45,0.06)' }}
+            >
+              <div>
+                <p className="text-xs tracking-widest uppercase mb-1" style={{ color: '#9B6B3C', fontWeight: 300 }}>
+                  Full Report
+                </p>
+                <p className="text-base font-serif" style={{ color: '#D88A2D', fontWeight: 300 }}>
+                  Your Spiralogic Evolutionary Report
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#8B7355', fontWeight: 300 }}>
+                  All 12 facets · Karmic insights · Current transits · Integration practices
+                </p>
+              </div>
+              <span className="text-lg ml-4 opacity-60 group-hover:opacity-100 transition-opacity" style={{ color: '#D88A2D' }}>→</span>
+            </Link>
+          </div>
+
           {/* Archetypal Profile */}
           <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl text-amber-200">
             <h2 className="text-xl font-medium tracking-wide !text-dune-amber mb-4">Your Archetypal Profile</h2>
