@@ -5,6 +5,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { cleanTranscriptTexts } from './transcriptCleaner';
+import { repairTranscriptTexts } from './transcriptRepair';
 import { getAssembledTranscript, type AssembledTurn } from '@/lib/supervision/transcriptAssembler';
 
 // ============================================================================
@@ -275,7 +276,14 @@ export async function buildSessionReviewPrompt(
     });
     const allSpeakers = assembledTurns.map(t => t.speaker);
 
-    const sampled_ = sampleSegments(allTexts, allTs);
+    // Conservative chunk-boundary fragment repair (read-time, not stored)
+    const repaired = repairTranscriptTexts(allTexts);
+    if (repaired.totalChanges > 0) {
+      console.log(`[SessionReview] Fragment repair: ${repaired.totalChanges} fixes —`, repaired.changeLog);
+    }
+    const repairedTexts = repaired.texts;
+
+    const sampled_ = sampleSegments(repairedTexts, allTs);
     sampledTexts = sampled_.texts;
     sampledTs = sampled_.timestamps;
     sampled = sampled_.sampled;

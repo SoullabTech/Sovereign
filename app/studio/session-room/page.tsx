@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
+import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -227,12 +228,13 @@ export default function SessionRoomPage() {
   const phase = ctx.phase;
 
   // Cleaned transcript texts for the review-phase "View transcript" panel.
-  // Apply phantom prefix stripping client-side so the practitioner sees clean
-  // text even before the server-side assembler has re-run.
+  // 1. Strip phantom prefix (repeated hallucination across many segments)
+  // 2. Repair high-confidence Whisper chunk-boundary fragments (e.g. "t's" → "it's")
   const cleanedSegmentTexts = useMemo(() => {
     if (ctx.segments.length === 0) return [] as string[];
     const raw = ctx.segments.map(s => s.text);
-    return cleanTranscriptTexts(raw).texts;
+    const deduped = cleanTranscriptTexts(raw).texts;
+    return repairTranscriptTexts(deduped).texts;
   }, [ctx.segments]);
   const container = phase === 'idle' ? localContainer : ctx.container;
   const memoryPolicy = phase === 'idle' ? localMemoryPolicy : ctx.memoryPolicy;
