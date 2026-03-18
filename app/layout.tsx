@@ -194,7 +194,11 @@ export default function RootLayout({
           <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
             <AethericConsciousnessProvider>
-              {children}
+              <FeatureTooltipProvider>
+                <MobileRouteGuard>
+                  {children}
+                </MobileRouteGuard>
+              </FeatureTooltipProvider>
             </AethericConsciousnessProvider>
           </SystemHealthProvider>
         </SubscriptionProvider>
