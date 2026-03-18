@@ -296,6 +296,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               recognitionRef.current.onresult = null;
               recognitionRef.current.onerror = null;
               recognitionRef.current.onend = null;
+              VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
             }
             recognitionRef.current = initializeSpeechRecognition();
             recognitionNeedsRefreshRef.current = false;
@@ -520,8 +521,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setIsListening(false);
         // Note: onError is not defined in props, removed the call
       } else if (event.error === 'aborted') {
-        // Aborted is normal when stopping/restarting - don't log as error
-        console.log('⏹️ Recognition aborted (normal during restart)');
+        // Aborted = VFP killed recognition because MAIA started speaking.
+        // Chrome zombie bug: calling .start() on this object again silently fails (onresult never fires).
+        // Flag it NOW so the auto-resume path recreates a fresh object instead of reusing the zombie.
+        console.log('⏹️ Recognition aborted — flagging zombie for recreation on next start');
+        recognitionNeedsRefreshRef.current = true;
         // Don't trigger any restart logic here - let onend handle it
       }
     };
