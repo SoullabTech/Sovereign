@@ -61,7 +61,7 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`/api/caseload/${caseId}/memories?memberId=${memberId}&limit=10`);
+      const res = await fetch(`/api/caseload/${caseId}/memories/list?memberId=${memberId}&limit=10`);
       const data = await res.json();
 
       if (!res.ok) {
