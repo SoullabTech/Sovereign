@@ -166,7 +166,7 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     const todaysMayanSign = getTodaysMayanSign();
 
     // Format the context for MAIA
-    const formattedContext = formatAstrologyContextForMAIA(
+    let formattedContext = formatAstrologyContextForMAIA(
       birthChart,
       mayanProfile,
       todaysMayanSign,
@@ -175,6 +175,12 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       relevantPatterns,
       !member.birth_time // Flag if birth time is unknown
     );
+
+    // Append stored Spiralogic Report summary if available
+    const reportSummary = await loadSpiralogicReportSummary(memberId);
+    if (reportSummary) {
+      formattedContext += reportSummary;
+    }
 
     return {
       hasBirthData,
@@ -695,6 +701,81 @@ function isWithinOrb(degree1: number, degree2: number, orb: number): boolean {
   // Handle wraparound (0° and 359° are close)
   const normalizedDiff = diff > 180 ? 360 - diff : diff;
   return normalizedDiff <= orb;
+}
+
+/**
+ * Load a compact oracle-safe summary from the stored Spiralogic Evolutionary Report.
+ * Returns null if no report exists or on any error (non-blocking).
+ */
+async function loadSpiralogicReportSummary(memberId: string): Promise<string | null> {
+  try {
+    const result = await query(
+      `SELECT report_data, generated_at FROM member_astrology_reports WHERE member_id = $1 LIMIT 1`,
+      [memberId]
+    );
+    if (result.rows.length === 0) return null;
+
+    const { report_data, generated_at } = result.rows[0];
+    const report = report_data as import('@/lib/astrology/spiralogicReportTypes').SpiralogicEvolutionaryReportData;
+
+    const generatedDate = new Date(generated_at).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+    let summary = `\n# Stored Spiralogic Evolutionary Report (generated ${generatedDate})\n`;
+    summary += `*This is the AI-authored integration narrative — use to inform depth and continuity, not as a script.*\n\n`;
+
+    // Elemental balance
+    const eb = report.elementalBalance;
+    if (eb) {
+      const { fire, water, earth, air } = eb.percentages;
+      summary += `**Elemental Balance:** Fire ${fire}% | Water ${water}% | Earth ${earth}% | Air ${air}%\n`;
+      summary += `- Dominant: ${eb.dominant} | Growth edge: ${eb.underactive}\n`;
+      if (eb.integrationPractices?.length) {
+        summary += `- Integration focus: ${eb.integrationPractices.slice(0, 2).join('; ')}\n`;
+      }
+      summary += '\n';
+    }
+
+    // Current phase lesson
+    if (report.currentPhase?.majorLesson) {
+      summary += `**Current Major Lesson:** ${report.currentPhase.majorLesson}\n\n`;
+    }
+
+    // Karmic arc
+    if (report.karmicInsights?.narrative) {
+      summary += `**Karmic Arc Summary:**\n${report.karmicInsights.narrative}\n\n`;
+    }
+
+    // Top integration rituals
+    if (report.practicalRituals?.length) {
+      summary += `**Integration Priorities:**\n`;
+      report.practicalRituals.slice(0, 3).forEach(r => {
+        summary += `- ${r.title}: ${r.practice}\n`;
+      });
+      summary += '\n';
+    }
+
+    // 6-12 month timeline
+    if (report.timeline?.length) {
+      summary += `**Forecast Timeline:**\n`;
+      report.timeline.forEach(t => {
+        summary += `- ${t.period}: ${t.themes}\n`;
+      });
+      summary += '\n';
+    }
+
+    summary += `## How to Use This (IMPORTANT)\n`;
+    summary += `- This is interpretive memory, not live calculation — treat it as background context\n`;
+    summary += `- Prioritize what the person says NOW over what this report predicted\n`;
+    summary += `- Reference it when there is a direct thematic match with the current conversation\n`;
+    summary += `- Do not recite it; let it inform depth and resonance\n\n`;
+
+    return summary;
+  } catch (err) {
+    console.warn('[AstrologyContext] Could not load Spiralogic report summary:', err);
+    return null;
+  }
 }
 
 /**
