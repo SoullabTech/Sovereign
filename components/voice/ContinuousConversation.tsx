@@ -530,6 +530,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Check if recognition ended too quickly after starting (rapid abort pattern)
       const timeSinceStart = Date.now() - recognitionStartTime.current;
       if (timeSinceStart < 500 && recognitionStartTime.current > 0) { // Ended in less than 500ms
+        // Expected abort: MAIA started speaking and VFP killed recognition.
+        // Preserve isListening so the auto-resume effect can restart after TTS ends.
+        if (isSpeakingRef.current || inputSuppressedRef.current) {
+          console.log('⏸️ [onend] Recognition aborted quickly because MAIA started speaking - preserving listening state');
+          return;
+        }
         console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
         setIsListening(false);
         isListeningRef.current = false;
