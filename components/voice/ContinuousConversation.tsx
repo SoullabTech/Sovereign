@@ -1779,6 +1779,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (!recognitionRef.current || recognitionNeedsRefreshRef.current) {
       if (recognitionRef.current && recognitionNeedsRefreshRef.current) {
         console.log('🔄 [ContinuousConversation] Refreshing recognition object (was aborted by VFP)');
+        // Null out all handlers first to prevent ghost callbacks from the dead instance
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
         VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
         recognitionRef.current = null;
       }
