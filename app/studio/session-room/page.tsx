@@ -81,6 +81,8 @@ interface PastSession {
   duration_seconds: number;
   segment_count: number;
   marker_count: number;
+  assembled_turns: number;
+  has_assembled: boolean;
 }
 
 interface BookingOption {
@@ -805,12 +807,19 @@ ${insightsSection}
                                     {durMin > 0 ? `${durMin}m ` : ''}{durSec}s
                                   </span>
                                   <span className="text-xs text-slate-600">·</span>
-                                  <span className="text-xs text-slate-500">{s.segment_count} segments</span>
+                                  {s.has_assembled ? (
+                                    <span className="text-xs text-teal-500/80">{s.assembled_turns} turns</span>
+                                  ) : s.segment_count > 0 ? (
+                                    <span className="text-xs text-slate-500">{s.segment_count} segments</span>
+                                  ) : null}
                                   {s.marker_count > 0 && (
                                     <>
                                       <span className="text-xs text-slate-600">·</span>
                                       <span className="text-xs text-amber-600">{s.marker_count} markers</span>
                                     </>
+                                  )}
+                                  {s.has_assembled && (
+                                    <span className="text-xs px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 ml-1">assembled</span>
                                   )}
                                   {!s.transcript_enabled && (
                                     <AlertCircle className="w-3 h-3 text-orange-500/60 ml-auto flex-shrink-0" title="Transcript not enabled" />
