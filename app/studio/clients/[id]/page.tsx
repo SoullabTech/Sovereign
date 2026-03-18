@@ -18,9 +18,12 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Mic,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { LeadershipProfileSection } from '@/components/studio/LeadershipProfileSection';
+import { CaseMemoryTimeline } from '@/components/studio/CaseMemoryTimeline';
+import { PatternLedgerEvolutionPanel } from '@/components/studio/PatternLedgerEvolutionPanel';
 import type { LeadershipProfile } from '@/lib/studio/leadership/types';
 
 interface Client {
@@ -285,6 +288,13 @@ export default function ClientDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
+              <Link
+                href={`/studio/session-room?caseId=${client.id}`}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 rounded-xl hover:bg-emerald-400 transition-colors font-medium"
+              >
+                <Mic className="w-4 h-4" />
+                Start Session
+              </Link>
               <button className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-400 transition-colors font-medium">
                 <Plus className="w-4 h-4" />
                 Schedule Session
@@ -297,6 +307,20 @@ export default function ClientDetailPage() {
                 <MessageSquare className="w-4 h-4" />
                 Message
               </button>
+            </div>
+
+            {/* Case Memory Timeline */}
+            <div>
+              <h2 className="text-sm font-medium text-slate-400 mb-3">Case Memory Timeline</h2>
+              <div className="bg-slate-900/30 border border-slate-800 rounded-xl overflow-hidden">
+                <CaseMemoryTimeline caseId={client.id} />
+              </div>
+            </div>
+
+            {/* Pattern Ledger */}
+            <div>
+              <h2 className="text-sm font-medium text-slate-400 mb-3">Pattern Ledger</h2>
+              <PatternLedgerEvolutionPanel clientId={client.id} />
             </div>
 
             {/* Upcoming Sessions */}

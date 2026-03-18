@@ -11,6 +11,7 @@
 import { consult } from '@/lib/ain/consultation';
 import type { ConsultationRequest, ConsultationResult } from '@/lib/ain/types';
 import type { ChangeContext, ChangeIterationContext } from './types';
+import type { DecisionInputBundle } from '@/lib/studio/practitioner/types';
 import { getChangeTypeConfig, buildChangeQuestion, mapUrgency } from './changeTypes';
 import { getHexagram } from '@/lib/iching/lookup';
 
@@ -20,10 +21,17 @@ import { getHexagram } from '@/lib/iching/lookup';
  *
  * When iterationContext is provided, the council sees the arc:
  * prior tensions, recommendation, insights, and what happened since.
+ *
+ * When inputBundle is provided, the council receives segmented evidence
+ * from client inquiry, field signals, and practitioner observations.
+ * The Changes prompt constraints apply intervention design framing:
+ * smallest next intervention, success signals, risk/caution, observation window.
  */
 export async function consultChangeCouncil(
   change: ChangeContext,
-  iterationContext?: ChangeIterationContext
+  iterationContext?: ChangeIterationContext,
+  inputBundle?: DecisionInputBundle,
+  councilBias?: string
 ): Promise<ConsultationResult> {
   const config = getChangeTypeConfig(change.changeType);
 
@@ -40,7 +48,7 @@ export async function consultChangeCouncil(
     }
   }
 
-  const question = buildChangeQuestion(change, config, hexagramContext, iterationContext);
+  const question = buildChangeQuestion(change, config, hexagramContext, iterationContext, inputBundle, councilBias);
 
   const request: ConsultationRequest = {
     council: config.council,

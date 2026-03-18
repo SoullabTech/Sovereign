@@ -42,6 +42,21 @@ function isDbConnectionError(error: unknown): boolean {
   return false;
 }
 
+// Check if error is a schema mismatch (missing column/table = unapplied migration)
+function isSchemaError(error: unknown): boolean {
+  if (error && typeof error === 'object') {
+    // PostgreSQL error codes: 42703 = undefined_column, 42P01 = undefined_table
+    const code = (error as { code?: string }).code;
+    if (code === '42703' || code === '42P01') return true;
+  }
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes('column') && msg.includes('does not exist') ||
+           msg.includes('relation') && msg.includes('does not exist');
+  }
+  return false;
+}
+
 /**
  * GET /api/members/profile
  * Get member profile from session
@@ -83,9 +98,11 @@ export async function GET(request: NextRequest) {
         `SELECT
           m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
           m.avatar_url, m.bio, m.timezone,
-          m.onboarded, m.created_at, m.last_sign_in,
+          m.onboarded, m.onboarding_step, m.created_at, m.last_sign_in,
           m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
           m.birth_location_name, m.birth_timezone,
+          m.astrology_consent,
+          m.nostr_pubkey, m.nostr_registered_at,
           ms.circle_tier, ms.circle_amount, ms.circle_joined_at
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -93,8 +110,11 @@ export async function GET(request: NextRequest) {
         [memberId]
       );
     } catch (dbError) {
-      // Database unavailable - return 503 not 500
-      console.error(`[Profile API] ${correlationId} - Database error:`, dbError);
+      if (isSchemaError(dbError)) {
+        console.error(`[Profile API] ${correlationId} - SCHEMA MISMATCH (unapplied migration?):`, dbError);
+      } else {
+        console.error(`[Profile API] ${correlationId} - Database error:`, dbError);
+      }
       const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
       return NextResponse.json(
         {
@@ -120,17 +140,24 @@ export async function GET(request: NextRequest) {
       ? `${member.passkey.substring(0, 8)}${'*'.repeat(Math.max(0, member.passkey.length - 8))}`
       : null;
 
+    // Normalize empty strings to null — prevents '' from poisoning downstream fallback chains
+    const preferredName =
+      typeof member.preferred_name === 'string' && member.preferred_name.trim().length > 0
+        ? member.preferred_name.trim()
+        : null;
+
     return NextResponse.json({
       id: member.id,
       username: member.username,
       name: member.name,
-      preferredName: member.preferred_name,
+      preferredName,
       email: member.email,
       passkey: maskedPasskey,
       avatarUrl: member.avatar_url,
       bio: member.bio,
       timezone: member.timezone,
       onboarded: member.onboarded,
+      onboardingStep: member.onboarding_step,
       createdAt: member.created_at,
       lastSignIn: member.last_sign_in,
       membership: {
@@ -152,6 +179,11 @@ export async function GET(request: NextRequest) {
           timezone: member.birth_timezone,
         } : null,
       } : null,
+      // Astrology consent — cross-device persistence for the BirthDataStep skip gate
+      astrologyConsent: (member.astrology_consent ?? 'unknown') as 'unknown' | 'opted_in' | 'declined',
+      // Nostr sovereign messaging identity (public key only — private key never stored)
+      nostrPubkey: member.nostr_pubkey ?? null,
+      nostrRegisteredAt: member.nostr_registered_at ?? null,
       correlationId,
     }, { headers });
 
@@ -206,7 +238,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name, preferredName, email, bio, timezone, birthData } = body;
+    const { name, preferredName, email, bio, timezone, birthData, astrologyConsent } = body;
 
     // Build SET clauses dynamically
     const setClauses: string[] = [];
@@ -273,6 +305,19 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    // Astrology consent (cross-device persistence for onboarding skip gate)
+    if (astrologyConsent !== undefined) {
+      const validConsent = ['unknown', 'opted_in', 'declined'];
+      if (!validConsent.includes(astrologyConsent)) {
+        return NextResponse.json(
+          { error: `Invalid astrologyConsent value — must be one of: ${validConsent.join(', ')}`, correlationId },
+          { status: 400, headers }
+        );
+      }
+      setClauses.push(`astrology_consent = $${paramIndex++}`);
+      values.push(astrologyConsent);
+    }
+
     if (setClauses.length === 0) {
       return NextResponse.json(
         { error: 'No fields to update', correlationId },
@@ -289,11 +334,15 @@ export async function PUT(request: NextRequest) {
          WHERE id = $1
          RETURNING id, username, name, preferred_name, email, bio, timezone,
                    birth_date, birth_time, birth_location_lat, birth_location_lng,
-                   birth_location_name, birth_timezone`,
+                   birth_location_name, birth_timezone, astrology_consent`,
         values
       );
     } catch (dbError) {
-      console.error(`[Profile API] ${correlationId} - Database error on update:`, dbError);
+      if (isSchemaError(dbError)) {
+        console.error(`[Profile API] ${correlationId} - SCHEMA MISMATCH on update (unapplied migration?):`, dbError);
+      } else {
+        console.error(`[Profile API] ${correlationId} - Database error on update:`, dbError);
+      }
       const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
       return NextResponse.json(
         {

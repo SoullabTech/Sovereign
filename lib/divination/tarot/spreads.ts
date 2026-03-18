@@ -481,10 +481,58 @@ export const CAREER_SPREAD: TarotSpread = {
 };
 
 /**
+ * Spiralogic Spread — Five-card transformation reading
+ * Maps the Spiralogic elemental cycle as phases of inner movement.
+ * Distinct from Elemental Cross: positions describe the transformation
+ * process, not life domains. Earth → Water → Fire → Air → Aether
+ * mirrors dissolution → activation → integration in spiral form.
+ */
+export const SPIRALOGIC_SPREAD: TarotSpread = {
+  name: 'Spiralogic',
+  description: 'A five-element reading through the spiral of transformation',
+  cardCount: 5,
+  positions: [
+    {
+      name: 'Earth — What is grounding you',
+      description: 'What wants embodiment right now. What is becoming real, stable, and present in your life.',
+      index: 0,
+      element: 'earth'
+    },
+    {
+      name: 'Water — What is moving through you',
+      description: 'What is dissolving, feeling its way forward, or seeking release. The psychic undertow beneath the surface.',
+      index: 1,
+      element: 'water'
+    },
+    {
+      name: 'Fire — What is calling you forward',
+      description: 'What wants to activate, ignite, or be chosen. The will beginning to organize itself.',
+      index: 2,
+      element: 'fire'
+    },
+    {
+      name: 'Air — What you are beginning to see',
+      description: 'The perspective that is clarifying. The witness. What the mind is finally able to perceive.',
+      index: 3,
+      element: 'air'
+    },
+    {
+      name: 'Aether — Where the spiral is taking you',
+      description: 'The integration this cycle is moving toward. What is completing and what is beginning again at a deeper octave.',
+      index: 4,
+      element: 'aether'
+    }
+  ],
+  purpose: 'Transformation process, inner cycle mapping, Spiralogic orientation',
+  difficulty: 'intermediate'
+};
+
+/**
  * All available spreads
  */
 export const SPREADS: Record<string, TarotSpread> = {
   'single': SINGLE_CARD_SPREAD,
+  'spiralogic': SPIRALOGIC_SPREAD,
   'three-card': THREE_CARD_SPREAD,
   'mind-body-spirit': MIND_BODY_SPIRIT_SPREAD,
   'elemental': ELEMENTAL_CROSS_SPREAD,

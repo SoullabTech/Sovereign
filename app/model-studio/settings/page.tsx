@@ -56,7 +56,7 @@ export default function ModelSettingsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] p-6">
+    <div className="min-h-screen font-sans bg-[#1a1a2e] p-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="p-3 bg-amber-500/20 rounded-xl">
@@ -86,7 +86,7 @@ export default function ModelSettingsPage() {
                 <Icon className="w-5 h-5" />
                 <div>
                   <div className="text-sm font-medium">{section.label}</div>
-                  <div className="text-xs opacity-60">{section.description}</div>
+                  <div className="text-xs text-stone-500">{section.description}</div>
                 </div>
               </button>
             );

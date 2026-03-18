@@ -21,7 +21,8 @@ import { apiFetch } from '@/lib/http/apiBase';
 import HexagramGlyph from '@/components/iching/HexagramGlyph';
 import MemberHexagramCaster from './MemberHexagramCaster';
 import MemberHexagramReading from './MemberHexagramReading';
-import type { ChangeRecord, ChangeExperience, ChangeExperienceType } from '@/lib/studio/changes/types';
+import ChangeMentorPanel from '@/components/studio/changes/ChangeMentorPanel';
+import type { ChangeRecord, ChangeExperience, ChangeExperienceType, ChangeMentorReflection } from '@/lib/studio/changes/types';
 
 interface ChangeJourneyProps {
   changeId: string;
@@ -88,6 +89,10 @@ export default function ChangeJourney({
   // Consultation state
   const [consultingCouncil, setConsultingCouncil] = useState(false);
 
+  // Mentor state (local override after AI generation / intention save)
+  const [mentorReflection, setMentorReflection] = useState<ChangeMentorReflection | null>(null);
+  const [followUpIntention, setFollowUpIntention] = useState<string | null>(null);
+
   useEffect(() => {
     fetchChange();
   }, [changeId]);
@@ -104,6 +109,10 @@ export default function ChangeJourney({
 
       const data = await response.json();
       setChange(data.change);
+
+      // Seed mentor state from fetched record
+      setMentorReflection(data.change.mentorReflection ?? null);
+      setFollowUpIntention(data.change.followUpIntention ?? null);
 
       // Auto-show caster if hexagram not cast yet
       if (!data.change.hexagramNumber) {
@@ -328,7 +337,7 @@ export default function ChangeJourney({
                 className="p-6"
               >
                 <div className="space-y-4">
-                  {change.councilResult.tensions && change.councilResult.tensions.length > 0 && (
+                  {change.councilResult?.tensions && change.councilResult.tensions.length > 0 && (
                     <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                       <h4 className="text-blue-300 text-sm font-medium mb-2">Tensions</h4>
                       <ul className="space-y-1.5">
@@ -341,7 +350,7 @@ export default function ChangeJourney({
                       </ul>
                     </div>
                   )}
-                  {change.councilResult.recommendation && (
+                  {change.councilResult?.recommendation && (
                     <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
                       <h4 className="text-emerald-300 text-sm font-medium mb-2">Recommendation</h4>
                       <p className="text-stone-300 text-sm leading-relaxed">
@@ -353,6 +362,24 @@ export default function ChangeJourney({
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      )}
+
+      {/* MAIA Mentor — go deeper after council insight */}
+      {hasCouncil && change.councilResult && (
+        <div className="border-b border-stone-800/50 px-6 py-5">
+          <ChangeMentorPanel
+            changeId={changeId}
+            council={change.councilResult}
+            changeType={change.changeType}
+            urgency={change.urgency}
+            emotionalState={change.emotionalState}
+            hexagramNumber={change.hexagramNumber}
+            mentorReflection={mentorReflection}
+            followUpIntention={followUpIntention}
+            onReflectionGenerated={setMentorReflection}
+            onIntentionSaved={setFollowUpIntention}
+          />
         </div>
       )}
 

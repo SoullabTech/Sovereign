@@ -156,6 +156,41 @@ get_latest_build() {
     log_success "Latest build: $BUILD_VERSION (ID: $BUILD_ID, State: $BUILD_STATE)"
 }
 
+# Wait for a NEW build to appear after upload (different ID from pre-upload snapshot).
+# Solves the race where App Store Connect hasn't ingested the upload yet and
+# get_latest_build returns the previous build instead of the new one.
+wait_for_new_build() {
+    local prev_build_id="$1"
+    log_info "Waiting for new build to appear in App Store Connect (prev: ${prev_build_id:0:8}...)..."
+    local max_attempts=60   # 10 minutes max (60 × 10s)
+    local attempt=0
+
+    while [ $attempt -lt $max_attempts ]; do
+        local response=$(api_request GET "/builds?filter[app]=$APP_ID&sort=-uploadedDate&limit=1")
+        local new_id=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+        local new_ver=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('version','') if d.get('data') else '')" 2>/dev/null)
+        local new_state=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['attributes'].get('processingState','') if d.get('data') else '')" 2>/dev/null)
+
+        if [ -n "$new_id" ] && [ "$new_id" != "$prev_build_id" ]; then
+            BUILD_ID="$new_id"
+            BUILD_VERSION="$new_ver"
+            BUILD_STATE="$new_state"
+            echo ""
+            log_success "New build detected: $BUILD_VERSION (ID: $BUILD_ID, State: $BUILD_STATE)"
+            [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+            return 0
+        fi
+
+        echo -n "."
+        sleep 10
+        ((attempt++))
+    done
+
+    echo ""
+    log_error "Timeout: new build did not appear in App Store Connect after 10 minutes"
+    exit 1
+}
+
 # Wait for build processing
 wait_for_processing() {
     log_info "Waiting for build processing..."
@@ -274,16 +309,59 @@ build_and_upload() {
     fi
     log_success "Web content built"
 
+    # Embed maia.html directly as index.html — same logic as build-ios.sh.
+    # DO NOT use window.location.replace('/enter'): CapacitorHttp intercepts
+    # the RSC payload fetch, Next.js router hangs, result is a dark screen.
+    log_info "Patching index.html <- maia.html direct embed..."
+    python3 - << 'PYEOF2'
+import sys, os
+src = 'out/maia.html'
+dst = 'out/index.html'
+if not os.path.exists(src):
+    print('  WARNING: out/maia.html not found')
+    sys.exit(0)
+content = open(src, encoding='utf-8').read()
+fix = '<script>if(location.pathname==="/")history.replaceState(null,"","/maia");</script>'
+patched = content.replace('<head>', '<head>' + fix, 1)
+open(dst, 'w', encoding='utf-8').write(patched)
+print(f'  OK index.html <- maia.html + URL fixup ({len(patched)} bytes)')
+PYEOF2
+
+    python3 - << 'PYEOF2'
+import os
+pages = ['maia', 'begin', 'signin', 'welcome-back', 'enter', 'onboarding', 'faq']
+for page in pages:
+    path = f'out/{page}.html'
+    if not os.path.exists(path):
+        continue
+    content = open(path, encoding='utf-8').read()
+    fix = f'<script>if(location.pathname==="/{page}.html")history.replaceState(null,"","/{page}");</script>'
+    if fix in content:
+        continue
+    open(path, 'w', encoding='utf-8').write(content.replace('<head>', '<head>' + fix, 1))
+    print(f'  OK   {path} + URL fixup')
+PYEOF2
+
+    INDEX_SIZE=$(wc -c < out/index.html 2>/dev/null | tr -d ' ')
+    if [ "${INDEX_SIZE:-0}" -lt 5000 ]; then
+        log_error "out/index.html too small (${INDEX_SIZE} bytes) — maia.html embed failed!"
+        exit 1
+    fi
+    log_success "index.html verified (${INDEX_SIZE} bytes — maia.html embed confirmed)"
+
     # Revert patches after successful build (trap will handle failure case)
     ./scripts/capacitor-patch-routes.sh revert
     trap - EXIT
 
+    # Remove stale build dir BEFORE cap sync — pod install calls xcodebuild clean
+    # internally and fails if build/ exists without the CreatedByBuildSystem xattr
+    rm -rf ios/App/build
+
     log_info "Syncing Capacitor (beta mode)..."
-    CAPACITOR_BUILD=1 npx cap sync ios
+    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CAPACITOR_BUILD=1 npx cap sync ios
     log_success "Capacitor synced"
 
     cd ios/App
-    xattr -w com.apple.xcode.CreatedByBuildSystem true ./build 2>/dev/null || true
 
     log_info "Building archive..."
     xcodebuild archive \
@@ -298,13 +376,25 @@ build_and_upload() {
     [ ! -d "./build/App.xcarchive" ] && { log_error "Archive failed!"; exit 1; }
     log_success "Archive created"
 
-    log_info "Uploading to App Store Connect..."
+    log_info "Exporting IPA..."
     xcodebuild -exportArchive \
         -archivePath ./build/App.xcarchive \
         -exportPath ./output \
         -exportOptionsPlist exportOptions.plist \
         -allowProvisioningUpdates \
-        2>&1 | grep -E "(Progress|Upload|EXPORT)" || true
+        2>&1 | grep -E "(Progress|Upload|EXPORT|error:)" || true
+
+    local ipa_path="./output/App.ipa"
+    [ ! -f "$ipa_path" ] && { log_error "IPA not found at $ipa_path — export failed!"; exit 1; }
+    log_success "IPA exported: $ipa_path"
+
+    log_info "Uploading to App Store Connect via altool..."
+    xcrun altool --upload-app \
+        -f "$ipa_path" \
+        --type ios \
+        --apiKey "$KEY_ID" \
+        --apiIssuer "$ISSUER_ID" \
+        2>&1
 
     log_success "Upload complete"
     cd ../..
@@ -323,11 +413,19 @@ main() {
     RELEASE_ONLY=false
     [ "$1" == "--release-only" ] && { RELEASE_ONLY=true; log_info "Release-only mode"; }
 
-    [ "$RELEASE_ONLY" == "false" ] && build_and_upload
-
     get_app_id
-    get_latest_build
-    [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+
+    if [ "$RELEASE_ONLY" == "false" ]; then
+        # Snapshot current latest build BEFORE uploading so we can detect the new one
+        get_latest_build
+        local pre_upload_build_id="$BUILD_ID"
+        build_and_upload
+        # Poll until App Store Connect shows a build with a different ID
+        wait_for_new_build "$pre_upload_build_id"
+    else
+        get_latest_build
+        [ "$BUILD_STATE" != "VALID" ] && wait_for_processing
+    fi
 
     get_beta_group
     submit_to_beta_review

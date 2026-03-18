@@ -601,7 +601,7 @@ export default function AstrologyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#EAE5DF]">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
         {/* Soft spiral unfurling */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
@@ -627,11 +627,11 @@ export default function AstrologyPage() {
 
   if (!chartData || !hasBirthData) {
     return (
-      <div className="min-h-screen bg-[#EAE5DF] flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
         {/* Back to MAIA */}
         <Link
           href="/maia"
-          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/70 hover:bg-white/90 text-stone-600 hover:text-stone-800 transition-colors"
+          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-black/40 hover:bg-black/60 text-amber-200 hover:text-dune-amber transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">MAIA</span>
@@ -657,12 +657,12 @@ export default function AstrologyPage() {
             <MiniHoloflower size={80} isDayMode={false} animated={true} />
           </div>
           <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
-          <p className="text-stone-600 mb-6 max-w-md mx-auto">
+          <p className="text-amber-200/90 mb-6 max-w-md mx-auto">
             Enter your birth details to unlock your personalized astrological map
           </p>
           <Link
             href="/journey"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-dune-spice-orange/80 hover:bg-dune-spice-orange text-stone-800 font-semibold rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-semibold rounded-lg transition-colors"
           >
             <Sparkles className="w-5 h-5" />
             Enter Birth Details
@@ -673,12 +673,12 @@ export default function AstrologyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#EAE5DF] relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
       {/* Fixed Navigation Header */}
       <div className="fixed top-4 left-4 z-50">
         <Link
           href="/maia"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/70 hover:bg-white/90 text-stone-600 hover:text-stone-800 transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-black/40 hover:bg-black/60 text-amber-200 hover:text-dune-amber transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium">MAIA</span>
@@ -708,16 +708,16 @@ export default function AstrologyPage() {
       </div>
 
       {/* Distant moons glow */}
-      <div className="absolute top-20 right-20 w-32 h-32 bg-dune-spice-orange/10 rounded-full blur-3xl" />
-      <div className="absolute top-40 left-32 w-24 h-24 bg-dune-fremen-azure/10 rounded-full blur-3xl" />
+      <div className="absolute top-20 right-20 w-32 h-32 bg-spice-orange/10 rounded-full blur-3xl" />
+      <div className="absolute top-40 left-32 w-24 h-24 bg-fremen-azure/10 rounded-full blur-3xl" />
 
       {/* Content */}
       <div className="relative z-10">
         {/* Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-light tracking-wide !text-[#8B7355] mb-2">Your Cosmic Blueprint</h1>
-            <p className="!text-stone-500 text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
+            <h1 className="text-4xl font-light tracking-wide !text-dune-amber mb-2">Your Cosmic Blueprint</h1>
+            <p className="!text-amber-200 text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
 
             {/* Zodiac System Toggle */}
             <div className="mt-6 flex flex-col items-center gap-2">
@@ -728,9 +728,9 @@ export default function AstrologyPage() {
                 onAyanamsaChange={setAyanamsaAndPersist}
               />
               {zodiacMode === 'sidereal' && (
-                <p className="text-xs text-stone-800/70 mt-1">
+                <p className="text-xs text-amber-200/70 mt-1">
                   Showing sidereal positions in Planetary Positions.{' '}
-                  <Link href="/astrology/vedic" className="text-dune-amber hover:text-dune-spice-glow underline">
+                  <Link href="/astrology/vedic" className="text-dune-amber hover:text-spice-glow underline">
                     Full Vedic Dashboard →
                   </Link>
                 </p>
@@ -761,19 +761,19 @@ export default function AstrologyPage() {
           </div>
 
           {/* Archetypal Profile */}
-          <div className="bg-white/70 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl text-stone-800">
-            <h2 className="text-xl font-medium tracking-wide !text-[#8B7355] mb-4">Your Archetypal Profile</h2>
-            <p className="!text-stone-600 mb-6 text-sm tracking-wide">
+          <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl text-amber-200">
+            <h2 className="text-xl font-medium tracking-wide !text-dune-amber mb-4">Your Archetypal Profile</h2>
+            <p className="!text-amber-200/80 mb-6 text-sm tracking-wide">
               The core archetypal energies shaping your soul's journey
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white/50 border border-dune-spice-orange/30 rounded-lg p-4 text-stone-800">
-                <h3 className="!text-[#A08060] font-semibold mb-2">The Seeker</h3>
-                <p className="!text-stone-600 text-sm">Sagittarius Sun energy driving philosophical expansion and truth-seeking</p>
+              <div className="bg-black/30 border border-spice-orange/30 rounded-lg p-4 text-amber-200">
+                <h3 className="!text-spice-glow font-semibold mb-2">The Seeker</h3>
+                <p className="!text-amber-200/80 text-sm">Sagittarius Sun energy driving philosophical expansion and truth-seeking</p>
               </div>
-              <div className="bg-white/50 border border-dune-fremen-azure/30 rounded-lg p-4 text-stone-800">
+              <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4 text-amber-200">
                 <h3 className="!text-sky-300 font-semibold mb-2">The Mystic</h3>
-                <p className="!text-stone-600 text-sm">Pisces Moon connecting to emotional depth and universal compassion</p>
+                <p className="!text-amber-200/80 text-sm">Pisces Moon connecting to emotional depth and universal compassion</p>
               </div>
             </div>
           </div>
@@ -781,28 +781,29 @@ export default function AstrologyPage() {
           {/* Big Three */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {/* Sun */}
-            <div className="bg-white/70 backdrop-blur-md border border-dune-spice-orange/40 rounded-lg p-6 shadow-xl text-stone-800">
+            <div className="bg-black/40 backdrop-blur-md border border-spice-orange/40 rounded-lg p-6 shadow-xl text-amber-200">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-spice-orange to-dune-spice-deep flex items-center justify-center shadow-lg shadow-dune-spice-orange/30">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-spice-orange to-spice-deep flex items-center justify-center shadow-lg shadow-spice-orange/30">
                   <span className="text-2xl">☉</span>
                 </div>
                 <div>
-                  <h3 className="!text-[#8B7355] font-semibold">Sun · Core Identity</h3>
-                  <p className="text-sm !text-stone-600">Conscious Expression</p>
+                  <h3 className="!text-dune-amber font-semibold">Sun · Core Identity</h3>
+                  <p className="text-sm !text-amber-200/80">Conscious Expression</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-2xl font-bold !text-[#A08060]">
+                <p className="text-2xl font-bold !text-spice-glow">
                   {chartData.sun.sign} · {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.facetName || 'The Explorer'}
                 </p>
-                <p className="text-sm !text-stone-800/70">
+                <p className="text-sm !text-amber-200/70">
                   {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}
                 </p>
-                <p className="text-sm !text-stone-500/80 italic mt-2">
+                <p className="text-sm !text-amber-200/90 italic mt-2">
                   {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Archetypal essence'}
                 </p>
                 <Link
                   href={`/astrology/placements/sun`}
+                  prefetch={false}
                   className="text-sm !text-orange-400 hover:!text-orange-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
@@ -811,28 +812,29 @@ export default function AstrologyPage() {
             </div>
 
             {/* Moon */}
-            <div className="bg-white/70 backdrop-blur-md border border-dune-fremen-azure/50 rounded-lg p-6 shadow-xl text-stone-800">
+            <div className="bg-black/40 backdrop-blur-md border border-fremen-azure/50 rounded-lg p-6 shadow-xl text-amber-200">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-fremen-azure to-dune-ibad-blue flex items-center justify-center shadow-lg shadow-dune-fremen-azure/30">
-                  <span className="text-2xl text-stone-800">☽</span>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fremen-azure to-dune-ibad-blue flex items-center justify-center shadow-lg shadow-fremen-azure/30">
+                  <span className="text-2xl text-amber-200">☽</span>
                 </div>
                 <div>
-                  <h3 className="!text-[#8B7355] font-semibold">Moon · Emotional Truth</h3>
-                  <p className="text-sm !text-stone-600">Subconscious Landscape</p>
+                  <h3 className="!text-dune-amber font-semibold">Moon · Emotional Truth</h3>
+                  <p className="text-sm !text-amber-200/80">Subconscious Landscape</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <p className="text-2xl font-bold !text-sky-300">
                   {chartData.moon.sign} · {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.facetName || 'The Mystic'}
                 </p>
-                <p className="text-sm !text-stone-800/70">
+                <p className="text-sm !text-amber-200/70">
                   {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}
                 </p>
-                <p className="text-sm !text-stone-500/80 italic mt-2">
+                <p className="text-sm !text-amber-200/90 italic mt-2">
                   {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Emotional archetype'}
                 </p>
                 <Link
                   href={`/astrology/placements/moon`}
+                  prefetch={false}
                   className="text-sm !text-sky-400 hover:!text-sky-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
@@ -841,28 +843,29 @@ export default function AstrologyPage() {
             </div>
 
             {/* Ascendant */}
-            <div className="bg-white/70 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 shadow-xl text-stone-800">
+            <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/40 rounded-lg p-6 shadow-xl text-amber-200">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-bene-gesserit-gold to-dune-sienna-rock flex items-center justify-center shadow-lg shadow-dune-bene-gesserit-gold/30">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-bene-gesserit-gold to-dune-sienna-rock flex items-center justify-center shadow-lg shadow-bene-gesserit-gold/30">
                   <span className="text-2xl">⇡</span>
                 </div>
                 <div>
-                  <h3 className="!text-[#8B7355] font-semibold">Ascendant · Life Portal</h3>
-                  <p className="text-sm !text-stone-600">How You Meet the World</p>
+                  <h3 className="!text-dune-amber font-semibold">Ascendant · Life Portal</h3>
+                  <p className="text-sm !text-amber-200/80">How You Meet the World</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <p className="text-2xl font-bold !text-yellow-300">
                   {chartData.ascendant.sign} · {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.facetName || 'The Sustainer'}
                 </p>
-                <p className="text-sm !text-stone-800/70">
+                <p className="text-sm !text-amber-200/70">
                   {chartData.ascendant.degree.toFixed(1)}°
                 </p>
-                <p className="text-sm !text-stone-500/80 italic mt-2">
+                <p className="text-sm !text-amber-200/90 italic mt-2">
                   {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Rising energy'}
                 </p>
                 <Link
                   href={`/astrology/placements/ascendant`}
+                  prefetch={false}
                   className="text-sm !text-yellow-400 hover:!text-yellow-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
@@ -874,19 +877,19 @@ export default function AstrologyPage() {
           {/* House Wheel & Planetary Positions */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* House Wheel */}
-            <div className="bg-white/70 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10 }}>
+            <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10 }}>
               <h3 className="text-dune-amber font-semibold mb-4 text-center">House Wheel</h3>
 
               {/* House System Selector & Transits Toggle */}
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
                 {/* House System Dropdown */}
                 <div className="flex-1 relative">
-                  <label className="block text-xs text-stone-800/70 mb-1">House System</label>
+                  <label className="block text-xs text-amber-200/70 mb-1">House System</label>
                   <select
                     value={houseSystem}
                     onChange={(e) => handleHouseSystemChange(e.target.value as HouseSystemType)}
                     disabled={houseSystemLoading}
-                    className="w-full bg-black/50 border border-dune-bene-gesserit-gold/30 rounded-lg px-3 py-2 text-sm text-amber-200 appearance-none cursor-pointer hover:border-dune-amber/50 transition-colors disabled:opacity-50"
+                    className="w-full bg-black/50 border border-bene-gesserit-gold/30 rounded-lg px-3 py-2 text-sm text-amber-200 appearance-none cursor-pointer hover:border-dune-amber/50 transition-colors disabled:opacity-50"
                   >
                     {HOUSE_SYSTEMS.map((sys) => (
                       <option key={sys.value} value={sys.value}>
@@ -909,7 +912,7 @@ export default function AstrologyPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
                       showTransits
                         ? 'bg-dune-amber/20 border-dune-amber text-dune-amber'
-                        : 'bg-white/50 border-dune-bene-gesserit-gold/30 text-stone-600 hover:border-dune-amber/50'
+                        : 'bg-black/30 border-bene-gesserit-gold/30 text-amber-200/90 hover:border-dune-amber/50'
                     }`}
                   >
                     {transitLoading ? (
@@ -924,11 +927,11 @@ export default function AstrologyPage() {
 
               {/* House System Description + Fallback footnote */}
               <div className="mb-3">
-                <p className="text-stone-800/70 text-xs text-center italic">
+                <p className="text-amber-200/70 text-xs text-center italic">
                   {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.description || 'Click a planet on the wheel for insights'}
                 </p>
                 {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.fallback && (
-                  <p className="text-stone-800/50 text-[10px] mt-1 text-center">
+                  <p className="text-amber-200/60 text-[10px] mt-1 text-center">
                     *Uses Porphyry calculation — true {houseSystem === 'placidus' ? 'Placidus' : 'Koch'} requires complex iterative solving
                   </p>
                 )}
@@ -938,7 +941,7 @@ export default function AstrologyPage() {
               <div className="mb-4">
                 <button
                   onClick={() => setShowHouseGuide(!showHouseGuide)}
-                  className="w-full flex items-center justify-center gap-1 text-stone-800/50 hover:text-stone-800/70 text-[10px] transition-colors"
+                  className="w-full flex items-center justify-center gap-1 text-amber-200/60 hover:text-amber-200/70 text-[10px] transition-colors"
                 >
                   <span>Which lens fits your inquiry?</span>
                   {showHouseGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -952,7 +955,7 @@ export default function AstrologyPage() {
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-3 p-3 bg-white/50 rounded-lg border border-dune-bene-gesserit-gold/20 text-[10px] text-stone-800/70 space-y-2">
+                      <div className="mt-3 p-3 bg-black/30 rounded-lg border border-bene-gesserit-gold/20 text-[10px] text-amber-200/70 space-y-2">
                         <p><span className="text-dune-amber">Inner growth:</span> Koch — how you unfold through thresholds</p>
                         <p><span className="text-dune-amber">Timing & transits:</span> Whole Sign — cleanest for house-based prediction</p>
                         <p><span className="text-dune-amber">Soul story:</span> Whole Sign — each sign a chapter of the journey</p>
@@ -988,15 +991,15 @@ export default function AstrologyPage() {
             </div>
 
             {/* Planetary Positions - Clickable with Insights */}
-            <div className="bg-white/70 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl">
+            <div className="bg-black/40 backdrop-blur-md border border-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl">
               <h3 className="text-dune-amber font-semibold mb-4">
                 Planetary Positions
                 {zodiacMode === 'sidereal' && (
                   <span className="text-indigo-400 text-sm font-normal ml-2">(Sidereal)</span>
                 )}
               </h3>
-              <p className="text-stone-800/70 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
-              <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto">
+              <p className="text-amber-200/70 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
+              <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto text-amber-200">
                 {[
                   { name: 'Sun', icon: '☉', data: chartData.sun },
                   { name: 'Moon', icon: '☽', data: chartData.moon },
@@ -1044,7 +1047,7 @@ export default function AstrologyPage() {
                         }`}
                         onClick={() => setExpandedPlanet(isExpanded ? null : name)}
                       >
-                        <span className="text-stone-600 flex items-center gap-2">
+                        <span className="text-amber-200/90 flex items-center gap-2">
                           <span className="text-lg">{icon}</span>
                           {name}
                           {(data as PlanetPosition)?.retrograde && <span className="text-red-400 text-xs">℞</span>}
@@ -1052,7 +1055,7 @@ export default function AstrologyPage() {
                         <div className="flex items-center gap-2">
                           <span className={zodiacMode === 'sidereal' ? 'text-indigo-300' : 'text-dune-amber'}>
                             {displaySign} {displayDegree?.toFixed(1)}°
-                            <span className="text-stone-800/70 ml-2">H{(data as PlanetPosition)?.house}</span>
+                            <span className="text-amber-200/70 ml-2">H{(data as PlanetPosition)?.house}</span>
                           </span>
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4 text-dune-amber/60" />
@@ -1087,7 +1090,7 @@ export default function AstrologyPage() {
                                 >
                                   {zodiacArchetype?.element || 'Unknown'}
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full text-xs bg-white/70 text-stone-800/70 uppercase tracking-wide">
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-amber-200/80 uppercase tracking-wide">
                                   {zodiacArchetype?.modality || 'Unknown'}
                                 </span>
                                 {zodiacArchetype?.temperament && (
@@ -1101,27 +1104,27 @@ export default function AstrologyPage() {
                               <div className="space-y-3">
                                 {/* Planetary Archetype */}
                                 <div>
-                                  <h5 className="text-xs uppercase tracking-wider text-stone-800/70 mb-1">
+                                  <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
                                     {name} Archetype
                                   </h5>
                                   <p className="text-amber-200/90 text-sm font-medium">
                                     {planetArchetype?.archetype || 'The Guide'}
                                   </p>
-                                  <p className="text-stone-800/70 text-xs mt-1">
+                                  <p className="text-amber-200/70 text-xs mt-1">
                                     {planetArchetype?.description}
                                   </p>
                                 </div>
 
                                 {/* Sign Facet */}
                                 <div>
-                                  <h5 className="text-xs uppercase tracking-wider text-stone-800/70 mb-1">
+                                  <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
                                     {data.sign} Expression
                                   </h5>
                                   <p className="text-dune-amber text-sm font-medium">
                                     {zodiacArchetype?.facetName}
                                   </p>
                                   {zodiacArchetype?.archetypes?.mythological && (
-                                    <p className="text-stone-800/70 text-xs mt-1 italic">
+                                    <p className="text-amber-200/70 text-xs mt-1 italic">
                                       {zodiacArchetype.archetypes.mythological.slice(0, 2).join(', ')}
                                     </p>
                                   )}
@@ -1130,13 +1133,13 @@ export default function AstrologyPage() {
                                 {/* House Activation */}
                                 {houseData && (
                                   <div>
-                                    <h5 className="text-xs uppercase tracking-wider text-stone-800/70 mb-1">
+                                    <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
                                       House {(data as PlanetPosition).house} Activation
                                     </h5>
                                     <p className="text-amber-200/90 text-sm font-medium">
                                       {houseData.facet}
                                     </p>
-                                    <p className="text-stone-800/70 text-xs mt-1">
+                                    <p className="text-amber-200/70 text-xs mt-1">
                                       {houseData.lesson}
                                     </p>
                                   </div>
@@ -1145,7 +1148,7 @@ export default function AstrologyPage() {
                                 {/* Aspects */}
                                 {planetAspects.length > 0 && (
                                   <div>
-                                    <h5 className="text-xs uppercase tracking-wider text-stone-800/70 mb-1">
+                                    <h5 className="text-xs uppercase tracking-wider text-amber-200/70 mb-1">
                                       Connections ({planetAspects.length})
                                     </h5>
                                     <div className="space-y-1">
@@ -1167,9 +1170,9 @@ export default function AstrologyPage() {
                                             }`}>
                                               {aspect.type}
                                             </span>
-                                            <span className="text-stone-800/70"> with {otherPlanet}</span>
+                                            <span className="text-amber-200/70"> with {otherPlanet}</span>
                                             {aspectSynthesis?.coreQuestion && (
-                                              <p className="text-stone-800/70 text-xs italic mt-0.5 pl-2 border-l border-white/10">
+                                              <p className="text-amber-200/70 text-xs italic mt-0.5 pl-2 border-l border-white/10">
                                                 {aspectSynthesis.coreQuestion}
                                               </p>
                                             )}
@@ -1177,7 +1180,7 @@ export default function AstrologyPage() {
                                         );
                                       })}
                                       {planetAspects.length > 3 && (
-                                        <p className="text-stone-800/50 text-xs italic">
+                                        <p className="text-amber-200/60 text-xs italic">
                                           +{planetAspects.length - 3} more
                                         </p>
                                       )}
@@ -1206,12 +1209,12 @@ export default function AstrologyPage() {
           </div>
 
           {/* Major Aspects */}
-          <div className="bg-white/70 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 mb-12 shadow-xl relative">
+          <div className="bg-black/40 backdrop-blur-md border border-spice-orange/30 rounded-lg p-6 mb-12 shadow-xl relative">
             <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-dune-spice-orange" />
+              <TrendingUp className="w-5 h-5 text-spice-orange" />
               Major Aspects
             </h2>
-            <p className="text-stone-600 mb-6 text-sm tracking-wide">
+            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
               Archetypal dynamics between planetary energies in your chart
             </p>
 
@@ -1224,15 +1227,15 @@ export default function AstrologyPage() {
                         aspect.type === 'quincunx' ? '⚻' : '○';
 
                   const aspectColor = aspect.type === 'square' ? 'text-red-400' :
-                    aspect.type === 'conjunction' ? 'text-dune-spice-orange' :
-                      aspect.type === 'trine' ? 'text-dune-atreides-green' :
-                        'text-dune-fremen-azure';
+                    aspect.type === 'conjunction' ? 'text-spice-orange' :
+                      aspect.type === 'trine' ? 'text-green-400' :
+                        'text-sky-400';
 
                   return (
                     <Link
                       key={index}
                       href={`/astrology/aspects/${aspect.planet1.toLowerCase()}-${aspect.type}-${aspect.planet2.toLowerCase()}`}
-                      className="group bg-white/50 border border-dune-spice-sand/20 hover:border-dune-spice-orange/60 rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-dune-spice-orange/20"
+                      className="group bg-black/30 border border-spice-sand/20 hover:border-spice-orange/60 rounded-lg p-4 transition-all duration-300 hover:shadow-lg hover:shadow-spice-orange/20"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -1241,11 +1244,11 @@ export default function AstrologyPage() {
                             {aspect.planet1} {aspect.type} {aspect.planet2}
                           </span>
                         </div>
-                        <span className="text-xs text-stone-800/70">
+                        <span className="text-xs text-amber-200/70">
                           {aspect.orb.toFixed(1)}° orb
                         </span>
                       </div>
-                      <p className="text-sm text-stone-600 group-hover:text-dune-spice-glow transition-colors">
+                      <p className="text-sm text-amber-200/90 group-hover:text-spice-glow transition-colors">
                         Tap to explore archetypal interpretation →
                       </p>
                     </Link>
@@ -1262,9 +1265,9 @@ export default function AstrologyPage() {
                       aspect.type === 'conjunction' ? '☌' :
                         aspect.type === 'trine' ? '△' : '○';
                     return (
-                      <div key={index} className="bg-white/50 border border-dune-spice-sand/20 rounded-lg p-4">
+                      <div key={index} className="bg-black/30 border border-spice-sand/20 rounded-lg p-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl text-dune-spice-orange">{aspectIcon}</span>
+                          <span className="text-2xl text-spice-orange">{aspectIcon}</span>
                           <span className="text-dune-amber font-semibold">
                             {aspect.planet1} {aspect.type} {aspect.planet2}
                           </span>
@@ -1279,12 +1282,12 @@ export default function AstrologyPage() {
                   <p className="text-dune-amber font-medium mb-2">
                     {chartData.aspects.length} aspects in your chart
                   </p>
-                  <p className="text-stone-600 text-sm mb-4 text-center px-4">
+                  <p className="text-amber-200/90 text-sm mb-4 text-center px-4">
                     Unlock detailed aspect interpretations with Personal Mentor
                   </p>
                   <Link
                     href="/maia/membership"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-dune-spice-orange/80 hover:bg-dune-spice-orange text-stone-800 font-medium rounded-lg transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-medium rounded-lg transition-colors"
                   >
                     <Sparkles className="w-4 h-4" />
                     Upgrade to unlock
@@ -1296,22 +1299,22 @@ export default function AstrologyPage() {
 
           {/* North & South Nodes */}
           {(chartData.northNode || chartData.southNode) && (
-          <div className="bg-white/70 backdrop-blur-md border border-dune-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
+          <div className="bg-black/40 backdrop-blur-md border border-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
             <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
               <span className="text-2xl">☊☋</span>
               North & South Nodes
             </h2>
-            <p className="text-stone-600 mb-6 text-sm tracking-wide">
+            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
               Your soul's evolutionary path: past mastery and future growth
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* North Node */}
               {chartData.northNode && (
-              <div className="bg-white/50 border border-dune-atreides-green/40 rounded-lg p-5">
+              <div className="bg-black/30 border border-atreides-green/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☊</span>
-                  <h3 className="text-xl font-bold text-dune-atreides-green">North Node</h3>
+                  <h3 className="text-xl font-bold text-green-400">North Node</h3>
                 </div>
                 <p className="text-lg font-semibold text-dune-amber mb-2">
                   {chartData.northNode.sign} in {chartData.northNode.house}
@@ -1319,10 +1322,10 @@ export default function AstrologyPage() {
                    chartData.northNode.house === 2 ? 'nd' :
                    chartData.northNode.house === 3 ? 'rd' : 'th'} House
                 </p>
-                <p className="text-sm text-stone-600 mb-2">
+                <p className="text-sm text-amber-200/90 mb-2">
                   {chartData.northNode.degree.toFixed(1)}°
                 </p>
-                <p className="text-stone-600 text-sm mb-3">
+                <p className="text-amber-200/90 text-sm mb-3">
                   Your soul's calling toward {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'growth'} energy.
                   {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
                    ` Embrace the archetype of ${getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
@@ -1332,10 +1335,10 @@ export default function AstrologyPage() {
 
               {/* South Node */}
               {chartData.southNode && (
-              <div className="bg-white/50 border border-dune-sienna-rock/40 rounded-lg p-5">
+              <div className="bg-black/30 border border-dune-sienna-rock/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☋</span>
-                  <h3 className="text-xl font-bold text-dune-sienna-rock">South Node</h3>
+                  <h3 className="text-xl font-bold text-orange-400">South Node</h3>
                 </div>
                 <p className="text-lg font-semibold text-dune-amber mb-2">
                   {chartData.southNode.sign} in {chartData.southNode.house}
@@ -1343,10 +1346,10 @@ export default function AstrologyPage() {
                    chartData.southNode.house === 2 ? 'nd' :
                    chartData.southNode.house === 3 ? 'rd' : 'th'} House
                 </p>
-                <p className="text-sm text-stone-600 mb-2">
+                <p className="text-sm text-amber-200/90 mb-2">
                   {chartData.southNode.degree.toFixed(1)}°
                 </p>
-                <p className="text-stone-600 text-sm mb-3">
+                <p className="text-amber-200/90 text-sm mb-3">
                   Past life mastery in {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'expression'} energy.
                   {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
                    ` Release the shadow of ${getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
@@ -1358,32 +1361,32 @@ export default function AstrologyPage() {
           )}
 
           {/* Current Transits */}
-          <div className="bg-white/70 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">
+          <div className="bg-black/40 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">
             <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
               <span className="text-lg">🌙</span>
               Current Transits & Activations
             </h2>
-            <p className="text-stone-600 mb-6 text-sm tracking-wide">
+            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
               Planetary movements currently influencing your chart
             </p>
 
             <div className="space-y-4">
-              <div className="bg-white/50 border border-dune-spice-orange/30 rounded-lg p-4">
+              <div className="bg-black/30 border border-spice-orange/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-dune-spice-orange">Jupiter conjunct Natal Sun</h3>
-                  <span className="text-xs text-stone-800/70">Active Now</span>
+                  <h3 className="font-semibold text-spice-orange">Jupiter conjunct Natal Sun</h3>
+                  <span className="text-xs text-amber-200/70">Active Now</span>
                 </div>
-                <p className="text-stone-600 text-sm">
+                <p className="text-amber-200/90 text-sm">
                   A time of expansion and opportunity. Your philosophical nature is amplified, bringing growth in teaching, travel, or higher learning.
                 </p>
               </div>
 
-              <div className="bg-white/50 border border-dune-fremen-azure/30 rounded-lg p-4">
+              <div className="bg-black/30 border border-fremen-azure/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-dune-fremen-azure">Saturn trine Natal Moon</h3>
-                  <span className="text-xs text-stone-800/70">Approaching</span>
+                  <h3 className="font-semibold text-sky-400">Saturn trine Natal Moon</h3>
+                  <span className="text-xs text-amber-200/70">Approaching</span>
                 </div>
-                <p className="text-stone-600 text-sm">
+                <p className="text-amber-200/90 text-sm">
                   Emotional maturity and structure. A supportive time for grounding feelings and building sustainable emotional foundations.
                 </p>
               </div>
@@ -1391,9 +1394,9 @@ export default function AstrologyPage() {
           </div>
 
           {/* Spiralogic Pathways */}
-          <div className="bg-white/70 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 shadow-xl">
+          <div className="bg-black/40 backdrop-blur-md border border-spice-orange/30 rounded-lg p-6 shadow-xl">
             <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6">Spiralogic Pathways</h2>
-            <p className="text-stone-600 mb-6 text-sm tracking-wide">
+            <p className="text-amber-200/90 mb-6 text-sm tracking-wide">
               The 12 houses organized by elemental pathways and consciousness functions
             </p>
 
@@ -1401,16 +1404,16 @@ export default function AstrologyPage() {
               {/* Fire Pathway */}
               <Link
                 href="/astrology/pathways/fire"
-                className="group bg-white/50 border border-dune-spice-orange/40 hover:border-dune-spice-orange/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-dune-spice-orange/20"
+                className="group bg-black/30 border border-spice-orange/40 hover:border-spice-orange/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-spice-orange/20"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🔥</div>
                   <div>
                     <h3 className="text-xl font-bold text-dune-amber">Fire Pathway</h3>
-                    <p className="text-sm text-stone-600">Houses 1, 5, 9 · Vision & Projection</p>
+                    <p className="text-sm text-amber-200/90">Houses 1, 5, 9 · Vision & Projection</p>
                   </div>
                 </div>
-                <p className="text-stone-600 group-hover:text-dune-spice-orange transition-colors">
+                <p className="text-amber-200/90 group-hover:text-spice-orange transition-colors">
                   Experience → Expression → Expansion
                 </p>
               </Link>
@@ -1418,16 +1421,16 @@ export default function AstrologyPage() {
               {/* Water Pathway */}
               <Link
                 href="/astrology/pathways/water"
-                className="group bg-white/50 border border-dune-fremen-azure/40 hover:border-dune-fremen-azure/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-dune-fremen-azure/20"
+                className="group bg-black/30 border border-fremen-azure/40 hover:border-fremen-azure/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-fremen-azure/20"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">💧</div>
                   <div>
                     <h3 className="text-xl font-bold text-dune-amber">Water Pathway</h3>
-                    <p className="text-sm text-stone-600">Houses 4, 8, 12 · Introspection & Depth</p>
+                    <p className="text-sm text-amber-200/90">Houses 4, 8, 12 · Introspection & Depth</p>
                   </div>
                 </div>
-                <p className="text-stone-600 group-hover:text-dune-fremen-azure transition-colors">
+                <p className="text-amber-200/90 group-hover:text-sky-400 transition-colors">
                   Heart → Healing → Holiness
                 </p>
               </Link>
@@ -1435,16 +1438,16 @@ export default function AstrologyPage() {
               {/* Earth Pathway */}
               <Link
                 href="/astrology/pathways/earth"
-                className="group bg-white/50 border border-dune-atreides-green/40 hover:border-dune-atreides-green/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-dune-atreides-green/20"
+                className="group bg-black/30 border border-atreides-green/40 hover:border-atreides-green/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-atreides-green/20"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🌍</div>
                   <div>
                     <h3 className="text-xl font-bold text-dune-amber">Earth Pathway</h3>
-                    <p className="text-sm text-stone-600">Houses 2, 6, 10 · Manifestation & Grounding</p>
+                    <p className="text-sm text-amber-200/90">Houses 2, 6, 10 · Manifestation & Grounding</p>
                   </div>
                 </div>
-                <p className="text-stone-600 group-hover:text-dune-atreides-green transition-colors">
+                <p className="text-amber-200/90 group-hover:text-green-400 transition-colors">
                   Mission → Means → Medicine
                 </p>
               </Link>
@@ -1452,16 +1455,16 @@ export default function AstrologyPage() {
               {/* Air Pathway */}
               <Link
                 href="/astrology/pathways/air"
-                className="group bg-white/50 border border-dune-bene-gesserit-gold/40 hover:border-dune-bene-gesserit-gold/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-dune-bene-gesserit-gold/20"
+                className="group bg-black/30 border border-bene-gesserit-gold/40 hover:border-bene-gesserit-gold/80 hover:bg-black/50 rounded-lg p-6 transition-all duration-300 shadow-lg hover:shadow-bene-gesserit-gold/20"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🌬</div>
                   <div>
                     <h3 className="text-xl font-bold text-dune-amber">Air Pathway</h3>
-                    <p className="text-sm text-stone-600">Houses 3, 7, 11 · Communication & Connection</p>
+                    <p className="text-sm text-amber-200/90">Houses 3, 7, 11 · Communication & Connection</p>
                   </div>
                 </div>
-                <p className="text-stone-600 group-hover:text-dune-bene-gesserit-gold transition-colors">
+                <p className="text-amber-200/90 group-hover:text-yellow-400 transition-colors">
                   Connection → Community → Consciousness
                 </p>
               </Link>
@@ -1471,19 +1474,19 @@ export default function AstrologyPage() {
             <div className="mt-8">
               <Link
                 href="/deep-dive"
-                className="group block bg-white/50 hover:bg-black/50 border border-dune-spice-orange/40 hover:border-dune-spice-orange/70 rounded-xl p-8 transition-all duration-300 shadow-lg hover:shadow-dune-spice-orange/20"
+                className="group block bg-black/30 hover:bg-black/50 border border-spice-orange/40 hover:border-spice-orange/70 rounded-xl p-8 transition-all duration-300 shadow-lg hover:shadow-spice-orange/20"
               >
                 <div className="flex items-start gap-4">
                   <div className="text-5xl">📖</div>
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-dune-amber group-hover:text-dune-spice-orange transition-colors mb-2">
+                    <h3 className="text-2xl font-bold text-dune-amber group-hover:text-spice-orange transition-colors mb-2">
                       The Deep Dive: Elemental Alchemy
                     </h3>
-                    <p className="text-stone-600 mb-3">
+                    <p className="text-amber-200/90 mb-3">
                       Go beyond your chart into the phenomenological journey through consciousness.
                       Kelly Nezat's book as living curriculum.
                     </p>
-                    <div className="flex items-center gap-2 text-dune-spice-glow text-sm">
+                    <div className="flex items-center gap-2 text-spice-glow text-sm">
                       <span>Begin your transformation</span>
                       <span>→</span>
                     </div>
@@ -1495,7 +1498,7 @@ export default function AstrologyPage() {
             {/* Cross-System Convergence */}
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold text-stone-600">
+                <h2 className="text-lg font-semibold text-amber-200/90">
                   Additional Wisdom Systems
                 </h2>
                 <TooltipProvider>
@@ -1506,7 +1509,7 @@ export default function AstrologyPage() {
                         aria-label="What does cross-system convergence mean?"
                         className="inline-flex items-center"
                       >
-                        <Info className="w-4 h-4 text-stone-800/40 hover:text-stone-800/70" />
+                        <Info className="w-4 h-4 text-amber-200/40 hover:text-amber-200/70" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
@@ -1515,7 +1518,7 @@ export default function AstrologyPage() {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="text-sm text-stone-800/70 mb-4">
+              <p className="text-sm text-amber-200/70 mb-4">
                 {CARD_COPY[resolvedMode]}
               </p>
 
@@ -1525,14 +1528,14 @@ export default function AstrologyPage() {
                   {/* Vedic Astrology */}
                   <Link
                     href="/astrology/vedic"
-                    className="group inline-flex items-center gap-3 bg-white/50 hover:bg-black/50 border border-indigo-500/40 hover:border-indigo-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-indigo-500/20"
+                    className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-indigo-500/40 hover:border-indigo-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-indigo-500/20"
                   >
                     <div className="text-4xl">🕉️</div>
                     <div className="text-left">
                       <h3 className="text-xl font-bold text-dune-amber group-hover:text-indigo-300 transition-colors">
                         Vedic Astrology
                       </h3>
-                      <p className="text-stone-600 text-sm">
+                      <p className="text-amber-200/90 text-sm">
                         Explore your sidereal chart, nakshatra, and Vimshottari Dasha periods →
                       </p>
                     </div>
@@ -1541,14 +1544,14 @@ export default function AstrologyPage() {
                   {/* Mayan Astrology */}
                   <Link
                     href="/astrology/mayan"
-                    className="group inline-flex items-center gap-3 bg-white/50 hover:bg-black/50 border border-dune-bene-gesserit-gold/40 hover:border-dune-bene-gesserit-gold/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-dune-bene-gesserit-gold/20"
+                    className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-bene-gesserit-gold/40 hover:border-bene-gesserit-gold/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-bene-gesserit-gold/20"
                   >
                     <div className="text-4xl">☀️</div>
                     <div className="text-left">
-                      <h3 className="text-xl font-bold text-dune-amber group-hover:text-dune-bene-gesserit-gold transition-colors">
+                      <h3 className="text-xl font-bold text-dune-amber group-hover:text-yellow-400 transition-colors">
                         Mayan Astrology
                       </h3>
-                      <p className="text-stone-600 text-sm">
+                      <p className="text-amber-200/90 text-sm">
                         Discover your Galactic Signature in the Tzolk&apos;in Sacred Calendar →
                       </p>
                     </div>
@@ -1557,14 +1560,14 @@ export default function AstrologyPage() {
                   {/* Chinese Astrology */}
                   <Link
                     href="/astrology/chinese"
-                    className="group inline-flex items-center gap-3 bg-white/50 hover:bg-black/50 border border-red-500/40 hover:border-red-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-red-500/20"
+                    className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-red-500/40 hover:border-red-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-red-500/20"
                   >
                     <div className="text-4xl">🐉</div>
                     <div className="text-left">
                       <h3 className="text-xl font-bold text-dune-amber group-hover:text-red-400 transition-colors">
                         Chinese Astrology
                       </h3>
-                      <p className="text-stone-600 text-sm">
+                      <p className="text-amber-200/90 text-sm">
                         Explore your zodiac animal, element, and cosmic destiny →
                       </p>
                     </div>
@@ -1573,14 +1576,14 @@ export default function AstrologyPage() {
                   {/* Synastry */}
                   <Link
                     href="/astrology/synastry"
-                    className="group inline-flex items-center gap-3 bg-white/50 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
+                    className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
                   >
                     <div className="text-4xl">💞</div>
                     <div className="text-left">
                       <h3 className="text-xl font-bold text-dune-amber group-hover:text-violet-300 transition-colors">
                         Synastry
                       </h3>
-                      <p className="text-stone-600 text-sm">
+                      <p className="text-amber-200/90 text-sm">
                         Compare two charts for harmony, friction, and soul-growth vectors →
                       </p>
                     </div>
@@ -1591,56 +1594,56 @@ export default function AstrologyPage() {
                 <div className="relative">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60 pointer-events-none">
                     {/* Vedic - locked preview */}
-                    <div className="inline-flex items-center gap-3 bg-white/50 border border-indigo-500/30 rounded-xl p-6">
+                    <div className="inline-flex items-center gap-3 bg-black/30 border border-indigo-500/30 rounded-xl p-6">
                       <div className="text-4xl opacity-50">🕉️</div>
                       <div className="text-left">
                         <h3 className="text-xl font-bold text-dune-amber/70 flex items-center gap-2">
                           Vedic Astrology
                           <Lock className="w-4 h-4" />
                         </h3>
-                        <p className="text-stone-800/70 text-sm">
+                        <p className="text-amber-200/70 text-sm">
                           Sidereal chart, nakshatra, Dasha periods
                         </p>
                       </div>
                     </div>
 
                     {/* Mayan - locked preview */}
-                    <div className="inline-flex items-center gap-3 bg-white/50 border border-dune-bene-gesserit-gold/30 rounded-xl p-6">
+                    <div className="inline-flex items-center gap-3 bg-black/30 border border-bene-gesserit-gold/30 rounded-xl p-6">
                       <div className="text-4xl opacity-50">☀️</div>
                       <div className="text-left">
                         <h3 className="text-xl font-bold text-dune-amber/70 flex items-center gap-2">
                           Mayan Astrology
                           <Lock className="w-4 h-4" />
                         </h3>
-                        <p className="text-stone-800/70 text-sm">
+                        <p className="text-amber-200/70 text-sm">
                           Galactic Signature, Tzolk&apos;in Calendar
                         </p>
                       </div>
                     </div>
 
                     {/* Chinese - locked preview */}
-                    <div className="inline-flex items-center gap-3 bg-white/50 border border-red-500/30 rounded-xl p-6">
+                    <div className="inline-flex items-center gap-3 bg-black/30 border border-red-500/30 rounded-xl p-6">
                       <div className="text-4xl opacity-50">🐉</div>
                       <div className="text-left">
                         <h3 className="text-xl font-bold text-dune-amber/70 flex items-center gap-2">
                           Chinese Astrology
                           <Lock className="w-4 h-4" />
                         </h3>
-                        <p className="text-stone-800/70 text-sm">
+                        <p className="text-amber-200/70 text-sm">
                           Zodiac animal, element, cosmic destiny
                         </p>
                       </div>
                     </div>
 
                     {/* Synastry - locked preview */}
-                    <div className="inline-flex items-center gap-3 bg-white/50 border border-violet-500/30 rounded-xl p-6">
+                    <div className="inline-flex items-center gap-3 bg-black/30 border border-violet-500/30 rounded-xl p-6">
                       <div className="text-4xl opacity-50">💞</div>
                       <div className="text-left">
                         <h3 className="text-xl font-bold text-dune-amber/70 flex items-center gap-2">
                           Synastry
                           <Lock className="w-4 h-4" />
                         </h3>
-                        <p className="text-stone-800/70 text-sm">
+                        <p className="text-amber-200/70 text-sm">
                           Chart comparison, relationship analysis
                         </p>
                       </div>
@@ -1653,12 +1656,12 @@ export default function AstrologyPage() {
                     <h3 className="text-lg font-medium text-dune-amber mb-2">
                       Unlock 4 Wisdom Systems
                     </h3>
-                    <p className="text-stone-600 text-sm mb-4 max-w-md">
+                    <p className="text-amber-200/90 text-sm mb-4 max-w-md">
                       Access Vedic, Mayan, Chinese astrology and Synastry relationship analysis with Personal Mentor
                     </p>
                     <Link
                       href="/maia/membership"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-dune-spice-orange/80 hover:bg-dune-spice-orange text-stone-800 font-medium rounded-lg transition-colors"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-spice-orange/80 hover:bg-spice-orange text-amber-900 font-medium rounded-lg transition-colors"
                     >
                       <Sparkles className="w-4 h-4" />
                       Upgrade to unlock
@@ -1673,19 +1676,19 @@ export default function AstrologyPage() {
               <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5 shadow-lg">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-semibold text-stone-800">Saved Synastry</h2>
-                    <p className="text-sm text-stone-800/70">Your recent relationship analyses</p>
+                    <h2 className="text-lg font-semibold text-amber-200">Saved Synastry</h2>
+                    <p className="text-sm text-amber-200/70">Your recent relationship analyses</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Link
                       href="/astrology/synastry"
-                      className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-stone-800/70 hover:bg-white/70"
+                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-amber-200/70 hover:bg-white/15"
                     >
                       New
                     </Link>
                     <Link
                       href="/astrology/synastry/saved"
-                      className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-stone-800/70 hover:bg-white/70"
+                      className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-amber-200/70 hover:bg-white/15"
                     >
                       View all
                     </Link>
@@ -1695,13 +1698,13 @@ export default function AstrologyPage() {
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                   {savedSynastryLoading ? (
                     <>
-                      <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
-                      <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
-                      <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
+                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
+                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
+                      <div className="h-20 rounded-xl bg-white/10 animate-pulse" />
                     </>
                   ) : sortedSavedSynastry.length === 0 ? (
-                    <div className="col-span-3 text-sm text-stone-800/70 py-4">
-                      No saved synastry yet. Run one and hit <span className="text-stone-600">Save to Timeline</span>.
+                    <div className="col-span-3 text-sm text-amber-200/70 py-4">
+                      No saved synastry yet. Run one and hit <span className="text-amber-200/90">Save to Timeline</span>.
                     </div>
                   ) : (
                     sortedSavedSynastry.map((item) => {
@@ -1713,13 +1716,13 @@ export default function AstrologyPage() {
                         <Link
                           key={item.analysisId}
                           href={`/astrology/synastry/${item.analysisId}`}
-                          className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-violet-500/40 hover:bg-white/50 transition"
+                          className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-violet-500/40 hover:bg-black/40 transition"
                         >
-                          <div className="text-sm font-semibold text-stone-800 group-hover:text-violet-200">
+                          <div className="text-sm font-semibold text-amber-200 group-hover:text-violet-200">
                             {a} × {b}
                           </div>
-                          <div className="mt-1 text-xs text-stone-800/50">Saved {when}</div>
-                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-stone-800/50">
+                          <div className="mt-1 text-xs text-amber-200/60">Saved {when}</div>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-amber-200/60">
                             {typeof s.attraction === 'number' && <span>A:{s.attraction.toFixed(1)}</span>}
                             {typeof s.harmony === 'number' && <span>H:{s.harmony.toFixed(1)}</span>}
                             {typeof s.friction === 'number' && <span>F:{s.friction.toFixed(1)}</span>}

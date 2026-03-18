@@ -887,7 +887,12 @@ export async function calculateTransits(date: Date): Promise<Record<string, Plan
 
   for (const bodyName of bodies) {
     const body = Astronomy.Body[bodyName as keyof typeof Astronomy.Body];
-    const lon = Astronomy.EclipticLongitude(body, time);
+
+    // EclipticLongitude does not work for the Sun (no heliocentric reference for itself).
+    // Use SunPosition() which returns geocentric ecliptic coordinates.
+    const lon = bodyName === 'Sun'
+      ? Astronomy.SunPosition(time).elon
+      : Astronomy.EclipticLongitude(body, time);
 
     transits[bodyName.toLowerCase()] = {
       ...longitudeToZodiac(lon),
@@ -897,4 +902,20 @@ export async function calculateTransits(date: Date): Promise<Record<string, Plan
   }
 
   return transits;
+}
+
+/**
+ * Calculate moon phase angle from ephemeris.
+ * Returns degrees 0–360 (0 = New Moon, 90 = First Quarter, 180 = Full Moon, 270 = Last Quarter).
+ * Use this instead of synodic approximations — it reads the actual sky.
+ */
+export function getMoonPhaseData(date: Date = new Date()): {
+  degrees: number;
+  percentage: number;
+} {
+  const time = Astronomy.MakeTime(date);
+  const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, time);
+  const sunLon = Astronomy.EclipticLongitude(Astronomy.Body.Sun, time);
+  const degrees = ((moonLon - sunLon) % 360 + 360) % 360;
+  return { degrees, percentage: Math.round((degrees / 360) * 100) };
 }

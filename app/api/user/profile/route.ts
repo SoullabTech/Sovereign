@@ -47,12 +47,18 @@ export async function GET(request: NextRequest) {
           isGuest = false;
           console.log(`✅ [USER-PROFILE] Found member: ${userName} (id: ${member.id})`);
 
+          // Normalize empty strings to null — prevents '' from poisoning downstream fallback chains
+          const normalizedPreferredName =
+            typeof member.preferred_name === 'string' && member.preferred_name.trim().length > 0
+              ? member.preferred_name.trim()
+              : null;
+
           // Return full member data for proper name handling
           const profile = {
             id: member.id,
             name: userName,
             username: member.username,
-            preferredName: member.preferred_name,
+            preferredName: normalizedPreferredName,
             domain: domain || 'localhost',
             isGuest: false,
             preferences: {

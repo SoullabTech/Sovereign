@@ -37,12 +37,23 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 
 ## Current priority thread (update each session)
 
-- **Date**: 2026-02-13
-- **Current milestone**: Bridge D implemented — spiral state persistence layer complete
-- **Last change**: Added `member_spiral_state` table + fire-and-forget persistence to prevent treating returning members as new
-- **Next action**: Run migration, verify continuity across server restarts
-- **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
-- **State of the system**: Bridge D landed. Anti-regression infrastructure in place. Structural continuity without content surveillance.
+- **Date**: 2026-03-16 (evening)
+- **Current milestone**: 4-phase sequencing confirmed working. Participatory theme detection deployed. Typecheck clean.
+- **Last changes** (this session, commits on `main`):
+  1. `d0097f39` — **participatory marker expansion**: ~60 natural-language variants added to `THEME_LANGUAGE_MARKERS` across all 6 themes. Ops script (`scripts/check-maia-state.sh`) and email normalization tests committed.
+  2. `725216b1` — **typecheck fix**: removed untyped continuity-stack fields from `between/chat` AIN telemetry call. Typecheck now zero errors.
+- **AIN shape results** (4-phase sequencing is working):
+  - 2h window (330 turns): mirror=70%, bridge=33%, next_step=**30.7%**, pass=**13.6%**
+  - Baseline was: bridge=22%, next_step=1%, pass=0.2%
+  - Question answered: yes, 4-phase sequencing moved next_step from 1% → 30%
+- **Participatory theme signals**: 0 rows after rebuild (expected — new markers not yet exercised). Check again after 24–48h of traffic using `./scripts/check-maia-state.sh`.
+- **Next action**: Observe theme signal volume over next 24–48h. Run `./scripts/check-maia-state.sh 48` to evaluate marker expansion impact.
+- **Underlying question**: Do expanded participatory markers produce 10–25 signals per 170 turns (vs 1 previously)?
+- **State of the system**: All layers live. Container rebuilt with expanded markers. Worktrees pruned (~120 stale removed). 34 commits ahead of origin/main pushed. Typecheck clean.
+- **Ops diagnostic**:
+  ```bash
+  ./scripts/check-maia-state.sh 48   # theme signals + AIN aggregate
+  ```
 
 ## Re-entry vow (for this session)
 

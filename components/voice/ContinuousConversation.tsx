@@ -212,6 +212,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
+  const recognitionNeedsRefreshRef = useRef(false); // True after VFP abort — Chrome reused objects silently fail
   const backoffStepRef = useRef(0); // Current exponential backoff step (0 = no backoff)
   const recognitionActiveRef = useRef(false); // True between .start() and .onend — prevents double-start InvalidStateError
 
@@ -287,7 +288,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
       setTimeout(() => {
-        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
+        if (isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
+          // 🔥 Recreate if VFP aborted — Chrome zombie objects silently fail on .start()
+          if (recognitionNeedsRefreshRef.current) {
+            if (recognitionRef.current) {
+              recognitionRef.current.onstart = null;
+              recognitionRef.current.onresult = null;
+              recognitionRef.current.onerror = null;
+              recognitionRef.current.onend = null;
+            }
+            recognitionRef.current = initializeSpeechRecognition();
+            recognitionNeedsRefreshRef.current = false;
+            if (!recognitionRef.current) {
+              console.warn('⚠️ [ContinuousConversation] Failed to recreate recognition object after VFP abort');
+              return;
+            }
+            console.log('🔄 [ContinuousConversation] Fresh recognition object created for auto-resume');
+          }
+          if (!recognitionRef.current) return;
           try {
             recognitionRef.current.start();
             setIsRecording(true);
@@ -340,6 +358,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
       onRecordingStateChange?.(true);
+      // Web speech confirmed live — exit ARMING into LISTENING
+      if (micStateRef.current === 'ARMING') {
+        setMicState('LISTENING', 'web_recognition_started');
+        if (armingTimeoutRef.current) {
+          clearTimeout(armingTimeoutRef.current);
+          armingTimeoutRef.current = null;
+        }
+      }
       accumulatedTranscript.current = "";
 
       // Clear conversation timeout when user starts speaking
@@ -530,6 +556,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Check if recognition ended too quickly after starting (rapid abort pattern)
       const timeSinceStart = Date.now() - recognitionStartTime.current;
       if (timeSinceStart < 500 && recognitionStartTime.current > 0) { // Ended in less than 500ms
+        // Expected abort: MAIA started speaking and VFP killed recognition.
+        // Preserve isListening so the auto-resume effect can restart after TTS ends.
+        if (isSpeakingRef.current || inputSuppressedRef.current) {
+          console.log('⏸️ [onend] Recognition aborted quickly because MAIA started speaking - preserving listening state');
+          // 🔥 FIX: Mark for refresh. Chrome's Web Speech API silently fails onresult
+          // when start() is called on a previously-aborted object. Force fresh object next session.
+          recognitionNeedsRefreshRef.current = true;
+          return;
+        }
         console.log('🚨 [onend] Recognition ended too quickly after start (' + timeSinceStart + 'ms) - possible infinite abort loop, stopping');
         setIsListening(false);
         isListeningRef.current = false;
@@ -1186,6 +1221,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🛡️ CRASH PREVENTION: Track startup state to prevent concurrent starts
   const isStartingRef = useRef(false);
   const lastStartAttemptRef = useRef(0);
+  const armingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Hard timeout to exit ARMING
+  const startAttemptTokenRef = useRef(0); // Increments each attempt; stale async paths check this
 
   // Start listening
   const startListening = useCallback(async (options?: { forceOverride?: boolean }) => {
@@ -1222,13 +1259,26 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     lastStartAttemptRef.current = now;
 
-    // 🛡️ CRASH PREVENTION: Don't start if already starting
-    if (isStartingRef.current) {
-      console.log('🚫 [ContinuousConversation] Already starting - ignoring duplicate call');
+    // 🛡️ CRASH PREVENTION: Don't start if already starting or still in ARMING
+    if (isStartingRef.current || micStateRef.current === 'ARMING') {
+      console.log('🚫 [ContinuousConversation] Already starting / ARMING - ignoring duplicate tap');
       return;
     }
     isStartingRef.current = true;
+    const attemptToken = ++startAttemptTokenRef.current; // Unique token for this attempt
     setMicState('ARMING', 'startListening');
+
+    // 🛡️ Hard ARMING timeout: if mic hasn't confirmed within 2s, reset to IDLE.
+    // Prevents any async failure from leaving state stuck in ARMING.
+    if (armingTimeoutRef.current) clearTimeout(armingTimeoutRef.current);
+    armingTimeoutRef.current = setTimeout(() => {
+      if (startAttemptTokenRef.current === attemptToken && micStateRef.current === 'ARMING') {
+        console.warn('⏱️ [ContinuousConversation] ARMING timeout — resetting to IDLE');
+        setMicState('IDLE', 'arming_timeout');
+        isStartingRef.current = false;
+      }
+      armingTimeoutRef.current = null;
+    }, 2000);
 
     // 🔄 CRITICAL: Determine platform at START time
     const platform = Capacitor.getPlatform();
@@ -1245,6 +1295,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (isSpeakingRef.current && !options?.forceOverride) {
       console.log('🚫 [ContinuousConversation] BLOCKED: Cannot start listening while MAIA is speaking');
       isStartingRef.current = false;
+      setMicState('IDLE', 'start_blocked_maia_speaking');
       return;
     }
 
@@ -1275,6 +1326,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setVoiceError(ready.reason || 'Speech recognition not available');
           // DON'T show "Listening..." if we can't actually listen
           isStartingRef.current = false;
+          setMicState('IDLE', 'permissions_failed');
           return;
         }
 
@@ -1738,8 +1790,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('📡 [Web] Permissions OK - showing listening state');
 
     // Initialize speech recognition
-    if (!recognitionRef.current) {
+    // 🔥 FIX: Always create a fresh recognition object if the previous one was aborted by VFP.
+    // Chrome's Web Speech API silently fails onresult when start() is called on an aborted object —
+    // recognition appears to start (onstart fires) but onresult never fires for user speech.
+    if (!recognitionRef.current || recognitionNeedsRefreshRef.current) {
+      if (recognitionRef.current && recognitionNeedsRefreshRef.current) {
+        console.log('🔄 [ContinuousConversation] Refreshing recognition object (was aborted by VFP)');
+        // Null out all handlers first to prevent ghost callbacks from the dead instance
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        VoiceFeedbackPrevention.getInstance().unregisterRecognition(recognitionRef.current);
+        recognitionRef.current = null;
+      }
       recognitionRef.current = initializeSpeechRecognition();
+      recognitionNeedsRefreshRef.current = false;
       console.log('🔧 [ContinuousConversation] Speech recognition initialized');
     }
 

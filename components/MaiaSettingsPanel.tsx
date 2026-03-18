@@ -137,8 +137,9 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
       // No localStorage sync for voice — that path is dead.
 
       // Trigger a custom event for components to react to settings changes
+      // NOTE: Only 'maia-settings-changed' — no separate 'conversationStyleChanged'
+      // dispatch. OracleConversation already listens to maia-settings-changed.
       window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
-      window.dispatchEvent(new Event('conversationStyleChanged'));
 
       // Optional: Save to backend
       await fetch('/api/maia/settings', {

@@ -58,6 +58,11 @@ export function parseStateVector(
   const match = responseText.match(re);
 
   if (!match) {
+    // Fallback: Claude sometimes outputs bare JSON (no fence) at the start of
+    // the response before the conversational text. Detect and strip it.
+    const bareJsonResult = extractBareJsonPrefix(responseText, memberId, source, sessionId, errors);
+    if (bareJsonResult) return bareJsonResult;
+
     return {
       vector: null,
       strippedText: responseText,
@@ -252,6 +257,69 @@ function validateEvidence(raw: any, errors: string[]): EvidenceModel {
     .filter((g: string) => validCategories.includes(g as EvidenceCategory));
 
   return { observations, contradictions, gaps };
+}
+
+// ---------------------------------------------------------------------------
+// Bare JSON prefix fallback
+// ---------------------------------------------------------------------------
+
+/**
+ * Fallback parser for when Claude outputs STATE_VECTOR as bare JSON (no fence).
+ * Detects a JSON object at the very start of the response, attempts to parse it
+ * as a StateVector, and returns the remainder as strippedText.
+ *
+ * This handles model non-compliance without losing the state signal or
+ * leaking raw JSON into the user-facing response.
+ */
+function extractBareJsonPrefix(
+  responseText: string,
+  memberId: string,
+  source: StateVectorSource,
+  sessionId: string | undefined,
+  errors: string[]
+): ParseResult | null {
+  const trimmed = responseText.trimStart();
+
+  // Only attempt if response starts with '{'
+  if (!trimmed.startsWith('{')) return null;
+
+  // Find the matching closing brace by tracking depth
+  let depth = 0;
+  let end = -1;
+  for (let i = 0; i < trimmed.length; i++) {
+    if (trimmed[i] === '{') depth++;
+    else if (trimmed[i] === '}') {
+      depth--;
+      if (depth === 0) { end = i; break; }
+    }
+  }
+
+  if (end === -1) return null; // Unbalanced braces — not valid JSON
+
+  const jsonCandidate = trimmed.slice(0, end + 1);
+
+  // Must look like a StateVector — require 'primary' and 'element' keys
+  if (!jsonCandidate.includes('"primary"') || !jsonCandidate.includes('"element"')) return null;
+
+  let raw: any;
+  try {
+    raw = JSON.parse(jsonCandidate);
+  } catch {
+    return null; // Not valid JSON, leave response untouched
+  }
+
+  // Strip the bare JSON from the user-facing text
+  const strippedText = trimmed.slice(end + 1).trim();
+
+  // Validate and construct typed StateVector
+  const parseErrors: string[] = [];
+  const vector = validateAndConstruct(raw, memberId, source, sessionId, parseErrors);
+
+  return {
+    vector,
+    strippedText,
+    errors: parseErrors.length > 0 ? [`[bare-json fallback] ${parseErrors.join('; ')}`] : [],
+  };
 }
 
 // ---------------------------------------------------------------------------

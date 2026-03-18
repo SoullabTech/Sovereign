@@ -237,8 +237,10 @@ export async function addTranscriptSegment(params: {
   language?: string;
   isFinal?: boolean;
   practitionerId?: string;
+  chunkIndex?: number;
 }): Promise<TranscriptSegment> {
   const segmentId = randomUUID();
+  const chunkIndex = params.chunkIndex ?? -1;
 
   // SECURITY: PHI encryption - plaintext + encrypted columns
   const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
@@ -251,8 +253,9 @@ export async function addTranscriptSegment(params: {
   const result = await query<TranscriptSegment>(`
     INSERT INTO supervision_transcript_segments (
       id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-      text, text_enc, text_enc_meta, transcription_confidence, language, is_final
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      text, text_enc, text_enc_meta, transcription_confidence, language, is_final, chunk_index
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    ON CONFLICT (session_id, chunk_index) WHERE chunk_index >= 0 DO NOTHING
     RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
               text, transcription_confidence, language, is_final, created_at
   `, [
@@ -267,10 +270,27 @@ export async function addTranscriptSegment(params: {
     textEncMeta,
     params.transcriptionConfidence ?? null,
     params.language || 'en',
-    params.isFinal ?? true
+    params.isFinal ?? true,
+    chunkIndex,
   ]);
 
   return result.rows[0];
+}
+
+/**
+ * Get the tail of the last finalized transcript segment for a session.
+ * Used as a Whisper context prompt to reduce repeated openings across chunks.
+ */
+export async function getLastChunkTail(sessionId: string): Promise<string | null> {
+  const result = await query<{ text: string }>(`
+    SELECT text FROM supervision_transcript_segments
+    WHERE session_id = $1 AND is_final = true
+    ORDER BY end_ms DESC
+    LIMIT 1
+  `, [sessionId]);
+
+  if (!result.rows[0]?.text) return null;
+  return result.rows[0].text.slice(-80) || null;
 }
 
 export async function getTranscript(
@@ -300,11 +320,15 @@ export async function getRecentTranscript(
   practitionerId?: string
 ): Promise<TranscriptSegment[]> {
   // SECURITY: Select all columns including encrypted for decrypt
+  // Note: lastMs is an epoch timestamp (ms) — filter by created_at, not start_ms.
+  // start_ms is a recording-relative offset (small integer); comparing it to epoch
+  // timestamps would overflow PostgreSQL INTEGER and return wrong results.
   const result = await query<TranscriptSegmentRow>(`
     SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
            text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
     FROM supervision_transcript_segments
-    WHERE session_id = $1 AND is_final = TRUE AND start_ms >= $2
+    WHERE session_id = $1 AND is_final = TRUE
+      AND created_at >= to_timestamp($2::double precision / 1000)
     ORDER BY start_ms ASC
   `, [sessionId, lastMs]);
 

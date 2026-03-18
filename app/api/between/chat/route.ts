@@ -82,6 +82,10 @@ import {
   type SpiralSnapshotInput
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
+import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
+import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
+import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT PLUMBING HELPERS
@@ -1862,6 +1866,24 @@ This user is in guest mode (no authenticated identity).
       console.log(`[AIN Council] 🏛️ Consultation complete: ${consultationResult.insights.length} insights, ${consultationResult.tensions.length} tensions, emergence: ${consultationResult.emergenceRating || 'recombination'}`);
     }
 
+    // PARTICIPATORY REALITY: Detect and persist theme signals (fire-and-forget)
+    // Runs after orchestrator so it never blocks the response. Sanctuary excluded.
+    // UUID_REGEX: only store for recognised members (valid UUID = exists in members table).
+    const isRecognisedMember = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(effectiveUserId ?? '');
+    if (!isSanctuary && isRecognisedMember) {
+      const currentElement = orchestratorResult.metadata?.stateVector?.primary?.element as string | undefined;
+      const scored = detectThemes(message, currentElement as any);
+      const topSignal = scored.length > 0 ? scored[0] : null;
+      console.info('[participatory] member=%s element=%s topTheme=%s resonance=%s',
+        effectiveUserId?.slice(0, 8), currentElement ?? 'none',
+        topSignal?.theme ?? 'none', topSignal?.resonance_strength?.toFixed(2) ?? '0.00');
+      if (topSignal && topSignal.resonance_strength >= 0.55) {
+        storeThemeSignal(effectiveUserId!, topSignal, { sessionId: safeSessionId });
+      }
+    } else {
+      console.info('[participatory] skipped — anon=%s sanctuary=%s', !isRecognisedMember, isSanctuary);
+    }
+
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
     // Note: `mode` is the actual conversation mode (dialogue/counsel/scribe), not orchestrator.route.mode
     // (orchestrator.route.mode is hardcoded to 'fail-soft-orchestration' and doesn't reflect conversation mode)
@@ -2051,6 +2073,28 @@ This user is in guest mode (no authenticated identity).
 
     const crystallization = detectCrystallization(message, finalMessage);
 
+    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair
+    // Conditions: Care mode + turn 3+ + meaningful response length + no anchor already present + not sanctuary
+    // Appended BEFORE voice renderer so it naturalises with the rest of the response.
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const isCareAnchorEligible =
+      mode === 'counsel' &&
+      conversationHistory.length >= 2 &&        // at least 3rd turn
+      finalMessage.length > 120 &&              // not a one-liner
+      !isSanctuary &&
+      !ANCHOR_ALREADY_PRESENT.test(finalMessage);
+
+    if (isCareAnchorEligible) {
+      // Pick an anchor that maps to the AIN nextStep evaluator
+      // "sit with (this|that|it)" and "you might sit" both match nextStep natural markers
+      const anchor = finalMessage.trimEnd().endsWith('?')
+        ? '\n\nSit with that for a moment.'
+        : '\n\nYou might sit with that tonight and see what arrives.';
+      finalMessage = finalMessage + anchor;
+      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
+        conversationHistory.length + 1, finalMessage.length);
+    }
+
     // 🗣️ VOICE RENDERER: Rewrite for warmth/clarity without adding facts
     let outboundText2 = finalMessage;
     let voiceMetrics2: { compliance: unknown; metrics: unknown } | null = null;
@@ -2162,6 +2206,24 @@ This user is in guest mode (no authenticated identity).
     }
 
     cleanedText = cleanedText.trim();
+
+    // 📐 AIN SHAPE TELEMETRY: Continuity-stack metrics (fire-and-forget, never blocks)
+    if (!isSanctuary && (process.env.AIN_SHAPE_TELEMETRY === '1' || process.env.NODE_ENV !== 'production')) {
+      const _ainShape = assessAINResponseShape(message, cleanedText);
+      logAINShapeTelemetry({
+        pass: _ainShape.pass,
+        score: _ainShape.score,
+        flags: _ainShape.flags,
+        menuSignals: _ainShape.signals ?? null,
+        route: 'between/chat',
+        processingProfile: undefined,
+        model: orchestratorResult.metadata?.provider?.model ?? undefined,
+        explorerId: effectiveUserId ?? undefined,
+        sessionId: safeSessionId,
+      }).catch((err) => {
+        console.warn('[between/chat] AIN shape telemetry write failed:', err?.message);
+      });
+    }
 
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {

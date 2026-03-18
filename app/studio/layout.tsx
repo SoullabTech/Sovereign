@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  ArrowLeft,
   ChevronLeft,
   Loader2,
   Menu,
@@ -30,6 +31,26 @@ import {
   type ModuleSlug,
   type ModuleDefinition,
 } from '@/lib/studio/moduleDefinitions';
+import type { StudioMode } from '@/hooks/useStudioData';
+import { useTeamContext } from '@/hooks/useStudioData';
+
+/**
+ * Watches studioMode from TeamContext and calls back when it changes.
+ * Must be rendered inside TeamContextProvider.
+ */
+function StudioModeWatcher({
+  onModeChange,
+}: {
+  onModeChange: (mode: StudioMode) => void;
+}) {
+  const { studioMode } = useTeamContext();
+
+  useEffect(() => {
+    onModeChange(studioMode);
+  }, [studioMode, onModeChange]);
+
+  return null;
+}
 
 // Bottom tab bar items (highest-frequency mobile actions)
 const MOBILE_TABS = [
@@ -54,6 +75,9 @@ export default function StudioLayout({
   const [checkingPractitioner, setCheckingPractitioner] = useState(true);
   const [isPractitioner, setIsPractitioner] = useState(false);
   const [visibleModules, setVisibleModules] = useState<ModuleDefinition[]>(MODULE_DEFINITIONS);
+  const [initialStudioMode, setInitialStudioMode] = useState<StudioMode>('practice');
+  const [portalTypeRef, setPortalTypeRef] = useState<PortalType>('generalist');
+  const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -82,7 +106,18 @@ export default function StudioLayout({
           // Resolve visible modules from identity
           const portalType = (data.identity?.portalType ?? 'generalist') as PortalType;
           const enabledModules = data.identity?.enabledModules as ModuleSlug[] | null;
-          setVisibleModules(getVisibleModules(enabledModules, portalType));
+          const serverMode = (data.identity?.studioMode ?? 'practice') as StudioMode;
+
+          setPortalTypeRef(portalType);
+          setEnabledModulesRef(enabledModules);
+          setInitialStudioMode(serverMode);
+          setVisibleModules(getVisibleModules(enabledModules, portalType, serverMode));
+
+          // Personal-mode users who land on /studio go to /studio/field
+          if (serverMode === 'personal' && pathname === '/studio') {
+            router.replace('/studio/field');
+            return;
+          }
         } else {
           router.replace('/studio/create');
           return;
@@ -96,7 +131,14 @@ export default function StudioLayout({
     }
 
     checkPractitioner();
-  }, [isCreatePage, router]);
+  }, [isCreatePage, router, pathname]);
+
+  // Callback for StudioModeWatcher — re-filters nav when mode changes
+  const handleModeChange = useCallback((mode: StudioMode) => {
+    if (isPractitioner) {
+      setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, mode));
+    }
+  }, [isPractitioner, enabledModulesRef, portalTypeRef]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -170,7 +212,8 @@ export default function StudioLayout({
   // ─── MOBILE LAYOUT ────────────────────────────────────────
   if (isMobile) {
     return (
-      <TeamContextProvider>
+      <TeamContextProvider initialStudioMode={initialStudioMode}>
+      <StudioModeWatcher onModeChange={handleModeChange} />
       <RecordingContextProvider>
       <NavigationGuard />
       <div className="min-h-screen bg-[#1a1a2e] flex flex-col">
@@ -256,13 +299,25 @@ export default function StudioLayout({
                 <nav className="flex-1 min-h-0 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
                   {visibleModules.map((mod) => renderNavLink(mod, () => setDrawerOpen(false)))}
                 </nav>
+
+                {/* Back to MAIA */}
+                <div className="px-2 py-2 border-t border-slate-800/50">
+                  <Link
+                    href="/maia"
+                    onClick={() => setDrawerOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                  >
+                    <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+                    <span>Back to MAIA</span>
+                  </Link>
+                </div>
               </motion.div>
             </div>
           )}
         </AnimatePresence>
 
         {/* Content */}
-        <main className="flex-1 min-h-0">
+        <main className="flex-1 min-h-0 font-sans">
           <RecordingBanner />
           {children}
         </main>
@@ -298,7 +353,8 @@ export default function StudioLayout({
 
   // ─── DESKTOP LAYOUT (unchanged) ───────────────────────────
   return (
-    <TeamContextProvider>
+    <TeamContextProvider initialStudioMode={initialStudioMode}>
+    <StudioModeWatcher onModeChange={handleModeChange} />
     <RecordingContextProvider>
     <NavigationGuard />
     <div className="min-h-screen bg-[#1a1a2e] flex">
@@ -367,6 +423,17 @@ export default function StudioLayout({
           })}
         </nav>
 
+        {/* Back to MAIA */}
+        <div className="px-2 py-2 border-t border-slate-800/50">
+          <Link
+            href="/maia"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Back to MAIA</span>}
+          </Link>
+        </div>
+
         {/* Expand button when collapsed */}
         {collapsed && (
           <div className="p-2">
@@ -382,7 +449,7 @@ export default function StudioLayout({
 
       {/* Main Content */}
       <main
-        className="flex-1 transition-all duration-300"
+        className="flex-1 font-sans transition-all duration-300"
         style={{ marginLeft: collapsed ? 64 : 200 }}
       >
         <RecordingBanner />

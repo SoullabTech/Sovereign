@@ -57,7 +57,7 @@ export function SustainingTransparency() {
       amount: 120,
       description: 'Text-to-speech generation',
       breakdown: [
-        { item: 'OpenAI TTS', cost: 80 },
+        { item: 'Voice synthesis', cost: 80 },
         { item: 'Voice processing', cost: 40 }
       ]
     },

@@ -18,6 +18,7 @@ import { MeditationProtocols } from './components/MeditationProtocols';
 import { SacredGeometryField } from './components/SacredGeometryField';
 import { LabToolsService } from './lib/LabToolsService';
 import DreamJournalInterface from '@/components/dreams/DreamJournalInterface';
+import ShadowWorkGuide from '@/components/consciousness/ShadowWorkGuide';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { PilotDroneVisualizer } from '@/components/consciousness/PilotDroneVisualizer';
 // import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard'; // REMOVED: was in deleted apps/web directory
@@ -28,7 +29,7 @@ import { PilotDroneVisualizer } from '@/components/consciousness/PilotDroneVisua
 export default function MAIALabTools() {
   const [labToolsService] = useState(() => new LabToolsService());
   const [isConnected, setIsConnected] = useState(false);
-  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'dreams' | 'ipp' | 'computing'>('monitor');
+  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'dreams' | 'ipp' | 'computing' | 'shadow'>('monitor');
   const [meditationActive, setMeditationActive] = useState(false);
   const [isFieldDrawerOpen, setIsFieldDrawerOpen] = useState(false);
 
@@ -117,6 +118,16 @@ export default function MAIALabTools() {
                 }`}
               >
                 🌙 Dreams
+              </button>
+              <button
+                onClick={() => setActiveView('shadow')}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  activeView === 'shadow'
+                    ? 'bg-violet-600/40 text-violet-200 border border-violet-500/40'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🌑 Shadow
               </button>
               <button
                 onClick={() => setActiveView('ipp')}
@@ -302,6 +313,26 @@ export default function MAIALabTools() {
             {/* Full Width Dream Journal Interface */}
             <div className="col-span-12">
               <DreamJournalInterface />
+            </div>
+          </>
+        ) : activeView === 'shadow' ? (
+          // Shadow Work View
+          <>
+            <div className="col-span-12">
+              <div className="flex flex-col h-full">
+                <div className="px-4 py-3 border-b border-white/5">
+                  <h2 className="text-sm font-medium text-stone-300">Shadow Work</h2>
+                  <p className="text-xs text-stone-500 mt-0.5">Integrative depth practice</p>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <ShadowWorkGuide
+                    userId="maia_labtools_demo"
+                    onComplete={(responses) => {
+                      console.log('Shadow work completed:', Object.keys(responses).length, 'responses');
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </>
         ) : activeView === 'computing' ? (
@@ -534,6 +565,13 @@ export default function MAIALabTools() {
                 <span>⚡ Consciousness Computing: Live</span>
               </>
             )}
+            {activeView === 'shadow' && (
+              <>
+                <span>🌑 Shadow Work: Active</span>
+                <span>🪞 Integration: Ready</span>
+                <span>✨ Archetypal Awareness: Online</span>
+              </>
+            )}
           </div>
           <div className="text-xs flex gap-4">
             <span>View: {
@@ -541,6 +579,7 @@ export default function MAIALabTools() {
               activeView === 'consciousness' ? '🧠 Consciousness' :
               activeView === 'meditation' ? '🧘 Meditation' :
               activeView === 'dreams' ? '🌙 Dreams' :
+              activeView === 'shadow' ? '🌑 Shadow' :
               activeView === 'computing' ? '🛸 Computing' :
               '👨‍👩‍👧‍👦 IPP'
             }</span>

@@ -25,7 +25,7 @@ interface CreatePractitionerInput {
   };
 }
 
-const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician', 'consultant'] as const;
+const VALID_PORTAL_TYPES = ['generalist', 'astrology', 'therapy', 'bodywork', 'groups', 'clinician', 'consultant', 'personal'] as const;
 type PortalType = typeof VALID_PORTAL_TYPES[number];
 
 function isValidPortalType(t: string): t is PortalType {

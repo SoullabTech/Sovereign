@@ -26,7 +26,9 @@ function WelcomeBackContent() {
     const signedOut = localStorage.getItem('maia_signed_out') === '1';
     if (signedOut) {
       console.log('[NAV] /welcome-back -> /signin (reason: signout latch active)');
-      window.location.replace('/signin?from=signed_out_latch');
+      // Use router.push (client-side) — window.location.replace causes full reload
+      // → index.html → /enter → loop on Capacitor iOS.
+      router.push('/signin');
       return;
     }
 

@@ -17,6 +17,9 @@ export GIT_PRE_COMMIT=1
 # Supabase ban
 npm run check:no-supabase
 
+# Vendor voice ban (no OpenAI/ElevenLabs names in UI)
+npm run check:no-vendor-voices
+
 # Dark text opacity guard (prevents invisible text on dark panels)
 bash scripts/check-dark-text-opacity.sh
 

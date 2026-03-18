@@ -20,6 +20,7 @@
 import os from 'node:os';
 import crypto from 'node:crypto';
 import { query, queryOne, closePool } from '../lib/db/postgres';
+import { assertCorrectDb } from '../lib/scripts/dbSafetyGuard';
 import {
   generateSessionRemembrance,
   storeRemembrance,
@@ -245,6 +246,8 @@ let consecutiveErrors = 0;
 let loopCount = 0;
 
 async function runWorkerLoop(): Promise<void> {
+  await assertCorrectDb();
+
   console.log('[Summary] MAIA Session Summary Worker starting...');
   console.log(`[Summary] Identity: ${WORKER_ID}`);
   console.log(`[Summary] Poll interval: ${POLL_INTERVAL_MS}ms`);

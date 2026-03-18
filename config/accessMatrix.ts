@@ -57,16 +57,28 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/signin', public: true, notes: 'Sign in' },
   { exact: '/signup', public: true, notes: 'Sign up' },
   { exact: '/reset-password', public: true, notes: 'Password reset' },
+  { exact: '/magic-link', public: true, notes: 'Magic link landing page — button-click redeems token (scanner-safe)' },
   { exact: '/magic-link-success', public: true, notes: 'Magic link confirmation' },
+  { exact: '/magic-link-error', public: true, notes: 'Magic link failure — human-readable recovery page' },
   { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
 
   // Onboarding (pre-auth)
-  { exact: '/begin', public: true, notes: 'Begin journey entry' },
+  { exact: '/begin', public: true, notes: 'Begin journey entry — email magic link path' },
+  { exact: '/resume', public: true, notes: 'Universal onboarding recovery — computes next step from server state' },
+  { exact: '/continue', public: true, notes: 'Alias for /resume' },
+  { exact: '/test-elemental', public: true, notes: 'Passkey / invite code entry path' },
+  { exact: '/intro-maia', public: true, notes: 'MAIA intro step' },
+  { exact: '/intro-daimon', public: true, notes: 'Daimon intro step' },
   { exact: '/intro', public: true, notes: 'Introduction' },
   { exact: '/welcome', public: true, notes: 'Welcome page' },
   { exact: '/welcome-back', public: true, notes: 'Welcome returning user' },
   { exact: '/welcome-flow', public: true, notes: 'Welcome flow' },
   { prefix: '/onboarding', public: true, notes: 'Onboarding flows' },
+
+  // Field (iOS native app shell) — entry is always public; content routes are auth-gated
+  // Capacitor bypass in middleware handles unauthenticated WKWebView page loads
+  { exact: '/field/enter', public: true, notes: 'Field canonical iOS entry router' },
+  { prefix: '/field', minTier: 'free', notes: 'Field mobile shell — all authenticated users' },
 
   // Beta access (invite-gated but public routes)
   { exact: '/beta-welcome', public: true, notes: 'Beta welcome' },
@@ -124,6 +136,11 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/dashboard/insights', minTier: 'personal', notes: 'Pattern insights' },
   { prefix: '/dashboard/patterns', minTier: 'personal', notes: 'Pattern tracking' },
 
+  // Field routes — iOS/Capacitor voice-first entry (same auth level as /maia)
+  { exact: '/field/enter', minTier: 'free', notes: 'Field entry router — smart session routing' },
+  { exact: '/field/talk', minTier: 'free', notes: 'Field voice session — voice-first MAIA on iOS' },
+  { prefix: '/field', minTier: 'free', notes: 'Field routes — all authenticated members' },
+
   // MAIA Interface (core)
   { exact: '/maia', minTier: 'free', notes: 'MAIA main interface - open to all authenticated users' },
   { exact: '/maia/compact', minTier: 'personal', notes: 'MAIA compact' },
@@ -164,7 +181,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
   { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
   { exact: '/astrology/vedic', minTier: 'personal', notes: 'Vedic astrology' },
-  { prefix: '/astrology/aspects/', minTier: 'personal', notes: 'Aspect details' },
+  { prefix: '/astrology/aspects/', public: true, notes: 'Aspect detail pages - public (chart page is public, aspects extend it)' },
   { prefix: '/astrology/pathways/', minTier: 'personal', notes: 'Pathways' },
   { exact: '/astrology/synastry', minTier: 'personal', notes: 'Synastry' },
   { exact: '/astrology/synastry/saved', minTier: 'personal', notes: 'Saved synastry' },
@@ -288,6 +305,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // Supervision
   { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
 
+  // Studio (session room + supporting pages)
+  { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
+
   // -------------------------------------------------------------------------
   // 5) ADMIN / STEWARD - Role-gated (not tier)
   // -------------------------------------------------------------------------
@@ -303,6 +323,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
+  { exact: '/api/members/register-email', public: true, notes: 'Register via magic link (no passkey)' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
   { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
@@ -329,6 +350,15 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Sovereign API - all open to authenticated users (tier check temporarily disabled)
   { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
+
+  // Studio API - session room, bookings, scribe markers, live prompts
+  { prefix: '/api/studio', minTier: 'free', notes: 'Studio API' },
+
+  // Supervision API - session lifecycle, transcript, insights SSE stream
+  { prefix: '/api/supervision', minTier: 'free', notes: 'Supervision API' },
+
+  // Scribe API - session review, summaries
+  { prefix: '/api/scribe', minTier: 'free', notes: 'Scribe API' },
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },

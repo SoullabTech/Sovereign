@@ -10,6 +10,11 @@ const config = {
   modulePathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/.next/standalone/',
+    '<rootDir>/.claude/',
+  ],
+  watchPathIgnorePatterns: [
+    '<rootDir>/.claude/',
+    '<rootDir>/node_modules/',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',

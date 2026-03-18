@@ -117,7 +117,7 @@ export async function getMemberCategoryPrefs(
   );
 
   // Build complete list with defaults for missing
-  // Utility categories default to collapsed so the consciousness map stays clean
+  // All categories default to collapsed — member opens what they want
   const allPrefs: CategoryPref[] = [];
   for (const [category, meta] of Object.entries(CATEGORY_META)) {
     const stored = storedPrefs.get(category);
@@ -125,7 +125,7 @@ export async function getMemberCategoryPrefs(
       stored || {
         category: category as ToolCategory,
         displayOrder: meta.defaultOrder,
-        collapsed: isUtilityCategory(category as ToolCategory),
+        collapsed: true,
       }
     );
   }

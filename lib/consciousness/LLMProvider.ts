@@ -30,41 +30,43 @@ export interface LLMResponse {
   metadata: {
     generationTime: number;
     tokenCount?: number;
+    /** Why the model stopped: 'end_turn' | 'max_tokens' | 'stop_sequence'. 'max_tokens' = truncated. */
+    stopReason?: string;
   };
 }
 
+// Local tier config — activated when LOCAL_TIER_ENABLED=true
+const OLLAMA_MODEL_GENERAL = process.env.OLLAMA_MODEL_GENERAL ?? 'qwen2.5:7b';
+const LOCAL_TIER_ENABLED = process.env.LOCAL_TIER_ENABLED === 'true';
+
 /**
  * Level-specific LLM configuration
- * MAIA uses selective Claude models: Sonnet 4.5 for levels 1-4, Opus 4.5 for level 5 DEEP work
+ * Levels 1-2: local Ollama (when LOCAL_TIER_ENABLED) or Sonnet fallback
+ * Levels 3-4: Claude Sonnet 4.5
+ * Level 5:    Claude Opus 4.5 (deep/fragile/architectural reasoning only)
  */
 const LEVEL_LLM_CONFIG: Record<ConsciousnessLevel, LLMConfig> = {
-  1: {
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
-    temperature: 0.7,
-    maxTokens: 500
-  },
-  2: {
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
-    temperature: 0.75,
-    maxTokens: 600
-  },
+  1: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_GENERAL, temperature: 0.7, maxTokens: 300 }
+    : { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.7, maxTokens: 500 },
+  2: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_GENERAL, temperature: 0.8, maxTokens: 500 }
+    : { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.75, maxTokens: 600 },
   3: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.8,
     maxTokens: 800
   },
   4: {
     provider: 'anthropic',
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-6',
     temperature: 0.85,
     maxTokens: 1000
   },
   5: {
     provider: 'anthropic',
-    model: 'claude-opus-4-5-20251101',
+    model: 'claude-opus-4-6',
     temperature: 0.9,
     maxTokens: 1200
   }
@@ -102,13 +104,23 @@ export class MultiLLMProvider {
   async generate(params: {
     systemPrompt: string;
     userInput: string;
+    /** Optional: proper alternating messages array. When supplied, Claude uses this
+     *  instead of wrapping userInput in a single user message — preserving real
+     *  multi-turn context. Ollama ignores this and falls back to the flat transcript. */
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
     level: ConsciousnessLevel;
     forceClaude?: boolean;
     forceOllama?: boolean;
+    maxTokensOverride?: number;
   }): Promise<LLMResponse> {
 
-    const { systemPrompt, userInput, level, forceClaude, forceOllama } = params;
-    const config = LEVEL_LLM_CONFIG[level];
+    const { systemPrompt, userInput, messages, level, forceClaude, forceOllama, maxTokensOverride } = params;
+    const baseConfig = LEVEL_LLM_CONFIG[level];
+    // Route-computed maxTokens wins over level default (MAIA-PAI depth scaling)
+    const config = maxTokensOverride
+      ? { ...baseConfig, maxTokens: maxTokensOverride }
+      : baseConfig;
+    console.info(`[oracle] effective maxTokens: ${config.maxTokens} (override=${maxTokensOverride ?? 'none'} level=${level})`);
     const startTime = Date.now();
 
     // Log model selection for testing
@@ -121,7 +133,7 @@ export class MultiLLMProvider {
       } catch (error) {
         console.warn('Ollama generation failed, trying Claude fallback:', error);
         if (this.anthropic) {
-          return await this.generateClaude(systemPrompt, userInput, config, startTime);
+          return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
         }
         throw error;
       }
@@ -130,7 +142,7 @@ export class MultiLLMProvider {
     // Default: Try Claude first (primary provider)
     if (this.anthropic) {
       try {
-        return await this.generateClaude(systemPrompt, userInput, config, startTime);
+        return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
       } catch (error) {
         console.error('Claude generation failed:', error);
 
@@ -210,12 +222,20 @@ export class MultiLLMProvider {
     systemPrompt: string,
     userInput: string,
     config: LLMConfig,
-    startTime: number
+    startTime: number,
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>
   ): Promise<LLMResponse> {
 
     if (!this.anthropic) {
       throw new Error('Claude not configured');
     }
+
+    // Use proper alternating messages array when provided (multi-turn context).
+    // Fallback: wrap userInput in a single user message (legacy single-turn path).
+    const claudeMessages: Array<{ role: 'user' | 'assistant'; content: string }> =
+      messages && messages.length > 0
+        ? messages
+        : [{ role: 'user', content: userInput }];
 
     const maxRetries = 3;
     const baseDelay = 1000; // 1 second
@@ -228,12 +248,7 @@ export class MultiLLMProvider {
           max_tokens: config.maxTokens,
           temperature: config.temperature,
           system: systemPrompt,
-          messages: [
-            {
-              role: 'user',
-              content: userInput
-            }
-          ]
+          messages: claudeMessages,
         });
 
         const response = message.content[0];
@@ -243,13 +258,22 @@ export class MultiLLMProvider {
 
         const generationTime = Date.now() - startTime;
 
+        if (message.stop_reason === 'max_tokens') {
+          console.warn(JSON.stringify({
+            tag: 'llm.truncated', stop_reason: 'max_tokens',
+            output_tokens: message.usage.output_tokens, max_tokens: config.maxTokens,
+            model: config.model
+          }));
+        }
+
         return {
           text: response.text,
           provider: 'anthropic',
           model: config.model,
           metadata: {
             generationTime,
-            tokenCount: message.usage.output_tokens
+            tokenCount: message.usage.output_tokens,
+            stopReason: message.stop_reason ?? undefined
           }
         };
       } catch (error: any) {

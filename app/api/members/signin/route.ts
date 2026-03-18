@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
     const member = result.rows[0];
 
     // Verify password
-    const isValid = await verifyPassword(password, member.password_hash);
-    if (!isValid) {
+    const verifyResult = await verifyPassword(password, member.password_hash);
+    if (!verifyResult.ok) {
       await logAuthEvent({
         action: 'password_signin',
         memberId: member.id,
@@ -89,6 +89,22 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid username or password' },
         { status: 401 }
       );
+    }
+
+    // Transparent SHA256 → bcrypt upgrade on successful login
+    if (verifyResult.needsUpgrade) {
+      try {
+        const { hashPassword } = await import('@/lib/auth/passwordUtils');
+        const newHash = await hashPassword(password);
+        await query(
+          `UPDATE members SET password_hash = $1 WHERE id = $2`,
+          [newHash, member.id]
+        );
+        console.log(`[Auth] Upgraded password hash to bcrypt for member ${member.id}`);
+      } catch (upgradeError) {
+        // Non-fatal — user is still signed in, upgrade will retry next login
+        console.error('[Auth] bcrypt upgrade failed:', upgradeError);
+      }
     }
 
     // Reset rate limit on success
@@ -133,7 +149,7 @@ export async function POST(request: NextRequest) {
       member: {
         id: member.id,
         username: member.username,
-        name: member.name,
+        name: (member.name || '').trim() || null,
         preferredName: resolveMemberDisplayName(member),
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
-import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users, Activity } from 'lucide-react';
+import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users, Activity, Layers, Network, GitBranch, Database } from 'lucide-react';
 import { SystemHealthDisplay } from '@/components/system-health/SystemHealthDisplay';
 
 interface User {
@@ -171,8 +171,35 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="text-white/70 text-sm">
-            Logged in as {currentUser.name}
+          <div className="flex items-center space-x-4">
+            <nav className="hidden md:flex items-center space-x-1">
+              {[
+                { label: 'Beta Testers', href: '/admin/beta-testers' },
+                { label: 'Opus Pulse', href: '/admin/opus-pulse' },
+                { label: 'Analytics', href: '/admin/consciousness-analytics' },
+                { label: 'Videos', href: '/admin/library/videos' },
+                { label: 'Command Center', href: '/labtools/admin/command-center' },
+                { label: 'Platform Overview', href: '/admin/platform-overview' },
+                { label: 'Security', href: '/admin/security' },
+              ].map(({ label, href }) => (
+                <button
+                  key={href}
+                  onClick={() => router.push(href)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    href === '/admin/platform-overview'
+                      ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                      : href === '/admin/security'
+                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+                      : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            <div className="text-white/40 text-sm">
+              {currentUser.name}
+            </div>
           </div>
         </div>
       </div>
@@ -192,6 +219,38 @@ export default function AdminPage() {
             <h2 className="text-xl font-cinzel text-white">System Health Monitoring</h2>
           </div>
           <SystemHealthDisplay showDetails={true} className="mb-6" />
+        </div>
+
+        {/* Platform Overview */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <Layers className="w-6 h-6 text-amber-400" />
+            <h2 className="text-xl font-cinzel text-white">Platform Tools</h2>
+          </div>
+          <div
+            onClick={() => router.push('/admin/platform-overview')}
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 hover:border-amber-500/40 hover:bg-white/[0.12] cursor-pointer transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                  <Network className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-white group-hover:text-amber-300 transition-colors">Platform Architecture Overview</h3>
+                  <p className="text-white/50 text-sm mt-0.5">Interactive map of API routes, data flows, consciousness engine, database tables, and system connections</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 text-white/30">
+                <div className="hidden md:flex items-center space-x-4 text-xs">
+                  <span className="flex items-center space-x-1"><GitBranch className="w-3.5 h-3.5" /><span>Data Flow</span></span>
+                  <span className="flex items-center space-x-1"><Database className="w-3.5 h-3.5" /><span>80+ Tables</span></span>
+                  <span className="flex items-center space-x-1"><Layers className="w-3.5 h-3.5" /><span>90+ APIs</span></span>
+                </div>
+                <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Add User Button */}

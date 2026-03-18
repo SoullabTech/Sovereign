@@ -16,8 +16,8 @@ import { describe, it, expect } from 'vitest';
 type AwarenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // Model configuration (mirrors claudeClient.ts)
-const OPUS_MODEL = 'claude-opus-4-5-20251101';
-const SONNET_MODEL = 'claude-sonnet-4-5-20250929';
+const OPUS_MODEL = 'claude-opus-4-6';
+const SONNET_MODEL = 'claude-sonnet-4-6';
 
 // Deep dive patterns (must match claudeClient.ts)
 const DEEP_DIVE_PATTERNS = /shadow|archetype|dream|trauma|grief|initiation|spiraling|pattern across|help me see|what I can't see|breakthrough|soul|transformation|sacred|ceremony|ritual|death|rebirth|integration|wound|healing crisis/i;

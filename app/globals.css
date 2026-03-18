@@ -221,6 +221,7 @@
   /* iOS Safe Area Support */
   html {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background-color: #1A1513; /* prevent white flash in WKWebView before React hydrates */
   }
 
   /* Optimize for mobile without breaking desktop */
@@ -228,6 +229,7 @@
     width: 100%;
     min-height: 100vh;
     -webkit-overflow-scrolling: touch;
+    background-color: #1A1513; /* covers iOS overscroll bounce + WebView initial paint */
   }
 
   /* Main app container with better mobile handling */
