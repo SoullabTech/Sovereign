@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Calendar, MessageCircle, ArrowRight, Clock,
-  ChevronLeft, ChevronRight, User,
+  ChevronLeft, ChevronRight, User, BookOpen, TrendingUp, Layers,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -477,12 +478,103 @@ export default function PortalHomePage() {
         </section>
       )}
 
+      {/* How it works */}
+      <section className="py-14 px-6 border-b border-zinc-800/50">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-10">
+            <h2 className="text-lg font-semibold text-white mb-1">How it works</h2>
+            <p className="text-sm text-zinc-500">Sessions are structured to build insight over time — not just one-off conversations.</p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Calendar,
+                step: '01',
+                title: 'Book a session',
+                desc: 'Choose the session type that fits where you are. Scheduling is instant, no back-and-forth.',
+              },
+              {
+                icon: BookOpen,
+                step: '02',
+                title: 'Capture key insights',
+                desc: 'Session notes and key themes are captured and stored in your private client portal.',
+              },
+              {
+                icon: TrendingUp,
+                step: '03',
+                title: 'Track your progress',
+                desc: 'Patterns emerge across sessions. You'll see your own movement clearly over time.',
+              },
+            ].map(({ icon: Icon, step, title, desc }) => (
+              <div key={step} className="relative pl-10">
+                <span className="absolute left-0 top-0 text-xs font-mono text-zinc-700">{step}</span>
+                <div className="mb-3">
+                  <Icon size={18} className="text-zinc-400" />
+                </div>
+                <h3 className="text-sm font-medium text-white mb-1.5">{title}</h3>
+                <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Client portal access */}
+      <section className="py-14 px-6 border-b border-zinc-800/50">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-white mb-1">Your client portal</h2>
+              <p className="text-sm text-zinc-500 mb-6 max-w-md">
+                Existing clients have access to session notes, resources, and direct messaging — all in one private space.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href={`/portal/${slug}/signin`}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
+                >
+                  <Lock size={14} />
+                  Sign in to portal
+                </Link>
+                <Link
+                  href={`/portal/${slug}/chat`}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-zinc-400 text-sm font-medium hover:text-white transition-colors"
+                >
+                  <MessageCircle size={14} />
+                  Send a message
+                </Link>
+              </div>
+            </div>
+            <div className="w-full lg:w-72 rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex-shrink-0">
+              <div className="flex items-center gap-2 mb-4">
+                <Layers size={14} className="text-zinc-500" />
+                <span className="text-xs font-medium text-zinc-400">Portal includes</span>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  'Session notes and summaries',
+                  'Resources shared in sessions',
+                  'Direct messaging with ' + firstName,
+                  'Booking history and upcoming sessions',
+                  'Progress reflections over time',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-xs text-zinc-400">
+                    <span className="mt-0.5 w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer CTA */}
       <section className="py-14 px-6 border-b border-zinc-800/50">
         <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-lg font-semibold text-white mb-2">Ready to get started?</h2>
+          <h2 className="text-lg font-semibold text-white mb-2">Ready to begin?</h2>
           <p className="text-sm text-zinc-400 mb-6">
-            Book a session or send a message to learn more about working together.
+            Book a session or reach out to learn more about working together.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
