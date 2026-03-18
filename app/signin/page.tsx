@@ -837,7 +837,7 @@ function SigninContent() {
 
           <div className="pt-3 border-t border-teal-200/20">
             <button
-              onClick={() => { window.location.href = '/begin'; }}
+              onClick={() => { window.location.href = '/begin?fresh=true'; }}
               className="text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors"
             >
               New to Soullab? Begin your journey

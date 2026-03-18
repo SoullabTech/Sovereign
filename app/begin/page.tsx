@@ -253,10 +253,14 @@ function BeginContent() {
   const emailParam = searchParams?.get('email') || '';
   // Only show profile step if both flags are present and email looks valid
   const verified = searchParams?.get('verified') === 'true' && emailParam.includes('@');
+  // fresh=true: user came from /signin "Begin your journey" — skip auto-redirect
+  // (prevents loop: stale localStorage onboarded=true → /maia → /signin → /begin → loop)
+  const fresh = searchParams?.get('fresh') === 'true';
 
   // Track page open and redirect already-onboarded members
   useEffect(() => {
     trackOnboarding({ event: 'begin_opened', path: verified ? '/begin?verified=true' : '/begin' });
+    if (fresh) return; // user explicitly chose to start fresh — don't redirect
     try {
       const betaUser = localStorage.getItem('beta_user');
       if (betaUser) {
@@ -266,7 +270,7 @@ function BeginContent() {
         }
       }
     } catch { /* ignore */ }
-  }, [router, verified]);
+  }, [router, verified, fresh]);
 
   const heading = verified ? 'Welcome' : 'Begin your journey';
   const subtitle = verified
