@@ -593,14 +593,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
-      // In Care/Scribe modes, ALWAYS restart to stay open for the user
-      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
-        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
+      // Only bail out on silence timeout if user has NOT started an active conversation.
+      // wantsContinuousConversationRef is set true when user taps mic, false only when user explicitly stops.
+      // If it's true, we're in an active convo and must keep restarting between turns.
+      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current && !wantsContinuousConversationRef.current) {
+        console.log('🔕 [onend] No recent speech and no active conversation - stopping to prevent blink');
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
         onRecordingStateChange?.(false);
         return;
+      }
+
+      if (!hasRecentSpeech && !hasAccumulatedTranscript && wantsContinuousConversationRef.current) {
+        console.log('🔄 [onend] No recent speech but active conversation — restarting mic for next turn');
       }
 
       // Log if persistent mode is keeping us open
