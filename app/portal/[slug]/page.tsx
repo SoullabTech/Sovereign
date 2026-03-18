@@ -321,15 +321,17 @@ export default function PortalHomePage() {
                 </div>
               )}
 
-              <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight mb-3">
+              <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight mb-2">
                 {displayName}
               </h1>
 
-              {profile.tagline && (
-                <p className="text-base text-zinc-400 mb-6 max-w-lg leading-relaxed">
-                  {profile.tagline}
-                </p>
-              )}
+              <p className="text-base text-zinc-400 mb-2 max-w-lg leading-relaxed">
+                {profile.tagline || 'Elemental Alchemy for Inner Coherence and Real Change'}
+              </p>
+
+              <p className="text-sm text-zinc-600 mb-8 max-w-md leading-relaxed">
+                Work through what&apos;s actually shaping your life — not just what&apos;s visible.
+              </p>
 
               {profile.specialties?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
@@ -347,14 +349,14 @@ export default function PortalHomePage() {
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
                 >
                   <Calendar size={15} />
-                  Book a session
+                  Book a Session
                 </Link>
                 <Link
-                  href={`/portal/${slug}/chat`}
+                  href={`/portal/${slug}/signin`}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
                 >
-                  <MessageCircle size={15} />
-                  Message {firstName}
+                  <Lock size={15} />
+                  Enter Your Portal
                 </Link>
               </div>
             </motion.div>
@@ -482,28 +484,28 @@ export default function PortalHomePage() {
       <section className="py-14 px-6 border-b border-zinc-800/50">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10">
-            <h2 className="text-lg font-semibold text-white mb-1">How it works</h2>
-            <p className="text-sm text-zinc-500">Sessions are structured to build insight over time — not just one-off conversations.</p>
+            <h2 className="text-lg font-semibold text-white mb-1">The work</h2>
+            <p className="text-sm text-zinc-500">A process, not a transaction. Each session builds on the last.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               {
                 icon: Calendar,
                 step: '01',
-                title: 'Book a session',
-                desc: 'Choose the session type that fits where you are. Scheduling is instant, no back-and-forth.',
+                title: 'Enter the Work',
+                desc: 'Begin with what\'s present — a pattern, pressure, or transition that\'s asking for attention.',
               },
               {
                 icon: BookOpen,
                 step: '02',
-                title: 'Capture key insights',
-                desc: 'Session notes and key themes are captured and stored in your private client portal.',
+                title: 'Map and Transform',
+                desc: 'We work through elemental dynamics — emotional, psychological, relational — to bring clarity and movement.',
               },
               {
                 icon: TrendingUp,
                 step: '03',
-                title: 'Track your progress',
-                desc: "Patterns emerge across sessions. You'll see your own movement clearly over time.",
+                title: 'Integrate and Track',
+                desc: 'Your insights, sessions, and shifts are captured so patterns become visible and usable over time.',
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative pl-10">
@@ -524,9 +526,9 @@ export default function PortalHomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1">
-              <h2 className="text-lg font-semibold text-white mb-1">Your client portal</h2>
+              <h2 className="text-lg font-semibold text-white mb-1">Your ongoing field of work</h2>
               <p className="text-sm text-zinc-500 mb-6 max-w-md">
-                Existing clients have access to session notes, resources, and direct messaging — all in one private space.
+                A living record of the work — not a dashboard. Everything that matters from your sessions, in one place.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
@@ -534,29 +536,29 @@ export default function PortalHomePage() {
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
                 >
                   <Lock size={14} />
-                  Sign in to portal
+                  Enter your space
                 </Link>
                 <Link
                   href={`/portal/${slug}/chat`}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-zinc-400 text-sm font-medium hover:text-white transition-colors"
                 >
                   <MessageCircle size={14} />
-                  Send a message
+                  Message between sessions
                 </Link>
               </div>
             </div>
             <div className="w-full lg:w-72 rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex-shrink-0">
               <div className="flex items-center gap-2 mb-4">
                 <Layers size={14} className="text-zinc-500" />
-                <span className="text-xs font-medium text-zinc-400">Portal includes</span>
+                <span className="text-xs font-medium text-zinc-400">Inside your portal</span>
               </div>
               <ul className="space-y-3">
                 {[
-                  'Session notes and summaries',
-                  'Resources shared in sessions',
-                  'Direct messaging with ' + firstName,
-                  'Booking history and upcoming sessions',
-                  'Progress reflections over time',
+                  'Session notes and key insights',
+                  'Voice-captured reflections',
+                  'Patterns tracked across time',
+                  'Resources and integration prompts',
+                  'Your evolving process, in one place',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-xs text-zinc-400">
                     <span className="mt-0.5 w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0" />
@@ -572,9 +574,9 @@ export default function PortalHomePage() {
       {/* Footer CTA */}
       <section className="py-14 px-6 border-b border-zinc-800/50">
         <div className="max-w-xl mx-auto text-center">
-          <h2 className="text-lg font-semibold text-white mb-2">Ready to begin?</h2>
+          <h2 className="text-lg font-semibold text-white mb-2">Start where you are.</h2>
           <p className="text-sm text-zinc-400 mb-6">
-            Book a session or reach out to learn more about working together.
+            We&apos;ll work from there.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
