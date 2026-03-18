@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * DESIGN:
  * - Works for both existing members and new signups
  * - Always succeeds from user's perspective (no email enumeration)
- * - 15 minute expiration for security
+ * - 1 hour expiration for security
  * - Graceful degradation if tables missing
  */
 
@@ -99,9 +99,9 @@ export async function POST(request: NextRequest) {
     const memberId = member?.id as string | null;
     const memberName = (member?.name as string) || 'Beautiful Soul';
 
-    // Generate token with 15 minute expiration
+    // Generate token with 1 hour expiration
     const token = generateToken();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Invalidate any existing tokens for this email
     await safeQuery(
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
             </div>
 
             <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
-              This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+              This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
             </p>
 
             <p style="color: #718096; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
@@ -209,7 +209,7 @@ ${bodyText}
 
 ${magicLink}
 
-This link expires in 15 minutes. If you didn't request this, you can safely ignore this email.
+This link expires in 1 hour. If you didn't request this, you can safely ignore this email.
 
 With presence,
 The Soullab Team

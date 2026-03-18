@@ -16,7 +16,7 @@ const ERROR_COPY: Record<string, { headline: string; body: string; cta: 'resend'
   },
   expired: {
     headline: 'This link has expired.',
-    body: 'Sign-in links expire after 15 minutes. Request a fresh one — it only takes a moment.',
+    body: 'Sign-in links expire after 1 hour. Request a fresh one — it only takes a moment.',
     cta: 'resend',
   },
   no_token: {
@@ -125,7 +125,7 @@ function MagicLinkErrorContent() {
               Check your email — a new link is on its way.
             </p>
             <p className="text-teal-100/50 text-xs mt-2 font-light">
-              Link expires in 15 minutes.
+              Link expires in 1 hour.
             </p>
           </div>
         ) : copy.cta === 'resend' ? (
