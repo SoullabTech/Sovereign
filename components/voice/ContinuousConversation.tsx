@@ -10,9 +10,7 @@ import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
-// =============================================================================
 // 🎙️ VOICE STATE MACHINE — Single authority for mic lifecycle
-// =============================================================================
 // Rule: ONLY requestRestart() can move from IDLE → ARMING → LISTENING.
 // Everything else (OracleConversation, StreamingVoice, etc.) emits events
 // that ContinuousConversation processes. No external code touches mic directly.
@@ -206,9 +204,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
   const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
   const wantsContinuousConversationRef = useRef(false); // 🔥 FIX: Track if user wants continuous conversation (persists through MAIA responses)
-  // ==========================================================================
   // 🎙️ STATE MACHINE — Single source of truth for mic lifecycle
-  // ==========================================================================
   const micStateRef = useRef<MicState>('IDLE');
   const listeningModeRef = useRef<ListeningMode>('HANDS_FREE');
   const restartInFlightRef = useRef(false); // True while a restart setTimeout is pending
@@ -522,8 +518,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setIsListening(false);
         // Note: onError is not defined in props, removed the call
       } else if (event.error === 'aborted') {
-        // Aborted is normal when stopping/restarting - don't log as error
-        console.log('⏹️ Recognition aborted (normal during restart)');
+        // Aborted = VFP killed recognition because MAIA started speaking.
+        // Chrome zombie bug: calling .start() on this object again silently fails (onresult never fires).
+        // Flag it NOW so the auto-resume path recreates a fresh object instead of reusing the zombie.
+        console.log('⏹️ Recognition aborted — flagging zombie for recreation on next start');
+        recognitionNeedsRefreshRef.current = true;
         // Don't trigger any restart logic here - let onend handle it
       }
     };
