@@ -57,10 +57,11 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
-/** Phase 19: Symbolic telemetry wiring */
+/** Phase 19–21: Symbolic telemetry wiring */
 import { buildPromptIngressItem } from '@/lib/symbolic/promptIngressGovernance';
 import { telemetryFromIngressItem } from '@/lib/symbolic/symbolicTelemetry';
 import { recordSymbolicEvent } from '@/lib/symbolic/telemetryStore';
+import { persistSymbolicTelemetryBatch } from '@/lib/symbolic/symbolicTelemetryPersistence';
 
 // Skip during static export (Capacitor builds)
 
@@ -604,11 +605,14 @@ export async function POST(request: NextRequest) {
     // Fire-and-forget — never blocks the oracle, never propagates errors.
     try {
       let _telemetryCount = 0;
+      const _telemetryEvents = [];
 
-      // Build, record, and count one item. Returns the governed item.
+      // Build, record to in-memory store, collect for DB batch, and count.
       const _record = (input) => {
         const item = buildPromptIngressItem(input);
-        recordSymbolicEvent(telemetryFromIngressItem(item, sessionId));
+        const event = telemetryFromIngressItem(item, sessionId);
+        recordSymbolicEvent(event);
+        _telemetryEvents.push(event);
         _telemetryCount++;
         return item;
       };
@@ -679,6 +683,8 @@ export async function POST(request: NextRequest) {
 
       if (_telemetryCount > 0) {
         console.log('[Symbolic Telemetry]', { itemCount: _telemetryCount, sessionId });
+        // Phase 21: persist to DB for time-window calibration queries (fire-and-forget)
+        persistSymbolicTelemetryBatch(_telemetryEvents, { memberId: userId, sessionId });
       }
     } catch {
       // Telemetry must never disrupt the oracle pipeline
