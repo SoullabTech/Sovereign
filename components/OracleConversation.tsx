@@ -7522,8 +7522,8 @@ I'm not sure what I'm feeling yet.`;
                       )}
                     </div>
                   )}
-                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
-                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Tap to speak hint - shows when muted OR when mic hasn't started yet */}
+                  {(isMuted || (!isListening && !isActivating)) && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}

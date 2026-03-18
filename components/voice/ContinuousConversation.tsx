@@ -288,7 +288,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       console.log('🎤 [ContinuousConversation] MAIA stopped speaking - hands-free active, auto-resuming mic in 600ms');
       setTimeout(() => {
-        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
+        if (isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current && handsFreeActiveRef.current) {
+          // 🔥 Recreate if VFP aborted — Chrome zombie objects silently fail on .start()
+          if (recognitionNeedsRefreshRef.current) {
+            if (recognitionRef.current) {
+              recognitionRef.current.onstart = null;
+              recognitionRef.current.onresult = null;
+              recognitionRef.current.onerror = null;
+              recognitionRef.current.onend = null;
+            }
+            recognitionRef.current = initializeSpeechRecognition();
+            recognitionNeedsRefreshRef.current = false;
+            if (!recognitionRef.current) {
+              console.warn('⚠️ [ContinuousConversation] Failed to recreate recognition object after VFP abort');
+              return;
+            }
+            console.log('🔄 [ContinuousConversation] Fresh recognition object created for auto-resume');
+          }
+          if (!recognitionRef.current) return;
           try {
             recognitionRef.current.start();
             setIsRecording(true);
