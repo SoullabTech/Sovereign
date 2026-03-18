@@ -57,6 +57,11 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 
+/** Phase 19: Symbolic telemetry wiring */
+import { buildPromptIngressItem } from '@/lib/symbolic/promptIngressGovernance';
+import { telemetryFromIngressItem } from '@/lib/symbolic/symbolicTelemetry';
+import { recordSymbolicEvent } from '@/lib/symbolic/telemetryStore';
+
 // Skip during static export (Capacitor builds)
 
 /**
@@ -590,6 +595,65 @@ export async function POST(request: NextRequest) {
       }
     } catch (astrologyError) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
+    }
+
+    // ── Phase 19: Symbolic telemetry ──────────────────────────────────────────
+    // Record governed prompt ingress for each symbolic domain present in this call.
+    // Fire-and-forget — never blocks the oracle, never propagates errors to the user.
+    // Records post-assembly, pre-LLM: captures what governance would allow to reach
+    // each surface (prompt, practitioner view, user view, memory).
+    try {
+      const _symbolicIngressItems = [];
+
+      // Astrology domain — authoritative when birth data is present, fallback for
+      // cosmic-weather-only (no birth chart on file).
+      if (astrologyContext) {
+        _symbolicIngressItems.push(buildPromptIngressItem({
+          traceId: `astro-${randomUUID()}`,
+          domain: 'astrology',
+          authority: astrologyContext.hasBirthData ? 'authoritative' : 'fallback',
+          renderBlocked: false,
+          claimTypes: [],
+          content: astrologyContext.formattedContext ?? '',
+        }));
+      }
+
+      // Field sensing domain — derived (always inference from observed field state).
+      if (panconsciousField?.axisMundi) {
+        _symbolicIngressItems.push(buildPromptIngressItem({
+          traceId: `field-${randomUUID()}`,
+          domain: 'field',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: [],
+        }));
+      }
+
+      // Pattern / symbol domain — derived when patterns detected; fallback if none.
+      if (symbolPatterns?.length > 0) {
+        _symbolicIngressItems.push(buildPromptIngressItem({
+          traceId: `pattern-${randomUUID()}`,
+          domain: 'pattern_ledger',
+          authority: 'derived',
+          renderBlocked: false,
+          claimTypes: ['recurring_pattern'],
+          content: symbolPatterns.map((p) => p.description ?? p.archetypalCore ?? '').join(' '),
+        }));
+      }
+
+      for (const _item of _symbolicIngressItems) {
+        recordSymbolicEvent(telemetryFromIngressItem(_item, sessionId));
+      }
+
+      if (_symbolicIngressItems.length > 0) {
+        console.log('[Symbolic Telemetry]', {
+          domains: _symbolicIngressItems.map(i => i.domain),
+          authorities: _symbolicIngressItems.map(i => i.authority),
+          promptRoles: _symbolicIngressItems.map(i => i.promptRole),
+        });
+      }
+    } catch {
+      // Telemetry must never disrupt the oracle pipeline
     }
 
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
