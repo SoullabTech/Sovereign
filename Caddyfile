@@ -210,6 +210,38 @@ soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Master Fields - Subdomain routing for individual master field sites
+# Middleware rewrites jondi.soullab.life/* → /fields/jondi/*
+# Add new masters here as they onboard.
+# ═══════════════════════════════════════════════════════════════════════════════
+jondi.soullab.life {
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-field"
+        X-Field-Slug "jondi"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/jondi-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Old Head Plaster - Astro SSR with Virtual Daragh
 # ═══════════════════════════════════════════════════════════════════════════════
 oldhead.soullab.life {
