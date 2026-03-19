@@ -85,6 +85,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
   { exact: '/beta-access', public: true, notes: 'Beta access' },
 
+  // Master Fields - public by design (invitation pages, field homes)
+  { prefix: '/fields/', public: true, notes: 'Master field sites are public — no auth required' },
+
   // Practitioner public portals - CLIENT-FACING
   { prefix: '/portal/', public: true, notes: 'All practitioner portals are public by design' },
 
