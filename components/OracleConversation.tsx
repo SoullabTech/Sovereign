@@ -7579,14 +7579,14 @@ I'm not sure what I'm feeling yet.`;
           </div>
         </div>
 
-        {/* Tap to Speak label - below holoflower */}
-        {isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
+        {/* Tap to Speak / Listening label - below holoflower */}
+        {!isResponding && !isAudioPlaying && !isProcessing && (
           <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
             <span
               className="text-amber-300/60 text-xs tracking-widest uppercase"
               style={{ letterSpacing: '0.15em' }}
             >
-              Tap to Speak
+              {isListening ? 'Listening' : 'Tap to Speak'}
             </span>
           </div>
         )}
