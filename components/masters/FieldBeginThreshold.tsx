@@ -221,7 +221,7 @@ export default function FieldBeginThreshold({ master }: Props) {
         {/* ── CTA ──────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
           <a
-            href={`/fields/${master.slug}/author`}
+            href="/author"
             style={{
               display: 'inline-block',
               padding: '1rem 2.5rem',
