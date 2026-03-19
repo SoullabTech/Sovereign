@@ -18,6 +18,7 @@ import {
   PersonaBoundaries,
   Modality,
 } from './types';
+import { ENERGY_MEDICINE_TEMPLATE } from '@/lib/masters/frameworks/energyMedicine';
 
 // ============================================
 // PERSONA CRUD
@@ -537,6 +538,15 @@ export function getPersonaTemplate(modality: Modality): CreatePersonaInput {
           traditions: ['earth-based', 'integrative'],
         },
         boundaries: getDefaultBoundaries('shamanic'),
+      };
+
+    case 'energy-medicine':
+      return {
+        persona_name: ENERGY_MEDICINE_TEMPLATE.defaultPersonaName,
+        modality: 'energy-medicine',
+        voice_patterns: ENERGY_MEDICINE_TEMPLATE.defaultVoice,
+        framework: ENERGY_MEDICINE_TEMPLATE.defaultFramework,
+        boundaries: ENERGY_MEDICINE_TEMPLATE.defaultBoundaries,
       };
 
     default:

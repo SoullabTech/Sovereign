@@ -97,7 +97,7 @@ export interface UpdateClientInput extends Partial<CreateClientInput> {
 
 export type SessionStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
 export type LocationType = 'video' | 'phone' | 'in_person' | 'async';
-export type Modality = 'astrology' | 'therapy' | 'bodywork' | 'coaching' | 'shamanic' | 'other';
+export type Modality = 'astrology' | 'therapy' | 'bodywork' | 'coaching' | 'shamanic' | 'energy-medicine' | 'other';
 
 // Astrology-specific session types
 export type AstrologySessionType =

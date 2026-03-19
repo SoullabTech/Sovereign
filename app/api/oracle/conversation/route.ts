@@ -297,6 +297,8 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  /** Master field slug — injects field-specific MAIA posture into the system prompt */
+  masterFieldSlug?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -358,6 +360,44 @@ export async function POST(request: NextRequest) {
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
     const { message, userId, sessionId } = parsed;
+
+    // Extract master field posture block (if this request comes from a master's field)
+    // Priority: trained persona (if practitionerId set + persona exists) → static systemPromptBlock
+    let masterFieldBlock = '';
+    if (parsed.masterFieldSlug) {
+      const { getFieldBySlug } = await import('@/lib/masters/registry');
+      const masterField = getFieldBySlug(parsed.masterFieldSlug);
+      if (masterField) {
+        let promptBlock: string | null = null;
+
+        // Try trained Virtual Self first
+        if (masterField.practitionerId) {
+          try {
+            const { getPersona } = await import('@/lib/stellium/personas');
+            const trainedPersona = await getPersona(masterField.practitionerId);
+            if (trainedPersona) {
+              const { synthesizePersonaPrompt } = await import('@/lib/masters/synthesizePersonaPrompt');
+              promptBlock = synthesizePersonaPrompt(masterField.name, trainedPersona);
+              if (promptBlock) {
+                console.log(`[MasterField] Trained Virtual Self active for: ${masterField.name}`);
+              }
+            }
+          } catch {
+            // DB unavailable or no persona — fall through to static
+          }
+        }
+
+        // Fallback: static systemPromptBlock from field config
+        if (!promptBlock && masterField.maia?.systemPromptBlock) {
+          promptBlock = masterField.maia.systemPromptBlock;
+          console.log(`[MasterField] Static field posture injected for: ${masterField.name}`);
+        }
+
+        if (promptBlock) {
+          masterFieldBlock = `\n\n[Field Posture: ${masterField.name}]\n${promptBlock}\n[End Field Posture]\n`;
+        }
+      }
+    }
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -608,7 +648,8 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      masterFieldBlock
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -658,7 +699,7 @@ export async function POST(request: NextRequest) {
             anamnesisPrompt,
             astrologyContext,
             preferredAssistantName
-          ) + `\n\n${validationResult.repairPrompt}`;
+          ) + masterFieldBlock + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
             .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
@@ -1398,7 +1439,8 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  masterFieldBlock?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1518,9 +1560,8 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
-    : systemPrompt;
+  const finalSystemPrompt = [systemPrompt, councilInsights, collectiveWisdom, masterFieldBlock ?? '']
+    .filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
