@@ -19,6 +19,36 @@ import type { Element } from '@/lib/types/voiceIntent';
 
 export type SpiralMotion = 'ascending' | 'stuck' | 'breakthrough';
 
+export interface ActiveReportContext {
+  reportId: string;
+  generatedAt: string;
+  currentPhase: {
+    spiralogicPhase: string;
+    majorLifeLesson: string;
+    edgeChallenge: string;
+    emergentGift: string;
+    activeTransits: string[];
+  };
+  elementalBalance: {
+    dominantElement: string;
+    underactiveElement: string;
+    fire: number;
+    water: number;
+    earth: number;
+    air: number;
+  };
+  nextAction: {
+    actions: string[];
+    watchFor: string;
+    journalPrompt: string;
+  };
+  evolutionDelta?: {
+    sinceLastReport: string;
+    repeatedPatterns: string[];
+    emergingStrengths: string[];
+  } | null;
+}
+
 export interface SpiralState {
   dominant_element: Element;
   phase: number;
@@ -27,6 +57,7 @@ export interface SpiralState {
   relational_phase: number;
   autonomy_streak: number;
   return_count: number;
+  activeReportContext?: ActiveReportContext | null;
   updated_at: Date;
   created_at: Date;
 }
@@ -53,7 +84,7 @@ export interface SpiralStateUpdate {
  */
 export async function loadSpiralState(memberId: string): Promise<SpiralState | null> {
   try {
-    const result = await query<SpiralState>(
+    const result = await query<SpiralState & { active_report_context: ActiveReportContext | null }>(
       `SELECT
         dominant_element,
         phase,
@@ -62,6 +93,7 @@ export async function loadSpiralState(memberId: string): Promise<SpiralState | n
         relational_phase,
         autonomy_streak,
         return_count,
+        active_report_context,
         updated_at,
         created_at
       FROM member_spiral_state
@@ -73,7 +105,11 @@ export async function loadSpiralState(memberId: string): Promise<SpiralState | n
       return null;
     }
 
-    return result.rows[0];
+    const row = result.rows[0];
+    return {
+      ...row,
+      activeReportContext: row.active_report_context ?? null,
+    };
   } catch (error) {
     // Graceful fallback — if state loading fails, conversation still works
     console.warn('[spiral-state] Failed to load state for member:', {
@@ -198,7 +234,29 @@ export function upsertSpiralState(memberId: string, update: SpiralStateUpdate): 
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 3. Observability Helpers
+// 3. Upsert Active Report Context (fire-and-forget)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Write the active report context snapshot to member_spiral_state.
+ * Fire-and-forget: returns Promise<void> so the caller can .catch() but should not await.
+ * Called from spiralogic-report route after a report is persisted.
+ */
+export async function upsertActiveReportContext(
+  memberId: string,
+  context: ActiveReportContext,
+): Promise<void> {
+  await query(
+    `INSERT INTO member_spiral_state (member_id, dominant_element, phase, active_report_context)
+     VALUES ($1, 'aether', 1, $2)
+     ON CONFLICT (member_id) DO UPDATE
+     SET active_report_context = $2`,
+    [memberId, JSON.stringify(context)],
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 4. Observability Helpers
 // ═══════════════════════════════════════════════════════════════
 
 /**

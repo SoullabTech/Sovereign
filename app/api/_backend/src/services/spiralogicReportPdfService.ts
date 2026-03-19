@@ -82,7 +82,15 @@ export class SpiralogicReportPdfService {
     doc.addPage();
     this.createReflectiveProtocolsPage(doc, report);
 
-    // Page 7: Chart Visualization (placeholder for now)
+    // Page 7: Current Phase + Elemental Balance Overview
+    doc.addPage();
+    this.createCurrentPhasePage(doc, report);
+
+    // Page 8: Next Action
+    doc.addPage();
+    this.createNextActionPage(doc, report);
+
+    // Page 9: Chart Visualization (placeholder for now)
     doc.addPage();
     this.createChartVisualizationPage(doc, report, birthData);
 
@@ -383,6 +391,185 @@ export class SpiralogicReportPdfService {
       240,
       { align: "center" },
     );
+  }
+
+  private createCurrentPhasePage(doc: jsPDF, report: SpiralogicReport) {
+    this.addPageHeader(doc, "Current Phase & Elemental Balance");
+
+    const phase = (report as any).currentPhase;
+    const balance = (report as any).elementalBalanceOverview;
+
+    let yPos = 40;
+
+    if (phase) {
+      // Spiralogic phase name
+      doc.setFontSize(14);
+      doc.setTextColor(this.style.accentColors.aether);
+      doc.text("Active Spiralogic Phase", 20, yPos);
+      yPos += 10;
+
+      doc.setFontSize(13);
+      doc.setTextColor(this.style.primaryColor);
+      doc.text(phase.spiralogicPhase ?? '', 20, yPos);
+      yPos += 12;
+
+      // Active transits
+      if (Array.isArray(phase.activeTransits) && phase.activeTransits.length > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(this.style.accentColors.aether);
+        doc.text("Life-Cycle Transits:", 20, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        phase.activeTransits.forEach((transit: string) => {
+          const lines = doc.splitTextToSize(`• ${transit}`, 165);
+          doc.text(lines, 22, yPos);
+          yPos += lines.length * 4.5 + 2;
+        });
+      }
+      yPos += 4;
+
+      // Major life lesson
+      if (phase.majorLifeLesson) {
+        doc.setFontSize(11);
+        doc.setTextColor(this.style.accentColors.fire);
+        doc.text("Core Growth Edge:", 20, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        const lessonLines = doc.splitTextToSize(phase.majorLifeLesson, 165);
+        doc.text(lessonLines, 20, yPos);
+        yPos += lessonLines.length * 4.5 + 6;
+      }
+
+      // Edge challenge and emergent gift
+      if (phase.edgeChallenge) {
+        doc.setFontSize(11);
+        doc.setTextColor(this.style.accentColors.water);
+        doc.text("Edge Challenge:", 20, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        const ecLines = doc.splitTextToSize(phase.edgeChallenge, 165);
+        doc.text(ecLines, 20, yPos);
+        yPos += ecLines.length * 4.5 + 6;
+      }
+
+      if (phase.emergentGift) {
+        doc.setFontSize(11);
+        doc.setTextColor(this.style.accentColors.earth);
+        doc.text("Emergent Gift:", 20, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        const egLines = doc.splitTextToSize(phase.emergentGift, 165);
+        doc.text(egLines, 20, yPos);
+        yPos += egLines.length * 4.5 + 10;
+      }
+    }
+
+    // Elemental Balance Overview
+    if (balance) {
+      // Divider
+      doc.setDrawColor(this.style.secondaryColor);
+      doc.setLineWidth(0.3);
+      doc.line(20, yPos, 190, yPos);
+      yPos += 8;
+
+      doc.setFontSize(14);
+      doc.setTextColor(this.style.primaryColor);
+      doc.text("Elemental Balance Overview", 20, yPos);
+      yPos += 10;
+
+      // Bar chart: fire/water/earth/air
+      const elems: Array<'fire' | 'water' | 'earth' | 'air'> = ['fire', 'water', 'earth', 'air'];
+      const maxBarWidth = 100;
+      elems.forEach((el) => {
+        const pct: number = typeof balance[el] === 'number' ? balance[el] : 0;
+        const barW = (pct / 100) * maxBarWidth;
+
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        doc.text(`${el.toUpperCase()}`, 20, yPos);
+
+        doc.setFillColor(this.style.accentColors[el]);
+        doc.rect(45, yPos - 4, barW, 5, 'F');
+
+        doc.setFontSize(9);
+        doc.setTextColor(this.style.secondaryColor);
+        doc.text(`${pct}%`, 148, yPos);
+        yPos += 10;
+      });
+
+      if (balance.balanceSummary) {
+        yPos += 4;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        const sumLines = doc.splitTextToSize(balance.balanceSummary, 165);
+        doc.text(sumLines, 20, yPos);
+      }
+    }
+  }
+
+  private createNextActionPage(doc: jsPDF, report: SpiralogicReport) {
+    this.addPageHeader(doc, "Next Steps");
+
+    const next = (report as any).nextAction;
+    if (!next) return;
+
+    let yPos = 45;
+
+    // Actions list
+    doc.setFontSize(14);
+    doc.setTextColor(this.style.primaryColor);
+    doc.text("Your Next Actions", 20, yPos);
+    yPos += 12;
+
+    if (Array.isArray(next.actions)) {
+      next.actions.forEach((action: string, i: number) => {
+        const label = i === 0 ? 'This week:' : i === 1 ? 'Reflective:' : '30-day arc:';
+        doc.setFontSize(11);
+        doc.setTextColor(this.style.accentColors.fire);
+        doc.text(label, 20, yPos);
+        yPos += 7;
+        doc.setFontSize(10);
+        doc.setTextColor(this.style.primaryColor);
+        const lines = doc.splitTextToSize(action, 165);
+        doc.text(lines, 22, yPos);
+        yPos += lines.length * 5 + 8;
+      });
+    }
+
+    // Watch for
+    if (next.watchFor) {
+      yPos += 4;
+      doc.setFontSize(12);
+      doc.setTextColor(this.style.accentColors.water);
+      doc.text("Watch for:", 20, yPos);
+      yPos += 8;
+      doc.setFontSize(10);
+      doc.setTextColor(this.style.primaryColor);
+      const watchLines = doc.splitTextToSize(next.watchFor, 165);
+      doc.text(watchLines, 20, yPos);
+      yPos += watchLines.length * 5 + 12;
+    }
+
+    // Journal prompt
+    if (next.journalPrompt) {
+      doc.setDrawColor(this.style.accentColors.aether);
+      doc.setLineWidth(0.5);
+      doc.line(20, yPos, 190, yPos);
+      yPos += 8;
+
+      doc.setFontSize(12);
+      doc.setTextColor(this.style.accentColors.aether);
+      doc.text("Journal Prompt:", 20, yPos);
+      yPos += 8;
+      doc.setFontSize(11);
+      doc.setTextColor(this.style.primaryColor);
+      const jpLines = doc.splitTextToSize(`"${next.journalPrompt}"`, 165);
+      doc.text(jpLines, 20, yPos);
+    }
   }
 
   // Helper methods
