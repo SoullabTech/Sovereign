@@ -7572,20 +7572,7 @@ I'm not sure what I'm feeling yet.`;
               </motion.div>
             )}
 
-            {/* Tap to speak hint — below holoflower, initial idle state */}
-            {!isListening && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && !showChatInterface && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: `calc(50% + ${holoflowerSize / 2 + 18}px)`,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span className="text-violet-300/60 text-sm font-light tracking-wide">tap to speak</span>
-              </div>
-            )}
+            {/* Voice state display moved to VoiceInteractionBar (fixed bottom zone) */}
 
             {/* OLD BUTTON REMOVED - Holoflower itself is now clickable */}
           </div>
