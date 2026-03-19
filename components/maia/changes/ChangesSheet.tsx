@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Wind } from 'lucide-react';
 import ChangeListView from './ChangeListView';
 import NameYourChange from './NameYourChange';
-import ChangeLandscapeVisual from './ChangeLandscapeVisual';
 import ChangeJourney from './ChangeJourney';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -18,7 +17,7 @@ interface ChangesSheetProps {
 
 type ViewState =
   | { type: 'list' }
-  | { type: 'create'; step: 'name' | 'landscape' }
+  | { type: 'create'; step: 'name' }
   | { type: 'journey'; changeId: string };
 
 export function ChangesSheet({
@@ -31,6 +30,7 @@ export function ChangesSheet({
   const [createData, setCreateData] = useState<{
     title: string;
     description: string;
+    changeType: string;
   } | null>(null);
 
   // Reset to list view when sheet closes
@@ -48,20 +48,15 @@ export function ChangesSheet({
     setCreateData(null);
   };
 
-  const handleNameNext = (title: string, description: string) => {
-    setCreateData({ title, description });
-    setView({ type: 'create', step: 'landscape' });
-  };
-
-  const handleLandscapeSelect = async (changeType: string) => {
-    if (!createData) return;
+  const handleNameNext = async (title: string, description: string, changeType: string) => {
+    setCreateData({ title, description, changeType });
 
     try {
       const response = await apiFetch('/api/changes', {
         method: 'POST',
         body: JSON.stringify({
-          title: createData.title,
-          description: createData.description,
+          title,
+          description,
           changeType,
           urgency: 'none',
         }),
@@ -85,12 +80,8 @@ export function ChangesSheet({
 
   const handleBack = () => {
     if (view.type === 'create') {
-      if (view.step === 'landscape') {
-        setView({ type: 'create', step: 'name' });
-      } else {
-        setView({ type: 'list' });
-        setCreateData(null);
-      }
+      setView({ type: 'list' });
+      setCreateData(null);
     } else if (view.type === 'journey') {
       setView({ type: 'list' });
     }
@@ -98,9 +89,7 @@ export function ChangesSheet({
 
   const getTitle = () => {
     if (view.type === 'list') return 'Changes';
-    if (view.type === 'create') {
-      return view.step === 'name' ? 'Name Your Change' : 'What Kind of Change?';
-    }
+    if (view.type === 'create') return 'Name Your Change';
     return 'Change Journey';
   };
 
@@ -187,21 +176,7 @@ export function ChangesSheet({
                       onBack={handleBack}
                       initialTitle={createData?.title}
                       initialDescription={createData?.description}
-                    />
-                  </motion.div>
-                )}
-
-                {view.type === 'create' && view.step === 'landscape' && (
-                  <motion.div
-                    key="create-landscape"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChangeLandscapeVisual
-                      onSelect={handleLandscapeSelect}
-                      onBack={handleBack}
+                      initialChangeType={createData?.changeType}
                     />
                   </motion.div>
                 )}
