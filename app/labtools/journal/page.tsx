@@ -27,10 +27,27 @@ import {
   ArrowLeft,
   X,
   Plus,
+  Wind,
+  Scale,
+  Droplets,
+  Sprout,
+  DoorOpen,
+  Merge,
+  Zap,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import CapsuleCard from '@/components/capsules/CapsuleCard';
 import type { CapsuleDTO } from '@/lib/capsules/types';
+
+// Change type element mapping
+const CHANGE_TYPE_CONFIG: Record<string, { emoji: string; label: string; iconColor: string; bgColor: string; borderColor: string }> = {
+  dissolution: { emoji: '💧', label: 'Dissolution', iconColor: 'text-blue-500', bgColor: 'bg-blue-100', borderColor: 'border-blue-200' },
+  emergence:   { emoji: '🌱', label: 'Emergence',   iconColor: 'text-cyan-500',  bgColor: 'bg-cyan-100',  borderColor: 'border-cyan-200' },
+  threshold:   { emoji: '✨', label: 'Threshold',   iconColor: 'text-purple-500',bgColor: 'bg-purple-100',borderColor: 'border-purple-200' },
+  integration: { emoji: '🌍', label: 'Integration', iconColor: 'text-emerald-500',bgColor: 'bg-emerald-100',borderColor: 'border-emerald-200' },
+  upheaval:    { emoji: '🔥', label: 'Upheaval',    iconColor: 'text-red-500',   bgColor: 'bg-red-100',   borderColor: 'border-red-200' },
+  ripening:    { emoji: '☀️', label: 'Ripening',    iconColor: 'text-amber-500', bgColor: 'bg-amber-100', borderColor: 'border-amber-200' },
+};
 
 // Types for unified entries
 interface JournalEntry {
@@ -54,12 +71,37 @@ interface ScribeSession {
   isActive: boolean;
 }
 
+interface MemberChange {
+  id: string;
+  title: string;
+  description: string;
+  changeType: string;
+  status: string;
+  hexagramName?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface MemberDecision {
+  id: string;
+  title: string;
+  context?: string;
+  situationType?: string;
+  status: string;
+  consultantNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 type UnifiedEntry =
   | { type: 'journal'; data: JournalEntry }
   | { type: 'capture'; data: CapsuleDTO }
-  | { type: 'scribe'; data: ScribeSession };
+  | { type: 'scribe'; data: ScribeSession }
+  | { type: 'change'; data: MemberChange }
+  | { type: 'decision'; data: MemberDecision };
 
-type CategoryFilter = 'all' | 'journal' | 'capture' | 'scribe';
+type CategoryFilter = 'all' | 'journal' | 'capture' | 'scribe' | 'change' | 'decision';
 type JournalSubFilter = 'all' | 'dream' | 'day' | 'handwriting';
 type ScribeSubFilter = 'all' | 'solo' | 'witness' | 'practitioner';
 
@@ -93,6 +135,14 @@ const getCategoryStyle = (type: string, isActive: boolean = false) => {
     case 'scribe':
       return isActive
         ? 'bg-violet-100 text-violet-700 ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
+    case 'change':
+      return isActive
+        ? 'bg-cyan-100 text-cyan-700 ' + base
+        : 'bg-white/70 text-stone-600 ' + base;
+    case 'decision':
+      return isActive
+        ? 'bg-stone-200 text-stone-700 ' + base
         : 'bg-white/70 text-stone-600 ' + base;
     default:
       return isActive
@@ -131,6 +181,8 @@ export default function UnifiedJournalPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [capsules, setCapsules] = useState<CapsuleDTO[]>([]);
   const [scribeSessions, setScribeSessions] = useState<ScribeSession[]>([]);
+  const [memberChanges, setMemberChanges] = useState<MemberChange[]>([]);
+  const [memberDecisions, setMemberDecisions] = useState<MemberDecision[]>([]);
 
   // Fetch all data
   const fetchAllData = useCallback(async () => {
@@ -179,6 +231,43 @@ export default function UnifiedJournalPage() {
           }))
         );
       }
+
+      // Fetch member changes
+      const changesRes = await apiFetch('/api/changes');
+      if (changesRes.ok) {
+        const data = await changesRes.json();
+        setMemberChanges(
+          (data.changes || []).map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            changeType: c.changeType || c.change_type || 'threshold',
+            status: c.status,
+            hexagramName: c.hexagramName || c.hexagram_name,
+            notes: c.notes,
+            createdAt: c.createdAt || c.created_at,
+            updatedAt: c.updatedAt || c.updated_at,
+          }))
+        );
+      }
+
+      // Fetch decisions (practitioner-linked members only; graceful if 403)
+      const decisionsRes = await apiFetch('/api/studio/decisions');
+      if (decisionsRes.ok) {
+        const data = await decisionsRes.json();
+        setMemberDecisions(
+          (data.decisions || []).map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            context: d.context,
+            situationType: d.situationType || d.situation_type,
+            status: d.status,
+            consultantNotes: d.consultantNotes || d.consultant_notes,
+            createdAt: d.createdAt || d.created_at,
+            updatedAt: d.updatedAt || d.updated_at,
+          }))
+        );
+      }
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load entries');
@@ -214,22 +303,24 @@ export default function UnifiedJournalPage() {
         .forEach((s) => entries.push({ type: 'scribe', data: s }));
     }
 
+    // Add changes
+    if (activeCategory === 'all' || activeCategory === 'change') {
+      memberChanges.forEach((c) => entries.push({ type: 'change', data: c }));
+    }
+
+    // Add decisions
+    if (activeCategory === 'all' || activeCategory === 'decision') {
+      memberDecisions.forEach((d) => entries.push({ type: 'decision', data: d }));
+    }
+
     // Sort by date (newest first)
-    return entries.sort((a, b) => {
-      const dateA =
-        a.type === 'journal'
-          ? a.data.createdAt
-          : a.type === 'capture'
-            ? a.data.createdAt
-            : a.data.startedAt;
-      const dateB =
-        b.type === 'journal'
-          ? b.data.createdAt
-          : b.type === 'capture'
-            ? b.data.createdAt
-            : b.data.startedAt;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    });
+    const getEntryDate = (e: UnifiedEntry): string => {
+      if (e.type === 'scribe') return e.data.startedAt;
+      return e.data.createdAt;
+    };
+    return entries.sort((a, b) =>
+      new Date(getEntryDate(b)).getTime() - new Date(getEntryDate(a)).getTime()
+    );
   };
 
   // Filter by search
@@ -253,6 +344,19 @@ export default function UnifiedJournalPage() {
       return (
         entry.data.title.toLowerCase().includes(query) ||
         entry.data.summary?.short?.toLowerCase().includes(query)
+      );
+    }
+    if (entry.type === 'change') {
+      return (
+        entry.data.title.toLowerCase().includes(query) ||
+        entry.data.description.toLowerCase().includes(query) ||
+        entry.data.changeType.toLowerCase().includes(query)
+      );
+    }
+    if (entry.type === 'decision') {
+      return (
+        entry.data.title.toLowerCase().includes(query) ||
+        (entry.data.context?.toLowerCase().includes(query) ?? false)
       );
     }
     return false;
@@ -282,7 +386,7 @@ export default function UnifiedJournalPage() {
       key: 'all',
       label: 'All',
       icon: <BookOpen className="w-4 h-4" />,
-      count: journalEntries.length + capsules.length + scribeSessions.length,
+      count: journalEntries.length + capsules.length + scribeSessions.length + memberChanges.length + memberDecisions.length,
     },
     {
       key: 'journal',
@@ -301,6 +405,18 @@ export default function UnifiedJournalPage() {
       label: 'Scribe',
       icon: <Mic className="w-4 h-4" />,
       count: scribeSessions.length,
+    },
+    {
+      key: 'change',
+      label: 'Changes',
+      icon: <Wind className="w-4 h-4" />,
+      count: memberChanges.length,
+    },
+    {
+      key: 'decision',
+      label: 'Decisions',
+      icon: <Scale className="w-4 h-4" />,
+      count: memberDecisions.length,
     },
   ];
 
@@ -335,7 +451,7 @@ export default function UnifiedJournalPage() {
     router.push('/labtools');
   };
 
-  const totalCount = journalEntries.length + capsules.length + scribeSessions.length;
+  const totalCount = journalEntries.length + capsules.length + scribeSessions.length + memberChanges.length + memberDecisions.length;
 
   return (
     <div className="h-screen overflow-y-auto bg-[#EAE5DF]">
@@ -376,7 +492,7 @@ export default function UnifiedJournalPage() {
 
           <h1 className="text-2xl font-bold text-stone-800 mb-1">Your Journal</h1>
           <p className="text-stone-500 text-sm">
-            {totalCount} {totalCount === 1 ? 'entry' : 'entries'} — thoughts, reflections, and sessions
+            {totalCount} {totalCount === 1 ? 'entry' : 'entries'} — thoughts, reflections, sessions, and journeys
           </p>
         </motion.div>
 
@@ -538,7 +654,11 @@ export default function UnifiedJournalPage() {
                   ? 'Use "Capture the Spirit" during conversations with MAIA.'
                   : activeCategory === 'scribe'
                     ? 'Start a Scribe session to transcribe and analyze conversations.'
-                    : 'Your journal entries, captures, and scribe sessions will appear here.'}
+                    : activeCategory === 'change'
+                      ? 'Use the Changes tool on MAIA to name and track your transitions.'
+                      : activeCategory === 'decision'
+                        ? 'Use the Decision Council in Studio to reflect on complex choices.'
+                        : 'Your journal entries, captures, sessions, changes, and decisions will appear here.'}
             </p>
             <button
               onClick={() => router.push('/maia')}
@@ -552,7 +672,7 @@ export default function UnifiedJournalPage() {
           <div className="space-y-3">
             {filteredEntries.map((entry, idx) => (
               <motion.div
-                key={`${entry.type}-${entry.data.id}`}
+                key={`${entry.type}-${'id' in entry.data ? entry.data.id : idx}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.03 }}
@@ -627,7 +747,7 @@ export default function UnifiedJournalPage() {
                       <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
                     </div>
                   </button>
-                ) : (
+                ) : entry.type === 'scribe' ? (
                   <button
                     className="w-full bg-white/70 border border-[#D4B896]/30 rounded-xl p-4 hover:bg-white/90 hover:border-violet-300 transition-all text-left group"
                     onClick={() => router.push(`/sessions/${entry.data.id}`)}
@@ -672,7 +792,77 @@ export default function UnifiedJournalPage() {
                       <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
                     </div>
                   </button>
-                )}
+                ) : entry.type === 'change' ? (() => {
+                  const cfg = CHANGE_TYPE_CONFIG[entry.data.changeType] ?? CHANGE_TYPE_CONFIG.threshold;
+                  return (
+                    <button
+                      className="w-full bg-white/70 border border-[#D4B896]/30 rounded-xl p-4 hover:bg-white/90 hover:border-cyan-300 transition-all text-left group"
+                      onClick={() => {/* TODO: open change journey */}}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-lg ${cfg.bgColor} flex items-center justify-center flex-shrink-0 text-lg leading-none`}>
+                          {cfg.emoji}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${cfg.bgColor} ${cfg.borderColor} ${cfg.iconColor}`}>
+                              {cfg.label}
+                            </span>
+                            <span className="text-xs text-stone-500">
+                              {formatDate(entry.data.createdAt)}
+                            </span>
+                            {entry.data.hexagramName && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">
+                                ☯ {entry.data.hexagramName}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-stone-800 font-medium">{entry.data.title}</p>
+                          <p className="text-xs text-stone-500 mt-1 line-clamp-2">{entry.data.description}</p>
+                          {entry.data.status && entry.data.status !== 'naming' && (
+                            <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-stone-500 capitalize">
+                              {entry.data.status}
+                            </span>
+                          )}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
+                      </div>
+                    </button>
+                  );
+                })() : entry.type === 'decision' ? (
+                  <button
+                    className="w-full bg-white/70 border border-[#D4B896]/30 rounded-xl p-4 hover:bg-white/90 hover:border-stone-400 transition-all text-left group"
+                    onClick={() => {/* TODO: open decision detail */}}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-stone-200 flex items-center justify-center flex-shrink-0">
+                        <Scale className="w-4 h-4 text-stone-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full border bg-stone-100 border-stone-300 text-stone-600 capitalize">
+                            {entry.data.situationType ?? 'Decision'}
+                          </span>
+                          <span className="text-xs text-stone-500">
+                            {formatDate(entry.data.createdAt)}
+                          </span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${
+                            entry.data.status === 'complete'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              : 'bg-stone-100 border-stone-200 text-stone-500'
+                          }`}>
+                            {entry.data.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-stone-800 font-medium">{entry.data.title}</p>
+                        {entry.data.context && (
+                          <p className="text-xs text-stone-500 mt-1 line-clamp-2">{entry.data.context}</p>
+                        )}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-stone-400 flex-shrink-0 group-hover:text-stone-600 transition-colors" />
+                    </div>
+                  </button>
+                ) : null}
               </motion.div>
             ))}
           </div>
