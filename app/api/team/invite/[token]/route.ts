@@ -48,6 +48,31 @@ export async function GET(
   });
 }
 
+// DELETE /api/team/invite/[token] — revoke by id or token (admin only)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+  const memberId = await getMemberIdFromRequest(request);
+  if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const adminCheck = await query(
+    `SELECT 1 FROM members WHERE id = $1 AND ('team_admin' = ANY(roles) OR 'admin' = ANY(roles))`,
+    [memberId]
+  );
+  if (!adminCheck.rows[0]) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  // token param may be a UUID id or a hex token — match either
+  const result = await query(
+    `DELETE FROM team_invites WHERE (id::text = $1 OR token = $1) AND accepted_at IS NULL RETURNING id`,
+    [token]
+  );
+
+  if (!result.rows[0]) return NextResponse.json({ error: 'Invite not found or already accepted' }, { status: 404 });
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
