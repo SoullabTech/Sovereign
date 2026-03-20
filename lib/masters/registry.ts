@@ -8,9 +8,10 @@
 import type { MasterField } from './types';
 import { JONDI_FIELD } from './jondi';
 import { KELLY_FIELD } from './kelly';
+import { NATHAN_FIELD } from './nathan';
 
 /** All registered master fields */
-const MASTER_FIELDS: MasterField[] = [JONDI_FIELD, KELLY_FIELD];
+const MASTER_FIELDS: MasterField[] = [JONDI_FIELD, KELLY_FIELD, NATHAN_FIELD];
 
 /** Look up a field by URL slug (e.g. 'jondi') */
 export function getFieldBySlug(slug: string): MasterField | null {

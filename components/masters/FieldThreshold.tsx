@@ -116,7 +116,7 @@ export default function FieldThreshold({ master }: Props) {
             display: 'block',
           }}
         >
-          About Jondi
+          About {master.shortName}
         </Link>
 
         {/* The three portals */}

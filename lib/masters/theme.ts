@@ -119,6 +119,23 @@ export const FIELD_PRESETS = {
     bodyFont: 'DM Sans',
   },
 
+  /**
+   * Nathan — Systems architect, platform partner.
+   * Same warm brown family as Kelly (partner aesthetic),
+   * but tighter density and analytical voice — a working environment, not a practice page.
+   */
+  nathan: {
+    primaryColor: '#B08060',    // warm amber-brown — partner palette, same family as Kelly
+    backgroundColor: '#1A140E', // near-black warm — consistent with the Soullab dark foundation
+    tone: 'dark' as FieldTone,
+    density: 'tight' as FieldDensity,
+    motion: 'none' as FieldMotion,
+    imagery: 'none' as FieldImagery,
+    voice: { length: 'medium' as FieldVoiceLength, style: 'analytical' as FieldVoiceStyle },
+    displayFont: 'Cormorant Garamond',
+    bodyFont: 'DM Sans',
+  },
+
   /** Philosophical depth. Dark, dense, no imagery. Mind-first. */
   mcgilchrist: {
     primaryColor: '#8B9EA8',
