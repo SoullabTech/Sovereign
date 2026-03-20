@@ -3,6 +3,7 @@
 
 import { query } from '@/lib/db/postgres';
 import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember } from './types';
+import { notifyChannelMentions } from '@/lib/team/notifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANNELS
@@ -300,6 +301,10 @@ export async function sendMessage(
   );
 
   const row = result.rows[0];
+
+  // Fire-and-forget email notifications for @mentions
+  notifyChannelMentions(channelId, senderId, trimmed).catch(() => {});
+
   const nameResult = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,
     [senderId]

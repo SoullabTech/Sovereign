@@ -1,6 +1,7 @@
 // SoulComms — Direct Message Service
 
 import { query } from '@/lib/db/postgres';
+import { notifyDMRecipient } from '@/lib/team/notifications';
 
 export interface DMThread {
   id: string;
@@ -260,6 +261,10 @@ export async function sendDMMessage(
   );
 
   const row = result.rows[0];
+
+  // Fire-and-forget email notification to the other participant
+  notifyDMRecipient(dmThreadId, senderId, trimmed).catch(() => {});
+
   const nameRes = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,
     [senderId]
