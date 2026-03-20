@@ -128,12 +128,7 @@ export async function middleware(req: NextRequest) {
 
   if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
     const url = req.nextUrl.clone();
-    // Root → redirect to /begin (the invitation threshold)
-    if (pathname === '/') {
-      url.pathname = `/fields/${masterSlug}/begin`;
-      return NextResponse.redirect(url);
-    }
-    url.pathname = `/fields/${masterSlug}${pathname}`;
+    url.pathname = pathname === '/' ? `/fields/${masterSlug}` : `/fields/${masterSlug}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
