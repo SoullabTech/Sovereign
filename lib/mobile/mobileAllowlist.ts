@@ -128,7 +128,7 @@ export const STUDIO_ROUTES = [
   '/studio/session-room',
   '/studio/maia',
   '/studio/tasks',
-  '/studio/teams',
+  '/team',
   '/studio/services',
 ] as const;
 
