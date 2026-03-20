@@ -327,3 +327,107 @@ ON CONFLICT (field_id, title) DO UPDATE SET
   description  = EXCLUDED.description,
   external_url = EXCLUDED.external_url,
   entry_point  = EXCLUDED.entry_point;
+
+
+-- ════════════════════════════════════════════════════════════════
+-- 4. ROBERT KANE — wisdom_keeper / ai_posture: contextual
+-- ════════════════════════════════════════════════════════════════
+
+WITH field AS (
+  INSERT INTO wisdom_fields (
+    slug, field_type, ai_posture, master_name, master_dates, master_domain,
+    orientation, ai_posture_note, voice_profile, visibility, created_by
+  )
+  SELECT
+    'robert-kane',
+    'wisdom_keeper',
+    'contextual',
+    'Robert Kane',
+    '1938–2023',
+    'Free Will · Agency · Moral Responsibility · Philosophy of Action',
+    'Kane spent his career on one of philosophy''s most consequential questions: is there a kind of freedom worth wanting that is both genuinely real and genuinely ours? His answer — built around Ultimate Responsibility and Self-Forming Actions — refused the compromise positions. He did not want a free will that survived only by redefining the terms. He wanted to show that indeterminism, far from undermining agency, might be what makes genuine authorship of our lives possible. This is the agency axis: the deep question of whether you are the ultimate source of your own becoming, and what that requires.',
+    'MAIA can think alongside you in this field. The free will question touches how you understand your own choices — she will hold the philosophical complexity without collapsing it into easy reassurance.',
+    'analytical_agency_philosophy',
+    'open',
+    id
+  FROM members ORDER BY created_at ASC LIMIT 1
+  ON CONFLICT (slug) DO UPDATE SET
+    master_name     = EXCLUDED.master_name,
+    master_dates    = EXCLUDED.master_dates,
+    master_domain   = EXCLUDED.master_domain,
+    orientation     = EXCLUDED.orientation,
+    ai_posture_note = EXCLUDED.ai_posture_note,
+    voice_profile   = EXCLUDED.voice_profile,
+    updated_at      = NOW()
+  RETURNING id
+),
+steward AS (
+  INSERT INTO wisdom_field_memberships (field_id, member_id, role, status)
+  SELECT field.id, m.id, 'steward', 'active'
+  FROM field, (SELECT id FROM members ORDER BY created_at ASC LIMIT 1) m
+  ON CONFLICT (field_id, member_id) DO NOTHING
+),
+ideas AS (
+  INSERT INTO wisdom_field_core_ideas
+    (field_id, concept, one_line, body, related_concepts, sort_order, added_by)
+  SELECT field.id, v.concept, v.one_line, v.body, v.related_concepts, v.sort_order, m.id
+  FROM field,
+       (SELECT id FROM members ORDER BY created_at ASC LIMIT 1) m,
+       (VALUES
+         ('Ultimate Responsibility',
+          'To be truly free, you must be the ultimate source of your will — not merely its proximate cause.',
+          'Ultimate Responsibility (UR) is Kane''s foundational condition for the kind of free will that matters morally. It is not enough that your actions flow from your desires and character — you must also be, in some sense, the author of those desires and that character. If every choice traces back to causes entirely outside you, something important is missing, however "free" the choice feels. UR is the demand that the buck stop with you.',
+          ARRAY['Self-Forming Actions', 'Moral Responsibility', 'Sourcehood']::TEXT[],
+          10),
+         ('Self-Forming Actions',
+          'The moments where we genuinely shape who we are — not just act from who we already are.',
+          'Self-Forming Actions (SFAs) are Kane''s answer to the charge that indeterminism merely introduces randomness into agency. SFAs occur at genuine turning points — moments of inner conflict where multiple possible futures are live and the outcome is not determined. These are not arbitrary: both the effort and the outcome express the agent. In choosing, the agent does not merely reveal pre-existing character; she creates it. The struggle itself is the freedom.',
+          ARRAY['Ultimate Responsibility', 'Indeterminism', 'Character Formation']::TEXT[],
+          20),
+         ('The Intelligibility Question',
+          'How can indeterminism make us more free rather than less? This is the central puzzle.',
+          'The standard objection to libertarian free will: if indeterminism is just randomness, it does not give us control — it removes it. Kane''s answer is that this misframes what indeterminism is doing. In SFAs, the indeterminism is not noise added to an otherwise determined process. It is located within the agent''s own effort — within the clash of competing motivations. Whatever happens, it happens because of what the agent is reaching toward. The indeterminism does not undercut authorship; it is where authorship is forged.',
+          ARRAY['Self-Forming Actions', 'Ultimate Responsibility', 'Compatibilism']::TEXT[],
+          30),
+         ('Compatibilism and Its Limits',
+          'Kane respected compatibilism — and thought it was answering a different question than the one that matters.',
+          'Compatibilists argue that free will is compatible with determinism because what matters is whether actions flow from the agent''s own reasons, values, and deliberation — not whether the causal chain goes back to them all the way down. Kane found this partially right but incomplete. It describes a real and valuable kind of freedom — but not the kind that grounds ultimate moral responsibility. The compatibilist free will does not ask whether you are the ultimate source; only whether you are the proximate one. Kane thought both questions deserve an answer.',
+          ARRAY['Ultimate Responsibility', 'Moral Responsibility', 'Determinism']::TEXT[],
+          40),
+         ('Moral Responsibility',
+          'Free will matters because moral responsibility — genuine desert — depends on it.',
+          'Kane''s interest in free will was never merely metaphysical. He cared because the questions of praise, blame, punishment, and desert hang on it. If no one is ever the ultimate source of their actions, the practice of holding people responsible — really responsible, not just as a useful social fiction — becomes hard to justify. His work is an attempt to show that the kind of freedom genuine responsibility requires is not incoherent, not refuted by physics, and not merely a folk illusion.',
+          ARRAY['Ultimate Responsibility', 'Agency', 'Desert']::TEXT[],
+          50)
+       ) AS v(concept, one_line, body, related_concepts, sort_order)
+  ON CONFLICT (field_id, concept) DO UPDATE SET
+    one_line         = EXCLUDED.one_line,
+    body             = EXCLUDED.body,
+    related_concepts = EXCLUDED.related_concepts,
+    sort_order       = EXCLUDED.sort_order,
+    updated_at       = NOW()
+)
+INSERT INTO wisdom_field_works
+  (field_id, title, year, work_type, description, external_url, entry_point, added_by)
+SELECT field.id, v.title, v.year, v.work_type, v.description, v.external_url, v.entry_point, m.id
+FROM field,
+     (SELECT id FROM members ORDER BY created_at ASC LIMIT 1) m,
+     (VALUES
+       ('A Contemporary Introduction to Free Will', '2005', 'book',
+        'The clearest single entry into Kane''s thought and the broader free will debate. Surveys compatibilism, hard determinism, and libertarianism with unusual fairness before making the case for what genuinely matters. Ideal first contact — philosophically serious without requiring prior background.',
+        NULL,
+        TRUE),
+       ('The Significance of Free Will', '1996', 'book',
+        'Kane''s major work. Develops Ultimate Responsibility and Self-Forming Actions in full technical detail. This is where the real argument lives. Read after the introduction — it rewards the effort.',
+        NULL,
+        FALSE),
+       ('The Oxford Handbook of Free Will', '2002', 'book',
+        'Edited by Kane — the comprehensive survey of the field. Essays from compatibilists, hard determinists, and libertarians. Useful for understanding where Kane''s position sits relative to the full landscape.',
+        NULL,
+        FALSE)
+     ) AS v(title, year, work_type, description, external_url, entry_point)
+ON CONFLICT (field_id, title) DO UPDATE SET
+  year         = EXCLUDED.year,
+  description  = EXCLUDED.description,
+  external_url = EXCLUDED.external_url,
+  entry_point  = EXCLUDED.entry_point;
