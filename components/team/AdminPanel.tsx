@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation';
 
 type Tab = 'overview' | 'channels' | 'members';
 
+interface PendingInvite {
+  id: string;
+  email: string;
+  role: string;
+  message: string | null;
+  expiresAt: string;
+  createdAt: string;
+  invitedByName: string;
+}
+
 interface Channel {
   id: string;
   slug: string;
@@ -61,6 +71,7 @@ export function AdminPanel() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [memberSearch, setMemberSearch] = useState('');
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
   const [editChannel, setEditChannel] = useState<Channel | null>(null);
   const [editName, setEditName] = useState('');
@@ -73,14 +84,16 @@ export function AdminPanel() {
   const [expandedMembersChannel, setExpandedMembersChannel] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [sRes, cRes, mRes] = await Promise.all([
+    const [sRes, cRes, mRes, iRes] = await Promise.all([
       fetch('/api/team/admin/stats'),
       fetch('/api/team/admin/channels'),
       fetch('/api/team/admin/members'),
+      fetch('/api/team/invites'),
     ]);
     if (sRes.ok) setStats(await sRes.json().then(d => d));
     if (cRes.ok) setChannels(await cRes.json().then(d => d.channels));
     if (mRes.ok) setMembers(await mRes.json().then(d => d.members));
+    if (iRes.ok) setPendingInvites(await iRes.json().then((d: { invites: PendingInvite[] }) => d.invites ?? []));
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -171,6 +184,14 @@ export function AdminPanel() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: m.id, makeAdmin: !isAdmin }),
     });
+    await load();
+    setSaving(null);
+  };
+
+  const revokeInvite = async (inviteId: string) => {
+    if (!confirm('Revoke this invite?')) return;
+    setSaving(inviteId);
+    await fetch(`/api/team/invite/${inviteId}`, { method: 'DELETE' });
     await load();
     setSaving(null);
   };
@@ -489,6 +510,37 @@ export function AdminPanel() {
                 );
               })}
             </div>
+
+            {pendingInvites.length > 0 && (
+              <div className="pt-4 border-t border-white/8">
+                <h3 className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">
+                  Pending invites · {pendingInvites.length}
+                </h3>
+                <div className="space-y-1">
+                  {pendingInvites.map(invite => {
+                    const expiresDate = new Date(invite.expiresAt);
+                    const daysLeft = Math.ceil((expiresDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={invite.id} className="flex items-center gap-3 bg-zinc-800/30 border border-white/5 rounded-lg px-4 py-2.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white/70 truncate">{invite.email}</p>
+                          <p className="text-xs text-white/30">
+                            invited by {invite.invitedByName} · expires in {daysLeft}d
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => revokeInvite(invite.id)}
+                          disabled={saving === invite.id}
+                          className="text-xs text-white/20 hover:text-red-400/70 transition-colors px-2 py-1 rounded hover:bg-white/5 flex-shrink-0"
+                        >
+                          {saving === invite.id ? '…' : 'Revoke'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

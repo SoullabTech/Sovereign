@@ -141,6 +141,109 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
   );
 }
 
+function InviteModal({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('sending');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), message: message.trim() || undefined }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.alreadyMember) {
+          setErrorMsg('This person already has a Soullab account — they can sign in at soullab.life/signin');
+          setStatus('error');
+        } else {
+          setStatus('sent');
+        }
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setErrorMsg(d.error ?? 'Failed to send invite');
+        setStatus('error');
+      }
+    } catch {
+      setErrorMsg('Network error — please try again');
+      setStatus('error');
+    }
+  };
+
+  if (status === 'sent') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+        <div className="bg-zinc-900 border border-white/12 rounded-xl shadow-2xl w-80 p-6 text-center space-y-3" onClick={e => e.stopPropagation()}>
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
+            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-white/90">Invite sent to {email}</p>
+          <p className="text-xs text-white/40">They'll receive an email with a link to join.</p>
+          <button onClick={onClose} className="text-xs text-white/30 hover:text-white/60 transition-colors">Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-zinc-900 border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-white/90">Invite teammate</h3>
+          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-xs text-white/40 mb-1">Email address</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="teammate@example.com"
+              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-white/40 mb-1">Personal note <span className="text-white/20">(optional)</span></label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Add a personal note..."
+              rows={3}
+              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50 resize-none"
+            />
+          </div>
+
+          {status === 'error' && <p className="text-xs text-red-400">{errorMsg}</p>}
+
+          <button
+            type="submit"
+            disabled={!email.trim() || status === 'sending'}
+            className="w-full py-2 rounded-lg bg-amber-500 text-black text-sm font-semibold disabled:opacity-40 hover:bg-amber-400 transition-colors"
+          >
+            {status === 'sending' ? 'Sending...' : 'Send invite'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -150,6 +253,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   const [dmThreads, setDMThreads] = useState<DMThread[]>([]);
   const [allMembers, setAllMembers] = useState<Array<{ memberId: string; name: string; status: string }>>([]);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const checkAdmin = useCallback(async () => {
@@ -216,6 +320,10 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
 
   return (
     <>
+      {showInvite && (
+        <InviteModal onClose={() => setShowInvite(false)} />
+      )}
+
       {showCreateChannel && (
         <CreateChannelModal
           onClose={() => setShowCreateChannel(false)}
@@ -295,7 +403,15 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
           {/* Direct Messages */}
           <ChannelGroup
             label="Direct Messages"
-            action={<span className="text-white/20 text-xs">↓ below</span>}
+            action={
+              <button
+                onClick={() => setShowInvite(true)}
+                className="text-white/25 hover:text-white/60 transition-colors text-xs"
+                title="Invite teammate"
+              >
+                + Invite
+              </button>
+            }
           >
             {dmThreads.map(thread => {
               const others = thread.members.filter(m => m.memberId !== currentMemberId);
