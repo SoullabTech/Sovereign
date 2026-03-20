@@ -1,5 +1,11 @@
 // SoulComms — Team Messaging Types
 
+export interface PromptScaffoldField {
+  label: string;
+  placeholder: string;
+  required: boolean;
+}
+
 export interface TeamChannel {
   id: string;
   slug: string;
@@ -11,6 +17,11 @@ export interface TeamChannel {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Practice infrastructure
+  archetype?: 'checkin' | 'field_note' | 'practice' | 'cohort' | 'venture' | 'general';
+  purposeBlock?: string | null;
+  promptScaffold?: PromptScaffoldField[] | null;
+  responseMode?: 'witnessing' | 'reflection' | 'advice' | 'open';
   // Computed
   unreadCount?: number;
 }
@@ -20,6 +31,7 @@ export interface TeamMessage {
   channelId: string;
   senderId: string;
   senderName: string;
+  senderType?: 'member' | 'maia';
   body: string;
   parentId: string | null;
   editedAt: string | null;

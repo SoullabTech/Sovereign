@@ -36,7 +36,7 @@ export async function PATCH(request: NextRequest) {
   const adminId = await requireAdmin(request);
   if (!adminId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { channelId, name, description, archive } = await request.json();
+  const { channelId, name, description, archive, archetype, purposeBlock, promptScaffold, responseMode } = await request.json();
   if (!channelId) return NextResponse.json({ error: 'channelId required' }, { status: 400 });
 
   if (typeof archive === 'boolean') {
@@ -53,6 +53,24 @@ export async function PATCH(request: NextRequest) {
          updated_at = NOW()
        WHERE id = $3`,
       [name ?? null, description ?? null, channelId]
+    );
+  }
+  if (archetype !== undefined || purposeBlock !== undefined || promptScaffold !== undefined || responseMode !== undefined) {
+    await query(
+      `UPDATE team_channels SET
+         archetype = COALESCE($1, archetype),
+         purpose_block = COALESCE($2, purpose_block),
+         prompt_scaffold = COALESCE($3::jsonb, prompt_scaffold),
+         response_mode = COALESCE($4, response_mode),
+         updated_at = NOW()
+       WHERE id = $5`,
+      [
+        archetype ?? null,
+        purposeBlock ?? null,
+        promptScaffold !== undefined ? JSON.stringify(promptScaffold) : null,
+        responseMode ?? null,
+        channelId,
+      ]
     );
   }
 
