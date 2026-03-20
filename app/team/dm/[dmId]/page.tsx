@@ -33,7 +33,10 @@ export default async function DMPage({
   const memberId = await getSessionMemberId();
   if (!memberId) redirect(`/signin?next=/team/dm/${dmId}`);
 
-  const threads = await listDMThreads(memberId).catch(() => []);
+  const threads = await listDMThreads(memberId).catch((err) => {
+    console.error('[DM page] listDMThreads failed:', err);
+    return [];
+  });
   const thread = threads.find(t => t.id === dmId);
 
   if (!thread) {
