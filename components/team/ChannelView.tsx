@@ -7,6 +7,7 @@ import { MessageInput } from './MessageInput';
 import { ThreadPanel } from './ThreadPanel';
 import { useChannelStream } from './useChannelStream';
 import { ChannelPurposeHeader } from './ChannelPurposeHeader';
+import { ChannelMembersPanel } from './ChannelMembersPanel';
 
 interface ChannelViewProps {
   channel: TeamChannel;
@@ -22,6 +23,8 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [threadMessage, setThreadMessage] = useState<TeamMessage | null>(null);
+  const [showMembersPanel, setShowMembersPanel] = useState(false);
+  const [memberCount, setMemberCount] = useState<number | undefined>(undefined);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
@@ -30,6 +33,15 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   const latestTs = messages.length > 0
     ? new Date(messages[messages.length - 1].createdAt).getTime()
     : 0;
+
+  // Load member count for private channels
+  useEffect(() => {
+    if (!channel.isPrivate) return;
+    fetch(`/api/team/channels/${channel.id}/members`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.members) setMemberCount(d.members.length); })
+      .catch(() => undefined);
+  }, [channel.id, channel.isPrivate]);
 
   // Load initial history
   useEffect(() => {
@@ -150,7 +162,12 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
 
   const mainCol = (
     <div className="flex flex-col flex-1 min-w-0">
-      <ChannelPurposeHeader channel={channel} />
+      <ChannelPurposeHeader
+        channel={channel}
+        currentMemberId={currentMemberId}
+        memberCount={memberCount}
+        onOpenMembers={channel.isPrivate ? () => setShowMembersPanel(p => !p) : undefined}
+      />
 
       <div
         ref={scrollRef}
@@ -212,6 +229,13 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
           currentMemberId={currentMemberId}
           onClose={() => setThreadMessage(null)}
           onReact={handleReact}
+        />
+      )}
+      {showMembersPanel && channel.isPrivate && (
+        <ChannelMembersPanel
+          channelId={channel.id}
+          currentMemberId={currentMemberId}
+          onClose={() => setShowMembersPanel(false)}
         />
       )}
     </div>

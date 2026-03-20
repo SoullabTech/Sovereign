@@ -22,13 +22,15 @@ function PresenceDot({ status }: { status: 'online' | 'away' | 'offline' }) {
   );
 }
 
-function CreateChannelModal({ onClose, onCreated }: {
+function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
   onClose: () => void;
   onCreated: (slug: string) => void;
+  currentMemberId: string;
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'text' | 'announcement'>('text');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const nameRef = useRef<HTMLInputElement>(null);
@@ -46,7 +48,7 @@ function CreateChannelModal({ onClose, onCreated }: {
       const res = await fetch('/api/team/channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type }),
+        body: JSON.stringify({ name: name.trim(), slug, description: description.trim(), channelType: type, isPrivate }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -113,6 +115,16 @@ function CreateChannelModal({ onClose, onCreated }: {
               ))}
             </div>
           </div>
+
+          <label className="flex items-center gap-2 text-xs text-white/50 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={e => setIsPrivate(e.target.checked)}
+              className="accent-amber-500"
+            />
+            Private — only invited members can see this channel
+          </label>
 
           {error && <p className="text-xs text-red-400">{error}</p>}
 
@@ -207,6 +219,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
       {showCreateChannel && (
         <CreateChannelModal
           onClose={() => setShowCreateChannel(false)}
+          currentMemberId={currentMemberId}
           onCreated={async (slug) => {
             setShowCreateChannel(false);
             await loadChannels();
@@ -379,7 +392,13 @@ function ChannelItem({ channel, active }: { channel: TeamChannel; active: boolea
           : 'text-white/45 hover:text-white/70 hover:bg-white/5'
       }`}
     >
-      <span className="text-white/25 text-xs">#</span>
+      {channel.isPrivate ? (
+        <svg className="w-3 h-3 text-white/25 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      ) : (
+        <span className="text-white/25 text-xs">#</span>
+      )}
       <span className="flex-1 truncate">{channel.name}</span>
       {(channel.unreadCount ?? 0) > 0 && !active && (
         <span className="text-xs bg-amber-500 text-black font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">

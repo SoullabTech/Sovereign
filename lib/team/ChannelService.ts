@@ -2,7 +2,7 @@
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
 import { query } from '@/lib/db/postgres';
-import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField } from './types';
+import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANNELS
@@ -362,6 +362,70 @@ export async function toggleReaction(
 // ─────────────────────────────────────────────────────────────────────────────
 // PRESENCE
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHANNEL MEMBERSHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getChannelMembers(channelId: string): Promise<ChannelMember[]> {
+  const result = await query<{
+    member_id: string;
+    name: string | null;
+    username: string;
+    role: string;
+    joined_at: string;
+    status: string;
+  }>(
+    `SELECT
+       tcm.member_id,
+       m.name,
+       m.username,
+       tcm.role,
+       tcm.joined_at,
+       CASE
+         WHEN tp.last_seen_at > NOW() - INTERVAL '2 minutes' THEN 'online'
+         WHEN tp.last_seen_at > NOW() - INTERVAL '10 minutes' THEN 'away'
+         ELSE 'offline'
+       END AS status
+     FROM team_channel_members tcm
+     JOIN members m ON m.id = tcm.member_id
+     LEFT JOIN team_presence tp ON tp.member_id = tcm.member_id
+     WHERE tcm.channel_id = $1
+     ORDER BY
+       CASE tcm.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END,
+       m.name ASC`,
+    [channelId]
+  );
+
+  return result.rows.map(row => ({
+    memberId: row.member_id,
+    name: row.name || row.username,
+    status: row.status as 'online' | 'away' | 'offline',
+    role: row.role as 'owner' | 'admin' | 'member',
+    joinedAt: row.joined_at,
+  }));
+}
+
+export async function addChannelMember(
+  channelId: string,
+  memberId: string,
+  invitedBy: string,
+  role: string = 'member'
+): Promise<void> {
+  await query(
+    `INSERT INTO team_channel_members (channel_id, member_id, invited_by, role, joined_at)
+     VALUES ($1, $2, $3, $4, NOW())
+     ON CONFLICT (channel_id, member_id) DO NOTHING`,
+    [channelId, memberId, invitedBy, role]
+  );
+}
+
+export async function removeChannelMember(channelId: string, memberId: string): Promise<void> {
+  await query(
+    `DELETE FROM team_channel_members WHERE channel_id = $1 AND member_id = $2`,
+    [channelId, memberId]
+  );
+}
 
 export async function heartbeat(memberId: string): Promise<void> {
   await query(
