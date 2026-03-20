@@ -1,33 +1,75 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Check, Loader2, AlertCircle } from 'lucide-react';
 import { LyricsPanel } from './LyricsPanel';
 import { ChordsPanel } from './ChordsPanel';
 import { StructurePanel } from './StructurePanel';
-import type { SongSeed } from '@/lib/songwriter/types';
+import type { SongSeed, LyricSection, ChordSuggestion } from '@/lib/songwriter/types';
+import type { SaveState } from '@/lib/songwriter/useSongDraft';
 
 interface SongCanvasProps {
   seed: SongSeed;
   inputEcho: string;
+  // Controlled state from useSongDraft
+  title: string;
+  lyrics: {
+    verse1: LyricSection;
+    chorus: LyricSection;
+    bridge: LyricSection | null;
+  };
+  chords: ChordSuggestion;
+  saveState: SaveState;
+  lastSavedAt: Date | null;
+  onTitleChange: (title: string) => void;
+  onLyricChange: (id: string, text: string) => void;
   onReset: () => void;
 }
 
-export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
-  // Local editable copy of lyrics
-  const [lyrics, setLyrics] = useState(seed.lyrics);
-  const [activeTitle, setActiveTitle] = useState(seed.titles[0] ?? 'Untitled');
+function SaveIndicator({ state, lastSavedAt }: { state: SaveState; lastSavedAt: Date | null }) {
+  if (state === 'idle') return null;
 
-  function handleLyricChange(id: string, text: string) {
-    setLyrics(prev => ({
-      ...prev,
-      verse1: prev.verse1.id === id ? { ...prev.verse1, text } : prev.verse1,
-      chorus: prev.chorus.id === id ? { ...prev.chorus, text } : prev.chorus,
-      bridge: prev.bridge?.id === id ? { ...prev.bridge, text } : prev.bridge,
-    }));
-  }
+  return (
+    <div
+      className="flex items-center gap-1.5 text-xs transition-all"
+      style={{ fontFamily: 'Spectral, Georgia, serif' }}
+    >
+      {state === 'saving' && (
+        <>
+          <Loader2 size={10} className="animate-spin text-white/30" />
+          <span className="text-white/25">Saving...</span>
+        </>
+      )}
+      {state === 'saved' && (
+        <>
+          <Check size={10} className="text-amber-400/40" />
+          <span className="text-white/25">
+            Saved{lastSavedAt ? ` ${new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+          </span>
+        </>
+      )}
+      {state === 'error' && (
+        <>
+          <AlertCircle size={10} className="text-red-400/50" />
+          <span className="text-red-400/50">Save failed</span>
+        </>
+      )}
+    </div>
+  );
+}
 
+export function SongCanvas({
+  seed,
+  inputEcho,
+  title,
+  lyrics,
+  chords,
+  saveState,
+  lastSavedAt,
+  onTitleChange,
+  onLyricChange,
+  onReset,
+}: SongCanvasProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -38,7 +80,6 @@ export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-4 mb-4">
-          {/* Title selector */}
           <div className="flex-1">
             <div
               className="text-xs uppercase tracking-widest text-white/25 mb-2"
@@ -46,83 +87,85 @@ export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
             >
               Title
             </div>
-            <div className="flex flex-wrap gap-2">
-              {seed.titles.map(title => (
-                <button
-                  key={title}
-                  onClick={() => setActiveTitle(title)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all duration-150 border
-                    ${activeTitle === title
-                      ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                      : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'
-                    }`}
-                  style={{ fontFamily: 'Spectral, Georgia, serif' }}
-                >
-                  {title}
-                </button>
-              ))}
-            </div>
+            {/* Editable title */}
+            <input
+              type="text"
+              value={title}
+              onChange={e => onTitleChange(e.target.value)}
+              className="w-full bg-transparent text-amber-400/80 text-lg font-light
+                         border-b border-white/10 focus:border-amber-400/30
+                         focus:outline-none pb-1 transition-colors"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              placeholder="Untitled Song"
+            />
+            {/* Title suggestions */}
+            {seed.titles.length > 1 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {seed.titles.map(t => (
+                  <button
+                    key={t}
+                    onClick={() => onTitleChange(t)}
+                    className={`px-2.5 py-1 rounded-full text-xs transition-all border
+                      ${title === t
+                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-400/70'
+                        : 'bg-white/[0.02] border-white/[0.07] text-white/30 hover:text-white/50'
+                      }`}
+                    style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <button
-            onClick={onReset}
-            className="shrink-0 flex items-center gap-1.5 text-xs text-white/20 hover:text-white/40
-                       transition-colors pt-6"
-            style={{ fontFamily: 'Spectral, Georgia, serif' }}
-            title="Start over"
-          >
-            <RotateCcw size={12} />
-            New seed
-          </button>
+          <div className="flex flex-col items-end gap-2 pt-1">
+            <button
+              onClick={onReset}
+              className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white/40 transition-colors"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+            >
+              <RotateCcw size={12} />
+              New seed
+            </button>
+            <SaveIndicator state={saveState} lastSavedAt={lastSavedAt} />
+          </div>
         </div>
 
         {/* Interpretation summary */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl px-4 py-3 space-y-1">
           <div className="flex items-start gap-3 flex-wrap">
             <div>
-              <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-                Theme
-              </span>
+              <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>Theme</span>
               <span className="text-white/60 text-xs" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                 {seed.interpretation.theme}
               </span>
             </div>
             <div>
-              <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-                Feel
-              </span>
+              <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>Feel</span>
               <span className="text-white/40 text-xs italic" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                 {seed.interpretation.emotionalTone}
               </span>
             </div>
           </div>
-          <p
-            className="text-white/30 text-xs leading-relaxed"
-            style={{ fontFamily: 'Spectral, Georgia, serif' }}
-          >
+          <p className="text-white/30 text-xs leading-relaxed" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
             {seed.interpretation.narrativeDirection}
           </p>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="border-t border-white/[0.06] mb-8" />
 
-      {/* Main panels */}
       <div className="space-y-10">
-        <LyricsPanel lyrics={lyrics} onChange={handleLyricChange} />
+        <LyricsPanel lyrics={lyrics} onChange={onLyricChange} />
         <div className="border-t border-white/[0.06]" />
-        <ChordsPanel chords={seed.chords} />
+        <ChordsPanel chords={chords} />
         <div className="border-t border-white/[0.06]" />
         <StructurePanel structure={seed.structure} coreStatement={seed.coreStatement} />
       </div>
 
-      {/* Original input echo */}
       <div className="mt-10 pt-6 border-t border-white/[0.04]">
-        <p
-          className="text-white/15 text-xs italic leading-relaxed"
-          style={{ fontFamily: 'Spectral, Georgia, serif' }}
-        >
+        <p className="text-white/15 text-xs italic leading-relaxed" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
           &ldquo;{inputEcho}&rdquo;
         </p>
       </div>
