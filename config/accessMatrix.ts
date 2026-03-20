@@ -312,6 +312,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
 
   // SoulComms — team messaging
+  { prefix: '/team/invite/', public: true, notes: 'Team invite accept pages — must be accessible before auth' },
+  { prefix: '/api/team/invite/', public: true, notes: 'Team invite API — lookup, accept, register — public for email link flow' },
   { prefix: '/team', minTier: 'free', notes: 'SoulComms team messaging - all authenticated users' },
   { prefix: '/api/team', minTier: 'free', notes: 'SoulComms API - all authenticated users' },
 
