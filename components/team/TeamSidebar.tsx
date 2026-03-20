@@ -138,6 +138,12 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
   const [dmThreads, setDMThreads] = useState<DMThread[]>([]);
   const [allMembers, setAllMembers] = useState<Array<{ memberId: string; name: string; status: string }>>([]);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkAdmin = useCallback(async () => {
+    const res = await fetch('/api/team/admin/stats');
+    setIsAdmin(res.ok);
+  }, []);
 
   const loadChannels = useCallback(async () => {
     const res = await fetch('/api/team/channels');
@@ -182,6 +188,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
     loadMembers();
     loadPresence();
     sendHeartbeat();
+    checkAdmin();
 
     const presenceInterval = setInterval(() => {
       loadPresence();
@@ -190,7 +197,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
     }, 25000);
 
     return () => clearInterval(presenceInterval);
-  }, [loadChannels, loadDMs, loadMembers, loadPresence, sendHeartbeat]);
+  }, [loadChannels, loadDMs, loadMembers, loadPresence, sendHeartbeat, checkAdmin]);
 
   const announcements = channels.filter(c => c.channelType === 'announcement');
   const regular = channels.filter(c => c.channelType === 'text');
@@ -327,7 +334,15 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-white/8">
+        <div className="px-4 py-3 border-t border-white/8 flex flex-col gap-1.5">
+          {isAdmin && (
+            <Link
+              href="/team/admin"
+              className="text-xs text-amber-400/40 hover:text-amber-400/70 transition-colors"
+            >
+              ⚙ Admin
+            </Link>
+          )}
           <Link
             href="/studio"
             className="text-xs text-white/25 hover:text-white/50 transition-colors"
