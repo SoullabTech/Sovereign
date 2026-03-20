@@ -262,6 +262,86 @@ soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Master Fields - Subdomain routing for individual master field sites
+# Middleware rewrites jondi.soullab.life/* → /fields/jondi/*
+# ═══════════════════════════════════════════════════════════════════════════════
+jondi.soullab.life {
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-field"
+        X-Field-Slug "jondi"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/jondi-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# Middleware rewrites kelly.soullab.life/* → /fields/kelly/*
+kelly.soullab.life {
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-field"
+        X-Field-Slug "kelly"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/kelly-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# Middleware rewrites nathan.soullab.life/* → /fields/nathan/*
+nathan.soullab.life {
+    reverse_proxy maia-sovereign:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign-field"
+        X-Field-Slug "nathan"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/nathan-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
 # Old Head Plaster - Astro SSR with Virtual Daragh
 # ═══════════════════════════════════════════════════════════════════════════════
 oldhead.soullab.life {
