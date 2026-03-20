@@ -27,10 +27,20 @@ export async function POST(request: NextRequest) {
 
   const slugClean = String(slug).toLowerCase().replace(/[^a-z0-9-]/g, '-');
 
+  const newChannelId = crypto.randomUUID();
+
   await query(
     `INSERT INTO team_channels (id, slug, name, description, channel_type, is_private, created_by)
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [crypto.randomUUID(), slugClean, name, description ?? null, channelType, isPrivate, memberId]
+    [newChannelId, slugClean, name, description ?? null, channelType, isPrivate, memberId]
+  );
+
+  // Auto-add creator as owner
+  await query(
+    `INSERT INTO team_channel_members (channel_id, member_id, role, invited_by)
+     VALUES ($1, $2, 'owner', $2)
+     ON CONFLICT (channel_id, member_id) DO NOTHING`,
+    [newChannelId, memberId]
   );
 
   const result = await query(

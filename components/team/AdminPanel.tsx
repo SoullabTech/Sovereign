@@ -69,6 +69,8 @@ export function AdminPanel() {
   const [editPurposeBlock, setEditPurposeBlock] = useState('');
   const [editResponseMode, setEditResponseMode] = useState('');
   const [editPromptScaffold, setEditPromptScaffold] = useState('');
+  const [channelMembers, setChannelMembers] = useState<Record<string, Array<{ memberId: string; name: string; role: string }>>>({});
+  const [expandedMembersChannel, setExpandedMembersChannel] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [sRes, cRes, mRes] = await Promise.all([
@@ -133,6 +135,32 @@ export function AdminPanel() {
     setEditChannel(null);
     await load();
     setSaving(null);
+  };
+
+  const loadChannelMembers = async (channelId: string) => {
+    if (channelMembers[channelId]) {
+      setExpandedMembersChannel(prev => prev === channelId ? null : channelId);
+      return;
+    }
+    const res = await fetch(`/api/team/channels/${channelId}/members`);
+    if (res.ok) {
+      const d = await res.json();
+      setChannelMembers(prev => ({ ...prev, [channelId]: d.members ?? [] }));
+    }
+    setExpandedMembersChannel(channelId);
+  };
+
+  const removeChannelMemberAdmin = async (channelId: string, memberId: string) => {
+    await fetch(`/api/team/channels/${channelId}/members`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId }),
+    });
+    const res = await fetch(`/api/team/channels/${channelId}/members`);
+    if (res.ok) {
+      const d = await res.json();
+      setChannelMembers(prev => ({ ...prev, [channelId]: d.members ?? [] }));
+    }
   };
 
   const toggleAdmin = async (m: Member) => {
@@ -233,7 +261,8 @@ export function AdminPanel() {
               </h3>
               <div className="space-y-1">
                 {activeChannels.map(ch => (
-                  <div key={ch.id} className="flex items-center gap-3 bg-zinc-800/40 border border-white/6 rounded-lg px-4 py-3 hover:border-white/12 transition-colors">
+                  <div key={ch.id} className="bg-zinc-800/40 border border-white/6 rounded-lg hover:border-white/12 transition-colors overflow-hidden">
+                  <div className="flex items-center gap-3 px-4 py-3">
                     <span className="text-white/25 text-xs">#</span>
                     <div className="flex-1 min-w-0">
                       {editChannel?.id === ch.id ? (
@@ -315,6 +344,12 @@ export function AdminPanel() {
                     ) : (
                       <div className="flex gap-1.5 flex-shrink-0">
                         <button
+                          onClick={() => loadChannelMembers(ch.id)}
+                          className="text-xs text-white/25 hover:text-white/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
+                        >
+                          Members
+                        </button>
+                        <button
                           onClick={() => {
                             setEditChannel(ch);
                             setEditName(ch.name);
@@ -347,6 +382,29 @@ export function AdminPanel() {
                         )}
                       </div>
                     )}
+                  </div>
+                  {/* Channel members expansion */}
+                  {expandedMembersChannel === ch.id && channelMembers[ch.id] && (
+                    <div className="border-t border-white/6 px-4 py-3">
+                      <p className="text-xs text-white/30 font-medium mb-2">Members ({channelMembers[ch.id].length})</p>
+                      <div className="space-y-1">
+                        {channelMembers[ch.id].map((m) => (
+                          <div key={m.memberId} className="flex items-center gap-2">
+                            <span className="text-xs text-white/60 flex-1">{m.name}</span>
+                            <span className="text-xs text-white/25">{m.role}</span>
+                            {m.role !== 'owner' && (
+                              <button
+                                onClick={() => removeChannelMemberAdmin(ch.id, m.memberId)}
+                                className="text-xs text-white/20 hover:text-red-400/60 transition-colors"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   </div>
                 ))}
               </div>

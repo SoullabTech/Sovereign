@@ -17,7 +17,19 @@ const RESPONSE_MODE_TEXT = {
   open:       null,
 };
 
-export function ChannelPurposeHeader({ channel }: { channel: TeamChannel }) {
+interface ChannelPurposeHeaderProps {
+  channel: TeamChannel;
+  currentMemberId?: string;
+  memberCount?: number;
+  onOpenMembers?: () => void;
+}
+
+export function ChannelPurposeHeader({
+  channel,
+  currentMemberId: _currentMemberId,
+  memberCount,
+  onOpenMembers,
+}: ChannelPurposeHeaderProps) {
   const archetype = channel.archetype ?? 'general';
   const config = ARCHETYPE_CONFIG[archetype] ?? ARCHETYPE_CONFIG.general;
   const responseHint = RESPONSE_MODE_TEXT[channel.responseMode ?? 'open'];
@@ -26,7 +38,13 @@ export function ChannelPurposeHeader({ channel }: { channel: TeamChannel }) {
   return (
     <div className="px-5 py-3 border-b border-white/8 flex-shrink-0">
       <div className="flex items-start gap-3">
-        <span className="text-white/40 text-lg font-light mt-0.5">#</span>
+        {channel.isPrivate ? (
+          <svg className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        ) : (
+          <span className="text-white/40 text-lg font-light mt-0.5">#</span>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h2 className="text-sm font-semibold text-white/90">{channel.name}</h2>
@@ -34,6 +52,17 @@ export function ChannelPurposeHeader({ channel }: { channel: TeamChannel }) {
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.color}`}>
                 {config.label}
               </span>
+            )}
+            {channel.isPrivate && onOpenMembers && (
+              <button
+                onClick={onOpenMembers}
+                className="text-xs text-white/30 hover:text-white/60 transition-colors flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Members{memberCount !== undefined ? ` (${memberCount})` : ''}
+              </button>
             )}
           </div>
           {channel.purposeBlock ? (

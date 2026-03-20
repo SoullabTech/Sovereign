@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { DMMessage, DMThread } from '@/lib/team/DMService';
 import { MessageInput } from './MessageInput';
 import { useChannelStream } from './useChannelStream';
+import { DMProfileCard } from './DMProfileCard';
 
 interface DMViewProps {
   dmThread: DMThread;
@@ -29,6 +30,7 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
 
   const otherMembers = dmThread.members.filter(m => m.memberId !== currentMemberId);
   const title = otherMembers.map(m => m.name).join(', ') || 'Direct Message';
+  const otherMemberId = otherMembers[0]?.memberId;
 
   const latestTs = messages.length > 0
     ? new Date(messages[messages.length - 1].createdAt).getTime()
@@ -108,6 +110,11 @@ export function DMView({ dmThread, currentMemberId }: DMViewProps) {
           </p>
         </div>
       </div>
+
+      {/* Profile card for the other participant */}
+      {otherMemberId && (
+        <DMProfileCard memberId={otherMemberId} currentMemberId={currentMemberId} />
+      )}
 
       {/* Messages */}
       <div

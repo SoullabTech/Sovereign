@@ -60,3 +60,11 @@ export interface SendMessageBody {
   body: string;
   parentId?: string;
 }
+
+export interface ChannelMember {
+  memberId: string;
+  name: string;
+  status: 'online' | 'away' | 'offline';
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+}
