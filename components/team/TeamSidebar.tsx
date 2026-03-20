@@ -63,7 +63,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-zinc-900 border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#16162a] border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-white/90">Create a channel</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
@@ -81,7 +81,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. announcements"
-              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
+              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
             />
             {slug && <p className="mt-1 text-xs text-white/25">#{slug}</p>}
           </div>
@@ -92,7 +92,7 @@ function CreateChannelModal({ onClose, onCreated, currentMemberId }: {
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="What's this channel for?"
-              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
+              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
             />
           </div>
 
@@ -179,7 +179,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   if (status === 'sent') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-        <div className="bg-zinc-900 border border-white/12 rounded-xl shadow-2xl w-80 p-6 text-center space-y-3" onClick={e => e.stopPropagation()}>
+        <div className="bg-[#16162a] border border-white/12 rounded-xl shadow-2xl w-80 p-6 text-center space-y-3" onClick={e => e.stopPropagation()}>
           <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
             <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -195,7 +195,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-zinc-900 border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
+      <div className="bg-[#16162a] border border-white/12 rounded-xl shadow-2xl w-80 p-5" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-white/90">Invite teammate</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
@@ -214,7 +214,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="teammate@example.com"
-              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
+              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50"
             />
           </div>
 
@@ -225,7 +225,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               onChange={e => setMessage(e.target.value)}
               placeholder="Add a personal note..."
               rows={3}
-              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50 resize-none"
+              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/90 placeholder-white/25 focus:outline-none focus:border-amber-500/50 resize-none"
             />
           </div>
 
@@ -336,7 +336,7 @@ export function TeamSidebar({ currentMemberId }: TeamSidebarProps) {
         />
       )}
 
-      <aside className="w-56 flex-shrink-0 bg-zinc-900/80 border-r border-white/8 flex flex-col h-full">
+      <aside className="w-56 flex-shrink-0 bg-[#16162a] border-r border-white/8 flex flex-col h-full">
         {/* Workspace header */}
         <div className="px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-2.5">

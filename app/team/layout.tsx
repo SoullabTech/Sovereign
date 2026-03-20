@@ -34,7 +34,7 @@ export default async function TeamLayout({
   if (!memberId) redirect('/signin?next=/team/general');
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden">
+    <div className="flex h-screen bg-[#1a1a2e] overflow-hidden">
       <TeamSidebar currentMemberId={memberId} />
       <main className="flex-1 min-w-0 flex flex-col">{children}</main>
     </div>

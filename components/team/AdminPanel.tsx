@@ -48,7 +48,7 @@ interface Stats {
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="bg-zinc-800/60 border border-white/8 rounded-xl p-4">
+    <div className="bg-[#16162a]/80 border border-white/8 rounded-xl p-4">
       <p className="text-2xl font-bold text-white/90">{value}</p>
       <p className="text-xs text-white/40 mt-0.5">{label}</p>
     </div>
@@ -208,7 +208,7 @@ export function AdminPanel() {
   const archivedChannels = channels.filter(c => c.archived_at);
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950">
+    <div className="flex flex-col h-full bg-[#1a1a2e]">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
         <div>
@@ -257,7 +257,7 @@ export function AdminPanel() {
               <StatCard label="Members" value={members.length || '—'} />
             </div>
 
-            <div className="bg-zinc-800/40 border border-white/8 rounded-xl p-4">
+            <div className="bg-[#16162a]/60 border border-white/8 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white/70 mb-3">Most active channels</h3>
               <div className="space-y-2">
                 {[...activeChannels].sort((a, b) => b.message_count - a.message_count).slice(0, 5).map(ch => (
@@ -282,7 +282,7 @@ export function AdminPanel() {
               </h3>
               <div className="space-y-1">
                 {activeChannels.map(ch => (
-                  <div key={ch.id} className="bg-zinc-800/40 border border-white/6 rounded-lg hover:border-white/12 transition-colors overflow-hidden">
+                  <div key={ch.id} className="bg-[#16162a]/60 border border-white/6 rounded-lg hover:border-white/12 transition-colors overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3">
                     <span className="text-white/25 text-xs">#</span>
                     <div className="flex-1 min-w-0">
@@ -293,20 +293,20 @@ export function AdminPanel() {
                               value={editName}
                               onChange={e => setEditName(e.target.value)}
                               placeholder="Channel name"
-                              className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-amber-500/50"
+                              className="flex-1 bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-amber-500/50"
                             />
                             <input
                               value={editDesc}
                               onChange={e => setEditDesc(e.target.value)}
                               placeholder="Description"
-                              className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50"
+                              className="flex-1 bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50"
                             />
                           </div>
                           <div className="flex gap-2">
                             <select
                               value={editArchetype}
                               onChange={e => setEditArchetype(e.target.value)}
-                              className="bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
+                              className="bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
                             >
                               <option value="">Archetype…</option>
                               <option value="general">General</option>
@@ -319,7 +319,7 @@ export function AdminPanel() {
                             <select
                               value={editResponseMode}
                               onChange={e => setEditResponseMode(e.target.value)}
-                              className="bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
+                              className="bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
                             >
                               <option value="">Response mode…</option>
                               <option value="open">Open</option>
@@ -333,14 +333,14 @@ export function AdminPanel() {
                             onChange={e => setEditPurposeBlock(e.target.value)}
                             placeholder="Purpose block (displayed below channel name)…"
                             rows={3}
-                            className="w-full bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50 resize-none"
+                            className="w-full bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50 resize-none"
                           />
                           <textarea
                             value={editPromptScaffold}
                             onChange={e => setEditPromptScaffold(e.target.value)}
                             placeholder={`Prompt scaffold JSON, e.g. [{"label":"What I am tending","placeholder":"...","required":true}]`}
                             rows={4}
-                            className="w-full bg-zinc-700 border border-white/15 rounded px-2 py-1 text-xs text-white/50 font-mono focus:outline-none focus:border-amber-500/50 resize-none"
+                            className="w-full bg-[#1e1e38] border border-white/15 rounded px-2 py-1 text-xs text-white/50 font-mono focus:outline-none focus:border-amber-500/50 resize-none"
                           />
                         </div>
                       ) : (
@@ -360,7 +360,7 @@ export function AdminPanel() {
                     {editChannel?.id === ch.id ? (
                       <div className="flex gap-1.5 flex-shrink-0">
                         <button onClick={saveEdit} disabled={saving === ch.id} className="text-xs px-2 py-1 bg-amber-500 text-black rounded font-medium hover:bg-amber-400 disabled:opacity-40">Save</button>
-                        <button onClick={() => setEditChannel(null)} className="text-xs px-2 py-1 bg-zinc-700 text-white/50 rounded hover:text-white/80">Cancel</button>
+                        <button onClick={() => setEditChannel(null)} className="text-xs px-2 py-1 bg-[#1e1e38] text-white/50 rounded hover:text-white/80">Cancel</button>
                       </div>
                     ) : (
                       <div className="flex gap-1.5 flex-shrink-0">
@@ -439,7 +439,7 @@ export function AdminPanel() {
                 </h3>
                 <div className="space-y-1">
                   {archivedChannels.map(ch => (
-                    <div key={ch.id} className="flex items-center gap-3 bg-zinc-900/40 border border-white/4 rounded-lg px-4 py-3 opacity-60">
+                    <div key={ch.id} className="flex items-center gap-3 bg-[#16162a]/40 border border-white/4 rounded-lg px-4 py-3 opacity-60">
                       <span className="text-white/15 text-xs">#</span>
                       <div className="flex-1">
                         <p className="text-sm text-white/50 line-through">{ch.name}</p>
@@ -473,14 +473,14 @@ export function AdminPanel() {
               value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
               placeholder="Search members…"
-              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+              className="w-full bg-[#1a1a2e] border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
             />
 
             <div className="space-y-1">
               {filteredMembers.map(m => {
                 const isAdmin = m.roles?.includes('team_admin') || m.roles?.includes('admin');
                 return (
-                  <div key={m.id} className="flex items-center gap-3 bg-zinc-800/40 border border-white/6 rounded-lg px-4 py-3 hover:border-white/12 transition-colors">
+                  <div key={m.id} className="flex items-center gap-3 bg-[#16162a]/60 border border-white/6 rounded-lg px-4 py-3 hover:border-white/12 transition-colors">
                     <PresenceDot status={m.status} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -521,7 +521,7 @@ export function AdminPanel() {
                     const expiresDate = new Date(invite.expiresAt);
                     const daysLeft = Math.ceil((expiresDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                     return (
-                      <div key={invite.id} className="flex items-center gap-3 bg-zinc-800/30 border border-white/5 rounded-lg px-4 py-2.5">
+                      <div key={invite.id} className="flex items-center gap-3 bg-[#16162a]/50 border border-white/5 rounded-lg px-4 py-2.5">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white/70 truncate">{invite.email}</p>
                           <p className="text-xs text-white/30">
