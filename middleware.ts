@@ -127,9 +127,13 @@ export async function middleware(req: NextRequest) {
   const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
 
   if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
-    const rewritePath = `/fields/${masterSlug}${pathname === '/' ? '' : pathname}`;
     const url = req.nextUrl.clone();
-    url.pathname = rewritePath;
+    // Root → redirect to /begin (the invitation threshold)
+    if (pathname === '/') {
+      url.pathname = `/fields/${masterSlug}/begin`;
+      return NextResponse.redirect(url);
+    }
+    url.pathname = `/fields/${masterSlug}${pathname}`;
     return NextResponse.rewrite(url);
   }
 
