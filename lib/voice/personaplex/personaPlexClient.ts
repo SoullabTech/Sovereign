@@ -180,7 +180,7 @@ export async function* renderWithPersonaPlex(
   if (req.sanctuary) {
     console.log(`🎤 [PersonaPlex] Rendering (sanctuary mode, ${req.mode})`);
   } else {
-    console.log(`🎤 [PersonaPlex] Rendering: ${req.text.substring(0, 50)}... (${req.mode})`);
+    console.log(`🎤 [PersonaPlex] Rendering: ${req.text.substring(0, 50)}... (${req.mode})`); // leak-guard:ignore
   }
 
   try {

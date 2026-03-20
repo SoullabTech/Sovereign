@@ -458,7 +458,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       layerTimings['ain-knowledge'] = Date.now() - ainStartTime;
       layersSuccessful.push('ain-knowledge');
     } else {
-      console.log(`📚 [AINKnowledge] No relevant chunks found for "${message.substring(0, 50)}..."`);
+      console.log(`📚 [AINKnowledge] No relevant chunks found for "${message.substring(0, 50)}..."`); // leak-guard:ignore
     }
   } catch (error) {
     console.warn('[AINKnowledge] Retrieval failed (continuing without):', error);

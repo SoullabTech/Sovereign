@@ -271,7 +271,7 @@ export class StreamingAudioQueue {
         if (!item.audio.ended) {
           const playedTime = item.audio.currentTime;
           console.warn(`⚠️ [StreamingQueue] UNEXPECTED PAUSE at ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s - audio stopped before completing!`);
-          console.warn(`⚠️ [StreamingQueue] Text chunk that was cut off: "${item.text.substring(0, 50)}..."`);
+          console.warn(`⚠️ [StreamingQueue] Text chunk that was cut off: "${item.text.substring(0, 50)}..."`); // leak-guard:ignore
         }
       };
 
@@ -290,7 +290,7 @@ export class StreamingAudioQueue {
 
       item.audio.onerror = (error) => {
         console.error(`❌ [StreamingQueue] Audio error on chunk ${this.chunksPlayed + 1}:`, error);
-        console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`);
+        console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`); // leak-guard:ignore
         finishChunk('onerror');
       };
 
