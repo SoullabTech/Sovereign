@@ -2,7 +2,7 @@
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
 import { query } from '@/lib/db/postgres';
-import type { TeamChannel, TeamMessage, MessageReaction } from './types';
+import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANNELS
@@ -21,6 +21,10 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
     created_at: string;
     updated_at: string;
     unread_count: string;
+    archetype: string | null;
+    purpose_block: string | null;
+    prompt_scaffold: PromptScaffoldField[] | null;
+    response_mode: string | null;
   }>(
     `SELECT
        tc.*,
@@ -55,6 +59,10 @@ export async function listChannels(memberId: string): Promise<TeamChannel[]> {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     unreadCount: parseInt(row.unread_count, 10) || 0,
+    archetype: (row.archetype as TeamChannel['archetype']) ?? 'general',
+    purposeBlock: row.purpose_block,
+    promptScaffold: row.prompt_scaffold ?? null,
+    responseMode: (row.response_mode as TeamChannel['responseMode']) ?? 'open',
   }));
 }
 
@@ -70,6 +78,10 @@ export async function getChannelBySlug(slug: string): Promise<TeamChannel | null
     archived_at: string | null;
     created_at: string;
     updated_at: string;
+    archetype: string | null;
+    purpose_block: string | null;
+    prompt_scaffold: PromptScaffoldField[] | null;
+    response_mode: string | null;
   }>(
     `SELECT * FROM team_channels WHERE slug = $1 AND archived_at IS NULL`,
     [slug]
@@ -88,7 +100,38 @@ export async function getChannelBySlug(slug: string): Promise<TeamChannel | null
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    archetype: (row.archetype as TeamChannel['archetype']) ?? 'general',
+    purposeBlock: row.purpose_block,
+    promptScaffold: row.prompt_scaffold ?? null,
+    responseMode: (row.response_mode as TeamChannel['responseMode']) ?? 'open',
   };
+}
+
+export async function updateChannelConfig(
+  channelId: string,
+  patch: {
+    archetype?: string;
+    purposeBlock?: string;
+    promptScaffold?: PromptScaffoldField[] | null;
+    responseMode?: string;
+  }
+): Promise<void> {
+  await query(
+    `UPDATE team_channels SET
+       archetype = COALESCE($1, archetype),
+       purpose_block = COALESCE($2, purpose_block),
+       prompt_scaffold = COALESCE($3::jsonb, prompt_scaffold),
+       response_mode = COALESCE($4, response_mode),
+       updated_at = NOW()
+     WHERE id = $5`,
+    [
+      patch.archetype ?? null,
+      patch.purposeBlock ?? null,
+      patch.promptScaffold !== undefined ? JSON.stringify(patch.promptScaffold) : null,
+      patch.responseMode ?? null,
+      channelId,
+    ]
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

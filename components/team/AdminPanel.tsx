@@ -65,6 +65,10 @@ export function AdminPanel() {
   const [editChannel, setEditChannel] = useState<Channel | null>(null);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editArchetype, setEditArchetype] = useState('');
+  const [editPurposeBlock, setEditPurposeBlock] = useState('');
+  const [editResponseMode, setEditResponseMode] = useState('');
+  const [editPromptScaffold, setEditPromptScaffold] = useState('');
 
   const load = useCallback(async () => {
     const [sRes, cRes, mRes] = await Promise.all([
@@ -105,10 +109,26 @@ export function AdminPanel() {
   const saveEdit = async () => {
     if (!editChannel) return;
     setSaving(editChannel.id);
+
+    let parsedScaffold: unknown = undefined;
+    if (editPromptScaffold.trim()) {
+      try { parsedScaffold = JSON.parse(editPromptScaffold); } catch { /* leave undefined */ }
+    } else {
+      parsedScaffold = null;
+    }
+
     await fetch('/api/team/admin/channels', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channelId: editChannel.id, name: editName, description: editDesc }),
+      body: JSON.stringify({
+        channelId: editChannel.id,
+        name: editName,
+        description: editDesc,
+        archetype: editArchetype || undefined,
+        purposeBlock: editPurposeBlock || undefined,
+        responseMode: editResponseMode || undefined,
+        promptScaffold: parsedScaffold,
+      }),
     });
     setEditChannel(null);
     await load();
@@ -217,17 +237,60 @@ export function AdminPanel() {
                     <span className="text-white/25 text-xs">#</span>
                     <div className="flex-1 min-w-0">
                       {editChannel?.id === ch.id ? (
-                        <div className="flex gap-2">
-                          <input
-                            value={editName}
-                            onChange={e => setEditName(e.target.value)}
-                            className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-amber-500/50"
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <input
+                              value={editName}
+                              onChange={e => setEditName(e.target.value)}
+                              placeholder="Channel name"
+                              className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-amber-500/50"
+                            />
+                            <input
+                              value={editDesc}
+                              onChange={e => setEditDesc(e.target.value)}
+                              placeholder="Description"
+                              className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <select
+                              value={editArchetype}
+                              onChange={e => setEditArchetype(e.target.value)}
+                              className="bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
+                            >
+                              <option value="">Archetype…</option>
+                              <option value="general">General</option>
+                              <option value="checkin">Check-In</option>
+                              <option value="field_note">Field Note</option>
+                              <option value="practice">Practice</option>
+                              <option value="cohort">Cohort / Circle</option>
+                              <option value="venture">Venture</option>
+                            </select>
+                            <select
+                              value={editResponseMode}
+                              onChange={e => setEditResponseMode(e.target.value)}
+                              className="bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/70 focus:outline-none focus:border-amber-500/50"
+                            >
+                              <option value="">Response mode…</option>
+                              <option value="open">Open</option>
+                              <option value="witnessing">Witnessing</option>
+                              <option value="reflection">Reflection</option>
+                              <option value="advice">Advice</option>
+                            </select>
+                          </div>
+                          <textarea
+                            value={editPurposeBlock}
+                            onChange={e => setEditPurposeBlock(e.target.value)}
+                            placeholder="Purpose block (displayed below channel name)…"
+                            rows={3}
+                            className="w-full bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50 resize-none"
                           />
-                          <input
-                            value={editDesc}
-                            onChange={e => setEditDesc(e.target.value)}
-                            placeholder="Description"
-                            className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50"
+                          <textarea
+                            value={editPromptScaffold}
+                            onChange={e => setEditPromptScaffold(e.target.value)}
+                            placeholder={`Prompt scaffold JSON, e.g. [{"label":"What I am tending","placeholder":"...","required":true}]`}
+                            rows={4}
+                            className="w-full bg-zinc-700 border border-white/15 rounded px-2 py-1 text-xs text-white/50 font-mono focus:outline-none focus:border-amber-500/50 resize-none"
                           />
                         </div>
                       ) : (
@@ -252,7 +315,16 @@ export function AdminPanel() {
                     ) : (
                       <div className="flex gap-1.5 flex-shrink-0">
                         <button
-                          onClick={() => { setEditChannel(ch); setEditName(ch.name); setEditDesc(ch.description ?? ''); }}
+                          onClick={() => {
+                            setEditChannel(ch);
+                            setEditName(ch.name);
+                            setEditDesc(ch.description ?? '');
+                            setEditArchetype((ch as Channel & { archetype?: string }).archetype ?? '');
+                            setEditPurposeBlock((ch as Channel & { purpose_block?: string }).purpose_block ?? '');
+                            setEditResponseMode((ch as Channel & { response_mode?: string }).response_mode ?? '');
+                            const scaffold = (ch as Channel & { prompt_scaffold?: unknown }).prompt_scaffold;
+                            setEditPromptScaffold(scaffold ? JSON.stringify(scaffold, null, 2) : '');
+                          }}
                           className="text-xs text-white/25 hover:text-white/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
                         >
                           Edit
