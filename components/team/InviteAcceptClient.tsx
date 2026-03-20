@@ -22,8 +22,15 @@ export function InviteAcceptClient({
   const [status, setStatus] = useState<'idle' | 'accepting' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Registration form state
+  const [showRegister, setShowRegister] = useState(false);
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
   const accept = async () => {
     setStatus('accepting');
+    setErrorMsg('');
     try {
       const res = await fetch(`/api/team/invite/${token}`, {
         method: 'POST',
@@ -36,6 +43,30 @@ export function InviteAcceptClient({
       } else {
         const d = await res.json().catch(() => ({}));
         setErrorMsg(d.error ?? 'Failed to accept invite');
+        setStatus('error');
+      }
+    } catch {
+      setErrorMsg('Network error — please try again');
+      setStatus('error');
+    }
+  };
+
+  const register = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('accepting');
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/team/invite/${token}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, username, password }),
+      });
+      if (res.ok) {
+        setStatus('done');
+        setTimeout(() => router.push('/team'), 1500);
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setErrorMsg(d.error ?? 'Registration failed');
         setStatus('error');
       }
     } catch {
@@ -63,7 +94,7 @@ export function InviteAcceptClient({
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-6">
-        {/* Holoflower wordmark */}
+        {/* Wordmark */}
         <div className="text-center">
           <p className="text-xs font-semibold tracking-[0.18em] text-white/30 uppercase">Soullab</p>
         </div>
@@ -92,6 +123,7 @@ export function InviteAcceptClient({
           )}
 
           {currentMemberId ? (
+            /* Already signed in — one-click accept */
             <button
               onClick={accept}
               disabled={status === 'accepting'}
@@ -99,7 +131,60 @@ export function InviteAcceptClient({
             >
               {status === 'accepting' ? 'Accepting...' : 'Accept & join workspace'}
             </button>
+          ) : showRegister ? (
+            /* Inline registration form */
+            <form onSubmit={register} className="space-y-3">
+              <div>
+                <label className="block text-xs text-white/40 mb-1">Your name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Full name"
+                  required
+                  className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-amber-400/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-white/40 mb-1">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                  placeholder="e.g. kelly_s"
+                  required
+                  className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-amber-400/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-white/40 mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  required
+                  minLength={8}
+                  className="w-full bg-zinc-800 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-amber-400/50"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={status === 'accepting'}
+                className="w-full py-3 rounded-xl bg-amber-500 text-black text-sm font-semibold hover:bg-amber-400 transition-colors disabled:opacity-50"
+              >
+                {status === 'accepting' ? 'Creating account...' : 'Create account & join'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowRegister(false); setErrorMsg(''); setStatus('idle'); }}
+                className="w-full text-xs text-white/30 hover:text-white/50 transition-colors py-1"
+              >
+                Already have an account? Sign in instead
+              </button>
+            </form>
           ) : (
+            /* Not signed in — sign in or create account */
             <div className="space-y-3">
               <a
                 href={`/signin?next=/team/invite/${token}`}
@@ -107,12 +192,12 @@ export function InviteAcceptClient({
               >
                 Sign in to accept
               </a>
-              <a
-                href={`/begin?next=/team/invite/${token}`}
+              <button
+                onClick={() => setShowRegister(true)}
                 className="block w-full py-3 rounded-xl bg-zinc-800 border border-white/10 text-white/60 text-sm font-medium hover:text-white/80 hover:bg-zinc-700 transition-colors text-center"
               >
                 New to Soullab? Create account
-              </a>
+              </button>
             </div>
           )}
         </div>
