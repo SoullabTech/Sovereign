@@ -1,0 +1,368 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+
+type Tab = 'overview' | 'channels' | 'members';
+
+interface Channel {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  channel_type: string;
+  archived_at: string | null;
+  created_by_name: string | null;
+  message_count: number;
+}
+
+interface Member {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  roles: string[];
+  tier: string;
+  status: 'online' | 'away' | 'offline';
+  message_count: number;
+  last_sign_in: string | null;
+}
+
+interface Stats {
+  totalMessages: number;
+  activeMembersToday: number;
+  onlineNow: number;
+  activeChannels: number;
+  dmThreads: number;
+}
+
+function StatCard({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="bg-zinc-800/60 border border-white/8 rounded-xl p-4">
+      <p className="text-2xl font-bold text-white/90">{value}</p>
+      <p className="text-xs text-white/40 mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function PresenceDot({ status }: { status: 'online' | 'away' | 'offline' }) {
+  return (
+    <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+      status === 'online' ? 'bg-emerald-400' :
+      status === 'away'   ? 'bg-amber-400' : 'bg-white/20'
+    }`} />
+  );
+}
+
+export function AdminPanel() {
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>('overview');
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [saving, setSaving] = useState<string | null>(null);
+  const [editChannel, setEditChannel] = useState<Channel | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+
+  const load = useCallback(async () => {
+    const [sRes, cRes, mRes] = await Promise.all([
+      fetch('/api/team/admin/stats'),
+      fetch('/api/team/admin/channels'),
+      fetch('/api/team/admin/members'),
+    ]);
+    if (sRes.ok) setStats(await sRes.json().then(d => d));
+    if (cRes.ok) setChannels(await cRes.json().then(d => d.channels));
+    if (mRes.ok) setMembers(await mRes.json().then(d => d.members));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const archiveChannel = async (ch: Channel) => {
+    setSaving(ch.id);
+    await fetch('/api/team/admin/channels', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channelId: ch.id, archive: !ch.archived_at }),
+    });
+    await load();
+    setSaving(null);
+  };
+
+  const deleteChannel = async (ch: Channel) => {
+    if (!confirm(`Delete #${ch.slug} permanently? This cannot be undone.`)) return;
+    setSaving(ch.id);
+    await fetch('/api/team/admin/channels', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channelId: ch.id }),
+    });
+    await load();
+    setSaving(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editChannel) return;
+    setSaving(editChannel.id);
+    await fetch('/api/team/admin/channels', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channelId: editChannel.id, name: editName, description: editDesc }),
+    });
+    setEditChannel(null);
+    await load();
+    setSaving(null);
+  };
+
+  const toggleAdmin = async (m: Member) => {
+    const isAdmin = m.roles?.includes('team_admin');
+    setSaving(m.id);
+    await fetch('/api/team/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId: m.id, makeAdmin: !isAdmin }),
+    });
+    await load();
+    setSaving(null);
+  };
+
+  const filteredMembers = memberSearch
+    ? members.filter(m =>
+        m.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+        m.email?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+        m.username?.toLowerCase().includes(memberSearch.toLowerCase())
+      )
+    : members;
+
+  const activeChannels = channels.filter(c => !c.archived_at);
+  const archivedChannels = channels.filter(c => c.archived_at);
+
+  return (
+    <div className="flex flex-col h-full bg-zinc-950">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
+        <div>
+          <h1 className="text-base font-semibold text-white/90">Team Admin</h1>
+          <p className="text-xs text-white/35 mt-0.5">Manage channels, members, and workspace settings</p>
+        </div>
+        <button
+          onClick={() => router.push('/team')}
+          className="text-xs text-white/30 hover:text-white/60 transition-colors"
+        >
+          ← Back to channels
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-0 border-b border-white/8 flex-shrink-0 px-6">
+        {(['overview', 'channels', 'members'] as Tab[]).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+              tab === t
+                ? 'border-amber-500 text-white/90'
+                : 'border-transparent text-white/35 hover:text-white/60'
+            }`}
+          >
+            {t}
+            {t === 'channels' && <span className="ml-1.5 text-xs text-white/25">{activeChannels.length}</span>}
+            {t === 'members' && <span className="ml-1.5 text-xs text-white/25">{members.length}</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6">
+
+        {/* OVERVIEW */}
+        {tab === 'overview' && (
+          <div className="space-y-6 max-w-2xl">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <StatCard label="Total messages" value={stats?.totalMessages ?? '—'} />
+              <StatCard label="Active today" value={stats?.activeMembersToday ?? '—'} />
+              <StatCard label="Online now" value={stats?.onlineNow ?? '—'} />
+              <StatCard label="Active channels" value={stats?.activeChannels ?? '—'} />
+              <StatCard label="DM threads" value={stats?.dmThreads ?? '—'} />
+              <StatCard label="Members" value={members.length || '—'} />
+            </div>
+
+            <div className="bg-zinc-800/40 border border-white/8 rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white/70 mb-3">Most active channels</h3>
+              <div className="space-y-2">
+                {[...activeChannels].sort((a, b) => b.message_count - a.message_count).slice(0, 5).map(ch => (
+                  <div key={ch.id} className="flex items-center gap-3">
+                    <span className="text-white/25 text-xs w-3">#</span>
+                    <span className="text-sm text-white/70 flex-1">{ch.name}</span>
+                    <span className="text-xs text-white/30">{ch.message_count} msgs</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CHANNELS */}
+        {tab === 'channels' && (
+          <div className="max-w-2xl space-y-6">
+            {/* Active channels */}
+            <div>
+              <h3 className="text-xs font-semibold text-white/35 uppercase tracking-wider mb-3">
+                Active · {activeChannels.length}
+              </h3>
+              <div className="space-y-1">
+                {activeChannels.map(ch => (
+                  <div key={ch.id} className="flex items-center gap-3 bg-zinc-800/40 border border-white/6 rounded-lg px-4 py-3 hover:border-white/12 transition-colors">
+                    <span className="text-white/25 text-xs">#</span>
+                    <div className="flex-1 min-w-0">
+                      {editChannel?.id === ch.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
+                            className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-amber-500/50"
+                          />
+                          <input
+                            value={editDesc}
+                            onChange={e => setEditDesc(e.target.value)}
+                            placeholder="Description"
+                            className="flex-1 bg-zinc-700 border border-white/15 rounded px-2 py-1 text-sm text-white/60 focus:outline-none focus:border-amber-500/50"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm text-white/80 font-medium">{ch.name}</p>
+                          {ch.description && <p className="text-xs text-white/30 truncate">{ch.description}</p>}
+                        </>
+                      )}
+                    </div>
+                    <span className="text-xs text-white/20 flex-shrink-0">{ch.message_count} msgs</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded flex-shrink-0 ${
+                      ch.channel_type === 'announcement' ? 'bg-amber-500/15 text-amber-400/70' : 'bg-white/5 text-white/25'
+                    }`}>
+                      {ch.channel_type === 'announcement' ? 'announce' : 'text'}
+                    </span>
+
+                    {editChannel?.id === ch.id ? (
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button onClick={saveEdit} disabled={saving === ch.id} className="text-xs px-2 py-1 bg-amber-500 text-black rounded font-medium hover:bg-amber-400 disabled:opacity-40">Save</button>
+                        <button onClick={() => setEditChannel(null)} className="text-xs px-2 py-1 bg-zinc-700 text-white/50 rounded hover:text-white/80">Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => { setEditChannel(ch); setEditName(ch.name); setEditDesc(ch.description ?? ''); }}
+                          className="text-xs text-white/25 hover:text-white/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => archiveChannel(ch)}
+                          disabled={saving === ch.id}
+                          className="text-xs text-white/25 hover:text-amber-400/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
+                        >
+                          Archive
+                        </button>
+                        {ch.slug !== 'general' && (
+                          <button
+                            onClick={() => deleteChannel(ch)}
+                            disabled={saving === ch.id}
+                            className="text-xs text-white/20 hover:text-red-400/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Archived */}
+            {archivedChannels.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-white/25 uppercase tracking-wider mb-3">
+                  Archived · {archivedChannels.length}
+                </h3>
+                <div className="space-y-1">
+                  {archivedChannels.map(ch => (
+                    <div key={ch.id} className="flex items-center gap-3 bg-zinc-900/40 border border-white/4 rounded-lg px-4 py-3 opacity-60">
+                      <span className="text-white/15 text-xs">#</span>
+                      <div className="flex-1">
+                        <p className="text-sm text-white/50 line-through">{ch.name}</p>
+                      </div>
+                      <button
+                        onClick={() => archiveChannel(ch)}
+                        disabled={saving === ch.id}
+                        className="text-xs text-white/25 hover:text-emerald-400/70 transition-colors px-2 py-1 rounded hover:bg-white/5"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={() => deleteChannel(ch)}
+                        disabled={saving === ch.id}
+                        className="text-xs text-white/20 hover:text-red-400/70 transition-colors px-2 py-1 rounded hover:bg-white/5"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* MEMBERS */}
+        {tab === 'members' && (
+          <div className="max-w-3xl space-y-4">
+            <input
+              value={memberSearch}
+              onChange={e => setMemberSearch(e.target.value)}
+              placeholder="Search members…"
+              className="w-full bg-zinc-800 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white/80 placeholder-white/25 focus:outline-none focus:border-amber-500/40"
+            />
+
+            <div className="space-y-1">
+              {filteredMembers.map(m => {
+                const isAdmin = m.roles?.includes('team_admin') || m.roles?.includes('admin');
+                return (
+                  <div key={m.id} className="flex items-center gap-3 bg-zinc-800/40 border border-white/6 rounded-lg px-4 py-3 hover:border-white/12 transition-colors">
+                    <PresenceDot status={m.status} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-white/80 font-medium truncate">{m.name || m.username}</p>
+                        {isAdmin && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400/80 flex-shrink-0">admin</span>
+                        )}
+                        {m.tier && m.tier !== 'free' && (
+                          <span className="text-xs text-white/20 flex-shrink-0">{m.tier}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/30 truncate">{m.email}</p>
+                    </div>
+                    <span className="text-xs text-white/20 flex-shrink-0">{m.message_count} msgs</span>
+                    <button
+                      onClick={() => toggleAdmin(m)}
+                      disabled={saving === m.id}
+                      className={`text-xs px-2.5 py-1 rounded border transition-colors flex-shrink-0 ${
+                        isAdmin
+                          ? 'border-amber-500/30 text-amber-400/60 hover:border-red-500/30 hover:text-red-400/60'
+                          : 'border-white/10 text-white/25 hover:border-amber-500/30 hover:text-amber-400/60'
+                      }`}
+                    >
+                      {saving === m.id ? '…' : isAdmin ? 'Remove admin' : 'Make admin'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
