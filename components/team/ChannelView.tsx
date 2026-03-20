@@ -6,6 +6,7 @@ import { MessageBubble, DateDivider } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ThreadPanel } from './ThreadPanel';
 import { useChannelStream } from './useChannelStream';
+import { ChannelPurposeHeader } from './ChannelPurposeHeader';
 
 interface ChannelViewProps {
   channel: TeamChannel;
@@ -136,17 +137,20 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     }));
   };
 
+  const handleReflect = async (messageId: string, mode: string) => {
+    const msg = messages.find(m => m.id === messageId);
+    if (!msg) return;
+    await fetch(`/api/team/channels/${channel.id}/maia-reflect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageId, messageBody: msg.body, reflectMode: mode }),
+    });
+    // The response will arrive via SSE — no need to manually add it
+  };
+
   const mainCol = (
     <div className="flex flex-col flex-1 min-w-0">
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-white/8 flex-shrink-0">
-        <span className="text-white/40 text-lg font-light">#</span>
-        <div>
-          <h2 className="text-sm font-semibold text-white/90">{channel.name}</h2>
-          {channel.description && (
-            <p className="text-xs text-white/35">{channel.description}</p>
-          )}
-        </div>
-      </div>
+      <ChannelPurposeHeader channel={channel} />
 
       <div
         ref={scrollRef}
@@ -182,6 +186,7 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
                 currentMemberId={currentMemberId}
                 onReact={handleReact}
                 onOpenThread={setThreadMessage}
+                onReflect={handleReflect}
               />
             </div>
           );
@@ -189,12 +194,16 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
         <div ref={bottomRef} />
       </div>
 
-      <MessageInput channelName={channel.slug} onSend={sendMessage} />
+      <MessageInput
+        channelName={channel.slug}
+        onSend={sendMessage}
+        promptScaffold={channel.promptScaffold ?? undefined}
+      />
     </div>
   );
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0">
       {mainCol}
       {threadMessage && (
         <ThreadPanel
