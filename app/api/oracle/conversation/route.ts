@@ -43,7 +43,7 @@ import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
-import { loadSpiralState, upsertSpiralState } from '@/lib/consciousness/spiralStatePersistence';
+import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -417,6 +417,15 @@ export async function POST(request: NextRequest) {
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
 
+    // BRIDGE D extension: Extract active report context (if present)
+    const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
+    if (activeReportContext) {
+      console.log('[Oracle] report-context-loaded', {
+        reportId: activeReportContext.reportId,
+        phase: activeReportContext.currentPhase?.spiralogicPhase,
+      });
+    }
+
     // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
     const [systemVoice, memberVoice] = await Promise.all([
       getSystemVoiceProfile(),
@@ -608,7 +617,8 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt,
       astrologyContext,
-      preferredAssistantName
+      preferredAssistantName,
+      activeReportContext
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1380,6 +1390,36 @@ function detectInterventionTriggers(
 }
 
 /**
+ * Build a concise oracle context block from the member's active Spiralogic report.
+ * Injected into the system prompt after the base identity prompt, before council/collective wisdom.
+ * Kept lightweight — orients elemental attunement without overwhelming the prompt.
+ */
+function buildReportContextBlock(ctx: ActiveReportContext): string {
+  const lines: string[] = [
+    `\n\n[Member's Active Spiralogic Context]`,
+    `Current Phase: ${ctx.currentPhase?.spiralogicPhase ?? 'unknown'}`,
+    `Major Life Lesson: ${ctx.currentPhase?.majorLifeLesson ?? ''}`,
+    `Edge Challenge: ${ctx.currentPhase?.edgeChallenge ?? ''}`,
+    `Emergent Gift: ${ctx.currentPhase?.emergentGift ?? ''}`,
+    `Dominant Element: ${ctx.elementalBalance?.dominantElement ?? ''} (${ctx.elementalBalance?.[ctx.elementalBalance?.dominantElement as keyof typeof ctx.elementalBalance] ?? ''}%)`,
+    `Underactive Element: ${ctx.elementalBalance?.underactiveElement ?? ''}`,
+    `Active Life-Cycle Transits: ${ctx.currentPhase?.activeTransits?.join('; ') ?? 'none identified'}`,
+    `Next Actions they are working with:`,
+    ...(ctx.nextAction?.actions ?? []).map((a: string, i: number) => `  ${i + 1}. ${a}`),
+    `Watch For: ${ctx.nextAction?.watchFor ?? ''}`,
+    `Journal Prompt: ${ctx.nextAction?.journalPrompt ?? ''}`,
+    ``,
+    ...(ctx.evolutionDelta ? [
+      `Evolution Since Last Report: ${ctx.evolutionDelta.sinceLastReport}`,
+      ...(ctx.evolutionDelta.repeatedPatterns?.length ? [`Recurring Patterns: ${ctx.evolutionDelta.repeatedPatterns.join('; ')}`] : []),
+      ...(ctx.evolutionDelta.emergingStrengths?.length ? [`Emerging Strengths: ${ctx.evolutionDelta.emergingStrengths.join('; ')}`] : []),
+    ] : []),
+    `Use this context to inform your responses where relevant, without over-referencing it. Do not repeat it verbatim. Let it orient your elemental attunement and phase awareness naturally.\n`,
+  ];
+  return lines.filter(Boolean).join('\n');
+}
+
+/**
  * Generate enhanced MAIA response with spiralogic guidance using LLM
  * Sacred attending: Spiralogic patterns inform the response implicitly, not explicitly
  */
@@ -1398,7 +1438,8 @@ async function generateSpiralogicResponseWithLLM(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  activeReportContext?: ActiveReportContext | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1518,9 +1559,17 @@ async function generateSpiralogicResponseWithLLM(
     // Non-blocking - MAIA proceeds without collective wisdom
   }
 
-  const finalSystemPrompt = councilInsights || collectiveWisdom
-    ? systemPrompt + councilInsights + collectiveWisdom
-    : systemPrompt;
+  // Build report context block if present (injected after base prompt, before council/collective)
+  const reportContextBlock = activeReportContext
+    ? buildReportContextBlock(activeReportContext)
+    : '';
+
+  const finalSystemPrompt = [
+    systemPrompt,
+    reportContextBlock,
+    councilInsights,
+    collectiveWisdom,
+  ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
