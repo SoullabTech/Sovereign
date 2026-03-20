@@ -115,6 +115,23 @@ function getMemberId(req: NextRequest): string | null {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const host = req.headers.get('host') ?? '';
+
+  // ---------------------------------------------------------------------
+  // MASTER FIELDS: Subdomain routing — jondi.soullab.life → /fields/jondi
+  // Must run before all other checks so the field gets its own routing context.
+  // ---------------------------------------------------------------------
+  const SOULLAB_ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'soullab.life';
+  const subdomainMatch = host.match(new RegExp(`^([a-z0-9-]+)\\.${SOULLAB_ROOT.replace('.', '\\.')}(:\\d+)?$`));
+  const masterSlug = subdomainMatch?.[1];
+  const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
+
+  if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
+    const rewritePath = `/fields/${masterSlug}${pathname === '/' ? '' : pathname}`;
+    const url = req.nextUrl.clone();
+    url.pathname = rewritePath;
+    return NextResponse.rewrite(url);
+  }
 
   // ---------------------------------------------------------------------
   // FIELD / STUDIO BOUNDARY: Reject /api/studio/* from Field shell context
