@@ -311,6 +311,10 @@ export const ACCESS_RULES: AccessRule[] = [
   // Studio (session room + supporting pages)
   { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
 
+  // SoulComms — team messaging
+  { prefix: '/team', minTier: 'free', notes: 'SoulComms team messaging - all authenticated users' },
+  { prefix: '/api/team', minTier: 'free', notes: 'SoulComms API - all authenticated users' },
+
   // -------------------------------------------------------------------------
   // 5) ADMIN / STEWARD - Role-gated (not tier)
   // -------------------------------------------------------------------------
