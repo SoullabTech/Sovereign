@@ -85,24 +85,11 @@ export async function getDMThreadMembers(dmThreadId: string): Promise<DMThreadMe
     `SELECT tdm.member_id, m.name, m.username, tp.status
      FROM team_dm_members tdm
      JOIN members m ON m.id = tdm.member_id
-     LEFT JOIN team_presence tp ON tp.member_id = tdm.member_id`,
-    [dmThreadId] // unused — fixed below
-  );
-  // Re-query with correct binding
-  const r = await query<{
-    member_id: string;
-    name: string | null;
-    username: string;
-    status: string | null;
-  }>(
-    `SELECT tdm.member_id, m.name, m.username, tp.status
-     FROM team_dm_members tdm
-     JOIN members m ON m.id = tdm.member_id
      LEFT JOIN team_presence tp ON tp.member_id = tdm.member_id
      WHERE tdm.dm_thread_id = $1`,
     [dmThreadId]
   );
-  return r.rows.map(row => ({
+  return result.rows.map(row => ({
     memberId: row.member_id,
     name: row.name || row.username,
     status: (row.status as 'online' | 'away' | 'offline') || 'offline',
