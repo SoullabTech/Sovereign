@@ -142,13 +142,6 @@ export async function getDMMessages(
   opts: { limit?: number; before?: string } = {}
 ): Promise<DMMessage[]> {
   const limit = opts.limit ?? 50;
-  const params: (string | number)[] = [dmThreadId, memberId, limit];
-
-  let beforeClause = '';
-  if (opts.before) {
-    beforeClause = `AND dm.created_at < $4`;
-    params.push(opts.before);
-  }
 
   // Verify membership
   const access = await query(
@@ -156,6 +149,13 @@ export async function getDMMessages(
     [dmThreadId, memberId]
   );
   if (!access.rows[0]) throw new Error('Not a member of this DM thread');
+
+  let beforeClause = '';
+  const params: (string | number)[] = [dmThreadId, limit];
+  if (opts.before) {
+    beforeClause = `AND dm.created_at < $3`;
+    params.push(opts.before);
+  }
 
   const result = await query<{
     id: string;
@@ -175,7 +175,7 @@ export async function getDMMessages(
        AND dm.deleted_at IS NULL
        ${beforeClause}
      ORDER BY dm.created_at ASC
-     LIMIT $3`,
+     LIMIT $2`,
     params
   );
 
