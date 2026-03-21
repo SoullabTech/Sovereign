@@ -4,6 +4,7 @@ import Link from 'next/link';
 import PartnerBoard from './PartnerBoard';
 import PartnerCommsPanel from './PartnerCommsPanel';
 import FieldActivityFeed from './FieldActivityFeed';
+import DecisionLedger from './DecisionLedger';
 
 const KELLY_PALETTE = {
   primary: '#B08060',
@@ -116,6 +117,17 @@ export default function PartnerWorkspace() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Decision Ledger */}
+      <div style={{
+        marginTop: '2.5rem',
+        background: `${palette.primary}06`,
+        border: `1px solid ${palette.primary}15`,
+        padding: '1.5rem',
+        borderRadius: '2px',
+      }}>
+        <DecisionLedger fieldSlug="nathan" palette={palette} />
       </div>
 
       {/* Activity Feed */}

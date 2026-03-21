@@ -4,12 +4,13 @@ import { useState } from 'react';
 import type { MasterField } from '@/lib/masters/types';
 import NathanOperator from './NathanOperator';
 import FieldKanban from './FieldKanban';
+import DecisionLedger from './DecisionLedger';
 
 interface Props {
   master: MasterField;
 }
 
-type View = 'platform' | 'board';
+type View = 'platform' | 'board' | 'decisions';
 
 export default function NathanOperatorWithKanban({ master }: Props) {
   const [view, setView] = useState<View>('board');
@@ -48,6 +49,7 @@ export default function NathanOperatorWithKanban({ master }: Props) {
           {([
             { id: 'board' as View, label: 'Project Board' },
             { id: 'platform' as View, label: 'Platform View' },
+            { id: 'decisions' as View, label: 'Decisions' },
           ] as { id: View; label: string }[]).map((tab) => (
             <button
               key={tab.id}
@@ -97,6 +99,14 @@ export default function NathanOperatorWithKanban({ master }: Props) {
       )}
 
       {view === 'platform' && <NathanOperator master={master} />}
+
+      {view === 'decisions' && (
+        <div style={{ padding: '32px 24px' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+            <DecisionLedger fieldSlug="nathan" palette={p} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

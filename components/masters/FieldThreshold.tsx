@@ -135,23 +135,60 @@ export default function FieldThreshold({ master }: Props) {
           ))}
         </nav>
 
-        {/* Partner workspace link — only when partnerSlugs is set */}
+        {/* Partner Workspace — visible secondary action when partnerSlugs is set */}
         {master.partnerSlugs && master.partnerSlugs.length > 0 && (
-          <Link
-            href={`/fields/${master.slug}/partner-view`}
-            style={{
-              fontFamily: 'var(--field-font-body)',
-              fontSize: '0.68rem',
-              color: `${palette.text}30`,
-              letterSpacing: '0.15em',
-              textTransform: 'uppercase',
-              marginTop: isSpacious ? '2rem' : '1.25rem',
-              display: 'block',
-              textDecoration: 'none',
-            }}
-          >
-            Partner Workspace
-          </Link>
+          <div style={{ width: '100%', marginTop: isSpacious ? '2.5rem' : '1.75rem' }}>
+            {/* Divider */}
+            <div
+              style={{
+                width: '100%',
+                height: '1px',
+                background: `linear-gradient(to right, transparent, ${palette.primary}30, transparent)`,
+                marginBottom: isSpacious ? '2rem' : '1.5rem',
+              }}
+            />
+            <Link
+              href={`/fields/${master.slug}/partner-view`}
+              className="group relative flex flex-col items-center py-4 transition-all duration-500"
+              style={{
+                border: `1px solid ${palette.primary}35`,
+                borderRadius: '2px',
+                background: `${palette.primary}08`,
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background = `${palette.primary}14`;
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = `${palette.primary}60`;
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLAnchorElement).style.background = `${palette.primary}08`;
+                (e.currentTarget as HTMLAnchorElement).style.borderColor = `${palette.primary}35`;
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--field-font-display)',
+                  fontSize: '1rem',
+                  fontWeight: 400,
+                  color: palette.text,
+                  letterSpacing: '0.02em',
+                  marginBottom: '0.3rem',
+                }}
+              >
+                Partner Workspace
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--field-font-body)',
+                  fontSize: '0.75rem',
+                  color: `${palette.text}55`,
+                  letterSpacing: '0.03em',
+                }}
+              >
+                Work with Nathan on builds, decisions, and shared direction.
+              </span>
+            </Link>
+          </div>
         )}
       </div>
 
