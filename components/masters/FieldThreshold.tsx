@@ -134,6 +134,25 @@ export default function FieldThreshold({ master }: Props) {
             />
           ))}
         </nav>
+
+        {/* Partner workspace link — only when partnerSlugs is set */}
+        {master.partnerSlugs && master.partnerSlugs.length > 0 && (
+          <Link
+            href={`/fields/${master.slug}/partner-view`}
+            style={{
+              fontFamily: 'var(--field-font-body)',
+              fontSize: '0.68rem',
+              color: `${palette.text}30`,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              marginTop: isSpacious ? '2rem' : '1.25rem',
+              display: 'block',
+              textDecoration: 'none',
+            }}
+          >
+            Partner Workspace
+          </Link>
+        )}
       </div>
 
       {/* Keyframe for breath animation */}

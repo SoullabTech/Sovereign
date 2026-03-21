@@ -192,4 +192,6 @@ developmental process, and the question of whether Soullab can actually hold wha
   theme: FIELD_PRESETS.nathan,
 
   active: true,
+
+  partnerSlugs: ['kelly'],
 };

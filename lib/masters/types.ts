@@ -88,4 +88,10 @@ export type MasterField = {
    * Set when the master registers as a practitioner in the platform.
    */
   practitionerId?: string;
+
+  /**
+   * Other field slugs this master partners with.
+   * Used to render shared workspace views (PartnerBoard, PartnerCommsPanel).
+   */
+  partnerSlugs?: string[];
 };

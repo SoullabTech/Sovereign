@@ -12,13 +12,24 @@ export async function GET(
   if (!getFieldBySlug(slug)) {
     return NextResponse.json({ error: 'Field not found' }, { status: 404 });
   }
-  const { rows } = await query(
-    `SELECT id, column_id, title, body, tags, author_id, sort_order, created_at, updated_at
-     FROM field_kanban_cards
-     WHERE field_slug = $1
-     ORDER BY column_id, sort_order, created_at`,
-    [slug]
-  );
+  const url = new URL(req.url);
+  const sharedOnly = url.searchParams.get('shared') === '1';
+
+  const { rows } = sharedOnly
+    ? await query(
+        `SELECT id, field_slug, column_id, title, body, tags, author_id, sort_order, created_at, updated_at, shared
+         FROM field_kanban_cards
+         WHERE (field_slug = $1 OR shared = true)
+         ORDER BY column_id, sort_order, created_at`,
+        [slug]
+      )
+    : await query(
+        `SELECT id, field_slug, column_id, title, body, tags, author_id, sort_order, created_at, updated_at, shared
+         FROM field_kanban_cards
+         WHERE field_slug = $1
+         ORDER BY column_id, sort_order, created_at`,
+        [slug]
+      );
   return NextResponse.json({ cards: rows });
 }
 
