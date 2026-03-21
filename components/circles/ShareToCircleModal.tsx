@@ -131,8 +131,11 @@ export function ShareToCircleModal({
         </p>
 
         {success ? (
-          <div className="py-6 text-center space-y-3">
+          <div className="py-6 text-center space-y-4">
             <p className="text-sm font-medium text-maia-sage-400">Offered to circle</p>
+            <p className="text-xs text-maia-ink-40 italic" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+              Some people share these.
+            </p>
             <div className="flex items-center justify-center gap-3">
               <Link
                 href={`/commons/circles/${selectedCircle?.id}`}
