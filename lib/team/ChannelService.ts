@@ -3,7 +3,7 @@
 
 import { query } from '@/lib/db/postgres';
 import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember } from './types';
-import { notifyChannelMentions } from '@/lib/team/notifications';
+import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANNELS
@@ -274,6 +274,86 @@ export async function getMessagesSince(
   }));
 }
 
+export async function getReplies(
+  channelId: string,
+  parentId: string,
+  opts: { limit?: number } = {}
+): Promise<TeamMessage[]> {
+  const limit = opts.limit ?? 100;
+
+  const result = await query<{
+    id: string;
+    channel_id: string;
+    sender_id: string;
+    sender_name: string;
+    body: string;
+    parent_id: string | null;
+    edited_at: string | null;
+    deleted_at: string | null;
+    created_at: string;
+  }>(
+    `SELECT
+       tm.*,
+       COALESCE(m.name, m.username, 'Unknown') AS sender_name
+     FROM team_messages tm
+     JOIN members m ON m.id = tm.sender_id
+     WHERE tm.channel_id = $1
+       AND tm.parent_id = $2
+       AND tm.deleted_at IS NULL
+     ORDER BY tm.created_at ASC
+     LIMIT $3`,
+    [channelId, parentId, limit]
+  );
+
+  const messages = result.rows.map(row => ({
+    id: row.id,
+    channelId: row.channel_id,
+    senderId: row.sender_id,
+    senderName: row.sender_name,
+    body: row.body,
+    parentId: row.parent_id,
+    editedAt: row.edited_at,
+    deletedAt: row.deleted_at,
+    createdAt: row.created_at,
+    reactions: [] as MessageReaction[],
+  }));
+
+  // Attach reactions in batch
+  if (messages.length > 0) {
+    const messageIds = messages.map(m => m.id);
+    const reactResult = await query<{
+      message_id: string;
+      emoji: string;
+      member_id: string;
+    }>(
+      `SELECT message_id, emoji, member_id FROM team_reactions WHERE message_id = ANY($1)`,
+      [messageIds]
+    );
+
+    const reactionMap = new Map<string, Map<string, string[]>>();
+    for (const row of reactResult.rows) {
+      if (!reactionMap.has(row.message_id)) reactionMap.set(row.message_id, new Map());
+      const emojiMap = reactionMap.get(row.message_id)!;
+      if (!emojiMap.has(row.emoji)) emojiMap.set(row.emoji, []);
+      emojiMap.get(row.emoji)!.push(row.member_id);
+    }
+
+    for (const msg of messages) {
+      const emojiMap = reactionMap.get(msg.id);
+      if (emojiMap) {
+        msg.reactions = Array.from(emojiMap.entries()).map(([emoji, memberIds]) => ({
+          emoji,
+          count: memberIds.length,
+          memberIds,
+          hasMine: false,
+        }));
+      }
+    }
+  }
+
+  return messages;
+}
+
 export async function sendMessage(
   channelId: string,
   senderId: string,
@@ -304,6 +384,11 @@ export async function sendMessage(
 
   // Fire-and-forget email notifications for @mentions
   notifyChannelMentions(channelId, senderId, trimmed).catch(() => {});
+
+  // Fire-and-forget thread reply notification (notify parent author if different member)
+  if (parentId) {
+    notifyThreadReply(channelId, parentId, senderId, trimmed).catch(() => {});
+  }
 
   const nameResult = await query<{ name: string | null; username: string }>(
     `SELECT name, username FROM members WHERE id = $1`,

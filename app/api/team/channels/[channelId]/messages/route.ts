@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { getMessages, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
+import { getMessages, getReplies, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +13,21 @@ export async function GET(
 
   const { channelId } = await params;
   const url = new URL(request.url);
+  const parentId = url.searchParams.get('parentId') ?? undefined;
+
+  // Thread replies path
+  if (parentId) {
+    const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '100', 10), 200);
+    const messages = await getReplies(channelId, parentId, { limit });
+    for (const msg of messages) {
+      for (const r of msg.reactions) {
+        r.hasMine = r.memberIds.includes(memberId);
+      }
+    }
+    return NextResponse.json({ messages });
+  }
+
+  // Top-level messages path
   const before = url.searchParams.get('before') ?? undefined;
   const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '50', 10), 100);
 
