@@ -9,7 +9,7 @@ interface Decision {
   context: string | null;
   recommendation: string | null;
   owner: string | null;
-  status: 'open' | 'decided' | 'deferred' | 'superseded';
+  status: 'open' | 'decided' | 'deferred' | 'superseded' | 'resolved';
   deadline: string | null;
   decided_at: string | null;
   decided_by: string | null;
@@ -37,6 +37,7 @@ const STATUS_COLORS: Record<Decision['status'], string> = {
   decided: '#16A34A',
   deferred: '#6B7280',
   superseded: '#4B5563',
+  resolved: '#059669',
 };
 
 const STATUS_LABELS: Record<Decision['status'], string> = {
@@ -44,6 +45,7 @@ const STATUS_LABELS: Record<Decision['status'], string> = {
   decided: 'Decided',
   deferred: 'Deferred',
   superseded: 'Superseded',
+  resolved: 'Resolved',
 };
 
 function StatusBadge({ status, palette }: { status: Decision['status']; palette: Palette }) {
@@ -546,6 +548,14 @@ export default function DecisionLedger({ fieldSlug, palette }: Props) {
 
               {/* Action row */}
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {(d.status === 'open' || d.status === 'decided') && (
+                  <button
+                    onClick={() => void patchDecision(d.id, { status: 'resolved' })}
+                    style={smallActionStyle('#059669', '#fff')}
+                  >
+                    ✓ Mark Resolved
+                  </button>
+                )}
                 {d.status === 'open' && (
                   <button
                     onClick={() => void patchDecision(d.id, { status: 'decided' })}
@@ -560,6 +570,14 @@ export default function DecisionLedger({ fieldSlug, palette }: Props) {
                     style={smallActionStyle('#4B5563', '#fff')}
                   >
                     Defer
+                  </button>
+                )}
+                {d.status === 'resolved' && (
+                  <button
+                    onClick={() => void patchDecision(d.id, { status: 'open' })}
+                    style={smallActionStyle(`${palette.text}20`, `${palette.text}60`)}
+                  >
+                    Reopen
                   </button>
                 )}
                 {d.status === 'deferred' && (

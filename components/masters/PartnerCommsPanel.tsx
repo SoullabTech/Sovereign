@@ -41,6 +41,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
   const [selectedType, setSelectedType] = useState<MessageType>('build');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [threadResolved, setThreadResolved] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -116,17 +117,36 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
           width: '6px',
           height: '6px',
           borderRadius: '50%',
-          background: palette.primary,
-          opacity: 0.6,
+          background: threadResolved ? '#059669' : palette.primary,
+          opacity: 0.7,
         }} />
         <span style={{
           fontSize: '0.72rem',
           letterSpacing: '0.15em',
           textTransform: 'uppercase',
           color: `${palette.text}60`,
+          flex: 1,
         }}>
           {partnerName}
+          {threadResolved && <span style={{ marginLeft: '0.5rem', color: '#059669', fontSize: '0.65rem' }}>· resolved</span>}
         </span>
+        <button
+          onClick={() => setThreadResolved((v) => !v)}
+          title={threadResolved ? 'Reopen thread' : 'Mark thread resolved'}
+          style={{
+            fontSize: '0.65rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: threadResolved ? '#059669' : `${palette.text}35`,
+            background: 'transparent',
+            border: `1px solid ${threadResolved ? '#05966940' : `${palette.text}15`}`,
+            padding: '2px 8px',
+            borderRadius: '2px',
+            cursor: 'pointer',
+          }}
+        >
+          {threadResolved ? '↩ Reopen' : '✓ Resolve'}
+        </button>
       </div>
 
       {/* Messages */}
