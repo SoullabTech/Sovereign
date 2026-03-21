@@ -29,8 +29,10 @@ export const NATHAN_FIELD: MasterField = {
     lead: "Nathan is an MIT-trained experimental mechanical engineer who believes the most important question in any initiative isn't 'What are we building?' — it's 'Does the structure actually support what we claim to do?' He brings that discipline to Soullab.",
     paragraphs: [
       "He spent years working in enterprise environments — the kind where 'it works in theory' isn't good enough and every assumption gets tested at scale. That background shaped a particular reflex: find the load-bearing assumptions early, before the structure is too committed to change.",
+      "But the systems that have always mattered most to Nathan aren't machines — they're groups. How people develop together, how collective intelligence forms, how a group of individuals becomes something more coherent than the sum of its parts. He brings the same rigor he applies to mechanical systems to the question of how humans grow in relation to one another.",
+      "He is a member of the Comega men's group — a long-term developmental community — and that experience shapes how he thinks about what Soullab is actually building. Not just a platform. A container. One that needs to be strong enough to hold real human process.",
       "When he encountered Soullab, the question wasn't whether the vision was compelling. It was whether the infrastructure could sustain it — data sovereignty in practice, not just in principle. Consent systems that actually hold. AI that supports agency rather than harvesting it. Those are engineering problems, not just ethical ones.",
-      "He joined as a partner not to invest in an idea but to help build something structurally sound. His focus: the systems layer — how coherence scales, where measurability ends, how enterprise environments can adopt sovereign AI without breaking the architecture that makes it sovereign.",
+      "He joined as a partner because he is moving toward something himself — a life with more depth, more meaning, more genuine contribution. Soullab is part of that direction. His focus: helping build something structurally sound enough to actually make a difference.",
       "This field is his working environment inside Soullab. It is not a practice page. It is where the building happens.",
     ],
     lineage: [
