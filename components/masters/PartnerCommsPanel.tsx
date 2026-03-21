@@ -13,11 +13,12 @@ const MESSAGE_TYPES: { type: MessageType; label: string; icon: string }[] = [
 
 interface DMMessage {
   id: string;
-  dm_thread_id: string;
-  sender_id: string;
+  dmThreadId: string;
+  senderId: string;
+  senderName?: string;
   body: string;
-  message_type?: MessageType;
-  created_at: string;
+  messageType?: MessageType;
+  createdAt: string;
 }
 
 interface Palette {
@@ -179,9 +180,9 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
           </p>
         )}
         {messages.map((msg, i) => {
-          const isViewer = msg.sender_id === viewerMemberId;
+          const isViewer = msg.senderId === viewerMemberId;
           const prevMsg = messages[i - 1];
-          const showDate = !prevMsg || formatDate(prevMsg.created_at) !== formatDate(msg.created_at);
+          const showDate = !prevMsg || formatDate(prevMsg.createdAt) !== formatDate(msg.createdAt);
           return (
             <div key={msg.id}>
               {showDate && (
@@ -192,7 +193,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
                   letterSpacing: '0.1em',
                   margin: '0.5rem 0',
                 }}>
-                  {formatDate(msg.created_at)}
+                  {formatDate(msg.createdAt)}
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: isViewer ? 'flex-end' : 'flex-start' }}>
@@ -220,20 +221,20 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
                     gap: '0.4rem',
                     marginTop: '0.25rem',
                   }}>
-                    {msg.message_type && msg.message_type !== 'build' && (
+                    {msg.messageType && msg.messageType !== 'build' && (
                       <span style={{
                         fontSize: '0.58rem',
                         color: `${palette.primary}80`,
                         letterSpacing: '0.05em',
                       }}>
-                        [{msg.message_type}]
+                        [{msg.messageType}]
                       </span>
                     )}
                     <span style={{
                       fontSize: '0.6rem',
                       color: `${palette.text}30`,
                     }}>
-                      {formatTime(msg.created_at)}
+                      {formatTime(msg.createdAt)}
                     </span>
                   </div>
                 </div>
