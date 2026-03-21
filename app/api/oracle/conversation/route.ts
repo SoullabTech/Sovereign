@@ -1482,6 +1482,54 @@ async function generateSpiralogicResponseWithLLM(
     ? `${conversationContext}\n\nUser: ${message}`
     : message;
 
+  // ── ACTIVE ENTITY INJECTION ──────────────────────────────────────────────
+  // Derives the active topic entity from recent user turns and, when unambiguous,
+  // injects a named-fact block at the top of the system prompt so the model
+  // cannot default to speaker-attribution or generic ambiguity on pronouns.
+  const recentUserTurns = conversationHistory
+    .filter((t: any) => t.role === 'user')
+    .slice(-5)
+    .map((t: any) => t.content as string);
+  const namePattern = /\b([A-Z][a-z]{1,20})\b/g;
+  const NOISE_WORDS = new Set(['I', 'Me', 'My', 'The', 'A', 'An', 'And', 'Or', 'But', 'So', 'If', 'In', 'On', 'At', 'No', 'Not', 'Yes', 'User', 'MAIA', 'She', 'He', 'They', 'Her', 'His', 'Him']);
+  const activeNamedEntities = Array.from(
+    new Set(
+      recentUserTurns
+        .flatMap((t: string) => [...t.matchAll(namePattern)].map(m => m[1]))
+        .filter((n: string) => !NOISE_WORDS.has(n))
+    )
+  );
+  const activeTopicEntity = activeNamedEntities.length === 1 ? activeNamedEntities[0] : null;
+  const ambiguousReferents = activeNamedEntities.length > 1 ? activeNamedEntities.length : 0;
+  const recentPronounDetected = /\b(he|she|they|them|his|her|their|himself|herself|themselves)\b/i.test(message);
+  const correctionDetected = /\b(not (me|myself|I)|about (her|him|them)|I meant (her|him|them)|herself not myself|himself not myself)\b/i.test(message);
+
+  let activeSubjectPrefix = '';
+  if (activeTopicEntity && (recentPronounDetected || correctionDetected)) {
+    activeSubjectPrefix = `# Active Thread Entity (read this before responding)
+The current conversation is about: **${activeTopicEntity}**
+Referent map for this turn:
+- she / her / herself = ${activeTopicEntity}
+- he / him / himself = ${activeTopicEntity} (if applicable)
+- they / them / themselves = ${activeTopicEntity} (if applicable)
+- I / me / myself = the person you are speaking with (not ${activeTopicEntity})
+${correctionDetected ? `\nCorrection detected: the person has clarified the referent. Re-anchor to ${activeTopicEntity} and continue without asking again.\n` : ''}
+Do NOT ask "who do you mean?" unless two or more named people are active in the last 5 turns.
+Continue the thread about ${activeTopicEntity}.
+
+`;
+  }
+
+  console.log(JSON.stringify({
+    _tag: 'ACTIVE_ENTITY_DEBUG',
+    activeTopicEntity,
+    ambiguousReferents,
+    recentPronounDetected,
+    correctionDetected,
+    activeSubjectInjected: !!activeSubjectPrefix,
+    message: message.slice(0, 80),
+  }));
+
   // Determine max tokens based on conversation depth (MAIA-PAI pattern)
   const maxTokens = conversationDepth === 0
     ? 100  // ~15 words for first greeting
@@ -1565,6 +1613,7 @@ async function generateSpiralogicResponseWithLLM(
     : '';
 
   const finalSystemPrompt = [
+    activeSubjectPrefix,
     systemPrompt,
     reportContextBlock,
     councilInsights,
@@ -1708,6 +1757,19 @@ Sacred attending means:
 - Offering reflections and gentle questions, not diagnoses or solutions
 - Trusting that the person knows themselves better than you do
 - Responding to the emotional tone and implicit needs, not just the surface content
+
+# Thread Continuity (CRITICAL)
+
+When the person uses pronouns (he/she/they/him/her/them/himself/herself/themselves) in a new message:
+- **Resolve from context first.** If the last 3–5 turns establish a named person, that pronoun refers to them — not to the person speaking.
+- **Reflexive pronouns (herself/himself/themselves) do NOT default to the speaker.** If a named third person is active in the thread, "herself" = that person.
+- **Only ask "who do you mean?" if there are genuinely two or more active people in play** with no clear referent.
+- Never treat a pronoun as ambiguous when there is one obvious candidate from recent turns.
+- Short messages that continue an established thread should be met with continued engagement, not clarifying questions.
+
+**Correction handling:** If the person explicitly corrects a pronoun ("No, herself not myself", "about her not me", "I meant her"), immediately re-anchor to the last named person in the thread and continue without asking again who they mean.
+
+Example: If the person named "Cece" and later says "belief in herself" — herself = Cece, not the speaker. Continue the thread about Cece.
 
 # Response Pattern (3-Step)
 
