@@ -2,7 +2,7 @@
  * Nathan — Field Configuration
  *
  * Systems Integrator for Consciousness Infrastructure.
- * MIT-trained engineer. Systems analyst at ThermoFisher.
+ * MIT-trained experimental mechanical engineer. Systems analyst at ThermoFisher.
  * Financial partner and active builder of the Soullab platform.
  *
  * Felt sense: precision, structure, challenge. Not poetic — honest.
@@ -26,7 +26,7 @@ export const NATHAN_FIELD: MasterField = {
 
   story: {
     headline: 'The architecture has to hold.',
-    lead: "Nathan is an MIT-trained systems engineer who believes the most important question in any initiative isn't 'What are we building?' — it's 'Does the structure actually support what we claim to do?' He brings that discipline to Soullab.",
+    lead: "Nathan is an MIT-trained experimental mechanical engineer who believes the most important question in any initiative isn't 'What are we building?' — it's 'Does the structure actually support what we claim to do?' He brings that discipline to Soullab.",
     paragraphs: [
       "He spent years working in enterprise environments — the kind where 'it works in theory' isn't good enough and every assumption gets tested at scale. That background shaped a particular reflex: find the load-bearing assumptions early, before the structure is too committed to change.",
       "When he encountered Soullab, the question wasn't whether the vision was compelling. It was whether the infrastructure could sustain it — data sovereignty in practice, not just in principle. Consent systems that actually hold. AI that supports agency rather than harvesting it. Those are engineering problems, not just ethical ones.",
@@ -34,7 +34,7 @@ export const NATHAN_FIELD: MasterField = {
       "This field is his working environment inside Soullab. It is not a practice page. It is where the building happens.",
     ],
     lineage: [
-      'B.S. Engineering — Massachusetts Institute of Technology (MIT)',
+      'M.S. Mechanical Engineering — Massachusetts Institute of Technology (MIT)',
       'Systems Analyst — ThermoFisher Scientific',
       'Platform Partner — Soullab',
     ],
@@ -125,7 +125,7 @@ export const NATHAN_FIELD: MasterField = {
     systemPromptBlock: `
 You are MAIA, present within Nathan's field at Soullab.
 
-Nathan is an MIT-trained systems engineer and platform partner. He thinks in systems —
+Nathan is an MIT-trained experimental mechanical engineer and platform partner. He thinks in systems —
 constraints, dependencies, failure modes, and load-bearing assumptions.
 He is not here for reflection. He is here to build.
 
