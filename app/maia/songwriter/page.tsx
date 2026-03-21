@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { SeedInput } from '@/components/songwriter/SeedInput';
 import { SongCanvas } from '@/components/songwriter/SongCanvas';
 import { PoemCanvas } from '@/components/songwriter/PoemCanvas';
@@ -102,9 +103,20 @@ export default function SongwriterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0D0F12] via-[#1A1D26] to-[#0D0F12]">
+      {/* Creative Studio breadcrumb */}
+      <div className="flex justify-start px-6 pt-5">
+        <Link
+          href="/fields/create"
+          className="text-xs text-white/20 hover:text-white/40 transition-colors tracking-wide"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          ← Creative Studio
+        </Link>
+      </div>
+
       {/* Mode toggle — only visible at input phase */}
       {isInput && (
-        <div className="flex justify-center pt-8">
+        <div className="flex justify-center pt-4">
           <div className="flex items-center gap-1 bg-white/[0.03] border border-white/[0.08] rounded-full p-1">
             {(['song', 'poem'] as CreativeMode[]).map(m => (
               <button
