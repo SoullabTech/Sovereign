@@ -187,4 +187,23 @@ export const FIELD_PRESETS = {
     displayFont: 'Playfair Display',
     bodyFont: 'DM Sans',
   },
+
+  /**
+   * Soullab Creative Studio — the maker's field.
+   *
+   * Warm amber on deep ink. A working surface, not a gallery.
+   * Dark enough to hold difficulty. Warm enough to invite play.
+   * Flow motion — creative fields breathe.
+   */
+  creative: {
+    primaryColor: '#C4956A',    // warm amber — creative energy, neither fire nor gold
+    backgroundColor: '#12100E', // deep warm ink — a working surface after dark
+    tone: 'dark' as FieldTone,
+    density: 'spacious' as FieldDensity,
+    motion: 'flow' as FieldMotion,
+    imagery: 'symbolic' as FieldImagery,
+    voice: { length: 'medium' as FieldVoiceLength, style: 'reflective' as FieldVoiceStyle },
+    displayFont: 'Cormorant Garamond',
+    bodyFont: 'DM Sans',
+  },
 } satisfies Record<string, FieldTheme>;
