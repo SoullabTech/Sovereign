@@ -170,15 +170,12 @@ function FieldMaiaSession({ master }: { master: MasterField }) {
         content: t.content,
       }));
 
-      const res = await fetch('/api/oracle/conversation', {
+      const res = await fetch(`/api/fields/${slug}/oracle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          userId: userId.current,
-          sessionId: sessionId.current,
           conversationHistory: history,
-          masterFieldSlug: slug,
         }),
       });
 
@@ -186,8 +183,7 @@ function FieldMaiaSession({ master }: { master: MasterField }) {
       const reply =
         data.message ||
         data.response ||
-        data.coreMessage ||
-        "I'm here. Take your time.";
+        "Something went wrong. Try again.";
 
       setTurns((prev) => [...prev, { role: 'maia', content: reply }]);
     } catch {
