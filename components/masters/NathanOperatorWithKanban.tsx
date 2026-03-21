@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { MasterField } from '@/lib/masters/types';
 import NathanOperator from './NathanOperator';
 import FieldKanban from './FieldKanban';
@@ -46,6 +47,20 @@ export default function NathanOperatorWithKanban({ master }: Props) {
             height: '48px',
           }}
         >
+          <Link
+            href={`/fields/${master.slug}`}
+            style={{
+              fontSize: '0.65rem',
+              color: `${p.text}35`,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              marginRight: '12px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ← Field
+          </Link>
           {([
             { id: 'board' as View, label: 'Project Board' },
             { id: 'platform' as View, label: 'Platform View' },
