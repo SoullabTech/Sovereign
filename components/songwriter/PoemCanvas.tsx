@@ -1,52 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
-import { LyricsPanel } from './LyricsPanel';
-import { ChordsPanel } from './ChordsPanel';
-import { StructurePanel } from './StructurePanel';
 import { useAutosave } from '@/lib/songwriter/useAutosave';
 import { getValidMemberId } from '@/lib/http/apiBase';
-import type { SongSeed } from '@/lib/songwriter/types';
+import type { PoemSeed } from '@/lib/songwriter/types';
 
-interface SongCanvasProps {
-  seed: SongSeed;
+interface PoemCanvasProps {
+  poem: PoemSeed;
   inputEcho: string;
   onReset: () => void;
 }
 
-export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
-  const [lyrics, setLyrics] = useState(seed.lyrics);
-  const [activeTitle, setActiveTitle] = useState(seed.titles[0] ?? 'Untitled');
+export function PoemCanvas({ poem, inputEcho, onReset }: PoemCanvasProps) {
+  const [activeTitle, setActiveTitle] = useState(poem.titles[0] ?? 'Untitled');
+  const [poemText, setPoemText] = useState(poem.poem);
   const [memberId] = useState<string | null>(() => getValidMemberId());
-
-  // Draft for autosave — serialise edited lyrics to text
-  const draftText = [
-    lyrics.verse1.text,
-    lyrics.chorus.text,
-    lyrics.bridge?.text ?? '',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
 
   const { saveStatus } = useAutosave({
     memberId,
-    type: 'song',
+    type: 'poem',
     title: activeTitle,
     inputEcho,
-    seed,
-    draft: draftText,
+    seed: poem,
+    draft: poemText,
   });
-
-  function handleLyricChange(id: string, text: string) {
-    setLyrics(prev => ({
-      ...prev,
-      verse1: prev.verse1.id === id ? { ...prev.verse1, text } : prev.verse1,
-      chorus: prev.chorus.id === id ? { ...prev.chorus, text } : prev.chorus,
-      bridge: prev.bridge?.id === id ? { ...prev.bridge, text } : prev.bridge,
-    }));
-  }
 
   return (
     <motion.div
@@ -67,7 +46,7 @@ export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
               Title
             </div>
             <div className="flex flex-wrap gap-2">
-              {seed.titles.map(title => (
+              {poem.titles.map(title => (
                 <button
                   key={title}
                   onClick={() => setActiveTitle(title)}
@@ -88,7 +67,7 @@ export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
             {/* Save status */}
             {saveStatus === 'saved' && (
               <span
-                className="text-xs text-white/20 transition-opacity"
+                className="text-xs text-white/20"
                 style={{ fontFamily: 'Spectral, Georgia, serif' }}
               >
                 Saved
@@ -122,41 +101,87 @@ export function SongCanvas({ seed, inputEcho, onReset }: SongCanvasProps) {
                 Theme
               </span>
               <span className="text-white/60 text-xs" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-                {seed.interpretation.theme}
+                {poem.theme}
               </span>
             </div>
             <div>
               <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-                Feel
+                Form
               </span>
               <span className="text-white/40 text-xs italic" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
-                {seed.interpretation.emotionalTone}
+                {poem.form}
+              </span>
+            </div>
+            <div>
+              <span className="text-xs text-white/20 mr-2" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                Voice
+              </span>
+              <span className="text-white/40 text-xs italic" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+                {poem.voice}
               </span>
             </div>
           </div>
-          <p
-            className="text-white/30 text-xs leading-relaxed"
-            style={{ fontFamily: 'Spectral, Georgia, serif' }}
-          >
-            {seed.interpretation.narrativeDirection}
-          </p>
         </div>
       </div>
 
       {/* Divider */}
       <div className="border-t border-white/[0.06] mb-8" />
 
-      {/* Main panels */}
-      <div className="space-y-10">
-        <LyricsPanel lyrics={lyrics} onChange={handleLyricChange} />
-        <div className="border-t border-white/[0.06]" />
-        <ChordsPanel chords={seed.chords} />
-        <div className="border-t border-white/[0.06]" />
-        <StructurePanel structure={seed.structure} coreStatement={seed.coreStatement} />
+      {/* Poem — editable */}
+      <div className="mb-8">
+        <div
+          className="text-xs uppercase tracking-widest text-white/25 mb-3"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Draft
+        </div>
+        <textarea
+          value={poemText}
+          onChange={e => setPoemText(e.target.value)}
+          rows={poemText.split('\n').length + 2}
+          className="w-full bg-transparent border-none resize-none text-white/75 leading-loose
+                     focus:outline-none placeholder-white/20 text-base"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+          spellCheck={false}
+        />
+      </div>
+
+      <div className="border-t border-white/[0.06] mb-8" />
+
+      {/* Core Image */}
+      <div className="mb-6">
+        <div
+          className="text-xs uppercase tracking-widest text-white/25 mb-2"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Core image
+        </div>
+        <p
+          className="text-white/50 text-sm italic leading-relaxed"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          {poem.coreImage}
+        </p>
+      </div>
+
+      {/* Core Statement */}
+      <div className="mb-8">
+        <div
+          className="text-xs uppercase tracking-widest text-white/25 mb-2"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          What this poem holds
+        </div>
+        <p
+          className="text-white/40 text-sm leading-relaxed"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          {poem.coreStatement}
+        </p>
       </div>
 
       {/* Original input echo */}
-      <div className="mt-10 pt-6 border-t border-white/[0.04]">
+      <div className="pt-6 border-t border-white/[0.04]">
         <p
           className="text-white/15 text-xs italic leading-relaxed"
           style={{ fontFamily: 'Spectral, Georgia, serif' }}

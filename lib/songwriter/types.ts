@@ -91,3 +91,26 @@ export interface SeedResponse {
   /** Raw input echoed back for canvas hydration */
   inputEcho: string;
 }
+
+// ─── Poetry types ─────────────────────────────────────────────────────────────
+
+export interface PoemSeed {
+  id: string;
+  theme: string;
+  titles: string[];
+  form: 'free verse' | 'short lines' | 'prose poem';
+  poem: string;
+  voice: 'intimate' | 'observational' | 'abstract';
+  coreImage: string;
+  coreStatement: string;
+}
+
+export interface PoemRequest {
+  content: string;
+  memberId?: string;
+}
+
+export interface PoemResponse {
+  poem: PoemSeed;
+  inputEcho: string;
+}
