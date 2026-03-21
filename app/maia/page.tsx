@@ -35,7 +35,7 @@ import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine } from 'lucide-react';
 import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
@@ -1730,6 +1730,18 @@ function MAIAPageContent() {
                 >
                   <FlaskConical className="w-5 h-5" />
                   <span className="text-base">Labtools</span>
+                </button>
+
+                {/* Songwriter */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/maia/songwriter');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <PenLine className="w-5 h-5" />
+                  <span className="text-base">Songwriter</span>
                 </button>
 
                 {/* Soullab Studios - Main practitioner portal */}
