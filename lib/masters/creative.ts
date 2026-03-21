@@ -72,7 +72,7 @@ export const CREATIVE_FIELD: MasterField = {
       invitation: 'Songwriting and poetry, starting from wherever you are.',
       description:
         'The making surface. Bring a feeling, a line, a memory — MAIA translates it into a starting place: lyric, poem, or lyrical fragment. The work is yours from the first word.',
-      href: '/with-me',
+      href: '/maia/songwriter',
     },
     {
       slug: 'with-others',
