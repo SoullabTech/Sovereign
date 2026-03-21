@@ -11,7 +11,7 @@ export async function PATCH(
 ) {
   const { slug, id } = await params;
   const body = await req.json();
-  const { column_id, title, text, tags, author_id } = body;
+  const { column_id, title, text, tags, author_id, card_type } = body;
 
   // Fetch existing card to detect column change for notifications
   const existing = await query(
@@ -24,16 +24,23 @@ export async function PATCH(
   const previousColumnId = existing.rows[0].column_id as string;
   const cardTitle = (title?.trim() ?? existing.rows[0].title) as string;
 
+  const validCardTypes = ['build', 'decision', 'insight', 'question'] as const;
+  type CardType = typeof validCardTypes[number];
+  const safeCardType: CardType | null = card_type != null && validCardTypes.includes(card_type)
+    ? (card_type as CardType)
+    : null;
+
   const { rows } = await query(
     `UPDATE field_kanban_cards
      SET column_id = COALESCE($1, column_id),
          title = COALESCE($2, title),
          body = COALESCE($3, body),
          tags = COALESCE($4, tags),
+         card_type = COALESCE($7, card_type),
          updated_at = NOW()
      WHERE id = $5 AND field_slug = $6
      RETURNING *`,
-    [column_id || null, title || null, text !== undefined ? text : null, tags || null, id, slug]
+    [column_id || null, title || null, text !== undefined ? text : null, tags || null, id, slug, safeCardType]
   );
   if (!rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -51,7 +58,7 @@ export async function PATCH(
       fieldSlug: slug,
       actorId: author_id,
       eventType: 'card_moved',
-      payload: { cardId: id, title: cardTitle, fromColumn: previousColumnId, toColumn: column_id },
+      payload: { cardId: id, title: cardTitle, fromColumn: previousColumnId, toColumn: column_id, card_type: rows[0].card_type },
     });
   }
 

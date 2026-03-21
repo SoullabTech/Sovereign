@@ -24,18 +24,25 @@ interface Props {
   palette: Palette;
 }
 
+function typeTag(type: unknown): string {
+  if (!type || type === 'build') return '';
+  return ` [${String(type)}]`;
+}
+
 function formatEventDescription(event: ActivityEvent): string {
   const actor = event.actor_name ?? 'Someone';
   const p = event.payload ?? {};
   switch (event.event_type) {
     case 'card_added':
-      return `${actor} added "${p.title ?? 'card'}" to ${p.columnId ?? 'the board'}`;
+      return `${actor} added${typeTag(p.card_type)} "${p.title ?? 'card'}" to ${p.columnId ?? 'the board'}`;
     case 'card_moved':
-      return `${actor} moved "${p.title ?? 'card'}" to ${p.toColumn ?? 'a column'}`;
+      return `${actor} moved${typeTag(p.card_type)} "${p.title ?? 'card'}" to ${p.toColumn ?? 'a column'}`;
     case 'card_deleted':
       return `${actor} removed a card`;
     case 'dm_sent':
-      return 'Message sent';
+      return p.message_type && p.message_type !== 'build'
+        ? `${actor} sent a [${String(p.message_type)}] message`
+        : `${actor} sent a message`;
     case 'decision_logged':
       return 'New decision logged';
     default:

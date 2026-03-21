@@ -1,12 +1,22 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 
+type CardType = 'build' | 'decision' | 'insight' | 'question';
+
+const CARD_TYPES: { type: CardType; label: string; icon: string }[] = [
+  { type: 'build', label: 'Build', icon: '\u{1F527}' },
+  { type: 'decision', label: 'Decision', icon: '\u25C6' },
+  { type: 'insight', label: 'Insight', icon: '\u25CB' },
+  { type: 'question', label: 'Question', icon: '?' },
+];
+
 interface KanbanCard {
   id: string;
   column_id: string;
   title: string;
   body: string | null;
   tags: string[];
+  card_type?: CardType;
   created_at: string;
 }
 
@@ -26,6 +36,7 @@ interface Props {
 interface AddFormState {
   title: string;
   body: string;
+  cardType: CardType;
   submitting: boolean;
 }
 
@@ -94,6 +105,17 @@ function KanbanCardView({
         >
           {card.title}
         </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          {card.card_type && card.card_type !== 'build' && (
+            <span style={{
+              fontSize: '9px',
+              color: palette.primary,
+              opacity: 0.55,
+              letterSpacing: '0.04em',
+            }}>
+              [{card.card_type}]
+            </span>
+          )}
         <button
           onClick={() => onDelete(card.id)}
           title="Remove card"
@@ -113,6 +135,7 @@ function KanbanCardView({
         >
           ×
         </button>
+        </div>
       </div>
 
       {card.body && (
@@ -195,16 +218,16 @@ function AddCardForm({
   onCancel,
 }: {
   palette: Props['palette'];
-  onAdd: (title: string, body: string) => Promise<void>;
+  onAdd: (title: string, body: string, cardType: CardType) => Promise<void>;
   onCancel: () => void;
 }) {
-  const [form, setForm] = useState<AddFormState>({ title: '', body: '', submitting: false });
+  const [form, setForm] = useState<AddFormState>({ title: '', body: '', cardType: 'build', submitting: false });
 
   const submit = async () => {
     if (!form.title.trim() || form.submitting) return;
     setForm((f) => ({ ...f, submitting: true }));
-    await onAdd(form.title.trim(), form.body.trim());
-    setForm({ title: '', body: '', submitting: false });
+    await onAdd(form.title.trim(), form.body.trim(), form.cardType);
+    setForm({ title: '', body: '', cardType: 'build', submitting: false });
   };
 
   return (
@@ -256,6 +279,32 @@ function AddCardForm({
           boxSizing: 'border-box',
         }}
       />
+      {/* Type selector */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+        {CARD_TYPES.map(({ type, label, icon }) => {
+          const isSelected = form.cardType === type;
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setForm((f) => ({ ...f, cardType: type }))}
+              style={{
+                background: isSelected ? `${palette.primary}20` : 'none',
+                border: `1px solid ${isSelected ? palette.primary : `${palette.text}15`}`,
+                color: isSelected ? palette.primary : palette.text,
+                opacity: isSelected ? 1 : 0.35,
+                padding: '2px 8px',
+                fontSize: '10px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                letterSpacing: '0.03em',
+              }}
+            >
+              {icon} {label}
+            </button>
+          );
+        })}
+      </div>
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
         <button
           onClick={onCancel}
@@ -317,11 +366,11 @@ export default function FieldKanban({ fieldSlug, palette }: Props) {
     fetchCards();
   }, [fetchCards]);
 
-  const addCard = async (columnId: string, title: string, body: string) => {
+  const addCard = async (columnId: string, title: string, body: string, cardType: CardType = 'build') => {
     const res = await fetch(`/api/fields/${fieldSlug}/kanban`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ column_id: columnId, title, text: body || undefined }),
+      body: JSON.stringify({ column_id: columnId, title, text: body || undefined, card_type: cardType }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -461,7 +510,7 @@ export default function FieldKanban({ fieldSlug, palette }: Props) {
                 {addingTo === col.id ? (
                   <AddCardForm
                     palette={palette}
-                    onAdd={(title, body) => addCard(col.id, title, body)}
+                    onAdd={(title, body, cardType) => addCard(col.id, title, body, cardType)}
                     onCancel={() => setAddingTo(null)}
                   />
                 ) : (

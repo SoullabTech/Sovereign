@@ -18,12 +18,15 @@ export interface DMThreadMember {
   status: 'online' | 'away' | 'offline';
 }
 
+export type MessageType = 'build' | 'decision' | 'insight' | 'question';
+
 export interface DMMessage {
   id: string;
   dmThreadId: string;
   senderId: string;
   senderName: string;
   body: string;
+  messageType: MessageType;
   editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
@@ -160,6 +163,7 @@ export async function getDMMessages(
     sender_id: string;
     sender_name: string;
     body: string;
+    message_type: string;
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
@@ -181,6 +185,7 @@ export async function getDMMessages(
     senderId: row.sender_id,
     senderName: row.sender_name,
     body: row.body,
+    messageType: (row.message_type ?? 'build') as MessageType,
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
@@ -205,6 +210,7 @@ export async function getDMMessagesSince(
     sender_id: string;
     sender_name: string;
     body: string;
+    message_type: string;
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
@@ -225,6 +231,7 @@ export async function getDMMessagesSince(
     senderId: row.sender_id,
     senderName: row.sender_name,
     body: row.body,
+    messageType: (row.message_type ?? 'build') as MessageType,
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
@@ -234,10 +241,14 @@ export async function getDMMessagesSince(
 export async function sendDMMessage(
   dmThreadId: string,
   senderId: string,
-  body: string
+  body: string,
+  messageType: MessageType = 'build'
 ): Promise<DMMessage> {
   const trimmed = body.trim();
   if (!trimmed) throw new Error('Message body cannot be empty');
+
+  const validTypes: MessageType[] = ['build', 'decision', 'insight', 'question'];
+  const safeType: MessageType = validTypes.includes(messageType) ? messageType : 'build';
 
   // Verify membership
   const access = await query(
@@ -251,13 +262,14 @@ export async function sendDMMessage(
     dm_thread_id: string;
     sender_id: string;
     body: string;
+    message_type: string;
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
   }>(
-    `INSERT INTO team_dm_messages (dm_thread_id, sender_id, body)
-     VALUES ($1, $2, $3) RETURNING *`,
-    [dmThreadId, senderId, trimmed]
+    `INSERT INTO team_dm_messages (dm_thread_id, sender_id, body, message_type)
+     VALUES ($1, $2, $3, $4) RETURNING *`,
+    [dmThreadId, senderId, trimmed, safeType]
   );
 
   const row = result.rows[0];
@@ -284,6 +296,7 @@ export async function sendDMMessage(
     senderId: row.sender_id,
     senderName: sender?.name || sender?.username || 'Unknown',
     body: row.body,
+    messageType: (row.message_type ?? 'build') as MessageType,
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,

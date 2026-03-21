@@ -2,11 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+type MessageType = 'build' | 'decision' | 'insight' | 'question';
+
+const MESSAGE_TYPES: { type: MessageType; label: string; icon: string }[] = [
+  { type: 'build', label: 'Build', icon: '\u{1F527}' },
+  { type: 'decision', label: 'Decision', icon: '\u25C6' },
+  { type: 'insight', label: 'Insight', icon: '\u25CB' },
+  { type: 'question', label: 'Question', icon: '?' },
+];
+
 interface DMMessage {
   id: string;
   dm_thread_id: string;
   sender_id: string;
   body: string;
+  message_type?: MessageType;
   created_at: string;
 }
 
@@ -28,6 +38,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
   const [messages, setMessages] = useState<DMMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [compose, setCompose] = useState('');
+  const [selectedType, setSelectedType] = useState<MessageType>('build');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -59,7 +70,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
       const res = await fetch(`/api/team/dm/${threadId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: trimmed }),
+        body: JSON.stringify({ body: trimmed, message_type: selectedType }),
       });
       if (res.ok) {
         const { message } = await res.json();
@@ -177,14 +188,29 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
                   }}>
                     {msg.body}
                   </p>
-                  <p style={{
-                    margin: '0.25rem 0 0',
-                    fontSize: '0.6rem',
-                    color: `${palette.text}30`,
-                    textAlign: isViewer ? 'right' : 'left',
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: isViewer ? 'flex-end' : 'flex-start',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    marginTop: '0.25rem',
                   }}>
-                    {formatTime(msg.created_at)}
-                  </p>
+                    {msg.message_type && msg.message_type !== 'build' && (
+                      <span style={{
+                        fontSize: '0.58rem',
+                        color: `${palette.primary}80`,
+                        letterSpacing: '0.05em',
+                      }}>
+                        [{msg.message_type}]
+                      </span>
+                    )}
+                    <span style={{
+                      fontSize: '0.6rem',
+                      color: `${palette.text}30`,
+                    }}>
+                      {formatTime(msg.created_at)}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -198,9 +224,35 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
         padding: '0.75rem 1rem',
         borderTop: `1px solid ${palette.primary}20`,
         display: 'flex',
+        flexDirection: 'column',
         gap: '0.5rem',
-        alignItems: 'flex-end',
       }}>
+        {/* Type selector */}
+        <div style={{ display: 'flex', gap: '0.35rem' }}>
+          {MESSAGE_TYPES.map(({ type, label, icon }) => {
+            const isSelected = selectedType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setSelectedType(type)}
+                style={{
+                  background: isSelected ? `${palette.primary}20` : 'none',
+                  border: `1px solid ${isSelected ? palette.primary : `${palette.primary}25`}`,
+                  color: isSelected ? palette.primary : `${palette.text}40`,
+                  padding: '0.2rem 0.55rem',
+                  fontSize: '0.65rem',
+                  borderRadius: '2px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.04em',
+                  transition: 'all 0.1s',
+                }}
+              >
+                {icon} {label}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
         <textarea
           value={compose}
           onChange={(e) => setCompose(e.target.value)}
@@ -243,6 +295,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
         >
           {sending ? '...' : 'Send'}
         </button>
+        </div>
       </div>
     </div>
   );

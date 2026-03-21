@@ -40,14 +40,18 @@ export async function POST(
 
   const { dmId } = await params;
   const body = await request.json();
-  const { body: msgBody } = body;
+  const { body: msgBody, message_type } = body;
 
   if (!msgBody || typeof msgBody !== 'string') {
     return NextResponse.json({ error: 'body is required' }, { status: 400 });
   }
 
+  const validTypes = ['build', 'decision', 'insight', 'question'] as const;
+  type MsgType = typeof validTypes[number];
+  const safeType: MsgType = validTypes.includes(message_type) ? (message_type as MsgType) : 'build';
+
   try {
-    const message = await sendDMMessage(dmId, memberId, msgBody);
+    const message = await sendDMMessage(dmId, memberId, msgBody, safeType);
 
     // Fire-and-forget: partner notification + activity log
     void sendPartnerNotification({
@@ -60,7 +64,7 @@ export async function POST(
       fieldSlug: PARTNER_FIELD_SLUG,
       actorId: memberId,
       eventType: 'dm_sent',
-      payload: { dmId },
+      payload: { dmId, message_type: safeType },
     });
 
     return NextResponse.json({ message }, { status: 201 });
