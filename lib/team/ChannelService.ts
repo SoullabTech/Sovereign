@@ -2,7 +2,7 @@
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
 import { query } from '@/lib/db/postgres';
-import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember } from './types';
+import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind } from './types';
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -163,6 +163,7 @@ export async function getMessages(
     deleted_at: string | null;
     created_at: string;
     reply_count: string;
+    message_kind: string;
   }>(
     `SELECT
        tm.*,
@@ -191,6 +192,7 @@ export async function getMessages(
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [] as MessageReaction[],
     replyCount: parseInt(row.reply_count, 10) || 0,
   }));
@@ -247,6 +249,7 @@ export async function getMessagesSince(
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
+    message_kind: string;
   }>(
     `SELECT
        tm.*,
@@ -270,6 +273,7 @@ export async function getMessagesSince(
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
   }));
 }
@@ -291,6 +295,7 @@ export async function getReplies(
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
+    message_kind: string;
   }>(
     `SELECT
        tm.*,
@@ -315,6 +320,7 @@ export async function getReplies(
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [] as MessageReaction[],
   }));
 
@@ -358,11 +364,14 @@ export async function sendMessage(
   channelId: string,
   senderId: string,
   body: string,
-  parentId?: string
+  parentId?: string,
+  messageKind?: MessageKind
 ): Promise<TeamMessage> {
   const trimmed = body.trim();
   if (!trimmed) throw new Error('Message body cannot be empty');
   if (trimmed.length > 8000) throw new Error('Message too long (max 8000 chars)');
+
+  const kind: MessageKind = messageKind ?? 'build';
 
   const result = await query<{
     id: string;
@@ -373,11 +382,12 @@ export async function sendMessage(
     edited_at: string | null;
     deleted_at: string | null;
     created_at: string;
+    message_kind: string;
   }>(
-    `INSERT INTO team_messages (channel_id, sender_id, body, parent_id)
-     VALUES ($1, $2, $3, $4)
+    `INSERT INTO team_messages (channel_id, sender_id, body, parent_id, message_kind)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING *`,
-    [channelId, senderId, trimmed, parentId ?? null]
+    [channelId, senderId, trimmed, parentId ?? null, kind]
   );
 
   const row = result.rows[0];
@@ -406,6 +416,7 @@ export async function sendMessage(
     editedAt: row.edited_at,
     deletedAt: row.deleted_at,
     createdAt: row.created_at,
+    messageKind: (row.message_kind as MessageKind) ?? 'build',
     reactions: [],
   };
 }

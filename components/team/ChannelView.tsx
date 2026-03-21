@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { TeamChannel, TeamMessage } from '@/lib/team/types';
+import type { TeamChannel, TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageBubble, DateDivider } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ThreadPanel } from './ThreadPanel';
@@ -90,11 +90,11 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
     enabled: !loading,
   });
 
-  const sendMessage = async (body: string) => {
+  const sendMessage = async (body: string, messageKind: MessageKind = 'build') => {
     const res = await fetch(`/api/team/channels/${channel.id}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body, messageKind }),
     });
     if (!res.ok) throw new Error('Failed to send');
     const { message } = await res.json();

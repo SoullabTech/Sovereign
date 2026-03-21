@@ -52,13 +52,20 @@ export async function POST(
 
   const { channelId } = await params;
   const body = await request.json();
-  const { body: msgBody, parentId } = body;
+  const { body: msgBody, parentId, messageKind } = body;
 
   if (!msgBody || typeof msgBody !== 'string') {
     return NextResponse.json({ error: 'body is required' }, { status: 400 });
   }
 
-  const message = await sendMessage(channelId, memberId, msgBody, parentId);
+  const VALID_KINDS = ['build', 'question', 'decision', 'insight'] as const;
+  type MessageKind = typeof VALID_KINDS[number];
+  const validatedKind: MessageKind =
+    typeof messageKind === 'string' && (VALID_KINDS as readonly string[]).includes(messageKind)
+      ? (messageKind as MessageKind)
+      : 'build';
+
+  const message = await sendMessage(channelId, memberId, msgBody, parentId, validatedKind);
 
   // Mark read on send
   await markChannelRead(channelId, memberId);

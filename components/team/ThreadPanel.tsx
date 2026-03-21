@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { TeamMessage } from '@/lib/team/types';
+import type { TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 
@@ -36,11 +36,11 @@ export function ThreadPanel({
     if (!loading) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [loading, replies.length]);
 
-  const sendReply = async (body: string) => {
+  const sendReply = async (body: string, messageKind: MessageKind = 'build') => {
     const res = await fetch(`/api/team/channels/${channelId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body, parentId: parentMessage.id }),
+      body: JSON.stringify({ body, parentId: parentMessage.id, messageKind }),
     });
     if (!res.ok) throw new Error('Failed to send reply');
     const { message } = await res.json();

@@ -1,7 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import type { TeamMessage } from '@/lib/team/types';
+import type { TeamMessage, MessageKind } from '@/lib/team/types';
+
+const KIND_BADGE: Record<Exclude<MessageKind, 'build'>, { label: string; className: string }> = {
+  question: {
+    label: '? Question',
+    className: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+  },
+  decision: {
+    label: '\u2713 Decision',
+    className: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  },
+  insight: {
+    label: '\u25C8 Insight',
+    className: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  },
+};
 
 const QUICK_REACTIONS = ['👍', '❤️', '🔥', '🎉', '✅', '🤔'];
 
@@ -78,7 +93,7 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2 flex-wrap">
           <span className={`text-sm font-semibold ${isMaia ? 'text-amber-400/90' : 'text-white/90'}`}>
             {message.senderName}
             {isOwn && !isMaia && <span className="text-xs text-white/30 font-normal ml-1">(you)</span>}
@@ -86,6 +101,11 @@ export function MessageBubble({ message, currentMemberId, onReact, onOpenThread,
           <span className="text-xs text-white/30">{formatTime(message.createdAt)}</span>
           {message.editedAt && (
             <span className="text-xs text-white/25 italic">edited</span>
+          )}
+          {message.messageKind && message.messageKind !== 'build' && KIND_BADGE[message.messageKind] && (
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${KIND_BADGE[message.messageKind].className}`}>
+              {KIND_BADGE[message.messageKind].label}
+            </span>
           )}
         </div>
 

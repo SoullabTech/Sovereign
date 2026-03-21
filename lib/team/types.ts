@@ -37,6 +37,7 @@ export interface TeamMessage {
   editedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
+  messageKind?: MessageKind;
   // Computed
   reactions: MessageReaction[];
   replyCount?: number;
@@ -56,9 +57,12 @@ export interface TeamMemberPresence {
   lastSeenAt: string;
 }
 
+export type MessageKind = 'build' | 'question' | 'decision' | 'insight';
+
 export interface SendMessageBody {
   body: string;
   parentId?: string;
+  messageKind?: MessageKind;
 }
 
 export interface ChannelMember {

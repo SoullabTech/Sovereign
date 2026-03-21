@@ -1,11 +1,18 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import type { PromptScaffoldField } from '@/lib/team/types';
+import type { PromptScaffoldField, MessageKind } from '@/lib/team/types';
+
+const KIND_OPTIONS: { value: MessageKind; label: string }[] = [
+  { value: 'build',    label: 'Build' },
+  { value: 'question', label: 'Question' },
+  { value: 'decision', label: 'Decision' },
+  { value: 'insight',  label: 'Insight' },
+];
 
 interface MessageInputProps {
   channelName: string;
-  onSend: (body: string) => Promise<void>;
+  onSend: (body: string, kind: MessageKind) => Promise<void>;
   disabled?: boolean;
   promptScaffold?: PromptScaffoldField[];
 }
@@ -15,6 +22,7 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
   const [sending, setSending] = useState(false);
   const [structured, setStructured] = useState(false);
   const [scaffoldValues, setScaffoldValues] = useState<Record<string, string>>({});
+  const [selectedKind, setSelectedKind] = useState<MessageKind>('build');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasScaffold = promptScaffold && promptScaffold.length > 0;
@@ -56,9 +64,10 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
     if (!body || sending) return;
     setSending(true);
     try {
-      await onSend(body);
+      await onSend(body, selectedKind);
       setValue('');
       setScaffoldValues({});
+      setSelectedKind('build');
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
     } finally {
       setSending(false);
@@ -143,6 +152,21 @@ export function MessageInput({ channelName, onSend, disabled, promptScaffold }: 
             className="flex-1 bg-transparent text-sm text-white/90 placeholder-white/25 resize-none outline-none leading-relaxed py-1"
             style={{ minHeight: '24px', maxHeight: '160px' }}
           />
+          {/* Kind selector — secondary, minimal */}
+          <select
+            value={selectedKind}
+            onChange={e => setSelectedKind(e.target.value as MessageKind)}
+            disabled={disabled || sending}
+            className="flex-shrink-0 text-xs bg-transparent text-white/35 hover:text-white/60 border-none outline-none cursor-pointer mb-0.5 pr-1"
+            title="Message kind"
+            aria-label="Message kind"
+          >
+            {KIND_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value} className="bg-zinc-800 text-white/80">
+                {opt.label}
+              </option>
+            ))}
+          </select>
           <button
             onClick={handleSend}
             disabled={!value.trim() || sending || disabled}
