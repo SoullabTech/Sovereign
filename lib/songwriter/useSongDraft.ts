@@ -22,6 +22,8 @@ export interface SongDraftState {
 interface UseSongDraftReturn extends SongDraftState {
   initDraft: (seed: SongSeed, seedPrompt: string) => Promise<void>;
   updateLyric: (id: string, text: string) => void;
+  replaceLyric: (section: 'verse1' | 'chorus' | 'bridge', lyric: LyricSection) => void;
+  replaceChords: (chords: ChordSuggestion) => void;
   updateTitle: (title: string) => void;
   forceSave: () => Promise<void>;
 }
@@ -146,6 +148,20 @@ export function useSongDraft(): UseSongDraftReturn {
     });
   }, [scheduleSave]);
 
+  const replaceLyric = useCallback((section: 'verse1' | 'chorus' | 'bridge', lyric: LyricSection) => {
+    setLyrics(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, [section]: lyric };
+      scheduleSave({ lyrics: updated });
+      return updated;
+    });
+  }, [scheduleSave]);
+
+  const replaceChords = useCallback((newChords: ChordSuggestion) => {
+    setChords(newChords);
+    scheduleSave({ chords: newChords });
+  }, [scheduleSave]);
+
   const updateTitle = useCallback((newTitle: string) => {
     setTitle(newTitle);
     scheduleSave({ title: newTitle });
@@ -159,6 +175,6 @@ export function useSongDraft(): UseSongDraftReturn {
   return {
     songId, title, lyrics, chords, structure,
     saveState, lastSavedAt,
-    initDraft, updateLyric, updateTitle, forceSave,
+    initDraft, updateLyric, replaceLyric, replaceChords, updateTitle, forceSave,
   };
 }

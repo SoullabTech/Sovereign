@@ -1,12 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { RotateCcw, Check, Loader2, AlertCircle } from 'lucide-react';
+import { RotateCcw, Check, Loader2, AlertCircle, Download } from 'lucide-react';
 import { LyricsPanel } from './LyricsPanel';
 import { ChordsPanel } from './ChordsPanel';
 import { StructurePanel } from './StructurePanel';
 import type { SongSeed, LyricSection, ChordSuggestion } from '@/lib/songwriter/types';
 import type { SaveState } from '@/lib/songwriter/useSongDraft';
+
+type SectionKey = 'verse1' | 'chorus' | 'bridge';
 
 interface SongCanvasProps {
   seed: SongSeed;
@@ -23,6 +25,8 @@ interface SongCanvasProps {
   lastSavedAt: Date | null;
   onTitleChange: (title: string) => void;
   onLyricChange: (id: string, text: string) => void;
+  onLyricReplace: (section: SectionKey, lyric: LyricSection) => void;
+  onChordsReplace: (chords: ChordSuggestion) => void;
   onReset: () => void;
 }
 
@@ -68,8 +72,44 @@ export function SongCanvas({
   lastSavedAt,
   onTitleChange,
   onLyricChange,
+  onLyricReplace,
+  onChordsReplace,
   onReset,
 }: SongCanvasProps) {
+
+  function downloadTxt() {
+    const lines = [
+      title,
+      '',
+      `Based on: "${inputEcho}"`,
+      '',
+      '— Verse 1 —',
+      lyrics.verse1.text,
+      '',
+      '— Chorus —',
+      lyrics.chorus.text,
+    ];
+    if (lyrics.bridge) {
+      lines.push('', '— Bridge —', lyrics.bridge.text);
+    }
+    lines.push(
+      '',
+      '— Chords —',
+      `Key: ${chords.key}${chords.capo > 0 ? ` (Capo ${chords.capo})` : ''}`,
+      `Verse: ${chords.verse.join(' - ')}`,
+      `Chorus: ${chords.chorus.join(' - ')}`,
+      chords.bridge?.length ? `Bridge: ${chords.bridge.join(' - ')}` : '',
+    );
+
+    const blob = new Blob([lines.filter(l => l !== undefined).join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'song'}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -128,6 +168,14 @@ export function SongCanvas({
               <RotateCcw size={12} />
               New seed
             </button>
+            <button
+              onClick={downloadTxt}
+              className="flex items-center gap-1.5 text-xs text-white/20 hover:text-amber-400/50 transition-colors"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+            >
+              <Download size={12} />
+              Download
+            </button>
             <SaveIndicator state={saveState} lastSavedAt={lastSavedAt} />
           </div>
         </div>
@@ -157,9 +205,22 @@ export function SongCanvas({
       <div className="border-t border-white/[0.06] mb-8" />
 
       <div className="space-y-10">
-        <LyricsPanel lyrics={lyrics} onChange={onLyricChange} />
+        <LyricsPanel
+          lyrics={lyrics}
+          seed={seed}
+          currentChords={chords}
+          seedPrompt={inputEcho}
+          onChange={onLyricChange}
+          onLyricReplace={onLyricReplace}
+        />
         <div className="border-t border-white/[0.06]" />
-        <ChordsPanel chords={chords} />
+        <ChordsPanel
+          chords={chords}
+          seed={seed}
+          currentLyrics={lyrics}
+          seedPrompt={inputEcho}
+          onChordsReplace={onChordsReplace}
+        />
         <div className="border-t border-white/[0.06]" />
         <StructurePanel structure={seed.structure} coreStatement={seed.coreStatement} />
       </div>

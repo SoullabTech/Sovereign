@@ -106,6 +106,8 @@ export default function SongwriterPage() {
             lastSavedAt={draft.lastSavedAt}
             onTitleChange={draft.updateTitle}
             onLyricChange={draft.updateLyric}
+            onLyricReplace={draft.replaceLyric}
+            onChordsReplace={draft.replaceChords}
             onReset={reset}
           />
         )}

@@ -1,23 +1,63 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
-import type { LyricSection } from '@/lib/songwriter/types';
+import { Copy, Check, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import type { LyricSection, SongSeed, ChordSuggestion } from '@/lib/songwriter/types';
+
+type SectionKey = 'verse1' | 'chorus' | 'bridge';
 
 interface LyricBlockProps {
   label: string;
+  sectionKey: SectionKey;
   section: LyricSection;
+  seed: SongSeed;
+  currentLyrics: LyricsPanelProps['lyrics'];
+  currentChords: ChordSuggestion;
+  seedPrompt: string;
   onChange: (id: string, text: string) => void;
+  onReplace: (sectionKey: SectionKey, lyric: LyricSection) => void;
 }
 
-function LyricBlock({ label, section, onChange }: LyricBlockProps) {
+function LyricBlock({
+  label, sectionKey, section, seed, currentLyrics, currentChords, seedPrompt, onChange, onReplace,
+}: LyricBlockProps) {
   const [copied, setCopied] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [refining, setRefining] = useState(false);
 
   function copyText() {
     navigator.clipboard.writeText(section.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
+
+  async function callRefine(action: 'regenerate' | 'refine') {
+    const setter = action === 'regenerate' ? setRegenerating : setRefining;
+    setter(true);
+    try {
+      const res = await fetch('/api/songwriter/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          section: sectionKey,
+          seed,
+          currentLyrics,
+          currentChords,
+          seedPrompt,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.lyric) onReplace(sectionKey, data.lyric);
+    } catch (err) {
+      console.error('[LyricBlock] refine failed:', err);
+    } finally {
+      setter(false);
+    }
+  }
+
+  const busy = regenerating || refining;
 
   return (
     <div className="group">
@@ -28,13 +68,41 @@ function LyricBlock({ label, section, onChange }: LyricBlockProps) {
         >
           {label}
         </span>
-        <button
-          onClick={copyText}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-white/30 hover:text-amber-400/60 p-1"
-          title="Copy"
-        >
-          {copied ? <Check size={12} /> : <Copy size={12} />}
-        </button>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => callRefine('regenerate')}
+            disabled={busy}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-xs text-white/30 hover:text-amber-400/60 transition-colors disabled:opacity-40"
+            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+            title="Regenerate"
+          >
+            {regenerating
+              ? <Loader2 size={10} className="animate-spin" />
+              : <RefreshCw size={10} />
+            }
+            <span>Regenerate</span>
+          </button>
+          <button
+            onClick={() => callRefine('refine')}
+            disabled={busy}
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-xs text-white/30 hover:text-amber-400/60 transition-colors disabled:opacity-40"
+            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+            title="Make it more me"
+          >
+            {refining
+              ? <Loader2 size={10} className="animate-spin" />
+              : <Sparkles size={10} />
+            }
+            <span>More like me</span>
+          </button>
+          <button
+            onClick={copyText}
+            className="text-white/30 hover:text-amber-400/60 p-1 transition-colors"
+            title="Copy"
+          >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+          </button>
+        </div>
       </div>
       <textarea
         value={section.text}
@@ -56,10 +124,14 @@ interface LyricsPanelProps {
     chorus: LyricSection;
     bridge: LyricSection | null;
   };
+  seed: SongSeed;
+  currentChords: ChordSuggestion;
+  seedPrompt: string;
   onChange: (id: string, text: string) => void;
+  onLyricReplace: (section: SectionKey, lyric: LyricSection) => void;
 }
 
-export function LyricsPanel({ lyrics, onChange }: LyricsPanelProps) {
+export function LyricsPanel({ lyrics, seed, currentChords, seedPrompt, onChange, onLyricReplace }: LyricsPanelProps) {
   function copyAll() {
     const parts = [
       `Verse 1\n${lyrics.verse1.text}`,
@@ -68,6 +140,8 @@ export function LyricsPanel({ lyrics, onChange }: LyricsPanelProps) {
     ].filter(Boolean);
     navigator.clipboard.writeText(parts.join('\n'));
   }
+
+  const sharedProps = { seed, currentLyrics: lyrics, currentChords, seedPrompt, onChange, onReplace: onLyricReplace };
 
   return (
     <section>
@@ -88,10 +162,10 @@ export function LyricsPanel({ lyrics, onChange }: LyricsPanelProps) {
       </div>
 
       <div className="space-y-5">
-        <LyricBlock label="Verse 1" section={lyrics.verse1} onChange={onChange} />
-        <LyricBlock label="Chorus" section={lyrics.chorus} onChange={onChange} />
+        <LyricBlock label="Verse 1" sectionKey="verse1" section={lyrics.verse1} {...sharedProps} />
+        <LyricBlock label="Chorus" sectionKey="chorus" section={lyrics.chorus} {...sharedProps} />
         {lyrics.bridge && (
-          <LyricBlock label="Bridge" section={lyrics.bridge} onChange={onChange} />
+          <LyricBlock label="Bridge" sectionKey="bridge" section={lyrics.bridge} {...sharedProps} />
         )}
       </div>
     </section>
