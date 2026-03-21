@@ -45,7 +45,9 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch(`/api/team/dm/${threadId}/messages?limit=20`)
+    fetch(`/api/team/dm/${threadId}/messages?limit=20`, {
+      headers: { 'x-member-id': viewerMemberId },
+    })
       .then((r) => r.json())
       .then((data) => {
         // API returns messages newest-first; reverse for display
@@ -57,7 +59,7 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
         setError('Could not load messages');
         setLoading(false);
       });
-  }, [threadId]);
+  }, [threadId, viewerMemberId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,7 +72,10 @@ export default function PartnerCommsPanel({ threadId, viewerMemberId, partnerNam
     try {
       const res = await fetch(`/api/team/dm/${threadId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-member-id': viewerMemberId,
+        },
         body: JSON.stringify({ body: trimmed, message_type: selectedType }),
       });
       if (res.ok) {
