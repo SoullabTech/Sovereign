@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getFieldBySlug } from '@/lib/masters/registry';
+import { sendPartnerNotification } from '@/lib/masters/partnerNotifications';
+import { logFieldActivity } from '@/lib/masters/fieldActivityLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,5 +54,22 @@ export async function POST(
      RETURNING *`,
     [slug, column_id, title.trim(), text || null, tags || [], author_id || null]
   );
+
+  if (author_id) {
+    void sendPartnerNotification({
+      event: 'card_added',
+      actorId: author_id,
+      fieldSlug: slug,
+      cardTitle: title.trim(),
+      columnId: column_id,
+    });
+    void logFieldActivity({
+      fieldSlug: slug,
+      actorId: author_id,
+      eventType: 'card_added',
+      payload: { cardId: rows[0].id, title: title.trim(), columnId: column_id },
+    });
+  }
+
   return NextResponse.json({ card: rows[0] }, { status: 201 });
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import PartnerBoard from './PartnerBoard';
 import PartnerCommsPanel from './PartnerCommsPanel';
+import FieldActivityFeed from './FieldActivityFeed';
 
 const KELLY_PALETTE = {
   primary: '#B08060',
@@ -115,6 +116,17 @@ export default function PartnerWorkspace() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Activity Feed */}
+      <div style={{
+        marginTop: '2.5rem',
+        background: `${palette.primary}06`,
+        border: `1px solid ${palette.primary}15`,
+        padding: '1.25rem 1.5rem',
+        borderRadius: '2px',
+      }}>
+        <FieldActivityFeed fieldSlug="kelly" palette={palette} />
       </div>
 
       {/* Bottom ambient rule */}

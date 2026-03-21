@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getDMMessages, sendDMMessage, markDMRead } from '@/lib/team/DMService';
+import { sendPartnerNotification } from '@/lib/masters/partnerNotifications';
+import { logFieldActivity } from '@/lib/masters/fieldActivityLog';
+
+// Slugs corresponding to the Kelly/Nathan partner relationship
+const PARTNER_FIELD_SLUG = 'kelly';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,6 +48,21 @@ export async function POST(
 
   try {
     const message = await sendDMMessage(dmId, memberId, msgBody);
+
+    // Fire-and-forget: partner notification + activity log
+    void sendPartnerNotification({
+      event: 'dm_sent',
+      actorId: memberId,
+      fieldSlug: PARTNER_FIELD_SLUG,
+      messagePreview: msgBody.slice(0, 120),
+    });
+    void logFieldActivity({
+      fieldSlug: PARTNER_FIELD_SLUG,
+      actorId: memberId,
+      eventType: 'dm_sent',
+      payload: { dmId },
+    });
+
     return NextResponse.json({ message }, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Error';
