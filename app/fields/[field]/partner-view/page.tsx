@@ -7,8 +7,9 @@ export const dynamic = 'force-dynamic';
 export default async function PartnerViewPage({ params }: { params: Promise<{ field: string }> }) {
   const { field: slug } = await params;
   const master = getFieldBySlug(slug);
-  // Partner workspace currently available only on Kelly's field
-  if (!master || slug !== 'kelly') notFound();
 
-  return <PartnerWorkspace />;
+  // Only available to fields that have partnerSlugs configured
+  if (!master || !master.partnerSlugs?.length) notFound();
+
+  return <PartnerWorkspace viewerSlug={slug} />;
 }

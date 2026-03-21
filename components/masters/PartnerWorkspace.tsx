@@ -6,19 +6,42 @@ import PartnerCommsPanel from './PartnerCommsPanel';
 import FieldActivityFeed from './FieldActivityFeed';
 import DecisionLedger from './DecisionLedger';
 
-const KELLY_PALETTE = {
+const PALETTE = {
   primary: '#B08060',
   background: '#1A140E',
   text: '#E8DDD0',
   accent: '#8A6040',
 };
 
-// Known constants — Kelly and Nathan partner relationship
-const KELLY_MEMBER_ID = 'ce284751-e457-42f6-89b6-bc07d0876682';
+// Partner relationship constants
 const DM_THREAD_ID = '06221c92-9244-4dd5-a4fb-fc328e5d3576';
+const MEMBER_IDS: Record<string, string> = {
+  kelly: 'ce284751-e457-42f6-89b6-bc07d0876682',
+  nathan: '7ce3b84c-a33c-4fcb-9aa8-03cf7a7eae78',
+};
+const PARTNER_NAMES: Record<string, string> = {
+  kelly: 'Nathan Kane',
+  nathan: 'Kelly',
+};
+const BACK_LINKS: Record<string, string> = {
+  kelly: '/fields/kelly',
+  nathan: '/fields/nathan',
+};
+const BACK_LABELS: Record<string, string> = {
+  kelly: "← Kelly's Field",
+  nathan: "← Nathan's Field",
+};
 
-export default function PartnerWorkspace() {
-  const palette = KELLY_PALETTE;
+interface Props {
+  viewerSlug?: string;
+}
+
+export default function PartnerWorkspace({ viewerSlug = 'kelly' }: Props) {
+  const palette = PALETTE;
+  const viewerMemberId = MEMBER_IDS[viewerSlug] ?? MEMBER_IDS.kelly;
+  const partnerName = PARTNER_NAMES[viewerSlug] ?? 'Partner';
+  const backHref = BACK_LINKS[viewerSlug] ?? '/fields/kelly';
+  const backLabel = BACK_LABELS[viewerSlug] ?? "← Field";
 
   return (
     <div
@@ -31,7 +54,7 @@ export default function PartnerWorkspace() {
     >
       {/* Back */}
       <Link
-        href="/fields/kelly"
+        href={backHref}
         style={{
           fontSize: '0.7rem',
           color: `${palette.text}40`,
@@ -42,7 +65,7 @@ export default function PartnerWorkspace() {
           marginBottom: '2.5rem',
         }}
       >
-        ← Kelly&apos;s Field
+        {backLabel}
       </Link>
 
       {/* Header */}
@@ -63,7 +86,7 @@ export default function PartnerWorkspace() {
           color: `${palette.text}50`,
           fontWeight: 300,
         }}>
-          Nathan Kane
+          {partnerName}
         </p>
         <div style={{
           width: '2.5rem',
@@ -88,8 +111,8 @@ export default function PartnerWorkspace() {
           borderRadius: '2px',
         }}>
           <PartnerBoard
-            viewerSlug="kelly"
-            partnerSlug="nathan"
+            viewerSlug={viewerSlug}
+            partnerSlug={viewerSlug === 'kelly' ? 'nathan' : 'kelly'}
             palette={palette}
           />
         </div>
@@ -110,8 +133,8 @@ export default function PartnerWorkspace() {
             <div style={{ flex: 1, minHeight: 0 }}>
               <PartnerCommsPanel
                 threadId={DM_THREAD_ID}
-                viewerMemberId={KELLY_MEMBER_ID}
-                partnerName="Nathan"
+                viewerMemberId={viewerMemberId}
+                partnerName={partnerName}
                 palette={palette}
               />
             </div>

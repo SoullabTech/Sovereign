@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { MasterField } from '@/lib/masters/types';
+import { getFieldBySlug } from '@/lib/masters/registry';
 
 interface Props {
   master: MasterField;
@@ -136,7 +137,10 @@ export default function FieldThreshold({ master }: Props) {
         </nav>
 
         {/* Partner Workspace — visible secondary action when partnerSlugs is set */}
-        {master.partnerSlugs && master.partnerSlugs.length > 0 && (
+        {master.partnerSlugs && master.partnerSlugs.length > 0 && (() => {
+          const partnerField = getFieldBySlug(master.partnerSlugs![0]);
+          const partnerName = partnerField?.shortName ?? 'your partner';
+          return (
           <div style={{ width: '100%', marginTop: isSpacious ? '2.5rem' : '1.75rem' }}>
             {/* Divider */}
             <div
@@ -185,11 +189,12 @@ export default function FieldThreshold({ master }: Props) {
                   letterSpacing: '0.03em',
                 }}
               >
-                Work with Nathan on builds, decisions, and shared direction.
+                Work with {partnerName} on builds, decisions, and shared direction.
               </span>
             </Link>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Keyframe for breath animation */}
