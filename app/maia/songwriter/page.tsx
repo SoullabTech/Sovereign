@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { SeedInput } from '@/components/songwriter/SeedInput';
 import { SongCanvas } from '@/components/songwriter/SongCanvas';
@@ -11,6 +12,8 @@ import type { SongSeed } from '@/lib/songwriter/types';
 type Phase = 'input' | 'loading' | 'canvas' | 'error';
 
 export default function SongwriterPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [phase, setPhase] = useState<Phase>('input');
   const [seed, setSeed] = useState<SongSeed | null>(null);
   const [inputEcho, setInputEcho] = useState('');
@@ -18,6 +21,14 @@ export default function SongwriterPage() {
   const [draftsKey, setDraftsKey] = useState(0);
 
   const draft = useSongDraft();
+
+  // ─── Auto-resume from ?resume=id (used by /songs page) ─────────────────────
+
+  useEffect(() => {
+    const resumeId = searchParams.get('resume');
+    if (resumeId) handleResume(resumeId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── Generate seed ─────────────────────────────────────────────────────────
 
@@ -43,9 +54,8 @@ export default function SongwriterPage() {
       setSeed(newSeed);
       setPhase('canvas');
 
-      // Immediately create a draft record
       await draft.initDraft(newSeed, content);
-      setDraftsKey(k => k + 1); // refresh recent drafts list
+      setDraftsKey(k => k + 1);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');
       setPhase('error');
@@ -62,14 +72,11 @@ export default function SongwriterPage() {
       const data = await res.json();
       const song = data.song;
 
-      // Restore canvas from saved state
       const savedSeed: SongSeed = song.seed_payload ?? song.canvas?.seedPayload;
       if (!savedSeed) return;
 
       setSeed(savedSeed);
       setInputEcho(song.seed_prompt ?? '');
-
-      // Re-init draft state with existing id
       draft.initDraft(savedSeed, song.seed_prompt ?? '');
       setPhase('canvas');
     } catch (err) {
@@ -82,6 +89,7 @@ export default function SongwriterPage() {
     setInputEcho('');
     setErrorMsg('');
     setPhase('input');
+    router.replace('/maia/songwriter');
   }
 
   return (
@@ -90,7 +98,7 @@ export default function SongwriterPage() {
         {(phase === 'input' || phase === 'loading') && (
           <div key="input">
             <SeedInput onSeed={handleSeed} isLoading={phase === 'loading'} />
-            <RecentDrafts onResume={handleResume} refreshKey={draftsKey} />
+            <RecentDrafts onResume={handleResume} refreshKey={draftsKey} onViewAll={() => router.push('/maia/songwriter/songs')} />
           </div>
         )}
 

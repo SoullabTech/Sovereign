@@ -13,6 +13,7 @@ interface DraftSummary {
 
 interface RecentDraftsProps {
   onResume: (id: string) => void;
+  onViewAll?: () => void;
   refreshKey?: number;
 }
 
@@ -26,7 +27,7 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export function RecentDrafts({ onResume, refreshKey }: RecentDraftsProps) {
+export function RecentDrafts({ onResume, onViewAll, refreshKey }: RecentDraftsProps) {
   const [drafts, setDrafts] = useState<DraftSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,11 +43,22 @@ export function RecentDrafts({ onResume, refreshKey }: RecentDraftsProps) {
 
   return (
     <div className="mt-8 max-w-2xl mx-auto px-4">
-      <div
-        className="text-xs uppercase tracking-widest text-white/20 mb-3"
-        style={{ fontFamily: 'Spectral, Georgia, serif' }}
-      >
-        Recent drafts
+      <div className="flex items-center justify-between mb-3">
+        <div
+          className="text-xs uppercase tracking-widest text-white/20"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Recent drafts
+        </div>
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="text-xs text-white/20 hover:text-amber-400/50 transition-colors"
+            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+          >
+            All songs →
+          </button>
+        )}
       </div>
       <div className="space-y-1.5">
         {drafts.map(draft => (
