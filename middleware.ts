@@ -128,7 +128,8 @@ export async function middleware(req: NextRequest) {
 
   if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
     const url = req.nextUrl.clone();
-    if (!pathname.startsWith('/fields/')) {
+    const isStaticAsset = pathname.startsWith('/_next/') || /\.[a-zA-Z0-9]+$/.test(pathname);
+    if (!isStaticAsset && !pathname.startsWith('/fields/') && !pathname.startsWith('/api/')) {
       url.pathname = pathname === '/' ? `/fields/${masterSlug}` : `/fields/${masterSlug}${pathname}`;
     }
     return NextResponse.rewrite(url);
