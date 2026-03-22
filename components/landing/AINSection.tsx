@@ -34,7 +34,7 @@ export function AINSection() {
   return (
     <section
       id="ain"
-      className="py-24 sm:py-32 px-6 border-t border-white/[0.05]"
+      className="py-20 sm:py-24 px-6 border-t border-white/[0.05]"
       style={{
         background: 'linear-gradient(180deg, #080c18 0%, #0b0f1c 100%)',
       }}
@@ -42,12 +42,13 @@ export function AINSection() {
       <div className="max-w-5xl mx-auto">
         <SectionReveal>
           {/* Header */}
-          <div className="mb-14">
+          <div className="mb-12">
+            <p className="text-white/20 text-xs mb-3">MAIA is the interface. AIN is the engine.</p>
             <p className="text-xs uppercase tracking-widest text-amber-500/50 mb-4">The engine</p>
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
               <div>
                 <h2
-                  className="text-4xl sm:text-5xl font-extralight text-white leading-tight"
+                  className="text-3xl sm:text-4xl font-extralight text-white leading-tight"
                   style={{ fontFamily: "'Crimson Pro', serif" }}
                 >
                   AIN
