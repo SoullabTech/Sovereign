@@ -5,28 +5,28 @@ import { SectionReveal } from './SectionReveal';
 
 const CAPABILITIES = [
   {
+    label: 'Relational intelligence',
+    sub: 'AIN doesn\'t just process input — it tracks the evolving relationship between person and system over time. Depth, trust, and history are first-class citizens.',
+  },
+  {
     label: 'Pattern recognition',
-    sub: 'Detects structural signals across language, behavior, and time — not just surface content.',
+    sub: 'Detects structural signals across language, behavior, and time — beneath surface content, to the mechanism driving the pattern.',
   },
   {
     label: 'Sovereign memory',
-    sub: 'Tracks what matters across sessions with full consent architecture. Nothing stored without awareness.',
+    sub: 'Tracks what matters across sessions with full consent architecture. Nothing stored without awareness. Memory that serves the person, not the model.',
   },
   {
     label: 'Elemental intelligence routing',
     sub: '60 elements, 12 phases. Every response is preceded by a developmental read — the engine meets people where they actually are.',
   },
   {
-    label: 'Deployable into any platform',
-    sub: 'AIN is not locked to MAIA. Partner portals, practitioner tools, and client platforms each get the consciousness layer underneath.',
-  },
-  {
     label: 'Field coherence architecture',
-    sub: 'Processes through coherence and emergence rather than pattern optimization. Validated mathematically.',
+    sub: 'Processes through coherence and emergence rather than pattern optimization. Intelligence as right relationship, not mechanical computation.',
   },
   {
-    label: 'Self-hosted and sovereign',
-    sub: 'No cloud middlemen. No managed databases. Every byte stays on infrastructure you control.',
+    label: 'Deployable into any platform',
+    sub: 'AIN is not locked to MAIA. Partner portals, practitioner tools, and client platforms each get the relational intelligence layer underneath.',
   },
 ];
 
@@ -61,7 +61,7 @@ export function AINSection() {
                 </p>
               </div>
               <p className="max-w-sm text-white/40 text-sm leading-relaxed">
-                A distributed intelligence architecture for depth, pattern recognition, and relational coherence.
+                A relational intelligence technology — built for depth, pattern recognition, and coherence across time.
                 The layer that powers MAIA — and everything else Soullab builds.
               </p>
             </div>
