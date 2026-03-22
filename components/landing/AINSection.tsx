@@ -5,8 +5,8 @@ import { SectionReveal } from './SectionReveal';
 
 const CAPABILITIES = [
   {
-    label: 'Relational intelligence',
-    sub: 'AIN doesn\'t just process input — it tracks the evolving relationship between person and system over time. Depth, trust, and history are first-class citizens.',
+    label: 'Attending intelligence',
+    sub: 'AIN doesn\'t just process — it attends. It holds the evolving relationship between person and system over time, tracking depth, trust, and history as primary signals.',
   },
   {
     label: 'Pattern recognition',
@@ -57,12 +57,12 @@ export function AINSection() {
                   className="mt-2 text-lg sm:text-xl font-extralight text-white/50"
                   style={{ fontFamily: "'Crimson Pro', serif" }}
                 >
-                  Awareness Intelligence Network
+                  Awareness Intelligence Network — attending, not just processing
                 </p>
               </div>
               <p className="max-w-sm text-white/40 text-sm leading-relaxed">
-                A relational intelligence technology — built for depth, pattern recognition, and coherence across time.
-                The layer that powers MAIA — and everything else Soullab builds.
+                An awareness intelligence — built to attend, not just process. Relational depth, structural pattern recognition, and coherence across time.
+                The layer beneath MAIA. The engine behind everything Soullab builds.
               </p>
             </div>
 
