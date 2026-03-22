@@ -5,65 +5,62 @@ import Link from 'next/link';
 /**
  * AuditFunnelSections — Homepage audit narrative
  *
- * Arc: Who → Why → What you get → How it works → CTA
+ * Arc: Who (selective) → Why (undeniable) → What (concrete) → How (clear) → Recognition → CTA
  */
 
 const WHO = [
-  { label: 'Founders', sub: 'Building something that needs to hold your full weight' },
-  { label: 'Creators', sub: 'Vision is clear but execution keeps fragmenting' },
-  { label: 'Guides & coaches', sub: 'You serve others well but something stays unnamed in yourself' },
-  { label: 'Operators', sub: 'The system works but you\'re not sure it\'s yours' },
-  { label: 'Anyone sensing a gap', sub: 'Between who you are, how you show up, and how things actually go' },
+  { label: 'Founders navigating complexity', sub: 'The system is growing but something structural isn\'t holding' },
+  { label: 'Creators who feel underexpressed', sub: 'Vision is clear — translation keeps breaking down' },
+  { label: 'Operators carrying misaligned structure', sub: 'The work functions. It doesn\'t feel like yours.' },
+  { label: 'Guides working with others', sub: 'You help people see clearly. Something stays unnamed in yourself.' },
+  { label: 'People at a transition point', sub: 'You know something isn\'t aligned. You can\'t yet see what.' },
 ];
 
-const WHAT_YOU_GET = [
-  { label: 'Your identity axis', sub: 'The structure holding your decisions, attention, and energy' },
-  { label: 'Pattern distortions', sub: 'Where your strengths loop back on themselves' },
-  { label: 'Elemental balance map', sub: 'What\'s overdeveloped, what\'s dormant, what that costs you' },
-  { label: '3 high-leverage shifts', sub: 'Structural, not behavioral — changes that hold' },
-  { label: '30-day integration path', sub: 'Concrete starting points, not abstract advice' },
+const WHAT_YOU_RECEIVE = [
+  { label: 'Core identity vs. presentation mapping', sub: 'Where you are vs. how you show up — and what fills the gap' },
+  { label: '2–3 structural tensions', sub: 'The specific frictions currently shaping your decisions and behavior' },
+  { label: 'Pattern distortions', sub: 'Where energy is looping, compensating, or misdirected' },
+  { label: 'Elemental balance map', sub: 'What\'s overdeveloped, what\'s dormant, what that costs you across domains' },
+  { label: '3 high-leverage structural shifts', sub: 'Not behavioral tweaks — changes at the level that actually holds' },
+  { label: '30-day integration path', sub: 'Concrete starting points mapped to your specific configuration' },
 ];
 
 const STEPS = [
   {
     n: '1',
-    label: 'Complete a short intake',
-    sub: '5–10 minutes. Seven questions about how you work, what you\'re building, where you feel friction.',
+    label: 'Complete a focused intake',
+    sub: '10–15 minutes. Seven questions about how you work, what you\'re building, and where friction keeps appearing.',
   },
   {
     n: '2',
     label: 'MAIA analyzes your structure',
-    sub: 'Pattern recognition, elemental mapping, and distortion analysis — not a personality type, a structural read.',
+    sub: 'Pattern recognition, elemental mapping, distortion analysis. Not a personality type — a structural read of how your system is actually running.',
   },
   {
     n: '3',
-    label: 'You receive your audit immediately',
-    sub: 'Eight structured sections. Specific, named, and usable. Not generic insight — your actual configuration.',
+    label: 'Your audit is generated and refined',
+    sub: 'Eight structured sections. Specific and named. Not generic insight — your actual configuration, in language you\'ll recognize.',
   },
   {
     n: '4',
-    label: 'You decide what to do with it',
-    sub: 'Continue inside MAIA. Bring it to a partner field. Use it on your own. The audit is yours.',
+    label: 'You receive a clear report with next steps',
+    sub: 'Immediately available. Yours to keep. You decide what to do with it — continue with MAIA, bring it to a partner field, or work with it independently.',
   },
 ];
 
 export function AuditFunnelSections() {
   return (
     <>
-      {/* Who it's for */}
+      {/* Who it's for — selective */}
       <section className="py-24 px-6 bg-stone-950">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-amber-500/60 mb-6">Who this is for</p>
-          <h2 className="text-2xl sm:text-3xl font-light text-stone-100 mb-4 leading-snug">
-            People who know something deeper is happening
+          <h2 className="text-2xl sm:text-3xl font-light text-stone-100 mb-5 leading-snug">
+            People who already sense a deeper pattern
             <br />
-            <span className="text-stone-400">but can't fully see it yet.</span>
+            <span className="text-stone-400">shaping their decisions — but can't yet see it clearly.</span>
           </h2>
-          <p className="text-stone-500 text-sm mb-10 leading-relaxed">
-            The audit is not for everyone. It's for people who are ready to look at structure — not seek
-            motivation, reassurance, or a framework to fit themselves into.
-          </p>
-          <div className="space-y-3">
+          <div className="space-y-3 mb-10">
             {WHO.map(({ label, sub }) => (
               <div key={label} className="flex items-start gap-4 py-4 px-5 border border-stone-800/60 rounded">
                 <span className="text-amber-500/40 mt-0.5 shrink-0 text-lg leading-none">·</span>
@@ -74,49 +71,48 @@ export function AuditFunnelSections() {
               </div>
             ))}
           </div>
+          <p className="text-stone-600 text-sm border-l border-stone-800 pl-4">
+            This is not for surface-level optimization or quick fixes.
+          </p>
         </div>
       </section>
 
-      {/* Why it's helpful */}
+      {/* Why it helps — undeniable */}
       <section className="py-24 px-6 bg-stone-900/40">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-amber-500/60 mb-6">Why it helps</p>
-          <h2 className="text-2xl sm:text-3xl font-light text-stone-100 mb-6 leading-snug">
-            Most systems try to improve behavior.
+          <h2 className="text-2xl sm:text-3xl font-light text-stone-100 mb-8 leading-snug">
+            Most people try to change behavior without understanding
             <br />
-            <span className="text-stone-400">Behavior is downstream of structure.</span>
+            <span className="text-stone-400">the structure behind it.</span>
           </h2>
           <div className="space-y-5 text-stone-400 text-sm leading-relaxed">
             <p>
-              If your patterns keep returning — if the same tension shows up in different contexts,
-              with different people, in different projects — it's not a discipline problem.
-              It's a structural one.
+              That's why patterns return — even after insight, effort, or real progress.
+              The behavior changes. The structure doesn't. Eventually the pattern reasserts itself.
             </p>
             <p>
-              The audit maps what's actually running: your identity axis, how it meets the world,
-              where it distorts under pressure, and what that costs you across domains.
-            </p>
-            <p>
-              Once you can see the structure clearly, the shifts that actually hold become obvious.
+              This audit shows the structure itself — the identity axis, the distortions under pressure,
+              the elemental imbalances running across domains — so change can actually hold.
             </p>
           </div>
         </div>
       </section>
 
-      {/* What you get */}
+      {/* What you receive — concrete */}
       <section className="py-24 px-6 bg-stone-950">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-amber-500/60 mb-6">What you receive</p>
           <h2 className="text-2xl font-light text-stone-100 mb-10">
-            A high-resolution map of how your system actually works.
+            A structured report. Eight sections. Specific to your configuration.
           </h2>
-          <div className="space-y-4">
-            {WHAT_YOU_GET.map(({ label, sub }) => (
+          <div className="space-y-5">
+            {WHAT_YOU_RECEIVE.map(({ label, sub }) => (
               <div key={label} className="flex items-start gap-4">
                 <span className="text-amber-500/40 mt-1 shrink-0 text-lg leading-none">·</span>
                 <div>
                   <p className="text-stone-200 text-sm font-medium">{label}</p>
-                  <p className="text-stone-500 text-sm mt-0.5">{sub}</p>
+                  <p className="text-stone-500 text-sm mt-0.5 leading-relaxed">{sub}</p>
                 </div>
               </div>
             ))}
@@ -124,17 +120,17 @@ export function AuditFunnelSections() {
         </div>
       </section>
 
-      {/* How it works — the experience */}
+      {/* The experience — reduce uncertainty */}
       <section className="py-24 px-6 bg-stone-900/40">
         <div className="max-w-2xl mx-auto">
           <p className="text-xs uppercase tracking-widest text-amber-500/60 mb-6">The experience</p>
           <h2 className="text-2xl font-light text-stone-100 mb-3">
-            Four steps. Start to audit in under ten minutes.
+            Four steps. Start to audit in under fifteen minutes.
           </h2>
-          <p className="text-stone-500 text-sm mb-12">
-            No account required. Your intake is processed privately. The report is yours to keep.
+          <p className="text-stone-500 text-sm mb-12 leading-relaxed">
+            No account required. Processed privately. The report is yours immediately.
           </p>
-          <div className="space-y-10">
+          <div className="space-y-10 mb-12">
             {STEPS.map(({ n, label, sub }) => (
               <div key={n} className="flex gap-6">
                 <span className="text-3xl font-extralight text-stone-700 shrink-0 w-7 leading-tight">{n}</span>
@@ -145,6 +141,9 @@ export function AuditFunnelSections() {
               </div>
             ))}
           </div>
+          <p className="text-stone-600 text-sm border-l border-stone-800 pl-4">
+            The more honestly you engage with the intake, the more precise the result will be.
+          </p>
         </div>
       </section>
 
@@ -161,21 +160,23 @@ export function AuditFunnelSections() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Recognition moment + CTA */}
       <section className="py-24 px-6 bg-stone-950 border-t border-stone-900">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <h2 className="text-2xl font-light text-stone-100">
-            Ready to see your structure clearly?
-          </h2>
-          <p className="text-stone-500 text-sm max-w-sm mx-auto leading-relaxed">
-            No account required. Takes 5–10 minutes. Your audit is generated immediately.
+        <div className="max-w-2xl mx-auto text-center space-y-5">
+          <p className="text-stone-400 text-base font-light leading-relaxed max-w-sm mx-auto">
+            Most people don't need more advice.
+            <br />
+            They need to see what's actually happening.
           </p>
-          <Link
-            href="/audit"
-            className="inline-flex items-center justify-center rounded-xl px-10 py-4 bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-sm tracking-wide transition-colors"
-          >
-            Start Your Identity Audit
-          </Link>
+          <div className="pt-4 space-y-3">
+            <Link
+              href="/audit"
+              className="inline-flex items-center justify-center rounded-xl px-10 py-4 bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-sm tracking-wide transition-colors"
+            >
+              Request Your Identity Audit
+            </Link>
+            <p className="text-stone-600 text-xs">See your structure clearly.</p>
+          </div>
         </div>
       </section>
     </>
