@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { AuditModeSelector, type AuditMode } from '@/components/audit/AuditModeSelector';
+import { AuditExampleBlock } from '@/components/audit/AuditExampleBlock';
 import { IdentityAuditForm } from '@/components/audit/IdentityAuditForm';
 import { PartnershipAuditForm } from '@/components/audit/PartnershipAuditForm';
 import { TeamAuditForm } from '@/components/audit/TeamAuditForm';
@@ -120,6 +121,11 @@ export function FieldAuditPageClient({
           <p className="text-sm text-stone-500 leading-relaxed">
             Identity Audit — structural mapping across individual, partnership, and team fields.
           </p>
+        </div>
+
+        {/* Example output — field-aware archetype */}
+        <div className="mb-12">
+          <AuditExampleBlock archetype={fieldSlug === 'nathan' ? 'systems' : 'founder'} />
         </div>
 
         {/* Mode selector */}
