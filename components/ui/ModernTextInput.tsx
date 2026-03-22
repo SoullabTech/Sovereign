@@ -74,6 +74,28 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   // Scribe/session mode allows unlimited input for full transcript uploads
   const maxLength = mode === 'session' ? undefined : maxLengthProp;
   const [value, setValue] = useState(initialValue);
+
+  // Cycling placeholder — only when using the default and input is empty
+  const CYCLING_PLACEHOLDERS = [
+    'What keeps repeating?',
+    'What feels unclear?',
+    'What are you trying to understand?',
+    'What are you working with right now?',
+  ];
+  const isDefaultPlaceholder = placeholder === 'Message MAIA...';
+  const [cycleIndex, setCycleIndex] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
+  useEffect(() => {
+    if (!isDefaultPlaceholder) return;
+    const id = setInterval(() => {
+      setCycleIndex((i) => (i + 1) % CYCLING_PLACEHOLDERS.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [isDefaultPlaceholder]); // eslint-disable-line react-hooks/exhaustive-deps
+  const activePlaceholder =
+    isDefaultPlaceholder && !value && !isFocused
+      ? CYCLING_PLACEHOLDERS[cycleIndex]
+      : placeholder;
   const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -142,7 +164,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
       return "What's on your mind? Let's talk...";
     }
 
-    return placeholder;
+    return activePlaceholder;
   };
 
   // Helper function to get time ago
@@ -430,6 +452,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               value={value}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder={isRecording ? 'Listening...' : getIntimatePlaceholder()}

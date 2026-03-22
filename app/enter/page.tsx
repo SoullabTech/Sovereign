@@ -125,9 +125,26 @@ export default function EnterPage() {
   }, [router]);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#0b0f1c', color: '#a0a0a0' }}>
-      <p style={{ marginBottom: '10px' }}>Entering MAIA...</p>
-      <p style={{ fontSize: '12px', maxWidth: '300px', textAlign: 'center' }}>{debugInfo}</p>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0b0f1c' }}>
+      {/* Breathing aura */}
+      <div style={{
+        width: 64,
+        height: 64,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(139,92,246,0.5) 0%, rgba(139,92,246,0.0) 70%)',
+        animation: 'maiaBreath 2.5s ease-in-out infinite',
+        marginBottom: 24,
+      }} />
+      <style>{`
+        @keyframes maiaBreath {
+          0%   { transform: scale(0.88); opacity: 0.5; }
+          50%  { transform: scale(1.10); opacity: 0.9; }
+          100% { transform: scale(0.88); opacity: 0.5; }
+        }
+      `}</style>
+      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, letterSpacing: '0.12em' }}>
+        Listening…
+      </p>
     </div>
   );
 }
