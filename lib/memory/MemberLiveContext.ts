@@ -57,6 +57,8 @@ export interface JournalEntry {
   /** 'quick' | 'elemental' */
   entryType?: string;
   tags?: string[];
+  /** Runtime-populated from entry_type + tags in loadJournals() */
+  themes?: string[];
   createdAt: string;
 }
 
@@ -215,6 +217,11 @@ function deriveDominantTone(recentJournal?: JournalEntry[]): string | undefined 
       ['grief', 'joy', 'anger', 'fear', 'confusion', 'peace', 'resistance',
        'anxiety', 'heaviness', 'curiosity', 'sadness', 'hope'].includes(t)
     );
+  console.log('[tone-debug]', {
+    journalCount: recentJournal?.length ?? 0,
+    themeSamples: (recentJournal ?? []).map(j => j.themes ?? []),
+    tonesFound: tones,
+  });
   if (!tones.length) return undefined;
   const counts = new Map<string, number>();
   for (const t of tones) counts.set(t, (counts.get(t) ?? 0) + 1);
