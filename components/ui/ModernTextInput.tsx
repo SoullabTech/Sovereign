@@ -96,7 +96,6 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     isDefaultPlaceholder && !value && !isFocused
       ? CYCLING_PLACEHOLDERS[cycleIndex]
       : placeholder;
-  const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
