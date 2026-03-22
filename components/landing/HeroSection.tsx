@@ -42,7 +42,7 @@ export function HeroSection() {
           className="mt-4 text-lg sm:text-xl md:text-2xl font-light text-white/60"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          See the structure behind your patterns, decisions, and growth.
+          A studio for depth, pattern recognition, and inner architecture.
         </motion.p>
 
         {/* Luminous holoflower — focal centerpiece */}
