@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
 const navLinks = [
-  { label: 'AIN + MAIA', href: '#maia' },
+  { label: 'Offerings', href: '#offerings' },
+  { label: 'What\u2019s Different', href: '#different' },
   { label: 'Innovations', href: '#research' },
   { label: 'Portfolio', href: '#portfolio' },
   { label: 'Roadmap', href: '#projects' },

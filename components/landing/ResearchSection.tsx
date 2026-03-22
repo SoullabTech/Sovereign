@@ -28,13 +28,13 @@ export function ResearchSection() {
             className="text-3xl sm:text-4xl lg:text-5xl font-extralight tracking-wide text-white text-center mb-4"
             style={{ fontFamily: "'Crimson Pro', serif" }}
           >
-            Innovations
+            Working Innovations
           </h2>
           <p className="text-white/40 text-center text-sm tracking-widest uppercase mb-6">
             {INNOVATIONS.length} working breakthroughs in consciousness computing
           </p>
           <p className="text-white/30 text-center text-sm max-w-2xl mx-auto mb-12" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-            Not theoretical. Not coming soon. Built and running in production today.
+            These are working outputs from the system — not concepts, but built results.
           </p>
         </SectionReveal>
 

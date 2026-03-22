@@ -15,7 +15,7 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 overflow-hidden"
       style={{
         background: 'radial-gradient(ellipse at center, #111827 0%, #0b0f1c 70%)',
       }}
@@ -42,7 +42,7 @@ export function HeroSection() {
           className="mt-4 text-lg sm:text-xl md:text-2xl font-light text-white/60"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          A studio for depth, pattern recognition, and inner architecture.
+          We build for the soul.
         </motion.p>
 
         {/* Luminous holoflower — focal centerpiece */}
@@ -87,17 +87,30 @@ export function HeroSection() {
           </div>
         </motion.div>
 
-        {/* Descriptor */}
-        <motion.p
+        {/* Support bullets */}
+        <motion.ul
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
-          className="text-sm sm:text-base text-white/40 max-w-md mx-auto mb-10"
+          className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-6 text-sm text-white/35"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          A studio for depth, pattern recognition, and inner architecture.
-          We build tools for the soul — intelligence that helps you see
-          clearly and operate from what's actually true.
+          <li>Understand your patterns</li>
+          <li className="hidden sm:block text-white/15">&middot;</li>
+          <li>Work with an ongoing intelligence</li>
+          <li className="hidden sm:block text-white/15">&middot;</li>
+          <li>Build systems that serve people</li>
+        </motion.ul>
+
+        {/* Grounding line */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.3, ease: 'easeOut' }}
+          className="text-sm text-white/25 mb-10"
+          style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
+        >
+          Work with MAIA, get a one-time Identity Audit, or deploy AIN in your own work.
         </motion.p>
 
         {/* CTAs */}
@@ -111,13 +124,13 @@ export function HeroSection() {
             href="/enter"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold text-base transition-colors shadow-lg shadow-maia-spice-500/20"
           >
-            Explore MAIA
+            Enter MAIA
           </Link>
           <Link
             href="/audit"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Get Your Identity Audit
+            Run Identity Audit
           </Link>
         </motion.div>
 
