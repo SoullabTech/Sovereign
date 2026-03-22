@@ -152,7 +152,7 @@ export default function AuditPage() {
               onClick={() => setState({ phase: 'form' })}
               className="w-full py-4 bg-amber-500 text-stone-950 rounded text-sm font-medium tracking-wide hover:bg-amber-400 transition-colors"
             >
-              Request Your Audit
+              Request Your Identity Audit
             </button>
 
             <p className="text-xs text-stone-700 text-center">
