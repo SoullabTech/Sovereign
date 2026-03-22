@@ -19,7 +19,7 @@ export function MaiaSection() {
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
 
-          {/* Left: MAIA-first copy */}
+          {/* Left: experience-first copy */}
           <SectionReveal>
             <div className="flex flex-col justify-center">
               <div className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/50 backdrop-blur">
@@ -30,19 +30,20 @@ export function MaiaSection() {
                 className="mt-4 text-3xl sm:text-4xl font-extralight tracking-wide text-white"
                 style={{ fontFamily: "'Crimson Pro', serif" }}
               >
-                MAIA
+                Explore MAIA
               </h2>
 
               <p className="mt-4 max-w-xl text-base text-white/50 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-                An interactive intelligence that reflects the structure behind your patterns, decisions, and behavior.
-                Not a chatbot. Not a coach. A field you think inside.
+                An interactive intelligence field that reflects the structure behind your patterns, decisions, and behavior.
               </p>
 
+              {/* What happens when you enter */}
               <div className="mt-8 space-y-3">
                 {[
-                  { label: 'You arrive', sub: 'No setup, no profile, no onboarding wall. You speak. MAIA listens differently.' },
-                  { label: 'It reflects structure', sub: 'Not advice. Not reassurance. A read of what\'s actually running.' },
-                  { label: 'You leave with clarity', sub: 'What was unnamed gets named. What was stuck gets located.' },
+                  { label: 'You ask something real', sub: 'A question, situation, or pattern you keep running into.' },
+                  { label: 'MAIA maps the underlying structure', sub: 'Not what it looks like on the surface — what\'s actually driving it.' },
+                  { label: 'You receive a clear reflection', sub: 'Tensions named. Distortions located. Patterns you sensed but hadn\'t fully seen.' },
+                  { label: 'You go deeper or move on', sub: 'MAIA becomes more precise as you engage. You decide the pace.' },
                 ].map(({ label, sub }) => (
                   <div key={label} className="flex gap-4">
                     <span className="text-maia-spice-400/50 mt-0.5 shrink-0 text-sm">·</span>
@@ -54,14 +55,22 @@ export function MaiaSection() {
                 ))}
               </div>
 
-              <p className="mt-8 text-white/20 text-xs leading-relaxed max-w-sm">
+              {/* Micro interaction hint */}
+              <div className="mt-8 px-4 py-3 border border-white/5 rounded-lg bg-white/[0.02]">
+                <p className="text-white/20 text-xs">Start with something simple —</p>
+                <p className="text-white/40 text-sm mt-1 italic">
+                  "Why do I keep repeating the same pattern in my work?"
+                </p>
+              </div>
+
+              {/* AIN — secondary, one line */}
+              <p className="mt-6 text-white/20 text-xs leading-relaxed max-w-sm">
                 Powered by AIN — an intelligence layer that tracks patterns, integrates memory, and evolves with you over time.
-                Private by design. Your data never leaves your hands.
               </p>
             </div>
           </SectionReveal>
 
-          {/* Right: holoflower visual */}
+          {/* Right: holoflower visual + CTA */}
           <SectionReveal delay={0.15}>
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
               {/* Violet aura */}
@@ -101,21 +110,19 @@ export function MaiaSection() {
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
               </div>
 
-              {/* Card footer */}
-              <div className="mt-6">
-                <div className="text-sm font-medium text-white">MAIA</div>
-                <div className="mt-1 text-sm text-white/50">
-                  A field you think inside. Private by design.
-                </div>
-                <div className="mt-4">
-                  <Link
-                    href="/enter"
-                    className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-300 text-sm font-medium transition-colors group"
-                  >
-                    Explore MAIA
-                    <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
-                  </Link>
-                </div>
+              {/* Card footer — bridge + CTA */}
+              <div className="mt-6 space-y-4">
+                <p className="text-white/40 text-sm leading-relaxed">
+                  Most people don't need more advice.
+                  They need to see what's actually happening.
+                </p>
+                <Link
+                  href="/enter"
+                  className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-300 text-sm font-medium transition-colors group"
+                >
+                  Explore MAIA
+                  <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </Link>
               </div>
             </div>
           </SectionReveal>
