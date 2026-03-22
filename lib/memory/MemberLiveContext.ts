@@ -74,6 +74,21 @@ export interface CosmicWeather {
   formatted?: string;
 }
 
+export interface FieldState {
+  /** Most common emotional tone across recent journals (e.g. 'grief', 'curiosity', 'confusion') */
+  dominantTone?: string;
+  /** Highest-count recurring participatory theme */
+  dominantTheme?: string;
+  /** Top active pattern statement from the interpretive ledger */
+  activePattern?: string;
+  /** How recent the signal evidence is */
+  recency: 'high' | 'medium' | 'low';
+  /** 0–1 composite confidence based on signal breadth */
+  confidence: number;
+  /** Named psychological tension if detectable (e.g. 'grief vs forward momentum') */
+  tension?: string;
+}
+
 // ============================================================================
 // The Contract
 // ============================================================================
@@ -125,6 +140,12 @@ export interface MemberLiveContext {
   // Cosmic context
   astrology?: AstrologyContext | null;
 
+  // Participatory themes recurring across recent sessions (closed feedback loop)
+  recurringThemes?: ThemeRecurrence[];
+
+  // Interpreted field state — synthesized from all signal layers
+  fieldState?: FieldState;
+
   // When this context was assembled
   assembledAt: string;
 }
@@ -143,10 +164,152 @@ export function describeLiveContext(ctx: MemberLiveContext): Record<string, unkn
     turnsFallback: (ctx.recentTurns?.length ?? 0) > 0,
     patterns: ctx.activePatterns.length,
     journal: ctx.recentJournal.length,
+    recurringThemes: ctx.recurringThemes?.length ?? 0,
     hasEssence: ctx.relationshipEssence != null,
     hasNatal: ctx.astrology?.hasBirthData ?? false,
     hasCosmicWeather: (ctx.astrology?.formattedContext?.length ?? 0) > 0,
   };
+}
+
+// ============================================================================
+// Field State Derivation — signal synthesis helpers
+// ============================================================================
+
+function toTime(value?: string | Date | null): number | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  const time = date.getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function getMostRecentTimestamp(ctx: {
+  recentJournal?: JournalEntry[];
+  recentSessions?: Array<{ completedAt: string }>;
+}): number | null {
+  const candidates: Array<number | null> = [
+    ...(ctx.recentJournal ?? []).map(j => toTime(j.createdAt)),
+    ...(ctx.recentSessions ?? []).map(s => toTime(s.completedAt)),
+  ];
+  const valid = candidates.filter((v): v is number => v !== null);
+  if (!valid.length) return null;
+  return Math.max(...valid);
+}
+
+function deriveRecency(
+  recentJournal?: JournalEntry[],
+  recentSessions?: Array<{ completedAt: string }>
+): 'high' | 'medium' | 'low' {
+  const latest = getMostRecentTimestamp({ recentJournal, recentSessions });
+  if (!latest) return 'low';
+  const ageDays = (Date.now() - latest) / (1000 * 60 * 60 * 24);
+  if (ageDays <= 3) return 'high';
+  if (ageDays <= 10) return 'medium';
+  return 'low';
+}
+
+function deriveDominantTone(recentJournal?: JournalEntry[]): string | undefined {
+  // Journals don't carry a pre-computed tone field yet — infer from themes/tags
+  const tones = (recentJournal ?? [])
+    .flatMap(j => j.themes ?? [])
+    .filter(t =>
+      ['grief', 'joy', 'anger', 'fear', 'confusion', 'peace', 'resistance',
+       'anxiety', 'heaviness', 'curiosity', 'sadness', 'hope'].includes(t)
+    );
+  if (!tones.length) return undefined;
+  const counts = new Map<string, number>();
+  for (const t of tones) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+}
+
+function deriveDominantTheme(recurringThemes?: ThemeRecurrence[]): string | undefined {
+  if (!recurringThemes?.length) return undefined;
+  return recurringThemes[0].theme.replace(/_/g, ' ');
+}
+
+function deriveActivePattern(activePatterns?: ActivePattern[]): string | undefined {
+  if (!activePatterns?.length) return undefined;
+  return activePatterns[0].statement;
+}
+
+function deriveConfidence(input: {
+  dominantTone?: string;
+  dominantTheme?: string;
+  activePattern?: string;
+  recency: 'high' | 'medium' | 'low';
+  recentJournal?: JournalEntry[];
+  recurringThemes?: ThemeRecurrence[];
+  activePatterns?: ActivePattern[];
+  recentSessions?: Array<{ sessionId: string; summary: any; completedAt: string }>;
+}): number {
+  let score = 0;
+  if (input.dominantTone) score += 0.2;
+  if (input.dominantTheme) score += 0.2;
+  if (input.activePattern) score += 0.2;
+  if ((input.recentSessions?.length ?? 0) > 0) score += 0.1;
+  if ((input.recentJournal?.length ?? 0) >= 2) score += 0.1;
+  if ((input.recurringThemes?.length ?? 0) >= 1) score += 0.05;
+  if ((input.activePatterns?.length ?? 0) >= 1) score += 0.05;
+  if (input.recency === 'high') score += 0.1;
+  if (input.recency === 'medium') score += 0.05;
+  return Math.min(1, Number(score.toFixed(2)));
+}
+
+function deriveTension(input: {
+  dominantTone?: string;
+  dominantTheme?: string;
+  activePattern?: string;
+}): string | undefined {
+  const text = [
+    input.dominantTone ?? '',
+    input.dominantTheme ?? '',
+    input.activePattern ?? '',
+  ].join(' | ').toLowerCase();
+
+  if ((text.includes('grief') || text.includes('loss')) &&
+      (text.includes('forward') || text.includes('momentum') ||
+       text.includes('ambition') || text.includes('progress') || text.includes('perform'))) {
+    return 'grief vs forward momentum';
+  }
+  if ((text.includes('connection') || text.includes('relationship') || text.includes('longing')) &&
+      (text.includes('withdraw') || text.includes('distance') || text.includes('protect') ||
+       text.includes('isolat'))) {
+    return 'longing for connection vs protective withdrawal';
+  }
+  if ((text.includes('clarity') || text.includes('vision') || text.includes('ready')) &&
+      (text.includes('fear') || text.includes('avoidance') || text.includes('confusion') ||
+       text.includes('stuck'))) {
+    return 'clarity vs avoidance';
+  }
+  if ((text.includes('expand') || text.includes('ambition')) &&
+      (text.includes('exhaust') || text.includes('deplet') || text.includes('burnout'))) {
+    return 'expansion vs exhaustion';
+  }
+  return undefined;
+}
+
+function deriveFieldState(input: {
+  recentJournal?: JournalEntry[];
+  recurringThemes?: ThemeRecurrence[];
+  activePatterns?: ActivePattern[];
+  recentSessions?: Array<{ sessionId: string; summary: any; completedAt: string }>;
+}): FieldState {
+  const dominantTone = deriveDominantTone(input.recentJournal);
+  const dominantTheme = deriveDominantTheme(input.recurringThemes);
+  const activePattern = deriveActivePattern(input.activePatterns);
+  const recency = deriveRecency(input.recentJournal, input.recentSessions);
+  const confidence = deriveConfidence({
+    dominantTone,
+    dominantTheme,
+    activePattern,
+    recency,
+    recentJournal: input.recentJournal,
+    recurringThemes: input.recurringThemes,
+    activePatterns: input.activePatterns,
+    recentSessions: input.recentSessions,
+  });
+  const tension = deriveTension({ dominantTone, dominantTheme, activePattern });
+
+  return { dominantTone, dominantTheme, activePattern, recency, confidence, tension };
 }
 
 // ============================================================================
@@ -158,6 +321,8 @@ import { getRecentSummaries } from '@/lib/scribe/sovereignSummarizer';
 import { getActivePatternContext } from '@/lib/patterns/PatternOfferingService';
 import { loadJournals } from '@/lib/memory/SignificantMomentsService';
 import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
+import { getRecentThemes, findRecurringThemes } from '@/lib/consciousness/participatoryRealityHelper';
+import type { ThemeRecurrence } from '@/lib/consciousness/participatoryReality';
 
 export interface BuildMemberLiveContextOptions {
   /** Max session summaries to fetch (default 3) */
@@ -206,6 +371,8 @@ export async function buildMemberLiveContext(
       activePatterns: [],
       recentJournal: [],
       relationshipEssence: null,
+      recurringThemes: [],
+      fieldState: undefined,
       astrology: null,
       assembledAt,
     };
@@ -218,13 +385,33 @@ export async function buildMemberLiveContext(
     activePatterns,
     recentJournal,
     relationshipEssence,
+    rawThemeSignals,
   ] = await Promise.all([
     loadSpiralState(userId).catch(() => null),
     getRecentSummaries(userId, maxSessions).catch(() => []),
     getActivePatternContext(userId, maxPatterns).catch(() => [] as ActivePattern[]),
     loadJournals(userId, maxJournal).catch(() => [] as JournalEntry[]),
     loadRelationshipEssence(userId).catch(() => null),
+    getRecentThemes(userId, 20, 30).catch(() => []),
   ]);
+
+  const recurringThemes = findRecurringThemes(rawThemeSignals);
+
+  const fieldState = deriveFieldState({
+    recentJournal,
+    recurringThemes,
+    activePatterns,
+    recentSessions,
+  });
+
+  console.log('[field-state]', {
+    dominantTone: fieldState.dominantTone,
+    dominantTheme: fieldState.dominantTheme,
+    activePattern: fieldState.activePattern,
+    recency: fieldState.recency,
+    confidence: fieldState.confidence,
+    tension: fieldState.tension,
+  });
 
   return {
     identity: { userId, displayName },
@@ -233,6 +420,8 @@ export async function buildMemberLiveContext(
     activePatterns,
     recentJournal,
     relationshipEssence,
+    recurringThemes,
+    fieldState,
     astrology: null, // populated by route when birth data / transit engine available
     assembledAt,
   };
@@ -248,7 +437,8 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
   if (
     ctx.activePatterns.length === 0 &&
     ctx.recentSessions.length === 0 &&
-    ctx.recentJournal.length === 0
+    ctx.recentJournal.length === 0 &&
+    (ctx.recurringThemes?.length ?? 0) === 0
   ) {
     return ''; // Nothing to inject — don't add noise
   }
@@ -285,6 +475,33 @@ export function formatMemberWebForPrompt(ctx: MemberLiveContext): string {
       }).join('\n')
     : '  No journal entries yet.';
 
+  const themesLines = ctx.recurringThemes && ctx.recurringThemes.length > 0
+    ? ctx.recurringThemes.slice(0, 3).map(t => {
+        const label = t.theme.replace(/_/g, ' ');
+        const last = t.last_seen ? String(t.last_seen).slice(0, 10) : '';
+        return `  ${label} (×${t.count}${last ? `, last ${last}` : ''}, ${t.dominant_signal_type})`;
+      }).join('\n')
+    : null;
+
+  const themesSection = themesLines
+    ? `\nParticipatory Themes (self-observed, recurring):\n${themesLines}\n`
+    : '';
+
+  let fieldConditionBlock = '';
+  if (ctx.fieldState) {
+    const { fieldState } = ctx;
+    const confidenceLabel = fieldState.confidence > 0.6 ? 'current field condition' : 'background signal';
+    const parts = [
+      fieldState.dominantTone  ? `dominant_tone=${fieldState.dominantTone}` : null,
+      fieldState.dominantTheme ? `dominant_theme=${fieldState.dominantTheme}` : null,
+      fieldState.activePattern ? `active_pattern=${fieldState.activePattern}` : null,
+      `recency=${fieldState.recency}`,
+      `confidence=${fieldState.confidence.toFixed(2)}`,
+      fieldState.tension       ? `tension=${fieldState.tension}` : null,
+    ].filter(Boolean);
+    fieldConditionBlock = `\n## ${confidenceLabel}\n${parts.join('; ')}\n`;
+  }
+
   return `🕸️ MEMBER WEB (Silent context — use as background awareness, do not recite):
 Active Patterns (recurring structures in their life):
 ${patternsBlock}
@@ -294,6 +511,6 @@ ${summariesBlock}
 
 Recent Journal:
 ${journalsBlock}
-
+${themesSection}${fieldConditionBlock}
 Instruction: Before responding, silently check these threads. If relevant, reflect them briefly and propose one integration step. Do not quote this block directly.`;
 }
