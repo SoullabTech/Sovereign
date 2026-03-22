@@ -107,16 +107,16 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
-            href="/audit"
+            href="/enter"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold text-base transition-colors shadow-lg shadow-maia-spice-500/20"
           >
-            Get Your MAIA Identity Audit
+            Explore MAIA
           </Link>
           <Link
-            href="/enter"
+            href="/audit"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Explore MAIA
+            Get Your Identity Audit
           </Link>
         </motion.div>
 
