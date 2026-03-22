@@ -42,7 +42,7 @@ export function HeroSection() {
           className="mt-4 text-lg sm:text-xl md:text-2xl font-light text-white/60"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          We build for the soul.
+          See the structure behind your patterns, decisions, and growth.
         </motion.p>
 
         {/* Luminous holoflower — focal centerpiece */}
@@ -92,11 +92,11 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.2, ease: 'easeOut' }}
-          className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
+          className="text-sm sm:text-base text-white/40 max-w-md mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Consciousness AI &amp; relational intelligence systems.
-          The engine that brings soul to any app, site, or platform.
+          Soullab maps the gap between who you are, how you show up,
+          and how your system actually operates.
         </motion.p>
 
         {/* CTAs */}
@@ -107,17 +107,17 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Link
-            href="/enter"
+            href="/audit"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 bg-maia-spice-500 hover:bg-maia-spice-400 text-black font-semibold text-base transition-colors shadow-lg shadow-maia-spice-500/20"
           >
-            Enter MAIA
+            Get Your MAIA Identity Audit
           </Link>
-          <button
-            onClick={scrollToContact}
+          <Link
+            href="/enter"
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Work with Soullab
-          </button>
+            Explore MAIA
+          </Link>
         </motion.div>
 
         {/* Trust line */}

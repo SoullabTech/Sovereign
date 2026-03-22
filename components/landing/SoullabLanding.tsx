@@ -2,6 +2,7 @@
 
 import { LandingNav } from './LandingNav';
 import { HeroSection } from './HeroSection';
+import { AuditFunnelSections } from './AuditFunnelSections';
 import { MaiaSection } from './MaiaSection';
 import { ResearchSection } from './ResearchSection';
 import { ProjectsSection } from './ProjectsSection';
@@ -16,6 +17,7 @@ export function SoullabLanding() {
       <LandingNav />
       <main>
         <HeroSection />
+        <AuditFunnelSections />
         <MaiaSection />
         <ResearchSection />
         <PortfolioSection />

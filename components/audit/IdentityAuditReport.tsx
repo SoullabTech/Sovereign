@@ -192,6 +192,39 @@ export function IdentityAuditReport({ result, name, onReset }: Props) {
         </section>
       )}
 
+      {/* Upgrade prompt */}
+      <section className="border border-stone-800 rounded-lg p-8 space-y-6 bg-stone-900/40">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-amber-500/60 mb-3">What's next</p>
+          <h3 className="text-lg font-light text-stone-100">
+            If you want help integrating this—
+          </h3>
+          <p className="text-stone-500 text-sm mt-2">
+            The audit shows you the structure. Working with it is a different step.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <a
+            href="/enter"
+            className="flex-1 py-3 px-4 rounded bg-amber-500 hover:bg-amber-400 text-stone-950 text-sm font-medium text-center transition-colors"
+          >
+            Continue with MAIA
+          </a>
+          <a
+            href="/fields/kelly/studio"
+            className="flex-1 py-3 px-4 rounded border border-stone-700 hover:border-stone-500 text-stone-300 hover:text-stone-100 text-sm text-center transition-colors"
+          >
+            Book a deeper audit
+          </a>
+          <a
+            href="/fields"
+            className="flex-1 py-3 px-4 rounded border border-stone-700 hover:border-stone-500 text-stone-300 hover:text-stone-100 text-sm text-center transition-colors"
+          >
+            Enter your field
+          </a>
+        </div>
+      </section>
+
       {/* Footer actions */}
       <div className="border-t border-stone-800 pt-8 flex flex-col sm:flex-row gap-4">
         <button

@@ -58,31 +58,26 @@ export default function AuditPage() {
 
         {/* Intro */}
         {state.phase === 'intro' && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div>
               <p className="text-xs uppercase tracking-widest text-amber-500/70 mb-4">Soullab</p>
               <h1 className="text-3xl font-light text-stone-100 mb-4 leading-snug">
-                MAIA Identity Audit
+                A high-resolution map of how your system actually works.
               </h1>
               <p className="text-stone-400 text-base leading-relaxed">
-                See the structure behind your patterns, decisions, and growth edge.
+                Not personality. Not surface behavior.
+                Structure, patterns, and realignment.
               </p>
             </div>
 
-            <p className="text-stone-500 text-sm leading-relaxed">
-              A high-resolution map of the patterns shaping your identity, expression,
-              and current growth edge — powered by MAIA and refined through Soullab's
-              elemental framework.
-            </p>
-
             <div className="space-y-3">
-              <p className="text-xs uppercase tracking-widest text-stone-600">What you get</p>
+              <p className="text-xs uppercase tracking-widest text-stone-600">What we analyze</p>
               <ul className="space-y-2 text-sm text-stone-400">
                 {[
-                  'Clear structural diagnosis',
-                  'Identity vs. expression mapping',
+                  'Core identity axis',
+                  'How you meet the world',
                   'Pattern distortions',
-                  'Elemental analysis',
+                  'Elemental balance',
                   'Strategic shifts',
                   '30-day integration path',
                 ].map((item) => (
@@ -94,11 +89,22 @@ export default function AuditPage() {
               </ul>
             </div>
 
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-widest text-stone-600">Who this is for</p>
+              <div className="flex flex-wrap gap-2">
+                {['Founders', 'Creators', 'Guides', 'Operators', 'Anyone who knows something deeper is happening'].map((who) => (
+                  <span key={who} className="px-3 py-1.5 border border-stone-800 rounded text-xs text-stone-500">
+                    {who}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <button
               onClick={() => setState({ phase: 'form' })}
               className="w-full py-4 bg-amber-500 text-stone-950 rounded text-sm font-medium tracking-wide hover:bg-amber-400 transition-colors"
             >
-              Begin Audit
+              Request Your Audit
             </button>
 
             <p className="text-xs text-stone-700 text-center">
