@@ -85,6 +85,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
   { exact: '/beta-access', public: true, notes: 'Beta access' },
 
+  // Master Fields - public by design (invitation pages, field homes)
+  { prefix: '/fields/', public: true, notes: 'Master field sites are public — no auth required' },
+
   // Practitioner public portals - CLIENT-FACING
   { prefix: '/portal/', public: true, notes: 'All practitioner portals are public by design' },
 
@@ -307,6 +310,12 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Studio (session room + supporting pages)
   { prefix: '/studio', minTier: 'free', notes: 'Studio - open to all authenticated users' },
+
+  // SoulComms — team messaging
+  { prefix: '/team/invite/', public: true, notes: 'Team invite accept pages — must be accessible before auth' },
+  { prefix: '/api/team/invite/', public: true, notes: 'Team invite API — lookup, accept, register — public for email link flow' },
+  { prefix: '/team', minTier: 'free', notes: 'SoulComms team messaging - all authenticated users' },
+  { prefix: '/api/team', minTier: 'free', notes: 'SoulComms API - all authenticated users' },
 
   // -------------------------------------------------------------------------
   // 5) ADMIN / STEWARD - Role-gated (not tier)

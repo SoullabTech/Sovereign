@@ -276,6 +276,68 @@ function getMoonSignElement(birthDate: Date, birthTime: string): { element: Elem
 }
 
 /**
+ * Compute the Ascendant (rising sign) element from birth coordinates and time.
+ *
+ * Method: Local Sidereal Time → Ascendant ecliptic longitude (Meeus formula)
+ * Accurate to within ±2° for most latitudes (excludes extreme polar regions).
+ *
+ * Returns null if coordinates are outside valid ranges.
+ */
+function getAscendantElement(
+  lat: number,
+  lng: number,
+  birthDate: Date,
+  birthTime: string,
+): { element: Elem; sign: string } | null {
+  if (lat < -89.9 || lat > 89.9 || lng < -180 || lng > 180) return null;
+
+  const [hourStr, minStr] = birthTime.split(':');
+  const hourLocal = parseInt(hourStr, 10) + parseInt(minStr || '0', 10) / 60;
+
+  // Convert local clock time to UT (approximate — no timezone DB, use lng offset)
+  // lng offset: each 15° = 1 hour
+  const utHour = ((hourLocal - lng / 15) % 24 + 24) % 24;
+
+  const j2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
+  const birthDayUTC = Date.UTC(
+    birthDate.getFullYear(),
+    birthDate.getMonth(),
+    birthDate.getDate(),
+    0, 0, 0,
+  );
+  const T = (birthDayUTC - j2000) / (1000 * 60 * 60 * 24); // days since J2000.0
+
+  // Greenwich Sidereal Time at 0h UT (degrees)
+  const GST0 = ((280.46061837 + 360.98564736629 * T) % 360 + 360) % 360;
+  // GST at birth UT
+  const GST = ((GST0 + utHour * 15.041069) % 360 + 360) % 360;
+  // Local Sidereal Time (degrees)
+  const LST = ((GST + lng) % 360 + 360) % 360;
+
+  // Obliquity of ecliptic (simplified, degrees)
+  const eps = 23.4393 - 0.0000004 * T;
+
+  const RAmcRad = LST * Math.PI / 180;
+  const epsRad = eps * Math.PI / 180;
+  const latRad = lat * Math.PI / 180;
+
+  // Ascendant ecliptic longitude (Meeus, Astronomical Algorithms §14)
+  let ascLon = Math.atan2(
+    Math.cos(RAmcRad),
+    -(Math.sin(RAmcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad)),
+  ) * 180 / Math.PI;
+  ascLon = ((ascLon % 360) + 360) % 360;
+
+  const zodiacSigns: [string, Elem][] = [
+    ['Aries', 'fire'], ['Taurus', 'earth'], ['Gemini', 'air'], ['Cancer', 'water'],
+    ['Leo', 'fire'], ['Virgo', 'earth'], ['Libra', 'air'], ['Scorpio', 'water'],
+    ['Sagittarius', 'fire'], ['Capricorn', 'earth'], ['Aquarius', 'air'], ['Pisces', 'water'],
+  ];
+  const [sign, element] = zodiacSigns[Math.floor(ascLon / 30)];
+  return { element, sign };
+}
+
+/**
  * Derive a rough diurnal quadrant from birth time (HH:MM).
  * Returns the element boosted by this time-of-day and a human label.
  */
@@ -289,45 +351,65 @@ function getTimeQuadrant(birthTime: string): { element: Elem; label: string } {
 }
 
 /**
- * Compute weighted elemental distribution:
- * Sun sign element → 35%, Moon sign element → 30%, time quadrant element → 20%,
- * remaining 15% spread equally across remaining elements.
+ * Compute weighted elemental distribution.
+ *
+ * Full model (coordinates present):
+ *   Sun 30% · Moon 25% · Ascendant 25% · Time 10% · Remainder 10%
+ *
+ * Fallback model (no coordinates):
+ *   Sun 35% · Moon 30% · Time 20% · Remainder 15%
  */
 function computeElementalDistribution(
   sunElement: Elem,
   timeElement: Elem,
   moonElement: Elem,
-): Record<Elem, number> {
+  ascendantElement?: Elem | null,
+): { dist: Record<Elem, number>; mode: 'sun-moon-asc-time' | 'sun-moon-time' } {
   const elements: Elem[] = ['fire', 'water', 'earth', 'air'];
   const dist: Record<Elem, number> = { fire: 0, water: 0, earth: 0, air: 0 };
 
-  dist[sunElement] += 35;
-  dist[moonElement] += 30;
-  dist[timeElement] += 20;
+  const mode = ascendantElement ? 'sun-moon-asc-time' : 'sun-moon-time';
 
-  // Spread remaining 15% across elements that received no primary weight
-  const weighted = new Set([sunElement, moonElement, timeElement]);
-  const remaining = elements.filter((e) => !weighted.has(e));
-  if (remaining.length === 0) {
-    // All three factors land on already-weighted elements — add 15% to sun
-    dist[sunElement] += 15;
+  if (ascendantElement) {
+    // Full model
+    dist[sunElement]       += 30;
+    dist[moonElement]      += 25;
+    dist[ascendantElement] += 25;
+    dist[timeElement]      += 10;
+    // Remaining 10% to any elements with no primary weight
+    const weighted = new Set([sunElement, moonElement, ascendantElement, timeElement]);
+    const remaining = elements.filter((e) => !weighted.has(e));
+    if (remaining.length === 0) {
+      dist[sunElement] += 10;
+    } else {
+      const share = 10 / remaining.length;
+      remaining.forEach((e) => { dist[e] += share; });
+    }
   } else {
-    const share = 15 / remaining.length;
-    remaining.forEach((e) => { dist[e] += share; });
+    // Fallback model
+    dist[sunElement]  += 35;
+    dist[moonElement] += 30;
+    dist[timeElement] += 20;
+    const weighted = new Set([sunElement, moonElement, timeElement]);
+    const remaining = elements.filter((e) => !weighted.has(e));
+    if (remaining.length === 0) {
+      dist[sunElement] += 15;
+    } else {
+      const share = 15 / remaining.length;
+      remaining.forEach((e) => { dist[e] += share; });
+    }
   }
 
   // Normalise to sum to 100
   const total = Object.values(dist).reduce((a, b) => a + b, 0);
   elements.forEach((e) => { dist[e] = Math.round((dist[e] / total) * 100); });
-
-  // Correct any rounding drift so the sum is exactly 100
   const sum = Object.values(dist).reduce((a, b) => a + b, 0);
   if (sum !== 100) {
     const dominant = elements.reduce((a, b) => (dist[a] > dist[b] ? a : b));
     dist[dominant] += (100 - sum);
   }
 
-  return dist;
+  return { dist, mode };
 }
 
 /**
@@ -395,7 +477,23 @@ async function generateSpiralogicReportData(opts: {
   const { element: sunElement, sign: sunSign } = getSunSignElement(birthDate);
   const { element: moonElement, sign: moonSign } = getMoonSignElement(birthDate, birthData.time);
   const { element: timeElement, label: timeLabel } = getTimeQuadrant(birthData.time);
-  const elementStrengths = computeElementalDistribution(sunElement, timeElement, moonElement);
+
+  // Ascendant (requires lat + lng)
+  const lat = birthData.location?.lat;
+  const lng = birthData.location?.lng;
+  const ascendantResult =
+    lat != null && lng != null
+      ? getAscendantElement(lat, lng, birthDate, birthData.time)
+      : null;
+  const ascendantElement = ascendantResult?.element ?? null;
+  const ascendantSign = ascendantResult?.sign ?? null;
+
+  const { dist: elementStrengths, mode: calculationMode } = computeElementalDistribution(
+    sunElement,
+    timeElement,
+    moonElement,
+    ascendantElement,
+  );
   const lifeCycleTransits = computeLifeCycleTransits(birthDate);
 
   // Identify dominant and underactive elements
@@ -440,14 +538,22 @@ For "evolutionDelta": compare the prior and current data above. Be conservative 
   const prompt = `You are the Spiralogic Evolutionary Report engine. Generate a deeply personalized report in JSON.
 
 ## Chart Signature (PRIMARY — all interpretations must reference this)
-Sun sign: ${sunSign} → Sun element: ${sunElement} (35% weight)
+${calculationMode === 'sun-moon-asc-time'
+  ? `Sun sign: ${sunSign} → Sun element: ${sunElement} (30% weight)
+Moon sign: ${moonSign} → Moon element: ${moonElement} (25% weight)
+Ascendant: ${ascendantSign} → Rising element: ${ascendantElement} (25% weight)
+Birth time context: ${timeLabel} (10% weight)
+Remainder spread equally across other elements (10%)
+Calculation mode: Full (Sun + Moon + Ascendant + Time)`
+  : `Sun sign: ${sunSign} → Sun element: ${sunElement} (35% weight)
 Moon sign: ${moonSign} → Moon element: ${moonElement} (30% weight)
 Birth time context: ${timeLabel} (20% weight)
 Remainder spread equally across other elements (15%)
+Calculation mode: Standard (Sun + Moon + Time — coordinates not provided)`}
 Name: ${birthData.name ?? 'the member'}
 Birth date: ${birthData.date}
 Birth time: ${birthData.time}
-Location: ${birthData.location.placeName ?? 'unspecified'}
+Location: ${birthData.location?.placeName ?? 'unspecified'}
 ${contextNote}
 
 ## Computed Elemental Distribution (chart-grounded, not seasonal)
@@ -569,6 +675,9 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
     "air": ${elementStrengths.air},
     "dominantElement": "${dominantElement}",
     "underactiveElement": "${underactiveElement}",
+    "calculationMode": "${calculationMode}",
+    ${ascendantSign ? `"ascendantSign": "${ascendantSign}",
+    "ascendantElement": "${ascendantElement}",` : ''}
     "balanceSummary": "<one sentence: what does a ${elementStrengths[dominantElement]}% ${dominantElement} / ${elementStrengths[underactiveElement]}% ${underactiveElement} signature mean for how this person moves through life>"
   },
   "nextAction": {
@@ -600,5 +709,20 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
   // Strip any accidental markdown fences
   const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
   const parsed = JSON.parse(cleaned);
+
+  // Inject server-computed chart signature as authoritative QA anchor
+  // (not AI-generated — values come directly from the computation above)
+  parsed.chartSignature = {
+    sunSign,
+    sunElement,
+    moonSign,
+    moonElement,
+    timeElement,
+    ascendantSign: ascendantSign ?? null,
+    ascendantElement: ascendantElement ?? null,
+    calculationMode,
+    elementalDistribution: elementStrengths,
+  };
+
   return parsed;
 }

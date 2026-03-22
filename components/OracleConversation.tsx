@@ -2332,7 +2332,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setStreamingResponseComplete(false);
 
       // Check if hands-free is active via the ContinuousConversation ref
-      const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+      // Default true: hands-free is the intended default (see line 7079 comment)
+      const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
 
       if (!isHandsFree) {
         // Push-to-talk (default): Just clear state, user taps mic to speak again
@@ -7582,6 +7583,18 @@ I'm not sure what I'm feeling yet.`;
             {/* OLD BUTTON REMOVED - Holoflower itself is now clickable */}
           </div>
         </div>
+
+        {/* Tap to Speak / Listening label - below holoflower */}
+        {!isResponding && !isAudioPlaying && !isProcessing && (
+          <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
+            <span
+              className="text-amber-300/60 text-xs tracking-widest uppercase"
+              style={{ letterSpacing: '0.15em' }}
+            >
+              {isListening ? 'Listening' : 'Tap to Speak'}
+            </span>
+          </div>
+        )}
       </motion.div>
         </TransformationalPresence>
       </div>

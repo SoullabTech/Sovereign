@@ -6,6 +6,42 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
+import { Resend } from 'resend';
+
+const KELLY_EMAIL = 'kelly@soullab.life';
+const KELLY_PHONE = '+15044539009';
+
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+}
+
+async function notifyKelly(category: string, categoryLabel: string, message: string, userName: string) {
+  const from = userName || 'Anonymous';
+  const preview = message.length > 160 ? message.substring(0, 157) + '...' : message;
+
+  // Email (fire-and-forget)
+  if (process.env.RESEND_API_KEY) {
+    getResend().emails.send({
+      from: 'MAIA Feedback <noreply@soullab.life>',
+      to: KELLY_EMAIL,
+      subject: `[${categoryLabel}] from ${from}`,
+      html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message}</p>`,
+    }).catch((e: unknown) => console.error('[Feedback] Email notify failed:', e));
+  }
+
+  // SMS via Twilio (fire-and-forget)
+  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {
+    const body = `MAIA ${categoryLabel} from ${from}: ${preview}`;
+    const auth = Buffer.from(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`).toString('base64');
+    fetch(`https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`, {
+      method: 'POST',
+      headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ From: process.env.TWILIO_FROM_NUMBER, To: KELLY_PHONE, Body: body }).toString(),
+    }).catch((e: unknown) => console.error('[Feedback] SMS notify failed:', e));
+  }
+}
 
 const PlatformFeedbackSchema = z.object({
   category: z.enum(['problem', 'challenge', 'strength', 'feature', 'question']),
@@ -54,7 +90,11 @@ export async function POST(request: NextRequest) {
       question: 'Question'
     };
 
-    console.log(`[Feedback] ${categoryLabels[validatedData.category]} from ${validatedData.userName || 'Anonymous'}: ${validatedData.message.substring(0, 100)}...`);
+    const categoryLabel = categoryLabels[validatedData.category];
+    const userName = validatedData.userName || 'Anonymous';
+    console.log(`[Feedback] ${categoryLabel} from ${userName}: ${validatedData.message.substring(0, 100)}...`);
+
+    notifyKelly(validatedData.category, categoryLabel, validatedData.message, userName);
 
     return NextResponse.json({
       success: true,
