@@ -100,6 +100,54 @@ export default function AuditPage() {
               </div>
             </div>
 
+            {/* Example output */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-widest text-stone-600">Sample output</p>
+                <span className="text-xs text-stone-700 italic">From a founder audit (anonymized)</span>
+              </div>
+
+              <div className="space-y-3 border border-stone-800/80 rounded-lg overflow-hidden">
+                {/* Block 1 */}
+                <div className="px-5 pt-5 pb-4 border-b border-stone-800/60">
+                  <p className="text-xs uppercase tracking-widest text-amber-500/50 mb-3">Core Structure</p>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="text-stone-500">Core axis —</span> <span className="text-stone-300">Internally visionary and pattern-oriented, driven by meaning and synthesis.</span></p>
+                    <p><span className="text-stone-500">Presentation axis —</span> <span className="text-stone-300">Externally structured and responsible, leading through organization and delivery.</span></p>
+                    <p className="text-stone-400 pt-1 leading-relaxed">
+                      There is a gap between how you think and how you present. This gap creates friction in execution and communication.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Block 2 */}
+                <div className="px-5 py-4 border-b border-stone-800/60">
+                  <p className="text-xs uppercase tracking-widest text-amber-500/50 mb-3">Primary Tension</p>
+                  <p className="text-sm text-stone-400 leading-relaxed mb-3">
+                    You generate ideas from a high-level pattern recognition layer but express them through structured execution.
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-stone-500">
+                    <li className="flex gap-2"><span className="text-amber-500/30 shrink-0">·</span>Difficulty translating vision into action without over-engineering first</li>
+                    <li className="flex gap-2"><span className="text-amber-500/30 shrink-0">·</span>Others perceive you as structured — you experience yourself as exploratory</li>
+                  </ul>
+                </div>
+
+                {/* Block 3 */}
+                <div className="px-5 py-4">
+                  <p className="text-xs uppercase tracking-widest text-amber-500/50 mb-3">Strategic Shift</p>
+                  <p className="text-sm text-stone-400 leading-relaxed">
+                    Shift from structuring your thinking <em>before</em> expression
+                    <span className="text-stone-600 mx-2">→</span>
+                    to expressing earlier and letting structure emerge from what you actually produce.
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-stone-700 leading-relaxed">
+                This is a simplified excerpt. Full audits include elemental mapping, distortion patterns, and a 30-day integration path.
+              </p>
+            </div>
+
             <button
               onClick={() => setState({ phase: 'form' })}
               className="w-full py-4 bg-amber-500 text-stone-950 rounded text-sm font-medium tracking-wide hover:bg-amber-400 transition-colors"
