@@ -51,6 +51,22 @@ const STEPS = [
 export function AuditFunnelSections() {
   return (
     <>
+      {/* Section header — Identity Audit */}
+      <section className="py-16 px-6 bg-stone-950 border-t border-stone-800/40">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs uppercase tracking-widest text-amber-500/50 mb-4">Identity Audit</p>
+          <h2
+            className="text-3xl sm:text-4xl font-extralight text-stone-100 leading-snug"
+            style={{ fontFamily: "'Crimson Pro', serif" }}
+          >
+            A high-resolution map of how your system actually works.
+          </h2>
+          <p className="mt-3 text-stone-400 text-base font-light">
+            Not personality. Not surface behavior. Structure, patterns, and realignment.
+          </p>
+        </div>
+      </section>
+
       {/* Who it's for — selective */}
       <section className="py-24 px-6 bg-stone-950">
         <div className="max-w-2xl mx-auto">
