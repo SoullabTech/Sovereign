@@ -95,8 +95,9 @@ export function HeroSection() {
           className="text-sm sm:text-base text-white/40 max-w-md mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Soullab maps the gap between who you are, how you show up,
-          and how your system actually operates.
+          A studio for depth, pattern recognition, and inner architecture.
+          We build tools for the soul — intelligence that helps you see
+          clearly and operate from what's actually true.
         </motion.p>
 
         {/* CTAs */}
