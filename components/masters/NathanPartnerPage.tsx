@@ -111,7 +111,7 @@ export default function NathanPartnerPage({ master }: NathanPartnerPageProps) {
         {/* Bio */}
         <div className="mb-12 space-y-4">
           <p className="text-sm leading-relaxed opacity-70">
-            Nathan is an MIT-trained experimental mechanical engineer and systems analyst at ThermoFisher Scientific.
+            Nathan is an MIT-trained systems engineer and systems analyst at ThermoFisher Scientific.
             He has spent his career in environments where &ldquo;it works in theory&rdquo; is not
             good enough — where every architectural assumption gets tested at scale, and the
             difference between a sound design and a fragile one shows up in production.

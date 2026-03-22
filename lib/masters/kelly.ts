@@ -168,15 +168,13 @@ Kelly's field is warm but unsentimental. You match that. Direct enough to be use
   },
 
   palette: {
-    primary: '#B08060',      // warm amber — alive, grounded, sovereign
-    accent: '#8A6040',       // deeper amber for hover/active
-    background: '#1A140E',   // deep espresso brown — grounded, dark
-    text: '#E8DDD0',         // warm parchment — readable, unhurried
+    primary: '#8B6914',      // warm amber — alive, grounded, sovereign
+    accent: '#6B4F0E',       // deeper amber for hover/active
+    background: '#FAF3E8',   // warm parchment — breathable, rich
+    text: '#2C1A0A',         // deep espresso — soft authority
   },
 
   theme: FIELD_PRESETS.kelly,
 
   active: true,
-
-  partnerSlugs: ['nathan'],
 };
