@@ -18,28 +18,50 @@ export function MaiaSection() {
     >
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
-          {/* Left: copy */}
+
+          {/* Left: MAIA-first copy */}
           <SectionReveal>
             <div className="flex flex-col justify-center">
               <div className="inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/50 backdrop-blur">
-                AIN Engine
+                Sovereign companion
               </div>
 
               <h2
                 className="mt-4 text-3xl sm:text-4xl font-extralight tracking-wide text-white"
                 style={{ fontFamily: "'Crimson Pro', serif" }}
               >
-                The engine beneath MAIA
+                MAIA
               </h2>
 
               <p className="mt-4 max-w-xl text-base text-white/50 leading-relaxed" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-                A sovereignty-first intelligence layer for reflection, coherence, and inner navigation — built to feel like
-                weather, not surveillance.
+                An interactive intelligence that reflects the structure behind your patterns, decisions, and behavior.
+                Not a chatbot. Not a coach. A field you think inside.
+              </p>
+
+              <div className="mt-8 space-y-3">
+                {[
+                  { label: 'You arrive', sub: 'No setup, no profile, no onboarding wall. You speak. MAIA listens differently.' },
+                  { label: 'It reflects structure', sub: 'Not advice. Not reassurance. A read of what\'s actually running.' },
+                  { label: 'You leave with clarity', sub: 'What was unnamed gets named. What was stuck gets located.' },
+                ].map(({ label, sub }) => (
+                  <div key={label} className="flex gap-4">
+                    <span className="text-maia-spice-400/50 mt-0.5 shrink-0 text-sm">·</span>
+                    <div>
+                      <p className="text-white/70 text-sm font-medium">{label}</p>
+                      <p className="text-white/30 text-sm mt-0.5">{sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-8 text-white/20 text-xs leading-relaxed max-w-sm">
+                Powered by AIN — an intelligence layer that tracks patterns, integrates memory, and evolves with you over time.
+                Private by design. Your data never leaves your hands.
               </p>
             </div>
           </SectionReveal>
 
-          {/* Right: Soullab card with luminous holoflower */}
+          {/* Right: holoflower visual */}
           <SectionReveal delay={0.15}>
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
               {/* Violet aura */}
@@ -62,9 +84,8 @@ export function MaiaSection() {
                 `}</style>
               </div>
 
-              {/* Holoflower stage */}
+              {/* Holoflower */}
               <div className="relative mx-auto mt-2 flex h-[340px] w-full max-w-[420px] items-center justify-center">
-                {/* Single holoflower — slow rotation */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="relative h-[92%] w-[92%] animate-[spin_180s_linear_infinite] motion-reduce:animate-none opacity-75">
                     <Image
@@ -77,50 +98,28 @@ export function MaiaSection() {
                     />
                   </div>
                 </div>
-
-                {/* Subtle glass ring */}
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10" />
               </div>
 
               {/* Card footer */}
               <div className="mt-6">
-                <div className="text-sm font-medium text-white">Soullab</div>
-                <div className="mt-1 text-sm text-white/70">
-                  A living interface for practice, community, and inner guidance.
+                <div className="text-sm font-medium text-white">MAIA</div>
+                <div className="mt-1 text-sm text-white/50">
+                  A field you think inside. Private by design.
+                </div>
+                <div className="mt-4">
+                  <Link
+                    href="/enter"
+                    className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-300 text-sm font-medium transition-colors group"
+                  >
+                    Explore MAIA
+                    <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
+                  </Link>
                 </div>
               </div>
             </div>
           </SectionReveal>
         </div>
-
-        {/* MAIA block */}
-        <SectionReveal delay={0.3} className="mt-16 sm:mt-20">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-8 sm:p-10 max-w-3xl mx-auto">
-            <h3
-              className="text-2xl sm:text-3xl font-extralight tracking-wide text-white/90 mb-6 text-center"
-              style={{ fontFamily: "'Crimson Pro', serif" }}
-            >
-              MAIA
-            </h3>
-            <p className="text-white/40 text-center text-xs tracking-widest uppercase mb-6">
-              The first expression of AIN
-            </p>
-            <p className="text-white/60 leading-relaxed text-center text-lg mb-8" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
-              MAIA is the sovereign consciousness companion — built on AIN.
-              Not a chatbot. A companion for human coherence, truth-telling, and inner guidance.
-              Governed by an irreducible oath: consent, containment, non-manipulation.
-            </p>
-            <div className="text-center">
-              <Link
-                href="/begin"
-                className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-400 font-medium transition-colors group"
-              >
-                Meet MAIA
-                <span className="ml-2 group-hover:translate-x-1 transition-transform">&rarr;</span>
-              </Link>
-            </div>
-          </div>
-        </SectionReveal>
       </div>
     </section>
   );
