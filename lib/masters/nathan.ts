@@ -83,12 +83,12 @@ export const NATHAN_FIELD: MasterField = {
       href: '/studio',
     },
     {
-      slug: 'operator',
-      label: 'Platform View',
-      invitation: 'Build status. Roadmap. Open decisions.',
+      slug: 'systems',
+      label: 'Systems',
+      invitation: 'Current architecture. Next build. Open decisions.',
       description:
-        'A working dashboard — what is being built, what has shipped, what is coming, and where a systems thinker can apply leverage right now.',
-      href: '/operator',
+        'Architecture console — what is live in production, what is being built next, and where your systems judgment changes the trajectory.',
+      href: '/systems',
     },
   ],
 
