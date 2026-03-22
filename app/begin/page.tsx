@@ -1,348 +1,401 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Holoflower } from '@/components/ui/Holoflower';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { trackOnboarding } from '@/lib/onboarding/telemetry';
+import { biometricAuth } from '@/lib/auth/biometricAuth';
 
-// ─── Email collection (default view) ───────────────────────────────────────
+type Step =
+  | 'email'
+  | 'biometric'        // returning user with webauthn
+  | 'password'         // returning user, no webauthn or chose password
+  | 'new-user'         // new account setup
+  | 'set-new-password' // forgot password flow
+  | 'offer-biometric'  // post sign-in: offer to enable biometrics
+  | 'done';
 
-function EmailStep() {
-  const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !trimmed.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
-    setStatus('sending');
-    setError('');
-    trackOnboarding({ event: 'email_submitted', email: trimmed, path: '/begin' });
-
-    try {
-      const res = await fetch('/api/members/magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: trimmed }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong. Please try again.');
-        setStatus('error');
-        return;
-      }
-
-      setStatus('sent');
-    } catch {
-      setError('Could not send the link. Please check your connection.');
-      setStatus('error');
-    }
-  };
-
-  if (status === 'sent') {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-sm mx-auto"
-      >
-        <div className="text-4xl mb-6">✉️</div>
-        <h2 className="text-white text-xl font-light mb-3">Check your email</h2>
-        <p className="text-teal-100/70 text-sm font-light leading-relaxed">
-          We sent a sign-in link to <strong className="text-white">{email}</strong>.
-          Open it to enter the field.
-        </p>
-        <p className="text-teal-100/50 text-xs mt-4 font-light">
-          Link expires in 15 minutes.
-        </p>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.form
-      onSubmit={handleSubmit}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, delay: 0.5 }}
-      className="w-full max-w-sm mx-auto space-y-3"
-    >
-      <input
-        type="email"
-        placeholder="Your email address"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        disabled={status === 'sending'}
-        autoFocus
-        className="w-full px-4 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-teal-100/60 text-base focus:outline-none focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
-      />
-
-      {error && (
-        <p className="text-red-300 text-sm text-center">{error}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={status === 'sending'}
-        className="w-full py-3 rounded-xl bg-white/85 hover:bg-white text-teal-950 font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50"
-      >
-        {status === 'sending' ? 'Sending…' : 'Send me a sign-in link'}
-      </button>
-
-      <div className="text-center pt-2">
-        <button
-          type="button"
-          onClick={() => window.location.href = '/test-elemental'}
-          className="text-teal-100/60 hover:text-teal-100 text-sm font-light underline underline-offset-2 transition"
-        >
-          Have an invite code?
-        </button>
-      </div>
-    </motion.form>
-  );
-}
-
-// ─── Profile completion (after magic link verification) ──────────────────────
-
-function ProfileStep({ email }: { email: string }) {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
-  const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmedName = name.trim();
-    const trimmedUsername = username.trim().toLowerCase();
-
-    if (!trimmedName) { setError('Please enter your name.'); return; }
-    if (!trimmedUsername || trimmedUsername.length < 3) { setError('Username must be at least 3 characters.'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
-
-    setStatus('submitting');
-    setError('');
-
-    try {
-      const res = await fetch('/api/members/register-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username: trimmedUsername, password, name: trimmedName }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Registration failed. Please try again.');
-        setStatus('error');
-        return;
-      }
-
-      const member = data.member;
-
-      // Store session — mirrors what magic-link-success sets for consistency
-      const sessionData = {
-        id: member.id,
-        memberId: member.id,
-        username: member.username,
-        name: member.name,
-        preferredName: member.name,
-        email,
-        onboarded: false,
-      };
-      localStorage.setItem('beta_user', JSON.stringify(sessionData));
-      localStorage.setItem('memberId', member.id);
-      localStorage.setItem('explorerId', member.id);
-      localStorage.setItem('explorerName', member.name);
-      localStorage.setItem('explorerPreferredName', member.name);
-      localStorage.setItem('betaOnboardingComplete', 'false');
-      localStorage.setItem('signup_completed', 'true');
-      localStorage.setItem('maia_session_version', '2');
-
-      // Continue into onboarding (FAQ → onboarding → maia)
-      router.push('/faq');
-    } catch {
-      setError('Could not complete registration. Please check your connection.');
-      setStatus('error');
-    }
-  };
-
-  return (
-    <motion.form
-      onSubmit={handleSubmit}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7 }}
-      className="w-full max-w-sm mx-auto space-y-3"
-    >
-      <p className="text-teal-100/70 text-sm text-center font-light mb-5">
-        Welcome — you&apos;re verified as <strong className="text-white">{email}</strong>.<br />
-        Set up your profile to enter the field.
-      </p>
-
-      <input
-        type="text"
-        placeholder="Your name"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        disabled={status === 'submitting'}
-        autoFocus
-        className="w-full px-4 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-teal-100/60 text-base focus:outline-none focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
-      />
-
-      <input
-        type="text"
-        placeholder="Choose a username"
-        value={username}
-        onChange={e => setUsername(e.target.value)}
-        disabled={status === 'submitting'}
-        autoComplete="username"
-        className="w-full px-4 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-teal-100/60 text-base focus:outline-none focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
-      />
-
-      <div className="relative">
-        <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Create a password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          disabled={status === 'submitting'}
-          autoComplete="new-password"
-          className="w-full px-4 py-3 pr-11 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-teal-100/60 text-base focus:outline-none focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword(v => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-100/60 hover:text-white transition"
-          tabIndex={-1}
-        >
-          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
-
-      {error && (
-        <p className="text-red-300 text-sm text-center">{error}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={status === 'submitting'}
-        className="w-full py-3 rounded-xl bg-white/85 hover:bg-white text-teal-950 font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50"
-      >
-        {status === 'submitting' ? 'Creating your account…' : 'Enter the field'}
-      </button>
-    </motion.form>
-  );
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
-
-function BeginContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  const emailParam = searchParams?.get('email') || '';
-  // Only show profile step if both flags are present and email looks valid
-  const verified = searchParams?.get('verified') === 'true' && emailParam.includes('@');
-  // fresh=true: user came from /signin "Begin your journey" — skip auto-redirect
-  // (prevents loop: stale localStorage onboarded=true → /maia → /signin → /begin → loop)
-  const fresh = searchParams?.get('fresh') === 'true';
-
-  // Track page open and redirect already-onboarded members
-  useEffect(() => {
-    trackOnboarding({ event: 'begin_opened', path: verified ? '/begin?verified=true' : '/begin' });
-    if (fresh) return; // user explicitly chose to start fresh — don't redirect
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const u = JSON.parse(betaUser);
-        if (u.onboarded === true) {
-          router.replace('/maia');
-        }
-      }
-    } catch { /* ignore */ }
-  }, [router, verified, fresh]);
-
-  const heading = verified ? 'Welcome' : 'Begin your journey';
-  const subtitle = verified
-    ? 'Your email is verified. Set up your profile below.'
-    : 'Enter your email to receive a sign-in link.';
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-6">
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.0, ease: 'easeOut' }}
-        className="mb-10"
-      >
-        <div className="w-28 h-28 mx-auto">
-          <Holoflower size="xl" glowIntensity="medium" animate={true} />
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="text-center mb-8"
-      >
-        <h1 className="text-white text-4xl sm:text-5xl font-extralight tracking-[0.25em] uppercase mb-3">
-          Soullab
-        </h1>
-        <p className="text-teal-100/80 text-base font-light tracking-wide">
-          {subtitle}
-        </p>
-      </motion.div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={verified ? 'profile' : 'email'}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="w-full max-w-sm"
-        >
-          {verified
-            ? <ProfileStep email={emailParam} />
-            : <EmailStep />
-          }
-        </motion.div>
-      </AnimatePresence>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-        className="mt-10 text-teal-100/40 text-xs font-light tracking-wide"
-      >
-        Already have an account?{' '}
-        <a href="/signin" className="underline underline-offset-2 hover:text-teal-100/70 transition">
-          Sign in
-        </a>
-      </motion.p>
-    </div>
-  );
+function storeSession(member: { id: string; name: string; email?: string; onboarded: boolean }) {
+  localStorage.setItem('beta_user', JSON.stringify(member));
 }
 
 export default function BeginPage() {
+  const router = useRouter();
+  const [step, setStep] = useState<Step>('email');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [memberName, setMemberName] = useState('');
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioLabel, setBioLabel] = useState('Biometric');
+  const [bioLoading, setBioLoading] = useState(false);
+  const [offerBioStatus, setOfferBioStatus] = useState<'idle' | 'registering' | 'done' | 'skipped'>('idle');
+
+  useEffect(() => {
+    biometricAuth.getAvailability().then(avail => setBioAvailable(avail.available));
+    setBioLabel(biometricAuth.getBiometricName());
+  }, []);
+
+  // ── Email step ───────────────────────────────────────────────────────────
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes('@')) { setError('Please enter a valid email.'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/members/lookup-email', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      const data = await res.json();
+      if (data.exists) {
+        setMemberName(data.name || '');
+        if (data.hasWebauthn && bioAvailable) {
+          setStep('biometric');
+        } else {
+          setStep('password');
+        }
+      } else {
+        setStep('new-user');
+      }
+    } catch { setError('Something went wrong. Try again.'); }
+    finally { setLoading(false); }
+  };
+
+  // ── Biometric sign-in ────────────────────────────────────────────────────
+  const handleBiometricSignIn = async () => {
+    setBioLoading(true); setError('');
+    try {
+      const res = await biometricAuth.authenticate(email.trim().toLowerCase());
+      if (!res.success) {
+        const msg =
+          res.code === 'USER_CANCELLED' || res.code === 'BIOMETRY_FAILED' ? 'Cancelled. Tap again when ready.' :
+          res.code === 'CREDENTIAL_NOT_FOUND' ? 'No biometric found. Use password instead.' :
+          res.code === 'CHALLENGE_EXPIRED' ? 'Took too long. Try again.' :
+          res.error || 'Something went wrong.';
+        setError(msg);
+        setBioLoading(false);
+        return;
+      }
+      if (res.member) storeSession({ id: res.member.id, name: res.member.name, onboarded: res.member.onboarded });
+      setStep('done');
+      setTimeout(() => router.push('/maia'), 800);
+    } catch { setError('Biometric sign-in failed. Try your password.'); }
+    finally { setBioLoading(false); }
+  };
+
+  // ── Password sign-in (returning) ─────────────────────────────────────────
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) { setError('Enter your password.'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/members/enter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(res.status === 401 ? 'Incorrect password.' : (data.error || 'Something went wrong.')); return; }
+      if (data.member) storeSession({ id: data.member.id, name: data.member.name, email: data.member.email, onboarded: data.member.onboarded });
+      // Offer biometric if available and not already set up
+      if (bioAvailable && !data.member?.hasWebauthn) {
+        setStep('offer-biometric');
+      } else {
+        setStep('done');
+        setTimeout(() => router.push('/maia'), 800);
+      }
+    } catch { setError('Something went wrong. Try again.'); }
+    finally { setLoading(false); }
+  };
+
+  // ── New user registration ─────────────────────────────────────────────────
+  const handleNewUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) { setError('What should we call you?'); return; }
+    if (!password || password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/members/enter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password, name: name.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong.'); return; }
+      if (data.member) storeSession({ id: data.member.id, name: data.member.name, email: data.member.email, onboarded: data.member.onboarded });
+      if (bioAvailable) {
+        setStep('offer-biometric');
+      } else {
+        setStep('done');
+        setTimeout(() => router.push('/maia'), 800);
+      }
+    } catch { setError('Something went wrong. Try again.'); }
+    finally { setLoading(false); }
+  };
+
+  // ── Set new password ──────────────────────────────────────────────────────
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password || password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/members/set-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), newPassword: password }),
+      });
+      if (!res.ok) { const d = await res.json(); setError(d.error || 'Something went wrong.'); return; }
+      const signIn = await fetch('/api/members/enter', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+      const d = await signIn.json();
+      if (d.member) storeSession({ id: d.member.id, name: d.member.name, email: d.member.email, onboarded: d.member.onboarded });
+      setStep('done');
+      setTimeout(() => router.push('/maia'), 800);
+    } catch { setError('Something went wrong. Try again.'); }
+    finally { setLoading(false); }
+  };
+
+  // ── Enable biometrics ─────────────────────────────────────────────────────
+  const handleEnableBiometric = async () => {
+    setOfferBioStatus('registering');
+    try {
+      const res = await biometricAuth.register();
+      if (res.success) {
+        setOfferBioStatus('done');
+        setTimeout(() => { setStep('done'); router.push('/maia'); }, 1200);
+      } else {
+        setOfferBioStatus('skipped');
+        setTimeout(() => { setStep('done'); router.push('/maia'); }, 800);
+      }
+    } catch {
+      setOfferBioStatus('skipped');
+      setTimeout(() => { setStep('done'); router.push('/maia'); }, 800);
+    }
+  };
+
+  const subtitle: Record<Step, string> = {
+    email: 'Your space is waiting.',
+    biometric: memberName ? `Welcome back, ${memberName.split(' ')[0]}.` : 'Welcome back.',
+    password: memberName ? `Welcome back, ${memberName.split(' ')[0]}.` : 'Welcome back.',
+    'new-user': 'Good to meet you.',
+    'set-new-password': 'Create a new password.',
+    'offer-biometric': 'One more thing.',
+    done: 'Entering…',
+  };
+
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-      </div>
-    }>
-      <BeginContent />
-    </Suspense>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 relative"
+      style={{ background: 'linear-gradient(135deg, #8FBCBE 0%, #6A9EA1 50%, #5A8E91 100%)' }}>
+
+      {/* Holoflower */}
+      <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.2, ease: 'easeOut' }} className="mb-6">
+        <img src="/holoflower.png" alt="" width={80} height={80} style={{ opacity: 0.9 }} />
+      </motion.div>
+
+      {/* Wordmark */}
+      <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.3 }}
+        className="text-white tracking-[0.3em] text-xl font-light mb-2">
+        S O U L L A B
+      </motion.h1>
+
+      {/* Subtitle */}
+      <AnimatePresence mode="wait">
+        <motion.p key={step + memberName} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 0.65, y: 0 }}
+          exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
+          className="text-white text-sm font-light mb-10 text-center">
+          {subtitle[step]}
+        </motion.p>
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+
+        {/* ── Email ── */}
+        {step === 'email' && (
+          <motion.form key="email" onSubmit={handleEmailSubmit}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3">
+            <input type="email" placeholder="your email" value={email} autoFocus
+              onChange={e => { setEmail(e.target.value); setError(''); }}
+              className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
+            {error && <p className="text-red-200 text-xs text-center">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              {loading ? 'Checking…' : 'Continue'}
+            </button>
+          </motion.form>
+        )}
+
+        {/* ── Biometric ── */}
+        {step === 'biometric' && (
+          <motion.div key="biometric"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3 text-center">
+            <button onClick={handleBiometricSignIn} disabled={bioLoading}
+              className="w-full py-4 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              {bioLoading ? 'Verifying…' : (
+                <>
+                  <span className="text-lg">🔒</span>
+                  Use {bioLabel}
+                </>
+              )}
+            </button>
+            {error && <p className="text-red-200 text-xs">{error}</p>}
+            <button type="button" onClick={() => { setError(''); setStep('password'); }}
+              className="text-white/50 text-xs hover:text-white/80 underline">
+              Use password instead
+            </button>
+            <p className="pt-1">
+              <button type="button" onClick={() => { setStep('email'); setError(''); }}
+                className="text-white/30 text-xs hover:text-white/60">← Back</button>
+            </p>
+          </motion.div>
+        )}
+
+        {/* ── Password (returning) ── */}
+        {step === 'password' && (
+          <motion.form key="password" onSubmit={handlePasswordSubmit}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3">
+            <div className="relative">
+              <input type={showPassword ? 'text' : 'password'} placeholder="password" value={password} autoFocus
+                onChange={e => { setPassword(e.target.value); setError(''); }}
+                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm pr-10" />
+              <button type="button" onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {error && (
+              <div className="text-center space-y-1">
+                <p className="text-red-200 text-xs">{error}</p>
+                {error.includes('Incorrect') && (
+                  <button type="button" onClick={() => { setError(''); setPassword(''); setConfirmPassword(''); setStep('set-new-password'); }}
+                    className="text-white/60 text-xs underline hover:text-white/90">
+                    Set a new password instead
+                  </button>
+                )}
+              </div>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              {loading ? 'Entering…' : 'Enter'}
+            </button>
+            <p className="text-center">
+              <button type="button" onClick={() => { setStep('email'); setPassword(''); setError(''); }}
+                className="text-white/40 text-xs hover:text-white/70">← Back</button>
+            </p>
+          </motion.form>
+        )}
+
+        {/* ── New user ── */}
+        {step === 'new-user' && (
+          <motion.form key="new-user" onSubmit={handleNewUserSubmit}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3">
+            <input type="text" placeholder="your name" value={name} autoFocus
+              onChange={e => { setName(e.target.value); setError(''); }}
+              className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
+            <div className="relative">
+              <input type={showPassword ? 'text' : 'password'} placeholder="create a password" value={password}
+                onChange={e => { setPassword(e.target.value); setError(''); }}
+                className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm pr-10" />
+              <button type="button" onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {error && <p className="text-red-200 text-xs text-center">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              {loading ? 'Creating your space…' : 'Enter'}
+            </button>
+            <p className="text-center">
+              <button type="button" onClick={() => { setStep('email'); setError(''); }}
+                className="text-white/40 text-xs hover:text-white/70">← Back</button>
+            </p>
+          </motion.form>
+        )}
+
+        {/* ── Set new password ── */}
+        {step === 'set-new-password' && (
+          <motion.form key="set-new-password" onSubmit={handleSetNewPassword}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3">
+            <input type="password" placeholder="new password (6+ characters)" value={password} autoFocus
+              onChange={e => { setPassword(e.target.value); setError(''); }}
+              className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
+            <input type="password" placeholder="confirm password" value={confirmPassword}
+              onChange={e => { setConfirmPassword(e.target.value); setError(''); }}
+              className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
+            {error && <p className="text-red-200 text-xs text-center">{error}</p>}
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              {loading ? 'Saving…' : 'Set password & enter'}
+            </button>
+            <p className="text-center">
+              <button type="button" onClick={() => { setStep('password'); setError(''); setPassword(''); setConfirmPassword(''); }}
+                className="text-white/40 text-xs hover:text-white/70">← Back</button>
+            </p>
+          </motion.form>
+        )}
+
+        {/* ── Offer biometric ── */}
+        {step === 'offer-biometric' && (
+          <motion.div key="offer-biometric"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
+            className="w-full max-w-sm space-y-3 text-center">
+            {offerBioStatus === 'idle' && (
+              <>
+                <p className="text-white/80 text-sm font-light leading-relaxed">
+                  Use {bioLabel} next time?<br />
+                  <span className="text-white/50 text-xs">Your touch becomes your key.</span>
+                </p>
+                <button onClick={handleEnableBiometric}
+                  className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all flex items-center justify-center gap-2">
+                  <span className="text-lg">🔒</span> Enable {bioLabel}
+                </button>
+                <button type="button" onClick={() => { setStep('done'); router.push('/maia'); }}
+                  className="text-white/40 text-xs hover:text-white/70 underline">
+                  Maybe later
+                </button>
+              </>
+            )}
+            {offerBioStatus === 'registering' && (
+              <p className="text-white/70 text-sm font-light">Setting up {bioLabel}…</p>
+            )}
+            {offerBioStatus === 'done' && (
+              <p className="text-white/90 text-sm font-light">✓ {bioLabel} enabled. Entering…</p>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── Done ── */}
+        {step === 'done' && (
+          <motion.p key="done" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="text-white/80 text-sm font-light tracking-wide">
+            Welcome.
+          </motion.p>
+        )}
+
+      </AnimatePresence>
+
+      {/* Footer */}
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} transition={{ delay: 1.5 }}
+        className="absolute bottom-8 text-white text-xs font-light tracking-widest">
+        Sovereign by design.
+      </motion.p>
+    </div>
   );
 }

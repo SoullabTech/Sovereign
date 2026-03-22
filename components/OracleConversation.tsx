@@ -50,6 +50,7 @@ import { FieldStateIndicator } from './ain/FieldStateIndicator';
 // TranslateMessageButton removed from per-message use — will return as session-level WisdomLensDrawer
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
+import { AstrologyHandoffCard } from '@/components/astrology/AstrologyHandoffCard';
 import { formatMessageText } from '@/lib/text/formatMessageText';
 import { HighlightedText } from './vocabulary/VocabularyTooltip';
 import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
@@ -473,6 +474,8 @@ interface ConversationMessage {
     emergenceRating: 'recombination' | 'synthesis' | 'breakthrough';
     framingWeights?: Record<string, number> | null;
   } | null;
+  // 🌌 ASTROLOGY HANDOFF: Structured transition into the Cosmic Blueprint
+  astrologyHandoff?: import('@/lib/astrology/astrologyHandoff').AstrologyHandoff | null;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -2329,7 +2332,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setStreamingResponseComplete(false);
 
       // Check if hands-free is active via the ContinuousConversation ref
-      const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
+      // Default true: hands-free is the intended default (see line 7079 comment)
+      const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
 
       if (!isHandsFree) {
         // Push-to-talk (default): Just clear state, user taps mic to speak again
@@ -5100,6 +5104,8 @@ I'm not sure what I'm feeling yet.`;
         ainState: responseData.ainState || null,
         // 🏛️ AIN: Consultation council results
         consultation: responseData.consultation || null,
+        // 🌌 ASTROLOGY HANDOFF: Structured threshold transition into the Cosmic Blueprint
+        astrologyHandoff: responseData.astrologyHandoff || null,
       };
 
       // 🌀 AIN: Track field wisdom presence at conversation level
@@ -7577,6 +7583,18 @@ I'm not sure what I'm feeling yet.`;
             {/* OLD BUTTON REMOVED - Holoflower itself is now clickable */}
           </div>
         </div>
+
+        {/* Tap to Speak / Listening label - below holoflower */}
+        {!isResponding && !isAudioPlaying && !isProcessing && (
+          <div className="pointer-events-none text-center w-full" style={{ marginTop: 8 }}>
+            <span
+              className="text-amber-300/60 text-xs tracking-widest uppercase"
+              style={{ letterSpacing: '0.15em' }}
+            >
+              {isListening ? 'Listening' : 'Tap to Speak'}
+            </span>
+          </div>
+        )}
       </motion.div>
         </TransformationalPresence>
       </div>
@@ -7814,6 +7832,11 @@ I'm not sure what I'm feeling yet.`;
                       {/* 🏛️ AIN: Council consultation results panel */}
                       {message.role === 'oracle' && message.consultation && (
                         <CouncilInsightPanel consultation={message.consultation} />
+                      )}
+
+                      {/* 🌌 ASTROLOGY HANDOFF: Threshold card into the Cosmic Blueprint */}
+                      {message.role === 'oracle' && message.astrologyHandoff && (
+                        <AstrologyHandoffCard handoff={message.astrologyHandoff} />
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}

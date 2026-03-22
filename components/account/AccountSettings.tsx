@@ -202,6 +202,7 @@ export function AccountSettings() {
   const [editPreferredName, setEditPreferredName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editBio, setEditBio] = useState('');
+  const [editTimezone, setEditTimezone] = useState('');
 
   // Birth data edit state
   const [editBirthDate, setEditBirthDate] = useState('');
@@ -281,6 +282,7 @@ export function AccountSettings() {
           setEditPreferredName(profileData.preferredName || '');
           setEditEmail(profileData.email || '');
           setEditBio(profileData.bio || '');
+          setEditTimezone(profileData.timezone || '');
 
           // Load birth data
           if (profileData.birthData) {
@@ -573,6 +575,7 @@ export function AccountSettings() {
           preferredName: editPreferredName,
           email: editEmail,
           bio: editBio,
+          timezone: editTimezone || null,
         }),
       });
 
@@ -604,7 +607,7 @@ export function AccountSettings() {
     } finally {
       setSaving(false);
     }
-  }, [userId, editName, editPreferredName, editEmail, editBio, showSaveIndicator]);
+  }, [userId, editName, editPreferredName, editEmail, editBio, editTimezone, showSaveIndicator]);
 
   // Search for birth location
   const searchLocation = useCallback(async (query: string) => {
@@ -947,6 +950,54 @@ export function AccountSettings() {
           rows={3}
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 placeholder-stone-500 focus:border-amber-500/50 focus:outline-none resize-none"
         />
+      </div>
+      <div>
+        <label className="text-sm text-stone-400 mb-2 block">Timezone</label>
+        <select
+          value={editTimezone}
+          onChange={(e) => setEditTimezone(e.target.value)}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-stone-200 focus:border-amber-500/50 focus:outline-none"
+        >
+          <option value="">— Select timezone —</option>
+          <optgroup label="Americas">
+            <option value="America/New_York">Eastern Time (New York)</option>
+            <option value="America/Chicago">Central Time (Chicago)</option>
+            <option value="America/Denver">Mountain Time (Denver)</option>
+            <option value="America/Phoenix">Mountain Time – no DST (Phoenix)</option>
+            <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+            <option value="America/Anchorage">Alaska Time (Anchorage)</option>
+            <option value="America/Honolulu">Hawaii Time (Honolulu)</option>
+            <option value="America/Toronto">Eastern Time (Toronto)</option>
+            <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+            <option value="America/Mexico_City">Central Time (Mexico City)</option>
+          </optgroup>
+          <optgroup label="Europe">
+            <option value="Europe/London">London (GMT/BST)</option>
+            <option value="Europe/Paris">Paris (CET/CEST)</option>
+            <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+            <option value="Europe/Rome">Rome (CET/CEST)</option>
+            <option value="Europe/Madrid">Madrid (CET/CEST)</option>
+            <option value="Europe/Amsterdam">Amsterdam (CET/CEST)</option>
+            <option value="Europe/Stockholm">Stockholm (CET/CEST)</option>
+            <option value="Europe/Helsinki">Helsinki (EET/EEST)</option>
+            <option value="Europe/Moscow">Moscow (MSK)</option>
+          </optgroup>
+          <optgroup label="Asia / Pacific">
+            <option value="Asia/Dubai">Dubai (GST)</option>
+            <option value="Asia/Kolkata">India (IST)</option>
+            <option value="Asia/Bangkok">Bangkok (ICT)</option>
+            <option value="Asia/Singapore">Singapore (SGT)</option>
+            <option value="Asia/Tokyo">Tokyo (JST)</option>
+            <option value="Asia/Shanghai">Shanghai (CST)</option>
+            <option value="Asia/Seoul">Seoul (KST)</option>
+            <option value="Australia/Melbourne">Melbourne (AEST/AEDT)</option>
+            <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+            <option value="Pacific/Auckland">Auckland (NZST/NZDT)</option>
+          </optgroup>
+          <optgroup label="Universal">
+            <option value="UTC">UTC</option>
+          </optgroup>
+        </select>
       </div>
       <div className="flex items-center justify-between text-sm text-stone-400">
         <span>Member since {profile ? new Date(profile.createdAt).toLocaleDateString() : '...'}</span>

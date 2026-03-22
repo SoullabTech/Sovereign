@@ -37,6 +37,9 @@ export default function SpiralogicReportPage() {
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
+  const [birthLat, setBirthLat] = useState('');
+  const [birthLng, setBirthLng] = useState('');
+  const [geocoding, setGeocoding] = useState(false);
   const [memberName, setMemberName] = useState('');
   const [lifeStage, setLifeStage] = useState('');
 
@@ -67,6 +70,29 @@ export default function SpiralogicReportPage() {
   useEffect(() => {
     loadHistory();
   }, []);
+
+  async function geocodePlace() {
+    if (!birthPlace.trim()) return;
+    setGeocoding(true);
+    try {
+      const encoded = encodeURIComponent(birthPlace.trim());
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+        { headers: { 'User-Agent': 'MAIA-SOVEREIGN/1.0' } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) {
+          setBirthLat(parseFloat(data[0].lat).toFixed(4));
+          setBirthLng(parseFloat(data[0].lon).toFixed(4));
+        }
+      }
+    } catch {
+      // non-fatal — user can enter manually
+    } finally {
+      setGeocoding(false);
+    }
+  }
 
   async function loadHistory() {
     setHistoryLoading(true);
@@ -121,6 +147,11 @@ export default function SpiralogicReportPage() {
     setGenerateError(null);
 
     try {
+      const lat = parseFloat(birthLat);
+      const lng = parseFloat(birthLng);
+      const hasCoords = !isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+
       const res = await fetch('/api/spiralogic-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,7 +160,11 @@ export default function SpiralogicReportPage() {
             date: birthDate,
             time: birthTime,
             name: memberName || undefined,
-            location: { placeName: birthPlace || undefined },
+            location: {
+              placeName: birthPlace || undefined,
+              lat: hasCoords ? lat : undefined,
+              lng: hasCoords ? lng : undefined,
+            },
           },
           lifeStage: lifeStage || undefined,
         }),
@@ -235,15 +270,71 @@ export default function SpiralogicReportPage() {
                   <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">
                     Birth Place (optional)
                   </label>
-                  <input
-                    type="text"
-                    value={birthPlace}
-                    onChange={(e) => setBirthPlace(e.target.value)}
-                    placeholder="e.g. Basel, Switzerland"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white
-                               text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={birthPlace}
+                      onChange={(e) => setBirthPlace(e.target.value)}
+                      placeholder="e.g. Basel, Switzerland"
+                      className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white
+                                 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={geocodePlace}
+                      disabled={geocoding || !birthPlace.trim()}
+                      className="px-2.5 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800
+                                 disabled:text-gray-600 text-gray-300 text-xs rounded-lg transition-colors shrink-0"
+                      title="Look up coordinates"
+                    >
+                      {geocoding ? '...' : 'Locate'}
+                    </button>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">
+                      Latitude
+                    </label>
+                    <input
+                      type="number"
+                      value={birthLat}
+                      onChange={(e) => setBirthLat(e.target.value)}
+                      step="0.0001"
+                      min="-90"
+                      max="90"
+                      placeholder="e.g. 47.5596"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white
+                                 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">
+                      Longitude
+                    </label>
+                    <input
+                      type="number"
+                      value={birthLng}
+                      onChange={(e) => setBirthLng(e.target.value)}
+                      step="0.0001"
+                      min="-180"
+                      max="180"
+                      placeholder="e.g. 7.5886"
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white
+                                 text-sm placeholder-gray-600 focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                </div>
+                {(birthLat || birthLng) ? (
+                  <p className="text-xs text-amber-500/70">
+                    Ascendant sign will be included in report.
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-600">
+                    Coordinates enable Ascendant sign (more precise reading).
+                  </p>
+                )}
 
                 <div>
                   <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">

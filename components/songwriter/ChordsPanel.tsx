@@ -1,9 +1,19 @@
 'use client';
 
-import type { ChordSuggestion } from '@/lib/songwriter/types';
+import { useState } from 'react';
+import { RefreshCw, Loader2 } from 'lucide-react';
+import type { ChordSuggestion, SongSeed, LyricSection } from '@/lib/songwriter/types';
 
 interface ChordsPanelProps {
   chords: ChordSuggestion;
+  seed: SongSeed;
+  currentLyrics: {
+    verse1: LyricSection;
+    chorus: LyricSection;
+    bridge: LyricSection | null;
+  };
+  seedPrompt: string;
+  onChordsReplace: (chords: ChordSuggestion) => void;
 }
 
 function ChordRow({ label, chords }: { label: string; chords: string[] }) {
@@ -29,15 +39,56 @@ function ChordRow({ label, chords }: { label: string; chords: string[] }) {
   );
 }
 
-export function ChordsPanel({ chords }: ChordsPanelProps) {
+export function ChordsPanel({ chords, seed, currentLyrics, seedPrompt, onChordsReplace }: ChordsPanelProps) {
+  const [regenerating, setRegenerating] = useState(false);
+
+  async function regenerateChords() {
+    setRegenerating(true);
+    try {
+      const res = await fetch('/api/songwriter/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'regenerate',
+          section: 'chords',
+          seed,
+          currentLyrics,
+          currentChords: chords,
+          seedPrompt,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.chords) onChordsReplace(data.chords);
+    } catch (err) {
+      console.error('[ChordsPanel] regenerate failed:', err);
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   return (
     <section>
-      <h2
-        className="text-sm font-light tracking-widest text-white/40 uppercase mb-4"
-        style={{ fontFamily: 'Spectral, Georgia, serif' }}
-      >
-        Chords
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2
+          className="text-sm font-light tracking-widest text-white/40 uppercase"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Chords
+        </h2>
+        <button
+          onClick={regenerateChords}
+          disabled={regenerating}
+          className="flex items-center gap-1.5 text-xs text-white/25 hover:text-amber-400/50 transition-colors disabled:opacity-40"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          {regenerating
+            ? <Loader2 size={10} className="animate-spin" />
+            : <RefreshCw size={10} />
+          }
+          Regenerate
+        </button>
+      </div>
 
       <div className="space-y-4">
         {/* Key + Capo */}

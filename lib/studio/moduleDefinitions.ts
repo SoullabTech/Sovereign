@@ -300,7 +300,7 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     slug: 'teams',
     label: 'Teams',
     icon: Users,
-    href: '/studio/teams',
+    href: '/team',
     category: 'collaboration',
     description: 'Team collaboration and delegation',
     alwaysOn: false,
