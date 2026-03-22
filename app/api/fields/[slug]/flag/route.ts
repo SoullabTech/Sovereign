@@ -14,9 +14,9 @@ import { query } from '@/lib/db/postgres';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ field: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ): Promise<NextResponse> {
-  const { field } = await params;
+  const { slug: field } = await params;
 
   let body: { decision?: string };
   try {
