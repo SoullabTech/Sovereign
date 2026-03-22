@@ -700,7 +700,7 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
 
   const message = await client.messages.create({
     model: 'claude-opus-4-6',
-    max_tokens: 2048,
+    max_tokens: 8192,
     messages: [{ role: 'user', content: prompt }],
   });
 
