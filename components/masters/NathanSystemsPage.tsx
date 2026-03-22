@@ -8,6 +8,7 @@
  * Answers four questions fast: what exists, what's next, how it fits, where Nathan's judgment matters.
  */
 
+import { useState, useEffect } from 'react';
 import type { MasterField } from '@/lib/masters/types';
 
 interface NathanSystemsPageProps {
@@ -203,6 +204,73 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
+// ── Flag button ───────────────────────────────────────────────────────────────
+
+const LS_KEY = 'nathan_flagged_decisions';
+
+function FlagButton({
+  decision,
+  fieldSlug,
+  primary,
+  bg,
+}: {
+  decision: string;
+  fieldSlug: string;
+  primary: string;
+  bg: string;
+}) {
+  const [flagged, setFlagged] = useState(false);
+
+  // Restore state from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') as string[];
+      if (stored.includes(decision)) setFlagged(true);
+    } catch { /* ignore */ }
+  }, [decision]);
+
+  const handleFlag = async () => {
+    if (flagged) return;
+    // Optimistic update
+    setFlagged(true);
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') as string[];
+      localStorage.setItem(LS_KEY, JSON.stringify([...stored, decision]));
+    } catch { /* ignore */ }
+    // Fire-and-forget POST
+    fetch(`/api/fields/${fieldSlug}/flag`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision }),
+    }).catch(() => { /* swallow — UI already updated */ });
+  };
+
+  if (flagged) {
+    return (
+      <span
+        className="text-xs px-3 py-1.5 rounded border"
+        style={{ color: primary, borderColor: `${primary}40`, opacity: 0.7 }}
+      >
+        Flagged ✓
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleFlag}
+      className="text-xs px-3 py-1.5 rounded border transition-all hover:opacity-80"
+      style={{
+        color: bg,
+        backgroundColor: primary,
+        borderColor: primary,
+      }}
+    >
+      Flag for discussion
+    </button>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function NathanSystemsPage({ master }: NathanSystemsPageProps) {
@@ -341,17 +409,23 @@ export default function NathanSystemsPage({ master }: NathanSystemsPageProps) {
             note="Unresolved questions where your input changes direction"
             primary={primary}
           />
-          <div className="p-5 rounded-lg" style={card}>
-            <ol className="space-y-4">
-              {OPEN_DECISIONS.map((decision, i) => (
-                <li key={i} className="flex gap-4 text-sm">
-                  <span style={{ color: primary, opacity: 0.5 }} className="shrink-0 font-medium">
-                    {i + 1}.
-                  </span>
-                  <span style={{ opacity: 0.7 }} className="leading-relaxed">{decision}</span>
-                </li>
-              ))}
-            </ol>
+          <div className="space-y-2">
+            {OPEN_DECISIONS.map((decision, i) => (
+              <div key={i} className="p-4 rounded-lg flex items-start gap-4" style={card}>
+                <span style={{ color: primary, opacity: 0.5 }} className="shrink-0 font-medium text-sm mt-0.5">
+                  {i + 1}.
+                </span>
+                <span style={{ opacity: 0.7 }} className="text-sm leading-relaxed flex-1">{decision}</span>
+                <div className="shrink-0 ml-2">
+                  <FlagButton
+                    decision={decision}
+                    fieldSlug={master.slug}
+                    primary={primary}
+                    bg={bg}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
