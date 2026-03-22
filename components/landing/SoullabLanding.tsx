@@ -17,8 +17,8 @@ export function SoullabLanding() {
       <LandingNav />
       <main>
         <HeroSection />
-        <AuditFunnelSections />
         <MaiaSection />
+        <AuditFunnelSections />
         <ResearchSection />
         <PortfolioSection />
         <ProjectsSection />
