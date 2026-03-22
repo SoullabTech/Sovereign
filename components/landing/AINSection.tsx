@@ -95,6 +95,9 @@ export function AINSection() {
                 AIN is available as a deployable engine for practitioners, platforms, and organizations
                 building at the intersection of intelligence and human development.
               </p>
+              <p className="text-white/25 text-xs mt-1">
+                For deployment, partnership, or sovereign implementation inquiries.
+              </p>
             </div>
             <Link
               href="#contact"
@@ -104,7 +107,7 @@ export function AINSection() {
               }}
               className="shrink-0 inline-flex items-center justify-center rounded-xl px-6 py-2.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white text-sm font-medium transition-colors"
             >
-              Explore AIN deployment
+              Talk with us about AIN
             </Link>
           </div>
         </SectionReveal>
