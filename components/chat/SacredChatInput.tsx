@@ -417,6 +417,21 @@ export default function SacredChatInput({
               style={{ height: 'auto' }}
             />
 
+            {/* Microcopy — gentle nudge when input is empty */}
+            <AnimatePresence>
+              {!message && !isRecording && !isFocused && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="absolute -bottom-5 left-1 text-[11px] text-neutral-500 font-light tracking-wide pointer-events-none"
+                >
+                  Begin where something is already alive.
+                </motion.p>
+              )}
+            </AnimatePresence>
+
             {/* Enhanced Voice Recording Overlay with Cloud Pulses */}
             <AnimatePresence>
               {isRecording && (
