@@ -714,7 +714,7 @@ function SigninContent() {
           <input
             value={username}
             onChange={(e) => { console.log('[INPUT] username:', e.target.value); setUsername(e.target.value); }}
-            placeholder="Username"
+            placeholder="Email or username"
             autoComplete="username"
             className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 focus:bg-white/15 transition-all"
           />

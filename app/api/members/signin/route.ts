@@ -44,18 +44,18 @@ export async function POST(request: NextRequest) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { error: 'Username and password required' },
+        { error: 'Email/username and password required' },
         { status: 400 }
       );
     }
 
-    // Find member by username (case-insensitive)
+    // Find member by username OR email (case-insensitive)
     const result = await query(
       `SELECT id, passkey, username, password_hash, name, preferred_name,
               onboarded, onboarding_step, tier, roles, subscription_active, subscription_expires_at,
               has_webauthn, preferred_auth_method, must_reset_password
        FROM members
-       WHERE LOWER(username) = LOWER($1)`,
+       WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)`,
       [username]
     );
 
