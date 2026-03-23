@@ -125,21 +125,15 @@ export class SpiralogicReportPdfService {
     doc.setFontSize(24);
     doc.text("Evolutionary Report", 105, 95, { align: "center" });
 
-    // Birth info
+    // Birth info — parse as local date to avoid UTC-offset day shift
     doc.setFontSize(16);
     doc.setTextColor(this.style.secondaryColor);
-    const birthDate = new Date(birthData.date);
-    doc.text(
-      `Born ${birthDate.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}`,
-      105,
-      120,
-      { align: "center" },
-    );
+    const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const [bYear, bMonth, bDay] = (birthData.date as string).split("-").map(Number);
+    const birthDate = new Date(bYear, bMonth - 1, bDay);
+    const birthDateStr = `Born ${DAYS[birthDate.getDay()]}, ${MONTHS[birthDate.getMonth()]} ${birthDate.getDate()}, ${birthDate.getFullYear()}`;
+    doc.text(birthDateStr, 105, 120, { align: "center" });
 
     doc.setFontSize(14);
     doc.text(
@@ -613,29 +607,39 @@ export class SpiralogicReportPdfService {
   }
 
   private drawElementalSymbols(doc: jsPDF, centerX: number, centerY: number) {
-    const symbols = {
-      fire: "△",
-      water: "▽",
-      earth: "□",
-      air: "○",
-    };
-
-    const positions = [
-      { x: -40, y: 0 }, // left
-      { x: 0, y: -40 }, // top
-      { x: 40, y: 0 }, // right
-      { x: 0, y: 40 }, // bottom
+    // Draw native PDF shapes — Unicode geometric symbols are outside WinAnsi encoding
+    const s = 5; // half-size in mm
+    const elements = [
+      { x: -40, y: 0,   key: "fire",  color: this.style.accentColors.fire,  label: "Fire"  },
+      { x: 0,   y: -40, key: "water", color: this.style.accentColors.water, label: "Water" },
+      { x: 40,  y: 0,   key: "earth", color: this.style.accentColors.earth, label: "Earth" },
+      { x: 0,   y: 40,  key: "air",   color: this.style.accentColors.air,   label: "Air"   },
     ];
 
-    Object.entries(symbols).forEach(([element, symbol], index) => {
-      const pos = positions[index];
-      doc.setTextColor(
-        this.style.accentColors[
-          element as keyof typeof this.style.accentColors
-        ],
-      );
-      doc.setFontSize(24);
-      doc.text(symbol, centerX + pos.x, centerY + pos.y, { align: "center" });
+    elements.forEach(({ x, y, color, label, key }) => {
+      const cx = centerX + x;
+      const cy = centerY + y;
+      doc.setDrawColor(color);
+      doc.setLineWidth(0.6);
+
+      if (key === "fire") {
+        // upward triangle
+        doc.lines([[s * 2, 0], [-s, -s * 1.73]], cx - s, cy + s * 0.87, [1, 1], "S", true);
+      } else if (key === "water") {
+        // downward triangle
+        doc.lines([[s * 2, 0], [-s, s * 1.73]], cx - s, cy - s * 0.87, [1, 1], "S", true);
+      } else if (key === "earth") {
+        // square
+        doc.rect(cx - s * 0.85, cy - s * 0.85, s * 1.7, s * 1.7, "S");
+      } else {
+        // circle for air
+        doc.circle(cx, cy, s * 0.9, "S");
+      }
+
+      // Element label below shape
+      doc.setFontSize(8);
+      doc.setTextColor(color);
+      doc.text(label, cx, cy + s * 2, { align: "center" });
     });
   }
 

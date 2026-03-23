@@ -276,15 +276,14 @@ function ProtocolCard({ protocol }: { protocol: ReflectiveProtocol }) {
 function CurrentPhaseHero({ phase }: { phase: CurrentPhase }) {
   return (
     <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-950/40 to-indigo-950/40 p-7">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <p className="text-xs text-purple-400 uppercase tracking-widest mb-1">Current Spiralogic Phase</p>
-          <h3 className="text-2xl font-light text-white">{phase.spiralogicPhase}</h3>
-        </div>
+      <div className="mb-5">
+        <p className="text-xs text-purple-400 uppercase tracking-widest mb-1">Current Spiralogic Phase</p>
+        <h3 className="text-2xl font-light text-white mb-3">{phase.spiralogicPhase}</h3>
         {phase.activeTransits.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {phase.activeTransits.map((t, i) => (
-              <span key={i} className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20">
+              <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300
+                                       border border-purple-500/20 leading-relaxed">
                 {t}
               </span>
             ))}
@@ -515,17 +514,18 @@ export function SpiralogicReportView({ reportId, report, birthData }: Props) {
     }
   };
 
-  const birthDate = birthData.date
-    ? new Date(birthData.date).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : '';
+  // Parse as local date (avoid UTC-offset shift that moves date back by 1 day)
+  const birthDate = (() => {
+    if (!birthData.date) return '';
+    const [y, m, d] = birthData.date.split('-').map(Number);
+    const dt = new Date(y, m - 1, d); // local midnight, no UTC shift
+    return dt.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+  })();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 text-gray-200">
+    <div className="w-full space-y-12 text-gray-200">
 
       {/* ---- Header ---- */}
       <div className="text-center space-y-3 pb-8 border-b border-gray-700">
