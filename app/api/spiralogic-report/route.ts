@@ -209,33 +209,26 @@ type Elem = 'fire' | 'water' | 'earth' | 'air';
  * Returns the element (fire/water/earth/air) and the sign name.
  */
 function getSunSignElement(birthDate: Date): { element: Elem; sign: string } {
-  const month = birthDate.getMonth() + 1; // 1-12
-  const day = birthDate.getDate();
+  // Use UTC accessors to avoid timezone-induced date shift (new Date("YYYY-MM-DD") is UTC midnight)
+  const month = birthDate.getUTCMonth() + 1; // 1-12
+  const day = birthDate.getUTCDate();
 
-  // [sign, startMonth, startDay, element]
-  const signs: [string, number, number, Elem][] = [
-    ['Aries',       3, 21, 'fire'],
-    ['Taurus',      4, 20, 'earth'],
-    ['Gemini',      5, 21, 'air'],
-    ['Cancer',      6, 21, 'water'],
-    ['Leo',         7, 23, 'fire'],
-    ['Virgo',       8, 23, 'earth'],
-    ['Libra',       9, 23, 'air'],
-    ['Scorpio',    10, 23, 'water'],
-    ['Sagittarius',11, 22, 'fire'],
-    ['Capricorn',  12, 22, 'earth'],
-    ['Aquarius',    1, 20, 'air'],
-    ['Pisces',      2, 19, 'water'],
-  ];
+  // Encode as MMDD for simple linear comparison — no reverse-walk needed
+  const mmdd = month * 100 + day;
 
-  // Walk signs in reverse to find which one the date falls into
-  for (let i = signs.length - 1; i >= 0; i--) {
-    const [sign, sMonth, sDay, element] = signs[i];
-    if (month > sMonth || (month === sMonth && day >= sDay)) {
-      return { element, sign };
-    }
-  }
-  // Jan 1–19 falls in Capricorn
+  if (mmdd >= 1222) return { element: 'earth', sign: 'Capricorn' };
+  if (mmdd >= 1122) return { element: 'fire',  sign: 'Sagittarius' };
+  if (mmdd >= 1023) return { element: 'water', sign: 'Scorpio' };
+  if (mmdd >= 923)  return { element: 'air',   sign: 'Libra' };
+  if (mmdd >= 823)  return { element: 'earth', sign: 'Virgo' };
+  if (mmdd >= 723)  return { element: 'fire',  sign: 'Leo' };
+  if (mmdd >= 621)  return { element: 'water', sign: 'Cancer' };
+  if (mmdd >= 521)  return { element: 'air',   sign: 'Gemini' };
+  if (mmdd >= 420)  return { element: 'earth', sign: 'Taurus' };
+  if (mmdd >= 321)  return { element: 'fire',  sign: 'Aries' };
+  if (mmdd >= 219)  return { element: 'water', sign: 'Pisces' };
+  if (mmdd >= 120)  return { element: 'air',   sign: 'Aquarius' };
+  // Jan 1–19: Capricorn
   return { element: 'earth', sign: 'Capricorn' };
 }
 
@@ -252,9 +245,9 @@ function getMoonSignElement(birthDate: Date, birthTime: string): { element: Elem
 
   const j2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
   const birthUTC = Date.UTC(
-    birthDate.getFullYear(),
-    birthDate.getMonth(),
-    birthDate.getDate(),
+    birthDate.getUTCFullYear(),
+    birthDate.getUTCMonth(),
+    birthDate.getUTCDate(),
     Math.floor(hour),
     Math.round((hour % 1) * 60),
     0,
