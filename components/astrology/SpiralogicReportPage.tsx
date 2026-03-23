@@ -39,7 +39,12 @@ export default function SpiralogicReportPage() {
   const [memberName, setMemberName] = useState('');
   const [lifeStage, setLifeStage] = useState('');
 
+  // "Reading for someone else" mode — clears profile pre-fill, enables custom subject name
+  const [readingForOther, setReadingForOther] = useState(false);
+  const [subjectName, setSubjectName] = useState('');
+
   const [showForm, setShowForm] = useState(true);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -51,7 +56,7 @@ export default function SpiralogicReportPage() {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
 
-  // Load member name from localStorage if available
+  // Load member name from localStorage, then fetch full profile birth data
   useEffect(() => {
     try {
       const stored = localStorage.getItem('beta_user');
@@ -59,10 +64,36 @@ export default function SpiralogicReportPage() {
         const parsed = JSON.parse(stored);
         if (parsed.name) setMemberName(parsed.name);
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+
+    // Fetch profile to pre-fill birth data
+    fetch('/api/members/profile')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.birthData) return;
+        const bd = data.birthData;
+        if (bd.date)  setBirthDate(bd.date);
+        if (bd.time)  setBirthTime(bd.time);
+        if (bd.location?.name) setBirthPlace(bd.location.name);
+        if (bd.location?.lat)  setBirthLat(String(bd.location.lat));
+        if (bd.location?.lng)  setBirthLng(String(bd.location.lng));
+        setProfileLoaded(true);
+      })
+      .catch(() => { /* profile unavailable — form stays empty */ });
   }, []);
+
+  // When switching to "someone else" mode, clear the pre-filled birth data
+  function handleReadingForOtherToggle(on: boolean) {
+    setReadingForOther(on);
+    if (on) {
+      setBirthDate('');
+      setBirthTime('');
+      setBirthPlace('');
+      setBirthLat('');
+      setBirthLng('');
+      setSubjectName('');
+    }
+  }
 
   // Load report history on mount
   useEffect(() => {
@@ -157,7 +188,7 @@ export default function SpiralogicReportPage() {
           birthData: {
             date: birthDate,
             time: birthTime,
-            name: memberName || undefined,
+            name: (readingForOther ? subjectName : memberName) || undefined,
             location: {
               placeName: birthPlace || undefined,
               lat: hasCoords ? lat : undefined,
@@ -226,13 +257,40 @@ export default function SpiralogicReportPage() {
         {/* Generate form — shown when no report, or toggled open */}
         {(showForm || !activeReport) && (
           <div className="mb-10 bg-gray-900/60 border border-gray-700 rounded-xl p-6">
-            <h2 className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-5">
-              {activeReport ? 'Generate New Report' : 'Generate Report'}
-            </h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-widest">
+                {readingForOther ? 'Reading for Someone Else' : activeReport ? 'Generate New Report' : 'Generate Report'}
+              </h2>
+              {/* "Someone else" toggle */}
+              <button
+                type="button"
+                onClick={() => handleReadingForOtherToggle(!readingForOther)}
+                className={`text-xs px-3 py-1 rounded-lg border transition-colors ${
+                  readingForOther
+                    ? 'border-indigo-500/60 bg-indigo-500/10 text-indigo-300'
+                    : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {readingForOther ? '— Reading for someone else' : '+ Reading for someone else'}
+              </button>
+            </div>
+            {profileLoaded && !readingForOther && (
+              <p className="text-xs text-amber-500/60 mb-4">Birth data pre-filled from your astrology profile.</p>
+            )}
             <form onSubmit={handleGenerate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+              {/* Subject name — "someone else" uses a custom name; self uses member name */}
+              {readingForOther ? (
+                <div className="sm:col-span-2">
+                  <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Their Name</label>
+                  <input type="text" value={subjectName} onChange={(e) => setSubjectName(e.target.value)}
+                    placeholder="Name of the person this reading is for"
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
+                               placeholder-gray-600 focus:outline-none focus:border-indigo-500/50" />
+                </div>
+              ) : (
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Name (optional)</label>
+                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Your Name (optional)</label>
                 <input type="text" value={memberName} onChange={(e) => setMemberName(e.target.value)}
                   placeholder="e.g. Aria"
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
@@ -246,6 +304,7 @@ export default function SpiralogicReportPage() {
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
                              placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
               </div>
+              )}
 
               <div>
                 <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Birth Date</label>
