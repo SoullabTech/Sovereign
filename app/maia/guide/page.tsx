@@ -317,6 +317,17 @@ Session synthesis available for review.`
         content: `Click Capture (sparkle icon) to distill conversation essence.
 Creates Reflection Capsule: Summary, Gold Lines, Decisions, Patterns.
 Stored in LabTools → Reflections.`
+      },
+      {
+        id: 'how-it-works',
+        title: 'How It Works (A New Layer)',
+        content: `Soullab doesn't just respond — it learns how you process experience.
+
+It notices how you think, where you hesitate, what kind of reflection lands for you. Not to categorize you, but to meet you more precisely over time.
+
+It works like a mirror: reflecting what is present, reducing noise, letting clarity emerge at the right moment.
+
+**Read the full piece** in Community Commons → Philosophical Foundations → "A New Layer Inside Soullab".`
       }
     ]
   },

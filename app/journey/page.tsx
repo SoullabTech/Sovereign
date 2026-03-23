@@ -32,6 +32,9 @@ import { Mission } from '@/lib/story/types';
 import ConsciousnessFieldWithTorus from '@/components/consciousness/ConsciousnessFieldWithTorus';
 import { useMissions } from '@/lib/hooks/useMissions';
 import MissionManager from '@/components/missions/MissionManager';
+import DevelopmentalMissionCard from '@/components/missions/DevelopmentalMissionCard';
+import type { DevelopmentalMission } from '@/lib/consciousness/developmentalMission';
+import { useDevelopmentalMissions } from '@/lib/hooks/useDevelopmentalMissions';
 import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
 import { useBirthChart } from '@/lib/hooks/useBirthChart';
 
@@ -178,6 +181,15 @@ export default function AstrologyPage() {
   // Mission management
   const { missions, loading: missionsLoading } = useMissions();
   const [showMissionManager, setShowMissionManager] = useState(false);
+
+  // Developmental missions (practice-based, from First Descent / MAIA)
+  const {
+    missions: devMissions,
+    loading: devMissionsLoading,
+    acceptMission,
+    releaseMission,
+    completeMission,
+  } = useDevelopmentalMissions();
 
   // Current transits - live planetary positions
   const [transits, setTransits] = useState<Transit[]>([]);
@@ -1010,6 +1022,26 @@ export default function AstrologyPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Developmental Missions — practice-based, from First Descent / MAIA */}
+        {!devMissionsLoading && devMissions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="mb-12 max-w-xl mx-auto space-y-4"
+          >
+            {devMissions.map((dm) => (
+              <DevelopmentalMissionCard
+                key={dm.id}
+                mission={dm}
+                onAccept={acceptMission}
+                onRelease={releaseMission}
+                onComplete={completeMission}
+              />
+            ))}
+          </motion.div>
+        )}
 
         {/* Your Active Missions - Manifestations in Progress - HIDE ON MOBILE */}
         <motion.div

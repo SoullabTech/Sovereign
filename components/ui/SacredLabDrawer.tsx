@@ -416,10 +416,10 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Your birth chart & astrology'
         },
         {
-          icon: FileText,
-          label: 'Evolutionary Report',
-          action: () => onNavigate('/astrology/report'),
-          description: 'Full Spiralogic report — all 12 facets'
+          icon: Compass,
+          label: 'Spiralogic Report',
+          action: () => onNavigate('/dashboard/spiralogic-report'),
+          description: 'Evolutionary report — all 12 facets'
         },
         {
           icon: Heart,

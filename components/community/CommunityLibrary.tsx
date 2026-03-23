@@ -56,6 +56,14 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
+        id: 'a-new-layer',
+        title: '★ A New Layer Inside Soullab',
+        description: 'How Soullab became a space that recognizes where you are, stays with what matters, and responds in a way that fits how you move',
+        content: 'docs/community-library/A_NEW_LAYER_INSIDE_SOULLAB.md',
+        tags: ['sovereignty', 'presence', 'first-descent', 'attunement', 'mirror', 'clarity'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field', 'elemental-circulation']
+      },
+      {
         id: 'presence-continuity',
         title: '★ Presence Continuity and Personal Sovereignty',
         description: 'FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.',

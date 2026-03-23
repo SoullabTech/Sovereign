@@ -44,6 +44,7 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
@@ -564,24 +565,35 @@ export async function POST(request: NextRequest) {
       memoryContext = null;
     }
 
-    // 💫 ANAMNESIS: Load soul-level recognition
-    let relationshipEssence: RelationshipEssence | null = null;
-    let anamnesisPrompt: string | null = null;
+    // 🌐 MEMBER LIVE CONTEXT: Unified field of member awareness
+    // Fetches spiral state, sessions, patterns, journals, relationship essence,
+    // and recurring participatory themes in one parallel call.
+    let memberLiveContext: MemberLiveContextType | null = null;
     try {
-      relationshipEssence = await loadRelationshipEssence(userId);
-      if (relationshipEssence) {
-        const anamnesis = getRelationshipAnamnesis();
-        anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
-        console.log('💫 [Anamnesis] Soul recognition activated:', {
-          encounterCount: relationshipEssence.encounterCount,
-          morphicResonance: relationshipEssence.morphicResonance,
-          presenceQuality: relationshipEssence.presenceQuality
-        });
-      } else {
-        console.log('💫 [Anamnesis] First encounter - essence will be captured');
-      }
-    } catch (anamnesisError) {
-      console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
+      memberLiveContext = await buildMemberLiveContext(userId, {
+        displayName: preferredAssistantName ?? undefined,
+        maxJournal: 5,
+        maxPatterns: 4,
+        maxSessions: 3,
+      });
+      console.log('🌐 [LiveContext]', describeLiveContext(memberLiveContext));
+    } catch (liveContextError) {
+      console.warn('⚠️ [LiveContext] Build failed (non-critical):', liveContextError);
+    }
+
+    // 💫 ANAMNESIS: Soul-level recognition (from live context — no separate fetch)
+    let relationshipEssence: RelationshipEssence | null = memberLiveContext?.relationshipEssence ?? null;
+    let anamnesisPrompt: string | null = null;
+    if (relationshipEssence) {
+      const anamnesis = getRelationshipAnamnesis();
+      anamnesisPrompt = anamnesis.generateAnamnesisPrompt(relationshipEssence);
+      console.log('💫 [Anamnesis] Soul recognition activated:', {
+        encounterCount: relationshipEssence.encounterCount,
+        morphicResonance: relationshipEssence.morphicResonance,
+        presenceQuality: relationshipEssence.presenceQuality,
+      });
+    } else {
+      console.log('💫 [Anamnesis] First encounter - essence will be captured');
     }
 
     // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
@@ -602,6 +614,14 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
     }
 
+    // Attach astrology to live context (fetched separately, joined here)
+    if (memberLiveContext && astrologyContext) {
+      memberLiveContext.astrology = astrologyContext;
+    }
+
+    // Format unified member web for prompt injection
+    const memberWebPrompt = memberLiveContext ? formatMemberWebForPrompt(memberLiveContext) : '';
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -619,7 +639,8 @@ export async function POST(request: NextRequest) {
       anamnesisPrompt,
       astrologyContext,
       preferredAssistantName,
-      activeReportContext
+      activeReportContext,
+      memberWebPrompt
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1455,7 +1476,8 @@ async function generateSpiralogicResponseWithLLM(
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
-  activeReportContext?: ActiveReportContext | null
+  activeReportContext?: ActiveReportContext | null,
+  memberWebPrompt?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1785,6 +1807,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 ` : ''}
 ${anamnesisPrompt ? anamnesisPrompt : ''}
 ${astrologyContext?.formattedContext ? astrologyContext.formattedContext : ''}
+${memberWebPrompt ? memberWebPrompt + '\n' : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
