@@ -52,11 +52,10 @@
   .mobile-carousel {
     -webkit-overflow-scrolling: touch;
     overflow-x: auto;
+    overflow-y: hidden;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
     touch-action: pan-x;
-    /* Ensure scrolling works on all platforms */
-    overflow-y: visible;
   }
 
   .carousel-item {
@@ -69,30 +68,40 @@
     position: relative;
   }
 
-  .header-navigation::after {
+  /* Scroll fade indicators — controlled by data attributes set via JS */
+  .mobile-carousel-wrap {
+    position: relative;
+  }
+
+  .mobile-carousel-wrap::before,
+  .mobile-carousel-wrap::after {
     content: '';
     position: absolute;
     top: 0;
-    right: 0;
     bottom: 0;
-    width: 24px;
-    background: linear-gradient(to right, transparent, rgba(27, 20, 16, 0.9));
+    width: 32px;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s ease;
     z-index: 10;
   }
 
-  /* Show scroll hint when container can scroll */
-  @media (max-width: 1024px) {
-    .header-navigation::after {
-      opacity: 1;
-    }
+  .mobile-carousel-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(27, 20, 16, 0.9), transparent);
   }
 
-  /* Hide hint when scrolled to the right edge */
-  .header-navigation:has(.mobile-carousel::-webkit-scrollbar-thumb:hover)::after {
-    opacity: 0;
+  .mobile-carousel-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(27, 20, 16, 0.9), transparent);
+  }
+
+  .mobile-carousel-wrap[data-can-scroll-left="true"]::before {
+    opacity: 1;
+  }
+
+  .mobile-carousel-wrap[data-can-scroll-right="true"]::after {
+    opacity: 1;
   }
 }
 
