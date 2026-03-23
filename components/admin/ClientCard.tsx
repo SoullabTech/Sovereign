@@ -49,8 +49,8 @@ function formatDate(dateString?: string): string {
 function getZodiacSign(birthDate?: string): string | null {
   if (!birthDate) return null;
   const date = new Date(birthDate);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
 
   const signs = [
     { name: 'Capricorn', start: [12, 22], end: [1, 19] },

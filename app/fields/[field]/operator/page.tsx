@@ -1,18 +1,11 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getFieldBySlug } from '@/lib/masters/registry';
-import NathanOperatorWithKanban from '@/components/masters/NathanOperatorWithKanban';
+import NathanOperator from '@/components/masters/NathanOperator';
 
 export default async function OperatorPage({ params }: { params: Promise<{ field: string }> }) {
   const { field: slug } = await params;
   const master = getFieldBySlug(slug);
-  if (!master) notFound();
+  if (!master || slug !== 'nathan') notFound();
 
-  // Kelly's operator experience lives in partner-view (shared workspace)
-  if (slug === 'kelly') {
-    redirect(`/fields/kelly/partner-view`);
-  }
-
-  if (slug !== 'nathan') notFound();
-
-  return <NathanOperatorWithKanban master={master} />;
+  return <NathanOperator master={master} />;
 }

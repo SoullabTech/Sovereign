@@ -56,6 +56,7 @@ import { consult } from '@/lib/ain/consultation';
 import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
+import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
 
 // Skip during static export (Capacitor builds)
 
@@ -1166,6 +1167,21 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       voiceHint,
       relationalHint,
+      astrologyHandoff: (() => {
+        const handoff = detectAstrologyHandoff(maiaResponse.coreMessage, conversationHistory ?? []);
+        if (handoff) {
+          console.info(JSON.stringify({
+            tag: 'astrology-handoff-audit',
+            emitted: true,
+            destination: handoff.destination,
+            emotionalSignature: handoff.fieldContext.emotionalSignature,
+            inquiry: handoff.fieldContext.inquiry,
+            symbolicFrame: handoff.fieldContext.symbolicFrame ?? null,
+            suggestedLens: handoff.fieldContext.suggestedLens,
+          }));
+        }
+        return handoff;
+      })(),
     };
 
     // Log successful oracle usage

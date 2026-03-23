@@ -18,7 +18,11 @@ import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, Bo
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
-import { apiUrl } from '@/lib/http/apiBase';
+import { SpiralogicEvolutionaryReport } from '@/components/astrology/SpiralogicEvolutionaryReport';
+import { FieldOrientationHeader } from '@/components/astrology/FieldOrientationHeader';
+import type { SpiralogicEvolutionaryReportData } from '@/lib/astrology/spiralogicReportTypes';
+import type { FieldContext } from '@/lib/astrology/astrologyHandoff';
+import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
 import { getSpiralogicPlanetDescription } from '@/lib/astrology/spiralogicHouseMapping';
@@ -29,6 +33,7 @@ import ConsciousnessFieldWithTorus from '@/components/consciousness/Consciousnes
 import { useMissions } from '@/lib/hooks/useMissions';
 import MissionManager from '@/components/missions/MissionManager';
 import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
+import { useBirthChart } from '@/lib/hooks/useBirthChart';
 
 interface BirthChartData {
   sun: { sign: string; degree: number; house: number };
@@ -106,6 +111,44 @@ export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [birthData, setBirthData] = useState<any>(null); // Store for recalculation
+
+  // Responsive chart size — scales to viewport across phone / tablet / desktop / iOS / PWA
+  const [chartSize, setChartSize] = useState(600);
+  useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    const update = () => {
+      // Use visualViewport when available (more accurate in iOS WebView and PWA)
+      const vw = (window.visualViewport?.width ?? window.innerWidth);
+      let size: number;
+      if (vw < 640) {
+        size = Math.min(vw - 8, 560);
+      } else if (vw < 1024) {
+        size = Math.min(vw - 40, 800);
+      } else {
+        size = Math.min(vw - 100, 1300);
+      }
+      // Height cap — prevents vertical clipping on landscape iPads and PWA with bottom bar
+      const heightCap = Math.min(window.innerHeight - 120, size);
+      setChartSize(Math.min(size, heightCap));
+    };
+    // Debounced handler — prevents jitter on orientation change and keyboard open/close
+    const debouncedUpdate = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(update, 50);
+    };
+    update(); // immediate on mount
+    window.addEventListener('resize', debouncedUpdate);
+    window.visualViewport?.addEventListener('resize', debouncedUpdate);
+    return () => {
+      clearTimeout(debounceTimer);
+      window.removeEventListener('resize', debouncedUpdate);
+      window.visualViewport?.removeEventListener('resize', debouncedUpdate);
+    };
+  }, []);
+
+  // useBirthChart hook — loads from server profile first, then localStorage
+  // This ensures members with server-saved birth data always see their chart
+  const { birthData: hookBirthData, isLoading: hookLoading, isComplete } = useBirthChart();
   const [elementalBalance, setElementalBalance] = useState({
     fire: 0.28,
     water: 0.38,
@@ -115,6 +158,22 @@ export default function AstrologyPage() {
 
   // Arrakis aesthetic - always desert night (the twin moons never set)
   const [isDayMode, setIsDayMode] = useState(false);
+
+  // Field context — present when arriving from a MAIA astrology handoff
+  const [maiaFieldContext, setMaiaFieldContext] = useState<FieldContext | null>(null);
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('astrologyEntryContext');
+      if (raw) setMaiaFieldContext(JSON.parse(raw) as FieldContext);
+    } catch { /* non-fatal */ }
+  }, []);
+
+  // Spiralogic report - AI-generated elemental narrative
+  const [spiralogicReport, setSpiralogicReport] = useState<SpiralogicEvolutionaryReportData | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportGenerating, setReportGenerating] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [memberName, setMemberName] = useState('Explorer');
 
   // Mission management
   const { missions, loading: missionsLoading } = useMissions();
@@ -128,6 +187,14 @@ export default function AstrologyPage() {
 
   // Welcome modal for first-time users
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Hook fallback: if the page's own loadBirthData didn't find data but the hook did,
+  // trigger chart calculation so all members with server-saved birth data see their chart
+  useEffect(() => {
+    if (!hookLoading && isComplete && hookBirthData && !chartData && !loading) {
+      calculateChart(hookBirthData);
+    }
+  }, [hookLoading, isComplete, hookBirthData, chartData, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Force night mode for Arrakis aesthetic
@@ -279,6 +346,67 @@ export default function AstrologyPage() {
     loadBirthData();
   }, []);
 
+  // Load member name from session
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('beta_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        setMemberName(u.preferredName || u.name || 'Explorer');
+      }
+    } catch { /* non-fatal */ }
+  }, []);
+
+  // Fetch existing Spiralogic report when chart loads
+  useEffect(() => {
+    if (!chartData) return;
+    const fetchReport = async () => {
+      setReportLoading(true);
+      try {
+        const res = await apiFetch('/api/astrology/spiralogic-report', { method: 'GET' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.report) setSpiralogicReport(data.report as SpiralogicEvolutionaryReportData);
+        }
+      } catch { /* non-fatal */ }
+      setReportLoading(false);
+    };
+    fetchReport();
+  }, [chartData]);
+
+  const generateSpiralogicReport = useCallback(async () => {
+    if (!birthData) return;
+    setReportGenerating(true);
+    setReportError(null);
+    const abort = new AbortController();
+    const timeout = setTimeout(() => abort.abort(), 90_000);
+    try {
+      const res = await apiFetch('/api/astrology/spiralogic-report', {
+        method: 'POST',
+        signal: abort.signal,
+        body: JSON.stringify({
+          birthDate: birthData.date,
+          birthTime: birthData.time,
+          lat: birthData.location?.lat,
+          lng: birthData.location?.lng,
+          locationName: birthData.location?.name,
+          timezone: birthData.location?.timezone,
+        }),
+      });
+      clearTimeout(timeout);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { detail?: string; error?: string }).detail || (err as { error?: string }).error || 'Generation failed');
+      }
+      const data = await res.json();
+      setSpiralogicReport(data.report as SpiralogicEvolutionaryReportData);
+    } catch (err) {
+      clearTimeout(timeout);
+      setReportError(err instanceof Error ? err.message : 'Report generation failed. Please try again.');
+    } finally {
+      setReportGenerating(false);
+    }
+  }, [birthData]);
 
   // Fetch chart from API using real ephemeris calculations
   const calculateChart = async (data: any) => {
@@ -793,12 +921,16 @@ export default function AstrologyPage() {
               </div>
             </div>
           </div>
+          {/* Field Orientation Header — visible when arriving from MAIA handoff */}
+          <div className="px-4 md:px-6">
+            <FieldOrientationHeader />
+          </div>
           {/* Sacred House Wheel with 3D Animated Torus (Apple/Tree of Life) */}
-          <div className="relative w-full mx-auto px-0 pb-16 md:pb-20">
+          <div className="relative w-full mx-auto px-0 pb-16 md:pb-20" style={{ paddingBottom: 'max(4rem, env(safe-area-inset-bottom))' }}>
             {/* 3D Torus Field - Animated breathing torus - RESPONSIVE SIZE */}
             <div className="flex items-center justify-center w-full pb-0" style={{ aspectRatio: '1/1' }}>
               <ConsciousnessFieldWithTorus
-                size={typeof window !== 'undefined' && window.innerWidth < 640 ? 600 : 1300}
+                size={chartSize}
                 showLabels={false}
                 animate={true}
               >
@@ -1259,6 +1391,102 @@ export default function AstrologyPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Spiralogic Report — AI-generated elemental narrative woven with astrology */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="mb-12"
+        >
+          {reportLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
+              <span className="ml-3 text-stone-400 text-sm italic">Reading the stars…</span>
+            </div>
+          ) : spiralogicReport ? (
+            <SpiralogicEvolutionaryReport
+              report={spiralogicReport}
+              memberName={memberName}
+              onRegenerate={generateSpiralogicReport}
+            />
+          ) : (
+            <div
+              className="rounded-2xl p-8 text-center backdrop-blur-md"
+              style={{
+                backgroundColor: 'rgba(12, 9, 7, 0.9)',
+                border: '1px solid #9B6B3C',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+              }}
+            >
+              <Sparkles className="w-10 h-10 mx-auto mb-4" style={{ color: '#D88A2D' }} />
+              <h2 className="text-2xl font-serif mb-3" style={{ color: '#D88A2D' }}>
+                Your Spiralogic Report
+              </h2>
+              <p className="text-sm mb-6 leading-relaxed" style={{ color: '#E7E2CF80' }}>
+                MAIA can generate a personalized elemental narrative — Fire, Water, Earth, Air — woven
+                through your birth chart, revealing where your energy flows, stagnates, and transforms.
+              </p>
+              {reportError && (
+                <p className="text-red-400 text-sm mb-4">{reportError}</p>
+              )}
+              <button
+                onClick={generateSpiralogicReport}
+                disabled={reportGenerating}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all disabled:opacity-50"
+                style={{
+                  backgroundColor: 'rgba(155, 107, 60, 0.3)',
+                  color: '#E7E2CF',
+                  border: '1px solid #9B6B3C',
+                }}
+              >
+                {reportGenerating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
+                    Weaving your report…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Generate My Spiralogic Report
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Return bridge — visible only when arriving from MAIA handoff */}
+        {maiaFieldContext && (
+          <div className="mb-10 text-center">
+            <Link
+              href="/maia"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all duration-200"
+              style={{
+                background: 'rgba(155, 107, 60, 0.15)',
+                border: '1px solid rgba(155, 107, 60, 0.35)',
+                color: '#E7E2CF',
+              }}
+              onClick={() => {
+                sessionStorage.setItem('maia_return_context_used', 'true');
+                console.info(JSON.stringify({
+                  tag: 'astrology-handoff-audit',
+                  returnBridgeClicked: true,
+                  inquiry: maiaFieldContext?.inquiry,
+                }));
+              }}
+            >
+              <span style={{ color: '#D88A2D' }}>◈</span>
+              Bring this back to MAIA
+            </Link>
+            <p
+              className="text-xs mt-2 italic"
+              style={{ color: '#E7E2CF', opacity: 0.4 }}
+            >
+              Now that we can see the pattern more clearly, let&apos;s sort what is yours to tend from what you may be absorbing from the wider field.
+            </p>
+          </div>
+        )}
 
         {/* Introduction */}
         <motion.div
