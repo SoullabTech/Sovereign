@@ -46,6 +46,7 @@ import {
   LayoutGrid,
   Gift,
   Hexagon,
+  PenLine,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -306,6 +307,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Claude Code',
           action: () => onNavigate('/consciousness/claude-code'),
           description: 'Co-creator & consciousness explorer'
+        },
+        {
+          icon: PenLine,
+          label: 'Songwriter',
+          action: () => onNavigate('/maia/songwriter'),
+          description: 'Seed-to-song creation engine'
         },
         {
           icon: Brain,
