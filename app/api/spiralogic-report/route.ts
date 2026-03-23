@@ -119,16 +119,21 @@ export async function POST(request: NextRequest) {
     const row = result.rows[0];
 
     // Fire-and-forget: write active report context snapshot to member_spiral_state
-    // reportData is Record<string, unknown> — cast through unknown to satisfy the type
     const _ebo = reportData.elementalBalanceOverview as Record<string, unknown> | undefined;
-    const _cp = reportData.currentPhase as ActiveReportContext['currentPhase'] | undefined;
-    const _na = reportData.nextAction as ActiveReportContext['nextAction'] | undefined;
-    if (_cp && _ebo && _na) {
-      const _delta = reportData.evolutionDelta as { sinceLastReport: string; repeatedPatterns: string[]; emergingStrengths: string[]; decompensatingPatterns?: string[] } | null | undefined;
+    const _cpNew = reportData.currentPhase as {
+      phase?: string; majorLesson?: string; edge?: string; gifts?: string[]; currentTransits?: string[];
+    } | undefined;
+    if (_cpNew && _ebo) {
       upsertActiveReportContext(memberId, {
         reportId: row.id,
         generatedAt: String(row.created_at),
-        currentPhase: _cp,
+        currentPhase: {
+          spiralogicPhase: String(_cpNew.phase ?? ''),
+          majorLifeLesson: String(_cpNew.majorLesson ?? ''),
+          edgeChallenge: String(_cpNew.edge ?? ''),
+          emergentGift: String((_cpNew.gifts ?? [])[0] ?? ''),
+          activeTransits: (_cpNew.currentTransits as string[]) ?? [],
+        },
         elementalBalance: {
           dominantElement: String(_ebo.dominantElement ?? ''),
           underactiveElement: String(_ebo.underactiveElement ?? ''),
@@ -137,14 +142,15 @@ export async function POST(request: NextRequest) {
           earth: Number(_ebo.earth ?? 0),
           air: Number(_ebo.air ?? 0),
         },
-        nextAction: _na,
-        evolutionDelta: _delta
-          ? {
-              sinceLastReport: _delta.sinceLastReport,
-              repeatedPatterns: _delta.repeatedPatterns ?? [],
-              emergingStrengths: _delta.emergingStrengths ?? [],
-            }
-          : null,
+        nextAction: {
+          actions: [],
+          watchFor: '',
+          journalPrompt: '',
+        },
+        evolutionDelta: (() => {
+          const d = reportData.evolutionDelta as { sinceLastReport?: string; repeatedPatterns?: string[]; emergingStrengths?: string[] } | null | undefined;
+          return d ? { sinceLastReport: d.sinceLastReport ?? '', repeatedPatterns: d.repeatedPatterns ?? [], emergingStrengths: d.emergingStrengths ?? [] } : null;
+        })(),
       }).catch((err) => console.error('[spiralogic] activeReportContext upsert failed (non-fatal):', err));
     }
 
@@ -453,6 +459,32 @@ function computeLifeCycleTransits(birthDate: Date): string[] {
 // Returns a structure matching SpiralogicReport from spiralogicAstrologyService.ts
 // ---------------------------------------------------------------------------
 
+const ORACLE_SYSTEM_PROMPT = `You are an oracle-level astrology writer working in the Spiralogic tradition.
+
+Your task is to produce a report that feels:
+- mythopoetic but not vague
+- intimate but not sentimental
+- spiritually intelligent but not inflated
+- psychologically deep but not clinical
+- beautiful but still structurally clear
+
+The opening sections should feel like a living reading, not a software summary.
+
+Especially in "oracleWelcome" and "memberOverviewStory":
+- write as though you are welcoming the reader into a sacred but discerning mirror
+- interpret the astrology as lived pattern, not only as technical placement
+- make timing matter — show how recurring spirals are shaping the person's present threshold
+- ensure the story has movement, not just descriptors
+
+The memberOverviewStory must not sound like a generic personality summary. It must explicitly answer:
+- What cycle are they in?
+- What spiral is repeating?
+- What is this spiral trying to teach?
+- What becomes possible if they meet it consciously now?
+
+Never invent random mystical claims that are unsupported by the chart context.
+Never use generic phrases like "you are a powerful soul" unless they are concretely earned and made specific.`;
+
 async function generateSpiralogicReportData(opts: {
   memberId: string;
   birthData: SpiralogicBirthData;
@@ -524,172 +556,226 @@ For "evolutionDelta": compare the prior and current data above. Be conservative 
   const Anthropic = (await import('@anthropic-ai/sdk')).default;
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const prompt = `You are the Spiralogic Evolutionary Report engine. Generate a deeply personalized report in JSON.
+  const subjectName = birthData.name ?? 'the member';
 
-## Chart Signature (PRIMARY — all interpretations must reference this)
-${calculationMode === 'sun-moon-asc-time'
-  ? `Sun sign: ${sunSign} → Sun element: ${sunElement} (30% weight)
-Moon sign: ${moonSign} → Moon element: ${moonElement} (25% weight)
-Ascendant: ${ascendantSign} → Rising element: ${ascendantElement} (25% weight)
-Birth time context: ${timeLabel} (10% weight)
-Remainder spread equally across other elements (10%)
-Calculation mode: Full (Sun + Moon + Ascendant + Time)`
-  : `Sun sign: ${sunSign} → Sun element: ${sunElement} (35% weight)
-Moon sign: ${moonSign} → Moon element: ${moonElement} (30% weight)
-Birth time context: ${timeLabel} (20% weight)
-Remainder spread equally across other elements (15%)
-Calculation mode: Standard (Sun + Moon + Time — coordinates not provided)`}
-Name: ${birthData.name ?? 'the member'}
-Birth date: ${birthData.date}
-Birth time: ${birthData.time}
-Location: ${birthData.location?.placeName ?? 'unspecified'}
-${contextNote}
-
-## Computed Elemental Distribution (chart-grounded, not seasonal)
-Fire: ${elementStrengths.fire}%
-Water: ${elementStrengths.water}%
-Earth: ${elementStrengths.earth}%
-Air: ${elementStrengths.air}%
+  const astrologyContext = `Sun: ${sunSign} (${sunElement}, ${elementStrengths[sunElement]}% elemental weight)
+Moon: ${moonSign} (${moonElement}, ${elementStrengths[moonElement]}% elemental weight)
+${ascendantSign ? `Ascendant: ${ascendantSign} (${ascendantElement}, strong angular weight)` : 'Ascendant: not calculated (coordinates not provided)'}
+Birth time: ${timeLabel}
+Elemental distribution — Fire: ${elementStrengths.fire}% | Water: ${elementStrengths.water}% | Earth: ${elementStrengths.earth}% | Air: ${elementStrengths.air}%
 Dominant element: ${dominantElement}
 Underactive element: ${underactiveElement}
+Calculation mode: ${calculationMode}`;
 
-## Life-Cycle Transits (compute from birth year — these are real timing signals)
+  const spiralogicContext = `Life-cycle transits active now:
 ${lifeCycleTransits.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+${lifeStage ? `\nLife stage provided: ${lifeStage}` : ''}`;
 
-${deltaPromptSection}## Specificity Requirement
-CRITICAL: Do not write generic advice. Every interpretation, challenge, gift, practice, and action must be grounded in this chart's actual elemental signature. A ${dominantElement}-dominant ${sunSign} person has specific patterns — name them precisely. The "nextAction" section must make different recommendations than it would for a person with different dominant elements or life-cycle phase.
+  const narrativeConstraint = `The memberOverviewStory must explicitly answer:
+- What cycle are they in?
+- What spiral is repeating?
+- What is this spiral trying to teach?
+- What becomes possible if they meet it consciously now?`;
 
-For currentPhase.activeTransits: use ONLY the life-cycle transits listed above. Do not fabricate generic transit language. Reference the specific transit descriptions provided.
+  const prompt = `You are generating a Spiralogic Evolutionary Report.
 
-For nextAction: A ${dominantElement}-dominant person in their current life-cycle phase gets different actions than any other combination. Make these actions concrete, embodied, and specific to ${dominantElement} energy and the transits above.
+Write in a mythopoetic, psychologically precise, astrologically grounded voice. The tone should feel intimate, elegant, spiritually intelligent, and emotionally exact. Avoid generic spiritual clichés, flattery, and vague uplift language. Everything must feel earned by the chart, the timing, and the Spiralogic lens.
 
-Return ONLY valid JSON matching this exact structure (no markdown, no commentary):
+The report should echo the beauty and warmth of an oracle reading, but remain structurally clear and grounded in real astrological interpretation.
+
+SUBJECT
+Name: ${subjectName}
+Birth date: ${birthData.date}
+Birth time: ${birthData.time}
+Birth location: ${birthData.location?.placeName ?? 'unspecified'}
+${birthData.location?.lat != null ? `Latitude: ${birthData.location.lat}` : ''}
+${birthData.location?.lng != null ? `Longitude: ${birthData.location.lng}` : ''}
+${lifeStage ? `Life stage/context: ${lifeStage}` : ''}
+
+ASTROLOGICAL CONTEXT
+${astrologyContext}
+
+SPIRALOGIC CONTEXT
+${spiralogicContext}
+
+${deltaPromptSection}
+
+NARRATIVE CONSTRAINT
+${narrativeConstraint}
+
+INSTRUCTIONS
+
+1. Begin with "oracleWelcome"
+Write 1-2 short paragraphs. This should feel like a beautiful welcome into the reading. Warm, intelligent, intimate. Speak directly to the person.
+
+2. Then write "memberOverviewStory"
+This is the most important section. Write 4-7 substantial paragraphs describing the member's astrological walk at this time.
+This section must:
+- synthesize natal pattern, current transits, life phase, and Spiralogic elemental development
+- describe the spirals currently active in the person's life across identity, relationships, work, embodiment, and soul growth
+- name tensions, thresholds, gifts, and what is ripening now
+- feel literary and beautiful, but still precise
+- make the person feel deeply seen without becoming vague or inflated
+
+3. Write "currentPhase" — Describe the person's current Spiralogic phase and why it is activated now.
+
+4. Write "soulsJourney" — The arc: where they are (stateOfBeing), where they are moving (stateOfBecoming), and how (bridge).
+
+5. Write "elementalMapping" — Generate 4-5 facet interpretations rooted in the Spiralogic system. Each facet should correspond to a life domain (e.g. Identity/Will, Relationships/Depth, Vocation/Form, Mind/Expression, Soul/Integration). Use the computed elemental strengths to weight the interpretation.
+
+6. Write "karmicSignatures" — Return 2-4 key karmic or archetypal themes grounded in the natal signature.
+
+7. Write "timelineForecast" — Return 3-5 time windows (e.g. "Now – 3 months", "3–6 months", "6–12 months") showing likely developmental themes and opportunities.
+
+8. Write "integrationPractices" — Return 4-6 grounded, elegant practices for embodiment and alignment. Make them specific to this chart, not generic.
+
+STYLE RULES
+- Prioritize narrative coherence over category dumping
+- Use evocative but readable language
+- Do not repeat the same idea in multiple sections
+- Do not overuse metaphors
+- Avoid melodrama
+- Be psychologically mature and symbolically rich
+- Keep the language alive, but not overwrought
+- Make the Member Overview Story the narrative heart of the report
+
+OUTPUT RULES
+- Return valid JSON only
+- Do not include markdown fences
+- Do not include commentary outside the JSON
+- Match this exact structure:
+
 {
-  "userId": "member",
-  "birthChartId": "generated",
-  "personalOverview": "<2-3 sentence soul narrative grounded in ${sunSign} Sun and ${dominantElement} dominance>",
-  "beingArchetype": "<short archetype name that reflects ${sunSign} and ${dominantElement} nature, e.g. 'The Scorpio Depth-Keeper'>",
-  "becomingArchetype": "<short archetype name for evolutionary direction toward ${underactiveElement} integration>",
-  "elementalInsights": {
-    "fire": {
-      "element": "Fire",
-      "strength": ${elementStrengths.fire},
-      "planets": [],
-      "interpretation": "<2 sentences about fire in THIS chart — reference ${sunSign} and the ${elementStrengths.fire}% weight specifically>",
-      "challenges": ["<challenge specific to fire at ${elementStrengths.fire}%>", "<second challenge>"],
-      "gifts": ["<gift specific to this fire level>", "<second gift>"],
-      "practices": ["<practice for ${elementStrengths.fire}% fire>", "<second practice>"]
-    },
-    "water": {
-      "element": "Water",
-      "strength": ${elementStrengths.water},
-      "planets": [],
-      "interpretation": "<2 sentences about water in THIS chart — reference the ${elementStrengths.water}% weight>",
-      "challenges": ["<challenge specific to water at ${elementStrengths.water}%>", "<second challenge>"],
-      "gifts": ["<gift specific to this water level>", "<second gift>"],
-      "practices": ["<practice for ${elementStrengths.water}% water>", "<second practice>"]
-    },
-    "earth": {
-      "element": "Earth",
-      "strength": ${elementStrengths.earth},
-      "planets": [],
-      "interpretation": "<2 sentences about earth in THIS chart — reference the ${elementStrengths.earth}% weight>",
-      "challenges": ["<challenge specific to earth at ${elementStrengths.earth}%>", "<second challenge>"],
-      "gifts": ["<gift specific to this earth level>", "<second gift>"],
-      "practices": ["<practice for ${elementStrengths.earth}% earth>", "<second practice>"]
-    },
-    "air": {
-      "element": "Air",
-      "strength": ${elementStrengths.air},
-      "planets": [],
-      "interpretation": "<2 sentences about air in THIS chart — reference the ${elementStrengths.air}% weight>",
-      "challenges": ["<challenge specific to air at ${elementStrengths.air}%>", "<second challenge>"],
-      "gifts": ["<gift specific to this air level>", "<second gift>"],
-      "practices": ["<practice for ${elementStrengths.air}% air>", "<second practice>"]
-    }
-  },
-  "karmicAxis": {
-    "northNode": {
-      "placement": { "planet": "North Node", "sign": "", "house": 0, "degree": 0, "retrograde": false },
-      "interpretation": "<2 sentences on evolutionary direction — integrate ${underactiveElement} themes>",
-      "lessons": ["<lesson 1>", "<lesson 2>"],
-      "evolutionary_direction": "<one-liner>"
-    },
-    "southNode": {
-      "placement": { "planet": "South Node", "sign": "", "house": 0, "degree": 0, "retrograde": false },
-      "interpretation": "<2 sentences on innate gifts — reference ${sunSign} and ${dominantElement} comfort patterns>",
-      "lessons": ["<lesson 1>"],
-      "evolutionary_direction": "<one-liner>"
-    },
-    "saturn": {
-      "placement": { "planet": "Saturn", "sign": "", "house": 0, "degree": 0, "retrograde": false },
-      "interpretation": "<2 sentences on path of mastery — connect to dominant element and life-cycle transits>",
-      "lessons": ["<lesson 1>"],
-      "evolutionary_direction": "<one-liner>"
-    },
-    "pluto": {
-      "placement": { "planet": "Pluto", "sign": "", "house": 0, "degree": 0, "retrograde": false },
-      "interpretation": "<2 sentences on deepest transformation — reference generational Pluto placement for birth year ${birthDate.getFullYear()}>",
-      "lessons": ["<lesson 1>"],
-      "evolutionary_direction": "<one-liner>"
-    }
-  },
+  "title": "<evocative report title for ${subjectName}>",
+  "subjectName": "${subjectName}",
+  "generatedAt": "${new Date().toISOString()}",
+  "oracleWelcome": "<1-2 welcoming paragraphs — warm, intelligent, direct address to the reader>",
+  "memberOverviewStory": "<4-7 paragraphs: the narrative heart — cycle, spiral, teaching, threshold, what is ripening now>",
   "currentPhase": {
-    "spiralogicPhase": "<name the active Spiralogic phase that resonates with the life-cycle transits above — e.g. 'Water 2 — Death and Rebirth' for a Saturn Return>",
-    "activeTransits": ${JSON.stringify(lifeCycleTransits)},
-    "majorLifeLesson": "<one clear sentence naming the core growth edge from the active life-cycle transit(s) above>",
-    "edgeChallenge": "<what is specifically being asked of a ${dominantElement}-dominant ${sunSign} person in this phase>",
-    "emergentGift": "<what is being unlocked — name it in terms of ${dominantElement} and ${underactiveElement} integration>"
+    "element": "${dominantElement}",
+    "phase": "<Spiralogic phase name that resonates with the active life-cycle transits>",
+    "title": "<evocative phase title>",
+    "summary": "<2-3 sentence summary of what this phase means for this person right now>",
+    "majorLesson": "<one clear sentence: the core growth edge from the active transits>",
+    "edge": "<what is specifically being asked of a ${dominantElement}-dominant ${sunSign} person in this phase>",
+    "gifts": ["<gift 1>", "<gift 2>", "<gift 3>"],
+    "currentTransits": ${JSON.stringify(lifeCycleTransits)}
   },
-  "reflectiveProtocols": [
+  "soulsJourney": {
+    "stateOfBeing": "<where they are now — present condition, pattern, ground>",
+    "stateOfBecoming": "<where they are moving — direction, integration, emergence>",
+    "bridge": "<the specific threshold or practice that connects being to becoming>"
+  },
+  "elementalMapping": [
     {
-      "name": "<ritual name grounded in ${dominantElement}>",
-      "element": "${dominantElement}",
-      "description": "<one-sentence description specific to ${dominantElement} at ${elementStrengths[dominantElement]}%>",
-      "steps": ["<step 1>", "<step 2>", "<step 3>"],
-      "timing": "<timing that suits ${dominantElement} energy>"
+      "facetKey": "identity",
+      "facetName": "Identity & Will",
+      "element": "<element name capitalized>",
+      "phase": "<Spiralogic phase>",
+      "archetype": "<archetype for this facet>",
+      "natalSignature": "<what the natal chart shows in this domain>",
+      "currentActivation": "<what is active or stirring in this domain right now>",
+      "growthEdge": "<what is being asked of them in this domain>",
+      "gifts": ["<gift 1>", "<gift 2>"],
+      "practices": ["<practice 1>", "<practice 2>"]
     },
     {
-      "name": "<ritual name that develops ${underactiveElement}>",
-      "element": "${underactiveElement}",
-      "description": "<one-sentence description that builds ${underactiveElement} capacity for this chart>",
-      "steps": ["<step 1>", "<step 2>"],
-      "timing": "<timing>"
+      "facetKey": "relationships",
+      "facetName": "Relationships & Depth",
+      "element": "<element>",
+      "phase": "<phase>",
+      "archetype": "<archetype>",
+      "natalSignature": "<natal pattern>",
+      "currentActivation": "<current activation>",
+      "growthEdge": "<growth edge>",
+      "gifts": ["<gift 1>", "<gift 2>"],
+      "practices": ["<practice 1>", "<practice 2>"]
+    },
+    {
+      "facetKey": "vocation",
+      "facetName": "Vocation & Form",
+      "element": "<element>",
+      "phase": "<phase>",
+      "archetype": "<archetype>",
+      "natalSignature": "<natal pattern>",
+      "currentActivation": "<current activation>",
+      "growthEdge": "<growth edge>",
+      "gifts": ["<gift 1>", "<gift 2>"],
+      "practices": ["<practice 1>", "<practice 2>"]
+    },
+    {
+      "facetKey": "mind",
+      "facetName": "Mind & Expression",
+      "element": "<element>",
+      "phase": "<phase>",
+      "archetype": "<archetype>",
+      "natalSignature": "<natal pattern>",
+      "currentActivation": "<current activation>",
+      "growthEdge": "<growth edge>",
+      "gifts": ["<gift 1>", "<gift 2>"],
+      "practices": ["<practice 1>", "<practice 2>"]
+    },
+    {
+      "facetKey": "soul",
+      "facetName": "Soul & Integration",
+      "element": "<element>",
+      "phase": "<phase>",
+      "archetype": "<archetype>",
+      "natalSignature": "<natal pattern>",
+      "currentActivation": "<current activation>",
+      "growthEdge": "<growth edge>",
+      "gifts": ["<gift 1>", "<gift 2>"],
+      "practices": ["<practice 1>", "<practice 2>"]
     }
   ],
-  "elementalBalanceOverview": {
-    "fire": ${elementStrengths.fire},
-    "water": ${elementStrengths.water},
-    "earth": ${elementStrengths.earth},
-    "air": ${elementStrengths.air},
-    "dominantElement": "${dominantElement}",
-    "underactiveElement": "${underactiveElement}",
-    "calculationMode": "${calculationMode}",
-    ${ascendantSign ? `"ascendantSign": "${ascendantSign}",
-    "ascendantElement": "${ascendantElement}",` : ''}
-    "balanceSummary": "<one sentence: what does a ${elementStrengths[dominantElement]}% ${dominantElement} / ${elementStrengths[underactiveElement]}% ${underactiveElement} signature mean for how this person moves through life>"
-  },
-  "nextAction": {
-    "actions": [
-      "<concrete first action this week — must be specific to ${dominantElement} energy and the current transit(s); not generic self-help>",
-      "<second action — reflective or relational, grounded in ${sunSign} and current life-cycle phase>",
-      "<third action — 30-day commitment to develop ${underactiveElement} capacity in a way authentic to this chart>"
-    ],
-    "watchFor": "<one clear shadow tendency specific to ${dominantElement}-dominant ${sunSign} people in this life-cycle phase>",
-    "journalPrompt": "<one open-ended question that a ${sunSign}/${dominantElement}-dominant person in this transit phase would genuinely benefit from sitting with>"
-  },
+  "karmicSignatures": [
+    {
+      "title": "<karmic theme title>",
+      "description": "<2-3 sentence description grounded in natal signature>",
+      "lesson": "<the evolutionary invitation>"
+    }
+  ],
+  "timelineForecast": [
+    {
+      "window": "Now – 3 months",
+      "theme": "<theme title>",
+      "interpretation": "<what is happening in this window for this chart>",
+      "opportunity": "<what to move toward>",
+      "caution": "<what to watch for>"
+    },
+    {
+      "window": "3–6 months",
+      "theme": "<theme>",
+      "interpretation": "<interpretation>",
+      "opportunity": "<opportunity>",
+      "caution": "<caution>"
+    },
+    {
+      "window": "6–12 months",
+      "theme": "<theme>",
+      "interpretation": "<interpretation>",
+      "opportunity": "<opportunity>",
+      "caution": "<caution>"
+    }
+  ],
+  "integrationPractices": [
+    {
+      "title": "<practice title>",
+      "description": "<description — specific to this chart>",
+      "frequency": "<optional: daily/weekly/as needed>"
+    }
+  ],
   "evolutionDelta": ${priorReport ? `{
-    "sinceLastReport": "<1-2 sentences summarising the most meaningful change or continuity since the prior report — be specific about what shifted or held>",
-    "repeatedPatterns": ["<pattern that appears in both reports>"],
-    "emergingStrengths": ["<something showing more integration or capacity than before>"],
-    "decompensatingPatterns": ["<something showing less coherence or more reactivity — omit array if nothing is clear>"]
-  }` : 'null'},
-  "generatedAt": "${new Date().toISOString()}"
+    "sinceLastReport": "<1-2 sentences: most meaningful change or continuity since prior report>",
+    "repeatedPatterns": ["<recurring pattern>"],
+    "emergingStrengths": ["<growing integration or capacity>"]
+  }` : 'null'}
 }`;
 
   const message = await client.messages.create({
     model: 'claude-opus-4-6',
-    max_tokens: 8192,
+    max_tokens: 12000,
+    system: ORACLE_SYSTEM_PROMPT,
     messages: [{ role: 'user', content: prompt }],
   });
 
@@ -711,6 +797,19 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
     ascendantElement: ascendantElement ?? null,
     calculationMode,
     elementalDistribution: elementStrengths,
+  };
+
+  // Inject server-computed elemental balance overview
+  parsed.elementalBalanceOverview = {
+    fire: elementStrengths.fire,
+    water: elementStrengths.water,
+    earth: elementStrengths.earth,
+    air: elementStrengths.air,
+    dominantElement,
+    underactiveElement,
+    calculationMode,
+    ...(ascendantSign ? { ascendantSign, ascendantElement } : {}),
+    balanceSummary: `${elementStrengths[dominantElement]}% ${dominantElement} dominant with ${elementStrengths[underactiveElement]}% ${underactiveElement} as the developmental edge`,
   };
 
   return parsed;

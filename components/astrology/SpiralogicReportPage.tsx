@@ -226,208 +226,213 @@ export default function SpiralogicReportPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1a] via-[#0d1220] to-[#0a0f1a]">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+  // ---- Form JSX (extracted for readability) ---------------------------------
+  const formPanel = (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest">
+          {readingForOther ? 'Reading for Someone Else' : 'Generate Report'}
+        </h2>
+        <button type="button" onClick={() => handleReadingForOtherToggle(!readingForOther)}
+          className={`text-xs px-3 py-1 rounded-lg border transition-colors ${
+            readingForOther
+              ? 'border-indigo-500/60 bg-indigo-500/10 text-indigo-300'
+              : 'border-white/10 text-white/40 hover:border-white/20 hover:text-white/60'
+          }`}>
+          {readingForOther ? '— Someone else' : '+ Reading for someone else'}
+        </button>
+      </div>
+      {profileLoaded && !readingForOther && (
+        <p className="text-xs text-amber-500/60 mb-4">Birth data pre-filled from your astrology profile.</p>
+      )}
+      <form onSubmit={handleGenerate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        {/* Page header */}
-        <div className="flex items-start justify-between mb-10 gap-6">
-          <div>
-            <h1 className="text-3xl font-extralight text-white tracking-tight mb-1">
-              Spiralogic Evolutionary Report
-            </h1>
-            {!activeReport && (
-              <p className="text-gray-500 font-light text-sm mt-2 max-w-lg leading-relaxed">
+        {readingForOther ? (
+          <div className="sm:col-span-2">
+            <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Their Name</label>
+            <input type="text" value={subjectName} onChange={(e) => setSubjectName(e.target.value)}
+              placeholder="Name of the person this reading is for"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                         placeholder-white/20 focus:outline-none focus:border-indigo-500/50" />
+          </div>
+        ) : (
+          <>
+            <div>
+              <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Your Name (optional)</label>
+              <input type="text" value={memberName} onChange={(e) => setMemberName(e.target.value)}
+                placeholder="e.g. Kelly"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                           placeholder-white/20 focus:outline-none focus:border-amber-500/50" />
+            </div>
+            <div>
+              <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Life Stage (optional)</label>
+              <input type="text" value={lifeStage} onChange={(e) => setLifeStage(e.target.value)}
+                placeholder="e.g. Career transition"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                           placeholder-white/20 focus:outline-none focus:border-amber-500/50" />
+            </div>
+          </>
+        )}
+
+        <div>
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Birth Date</label>
+          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                       focus:outline-none focus:border-amber-500/50" />
+        </div>
+
+        <div>
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Birth Time</label>
+          <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} required
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                       focus:outline-none focus:border-amber-500/50" />
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Birth Place (optional)</label>
+          <div className="flex gap-2">
+            <input type="text" value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)}
+              placeholder="e.g. Baton Rouge, LA"
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                         placeholder-white/20 focus:outline-none focus:border-amber-500/50" />
+            <button type="button" onClick={geocodePlace} disabled={geocoding || !birthPlace.trim()}
+              className="px-3 py-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 text-white/60 text-xs
+                         rounded-lg border border-white/10 transition-colors shrink-0">
+              {geocoding ? '...' : 'Locate'}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Latitude</label>
+          <input type="number" value={birthLat} onChange={(e) => setBirthLat(e.target.value)}
+            step="0.0001" min="-90" max="90" placeholder="e.g. 30.4494"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                       placeholder-white/20 focus:outline-none focus:border-amber-500/50" />
+        </div>
+        <div>
+          <label className="block text-xs text-white/40 uppercase tracking-widest mb-1">Longitude</label>
+          <input type="number" value={birthLng} onChange={(e) => setBirthLng(e.target.value)}
+            step="0.0001" min="-180" max="180" placeholder="e.g. -91.1870"
+            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm
+                       placeholder-white/20 focus:outline-none focus:border-amber-500/50" />
+        </div>
+
+        {(birthLat || birthLng) && (
+          <p className="sm:col-span-2 text-xs text-amber-500/70">Ascendant sign will be included in report.</p>
+        )}
+        {generateError && (
+          <p className="sm:col-span-2 text-xs text-red-400">{generateError}</p>
+        )}
+
+        <div className="sm:col-span-2">
+          <button type="submit" disabled={generating}
+            className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40
+                       text-black font-medium text-sm rounded-xl transition-colors">
+            {generating ? 'Generating...' : 'Generate Report'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#061225] text-white">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+
+        {!activeReport ? (
+          /* ── FORM MODE: narrow centered column ─────────────────────────── */
+          <div className="mx-auto max-w-xl">
+            <div className="mb-8">
+              <h1 className="text-4xl font-light tracking-tight">Spiralogic Evolutionary Report</h1>
+              <p className="mt-3 text-base text-white/60 leading-relaxed">
                 Your birth chart read through the Spiralogic lens — elemental mapping, karmic
                 insights, and practices for your arc.
               </p>
+            </div>
+
+            {reportLoading ? (
+              <div className="space-y-4 animate-pulse">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-2xl" />)}
+              </div>
+            ) : (
+              <>
+                {reportError && (
+                  <div className="mb-4 rounded-xl bg-red-900/20 border border-red-500/30 p-4">
+                    <p className="text-red-400 text-sm">{reportError}</p>
+                  </div>
+                )}
+                {formPanel}
+                {history.length > 0 && (
+                  <div className="mt-6">
+                    <p className="text-xs text-white/30 uppercase tracking-widest mb-3">Past Reports</p>
+                    <div className="space-y-2">
+                      {history.map((r) => (
+                        <button key={r.id} onClick={() => { loadReport(r.id); setShowForm(false); }}
+                          className="w-full text-left px-4 py-3 rounded-xl border border-white/10
+                                     bg-white/5 hover:bg-white/8 transition-colors">
+                          <p className="text-sm text-white">{r.beingArchetype ?? 'Report'}</p>
+                          <p className="text-xs text-white/40 mt-0.5">{new Date(r.createdAt).toLocaleDateString()}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
-          {activeReport && (
-            <button
-              onClick={() => setShowForm(f => !f)}
-              className="shrink-0 px-4 py-2 text-xs text-gray-400 border border-gray-700
-                         rounded-lg hover:border-gray-500 hover:text-gray-200 transition-colors whitespace-nowrap"
-            >
-              {showForm ? 'Hide Form' : 'New Report'}
-            </button>
-          )}
-        </div>
-
-        {/* Generate form — shown when no report, or toggled open */}
-        {(showForm || !activeReport) && (
-          <div className="mb-10 bg-gray-900/60 border border-gray-700 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-widest">
-                {readingForOther ? 'Reading for Someone Else' : activeReport ? 'Generate New Report' : 'Generate Report'}
-              </h2>
-              {/* "Someone else" toggle */}
-              <button
-                type="button"
-                onClick={() => handleReadingForOtherToggle(!readingForOther)}
-                className={`text-xs px-3 py-1 rounded-lg border transition-colors ${
-                  readingForOther
-                    ? 'border-indigo-500/60 bg-indigo-500/10 text-indigo-300'
-                    : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
-                }`}
-              >
-                {readingForOther ? '— Reading for someone else' : '+ Reading for someone else'}
-              </button>
-            </div>
-            {profileLoaded && !readingForOther && (
-              <p className="text-xs text-amber-500/60 mb-4">Birth data pre-filled from your astrology profile.</p>
-            )}
-            <form onSubmit={handleGenerate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              {/* Subject name — "someone else" uses a custom name; self uses member name */}
-              {readingForOther ? (
-                <div className="sm:col-span-2">
-                  <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Their Name</label>
-                  <input type="text" value={subjectName} onChange={(e) => setSubjectName(e.target.value)}
-                    placeholder="Name of the person this reading is for"
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                               placeholder-gray-600 focus:outline-none focus:border-indigo-500/50" />
-                </div>
-              ) : (
+        ) : (
+          /* ── REPORT MODE: full width, no competing columns ──────────────── */
+          <div className="mx-auto w-full">
+            {/* Report header bar */}
+            <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Your Name (optional)</label>
-                <input type="text" value={memberName} onChange={(e) => setMemberName(e.target.value)}
-                  placeholder="e.g. Aria"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
+                <h1 className="text-3xl font-light tracking-tight">Spiralogic Evolutionary Report</h1>
+                <p className="mt-1 text-sm text-white/50">
+                  A living astrological and elemental reading of this phase of your journey.
+                </p>
               </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Life Stage (optional)</label>
-                <input type="text" value={lifeStage} onChange={(e) => setLifeStage(e.target.value)}
-                  placeholder="e.g. Career transition"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
-              </div>
-              )}
-
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Birth Date</label>
-                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             focus:outline-none focus:border-amber-500/50" />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Birth Time</label>
-                <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} required
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             focus:outline-none focus:border-amber-500/50" />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Birth Place (optional)</label>
-                <div className="flex gap-2">
-                  <input type="text" value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)}
-                    placeholder="e.g. Baton Rouge, LA"
-                    className="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                               placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
-                  <button type="button" onClick={geocodePlace} disabled={geocoding || !birthPlace.trim()}
-                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600
-                               text-gray-300 text-xs rounded-lg transition-colors shrink-0">
-                    {geocoding ? '...' : 'Locate'}
+              <div className="flex flex-wrap gap-2">
+                {history.length > 1 && history.filter(r => r.id !== activeReport.id).map(r => (
+                  <button key={r.id} onClick={() => loadReport(r.id)}
+                    className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs
+                               text-white/60 hover:bg-white/10 transition">
+                    {r.beingArchetype ? r.beingArchetype.split(' — ')[0] : 'Report'} · {new Date(r.createdAt).toLocaleDateString()}
                   </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Latitude</label>
-                <input type="number" value={birthLat} onChange={(e) => setBirthLat(e.target.value)}
-                  step="0.0001" min="-90" max="90" placeholder="e.g. 30.4494"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 uppercase tracking-widest mb-1">Longitude</label>
-                <input type="number" value={birthLng} onChange={(e) => setBirthLng(e.target.value)}
-                  step="0.0001" min="-180" max="180" placeholder="e.g. -91.1870"
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm
-                             placeholder-gray-600 focus:outline-none focus:border-amber-500/50" />
-              </div>
-
-              {generateError && (
-                <p className="sm:col-span-2 text-xs text-red-400">{generateError}</p>
-              )}
-              {(birthLat || birthLng) && (
-                <p className="sm:col-span-2 text-xs text-amber-500/70">Ascendant sign will be included in report.</p>
-              )}
-
-              <div className="sm:col-span-2">
-                <button type="submit" disabled={generating}
-                  className="w-full py-2.5 bg-amber-600/80 hover:bg-amber-500 disabled:bg-gray-700
-                             disabled:text-gray-500 text-white text-sm rounded-lg transition-colors">
-                  {generating ? 'Generating...' : 'Generate Report'}
+                ))}
+                <button onClick={() => { setActiveReport(null); setShowForm(true); }}
+                  className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm
+                             text-white/80 hover:bg-white/10 transition">
+                  New Report
                 </button>
               </div>
-            </form>
-          </div>
-        )}
+            </div>
 
-        {/* Past reports strip — shown when report is active and form is hidden */}
-        {activeReport && !showForm && history.length > 1 && (
-          <div className="flex gap-2 flex-wrap mb-8">
-            {history.map((r) => (
-              <button key={r.id} onClick={() => loadReport(r.id)}
-                className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                  activeReport?.id === r.id
-                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
-                    : 'border-gray-700 bg-gray-800/40 text-gray-400 hover:border-gray-500'
-                }`}>
-                {r.beingArchetype ? r.beingArchetype.split(' — ')[0] : 'Report'} · {new Date(r.createdAt).toLocaleDateString()}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Loading skeleton */}
-        {reportLoading && (
-          <div className="space-y-6 animate-pulse">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-800/60 rounded-xl" />
-            ))}
-          </div>
-        )}
-
-        {reportError && (
-          <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
-            <p className="text-red-400 text-sm">{reportError}</p>
-          </div>
-        )}
-
-        {/* Report view — full width */}
-        {!reportLoading && !reportError && activeReport && (
-          <>
-            <SpiralogicReportView
-              reportId={activeReport.id}
-              report={activeReport.reportData}
-              birthData={activeReport.birthData}
-            />
+            {/* Report — full width, overflow guarded */}
+            <div className="w-full overflow-x-hidden">
+              <SpiralogicReportView
+                reportId={activeReport.id}
+                report={activeReport.reportData}
+                birthData={activeReport.birthData}
+              />
+            </div>
 
             {/* MAIA entry points */}
-            <div className="mt-10 pt-8 border-t border-gray-800 space-y-4">
-              <a
-                href={`/maia?reportPhase=${encodeURIComponent(activeReport.reportData.currentPhase?.spiralogicPhase ?? '')}&openWith=report`}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600/80 hover:bg-indigo-500
-                           text-white text-sm rounded-xl transition-colors duration-200"
-              >
+            <div className="mt-12 pt-8 border-t border-white/10 space-y-4">
+              <a href={`/maia?reportPhase=${encodeURIComponent((activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? '')}&openWith=report`}
+                className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600/80
+                           hover:bg-indigo-500 text-white text-sm rounded-xl transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 Talk with MAIA about this report
               </a>
-              <p className="text-center text-xs text-gray-600">MAIA already knows where you are in this cycle.</p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              <p className="text-center text-xs text-white/30">MAIA already knows where you are in this cycle.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { label: 'Work with my current phase', icon: '◎',
-                    prompt: `I want to work with my current Spiralogic phase: ${activeReport.reportData.currentPhase?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
+                    prompt: `I want to work with my current Spiralogic phase: ${(activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
                   { label: 'Help me understand this transit', icon: '⟳',
                     prompt: `I want to understand the life-cycle transit I'm in right now and what it's asking of me.` },
                   { label: 'Guide me through my next action', icon: '→',
@@ -436,30 +441,14 @@ export default function SpiralogicReportPage() {
                     prompt: `Based on what you know about my elemental pattern and current phase, what do you think I might be avoiding or not seeing clearly?` },
                 ].map(({ label, prompt, icon }) => (
                   <a key={label} href={`/maia?q=${encodeURIComponent(prompt)}`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-700
-                               hover:border-gray-500 bg-gray-800/40 hover:bg-gray-800/70
-                               text-sm text-gray-300 hover:text-white transition-all duration-150">
-                    <span className="text-gray-500 font-mono shrink-0 text-base">{icon}</span>
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10
+                               bg-white/5 hover:bg-white/8 text-sm text-white/70 hover:text-white transition-all">
+                    <span className="text-white/30 font-mono shrink-0">{icon}</span>
                     <span>{label}</span>
                   </a>
                 ))}
               </div>
             </div>
-          </>
-        )}
-
-        {/* Empty state */}
-        {!reportLoading && !reportError && !activeReport && !historyLoading && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 mb-6 text-gray-700">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4l3 3" strokeLinecap="round" />
-              </svg>
-            </div>
-            <p className="text-gray-500 font-light max-w-xs leading-relaxed">
-              Enter your birth information and generate your first Spiralogic Evolutionary Report.
-            </p>
           </div>
         )}
       </div>
