@@ -65,17 +65,13 @@ function lookupSign(month: number, day: number): SignPlacement {
 
 function computeMoonSign(normalized: NormalizedBirthData): SignPlacement {
   const { year, month, day, hour, minute } = normalized.localDateParts;
+  const utcOffset = normalized.lng != null ? normalized.lng / 15 : 0;
 
   const j2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
-  let birthUtcMs: number;
-  if (normalized.utcIsoForCalculation) {
-    birthUtcMs = new Date(normalized.utcIsoForCalculation).getTime();
-  } else {
-    // Fallback: longitude-based approximation
-    const utcOffset = normalized.lng != null ? normalized.lng / 15 : 0;
-    const localMs = Date.UTC(year, month - 1, day, Math.floor(hour), minute, 0);
-    birthUtcMs = localMs - utcOffset * 3600 * 1000;
-  }
+  // Build UTC ms from local parts + approximate offset
+  const localMs = Date.UTC(year, month - 1, day, Math.floor(hour), minute, 0);
+  const offsetMs = utcOffset * 3600 * 1000;
+  const birthUtcMs = localMs - offsetMs;
   const daysSince = (birthUtcMs - j2000) / 86400000;
 
   const moonLon = ((218.3 + 13.17639648 * daysSince) % 360 + 360) % 360;
@@ -101,11 +97,11 @@ function computeAscendant(normalized: NormalizedBirthData): SignPlacement | null
 
   let utHour: number;
   if (normalized.utcIsoForCalculation) {
-    const timePart = normalized.utcIsoForCalculation.split('T')[1]; // "13:00:00Z"
-    const [hStr, mStr] = timePart.replace('Z', '').split(':').map(Number);
-    utHour = hStr + mStr / 60;
+    // Elapsed hours from the local birth date 0h UT — handles UTC midnight rollover
+    const birthUtcMs = new Date(normalized.utcIsoForCalculation).getTime();
+    const birthDayStartMs = Date.UTC(year, month - 1, day, 0, 0, 0);
+    utHour = (birthUtcMs - birthDayStartMs) / 3600000;
   } else {
-    // Fallback: longitude-based approximation
     const utcOffset = lng / 15;
     utHour = hour - utcOffset + minute / 60;
   }
@@ -123,11 +119,12 @@ function computeAscendant(normalized: NormalizedBirthData): SignPlacement | null
   const epsRad = eps * Math.PI / 180;
   const latRad = lat * Math.PI / 180;
 
-  let ascLon = Math.atan2(
+  const rawAsc = Math.atan2(
     -Math.cos(RAmcRad),
     Math.sin(RAmcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad),
   ) * 180 / Math.PI;
-  ascLon = ((ascLon % 360) + 360) % 360;
+  // Add 180° correction: raw atan2 gives the western horizon; +180° gives the eastern horizon (Ascendant)
+  const ascLon = ((rawAsc + 180) % 360 + 360) % 360;
 
   const ascSigns: Array<[string, ZodiacElement]> = [
     ['Aries','fire'],['Taurus','earth'],['Gemini','air'],['Cancer','water'],

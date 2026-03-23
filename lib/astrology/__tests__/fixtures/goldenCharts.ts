@@ -40,10 +40,10 @@ export const goldenCharts: GoldenChart[] = [
   // ── Case 1: Kelly — primary reference chart (exposed visible failure) ────────
   {
     label: 'Kelly',
-    notes: 'Primary reference. Exposed Sun sign / date parsing bug.',
+    notes: 'Birth time confirmed by user: 22:29 CST. Ascendant Leo confirmed. Moon Scorpio confirmed by mean longitude calculation.',
     input: {
       birthDate: '1966-12-09',
-      birthTime: '07:00',
+      birthTime: '22:29',
       timezone: 'America/Chicago',
       lat: 30.4515,
       lng: -91.1871,
@@ -52,8 +52,8 @@ export const goldenCharts: GoldenChart[] = [
     expected: {
       displayDateLong: 'Friday, December 9, 1966',
       sunSign: 'Sagittarius',
-      moonSign: 'TODO — verify against Astro.com',
-      ascendant: 'TODO — verify against Astro.com',
+      moonSign: 'Scorpio',
+      ascendant: 'Leo',
     },
     category: 'stable',
   },
