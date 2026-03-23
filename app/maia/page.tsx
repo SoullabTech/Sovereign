@@ -35,7 +35,7 @@ import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
@@ -1048,7 +1048,7 @@ function MAIAPageContent() {
             </div>
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
-            <div className="hidden md:flex items-center w-full mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
+            <div className="hidden md:flex items-center w-full overflow-hidden mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
               {canScrollLeft && (
                 <button
                   onClick={() => scrollCarousel('left')}
@@ -1058,7 +1058,7 @@ function MAIAPageContent() {
                   <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
-              <div ref={desktopCarouselRef} className="flex-1 mobile-carousel scrollbar-hide">
+              <div ref={desktopCarouselRef} className="flex-1 min-w-0 mobile-carousel scrollbar-hide">
               <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
