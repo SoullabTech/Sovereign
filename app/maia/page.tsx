@@ -1048,7 +1048,7 @@ function MAIAPageContent() {
             </div>
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
-            <div className="hidden md:flex items-center w-full overflow-hidden mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
+            <div className="hidden md:flex items-center w-full mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
               {canScrollLeft && (
                 <button
                   onClick={() => scrollCarousel('left')}
@@ -1059,7 +1059,7 @@ function MAIAPageContent() {
                 </button>
               )}
               <div ref={desktopCarouselRef} className="flex-1 min-w-0 mobile-carousel scrollbar-hide">
-              <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
+              <div className="flex items-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
                   <FeatureTooltip featureId="voice-text-toggle" side="bottom">
