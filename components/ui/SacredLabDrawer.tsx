@@ -411,7 +411,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Compass,
           label: 'Spiralogic Report',
-          action: () => onNavigate('/dashboard/spiralogic-report'),
+          action: () => onNavigate('/astrology/report'),
           description: 'Evolutionary report — all 12 facets'
         },
         {
