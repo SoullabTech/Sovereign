@@ -652,8 +652,8 @@ function SigninContent() {
   // Show loading while checking server session
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 via-emerald-50/30 to-amber-50/20">
-        <div className="text-teal-600/60 animate-pulse">Checking session...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0b0f1c] to-[#161d3a]">
+        <div className="text-amber-400/60 animate-pulse">Checking session...</div>
       </div>
     );
   }
@@ -667,13 +667,13 @@ function SigninContent() {
         transition={{ duration: 1.2, ease: "easeOut" }}
         className="mb-8 z-10 relative flex flex-col items-center"
       >
-        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-6">
+        <h1 className="text-5xl font-extralight text-white/80 tracking-[0.12em] mb-6">
           Soullab
         </h1>
         <div className="w-28 h-28 flex items-center justify-center animate-breathe">
-          <Holoflower size="lg" glowIntensity="low" animate={false} theme="light" />
+          <Holoflower size="lg" glowIntensity="low" animate={false} theme="dark" />
         </div>
-        <p className="mt-4 text-sm text-teal-700/60 font-light tracking-wide">
+        <p className="mt-4 text-sm text-amber-400/60 font-light tracking-wide">
           Your space is waiting.
         </p>
       </motion.div>
@@ -685,10 +685,10 @@ function SigninContent() {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="rounded-3xl p-8 max-w-sm w-full"
         style={{
-          background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.25))',
+          background: 'linear-gradient(165deg, rgba(18, 24, 51, 0.8), rgba(11, 15, 28, 0.6))',
           backdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         {/* Reserved space for error messages - prevents layout shift */}
@@ -701,7 +701,7 @@ function SigninContent() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-xl border border-amber-400/40 bg-amber-50/60 p-3 text-sm text-amber-900/80"
+                className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-300"
               >
                 {error}
               </motion.div>
@@ -716,7 +716,7 @@ function SigninContent() {
             onChange={(e) => { console.log('[INPUT] username:', e.target.value); setUsername(e.target.value); }}
             placeholder="Username"
             autoComplete="username"
-            className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+            className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 focus:bg-white/15 transition-all"
           />
           <div className="relative">
             <input
@@ -725,12 +725,12 @@ function SigninContent() {
               placeholder="Password"
               type={showPasswordText ? 'text' : 'password'}
               autoComplete="current-password"
-              className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 pr-11 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+              className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 pr-11 text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 focus:bg-white/15 transition-all"
             />
             <button
               type="button"
               onClick={() => setShowPasswordText(!showPasswordText)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-teal-600/50 hover:text-teal-700 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/40 hover:text-white/70 transition-colors"
               tabIndex={-1}
             >
               {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -741,7 +741,7 @@ function SigninContent() {
             disabled={isLoading || !username || !password}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+            className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
           </motion.button>
@@ -754,9 +754,9 @@ function SigninContent() {
             disabled={isLoading}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="mt-3 w-full rounded-xl border border-teal-300/40 bg-white/30 px-4 py-3 text-center hover:bg-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="mt-3 w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            <span className="text-sm font-medium text-teal-800">
+            <span className="text-sm font-medium text-white/90">
               Use {biometricLabel}
             </span>
           </motion.button>
@@ -764,9 +764,9 @@ function SigninContent() {
 
         {/* Divider */}
         <div className="mt-6 flex items-center gap-3">
-          <div className="flex-1 h-px bg-teal-300/30" />
-          <span className="text-xs text-teal-600/50 uppercase tracking-wide">or</span>
-          <div className="flex-1 h-px bg-teal-300/30" />
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-xs text-white/30 uppercase tracking-wide">or</span>
+          <div className="flex-1 h-px bg-white/10" />
         </div>
 
         {/* Secondary Options */}
@@ -776,9 +776,9 @@ function SigninContent() {
             type="button"
             onClick={() => setShowMagicLink(true)}
             title="Email me a sign-in link"
-            className="w-11 h-11 rounded-xl bg-white/30 hover:bg-white/50 border border-teal-200/30 flex items-center justify-center transition-all"
+            className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all"
           >
-            <Mail className="w-5 h-5 text-teal-700/70" />
+            <Mail className="w-5 h-5 text-white/60" />
           </button>
 
           {/* QR Code Login (desktop only, when feature enabled) */}
@@ -787,9 +787,9 @@ function SigninContent() {
               type="button"
               onClick={() => setShowQRLogin(true)}
               title="Scan QR code with phone"
-              className="w-11 h-11 rounded-xl bg-white/30 hover:bg-white/50 border border-teal-200/30 flex items-center justify-center transition-all"
+              className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all"
             >
-              <QrCode className="w-5 h-5 text-teal-700/70" />
+              <QrCode className="w-5 h-5 text-white/60" />
             </button>
           )}
 
@@ -799,7 +799,7 @@ function SigninContent() {
               type="button"
               onClick={handleGoogleNative}
               title="Continue with Google"
-              className="w-11 h-11 rounded-xl bg-white/40 hover:bg-white/60 border border-teal-200/30 flex items-center justify-center transition-all"
+              className="w-11 h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -830,15 +830,15 @@ function SigninContent() {
           <button
             type="button"
             onClick={() => setShowRecovery(true)}
-            className="text-sm text-teal-700/50 hover:text-teal-700 transition-colors"
+            className="text-sm text-white/40 hover:text-white/70 transition-colors"
           >
             Forgot password?
           </button>
 
-          <div className="pt-3 border-t border-teal-200/20">
+          <div className="pt-3 border-t border-white/10">
             <button
               onClick={() => { window.location.href = '/begin?fresh=true'; }}
-              className="text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors"
+              className="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors"
             >
               New to Soullab? Begin your journey
             </button>
@@ -854,9 +854,9 @@ function SigninContent() {
         className="mt-6"
       >
         <EthosFooter
-          isDayMode={true}
+          isDayMode={false}
           showLearnMore={false}
-          className="text-teal-700/50"
+          className="text-white/30"
         />
       </motion.div>
 
@@ -872,19 +872,19 @@ function SigninContent() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-[#121833] border border-white/10"
           >
             <div className="flex justify-center mb-4">
-              <Mail className="w-10 h-10 text-teal-600" />
+              <Mail className="w-10 h-10 text-amber-400" />
             </div>
-            <h2 className="text-lg font-semibold text-teal-900 text-center mb-3">Reset Your Password</h2>
+            <h2 className="text-lg font-semibold text-white text-center mb-3">Reset Your Password</h2>
 
             {recoveryStatus === 'sent' ? (
               <div className="text-center">
-                <div className="bg-emerald-100/60 rounded-xl p-4 mb-4">
-                  <p className="text-emerald-800">Check your email for a password reset link.</p>
+                <div className="bg-emerald-500/10 rounded-xl p-4 mb-4">
+                  <p className="text-emerald-300">Check your email for a password reset link.</p>
                 </div>
-                <button onClick={() => setShowRecovery(false)} className="text-teal-600 text-sm">
+                <button onClick={() => setShowRecovery(false)} className="text-amber-400 text-sm">
                   Back to Sign In
                 </button>
               </div>
@@ -895,17 +895,17 @@ function SigninContent() {
                   value={recoveryEmail}
                   onChange={(e) => setRecoveryEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400/50"
                 />
                 <button
                   type="button"
                   onClick={handleRecovery}
                   disabled={recoveryStatus === 'sending' || !recoveryEmail}
-                  className="w-full py-2 rounded-xl font-medium !bg-teal-600 !text-white hover:!bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
+                  className="w-full py-2 rounded-xl font-medium !bg-amber-500 !text-white hover:!bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-400/40"
                 >
                   {recoveryStatus === 'sending' ? 'Sending...' : 'Send Reset Link'}
                 </button>
-                <button type="button" onClick={() => setShowRecovery(false)} className="w-full text-sm text-teal-700/70">
+                <button type="button" onClick={() => setShowRecovery(false)} className="w-full text-sm text-white/60">
                   Cancel
                 </button>
               </form>
@@ -926,23 +926,23 @@ function SigninContent() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-[#121833] border border-white/10"
           >
             <div className="flex justify-center mb-4">
-              <Sparkles className="w-10 h-10 text-emerald-600" />
+              <Sparkles className="w-10 h-10 text-emerald-400" />
             </div>
-            <h2 className="text-lg font-semibold text-teal-900 text-center mb-2">Sign In with Magic Link</h2>
-            <p className="text-sm text-teal-700/70 text-center mb-4">
+            <h2 className="text-lg font-semibold text-white text-center mb-2">Sign In with Magic Link</h2>
+            <p className="text-sm text-white/60 text-center mb-4">
               We'll send you a link to sign in instantly.
             </p>
 
             {magicLinkStatus === 'sent' ? (
               <div className="text-center">
-                <div className="bg-emerald-100/60 rounded-xl p-4 mb-4">
-                  <p className="text-emerald-800">Check your email for the magic link!</p>
-                  <p className="text-emerald-600/70 text-xs mt-1">Link expires in 15 minutes.</p>
+                <div className="bg-emerald-500/10 rounded-xl p-4 mb-4">
+                  <p className="text-emerald-300">Check your email for the magic link!</p>
+                  <p className="text-emerald-400/70 text-xs mt-1">Link expires in 15 minutes.</p>
                 </div>
-                <button onClick={() => setShowMagicLink(false)} className="text-teal-600 text-sm">
+                <button onClick={() => setShowMagicLink(false)} className="text-amber-400 text-sm">
                   Back to Sign In
                 </button>
               </div>
@@ -954,7 +954,7 @@ function SigninContent() {
                   onChange={(e) => setMagicLinkEmail(e.target.value)}
                   placeholder="your@email.com"
                   autoFocus
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:border-emerald-400"
+                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-white outline-none focus:border-amber-400/50"
                 />
                 <button
                   type="submit"
@@ -963,7 +963,7 @@ function SigninContent() {
                     width: '100%',
                     padding: '12px 16px',
                     borderRadius: 14,
-                    backgroundColor: '#0d9488',
+                    backgroundColor: '#f59e0b',
                     color: '#ffffff',
                     fontSize: 16,
                     fontWeight: 600,
@@ -975,7 +975,7 @@ function SigninContent() {
                 >
                   {magicLinkStatus === 'sending' ? 'Sending...' : 'Send Magic Link'}
                 </button>
-                <button type="button" onClick={() => setShowMagicLink(false)} className="w-full text-sm text-teal-700/70">
+                <button type="button" onClick={() => setShowMagicLink(false)} className="w-full text-sm text-white/60">
                   Use password instead
                 </button>
               </form>
@@ -994,16 +994,16 @@ function SigninContent() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-[#121833] border border-white/10"
           >
             <div className="flex justify-center mb-4">
-              <ArrowRightLeft className="w-10 h-10 text-teal-600" />
+              <ArrowRightLeft className="w-10 h-10 text-amber-400" />
             </div>
-            <h2 className="text-lg font-semibold text-teal-900 text-center mb-3">Link Your History</h2>
+            <h2 className="text-lg font-semibold text-white text-center mb-3">Link Your History</h2>
 
             {migrationStatus === 'idle' && (
               <>
-                <p className="text-sm text-teal-800/70 text-center mb-4">
+                <p className="text-sm text-white/80/70 text-center mb-4">
                   Found <strong>{migrationPreview.totalRecords}</strong> records from previous sessions.
                 </p>
                 <div className="space-y-3">
@@ -1014,7 +1014,7 @@ function SigninContent() {
                       width: '100%',
                       padding: '14px 16px',
                       borderRadius: 14,
-                      backgroundColor: '#0d9488',
+                      backgroundColor: '#f59e0b',
                       color: '#ffffff',
                       fontSize: 16,
                       fontWeight: 700,
@@ -1034,7 +1034,7 @@ function SigninContent() {
                       width: '100%',
                       padding: '12px 16px',
                       borderRadius: 14,
-                      backgroundColor: '#f1f5f9',
+                      backgroundColor: 'rgba(255,255,255,0.1)',
                       color: '#0f172a',
                       fontSize: 15,
                       fontWeight: 700,
@@ -1052,24 +1052,24 @@ function SigninContent() {
 
             {migrationStatus === 'migrating' && (
               <div className="text-center py-4">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-3" />
-                <p className="text-teal-700">Linking your history...</p>
+                <div className="animate-spin w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full mx-auto mb-3" />
+                <p className="text-amber-300">Linking your history...</p>
               </div>
             )}
 
             {migrationStatus === 'done' && (
               <div className="text-center py-4">
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-emerald-600 text-xl">✓</span>
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-emerald-400 text-xl">✓</span>
                 </div>
-                <p className="text-emerald-800 font-medium">History linked!</p>
+                <p className="text-emerald-300 font-medium">History linked!</p>
               </div>
             )}
 
             {migrationStatus === 'error' && (
               <div className="text-center py-4">
                 <p className="text-red-700 mb-3">Something went wrong.</p>
-                <button onClick={() => handleMigration(false)} className="text-teal-600 text-sm">
+                <button onClick={() => handleMigration(false)} className="text-amber-400 text-sm">
                   Continue without linking
                 </button>
               </div>
@@ -1088,31 +1088,31 @@ function SigninContent() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-[#121833] border border-white/10"
           >
             {passkeyPromptStatus === 'idle' && (
               <>
                 <div className="flex justify-center mb-4">
-                  <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-teal-600" />
+                  <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-amber-400" />
                   </div>
                 </div>
-                <h2 className="text-lg font-semibold text-teal-900 text-center mb-2">
+                <h2 className="text-lg font-semibold text-white text-center mb-2">
                   Enable {biometricLabel}?
                 </h2>
-                <p className="text-sm text-teal-800/70 text-center mb-5">
+                <p className="text-sm text-white/80/70 text-center mb-5">
                   Sign in with one tap next time. Faster and more secure than passwords.
                 </p>
                 <div className="space-y-2">
                   <button
                     onClick={() => handlePasskeySetup(true)}
-                    className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-500 transition-colors"
+                    className="w-full py-3 rounded-xl bg-amber-500 text-white font-medium hover:bg-amber-400 transition-colors"
                   >
                     Yes, enable {biometricLabel}
                   </button>
                   <button
                     onClick={() => handlePasskeySetup(false)}
-                    className="w-full py-2 text-sm text-teal-700/70 hover:text-teal-800"
+                    className="w-full py-2 text-sm text-white/60 hover:text-white/80"
                   >
                     Maybe later
                   </button>
@@ -1122,19 +1122,19 @@ function SigninContent() {
 
             {passkeyPromptStatus === 'registering' && (
               <div className="text-center py-6">
-                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
-                <p className="text-teal-700 font-medium">Setting up {biometricLabel}...</p>
-                <p className="text-sm text-teal-600/70 mt-1">Follow the prompts on your device</p>
+                <div className="animate-spin w-8 h-8 border-2 border-amber-400 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-amber-300 font-medium">Setting up {biometricLabel}...</p>
+                <p className="text-sm text-amber-400/70 mt-1">Follow the prompts on your device</p>
               </div>
             )}
 
             {passkeyPromptStatus === 'success' && (
               <div className="text-center py-6">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-emerald-600 text-2xl">✓</span>
+                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-emerald-400 text-2xl">✓</span>
                 </div>
-                <p className="text-emerald-800 font-medium text-lg">{biometricLabel} enabled!</p>
-                <p className="text-sm text-emerald-600/70 mt-1">You can now sign in with one tap</p>
+                <p className="text-emerald-300 font-medium text-lg">{biometricLabel} enabled!</p>
+                <p className="text-sm text-emerald-400/70 mt-1">You can now sign in with one tap</p>
               </div>
             )}
 
@@ -1143,7 +1143,7 @@ function SigninContent() {
                 <p className="text-red-700 mb-4">Setup didn&apos;t complete. You can try again later in settings.</p>
                 <button
                   onClick={() => handlePasskeySetup(false)}
-                  className="text-teal-600 font-medium"
+                  className="text-amber-400 font-medium"
                 >
                   Continue anyway
                 </button>
@@ -1163,33 +1163,33 @@ function SigninContent() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-[#121833] border border-white/10"
           >
             <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
+              <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl">🔑</span>
               </div>
             </div>
-            <h2 className="text-lg font-semibold text-teal-900 text-center mb-2">
+            <h2 className="text-lg font-semibold text-white text-center mb-2">
               Passkey needs to be renewed
             </h2>
-            <p className="text-sm text-teal-800/70 text-center mb-5">
+            <p className="text-sm text-white/80/70 text-center mb-5">
               This passkey was created before the SOULLAB upgrade, so it can&apos;t be used here anymore.
-              <br /><span className="text-teal-700 font-medium">No worries — your account is still safe.</span>
+              <br /><span className="text-amber-300 font-medium">No worries — your account is still safe.</span>
             </p>
 
-            <div className="bg-teal-50/80 rounded-xl p-4 mb-5 border border-teal-200/50">
-              <div className="text-sm text-teal-800 space-y-2">
+            <div className="bg-white/5 rounded-xl p-4 mb-5 border border-white/10">
+              <div className="text-sm text-white/80 space-y-2">
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">1</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-semibold">1</span>
                   <span><strong>Sign in with Google or password</strong></span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">2</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-semibold">2</span>
                   <span>Go to <strong>Settings → Security</strong></span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">3</span>
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center font-semibold">3</span>
                   <span>Select <strong>Add passkey</strong> and name it <strong>SOULLAB-[YourName]</strong></span>
                 </div>
               </div>
@@ -1203,7 +1203,7 @@ function SigninContent() {
                     setShowPasskeyRenewal(false);
                     handleGoogleNative();
                   }}
-                  className="w-full py-3 rounded-xl bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-white/10 border border-white/15 text-white/80 font-medium hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -1216,19 +1216,19 @@ function SigninContent() {
               )}
               <button
                 onClick={() => setShowPasskeyRenewal(false)}
-                className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-500 transition-colors"
+                className="w-full py-3 rounded-xl bg-amber-500 text-white font-medium hover:bg-amber-400 transition-colors"
               >
                 Use password instead
               </button>
               <button
                 onClick={() => setShowPasskeyRenewal(false)}
-                className="w-full py-2 text-sm text-teal-700/70 hover:text-teal-800"
+                className="w-full py-2 text-sm text-white/60 hover:text-white/80"
               >
                 Close
               </button>
             </div>
 
-            <p className="text-xs text-teal-600/60 text-center mt-4">
+            <p className="text-xs text-amber-400/60 text-center mt-4">
               If you don&apos;t see &quot;Add passkey&quot; in Settings, update iOS/macOS and try again.
             </p>
           </motion.div>
@@ -1260,27 +1260,27 @@ function LoadingFallback() {
   return (
     <>
       <div className="mb-8 flex flex-col items-center">
-        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-6">
+        <h1 className="text-5xl font-extralight text-white/70 tracking-[0.12em] mb-6">
           Soullab
         </h1>
         <div className="w-28 h-28 flex items-center justify-center">
-          <Holoflower size="lg" glowIntensity="low" animate={false} theme="light" />
+          <Holoflower size="lg" glowIntensity="low" animate={false} theme="dark" />
         </div>
-        <p className="mt-4 text-sm text-teal-700/60 font-light tracking-wide">
+        <p className="mt-4 text-sm text-amber-400/60 font-light tracking-wide">
           Your space is waiting.
         </p>
       </div>
       <div className="rounded-3xl p-8 max-w-sm w-full"
         style={{
-          background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.25))',
+          background: 'linear-gradient(165deg, rgba(18, 24, 51, 0.8), rgba(11, 15, 28, 0.6))',
           backdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}>
         <div className="space-y-3 animate-pulse">
-          <div className="h-12 bg-teal-200/20 rounded-xl" />
-          <div className="h-12 bg-teal-200/20 rounded-xl" />
-          <div className="h-12 bg-teal-600/30 rounded-xl" />
+          <div className="h-12 bg-white/10 rounded-xl" />
+          <div className="h-12 bg-white/10 rounded-xl" />
+          <div className="h-12 bg-amber-500/30 rounded-xl" />
         </div>
       </div>
     </>
@@ -1290,7 +1290,7 @@ function LoadingFallback() {
 export default function SigninPage() {
   console.log('[SIGNIN] ===== PAGE COMPONENT RENDER =====');
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0b0f1c] to-[#161d3a] flex flex-col items-center justify-center px-4 py-8">
       {/* Slow breathing animation for Holoflower */}
       <style jsx global>{`
         @keyframes breathe {

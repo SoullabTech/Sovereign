@@ -190,7 +190,7 @@ export default function BeginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 relative"
-      style={{ background: 'linear-gradient(135deg, #8FBCBE 0%, #6A9EA1 50%, #5A8E91 100%)' }}>
+      style={{ background: 'linear-gradient(135deg, #0b0f1c 0%, #0f1328 50%, #161d3a 100%)' }}>
 
       {/* Holoflower */}
       <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
@@ -226,7 +226,7 @@ export default function BeginPage() {
               className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
             {error && <p className="text-red-200 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              className="w-full py-3 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all disabled:opacity-50">
               {loading ? 'Checking…' : 'Continue'}
             </button>
           </motion.form>
@@ -239,7 +239,7 @@ export default function BeginPage() {
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.45 }}
             className="w-full max-w-sm space-y-3 text-center">
             <button onClick={handleBiometricSignIn} disabled={bioLoading}
-              className="w-full py-4 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full py-4 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {bioLoading ? 'Verifying…' : (
                 <>
                   <span className="text-lg">🔒</span>
@@ -286,7 +286,7 @@ export default function BeginPage() {
               </div>
             )}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              className="w-full py-3 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all disabled:opacity-50">
               {loading ? 'Entering…' : 'Enter'}
             </button>
             <p className="text-center">
@@ -316,7 +316,7 @@ export default function BeginPage() {
             </div>
             {error && <p className="text-red-200 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              className="w-full py-3 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all disabled:opacity-50">
               {loading ? 'Creating your space…' : 'Enter'}
             </button>
             <p className="text-center">
@@ -340,7 +340,7 @@ export default function BeginPage() {
               className="w-full px-4 py-3 rounded-xl bg-white/20 text-white placeholder-white/50 border border-white/20 focus:outline-none focus:border-white/50 text-sm" />
             {error && <p className="text-red-200 text-xs text-center">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all disabled:opacity-50">
+              className="w-full py-3 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all disabled:opacity-50">
               {loading ? 'Saving…' : 'Set password & enter'}
             </button>
             <p className="text-center">
@@ -363,7 +363,7 @@ export default function BeginPage() {
                   <span className="text-white/50 text-xs">Your touch becomes your key.</span>
                 </p>
                 <button onClick={handleEnableBiometric}
-                  className="w-full py-3 rounded-xl bg-white/90 text-[#5A8E91] font-medium text-sm hover:bg-white transition-all flex items-center justify-center gap-2">
+                  className="w-full py-3 rounded-xl bg-amber-500/90 text-white font-medium text-sm hover:bg-amber-400 transition-all flex items-center justify-center gap-2">
                   <span className="text-lg">🔒</span> Enable {bioLabel}
                 </button>
                 <button type="button" onClick={() => { setStep('done'); router.push('/maia'); }}
