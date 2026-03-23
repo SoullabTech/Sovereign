@@ -53,7 +53,7 @@ function SigninContent() {
         return;
       }
 
-      router.push(`/portal/${slug}`);
+      router.push(`/portal/${slug}/thread`);
     } catch (err) {
       const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
       setError(isOffline

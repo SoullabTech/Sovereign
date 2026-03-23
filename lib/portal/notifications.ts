@@ -586,6 +586,93 @@ Powered by Soullab
 // Utilities
 // ============================================================================
 
+// ============================================================================
+// Portal Message Notifications
+// ============================================================================
+
+/**
+ * Notify a portal client that they have a new message.
+ * Sends a minimal email with a link back to the portal — no message content (PHI protection).
+ */
+export async function notifyClientNewMessage(
+  clientEmail: string,
+  practitionerName: string,
+  portalSlug: string,
+  businessName?: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const resend = getResend();
+  if (!resend) {
+    return { success: false, error: 'Email not configured' };
+  }
+
+  const portalUrl = `https://soullab.life/connect/${portalSlug}`;
+  const displayName = businessName || practitionerName;
+
+  try {
+    const result = await resend.emails.send({
+      from: `${displayName} <messages@soullab.life>`,
+      to: clientEmail,
+      subject: `New message from ${practitionerName}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; background: #f8faf9;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 480px; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="padding: 32px; text-align: center;">
+              <p style="margin: 0 0 8px; color: #333; font-size: 16px;">
+                You have a new message from
+              </p>
+              <p style="margin: 0 0 24px; color: #1A2F24; font-size: 20px; font-weight: 600;">
+                ${practitionerName}
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="${portalUrl}" style="display: inline-block; background: #2C5530; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                      Open Your Space
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 32px; background: #f8faf9; border-top: 1px solid #e5e5e5; text-align: center;">
+              <p style="margin: 0; color: #999; font-size: 12px;">
+                ${displayName} &middot; Powered by Soullab
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+      `.trim(),
+      text: `You have a new message from ${practitionerName}. Open your space: ${portalUrl}`,
+      tags: [
+        { name: 'type', value: 'new-message-notification' },
+        { name: 'portal', value: portalSlug },
+      ],
+    });
+
+    if (result.error) {
+      return { success: false, error: result.error.message };
+    }
+
+    return { success: true, id: result.data?.id };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[Portal Notifications] Failed to send message notification:', msg);
+    return { success: false, error: msg };
+  }
+}
+
 function formatDateTime(date: Date, timezone: string): string {
   try {
     return new Intl.DateTimeFormat('en-US', {

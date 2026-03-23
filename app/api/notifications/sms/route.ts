@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       account_sid: string;
       auth_token: string;
       from_number: string;
+      messaging_service_sid?: string;
     } | null = null;
 
     if (practitionerId) {
@@ -107,9 +108,14 @@ export async function POST(request: NextRequest) {
     );
 
     if (!result.success) {
-      console.error('[SMS Notifications] Failed to send:', result.errorMessage);
+      console.error('[SMS Notifications] FULL ERROR:', {
+        errorMessage: result.errorMessage,
+        errorCode: result.errorCode,
+        status: result.status,
+        rawResponse: result.rawResponse,
+      });
       return NextResponse.json(
-        { error: result.errorMessage || 'Failed to send SMS' },
+        { error: result.errorMessage || result.errorCode || 'Failed to send SMS' },
         { status: 500 }
       );
     }

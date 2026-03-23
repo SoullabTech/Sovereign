@@ -118,6 +118,25 @@ export async function POST(
       [invite.id]
     );
 
+    // Wire into comms spine: create identity + thread (fire-and-forget)
+    query(
+      `INSERT INTO comms_identities (owner_type, owner_id, channel_type, address, verified, is_primary, status)
+       VALUES ('client', $1, 'in_app', $2, true, true, 'active')
+       ON CONFLICT DO NOTHING`,
+      [invite.client_id, email]
+    ).catch(err => console.error('[Claim Invite] Failed to create comms identity:', err));
+
+    query(
+      `INSERT INTO comms_threads (domain, thread_type, participants, practitioner_id, client_id, status)
+       VALUES ('clinical', 'between_session', $1::jsonb, $2, $3, 'active')
+       ON CONFLICT DO NOTHING`,
+      [
+        JSON.stringify({ practitioner_id: invite.practitioner_id, client_id: invite.client_id }),
+        invite.practitioner_id,
+        invite.client_id,
+      ]
+    ).catch(err => console.error('[Claim Invite] Failed to create comms thread:', err));
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('[Claim Invite] Error:', error);

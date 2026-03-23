@@ -107,7 +107,7 @@ export class TwilioProvider implements CommsProvider {
     }
 
     // Normalize phone number to E.164
-    const toNumber = this.normalizePhoneNumber(payload.to);
+    const toNumber = TwilioProvider.normalizePhoneNumber(payload.to);
     if (!toNumber) {
       return {
         success: false,
@@ -237,28 +237,43 @@ export class TwilioProvider implements CommsProvider {
   /**
    * Verify Twilio webhook signature
    *
-   * Twilio uses X-Twilio-Signature header with HMAC-SHA1
+   * Twilio signs webhooks with HMAC-SHA1 of:
+   *   webhookUrl + sorted POST param keys concatenated as key=value (no separator)
+   *
+   * @param url - The full webhook URL Twilio sent the request to
+   * @param params - Parsed POST parameters (key-value pairs)
+   * @param signature - X-Twilio-Signature header value
+   * @param authToken - Twilio auth token (HMAC key)
    */
-  verifyWebhookSignature(
-    payload: string,
+  static verifyWebhookSignature(
+    url: string,
+    params: Record<string, string>,
     signature: string,
-    secret: string
+    authToken: string
   ): boolean {
-    if (!secret) {
+    if (!authToken) {
       console.warn('[TwilioProvider] No auth token for signature verification');
-      return true; // Dev mode
+      return process.env.NODE_ENV !== 'production';
     }
 
     try {
-      // Twilio signature is HMAC-SHA1 of URL + sorted params
-      // For simplicity, we're doing basic verification here
-      // Full implementation would include URL in signature calculation
+      // Twilio spec: URL + sorted keys with values concatenated (no separators)
+      const sortedKeys = Object.keys(params).sort();
+      let data = url;
+      for (const key of sortedKeys) {
+        data += key + params[key];
+      }
 
-      const hmac = crypto.createHmac('sha1', secret);
-      hmac.update(payload);
-      const calculatedSignature = hmac.digest('base64');
+      const hmac = crypto.createHmac('sha1', authToken);
+      hmac.update(data);
+      const calculated = hmac.digest('base64');
 
-      return signature === calculatedSignature;
+      // Timing-safe comparison to prevent timing attacks
+      if (calculated.length !== signature.length) return false;
+      return crypto.timingSafeEqual(
+        Buffer.from(calculated),
+        Buffer.from(signature)
+      );
     } catch {
       return false;
     }
@@ -266,22 +281,22 @@ export class TwilioProvider implements CommsProvider {
 
   /**
    * Normalize phone number to E.164 format
+   * Public static for shared use across comms services
    */
-  private normalizePhoneNumber(phone: string): string | null {
-    // Remove all non-digits
+  static normalizePhoneNumber(phone: string): string | null {
     const digits = phone.replace(/\D/g, '');
 
-    // Handle US numbers
+    // US 10-digit
     if (digits.length === 10) {
       return `+1${digits}`;
     }
 
-    // Already has country code
+    // US with country code
     if (digits.length === 11 && digits.startsWith('1')) {
       return `+${digits}`;
     }
 
-    // International number
+    // International (10-15 digits)
     if (digits.length >= 10 && digits.length <= 15) {
       return `+${digits}`;
     }

@@ -8,6 +8,8 @@
 
 import { query, queryOne, transaction } from '../db/postgres';
 import { emitMessageCreated, emitThreadCreated } from './events';
+import { routeOutbound } from './OutboundRouter';
+import { notifyClientNewMessage } from '@/lib/portal/notifications';
 import type {
   CommsThread,
   CommsMessage,
@@ -343,6 +345,19 @@ export async function sendMessage(
     }
   );
 
+  // Fire-and-forget: route outbound delivery via channel provider
+  // Never awaited — UI returns immediately, delivery happens async
+  if (message.channel_type !== 'in_app') {
+    routeOutbound(message.id, practitionerId).catch(err => {
+      console.error(`[ThreadService] Outbound routing failed for message ${message.id}:`, err);
+    });
+  }
+
+  // Fire-and-forget: notify portal client of new practitioner message
+  if (thread.client_id) {
+    notifyPortalClient(thread.client_id, practitionerId).catch(() => {});
+  }
+
   return message;
 }
 
@@ -456,6 +471,37 @@ export async function findOrCreateThread(
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Notify a portal client that they have a new message.
+ * Looks up client email and practitioner info, sends via Resend.
+ * Fire-and-forget — never blocks the reply flow.
+ */
+async function notifyPortalClient(clientId: string, practitionerId: string): Promise<void> {
+  const client = await queryOne<{ portal_email: string | null }>(
+    `SELECT portal_email FROM practitioner_clients WHERE id = $1`,
+    [clientId]
+  );
+
+  if (!client?.portal_email) return; // Client hasn't claimed portal
+
+  const practitioner = await queryOne<{ name: string; slug: string; business_name: string | null }>(
+    `SELECT m.name, p.slug, p.business_name
+     FROM practitioners p
+     JOIN members m ON m.id = p.member_id
+     WHERE p.member_id = $1`,
+    [practitionerId]
+  );
+
+  if (!practitioner?.slug) return;
+
+  await notifyClientNewMessage(
+    client.portal_email,
+    practitioner.name,
+    practitioner.slug,
+    practitioner.business_name || undefined
+  );
+}
 
 function formatCheckDaysHelper(days: string[]): string {
   const dayAbbrev: Record<string, string> = {

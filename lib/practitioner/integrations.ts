@@ -5,9 +5,9 @@
  *
  * Currently supports:
  * - Email: managed (Soullab Resend) | resend (BYO key)
+ * - SMS: twilio (practice phone number)
  *
  * Future:
- * - SMS: managed | twilio | telnyx
  * - Calendar: google | outlook
  * - Payments: stripe
  */
@@ -25,6 +25,7 @@ import {
 
 export type IntegrationType = 'email' | 'sms' | 'calendar' | 'payments';
 export type EmailProvider = 'managed' | 'resend';
+export type SmsProvider = 'twilio';
 export type IntegrationStatus = 'disconnected' | 'connected' | 'error';
 
 export interface ManagedEmailConfig {
@@ -44,6 +45,23 @@ export type EmailIntegrationConfig = ManagedEmailConfig | ResendEmailConfig;
 export interface EmailIntegrationResult {
   provider: EmailProvider;
   config: EmailIntegrationConfig | null;
+  status?: IntegrationStatus;
+  lastError?: string | null;
+}
+
+// ── SMS TYPES ───────────────────────────────────────────────────────────────
+
+export interface TwilioSmsConfig {
+  provider: 'twilio';
+  accountSid: string;
+  authToken: string;
+  fromNumber: string;            // E.164 practice phone number
+  messagingServiceSid?: string;  // A2P 10DLC compliant (preferred over fromNumber)
+}
+
+export interface SmsIntegrationResult {
+  provider: SmsProvider | null;
+  config: TwilioSmsConfig | null;
   status?: IntegrationStatus;
   lastError?: string | null;
 }
@@ -211,6 +229,131 @@ export async function getEmailIntegrationSummary(practitionerId: string): Promis
     fromName: config.fromName,
     replyTo: config.replyTo,
     apiKeyMasked: config.apiKey ? `re_...${config.apiKey.slice(-6)}` : undefined,
+    lastError: integration.lastError,
+  };
+}
+
+// ============================================================================
+// SMS INTEGRATION
+// ============================================================================
+
+/**
+ * Get SMS (Twilio) integration for a practitioner
+ * Returns null config if no integration is configured
+ */
+export async function getSmsIntegration(practitionerId: string): Promise<SmsIntegrationResult> {
+  const { rows } = await query<{
+    provider: string;
+    config_encrypted: string | null;
+    status: string;
+    last_error: string | null;
+  }>(
+    `SELECT provider, config_encrypted, status, last_error
+     FROM practitioner_integrations
+     WHERE practitioner_id = $1 AND integration_type = 'sms'
+     LIMIT 1`,
+    [practitionerId]
+  );
+
+  if (!rows[0] || !rows[0].config_encrypted) {
+    return {
+      provider: null,
+      config: null,
+      status: rows[0]?.status as IntegrationStatus,
+      lastError: rows[0]?.last_error,
+    };
+  }
+
+  try {
+    const config = decryptIntegrationConfig<TwilioSmsConfig>(rows[0].config_encrypted);
+    return {
+      provider: rows[0].provider as SmsProvider,
+      config,
+      status: rows[0].status as IntegrationStatus,
+      lastError: rows[0].last_error,
+    };
+  } catch (err) {
+    console.error('[Integrations] Failed to decrypt SMS config:', err);
+    return {
+      provider: rows[0].provider as SmsProvider,
+      config: null,
+      status: 'error',
+      lastError: 'Failed to decrypt configuration',
+    };
+  }
+}
+
+/**
+ * Save or update SMS integration for a practitioner
+ */
+export async function upsertSmsIntegration(
+  practitionerId: string,
+  config: TwilioSmsConfig
+): Promise<{ ok: boolean; error?: string }> {
+  if (!isIntegrationEncryptionConfigured()) {
+    return { ok: false, error: 'Integration encryption is not configured' };
+  }
+
+  const encrypted = encryptIntegrationConfig(config);
+
+  await query(
+    `INSERT INTO practitioner_integrations
+      (practitioner_id, integration_type, provider, config_encrypted, status, updated_at)
+     VALUES
+      ($1, 'sms', 'twilio', $2, 'connected', NOW())
+     ON CONFLICT (practitioner_id, integration_type)
+     DO UPDATE SET
+       provider = 'twilio',
+       config_encrypted = EXCLUDED.config_encrypted,
+       status = 'connected',
+       last_error = NULL,
+       updated_at = NOW()`,
+    [practitionerId, encrypted]
+  );
+
+  return { ok: true };
+}
+
+/**
+ * Disconnect SMS integration for a practitioner
+ */
+export async function disconnectSmsIntegration(practitionerId: string): Promise<{ ok: boolean }> {
+  await query(
+    `DELETE FROM practitioner_integrations
+     WHERE practitioner_id = $1 AND integration_type = 'sms'`,
+    [practitionerId]
+  );
+
+  return { ok: true };
+}
+
+/**
+ * Get safe SMS integration summary for UI (no auth token exposed)
+ */
+export async function getSmsIntegrationSummary(practitionerId: string): Promise<{
+  provider: SmsProvider | null;
+  status: IntegrationStatus;
+  fromNumber?: string;
+  accountSidMasked?: string;
+  lastError?: string | null;
+}> {
+  const integration = await getSmsIntegration(practitionerId);
+
+  if (!integration.provider || !integration.config) {
+    return {
+      provider: null,
+      status: integration.status || 'disconnected',
+      lastError: integration.lastError,
+    };
+  }
+
+  return {
+    provider: 'twilio',
+    status: integration.status || 'connected',
+    fromNumber: integration.config.fromNumber,
+    accountSidMasked: integration.config.accountSid
+      ? `AC...${integration.config.accountSid.slice(-6)}`
+      : undefined,
     lastError: integration.lastError,
   };
 }
