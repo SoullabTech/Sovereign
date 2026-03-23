@@ -419,7 +419,7 @@ export default function SpiralogicReportPage() {
 
             {/* MAIA entry points */}
             <div className="mt-12 pt-8 border-t border-white/10 space-y-4">
-              <a href={`/maia?reportPhase=${encodeURIComponent(activeReport.reportData.currentPhase?.spiralogicPhase ?? '')}&openWith=report`}
+              <a href={`/maia?reportPhase=${encodeURIComponent((activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? '')}&openWith=report`}
                 className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600/80
                            hover:bg-indigo-500 text-white text-sm rounded-xl transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,7 +432,7 @@ export default function SpiralogicReportPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { label: 'Work with my current phase', icon: '◎',
-                    prompt: `I want to work with my current Spiralogic phase: ${activeReport.reportData.currentPhase?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
+                    prompt: `I want to work with my current Spiralogic phase: ${(activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
                   { label: 'Help me understand this transit', icon: '⟳',
                     prompt: `I want to understand the life-cycle transit I'm in right now and what it's asking of me.` },
                   { label: 'Guide me through my next action', icon: '→',

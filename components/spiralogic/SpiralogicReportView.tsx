@@ -13,58 +13,68 @@
  *   isDownloading - optional controlled state (defaults to internal)
  */
 
-import { useState } from 'react';
+// no React imports needed — all rendering uses JSX with no hooks
 
-// ---- Types (mirrors spiralogicAstrologyService.ts) -------------------------
+// ---- Types -----------------------------------------------------------------
 
-interface PlanetPlacement {
-  planet: string;
-  sign: string;
-  house: number;
-  degree: number;
-  retrograde: boolean;
-}
-
-interface ElementalInsight {
-  element: string;
-  strength: number;
-  planets: PlanetPlacement[];
-  interpretation: string;
-  challenges: string[];
-  gifts: string[];
-  practices: string[];
-}
-
-interface KarmicPoint {
-  placement: PlanetPlacement;
-  interpretation: string;
-  lessons: string[];
-  evolutionary_direction: string;
-}
-
-interface ReflectiveProtocol {
-  name: string;
-  element: string;
-  description: string;
-  steps: string[];
-  timing: string;
-  materials?: string[];
-}
-
-interface ElementalBalanceOverview {
+interface ElementalBalance {
   fire: number;
   water: number;
   earth: number;
   air: number;
   dominantElement: string;
   underactiveElement: string;
-  balanceSummary: string;
+  balanceSummary?: string;
 }
 
-interface NextAction {
-  actions: string[];
-  watchFor: string;
-  journalPrompt: string;
+interface CurrentPhase {
+  element: string;
+  phase: string;
+  title: string;
+  summary: string;
+  majorLesson: string;
+  edge: string;
+  gifts: string[];
+  currentTransits: string[];
+}
+
+interface SoulsJourney {
+  stateOfBeing: string;
+  stateOfBecoming: string;
+  bridge: string;
+}
+
+interface ElementalFacet {
+  facetKey: string;
+  facetName: string;
+  element: string;
+  phase: string;
+  archetype: string;
+  natalSignature: string;
+  currentActivation: string;
+  growthEdge: string;
+  gifts: string[];
+  practices: string[];
+}
+
+interface KarmicSignature {
+  title: string;
+  description: string;
+  lesson: string;
+}
+
+interface TimelineWindow {
+  window: string;
+  theme: string;
+  interpretation: string;
+  opportunity: string;
+  caution: string;
+}
+
+interface IntegrationPractice {
+  title: string;
+  description: string;
+  frequency?: string;
 }
 
 interface EvolutionDelta {
@@ -74,39 +84,27 @@ interface EvolutionDelta {
   decompensatingPatterns?: string[];
 }
 
-interface CurrentPhase {
-  spiralogicPhase: string;
-  activeTransits: string[];
-  majorLifeLesson: string;
-  edgeChallenge: string;
-  emergentGift: string;
-}
-
 export interface SpiralogicReportData {
-  userId?: string;
-  birthChartId?: string;
-  personalOverview: string;
-  beingArchetype: string;
-  becomingArchetype: string;
-  currentPhase?: CurrentPhase;
-  elementalBalanceOverview?: ElementalBalanceOverview;
-  elementalInsights: {
-    fire: ElementalInsight;
-    water: ElementalInsight;
-    earth: ElementalInsight;
-    air: ElementalInsight;
-  };
-  karmicAxis: {
-    northNode: KarmicPoint;
-    southNode: KarmicPoint;
-    saturn: KarmicPoint;
-    pluto: KarmicPoint;
-  };
-  reflectiveProtocols: ReflectiveProtocol[];
-  nextAction?: NextAction;
-  evolutionDelta?: EvolutionDelta | null;
+  // New schema fields
+  title?: string;
+  subjectName?: string;
+  oracleWelcome?: string;
   memberOverviewStory?: string;
+  currentPhase?: CurrentPhase;
+  soulsJourney?: SoulsJourney;
+  elementalMapping?: ElementalFacet[];
+  karmicSignatures?: KarmicSignature[];
+  timelineForecast?: TimelineWindow[];
+  integrationPractices?: IntegrationPractice[];
+  evolutionDelta?: EvolutionDelta | null;
   generatedAt?: string;
+  // Server-injected
+  elementalBalanceOverview?: ElementalBalance;
+  chartSignature?: Record<string, unknown>;
+  // Legacy fields (backward compat — kept for older saved reports)
+  personalOverview?: string;
+  beingArchetype?: string;
+  becomingArchetype?: string;
 }
 
 export interface BirthDataShape {
@@ -165,356 +163,233 @@ const ELEMENT_COLORS: Record<string, { border: string; text: string; bg: string;
 const elementColor = (elem: string) =>
   ELEMENT_COLORS[elem.toLowerCase()] ?? ELEMENT_COLORS.aether;
 
-// ---- Sub-components --------------------------------------------------------
+// ---- New schema section components ----------------------------------------
 
-function SectionHeader({ label, sub }: { label: string; sub?: string }) {
+function OracleWelcomeSection({ text }: { text: string }) {
   return (
-    <div className="mb-6">
-      <h2 className="text-2xl font-light text-white tracking-wide">{label}</h2>
-      {sub && <p className="text-sm text-gray-500 mt-1">{sub}</p>}
-      <div className="mt-3 h-px bg-gradient-to-r from-gray-600 to-transparent" />
-    </div>
+    <section className="mb-8 rounded-3xl border border-amber-500/20 bg-amber-500/5 p-6 sm:p-8">
+      <p className="text-xs uppercase tracking-[0.22em] text-amber-300/80">Oracle Welcome</p>
+      <div className="mt-4 max-w-4xl whitespace-pre-wrap text-base leading-8 text-white/90">
+        {text}
+      </div>
+    </section>
   );
 }
 
-function ElementCard({ insight, elem }: { insight: ElementalInsight; elem: string }) {
-  const colors = elementColor(elem);
+function MemberOverviewStorySection({ text }: { text: string }) {
   return (
-    <div className={`rounded-lg border ${colors.border} ${colors.bg} p-5`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className={`text-lg font-medium ${colors.text}`}>{insight.element}</h3>
-        <span className={`text-xs px-2 py-1 rounded-full ${colors.badge}`}>
-          {Math.round(insight.strength)}%
-        </span>
+    <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
+      <p className="text-xs uppercase tracking-[0.22em] text-cyan-300/80">Member Overview Story</p>
+      <h2 className="mt-2 text-2xl font-light tracking-tight text-white">Your Astrological Walk</h2>
+      <div className="mt-4 max-w-4xl whitespace-pre-wrap text-base leading-8 text-white/85">
+        {text}
       </div>
+    </section>
+  );
+}
 
-      {/* Strength bar */}
-      <div className="h-1.5 bg-gray-700 rounded-full mb-4">
-        <div
-          className={`h-full rounded-full ${colors.text.replace('text-', 'bg-')}`}
-          style={{ width: `${Math.min(100, Math.round(insight.strength))}%` }}
-        />
-      </div>
-
-      <p className="text-sm text-gray-300 leading-relaxed mb-4">{insight.interpretation}</p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-        <div>
-          <p className="text-gray-500 uppercase tracking-widest mb-1">Gifts</p>
-          <ul className="space-y-1">
-            {insight.gifts.map((g, i) => (
-              <li key={i} className="text-gray-300">- {g}</li>
-            ))}
-          </ul>
+function CurrentPhaseSection({ phase }: { phase: CurrentPhase }) {
+  const colors = elementColor(phase.element);
+  return (
+    <section className={`mb-8 rounded-3xl border ${colors.border} ${colors.bg} p-6 sm:p-8`}>
+      <p className={`text-xs uppercase tracking-[0.22em] ${colors.text}`}>Current Spiralogic Phase</p>
+      <h2 className="mt-2 text-2xl font-light tracking-tight text-white">{phase.title || phase.phase}</h2>
+      <p className="mt-4 text-base leading-8 text-white/80">{phase.summary}</p>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Major Lesson</p>
+          <p className="text-sm text-white/80">{phase.majorLesson}</p>
         </div>
-        <div>
-          <p className="text-gray-500 uppercase tracking-widest mb-1">Watch for</p>
-          <ul className="space-y-1">
-            {insight.challenges.map((c, i) => (
-              <li key={i} className="text-gray-300">- {c}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-gray-500 uppercase tracking-widest mb-1">Practices</p>
-          <ul className="space-y-1">
-            {insight.practices.map((p, i) => (
-              <li key={i} className="text-gray-300">- {p}</li>
-            ))}
-          </ul>
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Growth Edge</p>
+          <p className="text-sm text-white/80">{phase.edge}</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function KarmicCard({ label, point, colorKey }: { label: string; point: KarmicPoint; colorKey: string }) {
-  const colors = elementColor(colorKey);
-  return (
-    <div className={`rounded-lg border ${colors.border} p-5`}>
-      <h4 className={`text-base font-medium ${colors.text} mb-2`}>{label}</h4>
-      <p className="text-sm text-gray-300 leading-relaxed mb-3">{point.interpretation}</p>
-      {point.lessons.length > 0 && (
-        <ul className="text-xs text-gray-400 space-y-1">
-          {point.lessons.map((l, i) => (
-            <li key={i}>- {l}</li>
-          ))}
-        </ul>
-      )}
-      {point.evolutionary_direction && (
-        <p className={`text-xs mt-3 italic ${colors.text}`}>{point.evolutionary_direction}</p>
-      )}
-    </div>
-  );
-}
-
-function ProtocolCard({ protocol }: { protocol: ReflectiveProtocol }) {
-  const colors = elementColor(protocol.element);
-  return (
-    <div className={`rounded-lg border ${colors.border} ${colors.bg} p-5`}>
-      <div className="flex items-start justify-between mb-2">
-        <h4 className={`text-base font-medium ${colors.text}`}>{protocol.name}</h4>
-        <span className="text-xs text-gray-500">{protocol.timing}</span>
-      </div>
-      <p className="text-sm text-gray-400 italic mb-3">{protocol.description}</p>
-      <ol className="space-y-1 text-sm text-gray-300">
-        {protocol.steps.map((step, i) => (
-          <li key={i} className="flex gap-2">
-            <span className={`font-mono text-xs ${colors.text} shrink-0 mt-0.5`}>{i + 1}.</span>
-            <span>{step}</span>
-          </li>
-        ))}
-      </ol>
-      {protocol.materials && protocol.materials.length > 0 && (
-        <p className="text-xs text-gray-500 mt-3">
-          Materials: {protocol.materials.join(', ')}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function CurrentPhaseHero({ phase }: { phase: CurrentPhase }) {
-  return (
-    <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-950/40 to-indigo-950/40 p-7">
-      <div className="mb-5">
-        <p className="text-xs text-purple-400 uppercase tracking-widest mb-1">Current Spiralogic Phase</p>
-        <h3 className="text-2xl font-light text-white mb-3">{phase.spiralogicPhase}</h3>
-        {phase.activeTransits.length > 0 && (
+      {phase.gifts?.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Gifts Activated</p>
           <div className="flex flex-wrap gap-2">
-            {phase.activeTransits.map((t, i) => (
-              <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300
-                                       border border-purple-500/20 leading-relaxed">
-                {t}
-              </span>
+            {phase.gifts.map((g, i) => (
+              <span key={i} className={`text-xs px-3 py-1 rounded-full ${colors.badge}`}>{g}</span>
             ))}
           </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-sm">
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Major Life Lesson</p>
-          <p className="text-gray-200 leading-relaxed">{phase.majorLifeLesson}</p>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">The Edge</p>
-          <p className="text-gray-300 leading-relaxed">{phase.edgeChallenge}</p>
+      )}
+      {phase.currentTransits?.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Active Transits</p>
+          <div className="space-y-2">
+            {phase.currentTransits.map((t, i) => (
+              <p key={i} className="text-sm text-white/60 leading-relaxed">• {t}</p>
+            ))}
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Emergent Gift</p>
-          <p className="text-gray-300 leading-relaxed">{phase.emergentGift}</p>
-        </div>
-      </div>
-    </div>
+      )}
+    </section>
   );
 }
 
-function ElementalBalanceOverview({
-  overview,
-  insights,
-}: {
-  overview?: ElementalBalanceOverview;
-  insights: SpiralogicReportData['elementalInsights'];
-}) {
-  const elements = [
-    { key: 'fire' as const, label: 'Fire', icon: '🔥' },
-    { key: 'water' as const, label: 'Water', icon: '💧' },
-    { key: 'earth' as const, label: 'Earth', icon: '🌍' },
-    { key: 'air' as const, label: 'Air', icon: '🌬' },
-  ];
-
-  // Use explicit overview fields if present, else fall back to elementalInsights strengths
-  const getStrength = (key: 'fire' | 'water' | 'earth' | 'air') =>
-    overview ? Math.round(overview[key]) : Math.round(insights[key].strength);
-
-  const dominantElement = overview?.dominantElement ?? (() => {
-    return elements.reduce((a, b) =>
-      getStrength(a.key) >= getStrength(b.key) ? a : b
-    ).key;
-  })();
-
-  const underactiveElement = overview?.underactiveElement ?? (() => {
-    return elements.reduce((a, b) =>
-      getStrength(a.key) <= getStrength(b.key) ? a : b
-    ).key;
-  })();
-
+function SoulsJourneySection({ journey }: { journey: SoulsJourney }) {
   return (
-    <div className="rounded-xl border border-gray-700 bg-gray-900/40 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
-        <p className="text-xs text-gray-500 uppercase tracking-widest">Elemental Balance</p>
-        <div className="flex gap-3 text-xs">
-          <span className={`px-2 py-1 rounded-full ${elementColor(dominantElement).badge}`}>
-            ↑ {dominantElement.charAt(0).toUpperCase() + dominantElement.slice(1)} dominant
-          </span>
-          <span className="px-2 py-1 rounded-full bg-gray-700/60 text-gray-400">
-            ↓ {underactiveElement.charAt(0).toUpperCase() + underactiveElement.slice(1)} underactive
-          </span>
+    <section className="mb-8 rounded-3xl border border-purple-500/20 bg-purple-500/5 p-6 sm:p-8">
+      <p className="text-xs uppercase tracking-[0.22em] text-purple-300/80">Soul&apos;s Journey</p>
+      <h2 className="mt-2 text-2xl font-light tracking-tight text-white">The Arc of Becoming</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">State of Being</p>
+          <p className="text-sm leading-relaxed text-white/80">{journey.stateOfBeing}</p>
+        </div>
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Bridge</p>
+          <p className="text-sm leading-relaxed text-white/80">{journey.bridge}</p>
+        </div>
+        <div className="rounded-xl bg-white/5 p-4">
+          <p className="text-xs uppercase tracking-wider text-white/40 mb-2">State of Becoming</p>
+          <p className="text-sm leading-relaxed text-white/80">{journey.stateOfBecoming}</p>
         </div>
       </div>
+    </section>
+  );
+}
 
-      <div className="space-y-3 mb-4">
-        {elements.map(({ key, label, icon }) => {
-          const colors = elementColor(key);
-          const strength = getStrength(key);
-          const isDominant = key === dominantElement;
+function ElementalMappingSection({ facets }: { facets: ElementalFacet[] }) {
+  return (
+    <section className="mb-8">
+      <div className="mb-6">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/50">Elemental Mapping</p>
+        <h2 className="mt-2 text-2xl font-light tracking-tight text-white">The Spirals in Motion</h2>
+      </div>
+      <div className="space-y-6">
+        {facets.map((facet) => {
+          const colors = elementColor(facet.element);
           return (
-            <div key={key} className="flex items-center gap-3">
-              <span className="text-base w-5 shrink-0">{icon}</span>
-              <span className={`text-xs w-10 shrink-0 ${colors.text}`}>{label}</span>
-              <div className="flex-1 h-2 bg-gray-800 rounded-full">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${colors.text.replace('text-', 'bg-')}`}
-                  style={{ width: `${strength}%` }}
-                />
+            <div key={facet.facetKey} className={`rounded-2xl border ${colors.border} ${colors.bg} p-6`}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className={`text-xs uppercase tracking-wider ${colors.text}`}>{facet.element}</p>
+                  <h3 className="mt-1 text-lg font-light text-white">{facet.facetName}</h3>
+                </div>
+                <span className={`text-xs px-3 py-1 rounded-full ${colors.badge}`}>{facet.archetype}</span>
               </div>
-              <span className={`text-xs w-8 text-right tabular-nums ${isDominant ? colors.text : 'text-gray-500'}`}>
-                {strength}%
-              </span>
+              <div className="grid gap-3 sm:grid-cols-2 mt-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Natal Signature</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{facet.natalSignature}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Currently Active</p>
+                  <p className="text-sm text-white/70 leading-relaxed">{facet.currentActivation}</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-xs uppercase tracking-wider text-white/40 mb-1">Growth Edge</p>
+                <p className="text-sm text-white/70 leading-relaxed">{facet.growthEdge}</p>
+              </div>
+              {(facet.gifts?.length > 0 || facet.practices?.length > 0) && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {facet.gifts?.length > 0 && (
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Gifts</p>
+                      <div className="flex flex-wrap gap-1">
+                        {facet.gifts.map((g, i) => (
+                          <span key={i} className={`text-xs px-2 py-0.5 rounded-full ${colors.badge}`}>{g}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {facet.practices?.length > 0 && (
+                    <div>
+                      <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Practices</p>
+                      <ul className="space-y-1">
+                        {facet.practices.map((p, i) => (
+                          <li key={i} className="text-xs text-white/60">• {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-
-      {overview?.balanceSummary && (
-        <p className="text-xs text-gray-400 italic leading-relaxed border-t border-gray-700 pt-4">
-          {overview.balanceSummary}
-        </p>
-      )}
-    </div>
+    </section>
   );
 }
 
-function NextActionBlock({ nextAction }: { nextAction: NextAction }) {
+function KarmicSignaturesSection({ items }: { items: KarmicSignature[] }) {
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-amber-950/20 p-7 space-y-6">
-      <p className="text-xs text-amber-500 uppercase tracking-widest">Your Next Steps</p>
-
-      <div className="space-y-4">
-        {nextAction.actions.map((action, i) => (
-          <div key={i} className="flex gap-4 items-start">
-            <span className="flex-shrink-0 w-7 h-7 rounded-full border border-amber-500/40 bg-amber-500/10
-                             text-amber-400 text-xs font-mono flex items-center justify-center mt-0.5">
-              {i + 1}
-            </span>
-            <p className="text-gray-200 text-sm leading-relaxed">{action}</p>
+    <section className="mb-8 rounded-3xl border border-rose-500/20 bg-rose-500/5 p-6 sm:p-8">
+      <p className="text-xs uppercase tracking-[0.22em] text-rose-300/80">Karmic &amp; Archetypal Signatures</p>
+      <h2 className="mt-2 text-2xl font-light tracking-tight text-white">The Recurring Thread</h2>
+      <div className="mt-6 space-y-5">
+        {items.map((item, i) => (
+          <div key={i} className="rounded-xl bg-white/5 p-4">
+            <h3 className="text-sm font-medium text-white/90 mb-2">{item.title}</h3>
+            <p className="text-sm text-white/70 leading-relaxed mb-2">{item.description}</p>
+            <p className="text-xs text-rose-300/80 italic">Evolutionary invitation: {item.lesson}</p>
           </div>
         ))}
       </div>
-
-      {nextAction.watchFor && (
-        <div className="border-t border-amber-500/20 pt-5">
-          <p className="text-xs text-amber-400/70 uppercase tracking-widest mb-2">Watch for</p>
-          <p className="text-gray-300 text-sm leading-relaxed">{nextAction.watchFor}</p>
-        </div>
-      )}
-
-      {nextAction.journalPrompt && (
-        <div className="rounded-lg bg-gray-800/40 border border-gray-700 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-widest mb-2">Journal Prompt</p>
-          <p className="text-gray-300 text-sm italic leading-relaxed">"{nextAction.journalPrompt}"</p>
-        </div>
-      )}
-    </div>
+    </section>
   );
 }
 
-function EvolutionDeltaBlock({ delta }: { delta: EvolutionDelta }) {
+function TimelineForecastSection({ items }: { items: TimelineWindow[] }) {
   return (
-    <div className="rounded-xl border border-gray-600/40 bg-gray-900/30 p-6 space-y-5">
-      <p className="text-xs text-gray-500 uppercase tracking-widest">
-        Evolution Since Last Report
-      </p>
-
-      <p className="text-sm text-gray-300 leading-relaxed italic">
-        {delta.sinceLastReport}
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
-        {delta.repeatedPatterns.length > 0 && (
-          <div>
-            <p className="text-gray-500 uppercase tracking-widest mb-2">Recurring</p>
-            <ul className="space-y-1.5">
-              {delta.repeatedPatterns.map((p, i) => (
-                <li key={i} className="flex gap-2 text-gray-400">
-                  <span className="text-gray-600 shrink-0">&#x27F3;</span>
-                  {p}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {delta.emergingStrengths.length > 0 && (
-          <div>
-            <p className="text-gray-500 uppercase tracking-widest mb-2">Emerging</p>
-            <ul className="space-y-1.5">
-              {delta.emergingStrengths.map((s, i) => (
-                <li key={i} className="flex gap-2 text-gray-400">
-                  <span className="text-green-600 shrink-0">&#x2191;</span>
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {delta.decompensatingPatterns && delta.decompensatingPatterns.length > 0 && (
-          <div className="sm:col-span-2">
-            <p className="text-gray-500 uppercase tracking-widest mb-2">Watch</p>
-            <ul className="space-y-1.5">
-              {delta.decompensatingPatterns.map((d, i) => (
-                <li key={i} className="flex gap-2 text-gray-400">
-                  <span className="text-amber-600 shrink-0">&#x25B3;</span>
-                  {d}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <section className="mb-8">
+      <div className="mb-6">
+        <p className="text-xs uppercase tracking-[0.22em] text-white/50">Timeline Forecast</p>
+        <h2 className="mt-2 text-2xl font-light tracking-tight text-white">What is Emerging</h2>
       </div>
-    </div>
+      <div className="space-y-4">
+        {items.map((item, i) => (
+          <div key={i} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xs px-3 py-1 rounded-full bg-white/10 text-white/60">{item.window}</span>
+              <h3 className="text-sm font-medium text-white/90">{item.theme}</h3>
+            </div>
+            <p className="text-sm text-white/70 leading-relaxed mb-3">{item.interpretation}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-emerald-400/70 mb-1">Opportunity</p>
+                <p className="text-xs text-white/60">{item.opportunity}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-amber-400/70 mb-1">Watch For</p>
+                <p className="text-xs text-white/60">{item.caution}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function IntegrationPracticesSection({ items }: { items: IntegrationPractice[] }) {
+  return (
+    <section className="mb-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-6 sm:p-8">
+      <p className="text-xs uppercase tracking-[0.22em] text-emerald-300/80">Integration Practices</p>
+      <h2 className="mt-2 text-2xl font-light tracking-tight text-white">What is Being Asked</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        {items.map((item, i) => (
+          <div key={i} className="rounded-xl bg-white/5 p-4">
+            <h3 className="text-sm font-medium text-white/90 mb-1">{item.title}</h3>
+            {item.frequency && (
+              <span className="text-xs text-emerald-300/70 mb-2 inline-block">{item.frequency}</span>
+            )}
+            <p className="text-sm text-white/70 leading-relaxed">{item.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
 // ---- Main component --------------------------------------------------------
 
 export function SpiralogicReportView({ reportId, report, birthData }: Props) {
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  const handleDownload = async () => {
-    setDownloading(true);
-    setDownloadError(null);
-    try {
-      const res = await fetch(`/api/spiralogic-report/${reportId}/download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? 'Download failed');
-      }
-
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const name = (birthData.name ?? 'report').replace(/[^a-z0-9]/gi, '-').toLowerCase();
-      a.href = url;
-      a.download = `spiralogic-evolutionary-report-${name}-${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setDownloadError(err instanceof Error ? err.message : 'Download failed');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   // Parse as local date (avoid UTC-offset shift that moves date back by 1 day)
   const birthDate = (() => {
     if (!birthData.date) return '';
@@ -526,157 +401,111 @@ export function SpiralogicReportView({ reportId, report, birthData }: Props) {
   })();
 
   return (
-    <div className="w-full max-w-none overflow-x-hidden space-y-12 text-gray-200">
-
-      {/* ---- Header ---- */}
-      <div className="text-center space-y-3 pb-8 border-b border-gray-700">
-        <p className="text-xs text-gray-500 uppercase tracking-widest">Spiralogic Evolutionary Report</p>
-        {birthData.name && (
-          <h1 className="text-4xl font-extralight text-white">{birthData.name}</h1>
-        )}
-        {birthDate && (
-          <p className="text-sm text-gray-400">
-            Born {birthDate}
-            {birthData.time ? ` at ${birthData.time}` : ''}
-            {birthData.location?.placeName ? ` in ${birthData.location.placeName}` : ''}
-          </p>
-        )}
-        {report.generatedAt && (
-          <p className="text-xs text-gray-600">
-            Generated {new Date(report.generatedAt).toLocaleDateString()}
-          </p>
-        )}
-
-        {/* Download button */}
-        <div className="pt-4">
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600/80 hover:bg-amber-500
-                       disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm rounded-lg
-                       transition-colors duration-200"
-          >
-            {downloading ? (
-              <>
-                <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Download PDF
-              </>
+    <div className="w-full max-w-none overflow-x-hidden">
+      {/* ── Report Header ─────────────────────────────────────────────── */}
+      <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-[0.22em] text-white/40">Spiralogic Evolutionary Report</p>
+            <h1 className="mt-2 text-3xl font-extralight tracking-tight text-white break-words">
+              {report.title || (report.subjectName ? `Report for ${report.subjectName}` : 'Your Evolutionary Report')}
+            </h1>
+            {birthData.name && (
+              <p className="mt-1 text-sm text-white/50">{birthData.name}</p>
             )}
-          </button>
-          {downloadError && (
-            <p className="text-xs text-red-400 mt-2">{downloadError}</p>
-          )}
+            <p className="mt-2 text-sm text-white/40">{birthDate}</p>
+            {birthData.location?.placeName && (
+              <p className="text-sm text-white/30">{birthData.location.placeName}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2 sm:items-end">
+            {report.elementalBalanceOverview && (
+              <div className="flex flex-wrap gap-1.5">
+                {(['fire','water','earth','air'] as const).map((el) => {
+                  const val = report.elementalBalanceOverview![el as keyof typeof report.elementalBalanceOverview] as number;
+                  if (typeof val !== 'number') return null;
+                  const colors = elementColor(el);
+                  return (
+                    <span key={el} className={`text-xs px-2 py-0.5 rounded-full ${colors.badge}`}>
+                      {el} {val}%
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            <a
+              href={`/api/spiralogic-report/${reportId}/download`}
+              download
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5 text-xs text-white/70 hover:bg-white/20 transition-colors"
+            >
+              &#x2193; Download PDF
+            </a>
+          </div>
         </div>
       </div>
 
-      {/* ---- Member Overview Story ---- */}
+      {/* ── Oracle Welcome ─────────────────────────────────────────────── */}
+      {report.oracleWelcome && <OracleWelcomeSection text={report.oracleWelcome} />}
+
+      {/* ── Member Overview Story ──────────────────────────────────────── */}
       {(report.memberOverviewStory || report.personalOverview) && (
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-cyan-300/80">Member Overview Story</p>
-            <h2 className="mt-2 text-2xl font-light tracking-tight text-white">Your Astrological Walk</h2>
-          </div>
-          <div className="max-w-none text-base leading-8 text-white/80 whitespace-pre-wrap">
-            {report.memberOverviewStory || report.personalOverview}
-          </div>
-        </section>
+        <MemberOverviewStorySection text={report.memberOverviewStory || report.personalOverview || ''} />
       )}
 
-      {/* ---- Current Phase (prominent) ---- */}
-      {report.currentPhase && (
-        <section>
-          <CurrentPhaseHero phase={report.currentPhase} />
-        </section>
+      {/* ── Current Spiralogic Phase ───────────────────────────────────── */}
+      {report.currentPhase && <CurrentPhaseSection phase={report.currentPhase} />}
+
+      {/* ── Soul's Journey ─────────────────────────────────────────────── */}
+      {report.soulsJourney && <SoulsJourneySection journey={report.soulsJourney} />}
+
+      {/* ── Elemental Mapping ──────────────────────────────────────────── */}
+      {report.elementalMapping && report.elementalMapping.length > 0 && (
+        <ElementalMappingSection facets={report.elementalMapping} />
       )}
 
-      {/* ---- Introduction / Overview ---- */}
-      <section>
-        <SectionHeader label="Your Soul's Journey" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5">
-            <p className="text-xs text-amber-500 uppercase tracking-widest mb-2">State of Being</p>
-            <p className="text-xl text-white font-light">{report.beingArchetype}</p>
-          </div>
-          <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-5">
-            <p className="text-xs text-indigo-400 uppercase tracking-widest mb-2">State of Becoming</p>
-            <p className="text-xl text-white font-light">{report.becomingArchetype}</p>
-          </div>
-        </div>
-        <p className="text-base text-gray-300 leading-relaxed">{report.personalOverview}</p>
-      </section>
-
-      {/* ---- Elemental Mapping ---- */}
-      <section>
-        <SectionHeader
-          label="Elemental Mapping"
-          sub="Four elements, three facets each — your evolutionary architecture"
-        />
-        <ElementalBalanceOverview overview={report.elementalBalanceOverview} insights={report.elementalInsights} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-          {(['fire', 'water', 'earth', 'air'] as const).map((elem) => (
-            <ElementCard key={elem} elem={elem} insight={report.elementalInsights[elem]} />
-          ))}
-        </div>
-      </section>
-
-      {/* ---- Karmic Insights ---- */}
-      <section>
-        <SectionHeader
-          label="Karmic Insights"
-          sub="Nodes, Saturn, and Pluto — the deep structural forces"
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <KarmicCard label="North Node — Evolutionary Direction" point={report.karmicAxis.northNode} colorKey="aether" />
-          <KarmicCard label="South Node — Innate Gifts" point={report.karmicAxis.southNode} colorKey="earth" />
-          <KarmicCard label="Saturn — Path of Mastery" point={report.karmicAxis.saturn} colorKey="earth" />
-          <KarmicCard label="Pluto — Deepest Transformation" point={report.karmicAxis.pluto} colorKey="water" />
-        </div>
-      </section>
-
-      {/* ---- Practices ---- */}
-      {report.reflectiveProtocols.length > 0 && (
-        <section>
-          <SectionHeader
-            label="Sacred Practices"
-            sub="Tailored rituals for integration and embodiment"
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {report.reflectiveProtocols.map((p, i) => (
-              <ProtocolCard key={i} protocol={p} />
-            ))}
-          </div>
-        </section>
+      {/* ── Karmic Signatures ──────────────────────────────────────────── */}
+      {report.karmicSignatures && report.karmicSignatures.length > 0 && (
+        <KarmicSignaturesSection items={report.karmicSignatures} />
       )}
 
-      {/* ---- Evolution Delta ---- */}
+      {/* ── Timeline Forecast ──────────────────────────────────────────── */}
+      {report.timelineForecast && report.timelineForecast.length > 0 && (
+        <TimelineForecastSection items={report.timelineForecast} />
+      )}
+
+      {/* ── Integration Practices ──────────────────────────────────────── */}
+      {report.integrationPractices && report.integrationPractices.length > 0 && (
+        <IntegrationPracticesSection items={report.integrationPractices} />
+      )}
+
+      {/* ── Evolution Delta (returning members) ───────────────────────── */}
       {report.evolutionDelta && (
-        <section>
-          <EvolutionDeltaBlock delta={report.evolutionDelta} />
+        <section className="mb-8 rounded-3xl border border-violet-500/20 bg-violet-500/5 p-6 sm:p-8">
+          <p className="text-xs uppercase tracking-[0.22em] text-violet-300/80">Evolution Delta</p>
+          <h2 className="mt-2 text-2xl font-light tracking-tight text-white">Since Your Last Report</h2>
+          <p className="mt-4 text-base text-white/80 leading-relaxed">{report.evolutionDelta.sinceLastReport}</p>
+          {report.evolutionDelta.emergingStrengths?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Emerging Strengths</p>
+              <ul className="space-y-1">
+                {report.evolutionDelta.emergingStrengths.map((s, i) => (
+                  <li key={i} className="text-sm text-white/70">• {s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {report.evolutionDelta.repeatedPatterns?.length > 0 && (
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Recurring Patterns</p>
+              <ul className="space-y-1">
+                {report.evolutionDelta.repeatedPatterns.map((p, i) => (
+                  <li key={i} className="text-sm text-white/60">• {p}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
       )}
-
-      {/* ---- Next Action ---- */}
-      {report.nextAction && (
-        <section>
-          <NextActionBlock nextAction={report.nextAction} />
-        </section>
-      )}
-
-      {/* ---- Footer CTA ---- */}
-      <div className="text-center pb-8 border-t border-gray-700 pt-8">
-        <p className="text-sm text-gray-500 leading-relaxed max-w-lg mx-auto">
-          This report is a reflective mirror, not a prescription. Bring what resonates
-          into dialogue with a practitioner or with MAIA for deeper integration.
-        </p>
-      </div>
     </div>
   );
 }
