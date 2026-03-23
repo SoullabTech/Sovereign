@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import SpiralogicReportPage from '@/components/astrology/SpiralogicReportPage';
 
-export default function AstrologyReportRedirect() {
-  redirect('/dashboard/spiralogic-report');
+export default function AstrologyReportPage() {
+  return <SpiralogicReportPage />;
 }

@@ -1292,6 +1292,41 @@ export default function AstrologyPage() {
           </div>
         </motion.div>
 
+        {/* Spiralogic Evolutionary Report — entry card */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.6 }}
+          className="rounded-2xl p-6 mb-8 backdrop-blur-md"
+          style={{
+            backgroundColor: 'rgba(12, 9, 7, 0.85)',
+            border: '1px solid rgba(155, 107, 60, 0.5)',
+          }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-lg font-serif mb-1" style={{ color: '#D88A2D' }}>
+                Spiralogic Evolutionary Report
+              </h2>
+              <p className="text-sm leading-relaxed" style={{ color: '#B8A98A' }}>
+                Your birth chart read through the Spiralogic lens — elemental mapping,
+                karmic insights, and practices for your arc.
+              </p>
+            </div>
+            <a
+              href="/astrology/report"
+              className="shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(155, 107, 60, 0.25)',
+                border: '1px solid rgba(155, 107, 60, 0.5)',
+                color: '#D88A2D',
+              }}
+            >
+              Open Report
+            </a>
+          </div>
+        </motion.div>
+
         {/* Current Evolutionary Phase */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
