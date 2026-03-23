@@ -94,8 +94,17 @@ function computeAscendant(normalized: NormalizedBirthData): SignPlacement | null
   if (lat < -89.9 || lat > 89.9) return null;
 
   const { year, month, day, hour, minute } = normalized.localDateParts;
-  const utcOffset = lng / 15;
-  const utHour = hour - utcOffset + minute / 60;
+
+  let utHour: number;
+  if (normalized.utcIsoForCalculation) {
+    // Elapsed hours from the local birth date 0h UT — handles UTC midnight rollover
+    const birthUtcMs = new Date(normalized.utcIsoForCalculation).getTime();
+    const birthDayStartMs = Date.UTC(year, month - 1, day, 0, 0, 0);
+    utHour = (birthUtcMs - birthDayStartMs) / 3600000;
+  } else {
+    const utcOffset = lng / 15;
+    utHour = hour - utcOffset + minute / 60;
+  }
 
   const j2000 = Date.UTC(2000, 0, 1, 12, 0, 0);
   const birthDayUtcMs = Date.UTC(year, month - 1, day, 0, 0, 0);
@@ -110,11 +119,12 @@ function computeAscendant(normalized: NormalizedBirthData): SignPlacement | null
   const epsRad = eps * Math.PI / 180;
   const latRad = lat * Math.PI / 180;
 
-  let ascLon = Math.atan2(
-    Math.cos(RAmcRad),
-    -(Math.sin(RAmcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad)),
+  const rawAsc = Math.atan2(
+    -Math.cos(RAmcRad),
+    Math.sin(RAmcRad) * Math.cos(epsRad) + Math.tan(latRad) * Math.sin(epsRad),
   ) * 180 / Math.PI;
-  ascLon = ((ascLon % 360) + 360) % 360;
+  // Add 180° correction: raw atan2 gives the western horizon; +180° gives the eastern horizon (Ascendant)
+  const ascLon = ((rawAsc + 180) % 360 + 360) % 360;
 
   const ascSigns: Array<[string, ZodiacElement]> = [
     ['Aries','fire'],['Taurus','earth'],['Gemini','air'],['Cancer','water'],

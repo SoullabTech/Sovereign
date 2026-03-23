@@ -574,7 +574,8 @@ For "evolutionDelta": compare the prior and current data above. Be conservative 
   const astrologyContext = `${spiralogicMap.astrologyContextBlock}
 Birth time: ${timeLabel}`;
 
-  const spiralogicContext = spiralogicMap.spiralogicContextBlock;
+  const currentAge = transitData[0]?.currentAge;
+  const spiralogicContext = `Current age: ${currentAge ?? 'unknown'}\n${spiralogicMap.spiralogicContextBlock}`;
 
   const narrativeConstraint = `The memberOverviewStory must explicitly answer:
 - What cycle are they in?
