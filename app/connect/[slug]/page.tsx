@@ -19,7 +19,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
 // Friendly slug aliases → actual portal slugs
 const SLUG_ALIASES: Record<string, string> = {
-  'kelly': 'stellium',
+  'kelly': 'kelly-nezat',
 };
 
 export default function ConnectEntryPage() {
