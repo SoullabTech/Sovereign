@@ -209,34 +209,23 @@ type Elem = 'fire' | 'water' | 'earth' | 'air';
  * Returns the element (fire/water/earth/air) and the sign name.
  */
 function getSunSignElement(birthDate: Date): { element: Elem; sign: string } {
-  const month = birthDate.getMonth() + 1; // 1-12
-  const day = birthDate.getDate();
+  // Use month*100+day for clean range comparison — avoids cross-year wrap bugs
+  const month = birthDate.getUTCMonth() + 1; // use UTC to match how date string is parsed
+  const day = birthDate.getUTCDate();
+  const md = month * 100 + day;
 
-  // [sign, startMonth, startDay, element]
-  const signs: [string, number, number, Elem][] = [
-    ['Aries',       3, 21, 'fire'],
-    ['Taurus',      4, 20, 'earth'],
-    ['Gemini',      5, 21, 'air'],
-    ['Cancer',      6, 21, 'water'],
-    ['Leo',         7, 23, 'fire'],
-    ['Virgo',       8, 23, 'earth'],
-    ['Libra',       9, 23, 'air'],
-    ['Scorpio',    10, 23, 'water'],
-    ['Sagittarius',11, 22, 'fire'],
-    ['Capricorn',  12, 22, 'earth'],
-    ['Aquarius',    1, 20, 'air'],
-    ['Pisces',      2, 19, 'water'],
-  ];
-
-  // Walk signs in reverse to find which one the date falls into
-  for (let i = signs.length - 1; i >= 0; i--) {
-    const [sign, sMonth, sDay, element] = signs[i];
-    if (month > sMonth || (month === sMonth && day >= sDay)) {
-      return { element, sign };
-    }
-  }
-  // Jan 1–19 falls in Capricorn
-  return { element: 'earth', sign: 'Capricorn' };
+  if (md >= 321 && md <= 419) return { sign: 'Aries',       element: 'fire'  };
+  if (md >= 420 && md <= 520) return { sign: 'Taurus',      element: 'earth' };
+  if (md >= 521 && md <= 620) return { sign: 'Gemini',      element: 'air'   };
+  if (md >= 621 && md <= 722) return { sign: 'Cancer',      element: 'water' };
+  if (md >= 723 && md <= 822) return { sign: 'Leo',         element: 'fire'  };
+  if (md >= 823 && md <= 922) return { sign: 'Virgo',       element: 'earth' };
+  if (md >= 923 && md <= 1022) return { sign: 'Libra',      element: 'air'   };
+  if (md >= 1023 && md <= 1121) return { sign: 'Scorpio',   element: 'water' };
+  if (md >= 1122 && md <= 1221) return { sign: 'Sagittarius', element: 'fire' };
+  if (md >= 1222 || md <= 119)  return { sign: 'Capricorn', element: 'earth' };
+  if (md >= 120 && md <= 218)   return { sign: 'Aquarius',  element: 'air'   };
+  return { sign: 'Pisces', element: 'water' }; // 219–320
 }
 
 /**
