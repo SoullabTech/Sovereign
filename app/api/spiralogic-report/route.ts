@@ -567,6 +567,7 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
 {
   "userId": "member",
   "birthChartId": "generated",
+  "memberOverviewStory": "<A beautiful, psychologically precise, mythopoetic narrative of 5-8 substantial paragraphs. Synthesize natal pattern (${sunSign} Sun, ${moonSign} Moon, ${elementStrengths.fire}% fire / ${elementStrengths.water}% water / ${elementStrengths.earth}% earth / ${elementStrengths.air}% air), the current life-cycle phase (${lifeCycleTransits.slice(0,2).join('; ')}), and evolutionary arc. Describe the spirals currently activated in identity, relationships, work, soul growth, and embodiment. Name tensions, thresholds, gifts, and what is ripening now. Speak in a warm, depth-oriented, spiritually intelligent voice — personal, alive, never generic. Make the person feel seen in both their destiny and their present crossroads.>",
   "personalOverview": "<2-3 sentence soul narrative grounded in ${sunSign} Sun and ${dominantElement} dominance>",
   "beingArchetype": "<short archetype name that reflects ${sunSign} and ${dominantElement} nature, e.g. 'The Scorpio Depth-Keeper'>",
   "becomingArchetype": "<short archetype name for evolutionary direction toward ${underactiveElement} integration>",
@@ -689,7 +690,7 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
 
   const message = await client.messages.create({
     model: 'claude-opus-4-6',
-    max_tokens: 8192,
+    max_tokens: 12000,
     messages: [{ role: 'user', content: prompt }],
   });
 

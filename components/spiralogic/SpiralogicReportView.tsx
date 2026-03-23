@@ -105,6 +105,7 @@ export interface SpiralogicReportData {
   reflectiveProtocols: ReflectiveProtocol[];
   nextAction?: NextAction;
   evolutionDelta?: EvolutionDelta | null;
+  memberOverviewStory?: string;
   generatedAt?: string;
 }
 
@@ -525,7 +526,7 @@ export function SpiralogicReportView({ reportId, report, birthData }: Props) {
   })();
 
   return (
-    <div className="w-full space-y-12 text-gray-200">
+    <div className="w-full max-w-none overflow-x-hidden space-y-12 text-gray-200">
 
       {/* ---- Header ---- */}
       <div className="text-center space-y-3 pb-8 border-b border-gray-700">
@@ -575,6 +576,19 @@ export function SpiralogicReportView({ reportId, report, birthData }: Props) {
           )}
         </div>
       </div>
+
+      {/* ---- Member Overview Story ---- */}
+      {(report.memberOverviewStory || report.personalOverview) && (
+        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8">
+          <div className="mb-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-cyan-300/80">Member Overview Story</p>
+            <h2 className="mt-2 text-2xl font-light tracking-tight text-white">Your Astrological Walk</h2>
+          </div>
+          <div className="max-w-none text-base leading-8 text-white/80 whitespace-pre-wrap">
+            {report.memberOverviewStory || report.personalOverview}
+          </div>
+        </section>
+      )}
 
       {/* ---- Current Phase (prominent) ---- */}
       {report.currentPhase && (
