@@ -19,7 +19,10 @@ if (isServer) {
     connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000,
+    // Detect dead connections from postgres restarts
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
   });
 
   // Handle pool errors
