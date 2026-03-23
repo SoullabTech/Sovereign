@@ -494,33 +494,46 @@ async function generateSpiralogicReportData(opts: {
 }): Promise<Record<string, unknown>> {
   const { birthData, lifeStage, personalityNotes, priorReport } = opts;
 
-  const birthDate = new Date(birthData.date);
-  const { element: sunElement, sign: sunSign } = getSunSignElement(birthDate);
-  const { element: moonElement, sign: moonSign } = getMoonSignElement(birthDate, birthData.time);
-  const { element: timeElement, label: timeLabel } = getTimeQuadrant(birthData.time);
+  // ── Canonical birth data pipeline (one source of truth) ─────────────────────
+  const { normalizeBirthData } = await import('@/lib/astrology/normalizeBirthData');
+  const { calculateNatalChart } = await import('@/lib/astrology/calculateNatalChart');
+  const { calculateTransits, getActiveTransitDescriptions } = await import('@/lib/astrology/calculateTransits');
+  const { deriveSpiralogicMappings } = await import('@/lib/astrology/deriveSpiralogicMappings');
 
-  // Ascendant (requires lat + lng)
-  const lat = birthData.location?.lat;
-  const lng = birthData.location?.lng;
-  const ascendantResult =
-    lat != null && lng != null
-      ? getAscendantElement(lat, lng, birthDate, birthData.time)
-      : null;
-  const ascendantElement = ascendantResult?.element ?? null;
-  const ascendantSign = ascendantResult?.sign ?? null;
+  function getTimeLabel(hour: number): string {
+    if (hour >= 6 && hour < 12)  return 'Born at dawn/morning — fire/will emphasis';
+    if (hour >= 12 && hour < 18) return 'Born at midday/afternoon — earth/form emphasis';
+    if (hour >= 18 && hour < 24) return 'Born at dusk/evening — air/mind emphasis';
+    return 'Born at night/pre-dawn — water/depth emphasis';
+  }
 
-  const { dist: elementStrengths, mode: calculationMode } = computeElementalDistribution(
-    sunElement,
-    timeElement,
-    moonElement,
-    ascendantElement,
-  );
-  const lifeCycleTransits = computeLifeCycleTransits(birthDate);
+  const normalized = normalizeBirthData({
+    birthDate: birthData.date,
+    birthTime: birthData.time,
+    timezone: birthData.location?.timezone,
+    lat: birthData.location?.lat,
+    lng: birthData.location?.lng,
+    placeName: birthData.location?.placeName,
+  });
 
-  // Identify dominant and underactive elements
-  const elements: Elem[] = ['fire', 'water', 'earth', 'air'];
-  const dominantElement = elements.reduce((a, b) => elementStrengths[a] > elementStrengths[b] ? a : b);
-  const underactiveElement = elements.reduce((a, b) => elementStrengths[a] < elementStrengths[b] ? a : b);
+  const natal = calculateNatalChart(normalized);
+  const transitData = calculateTransits(normalized);
+  const lifeCycleTransits = getActiveTransitDescriptions(transitData);
+
+  const spiralogicMap = deriveSpiralogicMappings(natal, lifeCycleTransits, lifeStage);
+
+  // Aliases for compatibility with prompt template below
+  const sunSign = natal.sun.sign;
+  const sunElement = natal.sun.element;
+  const moonSign = natal.moon.sign;
+  const moonElement = natal.moon.element;
+  const ascendantSign = natal.ascendant?.sign ?? null;
+  const ascendantElement = natal.ascendant?.element ?? null;
+  const calculationMode = natal.calculationMode === 'full' ? 'sun-moon-asc-time' : 'sun-moon-time';
+  const elementStrengths = natal.elementalDistribution;
+  const dominantElement = natal.dominantElement;
+  const underactiveElement = natal.underactiveElement;
+  const timeLabel = getTimeLabel(normalized.localDateParts.hour);
 
   const contextNote = [
     lifeStage ? `Life stage: ${lifeStage}.` : '',
@@ -558,18 +571,10 @@ For "evolutionDelta": compare the prior and current data above. Be conservative 
 
   const subjectName = birthData.name ?? 'the member';
 
-  const astrologyContext = `Sun: ${sunSign} (${sunElement}, ${elementStrengths[sunElement]}% elemental weight)
-Moon: ${moonSign} (${moonElement}, ${elementStrengths[moonElement]}% elemental weight)
-${ascendantSign ? `Ascendant: ${ascendantSign} (${ascendantElement}, strong angular weight)` : 'Ascendant: not calculated (coordinates not provided)'}
-Birth time: ${timeLabel}
-Elemental distribution — Fire: ${elementStrengths.fire}% | Water: ${elementStrengths.water}% | Earth: ${elementStrengths.earth}% | Air: ${elementStrengths.air}%
-Dominant element: ${dominantElement}
-Underactive element: ${underactiveElement}
-Calculation mode: ${calculationMode}`;
+  const astrologyContext = `${spiralogicMap.astrologyContextBlock}
+Birth time: ${timeLabel}`;
 
-  const spiralogicContext = `Life-cycle transits active now:
-${lifeCycleTransits.map((t, i) => `${i + 1}. ${t}`).join('\n')}
-${lifeStage ? `\nLife stage provided: ${lifeStage}` : ''}`;
+  const spiralogicContext = spiralogicMap.spiralogicContextBlock;
 
   const narrativeConstraint = `The memberOverviewStory must explicitly answer:
 - What cycle are they in?
@@ -792,7 +797,7 @@ OUTPUT RULES
     sunElement,
     moonSign,
     moonElement,
-    timeElement,
+    timeElement: (['water','water','water','water','water','water','fire','fire','fire','fire','fire','fire','earth','earth','earth','earth','earth','earth','air','air','air','air','air','air'] as const)[normalized.localDateParts.hour],
     ascendantSign: ascendantSign ?? null,
     ascendantElement: ascendantElement ?? null,
     calculationMode,
