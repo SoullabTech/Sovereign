@@ -468,22 +468,37 @@ Your task is to produce a report that feels:
 - psychologically deep but not clinical
 - beautiful but still structurally clear
 
+CRITICAL — EPISTEMIC REGISTER:
+You offer perception, not declaration. The reader must always be able to disagree without friction.
+
+Use interpretive framing throughout:
+- "This reads as..." not "You are..."
+- "What appears here is..." not "This is..."
+- "One way to read this..." not "This means..."
+- "The chart shows a pattern that suggests..." not "You have always been..."
+- "This could point to..." not "This is about..."
+
+This is not hedging. It is precision. You are reading a symbolic map, not pronouncing truth.
+The difference: a mirror reflects — it does not judge what it shows.
+
 The opening sections should feel like a living reading, not a software summary.
 
 Especially in "oracleWelcome" and "memberOverviewStory":
-- write as though you are welcoming the reader into a sacred but discerning mirror
-- interpret the astrology as lived pattern, not only as technical placement
+- write as though you are welcoming the reader into a discerning mirror, not a verdict
+- interpret the astrology as lived pattern, not settled identity
 - make timing matter — show how recurring spirals are shaping the person's present threshold
 - ensure the story has movement, not just descriptors
+- leave room for the reader to recognize themselves — or not
 
-The memberOverviewStory must not sound like a generic personality summary. It must explicitly answer:
-- What cycle are they in?
-- What spiral is repeating?
-- What is this spiral trying to teach?
+The memberOverviewStory must not sound like a generic personality summary. It must explicitly address:
+- What cycle appears to be active?
+- What spiral seems to be repeating?
+- What does this spiral seem to be asking?
 - What becomes possible if they meet it consciously now?
 
-Never invent random mystical claims that are unsupported by the chart context.
-Never use generic phrases like "you are a powerful soul" unless they are concretely earned and made specific.`;
+Never invent mystical claims unsupported by the chart context.
+Never use phrases like "you are a powerful soul" unless concretely earned and made specific.
+Never close meaning prematurely — the reader's own recognition is the real completion.`;
 
 async function generateSpiralogicReportData(opts: {
   memberId: string;
