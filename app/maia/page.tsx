@@ -707,7 +707,7 @@ function MAIAPageContent() {
         {/* NOTE: overflow-hidden removed from outer div — iOS Safari renders backdrop-blur-xl as invisible when
             combined with overflow:hidden on the same element. Decorations are clipped in inner wrapper instead. */}
         <div
-          className="header-navigation safari-nav-fix flex-shrink-0 relative bg-[#1b1410]/90 backdrop-blur-xl border-b border-[#3a2a1f]/60 z-60"
+          className="header-navigation safari-nav-fix flex-shrink-0 relative overflow-x-hidden bg-[#1b1410]/90 backdrop-blur-xl border-b border-[#3a2a1f]/60 z-60"
         >
           {/* Decorative elements — overflow-hidden applied here, NOT on the outer div */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
