@@ -14,6 +14,9 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
+  Tag,
+  FolderPlus,
+  FileBarChart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -45,6 +48,21 @@ export default function ClientImportPage() {
   const [importResult, setImportResult] = useState<{
     imported: number;
     skipped: number;
+    createdIds: string[];
+  } | null>(null);
+
+  // Post-import actions state
+  const [showActions, setShowActions] = useState(false);
+  const [actionTags, setActionTags] = useState('source:import');
+  const [enableTags, setEnableTags] = useState(true);
+  const [cohortName, setCohortName] = useState('');
+  const [enableCohort, setEnableCohort] = useState(false);
+  const [enableReports, setEnableReports] = useState(false);
+  const [applyingActions, setApplyingActions] = useState(false);
+  const [actionResult, setActionResult] = useState<{
+    tagged?: number;
+    cohortCreated?: { name: string; clientCount: number };
+    reportsQueued?: number;
   } | null>(null);
 
   const isNative = Capacitor.isNativePlatform();
@@ -192,12 +210,55 @@ export default function ClientImportPage() {
       setImportResult({
         imported: data.imported,
         skipped: data.skipped,
+        createdIds: data.createdIds || [],
       });
       setState('done');
+      if (data.createdIds?.length > 0) {
+        setShowActions(true);
+      }
     } catch (err) {
       console.error('Import error:', err);
       setError(err instanceof Error ? err.message : 'Import failed');
       setState('error');
+    }
+  };
+
+  // Apply post-import actions
+  const handleApplyActions = async () => {
+    if (!importResult?.createdIds?.length) return;
+
+    const tags = enableTags
+      ? actionTags.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    const hasActions = tags.length > 0 || (enableCohort && cohortName.trim()) || enableReports;
+    if (!hasActions) return;
+
+    setApplyingActions(true);
+    try {
+      const response = await apiFetch('/api/studio/import-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientIds: importResult.createdIds,
+          actions: {
+            tags: tags.length > 0 ? tags : undefined,
+            cohortName: enableCohort && cohortName.trim() ? cohortName.trim() : undefined,
+            queueSpiralogicReport: enableReports || undefined,
+          },
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.results) {
+        setActionResult(data.results);
+        setShowActions(false);
+      } else {
+        setError(data.error || 'Failed to apply actions');
+      }
+    } catch {
+      setError('Failed to apply actions');
+    } finally {
+      setApplyingActions(false);
     }
   };
 
@@ -208,6 +269,13 @@ export default function ClientImportPage() {
     setContacts([]);
     setError(null);
     setImportResult(null);
+    setShowActions(false);
+    setActionResult(null);
+    setActionTags('source:import');
+    setEnableTags(true);
+    setCohortName('');
+    setEnableCohort(false);
+    setEnableReports(false);
   };
 
   const selectedCount = contacts.filter((c) => c.selected && !c.alreadyExists).length;
@@ -435,23 +503,158 @@ export default function ClientImportPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md mx-auto text-center py-12"
+          className="max-w-lg mx-auto py-12"
         >
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+          {/* Success banner */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-white mb-2">
+              Import Complete
+            </h2>
+            <p className="text-slate-400">
+              Successfully imported {importResult.imported} client
+              {importResult.imported !== 1 ? 's' : ''}.
+              {importResult.skipped > 0 && (
+                <span className="block text-sm mt-1">
+                  {importResult.skipped} skipped (duplicates or missing info)
+                </span>
+              )}
+            </p>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Import Complete
-          </h2>
-          <p className="text-slate-400 mb-6">
-            Successfully imported {importResult.imported} client
-            {importResult.imported !== 1 ? 's' : ''}.
-            {importResult.skipped > 0 && (
-              <span className="block text-sm mt-1">
-                {importResult.skipped} skipped (duplicates or missing info)
-              </span>
-            )}
-          </p>
+
+          {/* Action result banner */}
+          {actionResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg"
+            >
+              <p className="text-sm font-medium text-emerald-400 mb-2">Actions applied:</p>
+              <ul className="text-sm text-slate-300 space-y-1">
+                {(actionResult.tagged ?? 0) > 0 && (
+                  <li>{actionResult.tagged} clients tagged</li>
+                )}
+                {actionResult.cohortCreated && (
+                  <li>
+                    Cohort &ldquo;{actionResult.cohortCreated.name}&rdquo; created
+                    ({actionResult.cohortCreated.clientCount} members)
+                  </li>
+                )}
+                {(actionResult.reportsQueued ?? 0) > 0 && (
+                  <li>{actionResult.reportsQueued} reports queued</li>
+                )}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* Post-import actions panel */}
+          {showActions && importResult.createdIds.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 p-5 bg-[#1e1e38] border border-slate-800/50 rounded-xl"
+            >
+              <h3 className="text-sm font-semibold text-white mb-1">
+                Post-Import Actions
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Apply to {importResult.createdIds.length} newly created client{importResult.createdIds.length !== 1 ? 's' : ''}
+              </p>
+
+              <div className="space-y-4">
+                {/* Tags */}
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={enableTags}
+                    onChange={(e) => setEnableTags(e.target.checked)}
+                    className="mt-1 accent-amber-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 text-sm text-white">
+                      <Tag className="w-3.5 h-3.5 text-amber-400" />
+                      Add tags
+                    </div>
+                    {enableTags && (
+                      <input
+                        type="text"
+                        value={actionTags}
+                        onChange={(e) => setActionTags(e.target.value)}
+                        placeholder="source:csv, cohort:retreat_march_2026"
+                        className="mt-2 w-full text-sm bg-[#141428] border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
+                      />
+                    )}
+                  </div>
+                </label>
+
+                {/* Cohort */}
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={enableCohort}
+                    onChange={(e) => setEnableCohort(e.target.checked)}
+                    className="mt-1 accent-amber-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 text-sm text-white">
+                      <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
+                      Create cohort group
+                    </div>
+                    {enableCohort && (
+                      <input
+                        type="text"
+                        value={cohortName}
+                        onChange={(e) => setCohortName(e.target.value)}
+                        placeholder="March Retreat 2026"
+                        className="mt-2 w-full text-sm bg-[#141428] border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/50"
+                      />
+                    )}
+                  </div>
+                </label>
+
+                {/* Reports */}
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={enableReports}
+                    onChange={(e) => setEnableReports(e.target.checked)}
+                    className="mt-1 accent-amber-500"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 text-sm text-white">
+                      <FileBarChart className="w-3.5 h-3.5 text-amber-400" />
+                      Queue Spiralogic reports
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Marks clients for report generation
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <button
+                onClick={handleApplyActions}
+                disabled={applyingActions || (!enableTags && !enableCohort && !enableReports)}
+                className="mt-5 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-colors bg-amber-500 text-white hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed"
+              >
+                {applyingActions ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Apply Actions to {importResult.createdIds.length} Client{importResult.createdIds.length !== 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+            </motion.div>
+          )}
+
+          {/* Navigation */}
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={handleReset}
