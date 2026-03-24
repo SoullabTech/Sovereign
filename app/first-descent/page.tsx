@@ -197,7 +197,7 @@ export default function FirstDescentPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isGenerating}
-                placeholder="whatever's there"
+                placeholder=""
                 rows={4}
                 maxLength={2000}
                 className="w-full rounded-xl bg-white/5 border border-white/10 px-5 py-4 text-white placeholder:text-white/20 text-base leading-relaxed outline-none focus:border-white/25 focus:bg-white/8 transition-all resize-none disabled:opacity-50"
