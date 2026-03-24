@@ -30,13 +30,14 @@ export async function POST(
       );
     }
 
-    // Find client by portal email
-    // Join with practitioners to verify slug matches
+    // Find client by portal email.
+    // Resolve p.member_id so comms_threads.practitioner_id (which stores members.id) matches.
     const clientResult = await query(
       `SELECT c.id, c.practitioner_id, c.portal_password_hash, c.name,
-              p.slug as practitioner_slug
+              p.slug as practitioner_slug,
+              p.member_id as practitioner_member_id
        FROM practitioner_clients c
-       LEFT JOIN practitioners p ON c.practitioner_id = p.id OR c.practitioner_id = p.member_id
+       JOIN practitioners p ON p.id = c.practitioner_id
        WHERE c.portal_email = $1
          AND c.portal_claimed_at IS NOT NULL
        LIMIT 1`,
@@ -53,6 +54,14 @@ export async function POST(
       );
     }
 
+    if (!client.practitioner_member_id) {
+      console.error('[Client Signin] Practitioner has no member_id for client:', client.id);
+      return NextResponse.json(
+        { error: 'Practitioner account not configured' },
+        { status: 500 }
+      );
+    }
+
     // Verify password
     const passwordValid = verifyPassword(password, client.portal_password_hash);
     if (!passwordValid) {
@@ -62,7 +71,7 @@ export async function POST(
       );
     }
 
-    // Create session
+    // Create session — store members.id as practitionerId so it matches comms_threads.practitioner_id
     const res = NextResponse.json({
       ok: true,
       clientName: client.name,
@@ -71,7 +80,7 @@ export async function POST(
     await createClientSession(res, {
       portalSlug: slug,
       clientId: client.id,
-      practitionerId: client.practitioner_id,
+      practitionerId: client.practitioner_member_id,
     });
 
     return res;

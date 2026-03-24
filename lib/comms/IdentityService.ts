@@ -199,6 +199,9 @@ async function createUnresolvedIdentity(
  * Used by inbound SMS/voice webhooks to route messages.
  *
  * Checks practitioner_integrations for SMS config containing the number.
+ *
+ * Returns practitionerId as members.id (not practitioners.id) so it is
+ * compatible with comms_threads.practitioner_id.
  */
 export async function resolvePractitionerByNumber(
   phoneNumber: string
@@ -206,16 +209,19 @@ export async function resolvePractitionerByNumber(
   const normalized = normalizePhone(phoneNumber);
   if (!normalized) return null;
 
-  // Check practitioner_integrations for SMS config with this number
+  // Check practitioner_integrations for SMS config with this number.
+  // Join to practitioners to get member_id (what comms_threads expects).
   const result = await queryOne<{
     practitioner_id: string;
+    member_id: string;
     config_encrypted: string;
   }>(
-    `SELECT practitioner_id, config_encrypted
-     FROM practitioner_integrations
-     WHERE integration_type = 'sms'
-       AND status = 'connected'
-     ORDER BY updated_at DESC`,
+    `SELECT pi.practitioner_id, p.member_id, pi.config_encrypted
+     FROM practitioner_integrations pi
+     JOIN practitioners p ON p.id = pi.practitioner_id
+     WHERE pi.integration_type = 'sms'
+       AND pi.status = 'connected'
+     ORDER BY pi.updated_at DESC`,
     []
   );
 
@@ -223,7 +229,7 @@ export async function resolvePractitionerByNumber(
   // In multi-practitioner mode, would decrypt and match from_number
   if (result) {
     return {
-      practitionerId: result.practitioner_id,
+      practitionerId: result.member_id, // members.id for comms_threads compatibility
       authToken: '', // Will be loaded from env or decrypted config when needed
     };
   }
@@ -236,14 +242,15 @@ export async function resolvePractitionerByNumber(
   if (envSid && envToken && envFrom) {
     const envNormalized = normalizePhone(envFrom);
     if (envNormalized === normalized) {
-      // Find the practitioner — for single-practitioner, get first one
-      const practitioner = await queryOne<{ id: string }>(
-        `SELECT id FROM practitioners LIMIT 1`,
+      // Find the practitioner — for single-practitioner, get first one.
+      // Return member_id so it aligns with comms_threads.practitioner_id.
+      const practitioner = await queryOne<{ member_id: string }>(
+        `SELECT member_id FROM practitioners LIMIT 1`,
         []
       );
       if (practitioner) {
         return {
-          practitionerId: practitioner.id,
+          practitionerId: practitioner.member_id,
           authToken: envToken,
         };
       }

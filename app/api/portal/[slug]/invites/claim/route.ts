@@ -50,9 +50,11 @@ export async function POST(
 
     const inviteResult = await query(
       `SELECT i.id, i.client_id, i.practitioner_id, i.status, i.expires_at,
-              c.portal_claimed_at, c.email as booking_email
+              c.portal_claimed_at, c.email as booking_email,
+              p.member_id as practitioner_member_id
        FROM client_invites i
        JOIN practitioner_clients c ON c.id = i.client_id
+       JOIN practitioners p ON p.id = i.practitioner_id
        WHERE i.code_hash = $1
        LIMIT 1`,
       [codeHash]
@@ -126,16 +128,22 @@ export async function POST(
       [invite.client_id, email]
     ).catch(err => console.error('[Claim Invite] Failed to create comms identity:', err));
 
-    query(
-      `INSERT INTO comms_threads (domain, thread_type, participants, practitioner_id, client_id, status)
-       VALUES ('clinical', 'between_session', $1::jsonb, $2, $3, 'active')
-       ON CONFLICT DO NOTHING`,
-      [
-        JSON.stringify({ practitioner_id: invite.practitioner_id, client_id: invite.client_id }),
-        invite.practitioner_id,
-        invite.client_id,
-      ]
-    ).catch(err => console.error('[Claim Invite] Failed to create comms thread:', err));
+    // comms_threads.practitioner_id stores members.id — use practitioner_member_id
+    const practitionerMemberId = invite.practitioner_member_id;
+    if (practitionerMemberId) {
+      query(
+        `INSERT INTO comms_threads (domain, thread_type, participants, practitioner_id, client_id, status)
+         VALUES ('clinical', 'between_session', $1::jsonb, $2, $3, 'active')
+         ON CONFLICT DO NOTHING`,
+        [
+          JSON.stringify({ practitioner_id: practitionerMemberId, client_id: invite.client_id }),
+          practitionerMemberId,
+          invite.client_id,
+        ]
+      ).catch(err => console.error('[Claim Invite] Failed to create comms thread:', err));
+    } else {
+      console.error('[Claim Invite] Could not resolve practitioner member_id — thread not created for client:', invite.client_id);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

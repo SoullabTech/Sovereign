@@ -27,7 +27,21 @@ export async function GET(
     const session = await requireClientSession(slug);
     if (session instanceof NextResponse) return session;
 
-    const { clientId, practitionerId } = session;
+    const { clientId, practitionerId: rawPractitionerId } = session;
+
+    // comms_threads.practitioner_id stores members.id.
+    // New sessions (post-fix) already carry members.id. Legacy sessions may carry practitioners.id.
+    // Resolve to members.id to be safe.
+    let practitionerMemberId = rawPractitionerId;
+    const practitionerRow = await queryOne<{ member_id: string }>(
+      `SELECT member_id FROM practitioners WHERE id = $1`,
+      [rawPractitionerId]
+    );
+    if (practitionerRow) {
+      // rawPractitionerId was practitioners.id — upgrade to members.id
+      practitionerMemberId = practitionerRow.member_id;
+    }
+    // If not found, rawPractitionerId is already members.id (new session format)
 
     // Find the client's active thread
     const thread = await queryOne<{
@@ -44,7 +58,7 @@ export async function GET(
          AND thread_type = 'between_session'
          AND status = 'active'
        LIMIT 1`,
-      [practitionerId, clientId]
+      [practitionerMemberId, clientId]
     );
 
     if (!thread) {
@@ -73,13 +87,13 @@ export async function GET(
       [thread.id]
     );
 
-    // Get practitioner name
+    // Get practitioner name — practitionerMemberId is members.id
     const practitioner = await queryOne<{ name: string }>(
       `SELECT m.name
        FROM practitioners p
        JOIN members m ON m.id = p.member_id
        WHERE p.member_id = $1`,
-      [practitionerId]
+      [practitionerMemberId]
     );
 
     // Mark client messages as read
@@ -115,7 +129,18 @@ export async function POST(
     const session = await requireClientSession(slug);
     if (session instanceof NextResponse) return session;
 
-    const { clientId, practitionerId } = session;
+    const { clientId, practitionerId: rawPractitionerId } = session;
+
+    // comms_threads.practitioner_id stores members.id.
+    // Resolve to members.id — legacy sessions may carry practitioners.id.
+    let practitionerMemberId = rawPractitionerId;
+    const practitionerRowPost = await queryOne<{ member_id: string }>(
+      `SELECT member_id FROM practitioners WHERE id = $1`,
+      [rawPractitionerId]
+    );
+    if (practitionerRowPost) {
+      practitionerMemberId = practitionerRowPost.member_id;
+    }
 
     const body = await request.json().catch(() => ({}));
     const messageBody = (body?.body || '').trim();
@@ -144,7 +169,7 @@ export async function POST(
          AND thread_type = 'between_session'
          AND status = 'active'
        LIMIT 1`,
-      [practitionerId, clientId]
+      [practitionerMemberId, clientId]
     );
 
     if (!thread) {
