@@ -7,7 +7,7 @@ import { Holoflower } from '@/components/ui/Holoflower';
 import { apiUrl } from '@/lib/http/apiBase';
 import type { DescentStep } from '@/lib/consciousness/firstDescent';
 
-const OPENING_QUESTION = `Something in your life is already asking for your attention.\nWhat feels most present right now — not the whole story, just the part that has weight?`;
+const OPENING_QUESTION = `What feels most present for you right now — not the whole story, just the part that stands out?`;
 
 export default function FirstDescentPage() {
   const router = useRouter();
@@ -185,7 +185,7 @@ export default function FirstDescentPage() {
               className="space-y-6"
             >
               <p className="text-white/40 text-sm text-center font-light">
-                Not the whole story. Just the part that has weight.
+                Not the whole story. Just the part that stands out.
               </p>
 
               <textarea
