@@ -44,6 +44,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { loadFirstDescentSeed } from '@/lib/consciousness/firstDescentPersistence';
+import type { DescentSeed } from '@/lib/consciousness/firstDescent';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -418,6 +420,9 @@ export async function POST(request: NextRequest) {
 
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
+
+    // First Descent: Load seed for soft continuity injection
+    const descentSeed = await loadFirstDescentSeed(userId);
 
     // BRIDGE D extension: Extract active report context (if present)
     const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
@@ -1602,9 +1607,29 @@ async function generateSpiralogicResponseWithLLM(
     ? buildReportContextBlock(activeReportContext)
     : '';
 
+  // Build descent context block for soft continuity
+  function buildDescentContextBlock(seed: DescentSeed): string {
+    return [
+      `\n\n## Descent context (background only — soft reference for continuity)`,
+      `Initial thread (unresolved): "${seed.originInput}"`,
+      `MAIA's first observation: "${seed.maiaReply.slice(0, 200)}${seed.maiaReply.length > 200 ? '...' : ''}"`,
+      ``,
+      `Use this as a soft reference for continuity.`,
+      `Do NOT assert it as identity. Do NOT introduce it unless conversation naturally returns to it.`,
+      `If referenced, present as possibility, not conclusion.`,
+      `Before responding, check: am I defining identity, finalizing a pattern, or prescribing direction? If so, downgrade to observational, conditional, or reversible.\n`,
+    ].join('\n');
+  }
+
+  // Build descent context block if seed exists (soft background reference)
+  const descentContextBlock = descentSeed
+    ? buildDescentContextBlock(descentSeed)
+    : '';
+
   const finalSystemPrompt = [
     systemPrompt,
     reportContextBlock,
+    descentContextBlock,
     councilInsights,
     collectiveWisdom,
   ].filter(Boolean).join('');
@@ -1759,23 +1784,6 @@ Every reply follows:
 - Plainspoken first, symbolic second
 - Focused on what actually matters emotionally and practically
 - End with a question, experiment, or reflection they can try - NOT a final verdict
-
-# Pattern Signal Response Rule (OVERRIDES default 3-step sequencing)
-
-When the user's input contains a recognizable pattern signal — phrases like "I keep", "I always", "I can't", "something feels off", "I know what I need to do but", "I'm stuck", "I keep circling", "I don't know why I", or any expression of repetition, stuckness, misalignment, or internal contradiction — do NOT begin by reflecting the situation back or asking what the issue is.
-
-Instead, follow this sequence:
-1. **Name the structure first** — Identify the underlying dynamic driving the pattern in clear, specific language. Not empathy. Not mirroring. The actual mechanism.
-2. **Explain briefly why it persists** — One sentence on the structural reason this keeps happening
-3. **Ask a constrained question** — A specific fork ("Is this more X or Y?"), not an open invitation ("Tell me more")
-
-**Correct** response to "I keep circling the same issue in my work":
-> Circling usually means the problem isn't actually the problem — either the framing is off, or the real cost of resolving it hasn't been faced yet. Most people stay in motion there because it feels like progress without requiring a decision. Does this feel more like a framing issue, or a cost issue?
-
-**Incorrect** response:
-> I hear that you're circling something in your work. What's the issue you keep returning to?
-
-The goal of the first response to a pattern signal is immediate recognition — a sense of "this understands me" — not warmth alone. Warmth without precision is not intelligence.
 
 # Current Context (IMPLICIT - do not state these explicitly to the user)
 

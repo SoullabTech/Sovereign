@@ -10,7 +10,7 @@
  * God is more between than within - the I-Thou relationship
  */
 
-import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,7 +35,7 @@ import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine } from 'lucide-react';
 import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
@@ -386,47 +386,6 @@ function MAIAPageContent() {
   const [currentScribeLens, setCurrentScribeLens] = useState<ReflectionLens>('auto');
   const [mentorStanceEnabled, setMentorStanceEnabled] = useState(false);
 
-  // Carousel scroll state for ribbon overflow detection
-  const desktopCarouselRef = useRef<HTMLDivElement>(null);
-  const mobileCarouselRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollIndicators = useCallback((el: HTMLDivElement | null) => {
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 2);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 2);
-  }, []);
-
-  const scrollCarousel = useCallback((direction: 'left' | 'right') => {
-    const el = desktopCarouselRef.current || mobileCarouselRef.current;
-    if (!el) return;
-    const amount = direction === 'left' ? -200 : 200;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
-  }, []);
-
-  // Attach scroll listener + ResizeObserver for carousel overflow detection
-  useEffect(() => {
-    const els = [desktopCarouselRef.current, mobileCarouselRef.current].filter(Boolean) as HTMLDivElement[];
-    const handler = (e: Event) => updateScrollIndicators(e.target as HTMLDivElement);
-
-    els.forEach(el => {
-      el.addEventListener('scroll', handler, { passive: true });
-      updateScrollIndicators(el);
-    });
-
-    const ro = new ResizeObserver(() => {
-      els.forEach(updateScrollIndicators);
-    });
-    els.forEach(el => ro.observe(el));
-
-    return () => {
-      els.forEach(el => el.removeEventListener('scroll', handler));
-      ro.disconnect();
-    };
-  }, [updateScrollIndicators]);
-
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
   //   const betaUser = localStorage.getItem('beta_user');
@@ -461,6 +420,19 @@ function MAIAPageContent() {
         router.replace('/signin');
         return;
       }
+
+      // Hard gate: First Descent required before /maia
+      try {
+        const raw = localStorage.getItem('beta_user');
+        if (raw) {
+          const user = JSON.parse(raw);
+          if (user.onboarded && !user.firstDescentCompleted) {
+            console.log('[NAV] /maia -> /first-descent (reason: descent not completed)');
+            router.replace('/first-descent');
+            return;
+          }
+        }
+      } catch { /* continue if parse fails */ }
 
       // Load user data first (needed for session registration)
       const initialData = await getInitialUserData();
@@ -777,8 +749,7 @@ function MAIAPageContent() {
 
           <div className="relative w-full px-2 py-1" style={{paddingTop: 'max(env(safe-area-inset-top), 1.5rem)'}}>
             {/* Mobile: Horizontal scrollable container */}
-            <div className="md:hidden mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
-            <div ref={mobileCarouselRef} className="mobile-carousel scrollbar-hide">
+            <div className="md:hidden mobile-carousel scrollbar-hide">
               <div className="flex items-center gap-2 min-w-max px-2 py-1">
                 {/* Logo removed - now in bottom center */}
 
@@ -1045,12 +1016,11 @@ function MAIAPageContent() {
                 </motion.button>
               </div>
             </div>
-            </div>
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
-            <div className="hidden md:block w-full overflow-hidden mobile-carousel-wrap" data-can-scroll-left={canScrollLeft} data-can-scroll-right={canScrollRight}>
-              <div ref={desktopCarouselRef} className="overflow-x-auto scrollbar-hide">
-              <div className="flex items-center gap-3 min-w-max px-4 py-1">
+            <div className="hidden md:block w-full mobile-carousel scrollbar-hide">
+              {/* All navigation controls grouped together */}
+              <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
                   <FeatureTooltip featureId="voice-text-toggle" side="bottom">
@@ -1362,7 +1332,6 @@ function MAIAPageContent() {
                     <span className="hidden sm:inline">Account</span>
                   </motion.button>
                 </FeatureTooltip>
-              </div>
               </div>
             </div>
           </div>
@@ -1774,6 +1743,18 @@ function MAIAPageContent() {
                 >
                   <FlaskConical className="w-5 h-5" />
                   <span className="text-base">Labtools</span>
+                </button>
+
+                {/* Songwriter */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/maia/songwriter');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <PenLine className="w-5 h-5" />
+                  <span className="text-base">Songwriter</span>
                 </button>
 
                 {/* Soullab Studios - Main practitioner portal */}

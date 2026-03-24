@@ -66,7 +66,7 @@ function SigninContent() {
       !next.startsWith('//') &&
       !next.startsWith('/signin') // avoid loop
         ? next
-        : '/maia';
+        : getPostAuthDest();
 
     console.log('[SignIn] Already authenticated - redirecting to', safeNext);
     window.location.replace(safeNext);
@@ -94,6 +94,23 @@ function SigninContent() {
   const getSearchParam = (key: string): string | null => {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get(key);
+  };
+
+  // Resolve post-auth destination: /first-descent if not completed, /maia otherwise
+  const getPostAuthDest = (memberData?: { firstDescentCompleted?: boolean }): string => {
+    // Check from server response first
+    if (memberData?.firstDescentCompleted === false) return '/first-descent';
+    if (memberData?.firstDescentCompleted === true) return '/maia';
+    // Fall back to localStorage
+    try {
+      const raw = localStorage.getItem('beta_user');
+      if (raw) {
+        const user = JSON.parse(raw);
+        if (user.firstDescentCompleted === true) return '/maia';
+        if (user.onboarded === true) return '/first-descent';
+      }
+    } catch { /* continue */ }
+    return '/maia';
   };
 
   // State
@@ -326,8 +343,9 @@ function SigninContent() {
 
         await trustThisDevice();
 
-        // Navigate to main app
-        window.location.assign(`/maia?ts=${Date.now()}`);
+        // Navigate to first descent or main app
+        const dest = getPostAuthDest(res.member);
+        window.location.assign(`${dest}?ts=${Date.now()}`);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Biometric sign-in failed');
@@ -412,8 +430,9 @@ function SigninContent() {
       console.log("[SignIn] Post-signin check: memberId=", mid, "token=", tok ? "yes" : "no");
 
       // Navigate explicitly - use assign to ensure full navigation
-      console.log("[SignIn] navigating to /maia");
-      window.location.assign(`/maia?ts=${Date.now()}`);
+      const dest = getPostAuthDest(data.member);
+      console.log("[SignIn] navigating to", dest);
+      window.location.assign(`${dest}?ts=${Date.now()}`);
     } catch (err: any) {
       console.error("[SignIn] exception", err);
       const errMsg = err?.message || "Sign in threw an exception.";
@@ -465,7 +484,7 @@ function SigninContent() {
 
         if (data.member) {
           storeSession(data.member, data.sessionToken);
-          window.location.assign(`/maia?ts=${Date.now()}`);
+          window.location.assign(`${getPostAuthDest()}?ts=${Date.now()}`);
         }
         return;
       }
@@ -517,7 +536,7 @@ function SigninContent() {
 
         if (data.member) {
           storeSession(data.member, data.sessionToken);
-          window.location.assign(`/maia?ts=${Date.now()}`);
+          window.location.assign(`${getPostAuthDest()}?ts=${Date.now()}`);
         }
         return;
       }
@@ -572,7 +591,7 @@ function SigninContent() {
           setMigrationStatus('done');
           localStorage.setItem('explorerId', pendingUser.id);
           setTimeout(() => {
-            window.location.assign(`/maia?ts=${Date.now()}`);
+            window.location.assign(`${getPostAuthDest()}?ts=${Date.now()}`);
           }, 1500);
         } else {
           setMigrationStatus('error');
@@ -583,7 +602,7 @@ function SigninContent() {
     } else {
       localStorage.setItem('explorerId', pendingUser.id);
       setShowMigration(false);
-      window.location.assign(`/maia?ts=${Date.now()}`);
+      window.location.assign(`${getPostAuthDest()}?ts=${Date.now()}`);
     }
   };
 
@@ -1129,7 +1148,7 @@ function SigninContent() {
               preferredName: member.preferredName,
               onboarded: member.onboarded
             });
-            window.location.assign(`/maia?ts=${Date.now()}`);
+            window.location.assign(`${getPostAuthDest()}?ts=${Date.now()}`);
           }}
           onClose={() => setShowQRLogin(false)}
         />

@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const result = await query(
       `SELECT id, passkey, username, password_hash, name, preferred_name,
               onboarded, onboarding_step, tier, roles, subscription_active, subscription_expires_at,
-              has_webauthn, preferred_auth_method, must_reset_password
+              has_webauthn, preferred_auth_method, must_reset_password, first_descent_completed
        FROM members
        WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)`,
       [username]
@@ -159,7 +159,8 @@ export async function POST(request: NextRequest) {
         subscriptionExpiresAt: member.subscription_expires_at || null,
         hasWebauthn: member.has_webauthn || false,
         preferredAuthMethod: member.preferred_auth_method || 'password',
-        mustResetPassword: member.must_reset_password || false
+        mustResetPassword: member.must_reset_password || false,
+        firstDescentCompleted: member.first_descent_completed || false
       },
       session: session ? {
         expiresAt: session.expiresAt.toISOString(),
