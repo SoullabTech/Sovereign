@@ -78,7 +78,7 @@ export async function POST(
     // Get practitioner and AI config
     const practitionerResult = await db.query(
       `SELECT
-        p.id, p.name, p.email, p.business_name, p.bio, p.tagline,
+        p.id, p.member_id, p.name, p.email, p.business_name, p.bio, p.tagline,
         p.specialties, p.approach, p.values,
         ac.name as ai_name, ac.voice_style, ac.tone,
         ac.frameworks, ac.primary_framework, ac.specialties as ai_specialties,
@@ -117,6 +117,7 @@ export async function POST(
     const toolContext: ToolContext = {
       portalSlug: slug,
       practitionerId,
+      memberId: practitioner.member_id,
     };
 
     // Call Claude with optional tools
