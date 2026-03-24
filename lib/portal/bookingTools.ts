@@ -134,6 +134,7 @@ export const BOOKING_TOOLS = [
 export interface ToolContext {
   portalSlug: string;
   practitionerId: string;
+  memberId?: string; // member UUID — needed for client_invites FK (references members.id)
 }
 
 export interface ToolResult {
@@ -524,10 +525,12 @@ async function sendPortalInviteIfNeeded(
   const codeHash = hashInviteCode(code);
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 90); // 90 days
 
+  // client_invites.practitioner_id references members(id), not practitioners(id)
+  const inviteOwnerId = ctx.memberId || ctx.practitionerId;
   await db.query(
     `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, expires_at)
      VALUES ($1, $2, $3, 'unused', $4)`,
-    [ctx.practitionerId, clientId, codeHash, expiresAt]
+    [inviteOwnerId, clientId, codeHash, expiresAt]
   );
 
   // Fetch practitioner info for the email
