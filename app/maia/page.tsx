@@ -1018,18 +1018,7 @@ function MAIAPageContent() {
             </div>
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
-            <div className="hidden md:flex items-center w-full overflow-hidden relative">
-              {canScrollLeft && (
-                <button
-                  onClick={() => scrollCarousel('left')}
-                  className="flex-shrink-0 p-1 text-maia-ink-40 hover:text-maia-ink-80 transition-colors z-20"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              )}
-              {canScrollLeft && <div className="absolute left-6 top-0 bottom-0 w-8 bg-gradient-to-r from-[#1b1410] to-transparent z-10 pointer-events-none" />}
-              <div className="min-w-0 flex-1">
+            <div className="hidden md:block w-full overflow-hidden">
               <div ref={desktopCarouselRef} className="overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
@@ -1346,16 +1335,6 @@ function MAIAPageContent() {
               </div>
               </div>
               </div>
-              {canScrollRight && <div className="absolute right-6 top-0 bottom-0 w-8 bg-gradient-to-l from-[#1b1410] to-transparent z-10 pointer-events-none" />}
-              {canScrollRight && (
-                <button
-                  onClick={() => scrollCarousel('right')}
-                  className="flex-shrink-0 p-1 text-maia-ink-40 hover:text-maia-ink-80 transition-colors z-20"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
             </div>
           </div>
         </div>
