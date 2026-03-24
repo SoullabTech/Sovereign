@@ -166,7 +166,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Circles Commons (Phase 1)
   { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons - all authenticated members' },
-  { exact: '/commons/join', minTier: 'free', notes: 'Join circle via invite' },
+  { exact: '/commons/join', public: true, notes: 'Join circle via invite — public landing, auth required at submit' },
 
   // Elemental Alchemy
   { prefix: '/maia/community/elemental-alchemy', minTier: 'personal', notes: 'Elemental alchemy system' },

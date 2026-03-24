@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, KeyRound } from 'lucide-react';
+import { ArrowLeft, KeyRound, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
+import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 
 function JoinCircleForm() {
   const router = useRouter();
@@ -14,10 +15,29 @@ function JoinCircleForm() {
   const [consentMode, setConsentMode] = useState<'manual' | 'not_now'>('manual');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check if user is signed in
+  useEffect(() => {
+    const memberId = getLocalMemberId();
+    setIsAuthenticated(!!memberId);
+  }, []);
+
+  // Build return URL preserving the token
+  const returnUrl = typeof window !== 'undefined'
+    ? `/commons/join${token ? `?token=${encodeURIComponent(token)}` : ''}`
+    : '/commons/join';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token.trim()) return;
+
+    // Re-check auth at submit time
+    const memberId = getLocalMemberId();
+    if (!memberId) {
+      setIsAuthenticated(false);
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -37,6 +57,8 @@ function JoinCircleForm() {
       if (!res.ok) {
         if (json.error === 'INVALID_INVITE') {
           setError('This invite link is invalid or has been revoked.');
+        } else if (res.status === 401) {
+          setIsAuthenticated(false);
         } else {
           setError(json.error || 'Failed to join circle');
         }
@@ -72,7 +94,38 @@ function JoinCircleForm() {
         Enter the invite token you received from a circle facilitator.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      {/* Auth gate — show sign-in prompt for unauthenticated visitors */}
+      {isAuthenticated === false && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8 rounded-2xl border border-maia-spice-500/20 bg-maia-spice-500/5 p-6 text-center"
+        >
+          <LogIn className="mx-auto h-8 w-8 text-maia-spice-400 mb-3" />
+          <h2 className="text-base font-semibold text-maia-ink-100 mb-2">
+            Sign in to join this circle
+          </h2>
+          <p className="text-sm text-maia-ink-60 mb-5">
+            You need a Soullab account to join a circle. Sign in or create one, then come back to this link.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href={`/signin?next=${encodeURIComponent(returnUrl)}`}
+              className="w-full rounded-xl border border-maia-spice-500/30 bg-maia-spice-500/10 px-4 py-2.5 text-sm font-medium text-maia-spice-400 transition-colors hover:bg-maia-spice-500/20"
+            >
+              Sign in
+            </Link>
+            <Link
+              href={`/begin?next=${encodeURIComponent(returnUrl)}`}
+              className="w-full rounded-xl border border-maia-navy-700 px-4 py-2.5 text-sm font-medium text-maia-ink-60 transition-colors hover:border-maia-ink-40 hover:text-maia-ink-80"
+            >
+              New to Soullab? Begin your journey
+            </Link>
+          </div>
+        </motion.div>
+      )}
+
+      <form onSubmit={handleSubmit} className={`mt-8 space-y-6 ${isAuthenticated === false ? 'opacity-40 pointer-events-none' : ''}`}>
         <div>
           <label htmlFor="token" className="block text-sm font-medium text-maia-ink-80">
             Invite token
