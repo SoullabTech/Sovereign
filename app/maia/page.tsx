@@ -1018,9 +1018,9 @@ function MAIAPageContent() {
             </div>
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
-            <div className="hidden md:block w-full mobile-carousel scrollbar-hide">
-              {/* All navigation controls grouped together */}
-              <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
+            <div className="hidden md:block w-full overflow-hidden">
+              <div ref={desktopCarouselRef} className="overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <div className="flex items-center gap-1">
                   <FeatureTooltip featureId="voice-text-toggle" side="bottom">
@@ -1332,6 +1332,8 @@ function MAIAPageContent() {
                     <span className="hidden sm:inline">Account</span>
                   </motion.button>
                 </FeatureTooltip>
+              </div>
+              </div>
               </div>
             </div>
           </div>
