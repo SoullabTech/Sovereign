@@ -92,7 +92,7 @@ function WelcomeBackContent() {
         : `You're entering through the ${institutionName} / ${contextName} path.\nWhen you sign in, MAIA can reflect with you on your projects, research, and inner life.`;
 
       return (
-        <p className="text-base text-teal-800/80 font-light mb-8 leading-relaxed whitespace-pre-line">
+        <p className="text-base text-white/70 font-light mb-8 leading-relaxed whitespace-pre-line">
           {message}
         </p>
       );
@@ -102,7 +102,7 @@ function WelcomeBackContent() {
         : 'When you sign in, MAIA will remember where you left off and what you were here for.';
 
       return (
-        <p className="text-base text-teal-800/80 font-light mb-8 leading-relaxed whitespace-pre-line">
+        <p className="text-base text-white/70 font-light mb-8 leading-relaxed whitespace-pre-line">
           {message}
         </p>
       );
@@ -126,13 +126,13 @@ function WelcomeBackContent() {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0b0f1c] to-[#161d3a] flex flex-col items-center justify-center px-4">
         <div className="mb-16">
           <div className="w-32 h-32 mx-auto">
             <Holoflower size="xl" glowIntensity="medium" animate={true} />
           </div>
         </div>
-        <div className="text-teal-900/60 font-light">
+        <div className="text-amber-400/60 font-light">
           Detecting consciousness state...
         </div>
       </div>
@@ -140,7 +140,7 @@ function WelcomeBackContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0b0f1c] to-[#161d3a] flex flex-col items-center justify-center px-4">
 
       {/* Sacred Holoflower */}
       <div className="mb-16">
@@ -153,13 +153,12 @@ function WelcomeBackContent() {
       <div
         className="rounded-2xl p-8 shadow-2xl border text-center max-w-lg w-full mb-8"
         style={{
-          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+          background: 'linear-gradient(165deg, rgba(18, 24, 51, 0.8), rgba(11, 15, 28, 0.6))',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
-        <h1 className="text-3xl font-extralight text-teal-900 mb-6 tracking-[0.2em]">
+        <h1 className="text-3xl font-extralight text-white mb-6 tracking-[0.2em]">
           Welcome back to Soullab
         </h1>
 
@@ -170,22 +169,15 @@ function WelcomeBackContent() {
           onClick={handleSignIn}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full p-4 rounded-xl mb-4 transition-all duration-300"
-          style={{
-            background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
-            border: '1px solid rgba(110, 231, 183, 0.4)',
-            backdropFilter: 'blur(4px)',
-          }}
+          className="w-full rounded-xl bg-amber-500 hover:bg-amber-400 text-white p-4 mb-4 font-medium text-lg transition-all duration-300 shadow-lg"
         >
-          <div className="text-teal-900 font-medium text-lg">
-            Sign In
-          </div>
+          Sign In
         </motion.button>
 
         {/* Start Fresh Link */}
         <button
           onClick={handleStartFresh}
-          className="text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+          className="text-amber-400/60 text-sm font-light hover:text-amber-300 transition-colors duration-300"
         >
           {userName ? `Not ${userName}? Start fresh` : 'Not you? Start fresh'}
         </button>
@@ -197,7 +189,7 @@ function WelcomeBackContent() {
 
 export default function WelcomeBackPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center text-teal-900">Loading welcome page...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-[#0b0f1c] to-[#161d3a] flex items-center justify-center text-amber-400/60">Loading welcome page...</div>}>
       <WelcomeBackContent />
     </Suspense>
   );
