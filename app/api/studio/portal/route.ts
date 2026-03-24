@@ -97,17 +97,18 @@ export async function POST(req: NextRequest) {
     const codeHash = hashInviteCode(code);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14); // 14 days
 
+    // client_invites.practitioner_id references members(id), not practitioners(id)
     await query(
       `INSERT INTO client_invites (id, client_id, practitioner_id, code_hash, status, expires_at, created_at)
        VALUES (gen_random_uuid(), $1, $2, $3, 'unused', $4, NOW())`,
-      [clientId, identity.practitionerId, codeHash, expiresAt]
+      [clientId, identity.memberId, codeHash, expiresAt]
     );
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://soullab.life';
     const email = client.email || '';
     const claimUrl = `${baseUrl}/portal/${client.slug}/claim?code=${encodeURIComponent(code)}${email ? `&email=${encodeURIComponent(email)}` : ''}`;
 
-    await sendPortalClaimEmail(
+    const emailResult = await sendPortalClaimEmail(
       { clientName: client.name || 'Client', clientEmail: email, claimUrl },
       {
         name: client.prac_name,
@@ -117,7 +118,12 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({ ok: true, claimUrl });
+    return NextResponse.json({
+      ok: true,
+      claimUrl,
+      emailSent: emailResult.success,
+      emailError: emailResult.error || undefined,
+    });
   } catch (err) {
     console.error('[Studio Portal] POST error:', err);
     return NextResponse.json({ error: 'Failed to send invite' }, { status: 500 });

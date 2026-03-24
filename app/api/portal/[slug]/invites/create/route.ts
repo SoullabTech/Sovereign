@@ -86,10 +86,11 @@ export async function POST(
     const codeHash = hashInviteCode(code);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 90); // 90 days
 
+    // client_invites.practitioner_id references members(id), not practitioners(id)
     await query(
       `INSERT INTO client_invites (practitioner_id, client_id, code_hash, status, expires_at)
        VALUES ($1, $2, $3, 'unused', $4)`,
-      [practitionerId, clientId, codeHash, expiresAt]
+      [memberId, clientId, codeHash, expiresAt]
     );
 
     // Return code ONCE - practitioner must copy it now

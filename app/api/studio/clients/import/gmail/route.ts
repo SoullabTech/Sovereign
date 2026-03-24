@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
     let imported = 0;
     let skipped = 0;
     const errors: string[] = [];
+    const createdIds: string[] = [];
 
     for (const contact of contacts) {
       try {
@@ -146,12 +147,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Insert client
+        const clientId = crypto.randomUUID();
         await db.query(
           `INSERT INTO practitioner_clients (
             id, practitioner_id, name, email, phone, created_at
           ) VALUES ($1, $2, $3, $4, $5, NOW())`,
           [
-            crypto.randomUUID(),
+            clientId,
             practitionerId,
             contact.name || contact.firstName || 'Unknown',
             contact.email,
@@ -160,6 +162,7 @@ export async function POST(request: NextRequest) {
         );
 
         existingEmails.add(contact.email.toLowerCase());
+        createdIds.push(clientId);
         imported++;
       } catch (err) {
         console.error('[Gmail Import] Error importing contact:', err);
@@ -171,6 +174,7 @@ export async function POST(request: NextRequest) {
       success: true,
       imported,
       skipped,
+      createdIds,
       errors: errors.length > 0 ? errors : undefined,
     });
 
