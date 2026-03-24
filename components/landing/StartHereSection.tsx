@@ -5,7 +5,6 @@ import { SectionReveal } from './SectionReveal';
 
 const PATHS = [
   { condition: 'Ongoing relationship', answer: 'MAIA', href: '/enter' },
-  { condition: 'Immediate clarity', answer: 'Identity Audit', href: '/audit' },
   { condition: 'Build or integrate', answer: 'AIN', href: '#contact', scroll: true },
 ] as const;
 

@@ -17,18 +17,6 @@ const OFFERINGS = [
     accent: 'maia-spice',
   },
   {
-    name: 'Identity Audit',
-    what: 'A one-time, high-resolution map of your structure.',
-    bullets: [
-      'Reveals core tensions and blind spots',
-      'Clarifies patterns across domains',
-      'Gives concrete next moves',
-    ],
-    cta: 'Run Identity Audit',
-    href: '/audit',
-    accent: 'amber',
-  },
-  {
     name: 'AIN',
     what: 'An intelligence layer you can deploy in your work or platform.',
     bullets: [
@@ -58,14 +46,14 @@ export function OfferingsSection() {
             className="text-3xl sm:text-4xl lg:text-5xl font-extralight tracking-wide text-white text-center mb-4"
             style={{ fontFamily: "'Crimson Pro', serif" }}
           >
-            Three ways to work with Soullab
+            Two ways to work with Soullab
           </h2>
           <p className="text-white/30 text-center text-sm max-w-lg mx-auto mb-16" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
             Each built on the same engine. Each designed to serve the person, not the platform.
           </p>
         </SectionReveal>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {OFFERINGS.map((offering, i) => (
             <SectionReveal key={offering.name} delay={0.1 * (i + 1)}>
               <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-white/[0.03] p-8 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-300">

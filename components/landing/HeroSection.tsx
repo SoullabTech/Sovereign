@@ -110,7 +110,7 @@ export function HeroSection() {
           className="text-sm text-white/25 mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Work with MAIA, get a one-time Identity Audit, or deploy AIN in your own work.
+          Work with MAIA, or deploy AIN in your own work.
         </motion.p>
 
         {/* CTAs */}
@@ -126,12 +126,12 @@ export function HeroSection() {
           >
             Enter MAIA
           </Link>
-          <Link
-            href="/audit"
+          <button
+            onClick={scrollToContact}
             className="inline-flex items-center justify-center rounded-xl px-8 py-3.5 border border-white/15 hover:border-white/30 text-white/60 hover:text-white font-medium text-base transition-colors"
           >
-            Run Identity Audit
-          </Link>
+            Work with Soullab
+          </button>
         </motion.div>
 
         {/* Trust line */}

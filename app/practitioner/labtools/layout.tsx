@@ -11,6 +11,7 @@ import Link from 'next/link';
 // Main Labtools navigation
 const NAV_ITEMS = [
   { href: '/practitioner/labtools', label: 'Overview', icon: 'home' },
+  { href: '/audit', label: 'Identity Audit', icon: 'scan' },
   { href: '/practitioner/labtools/ventures', label: 'Ventures', icon: 'rocket' },
   { href: '/practitioner/labtools/network', label: 'Network', icon: 'users' },
   { href: '/practitioner/labtools/meetings', label: 'Meetings', icon: 'calendar' },
@@ -29,6 +30,11 @@ function NavIcon({ icon, className }: { icon: string; className?: string }) {
     home: (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+    scan: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
     rocket: (
@@ -83,8 +89,8 @@ export default function LabtoolsLayout({
   const pathname = usePathname() ?? '';
 
   const isActive = (href: string) => {
-    // Exact match for overview and dashboard
-    if (href === '/practitioner/labtools' || href === '/practitioner/dashboard') {
+    // Exact match for overview, dashboard, and external routes
+    if (href === '/practitioner/labtools' || href === '/practitioner/dashboard' || href === '/audit') {
       return pathname === href;
     }
     return pathname.startsWith(href);

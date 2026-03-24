@@ -259,6 +259,12 @@ export default function LabtoolsHub() {
           </h2>
           <div className="grid md:grid-cols-2 gap-4">
             <QuickActionCard
+              title="Identity Audit"
+              description="A one-time, high-resolution map of your structure"
+              href="/audit"
+              icon="🔍"
+            />
+            <QuickActionCard
               title="Ventures"
               description="Manage business initiatives and projects"
               href="/practitioner/labtools/ventures"
