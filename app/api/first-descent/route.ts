@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (!originInput || typeof originInput !== 'string' || originInput.trim().length < 5) {
       return NextResponse.json(
-        { error: 'Please share what feels present for you.' },
+        { error: 'hold on' },
         { status: 400 }
       );
     }
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[FirstDescent] Generate error:', error);
     return NextResponse.json(
-      { error: 'Unable to generate response. Please try again.' },
+      { error: 'hold on' },
       { status: 500 }
     );
   }

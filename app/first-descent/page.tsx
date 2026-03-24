@@ -7,7 +7,7 @@ import { Holoflower } from '@/components/ui/Holoflower';
 import { apiUrl } from '@/lib/http/apiBase';
 import type { DescentStep } from '@/lib/consciousness/firstDescent';
 
-const OPENING_QUESTION = `Tell me something about you and your world right now.`;
+const OPENING_QUESTION = `what's been going on with you lately`;
 
 export default function FirstDescentPage() {
   const router = useRouter();
@@ -75,7 +75,7 @@ export default function FirstDescentPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || 'Something went wrong. Try again.');
+        setError(data.error || 'hold on');
         setIsGenerating(false);
         return;
       }
@@ -86,7 +86,7 @@ export default function FirstDescentPage() {
       setModelUsed(data.modelUsed || '');
       setStep('reply');
     } catch {
-      setError('Could not connect. Please check your connection.');
+      setError('hold on');
     } finally {
       setIsGenerating(false);
     }
@@ -124,6 +124,13 @@ export default function FirstDescentPage() {
     }
 
     router.push('/maia');
+  };
+
+  const handleRetry = async () => {
+    // Re-generate against the same input — silent retry, not an error
+    setStep('input');
+    setReply('');
+    setError('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -169,7 +176,7 @@ export default function FirstDescentPage() {
                 onClick={() => setStep('input')}
                 className="mt-10 text-sm text-white/30 hover:text-white/60 transition-colors"
               >
-                I'm ready
+                ok
               </motion.button>
             </motion.div>
           )}
@@ -184,17 +191,13 @@ export default function FirstDescentPage() {
               transition={{ duration: 0.8 }}
               className="space-y-6"
             >
-              <p className="text-white/40 text-sm text-center font-light">
-                Start wherever you are.
-              </p>
-
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isGenerating}
-                placeholder="What's present..."
+                placeholder="whatever's there"
                 rows={4}
                 maxLength={2000}
                 className="w-full rounded-xl bg-white/5 border border-white/10 px-5 py-4 text-white placeholder:text-white/20 text-base leading-relaxed outline-none focus:border-white/25 focus:bg-white/8 transition-all resize-none disabled:opacity-50"
@@ -211,14 +214,7 @@ export default function FirstDescentPage() {
                 whileTap={{ scale: 0.99 }}
                 className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white/80 text-sm font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {isGenerating ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-3 h-3 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
-                    Listening...
-                  </span>
-                ) : (
-                  'Share'
-                )}
+                {isGenerating ? '...' : 'send'}
               </motion.button>
             </motion.div>
           )}
@@ -232,39 +228,41 @@ export default function FirstDescentPage() {
               transition={{ duration: 1.5 }}
               className="space-y-10"
             >
-              <div className="text-white/70 text-base leading-relaxed font-light">
-                {reply.split('\n').map((paragraph, i) => (
-                  <p key={i} className={i > 0 ? 'mt-4' : ''}>
-                    {paragraph}
-                  </p>
-                ))}
+              <div>
+                <span className="text-white/30 text-[0.7rem] block mb-1">maia</span>
+                <div className="text-white/70 text-base leading-relaxed font-light">
+                  {reply.split('\n').map((paragraph, i) => (
+                    <p key={i} className={i > 0 ? 'mt-4' : ''}>
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
               </div>
 
-              <motion.button
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 2, duration: 1 }}
-                onClick={handleEnter}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="w-full py-3 rounded-xl bg-amber-500/90 hover:bg-amber-400 text-black font-medium text-sm transition-all shadow-lg"
+                className="flex gap-4 justify-center"
               >
-                Enter
-              </motion.button>
+                <button
+                  onClick={handleEnter}
+                  className="text-sm text-white/50 hover:text-white/80 transition-colors font-normal"
+                >
+                  yeah
+                </button>
+                <button
+                  onClick={handleRetry}
+                  className="text-sm text-white/30 hover:text-white/50 transition-colors font-normal"
+                >
+                  not quite
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Subtle footer */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2, duration: 1 }}
-        className="fixed bottom-6 text-white/15 text-xs"
-      >
-        First Descent
-      </motion.p>
     </div>
   );
 }
