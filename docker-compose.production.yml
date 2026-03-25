@@ -106,6 +106,8 @@ services:
       AIN_SHAPE_TELEMETRY: "1"
       # AIN Phase 1: Knowledge Gate — awareness-modulated source well scoring
       AIN_KNOWLEDGE_GATE_ENABLED: "1"
+      # Memory Tool Pilot: selective retrieval for wisdom + council layers
+      MAIA_MEMORY_TOOL_PILOT: "true"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
       WHISPER_URL: "http://whisper:8000"
