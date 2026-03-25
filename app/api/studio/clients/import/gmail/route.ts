@@ -11,34 +11,28 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleContactsService, GoogleContact } from '@/lib/contacts/GoogleContactsService';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
 
 /**
  * GET - Fetch Google contacts for import preview
+ *
+ * Auth: requires authenticated practitioner session.
+ * Uses the practitioner's member_id to look up Google credentials —
+ * never accepts userId from query params (that was a data-leak vector).
  */
 export async function GET(request: NextRequest) {
   try {
-    let userId = request.nextUrl.searchParams.get('userId');
-
-    // If no userId provided, find the most recent Google credential
-    if (!userId) {
-      // Try to find any Google credentials (dev fallback)
-      const credResult = await db.query(
-        `SELECT user_id FROM google_calendar_credentials
-         ORDER BY updated_at DESC NULLS LAST LIMIT 1`
-      );
-      if (credResult.rows.length > 0) {
-        userId = credResult.rows[0].user_id;
-      }
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
     }
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Could not determine user' }, { status: 400 });
-    }
+    const { memberId, practitionerId } = identity;
 
-    // Check if user has Google connected
-    const isConnected = await GoogleCalendarService.isConnected(userId);
+    // Check if this practitioner's member has Google connected
+    const isConnected = await GoogleCalendarService.isConnected(memberId);
     if (!isConnected) {
       return NextResponse.json({
         error: 'Google not connected',
@@ -46,17 +40,14 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Fetch contacts
-    const contacts = await GoogleContactsService.fetchAllContacts(userId, 200);
+    // Fetch contacts scoped to this member's Google credentials
+    const contacts = await GoogleContactsService.fetchAllContacts(memberId, 200);
 
-    // Get existing client emails to mark duplicates
-    // For now, hardcode stellium - in future, get from auth context
-    const practitionerSlug = 'stellium';
+    // Get existing client emails for THIS practitioner to mark duplicates
     const existingResult = await db.query(
-      `SELECT email FROM practitioner_clients pc
-       JOIN practitioners p ON pc.practitioner_id = p.id
-       WHERE p.slug = $1 AND pc.email IS NOT NULL`,
-      [practitionerSlug]
+      `SELECT email FROM practitioner_clients
+       WHERE practitioner_id = $1 AND email IS NOT NULL`,
+      [practitionerId]
     );
     const existingEmails = new Set(existingResult.rows.map(r => r.email.toLowerCase()));
 
@@ -94,30 +85,21 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    let { contacts, userId } = body as {
-      contacts: GoogleContact[];
-      userId?: string;
-    };
+    const identity = await getCurrentPractitioner(request);
+    if (!identity) {
+      return NextResponse.json({ error: 'Unauthorized or not a practitioner' }, { status: 401 });
+    }
 
-    // userId is optional for POST - we use hardcoded practitioner slug for import
+    const { practitionerId } = identity;
+
+    const body = await request.json();
+    const { contacts } = body as {
+      contacts: GoogleContact[];
+    };
 
     if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
       return NextResponse.json({ error: 'No contacts to import' }, { status: 400 });
     }
-
-    // Get practitioner ID (hardcoded for now)
-    const practitionerSlug = 'stellium';
-    const practResult = await db.query(
-      'SELECT id FROM practitioners WHERE slug = $1',
-      [practitionerSlug]
-    );
-
-    if (practResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
-
-    const practitionerId = practResult.rows[0].id;
 
     // Get existing emails to skip duplicates
     const existingResult = await db.query(
