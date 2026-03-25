@@ -83,6 +83,13 @@ export const ENERGY_MEDICINE_TEMPLATE = {
  * These replace the generic Stellium prompts with energy-medicine-specific ones.
  */
 export const ENERGY_MEDICINE_TRAINING_PROMPTS = {
+  materials: {
+    title: 'Teaching Materials',
+    description:
+      'Upload your transcripts, book chapters, class recordings, or session notes. These train your Virtual Self to hold your method — the sequences, the corrections, the way you move energy.',
+    placeholder: '', // Not used for upload step
+  },
+
   voice: {
     title: 'Teach Your Voice',
     description:

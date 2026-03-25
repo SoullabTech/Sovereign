@@ -27,6 +27,7 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { getVoiceMethodConstraints } from '@/lib/maia/prompts/voiceMethodConstraints';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -690,7 +691,7 @@ export async function POST(request: NextRequest) {
             anamnesisPrompt,
             astrologyContext,
             preferredAssistantName
-          ) + `\n\n${validationResult.repairPrompt}`;
+          ) + `\n\n${voiceMethodConstraints}\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
             .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
@@ -1602,8 +1603,12 @@ async function generateSpiralogicResponseWithLLM(
     ? buildReportContextBlock(activeReportContext)
     : '';
 
+  // Voice & method constraints from Kelly Field Evaluation #001 (2026-03-25)
+  const voiceMethodConstraints = getVoiceMethodConstraints();
+
   const finalSystemPrompt = [
     systemPrompt,
+    voiceMethodConstraints,
     reportContextBlock,
     councilInsights,
     collectiveWisdom,

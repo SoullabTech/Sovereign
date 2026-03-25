@@ -14,6 +14,7 @@ export interface FeatureFlags {
   participatoryReality: boolean;        // Phase 1: types + prompt blocks ready; oracle wiring pending
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
+  masterDocumentUpload: boolean;        // Master field: document upload + extraction for Virtual Self training
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -27,6 +28,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryReality: false,        // Off until Phase 2 wiring complete
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
+  masterDocumentUpload: false,        // Off until Jondi v1 validation
 };
 
 /**
