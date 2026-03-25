@@ -85,7 +85,7 @@ function MagicLinkErrorContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1628] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 flex flex-col items-center justify-center px-6">
 
       <motion.div
         initial={{ opacity: 0, scale: 0.85 }}
@@ -107,7 +107,7 @@ function MagicLinkErrorContent() {
         <h1 className="text-white text-2xl font-light mb-3 leading-snug">
           {copy.headline}
         </h1>
-        <p className="text-white/50 text-sm font-light leading-relaxed">
+        <p className="text-maia-ink-60 text-sm font-light leading-relaxed">
           {copy.body}
         </p>
       </motion.div>
@@ -120,12 +120,12 @@ function MagicLinkErrorContent() {
       >
         {sendStatus === 'sent' ? (
           <div className="text-center">
-            <div className="text-3xl mb-4">&#x2709;&#xFE0F;</div>
+            <div className="text-3xl mb-4">✉️</div>
             <p className="text-white text-base font-light">
               Check your email — a new link is on its way.
             </p>
-            <p className="text-white/40 text-xs mt-2 font-light">
-              Check your inbox.
+            <p className="text-maia-ink-40 text-xs mt-2 font-light">
+              Link expires in 1 hour.
             </p>
           </div>
         ) : copy.cta === 'resend' ? (
@@ -137,24 +137,24 @@ function MagicLinkErrorContent() {
               onChange={e => setEmail(e.target.value)}
               disabled={sendStatus === 'sending'}
               autoFocus
-              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/15 text-white placeholder:text-white/40 text-base outline-none focus:border-amber-400/50 focus:bg-white/15 transition disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-teal-100/60 text-base focus:outline-none focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
             />
             {sendError && (
-              <p className="text-red-400 text-sm text-center">{sendError}</p>
+              <p className="text-red-300 text-sm text-center">{sendError}</p>
             )}
             <button
               type="submit"
               disabled={sendStatus === 'sending'}
-              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-amber-400/40 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-maia-spice-500 hover:bg-maia-spice-400 text-white font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-white/40 disabled:opacity-50"
             >
-              {sendStatus === 'sending' ? 'Sending...' : 'Send me a new link'}
+              {sendStatus === 'sending' ? 'Sending…' : 'Send me a new link'}
             </button>
           </form>
         ) : (
           <div className="space-y-3">
             <button
               onClick={() => router.push('/signin')}
-              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+              className="w-full py-3 rounded-xl bg-maia-spice-500 hover:bg-maia-spice-400 text-white font-semibold text-base shadow-lg transition focus:outline-none focus:ring-2 focus:ring-white/40"
             >
               Sign in
             </button>
@@ -170,15 +170,15 @@ function MagicLinkErrorContent() {
         className="mt-8 text-center space-y-2"
       >
         {copy.cta !== 'signin' && (
-          <p className="text-white/40 text-xs font-light">
-            <a href="/signin" className="underline underline-offset-2 hover:text-white/70 transition">
+          <p className="text-maia-ink-40 text-xs font-light">
+            <a href="/signin" className="underline underline-offset-2 hover:text-maia-ink-80 transition">
               Sign in with username and password instead
             </a>
           </p>
         )}
-        <p className="text-amber-400/70 text-xs font-light">
+        <p className="text-maia-ink-40 text-xs font-light">
           New here?{' '}
-          <a href="/begin" className="underline underline-offset-2 hover:text-amber-400 transition">
+          <a href="/begin" className="underline underline-offset-2 hover:text-maia-ink-80 transition">
             Begin your journey
           </a>
         </p>
@@ -192,7 +192,7 @@ function MagicLinkErrorContent() {
 export default function MagicLinkErrorPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     }>

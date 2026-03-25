@@ -1,3 +1,9 @@
+// AUTH DESIGN SYSTEM (NON-NEGOTIABLE)
+// - Use maia.navy / maia.spice / maia.ink tokens only
+// - No raw hex colors
+// - No teal palette
+// - All auth screens must render inside AuthLayout
+// - Enforced by: scripts/check-no-teal-auth.sh (pre-commit + preflight)
 'use client';
 
 import { Suspense, type ReactNode } from 'react';

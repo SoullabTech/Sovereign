@@ -40,13 +40,14 @@ module.exports = {
             700: '#b45309',  // deep accent
           },
 
-          // Secondary wellness accent ("sage" - onboarding, calm, safety)
+          // Secondary wellness accent ("sage" - reserved for non-auth wellness contexts)
+          // NOTE: sage.bg (#A0C4C7) removed — auth pages use maia.navy tokens via AuthLayout.
+          // Do NOT add sage colors to auth paths. Enforced by check:no-teal-auth.
           sage: {
             400: '#5eead4',
             500: '#14b8a6',
             600: '#0d9488',
             700: '#0f766e',
-            bg: '#A0C4C7',   // onboarding background
           },
 
           // Semantic

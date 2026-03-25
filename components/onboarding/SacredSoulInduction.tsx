@@ -418,7 +418,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] relative overflow-y-auto">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 relative overflow-y-auto">
       <div className="relative z-20 min-h-screen flex flex-col pb-safe">
         {/* Soullab Logo at top - starts immediately visible */}
         <div className="pt-8 pb-6 text-center z-30">
@@ -480,18 +480,18 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                     const welcomeText = getFacetWelcomeText();
                     return (
                       <>
-                        <h1 className="text-2xl sm:text-3xl font-semibold text-teal-900 mb-4 tracking-tight">
+                        <h1 className="text-2xl sm:text-3xl font-semibold text-maia-ink-100 mb-4 tracking-tight">
                           {welcomeText.title}
                         </h1>
 
                         <div className="text-center mb-8">
-                          <p className="text-teal-800 text-lg font-medium mb-3">
+                          <p className="text-maia-ink-80 text-lg font-medium mb-3">
                             {welcomeText.greeting}
                           </p>
-                          <p className="text-teal-700/80 text-base leading-relaxed mb-4">
+                          <p className="text-maia-ink-60/80 text-base leading-relaxed mb-4">
                             {welcomeText.description}
                           </p>
-                          <p className="text-teal-700/70 text-sm leading-relaxed">
+                          <p className="text-maia-ink-60/70 text-sm leading-relaxed">
                             {welcomeText.keyPrompt}
                           </p>
                         </div>
@@ -501,7 +501,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
 
                   <form ref={formRef} onSubmit={handleSoulKeyEntry} className="space-y-5">
                     <div className="text-center">
-                      <label className="block text-sm font-medium text-teal-800 mb-2">
+                      <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                         Passkey
                       </label>
                       <input
@@ -509,10 +509,10 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         value={soulKey}
                         onChange={(e) => setSoulKey(e.target.value.toUpperCase())}
                         placeholder="SOULLAB-YOURNAME"
-                        className="w-full px-4 py-3 rounded-xl text-center text-lg font-medium bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                        className="w-full px-4 py-3 rounded-xl text-center text-lg font-medium bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                       />
-                      <p className="text-teal-600/70 text-xs mt-2">
-                        Don't have one? Email <a href="mailto:support@soullab.life" className="text-teal-700 hover:text-teal-800 transition">support@soullab.life</a>
+                      <p className="text-maia-ink-40/70 text-xs mt-2">
+                        Don't have one? Email <a href="mailto:support@soullab.life" className="text-maia-ink-60 hover:text-maia-ink-80 transition">support@soullab.life</a>
                       </p>
                     </div>
 
@@ -522,7 +522,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         animate={{ opacity: 1, y: 0 }}
                         className={`text-sm font-light text-center rounded-lg p-3 border ${
                           error.toLowerCase().includes('welcome back')
-                            ? 'text-teal-700 bg-teal-50/80 border-teal-200'
+                            ? 'text-maia-ink-60 bg-maia-spice-500/10 border-maia-spice-400/30'
                             : 'text-red-600 bg-red-50/80 border-red-200'
                         }`}
                       >
@@ -544,7 +544,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             <button
                               type="button"
                               onClick={() => router.push('/signin?magic=true')}
-                              className="text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2 block mx-auto"
+                              className="text-maia-spice-400 hover:text-maia-spice-500 font-medium underline underline-offset-2 block mx-auto"
                             >
                               Email me a sign-in link
                             </button>
@@ -628,10 +628,10 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                 >
                   <div className="space-y-6">
                     <div className="text-center">
-                      <h1 className="text-2xl font-semibold text-teal-900 mb-3 tracking-tight">
+                      <h1 className="text-2xl font-semibold text-maia-ink-100 mb-3 tracking-tight">
                         Welcome back, {name}
                       </h1>
-                      <p className="text-teal-700/80 text-sm leading-relaxed">
+                      <p className="text-maia-ink-60/80 text-sm leading-relaxed">
                         Complete signup to access your previous conversations.
                       </p>
                     </div>
@@ -639,7 +639,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
 
                     <form onSubmit={handleRecognizedSoul} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Your name
                         </label>
                         <input
@@ -652,12 +652,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             }
                           }}
                           placeholder="Your name"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           What should MAIA call you?
                         </label>
                         <input
@@ -665,7 +665,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={preferredName}
                           onChange={(e) => setPreferredName(e.target.value)}
                           placeholder="Nickname or name"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                         <p className="text-white/60 text-xs mt-1">
                           You can change this anytime
@@ -673,7 +673,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Username
                         </label>
                         <input
@@ -681,12 +681,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="Choose a username"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
                         </label>
                         <input
@@ -694,12 +694,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Date of birth
                         </label>
                         <input
@@ -707,7 +707,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={birthDate}
                           onChange={(e) => setBirthDate(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                         <p className="text-white/60 text-xs mt-1">
                           Helps us create the right experience for you
@@ -715,7 +715,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Password
                         </label>
                         <div className="relative">
@@ -724,7 +724,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="At least 8 characters"
-                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                           />
                           <button
                             type="button"
@@ -750,7 +750,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         type="submit"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-maia-spice-500 hover:bg-maia-spice-400 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
                       >
                         Continue
                       </motion.button>
@@ -800,14 +800,14 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                 >
                   <div className="space-y-6">
                     <div className="text-center">
-                      <h1 className="text-2xl font-semibold text-teal-900 mb-2 tracking-tight">
+                      <h1 className="text-2xl font-semibold text-maia-ink-100 mb-2 tracking-tight">
                         Create Account
                       </h1>
                     </div>
 
                     <form onSubmit={handleSoulCreation} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Your name
                         </label>
                         <input
@@ -820,12 +820,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             }
                           }}
                           placeholder="Your name"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           What should MAIA call you?
                         </label>
                         <input
@@ -833,7 +833,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={preferredName}
                           onChange={(e) => setPreferredName(e.target.value)}
                           placeholder="Nickname or name"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                         <p className="text-white/60 text-xs mt-1">
                           You can change this anytime
@@ -841,7 +841,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Username
                         </label>
                         <input
@@ -849,12 +849,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="Choose a username"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
                         </label>
                         <input
@@ -862,12 +862,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Date of birth
                         </label>
                         <input
@@ -875,7 +875,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={birthDate}
                           onChange={(e) => setBirthDate(e.target.value)}
                           max={new Date().toISOString().split('T')[0]}
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                         <p className="text-white/60 text-xs mt-1">
                           Helps us create the right experience for you
@@ -883,7 +883,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Password
                         </label>
                         <div className="relative">
@@ -892,7 +892,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="At least 8 characters"
-                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                           />
                           <button
                             type="button"
@@ -905,7 +905,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Confirm password
                         </label>
                         <div className="relative">
@@ -914,7 +914,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Confirm password"
-                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                            className="w-full px-4 py-3 pr-12 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                           />
                           <button
                             type="button"
@@ -940,7 +940,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         type="submit"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-maia-spice-500 hover:bg-maia-spice-400 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Create Account
                       </motion.button>
@@ -978,7 +978,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
               >
                 {/* Mail icon */}
                 <div className="w-16 h-16 mx-auto">
-                  <Mail className="w-full h-full text-teal-600" />
+                  <Mail className="w-full h-full text-maia-ink-40" />
                 </div>
 
                 <div
@@ -989,11 +989,11 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                   }}
                 >
-                  <h1 className="text-xl font-semibold text-teal-900 mb-3 tracking-tight">
+                  <h1 className="text-xl font-semibold text-maia-ink-100 mb-3 tracking-tight">
                     Recover Passkey
                   </h1>
 
-                  <p className="text-teal-700/80 text-sm leading-relaxed mb-6">
+                  <p className="text-maia-ink-60/80 text-sm leading-relaxed mb-6">
                     Enter your email and we'll send your passkey.
                   </p>
 
@@ -1003,11 +1003,11 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       animate={{ opacity: 1, scale: 1 }}
                       className="space-y-4"
                     >
-                      <div className="bg-emerald-100/60 border border-emerald-300/40 rounded-xl p-4">
-                        <p className="text-emerald-800 font-medium">
+                      <div className="bg-maia-spice-500/10 border border-maia-spice-400/30 rounded-xl p-4">
+                        <p className="text-maia-spice-400 font-medium">
                           Check your email
                         </p>
-                        <p className="text-emerald-700/80 text-sm mt-1">
+                        <p className="text-maia-spice-500/80 text-sm mt-1">
                           If an account exists, we've sent recovery instructions.
                         </p>
                       </div>
@@ -1019,7 +1019,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           setRecoveryStatus('idle');
                           setRecoveryEmail('');
                         }}
-                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                        className="text-sm font-medium text-maia-ink-60/70 hover:text-maia-ink-80 transition"
                       >
                         Back to passkey entry
                       </button>
@@ -1027,7 +1027,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                   ) : (
                     <form onSubmit={handleRecovery} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-teal-800 mb-2">
+                        <label className="block text-sm font-medium text-maia-ink-80 mb-2">
                           Email Address
                         </label>
                         <input
@@ -1035,7 +1035,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           value={recoveryEmail}
                           onChange={(e) => setRecoveryEmail(e.target.value)}
                           placeholder="your@email.com"
-                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-maia-ink-100 placeholder:text-maia-ink-40/50 focus:border-white/50 focus:ring-2 focus:ring-maia-spice-400/25 outline-none transition"
                         />
                       </div>
 
@@ -1055,7 +1055,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                         disabled={!recoveryEmail.trim() || recoveryStatus === 'sending'}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold !text-white !bg-teal-700 hover:!bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
+                        className="w-full py-3 rounded-xl font-semibold !text-white !bg-maia-spice-500 hover:!bg-maia-spice-400 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-maia-spice-400/40"
                       >
                         {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
                       </motion.button>
@@ -1067,7 +1067,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                           setError('');
                           setRecoveryEmail('');
                         }}
-                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                        className="text-sm font-medium text-maia-ink-60/70 hover:text-maia-ink-80 transition"
                       >
                         Back to passkey entry
                       </button>
