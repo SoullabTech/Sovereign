@@ -14,6 +14,8 @@ export interface FeatureFlags {
   participatoryReality: boolean;        // Phase 1: types + prompt blocks ready; oracle wiring pending
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
+  livingNotebook: boolean;              // Living Notebook: capture + basic structuring
+  livingNotebookActivation: boolean;    // Living Notebook: MAIA context injection
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -27,6 +29,8 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryReality: false,        // Off until Phase 2 wiring complete
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
+  livingNotebook: false,              // Off until Phase 1 complete
+  livingNotebookActivation: false,    // Off until Phase 2 complete
 };
 
 /**

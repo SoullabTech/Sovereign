@@ -25,6 +25,7 @@ import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
+import { QuickCapture } from '@/components/notebook/QuickCapture';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
@@ -1648,6 +1649,9 @@ function MAIAPageContent() {
           memberId={explorerId}
           memberName={explorerName}
         />
+
+        {/* Quick Capture — Living Notebook */}
+        <QuickCapture source="manual" primaryContext="personal" />
 
         </div>
       </SwipeNavigation>
