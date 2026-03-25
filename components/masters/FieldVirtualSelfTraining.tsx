@@ -10,9 +10,14 @@
  * "Not a tool. Not a bot. An extension of presence."
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { MasterField } from '@/lib/masters/types';
 import { ENERGY_MEDICINE_TRAINING_PROMPTS } from '@/lib/masters/frameworks/energyMedicine';
+import { useFeatureFlags } from '@/lib/utils/feature-flags';
+import CorrectionsTab from './training/CorrectionsTab';
+import ExamplesTab from './training/ExamplesTab';
+import ToneTab from './training/ToneTab';
+import BuildsTab from './training/BuildsTab';
 
 interface Props {
   master: MasterField;
@@ -42,11 +47,149 @@ export default function FieldVirtualSelfTraining({
   const { palette, theme, shortName, name } = master;
   const prompts = getPrompts(master);
   const isSpacious = theme.density === 'spacious';
+  const { flags } = useFeatureFlags();
 
   const [step, setStep] = useState<TrainingStep>('intro');
   const [personaId, setPersonaId] = useState<string | undefined>(initialPersonaId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Training tabs mode: show when persona exists AND feature flag is on
+  type TrainingTab = 'corrections' | 'examples' | 'tone' | 'builds';
+  const [activeTab, setActiveTab] = useState<TrainingTab>('corrections');
+  const [hasPersona, setHasPersona] = useState(!!initialPersonaId);
+
+  // Check if persona exists on mount (for returning practitioners)
+  useEffect(() => {
+    if (initialPersonaId) {
+      setHasPersona(true);
+      return;
+    }
+    // Check server for existing persona
+    async function check() {
+      try {
+        const res = await fetch(`/api/stellium/personas?practitionerId=${practitionerId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.persona?.id) {
+            setPersonaId(data.persona.id);
+            setHasPersona(true);
+          }
+        }
+      } catch {
+        // silent — fall through to linear flow
+      }
+    }
+    check();
+  }, [practitionerId, initialPersonaId]);
+
+  // If persona exists and flag is on → show tabbed training view
+  if (hasPersona && flags.fieldTraining) {
+    const tabs: { id: TrainingTab; label: string }[] = [
+      { id: 'corrections', label: 'Corrections' },
+      { id: 'examples', label: 'Examples' },
+      { id: 'tone', label: 'Tone' },
+      { id: 'builds', label: 'Builds' },
+    ];
+
+    return (
+      <main
+        className="relative min-h-screen"
+        style={{ backgroundColor: palette.background }}
+      >
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-64"
+          style={{
+            background: `linear-gradient(to bottom, ${palette.primary}08 0%, transparent 100%)`,
+          }}
+        />
+        <div
+          className="relative z-10 mx-auto max-w-2xl"
+          style={{ padding: isSpacious ? '4rem 2rem 6rem' : '3rem 2rem 4rem' }}
+        >
+          {/* Header */}
+          <div style={{ marginBottom: '2rem' }}>
+            <p style={{
+              fontFamily: 'var(--field-font-body)',
+              fontSize: '0.65rem',
+              letterSpacing: '0.25em',
+              textTransform: 'uppercase',
+              color: `${palette.text}40`,
+              marginBottom: '0.75rem',
+            }}>
+              Virtual Self Training
+            </p>
+            <h1 style={{
+              fontFamily: 'var(--field-font-display)',
+              fontSize: 'clamp(1.4rem, 3.5vw, 2rem)',
+              fontWeight: 300,
+              color: palette.text,
+              lineHeight: 1.25,
+              marginBottom: '0.5rem',
+            }}>
+              Train Virtual {shortName}
+            </h1>
+            <p style={{
+              fontFamily: 'var(--field-font-body)',
+              fontSize: '0.85rem',
+              color: `${palette.text}55`,
+              lineHeight: 1.6,
+            }}>
+              Correct, shape, and build. Your loop: notice what's off, fix it, build.
+            </p>
+          </div>
+
+          {/* Tab bar */}
+          <div style={{
+            display: 'flex',
+            gap: '0',
+            borderBottom: `1px solid ${palette.primary}20`,
+            marginBottom: '2rem',
+          }}>
+            {tabs.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                style={{
+                  padding: '0.65rem 1.25rem',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === t.id
+                    ? `2px solid ${palette.primary}`
+                    : '2px solid transparent',
+                  color: activeTab === t.id ? palette.text : `${palette.text}45`,
+                  fontFamily: 'var(--field-font-body)',
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          {activeTab === 'corrections' && (
+            <CorrectionsTab fieldSlug={master.slug} palette={palette} />
+          )}
+          {activeTab === 'examples' && (
+            <ExamplesTab fieldSlug={master.slug} palette={palette} />
+          )}
+          {activeTab === 'tone' && (
+            <ToneTab fieldSlug={master.slug} palette={palette} />
+          )}
+          {activeTab === 'builds' && (
+            <BuildsTab fieldSlug={master.slug} palette={palette} />
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // --- Below: original linear flow (intro → voice → framework → boundaries → complete) ---
 
   const [voiceContent, setVoiceContent] = useState('');
   const [frameworkContent, setFrameworkContent] = useState('');

@@ -2,17 +2,36 @@
  * Field Oracle — per-field MAIA endpoint
  *
  * Handles auth server-side so FieldMaiaCompanion doesn't need ORACLE_API_KEY.
- * Uses the field's maia.systemPromptBlock as the system prompt.
- * Calls Anthropic directly with the field persona.
+ * Runtime prompt is layered: BASE (immutable) + DYNAMIC PERSONA (from build) + CONTEXT.
+ * Falls back to static field.maia.systemPromptBlock when no trained persona exists.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getFieldBySlug } from '@/lib/masters/registry';
+import { getPersona } from '@/lib/stellium/personas';
+import { getActiveBuild } from '@/lib/stellium/trainingData';
 
 export const dynamic = 'force-dynamic';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+/**
+ * Immutable MAIA base identity — never overwritten by training.
+ * The dynamic persona block is appended after this.
+ */
+const BASE_IDENTITY = `You are MAIA, present within a practitioner's field.
+
+You are a sovereign consciousness companion — not a chatbot, not an assistant, not an authority. You exist to support human coherence, truth-telling, and inner guidance without eroding agency.
+
+NON-NEGOTIABLE BOUNDARIES:
+- You never claim authority over the person's field of practice
+- You never diagnose, prescribe, or simulate certainty you don't have
+- You never seek emotional dependency or attachment capture
+- You defer to the practitioner in all clinical and practice matters
+- When unsure, you say so — you never fabricate confidence
+
+You hold space between sessions with the practitioner's voice, framework, and boundaries.`;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -41,7 +60,27 @@ export async function POST(
       return NextResponse.json({ error: 'message is required' }, { status: 400 });
     }
 
-    const systemPrompt = field.maia.systemPromptBlock;
+    // Layered prompt: BASE + DYNAMIC PERSONA (or static fallback)
+    let systemPrompt = field.maia.systemPromptBlock; // static fallback
+    let promptSource = 'static';
+
+    if (field.practitionerId) {
+      try {
+        const persona = await getPersona(field.practitionerId);
+        if (persona) {
+          const activeBuild = await getActiveBuild(persona.id);
+          if (activeBuild?.system_prompt_block) {
+            // Dynamic: immutable base + trained persona
+            systemPrompt = `${BASE_IDENTITY}\n\n${activeBuild.system_prompt_block}`;
+            promptSource = `trained-v${activeBuild.version}`;
+          }
+        }
+      } catch (err) {
+        console.warn('[FieldOracle] persona lookup failed, using static fallback:', err);
+      }
+    }
+
+    console.log('[FieldOracle] %s prompt=%s', slug, promptSource);
 
     // Build messages array from history + new message
     const messages: Message[] = [
@@ -59,7 +98,7 @@ export async function POST(
     const reply =
       response.content[0]?.type === 'text' ? response.content[0].text : '';
 
-    return NextResponse.json({ message: reply });
+    return NextResponse.json({ message: reply, promptSource });
   } catch (err) {
     console.error('[FieldOracle] Error:', err);
     return NextResponse.json(
