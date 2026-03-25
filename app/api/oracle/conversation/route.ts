@@ -696,7 +696,8 @@ export async function POST(request: NextRequest) {
             memoryContext,
             anamnesisPrompt,
             astrologyContext,
-            preferredAssistantName
+            preferredAssistantName,
+            memberWebPrompt
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -1515,7 +1516,8 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    memberWebPrompt
   );
 
   // Format conversation history for LLM
@@ -1838,7 +1840,8 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  memberWebPrompt?: string
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
