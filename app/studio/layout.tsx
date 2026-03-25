@@ -33,6 +33,7 @@ import {
 } from '@/lib/studio/moduleDefinitions';
 import type { StudioMode } from '@/hooks/useStudioData';
 import { useTeamContext } from '@/hooks/useStudioData';
+import { QuickCapture } from '@/components/notebook/QuickCapture';
 
 /**
  * Watches studioMode from TeamContext and calls back when it changes.
@@ -454,6 +455,7 @@ export default function StudioLayout({
       >
         <RecordingBanner />
         {children}
+        <QuickCapture source="manual" primaryContext="personal" />
       </main>
     </div>
     </RecordingContextProvider>

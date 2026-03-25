@@ -28,6 +28,7 @@ import {
   Scale,
   Wind,
   Globe,
+  BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -64,6 +65,7 @@ export type ModuleSlug =
   | 'changes'
   | 'teams'
   | 'maia'
+  | 'notebook'
   | 'tools'
   | 'settings'
   | 'portal';
@@ -245,6 +247,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 
   // ── Shared tools (both modes) ──
   {
+    slug: 'notebook',
+    label: 'Notebook',
+    icon: BookOpen,
+    href: '/studio/notebook',
+    category: 'tools',
+    description: 'Living notebook — capture, structure, activate',
+    alwaysOn: false,
+    mode: 'both',
+  },
+  {
     slug: 'vault',
     label: 'Vault',
     icon: Lock,
@@ -341,14 +353,14 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
-  astrology: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'portal', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  personal: ['notebook', 'decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 
 // ─── Helpers ────────────────────────────────────────────

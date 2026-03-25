@@ -15,6 +15,8 @@ export interface FeatureFlags {
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
   fieldTraining: boolean;               // V1: corrections, examples, preferences, builds
+  livingNotebook: boolean;              // Living Notebook: capture + basic structuring
+  livingNotebookActivation: boolean;    // Living Notebook: MAIA context injection
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -29,6 +31,8 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
   fieldTraining: false,               // Off until training UI ready
+  livingNotebook: false,              // Off until Phase 1 complete
+  livingNotebookActivation: false,    // Off until Phase 2 complete
 };
 
 /**
