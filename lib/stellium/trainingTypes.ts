@@ -120,6 +120,44 @@ export interface BuildValidationResult {
 }
 
 // ============================================
+// DOCUMENT / KNOWLEDGE TYPES (V2)
+// ============================================
+
+export type DocumentSourceType = 'md' | 'txt' | 'pdf' | 'transcript';
+export type ProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+export interface PersonaDocument {
+  id: string;
+  persona_id: string;
+  title: string;
+  source_type: DocumentSourceType;
+  content_hash: string;
+  raw_content: string;
+  char_count: number;
+  processing_status: ProcessingStatus;
+  processing_error: string | null;
+  chunks_count: number;
+  knowledge_statements: KnowledgeStatement[];
+  knowledge_summary: string | null;
+  created_at: string;
+  updated_at: string;
+  processed_at: string | null;
+}
+
+export interface KnowledgeStatement {
+  text: string;
+  category: 'distinction' | 'sequence' | 'constraint' | 'distortion' | 'framework' | 'practice';
+  source_chapter?: string;
+  weight?: number;
+}
+
+export interface IngestDocumentInput {
+  title: string;
+  source_type: DocumentSourceType;
+  content: string;
+}
+
+// ============================================
 // EXPORT BUNDLE (sovereignty portability)
 // ============================================
 

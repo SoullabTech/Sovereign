@@ -26,6 +26,7 @@ import {
   insertBuild,
 } from './trainingData';
 import { getPersonaById } from './personas';
+import { getCombinedKnowledge } from './knowledgeProcessor';
 import type {
   PersonaBuild,
   PersonaCorrection,
@@ -53,14 +54,15 @@ export async function buildPersona(
   personaId: string,
   practitionerId: string
 ): Promise<PersonaBuild> {
-  // 1. Gather all inputs in parallel
-  const [corrections, examples, preferences, persona, latestVersion] =
+  // 1. Gather all inputs in parallel (including knowledge layer)
+  const [corrections, examples, preferences, persona, latestVersion, knowledgeBlock] =
     await Promise.all([
       listCorrections(personaId),
       listExamples(personaId),
       listPreferences(personaId),
       getPersonaById(practitionerId, personaId),
       getLatestVersion(personaId),
+      getCombinedKnowledge(personaId),
     ]);
 
   if (!persona) {
@@ -92,13 +94,14 @@ export async function buildPersona(
   // 5. Call Claude for synthesis
   const { voice_block, stance_block } = await synthesize(synthesisPrompt);
 
-  // 6. Compose system_prompt_block (voice + stance, no base — added at runtime)
+  // 6. Compose system_prompt_block (voice + stance + knowledge, no base — added at runtime)
   const system_prompt_block = [
     voice_block ? `## Voice\n${voice_block}` : '',
     stance_block ? `## Guidance Stance\n${stance_block}` : '',
     boundaryPrefs.length > 0
       ? `## Boundaries\n${boundaryPrefs.map(p => `- ${p.key}: ${p.value}`).join('\n')}`
       : '',
+    knowledgeBlock ? `## Knowledge\n${knowledgeBlock}` : '',
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -122,7 +125,7 @@ export async function buildPersona(
     version: latestVersion + 1,
     voice_block,
     stance_block,
-    knowledge_block: null, // V2
+    knowledge_block: knowledgeBlock ?? null,
     system_prompt_block,
     base_system_block: null, // base is in oracle route, not stored per-build
     build_input_summary: buildInputSummary as unknown as Record<string, unknown>,
@@ -130,12 +133,13 @@ export async function buildPersona(
   });
 
   console.log(
-    '[PersonaBuilder] Draft build v%d for persona %s: %d corrections, %d examples, %d preferences',
+    '[PersonaBuilder] Draft build v%d for persona %s: %d corrections, %d examples, %d preferences, knowledge=%s',
     build.version,
     personaId,
     usable.length,
     examples.length,
-    preferences.length
+    preferences.length,
+    knowledgeBlock ? `${knowledgeBlock.length} chars` : 'none'
   );
 
   return build;
