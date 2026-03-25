@@ -36,10 +36,8 @@ export interface SpiralogicBirthData {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
+  // Auth is optional — anonymous visitors can generate reports (not saved to DB)
   const memberId = await getMemberIdFromRequest(request);
-  if (!memberId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   let body: {
     birthData: SpiralogicBirthData;
@@ -63,21 +61,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Load prior report for delta comparison (nullable — fine if none exists)
+  // Load prior report for delta comparison (only for authenticated members)
   let priorReport: Record<string, unknown> | null = null;
-  try {
-    const priorResult = await query(
-      `SELECT report_data FROM spiralogic_reports
-       WHERE member_id = $1
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [memberId],
-    );
-    if (priorResult.rows.length > 0) {
-      priorReport = priorResult.rows[0].report_data;
+  if (memberId) {
+    try {
+      const priorResult = await query(
+        `SELECT report_data FROM spiralogic_reports
+         WHERE member_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [memberId],
+      );
+      if (priorResult.rows.length > 0) {
+        priorReport = priorResult.rows[0].report_data;
+      }
+    } catch {
+      // non-fatal — delta generation degrades gracefully
     }
-  } catch {
-    // non-fatal — delta generation degrades gracefully
   }
 
   // Build the report data using the existing Spiralogic narrative engine.
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
   let reportData: Record<string, unknown>;
   try {
     reportData = await generateSpiralogicReportData({
-      memberId,
+      memberId: memberId ?? 'anonymous',
       birthData,
       lifeStage,
       personalityNotes: personalityNotes ?? [],
@@ -102,68 +102,82 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Persist
-  try {
-    const result = await query(
-      `INSERT INTO spiralogic_reports (member_id, practitioner_id, birth_data, report_data)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, created_at`,
-      [
-        memberId,
-        practitionerId ?? null,
-        JSON.stringify(birthData),
-        JSON.stringify(reportData),
-      ],
-    );
+  // Persist only for authenticated members
+  if (memberId) {
+    try {
+      const result = await query(
+        `INSERT INTO spiralogic_reports (member_id, practitioner_id, birth_data, report_data)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, created_at`,
+        [
+          memberId,
+          practitionerId ?? null,
+          JSON.stringify(birthData),
+          JSON.stringify(reportData),
+        ],
+      );
 
-    const row = result.rows[0];
+      const row = result.rows[0];
 
-    // Fire-and-forget: write active report context snapshot to member_spiral_state
-    const _ebo = reportData.elementalBalanceOverview as Record<string, unknown> | undefined;
-    const _cpNew = reportData.currentPhase as {
-      phase?: string; majorLesson?: string; edge?: string; gifts?: string[]; currentTransits?: string[];
-    } | undefined;
-    if (_cpNew && _ebo) {
-      upsertActiveReportContext(memberId, {
+      // Fire-and-forget: write active report context snapshot to member_spiral_state
+      const _ebo = reportData.elementalBalanceOverview as Record<string, unknown> | undefined;
+      const _cpNew = reportData.currentPhase as {
+        phase?: string; majorLesson?: string; edge?: string; gifts?: string[]; currentTransits?: string[];
+      } | undefined;
+      if (_cpNew && _ebo) {
+        upsertActiveReportContext(memberId, {
+          reportId: row.id,
+          generatedAt: String(row.created_at),
+          currentPhase: {
+            spiralogicPhase: String(_cpNew.phase ?? ''),
+            majorLifeLesson: String(_cpNew.majorLesson ?? ''),
+            edgeChallenge: String(_cpNew.edge ?? ''),
+            emergentGift: String((_cpNew.gifts ?? [])[0] ?? ''),
+            activeTransits: (_cpNew.currentTransits as string[]) ?? [],
+          },
+          elementalBalance: {
+            dominantElement: String(_ebo.dominantElement ?? ''),
+            underactiveElement: String(_ebo.underactiveElement ?? ''),
+            fire: Number(_ebo.fire ?? 0),
+            water: Number(_ebo.water ?? 0),
+            earth: Number(_ebo.earth ?? 0),
+            air: Number(_ebo.air ?? 0),
+          },
+          nextAction: {
+            actions: [],
+            watchFor: '',
+            journalPrompt: '',
+          },
+          evolutionDelta: (() => {
+            const d = reportData.evolutionDelta as { sinceLastReport?: string; repeatedPatterns?: string[]; emergingStrengths?: string[] } | null | undefined;
+            return d ? { sinceLastReport: d.sinceLastReport ?? '', repeatedPatterns: d.repeatedPatterns ?? [], emergingStrengths: d.emergingStrengths ?? [] } : null;
+          })(),
+        }).catch((err) => console.error('[spiralogic] activeReportContext upsert failed (non-fatal):', err));
+      }
+
+      return NextResponse.json({
+        success: true,
         reportId: row.id,
-        generatedAt: String(row.created_at),
-        currentPhase: {
-          spiralogicPhase: String(_cpNew.phase ?? ''),
-          majorLifeLesson: String(_cpNew.majorLesson ?? ''),
-          edgeChallenge: String(_cpNew.edge ?? ''),
-          emergentGift: String((_cpNew.gifts ?? [])[0] ?? ''),
-          activeTransits: (_cpNew.currentTransits as string[]) ?? [],
-        },
-        elementalBalance: {
-          dominantElement: String(_ebo.dominantElement ?? ''),
-          underactiveElement: String(_ebo.underactiveElement ?? ''),
-          fire: Number(_ebo.fire ?? 0),
-          water: Number(_ebo.water ?? 0),
-          earth: Number(_ebo.earth ?? 0),
-          air: Number(_ebo.air ?? 0),
-        },
-        nextAction: {
-          actions: [],
-          watchFor: '',
-          journalPrompt: '',
-        },
-        evolutionDelta: (() => {
-          const d = reportData.evolutionDelta as { sinceLastReport?: string; repeatedPatterns?: string[]; emergingStrengths?: string[] } | null | undefined;
-          return d ? { sinceLastReport: d.sinceLastReport ?? '', repeatedPatterns: d.repeatedPatterns ?? [], emergingStrengths: d.emergingStrengths ?? [] } : null;
-        })(),
-      }).catch((err) => console.error('[spiralogic] activeReportContext upsert failed (non-fatal):', err));
+        createdAt: row.created_at,
+        report: reportData,
+      });
+    } catch (err) {
+      console.error('[spiralogic-report] DB persist error:', err);
+      // Still return the report even if DB save fails
+      return NextResponse.json({
+        success: true,
+        reportId: null,
+        report: reportData,
+      });
     }
-
-    return NextResponse.json({
-      success: true,
-      reportId: row.id,
-      createdAt: row.created_at,
-      report: reportData,
-    });
-  } catch (err) {
-    console.error('[spiralogic-report] DB persist error:', err);
-    return NextResponse.json({ error: 'Failed to save report' }, { status: 500 });
   }
+
+  // Anonymous — return report without persistence
+  return NextResponse.json({
+    success: true,
+    reportId: null,
+    report: reportData,
+  });
 }
 
 // ---------------------------------------------------------------------------

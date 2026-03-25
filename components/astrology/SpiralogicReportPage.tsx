@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { SpiralogicReportView, type SpiralogicReportData, type BirthDataShape } from '@/components/spiralogic/SpiralogicReportView';
 
 // ---- Types -----------------------------------------------------------------
@@ -55,31 +56,37 @@ export default function SpiralogicReportPage() {
   const [activeReport, setActiveReport] = useState<LoadedReport | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Load member name from localStorage, then fetch full profile birth data
   useEffect(() => {
+    let hasSession = false;
     try {
       const stored = localStorage.getItem('beta_user');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed.name) setMemberName(parsed.name);
+        hasSession = true;
+        setIsAuthenticated(true);
       }
     } catch { /* ignore */ }
 
-    // Fetch profile to pre-fill birth data
-    fetch('/api/members/profile')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data?.birthData) return;
-        const bd = data.birthData;
-        if (bd.date)  setBirthDate(bd.date);
-        if (bd.time)  setBirthTime(bd.time);
-        if (bd.location?.name) setBirthPlace(bd.location.name);
-        if (bd.location?.lat)  setBirthLat(String(bd.location.lat));
-        if (bd.location?.lng)  setBirthLng(String(bd.location.lng));
-        setProfileLoaded(true);
-      })
-      .catch(() => { /* profile unavailable — form stays empty */ });
+    // Only fetch profile if authenticated
+    if (hasSession) {
+      fetch('/api/members/profile')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data?.birthData) return;
+          const bd = data.birthData;
+          if (bd.date)  setBirthDate(bd.date);
+          if (bd.time)  setBirthTime(bd.time);
+          if (bd.location?.name) setBirthPlace(bd.location.name);
+          if (bd.location?.lat)  setBirthLat(String(bd.location.lat));
+          if (bd.location?.lng)  setBirthLng(String(bd.location.lng));
+          setProfileLoaded(true);
+        })
+        .catch(() => { /* profile unavailable — form stays empty */ });
+    }
   }, []);
 
   // When switching to "someone else" mode, clear the pre-filled birth data
@@ -363,6 +370,23 @@ export default function SpiralogicReportPage() {
                   </div>
                 )}
                 {formPanel}
+                {!isAuthenticated && (
+                  <div className="mt-6 text-center py-6 border-t border-white/10">
+                    <p className="text-sm text-white/60 mb-3">
+                      Want to save your report and explore deeper?
+                    </p>
+                    <Link href="/begin"
+                      className="inline-block px-6 py-2.5 text-sm bg-amber-500/15 border border-amber-500
+                                 text-amber-200 rounded-xl hover:bg-amber-500/25 transition-colors">
+                      Join Soullab
+                    </Link>
+                    <p className="mt-2">
+                      <Link href="/signin" className="text-xs text-white/30 hover:text-white/50 transition-colors">
+                        Already a member? Sign in
+                      </Link>
+                    </p>
+                  </div>
+                )}
                 {history.length > 0 && (
                   <div className="mt-6">
                     <p className="text-xs text-white/30 uppercase tracking-widest mb-3">Past Reports</p>
