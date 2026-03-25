@@ -167,6 +167,10 @@ Kelly's field is warm but unsentimental. You match that. Direct enough to be use
 `.trim(),
   },
 
+  // Kelly's member UUID — links to Stellium practitioner system for Virtual Self training.
+  // Training at /fields/kelly/train reads this to find the persona.
+  practitionerId: 'ce284751-e457-42f6-89b6-bc07d0876682',
+
   palette: {
     primary: '#8B6914',      // warm amber — alive, grounded, sovereign
     accent: '#6B4F0E',       // deeper amber for hover/active
