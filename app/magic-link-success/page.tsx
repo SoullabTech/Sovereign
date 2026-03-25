@@ -124,26 +124,26 @@ function MagicLinkSuccessContent() {
           <div className="w-12 h-12 bg-amber-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-amber-600 text-2xl">!</span>
           </div>
-          <p className="text-teal-900 font-light mb-4">Something went wrong with that link.</p>
+          <p className="text-maia-ink-100 font-light mb-4">Something went wrong with that link.</p>
           <button
             onClick={() => router.push('/begin')}
-            className="px-6 py-2 rounded-xl bg-teal-700 text-white text-sm font-medium hover:bg-teal-800 transition"
+            className="px-6 py-2 rounded-xl bg-maia-spice-500 text-white text-sm font-medium hover:bg-maia-spice-400 transition"
           >
             Try again
           </button>
         </>
       ) : phase === 'redirecting' ? (
         <>
-          <div className="w-12 h-12 bg-emerald-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-emerald-600 text-2xl">✓</span>
+          <div className="w-12 h-12 bg-maia-spice-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-maia-spice-400 text-2xl">✓</span>
           </div>
-          <p className="text-teal-900 font-light tracking-wide text-lg">{greeting}</p>
-          <p className="text-teal-700/60 text-sm mt-2">Taking you in…</p>
+          <p className="text-maia-ink-100 font-light tracking-wide text-lg">{greeting}</p>
+          <p className="text-maia-ink-60 text-sm mt-2">Taking you in…</p>
         </>
       ) : (
         <>
-          <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-teal-900 font-light tracking-wide">
+          <div className="animate-spin w-8 h-8 border-2 border-maia-spice-400 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-maia-ink-100 font-light tracking-wide">
             {phase === 'hydrating' ? 'Signing you in…' : 'Checking your progress…'}
           </p>
         </>
@@ -156,7 +156,7 @@ function MagicLinkSuccessContent() {
 
 export default function MagicLinkSuccessPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 flex flex-col items-center justify-center px-4">
       <div className="mb-8 z-10 relative">
         <div className="w-32 h-32 flex items-center justify-center">
           <Holoflower size="lg" glowIntensity="medium" animate={true} />
@@ -177,8 +177,8 @@ export default function MagicLinkSuccessPage() {
       >
         <Suspense fallback={
           <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-teal-900 font-light tracking-wide">Signing you in…</p>
+            <div className="animate-spin w-8 h-8 border-2 border-maia-spice-400 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-maia-ink-100 font-light tracking-wide">Signing you in…</p>
           </div>
         }>
           <MagicLinkSuccessContent />

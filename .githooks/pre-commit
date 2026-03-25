@@ -19,7 +19,11 @@ PHI_EXIT=$?
 npm run check:phi-inventory
 INVENTORY_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
+# 5. No teal/sage palette in auth paths
+npm run check:no-teal-auth
+TEAL_EXIT=$?
+
+if [ $SUPABASE_EXIT -eq 0 ] && [ $NAMES_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ] && [ $TEAL_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
@@ -35,6 +39,9 @@ else
   fi
   if [ $INVENTORY_EXIT -ne 0 ]; then
     echo "   - PHI inventory inconsistent"
+  fi
+  if [ $TEAL_EXIT -ne 0 ]; then
+    echo "   - Teal/sage palette found in auth paths (use maia.navy/spice/ink tokens)"
   fi
   exit 1
 fi
