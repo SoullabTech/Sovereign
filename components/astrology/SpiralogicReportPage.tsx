@@ -441,53 +441,81 @@ export default function SpiralogicReportPage() {
               />
             </div>
 
-            {/* MAIA entry points */}
-            <div className="mt-12 pt-8 border-t border-white/10 space-y-4">
-              <a href={`/maia?reportPhase=${encodeURIComponent((activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? '')}&openWith=report`}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600/80
-                           hover:bg-indigo-500 text-white text-sm rounded-xl transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                Talk with MAIA about this report
-              </a>
-              <p className="text-center text-xs text-white/30">MAIA already knows where you are in this cycle.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { label: 'Work with my current phase', icon: '◎',
-                    prompt: `I want to work with my current Spiralogic phase: ${(activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
-                  { label: 'Help me understand this transit', icon: '⟳',
-                    prompt: `I want to understand the life-cycle transit I'm in right now and what it's asking of me.` },
-                  { label: 'Guide me through my next action', icon: '→',
-                    prompt: `I want to work through my first next action from my Spiralogic report. Can you help me get concrete about it?` },
-                  { label: 'What am I missing?', icon: '◇',
-                    prompt: `Based on what you know about my elemental pattern and current phase, what do you think I might be avoiding or not seeing clearly?` },
-                ].map(({ label, prompt, icon }) => (
-                  <a key={label} href={`/maia?q=${encodeURIComponent(prompt)}`}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10
-                               bg-white/5 hover:bg-white/8 text-sm text-white/70 hover:text-white transition-all">
-                    <span className="text-white/30 font-mono shrink-0">{icon}</span>
-                    <span>{label}</span>
-                  </a>
-                ))}
+            {/* MAIA entry points — authenticated vs anonymous */}
+            {isAuthenticated ? (
+              <div className="mt-12 pt-8 border-t border-white/10 space-y-4">
+                <a href={`/maia?reportPhase=${encodeURIComponent((activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? '')}&openWith=report`}
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-indigo-600/80
+                             hover:bg-indigo-500 text-white text-sm rounded-xl transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Talk with MAIA about this report
+                </a>
+                <p className="text-center text-xs text-white/30">MAIA already knows where you are in this cycle.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { label: 'Work with my current phase', icon: '◎',
+                      prompt: `I want to work with my current Spiralogic phase: ${(activeReport.reportData.currentPhase as any)?.phase ?? (activeReport.reportData.currentPhase as any)?.spiralogicPhase ?? 'my current phase'}. Where do I begin?` },
+                    { label: 'Help me understand this transit', icon: '⟳',
+                      prompt: `I want to understand the life-cycle transit I'm in right now and what it's asking of me.` },
+                    { label: 'Guide me through my next action', icon: '→',
+                      prompt: `I want to work through my first next action from my Spiralogic report. Can you help me get concrete about it?` },
+                    { label: 'What am I missing?', icon: '◇',
+                      prompt: `Based on what you know about my elemental pattern and current phase, what do you think I might be avoiding or not seeing clearly?` },
+                  ].map(({ label, prompt, icon }) => (
+                    <a key={label} href={`/maia?q=${encodeURIComponent(prompt)}`}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10
+                                 bg-white/5 hover:bg-white/8 text-sm text-white/70 hover:text-white transition-all">
+                      <span className="text-white/30 font-mono shrink-0">{icon}</span>
+                      <span>{label}</span>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-            {!isAuthenticated && (
-              <div className="mt-10 text-center py-8 border-t border-white/10">
-                <p className="text-sm text-white/60 mb-3">
-                  Save your report, talk with MAIA about your chart, and track your evolution over time.
-                </p>
-                <Link href="/begin"
-                  className="inline-block px-6 py-2.5 text-sm bg-amber-500/15 border border-amber-500
-                             text-amber-200 rounded-xl hover:bg-amber-500/25 transition-colors">
-                  Join Soullab
-                </Link>
-                <p className="mt-2">
-                  <Link href="/signin" className="text-xs text-white/30 hover:text-white/50 transition-colors">
-                    Already a member? Sign in
-                  </Link>
-                </p>
+            ) : (
+              <div className="mt-12 pt-8 border-t border-white/10">
+                <div className="mx-auto max-w-lg text-center space-y-6">
+                  <div>
+                    <h3 className="text-lg font-light text-white/90 mb-2">This is just the beginning.</h3>
+                    <p className="text-sm text-white/50 leading-relaxed">
+                      Your report is a map. MAIA is the guide who walks it with you — she already knows
+                      your chart, your phase, your edge. She meets you where you are.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                    {[
+                      { icon: '◎', text: 'Talk with MAIA about your chart and current phase' },
+                      { icon: '⟳', text: 'Track how your patterns evolve over time' },
+                      { icon: '→', text: 'Get concrete next actions grounded in your cycle' },
+                      { icon: '◇', text: 'Save reports and compare where you were to where you are' },
+                    ].map(({ icon, text }) => (
+                      <div key={text} className="flex items-start gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5">
+                        <span className="text-amber-500/60 font-mono shrink-0 mt-0.5">{icon}</span>
+                        <span className="text-sm text-white/60">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-2 space-y-3">
+                    <Link href="/begin"
+                      className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500/90
+                                 hover:bg-amber-400 text-black font-medium text-sm rounded-xl transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      Join Soullab — Talk with MAIA
+                    </Link>
+                    <p>
+                      <Link href="/signin" className="text-xs text-white/30 hover:text-white/50 transition-colors">
+                        Already a member? Sign in
+                      </Link>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
