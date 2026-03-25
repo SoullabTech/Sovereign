@@ -68,7 +68,8 @@ export type ModuleSlug =
   | 'notebook'
   | 'tools'
   | 'settings'
-  | 'portal';
+  | 'portal'
+  | 'notebook';
 
 export type ModuleCategory = 'core' | 'clients' | 'operations' | 'tools' | 'collaboration';
 
@@ -303,6 +304,17 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/session-room',
     category: 'tools',
     description: 'Live session companion with recording, transcript, and MAIA',
+    alwaysOn: false,
+    mode: 'both',
+  },
+
+  {
+    slug: 'notebook',
+    label: 'Notebook',
+    icon: BookOpen,
+    href: '/studio/notebook',
+    category: 'tools',
+    description: 'Living notebook for reflections and field notes',
     alwaysOn: false,
     mode: 'both',
   },
