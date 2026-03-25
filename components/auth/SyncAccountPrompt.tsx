@@ -30,25 +30,20 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
   const [explorerName, setExplorerName] = useState<string>('');
 
   useEffect(() => {
-    // Check if user needs account sync prompt
     const checkSyncStatus = () => {
       if (typeof window === 'undefined') return;
 
-      // Get current explorer ID
       const currentExplorerId = localStorage.getItem('explorerId');
       if (!currentExplorerId) return;
 
-      // Check if they already have a proper account
       const betaUser = localStorage.getItem('beta_user');
       if (betaUser) {
         try {
           const userData = JSON.parse(betaUser);
-          // If they have a proper member account (with username), don't show prompt
-          // Check multiple ID fields as they may be stored differently
           const hasUsername = !!userData.username;
           const idMatches = userData.id === currentExplorerId ||
                            userData.memberId === currentExplorerId ||
-                           userData.id || userData.memberId; // Any valid ID means synced
+                           userData.id || userData.memberId;
           if (hasUsername && idMatches) {
             return;
           }
@@ -57,28 +52,22 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
         }
       }
 
-      // Check if they've dismissed this prompt before
       const dismissed = localStorage.getItem('sync_prompt_dismissed');
       if (dismissed) {
         const dismissedTime = parseInt(dismissed);
-        // Show again after 7 days
         if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
           return;
         }
       }
 
-      // Check if they have any meaningful data (at least used the app a bit)
       const sessionVersion = localStorage.getItem('maia_session_version');
       if (!sessionVersion) {
-        // First time user, don't show yet
         return;
       }
 
-      // Show the prompt
       setExplorerId(currentExplorerId);
       setExplorerName(localStorage.getItem('explorerName') || localStorage.getItem('explorerPreferredName') || '');
 
-      // Delay showing to not interrupt initial experience
       setTimeout(() => setShowPrompt(true), 3000);
     };
 
@@ -99,7 +88,6 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
       return;
     }
 
-    // Use betaConfig for validation
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       setError(passwordValidation.error || 'Invalid password');
@@ -130,7 +118,6 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Update localStorage with new account info
         const user = {
           id: data.member.id,
           username: data.member.username,
@@ -149,7 +136,6 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
         setIsComplete(true);
         onAccountCreated?.(data.member.id);
 
-        // Close after showing success
         setTimeout(() => {
           setShowModal(false);
           setShowPrompt(false);
@@ -178,32 +164,26 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-full px-4"
           >
-            <div
-              className="rounded-xl p-4 shadow-lg border flex items-center gap-3"
-              style={{
-                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(251, 191, 36, 0.1))',
-                borderColor: 'rgba(251, 191, 36, 0.3)',
-              }}
-            >
-              <Smartphone className="w-5 h-5 text-amber-600 flex-shrink-0" />
+            <div className="rounded-xl p-4 shadow-lg bg-maia-navy-850 border border-white/10 flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-maia-spice-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-teal-900 font-medium">
+                <p className="text-sm text-maia-ink-100 font-medium">
                   Access MAIA from any device
                 </p>
-                <p className="text-xs text-teal-700/70 mt-0.5">
+                <p className="text-xs text-maia-ink-60 mt-0.5">
                   Create a username to sync your conversations
                 </p>
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 <button
                   onClick={handleDismiss}
-                  className="text-xs text-teal-600/60 hover:text-teal-600 px-2 py-1"
+                  className="text-xs text-maia-ink-40 hover:text-maia-ink-60 px-2 py-1"
                 >
                   Later
                 </button>
                 <button
                   onClick={() => setShowModal(true)}
-                  className="text-xs bg-amber-500/80 hover:bg-amber-500 text-white px-3 py-1 rounded-lg transition-colors"
+                  className="text-xs bg-maia-spice-500 hover:bg-maia-spice-400 text-white px-3 py-1 rounded-lg transition-colors"
                 >
                   Set up
                 </button>
@@ -228,38 +208,34 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="rounded-2xl p-6 max-w-sm w-full shadow-2xl border"
-              style={{
-                background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95))',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-              }}
+              className="rounded-2xl p-6 max-w-sm w-full shadow-2xl bg-maia-navy-850 border border-white/10"
             >
               {isComplete ? (
                 <div className="text-center py-6">
-                  <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Check className="w-7 h-7 text-emerald-600" />
+                  <div className="w-14 h-14 bg-maia-spice-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Check className="w-7 h-7 text-maia-spice-400" />
                   </div>
-                  <h2 className="text-xl font-light text-teal-900 mb-2">You're all set!</h2>
-                  <p className="text-teal-700/70 text-sm">
+                  <h2 className="text-xl font-light text-maia-ink-100 mb-2">You're all set!</h2>
+                  <p className="text-maia-ink-60 text-sm">
                     Sign in with <span className="font-medium">{username}</span> on any device.
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-3 mb-4">
-                    <Smartphone className="w-6 h-6 text-amber-600" />
-                    <h2 className="text-lg font-light text-teal-900">
+                    <Smartphone className="w-6 h-6 text-maia-spice-500" />
+                    <h2 className="text-lg font-light text-maia-ink-100">
                       Access from any device
                     </h2>
                   </div>
 
-                  <p className="text-teal-700/70 text-sm mb-5">
+                  <p className="text-maia-ink-60 text-sm mb-5">
                     Create a username and password to sign in on other devices and keep your conversations synced.
                   </p>
 
                   <form onSubmit={handleCreateAccount} className="space-y-4">
                     <div>
-                      <label htmlFor="sync-username" className="block text-sm font-light text-teal-800 mb-1.5">
+                      <label htmlFor="sync-username" className="block text-sm font-light text-maia-ink-80 mb-1.5">
                         Username
                       </label>
                       <input
@@ -267,7 +243,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                         id="sync-username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 text-sm"
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-maia-spice-400/50 text-sm"
                         placeholder="Choose a username"
                         required
                         autoComplete="username"
@@ -276,15 +252,15 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                     </div>
 
                     <div>
-                      <label htmlFor="sync-email" className="block text-sm font-light text-teal-800 mb-1.5">
-                        Email {!betaConfig.requireEmail && <span className="text-teal-600/50">(optional)</span>}
+                      <label htmlFor="sync-email" className="block text-sm font-light text-maia-ink-80 mb-1.5">
+                        Email {!betaConfig.requireEmail && <span className="text-maia-ink-40">(optional)</span>}
                       </label>
                       <input
                         type="email"
                         id="sync-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 text-sm"
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-maia-spice-400/50 text-sm"
                         placeholder="For account recovery"
                         required={betaConfig.requireEmail}
                         autoComplete="email"
@@ -293,7 +269,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                     </div>
 
                     <div>
-                      <label htmlFor="sync-password" className="block text-sm font-light text-teal-800 mb-1.5">
+                      <label htmlFor="sync-password" className="block text-sm font-light text-maia-ink-80 mb-1.5">
                         Password
                       </label>
                       <input
@@ -301,7 +277,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                         id="sync-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 text-sm"
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-maia-spice-400/50 text-sm"
                         placeholder="Create a password"
                         required
                         autoComplete="new-password"
@@ -310,7 +286,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                     </div>
 
                     <div>
-                      <label htmlFor="sync-confirm" className="block text-sm font-light text-teal-800 mb-1.5">
+                      <label htmlFor="sync-confirm" className="block text-sm font-light text-maia-ink-80 mb-1.5">
                         Confirm password
                       </label>
                       <input
@@ -318,7 +294,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                         id="sync-confirm"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 text-sm"
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/10 border border-white/15 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-maia-spice-400/50 text-sm"
                         placeholder="Confirm your password"
                         required
                         autoComplete="new-password"
@@ -327,7 +303,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                     </div>
 
                     {error && (
-                      <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-2.5 border border-red-200/40">
+                      <div className="text-red-400 text-sm bg-red-500/10 rounded-lg p-2.5 border border-red-500/20">
                         {error}
                       </div>
                     )}
@@ -335,7 +311,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                     <button
                       type="submit"
                       disabled={isLoading || !username.trim() || !password}
-                      className="w-full py-2.5 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      className="w-full py-2.5 rounded-xl font-medium bg-maia-spice-500 hover:bg-maia-spice-400 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
                       {isLoading ? 'Creating...' : 'Create Account'}
                     </button>
@@ -344,7 +320,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                       type="button"
                       onClick={() => setShowModal(false)}
                       disabled={isLoading}
-                      className="w-full py-2 text-teal-700/60 text-sm hover:text-teal-700 transition-colors"
+                      className="w-full py-2 text-maia-ink-40 text-sm hover:text-maia-ink-60 transition-colors"
                     >
                       Maybe later
                     </button>

@@ -43,19 +43,19 @@ export function QRLoginDisplay({ onSuccess, onClose }: QRLoginDisplayProps) {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-gradient-to-b from-teal-950/95 to-black/95 border border-teal-500/30 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl"
+        className="bg-maia-navy-850 border border-white/10 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-serif text-teal-100 text-center mb-4">
+        <h2 className="text-xl font-serif text-maia-ink-100 text-center mb-4">
           QR Login
         </h2>
 
         <div className="aspect-square bg-white/10 rounded-xl flex items-center justify-center mb-4">
           {status === 'loading' && (
-            <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-maia-spice-400 border-t-transparent rounded-full animate-spin" />
           )}
           {status === 'ready' && (
-            <p className="text-teal-300/60 text-sm text-center px-4">
+            <p className="text-maia-ink-60 text-sm text-center px-4">
               QR login coming soon
             </p>
           )}
@@ -64,13 +64,13 @@ export function QRLoginDisplay({ onSuccess, onClose }: QRLoginDisplayProps) {
           )}
         </div>
 
-        <p className="text-sm text-teal-200/60 text-center mb-6">
+        <p className="text-sm text-maia-ink-60 text-center mb-6">
           Scan with your phone to sign in on this device
         </p>
 
         <button
           onClick={onClose}
-          className="w-full py-3 rounded-xl border border-teal-500/30 text-teal-300 hover:bg-teal-500/10 transition-colors"
+          className="w-full py-3 rounded-xl border border-white/15 text-maia-ink-80 hover:bg-white/10 transition-colors"
         >
           Cancel
         </button>
