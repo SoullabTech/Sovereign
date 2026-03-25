@@ -82,24 +82,38 @@ export async function POST(
       );
     }
 
+    // Check if this is a process request for existing document
+    const action = req.nextUrl.searchParams.get('action');
+    const existingId = req.nextUrl.searchParams.get('id');
+
+    if (action === 'process' && existingId) {
+      // Process an already-ingested document (synchronous — caller waits)
+      console.log('[Documents API] Processing document %s synchronously', existingId);
+      const processed = await processDocument(existingId);
+      return NextResponse.json({
+        success: true,
+        document: {
+          id: processed.id,
+          title: processed.title,
+          processing_status: processed.processing_status,
+          chunks_count: processed.chunks_count,
+          knowledge_statements_count: processed.knowledge_statements?.length ?? 0,
+          knowledge_summary_length: processed.knowledge_summary?.length ?? 0,
+        },
+      });
+    }
+
     // 1. Ingest (store raw)
     const doc = await ingestDocument(persona.id, body);
-    console.log('[Documents API] Ingested "%s" (%d chars) → processing', body.title, body.content.length);
-
-    // 2. Process (chunk → extract → synthesize)
-    // Fire-and-forget for large documents — return immediately with doc ID.
-    // Poll GET ?id=X to check processing_status.
-    processDocument(doc.id).catch(err => {
-      console.error('[Documents API] Background processing failed:', err);
-    });
+    console.log('[Documents API] Ingested "%s" (%d chars)', body.title, body.content.length);
 
     return NextResponse.json({
       success: true,
       document: {
         id: doc.id,
         title: doc.title,
-        processing_status: 'processing',
-        message: 'Document ingested. Processing in background. Poll GET ?id=<id> for status.',
+        processing_status: 'pending',
+        message: 'Document ingested. Call POST ?action=process&id=<id> to process.',
       },
     });
   } catch (err) {
