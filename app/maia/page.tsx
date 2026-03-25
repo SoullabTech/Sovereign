@@ -10,7 +10,7 @@
  * God is more between than within - the I-Thou relationship
  */
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -35,7 +35,7 @@ import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FeatureTooltip } from '@/components/help/FeatureTooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
@@ -340,6 +340,9 @@ function MAIAPageContent() {
   // Fix hydration: Initialize with safe defaults, update in useEffect
   // NOTE: Initialize name as '' (not 'Friend') so greeting shows "Good morning" without a bogus label
   // The real name loads async via getInitialUserData() and updates before greeting renders
+  const desktopCarouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const [explorerId, setExplorerId] = useState('guest');
   const [explorerName, setExplorerName] = useState('');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
@@ -402,6 +405,24 @@ function MAIAPageContent() {
   //     }
   //   }
   // }, [router]);
+
+  // Desktop ribbon scroll detection
+  useEffect(() => {
+    const el = desktopCarouselRef.current;
+    if (!el) return;
+    const updateScroll = () => {
+      setCanScrollLeft(el.scrollLeft > 2);
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+    };
+    updateScroll();
+    el.addEventListener('scroll', updateScroll, { passive: true });
+    const ro = new ResizeObserver(updateScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateScroll);
+      ro.disconnect();
+    };
+  }, []);
 
   // Fix hydration: Initialize user data and session after mount
   useEffect(() => {
@@ -1009,6 +1030,16 @@ function MAIAPageContent() {
 
             {/* Desktop: Scrollable navigation for narrow windows (including PWA) */}
             <div className="hidden md:flex items-center w-full overflow-hidden">
+              {/* Left scroll arrow */}
+              {canScrollLeft && (
+                <button
+                  onClick={() => desktopCarouselRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+                  className="flex-shrink-0 p-1 text-maia-ink-40 hover:text-maia-ink-80 transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
               <div className="min-w-0 flex-1">
               <div ref={desktopCarouselRef} className="overflow-x-auto scrollbar-hide">
               <div className="flex items-center gap-3 min-w-max px-4 py-1">
@@ -1326,6 +1357,16 @@ function MAIAPageContent() {
               </div>
               </div>
               </div>
+              {/* Right scroll arrow */}
+              {canScrollRight && (
+                <button
+                  onClick={() => desktopCarouselRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+                  className="flex-shrink-0 p-1 text-maia-ink-40 hover:text-maia-ink-80 transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
