@@ -422,17 +422,7 @@ function MAIAPageContent() {
       }
 
       // Hard gate: First Descent required before /maia
-      try {
-        const raw = localStorage.getItem('beta_user');
-        if (raw) {
-          const user = JSON.parse(raw);
-          if (user.onboarded && !user.firstDescentCompleted) {
-            console.log('[NAV] /maia -> /first-descent (reason: descent not completed)');
-            router.replace('/first-descent');
-            return;
-          }
-        }
-      } catch { /* continue if parse fails */ }
+      // First descent gate removed — users go straight to /maia
 
       // Load user data first (needed for session registration)
       const initialData = await getInitialUserData();
