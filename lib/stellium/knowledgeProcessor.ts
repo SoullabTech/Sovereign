@@ -200,9 +200,10 @@ function chunkDocument(content: string): DocumentChunk[] {
   }
 
   for (const line of lines) {
+    // Chunk at H1 and H2 boundaries (not H3 — those stay grouped in their parent)
     if (/^#{1,2}\s/.test(line)) {
       flushChunk();
-      currentTitle = line.replace(/^#+\s*/, '').replace(/\*+/g, '').trim();
+      currentTitle = line.replace(/^#+\s*/, '').replace(/\*+/g, '').replace(/!\[.*?\]\[.*?\]/g, '').trim();
     } else {
       currentLines.push(line);
     }
