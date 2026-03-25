@@ -18,6 +18,7 @@ export interface FeatureFlags {
   livingNotebook: boolean;              // Living Notebook: capture + basic structuring
   livingNotebookActivation: boolean;    // Living Notebook: MAIA context injection
   memoryToolPilot: boolean;             // Server-side: Anthropic Memory Tool for selective retrieval (env: MAIA_MEMORY_TOOL_PILOT)
+  masterDocumentUpload: boolean;        // Master field: document upload + extraction for Virtual Self training
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -35,6 +36,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   livingNotebook: false,              // Off until Phase 1 complete
   livingNotebookActivation: false,    // Off until Phase 2 complete
   memoryToolPilot: false,             // Off; activate via MAIA_MEMORY_TOOL_PILOT=true in env
+  masterDocumentUpload: false,        // Off until Jondi v1 validation
 };
 
 /**

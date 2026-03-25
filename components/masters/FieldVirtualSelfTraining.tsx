@@ -10,7 +10,7 @@
  * "Not a tool. Not a bot. An extension of presence."
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { MasterField } from '@/lib/masters/types';
 import { ENERGY_MEDICINE_TRAINING_PROMPTS } from '@/lib/masters/frameworks/energyMedicine';
 import { useFeatureFlags } from '@/lib/utils/feature-flags';
@@ -28,7 +28,22 @@ interface Props {
   onComplete?: () => void;
 }
 
-type TrainingStep = 'intro' | 'voice' | 'framework' | 'boundaries' | 'complete';
+type TrainingStep = 'intro' | 'materials' | 'voice' | 'framework' | 'boundaries' | 'complete';
+
+// Document types for the materials step
+type SourceType = 'transcript' | 'book' | 'class' | 'notes';
+
+interface PersonaDocumentItem {
+  id: string;
+  title: string;
+  source_type: SourceType;
+  format: 'pdf' | 'txt' | 'md';
+  original_filename: string;
+  processing_status: 'pending' | 'extracting' | 'complete' | 'failed';
+  processing_error?: string | null;
+  content_chars: number;
+  created_at: string;
+}
 
 type TrainingPrompts = typeof ENERGY_MEDICINE_TRAINING_PROMPTS;
 
@@ -195,11 +210,88 @@ export default function FieldVirtualSelfTraining({
   const [frameworkContent, setFrameworkContent] = useState('');
   const [boundaryContent, setBoundaryContent] = useState('');
 
-  const [trainingProgress, setTrainingProgress] = useState({
+  const [trainingProgress, setTrainingProgress] = useState<Record<string, boolean>>({
+    materials: false,
     voice: false,
     framework: false,
     boundaries: false,
   });
+
+  // Materials step state
+  const { flags } = useFeatureFlags();
+  const showMaterials = flags.masterDocumentUpload;
+  const [documents, setDocuments] = useState<PersonaDocumentItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [selectedSourceType, setSelectedSourceType] = useState<SourceType>('transcript');
+
+  const afterIntro: TrainingStep = showMaterials ? 'materials' : 'voice';
+
+  // Load documents when materials step opens
+  const loadDocuments = useCallback(async () => {
+    if (!practitionerId || !personaId) return;
+    try {
+      const params = new URLSearchParams({ practitionerId, personaId });
+      const res = await fetch(`/api/stellium/maia/documents?${params}`);
+      if (res.ok) {
+        const json = await res.json();
+        setDocuments(json.documents ?? []);
+      }
+    } catch { /* silently fail — not critical */ }
+  }, [practitionerId, personaId]);
+
+  useEffect(() => {
+    if (step !== 'materials' || !practitionerId || !personaId) return;
+
+    void loadDocuments();
+
+    // Poll every 5s while any document is still processing
+    const interval = setInterval(() => {
+      const hasProcessing = documents.some(
+        d => d.processing_status === 'pending' || d.processing_status === 'extracting'
+      );
+      if (hasProcessing) void loadDocuments();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [step, practitionerId, personaId, loadDocuments, documents]);
+
+  const handleFileUpload = async (file: File) => {
+    if (!practitionerId) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      // Ensure persona exists before uploading
+      const pid = await ensurePersona();
+      if (!pid) { setIsUploading(false); return; }
+
+      const title = file.name.replace(/\.[^.]+$/, '');
+      const formData = new FormData();
+      formData.append('practitionerId', practitionerId);
+      formData.append('personaId', pid);
+      formData.append('title', title);
+      formData.append('sourceType', selectedSourceType);
+      formData.append('file', file);
+
+      const res = await fetch('/api/stellium/maia/documents', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Upload failed');
+      }
+
+      await loadDocuments();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // ---------------------------------------------------------------------------
   // Ensure persona exists before training
@@ -333,6 +425,7 @@ export default function FieldVirtualSelfTraining({
   // Step: progress indicator
   // ---------------------------------------------------------------------------
   const steps: Array<{ id: TrainingStep; label: string }> = [
+    ...(showMaterials ? [{ id: 'materials' as TrainingStep, label: 'Materials' }] : []),
     { id: 'voice', label: 'Voice' },
     { id: 'framework', label: 'Framework' },
     { id: 'boundaries', label: 'Scope' },
@@ -495,7 +588,7 @@ export default function FieldVirtualSelfTraining({
                   marginBottom: '1.25rem',
                 }}
               >
-                Three short steps. Each one teaches MAIA something distinct about how you work.
+                {steps.length} short steps. Each one teaches MAIA something distinct about how you work.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {steps.map((s, i) => (
@@ -522,6 +615,7 @@ export default function FieldVirtualSelfTraining({
                           color: palette.text,
                         }}
                       >
+                        {s.label === 'Materials' && 'Your Materials — transcripts, books, and teaching notes'}
                         {s.label === 'Voice' && 'Your Voice — how you speak, phrase, and pace'}
                         {s.label === 'Framework' && 'Your Framework — what EFT means in your practice'}
                         {s.label === 'Scope' && 'Your Scope — what you hold and what you refer out'}
@@ -531,9 +625,206 @@ export default function FieldVirtualSelfTraining({
                 ))}
               </div>
             </div>
-            <button style={primaryBtn} onClick={() => setStep('voice')}>
+            <button style={primaryBtn} onClick={() => setStep(afterIntro)}>
               Begin Training
             </button>
+          </div>
+        )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* MATERIALS                                                         */}
+        {/* ----------------------------------------------------------------- */}
+        {step === 'materials' && showMaterials && (
+          <div>
+            <StepIndicator />
+            <h2 style={stepTitle}>Teaching Materials</h2>
+            <p style={stepDesc}>
+              Upload transcripts, book chapters, class recordings, or session notes.
+              These train your Virtual Self to hold your method.
+            </p>
+
+            {/* Source type selector */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ ...sectionLabel, marginBottom: '0.5rem' }}>Source Type</p>
+              <select
+                value={selectedSourceType}
+                onChange={e => setSelectedSourceType(e.target.value as SourceType)}
+                style={{
+                  ...inputStyle,
+                  height: '2.5rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="transcript">Transcript</option>
+                <option value="book">Book</option>
+                <option value="class">Class</option>
+                <option value="notes">Notes</option>
+              </select>
+            </div>
+
+            {/* Upload zone */}
+            <label
+              style={{
+                display: 'block',
+                padding: '2rem',
+                border: `2px dashed ${palette.primary}30`,
+                background: `${palette.primary}04`,
+                textAlign: 'center',
+                cursor: isUploading ? 'not-allowed' : 'pointer',
+                opacity: isUploading ? 0.6 : 1,
+                marginBottom: '1.5rem',
+                transition: 'border-color 0.2s',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: 'var(--field-font-body)',
+                  fontSize: '0.9rem',
+                  color: palette.text,
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {isUploading ? 'Uploading...' : 'Choose a file or drag it here'}
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--field-font-body)',
+                  fontSize: '0.72rem',
+                  color: `${palette.text}40`,
+                }}
+              >
+                PDF, TXT, or Markdown — up to 15 MB
+              </p>
+              <input
+                type="file"
+                accept=".pdf,.txt,.md"
+                style={{ display: 'none' }}
+                disabled={isUploading}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleFileUpload(file);
+                  e.target.value = ''; // reset for re-upload
+                }}
+              />
+            </label>
+
+            {/* Upload error */}
+            {uploadError && (
+              <div
+                style={{
+                  padding: '0.875rem 1rem',
+                  background: '#FFF0EE',
+                  border: '1px solid #E8C4BC',
+                  borderRadius: '2px',
+                  fontFamily: 'var(--field-font-body)',
+                  fontSize: '0.82rem',
+                  color: '#8B3020',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                {uploadError}
+              </div>
+            )}
+
+            {/* Document library */}
+            <div style={{ marginBottom: '2rem' }}>
+              <p style={{ ...sectionLabel, marginBottom: '0.75rem' }}>Library</p>
+              {documents.length === 0 ? (
+                <p
+                  style={{
+                    fontFamily: 'var(--field-font-body)',
+                    fontSize: '0.85rem',
+                    color: `${palette.text}35`,
+                    padding: '1.5rem',
+                    border: `1px solid ${palette.primary}12`,
+                    textAlign: 'center',
+                  }}
+                >
+                  No materials uploaded yet.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {documents.map(doc => (
+                    <div
+                      key={doc.id}
+                      style={{
+                        padding: '0.875rem 1rem',
+                        border: `1px solid ${palette.primary}15`,
+                        background: `${palette.primary}04`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                      }}
+                    >
+                      <div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--field-font-body)',
+                            fontSize: '0.85rem',
+                            color: palette.text,
+                            marginBottom: '0.15rem',
+                          }}
+                        >
+                          {doc.title}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: 'var(--field-font-body)',
+                            fontSize: '0.68rem',
+                            color: `${palette.text}45`,
+                            letterSpacing: '0.05em',
+                          }}
+                        >
+                          {doc.source_type} · {doc.format.toUpperCase()}
+                          {doc.content_chars > 0 && ` · ${Math.round(doc.content_chars / 1000)}k chars`}
+                        </p>
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: 'var(--field-font-body)',
+                          fontSize: '0.65rem',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: doc.processing_status === 'complete' ? palette.primary
+                            : doc.processing_status === 'failed' ? '#8B3020'
+                            : `${palette.text}40`,
+                        }}
+                      >
+                        {doc.processing_status === 'complete' && '✓ Complete'}
+                        {doc.processing_status === 'extracting' && '⟳ Extracting'}
+                        {doc.processing_status === 'pending' && '○ Pending'}
+                        {doc.processing_status === 'failed' && '✗ Failed'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Navigation */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+              }}
+            >
+              <button style={ghostBtn} onClick={() => setStep('voice')}>
+                Skip for now
+              </button>
+              <button
+                style={{ ...primaryBtn, flex: 1 }}
+                onClick={() => {
+                  if (documents.length > 0) {
+                    setTrainingProgress(prev => ({ ...prev, materials: true }));
+                  }
+                  setStep('voice');
+                }}
+              >
+                Continue to Voice →
+              </button>
+            </div>
           </div>
         )}
 
@@ -764,13 +1055,13 @@ export default function FieldVirtualSelfTraining({
                       style={{
                         fontFamily: 'var(--field-font-body)',
                         fontSize: '1rem',
-                        color: trainingProgress[s.id as keyof typeof trainingProgress]
+                        color: trainingProgress[s.id]
                           ? palette.primary
                           : `${palette.text}25`,
                         marginBottom: '0.3rem',
                       }}
                     >
-                      {trainingProgress[s.id as keyof typeof trainingProgress] ? '✓' : '○'}
+                      {trainingProgress[s.id] ? '✓' : '○'}
                     </div>
                     <div
                       style={{

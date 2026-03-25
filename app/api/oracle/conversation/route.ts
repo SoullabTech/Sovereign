@@ -27,6 +27,7 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { getVoiceMethodConstraints } from '@/lib/maia/prompts/voiceMethodConstraints';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -701,7 +702,7 @@ export async function POST(request: NextRequest) {
             astrologyContext,
             preferredAssistantName,
             memberWebPrompt
-          ) + `\n\n${validationResult.repairPrompt}`;
+          ) + `\n\n${voiceMethodConstraints}\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
             .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
@@ -1641,6 +1642,9 @@ async function generateSpiralogicResponseWithLLM(
   const wisdomAvailable = !!collectiveWisdom;
   const councilAvailable = !!councilInsights;
 
+  // Voice & method constraints from Kelly Field Evaluation #001 (2026-03-25)
+  const voiceMethodConstraints = getVoiceMethodConstraints();
+
   let finalSystemPrompt: string;
   let memoryToolActive = false;
 
@@ -1655,6 +1659,7 @@ async function generateSpiralogicResponseWithLLM(
 
     finalSystemPrompt = [
       systemPrompt,
+      voiceMethodConstraints,
       reportContextBlock,
       descentContextBlock,
       `\n\n[MEMORY INSTRUCTION: You have access to a memory tool containing field awareness and council insights for this member at /memories/${userId}/. If council or field awareness could improve your response, you SHOULD read from memory before answering. This is not optional context — it represents the collective field and advisory council relevant to this person's current position.]`,
@@ -1665,6 +1670,7 @@ async function generateSpiralogicResponseWithLLM(
     // Standard path: direct injection (existing behavior, zero change)
     finalSystemPrompt = [
       systemPrompt,
+      voiceMethodConstraints,
       reportContextBlock,
       descentContextBlock,
       councilInsights,
