@@ -87,19 +87,19 @@ export async function POST(
     console.log('[Documents API] Ingested "%s" (%d chars) → processing', body.title, body.content.length);
 
     // 2. Process (chunk → extract → synthesize)
-    // This is intentionally synchronous — the caller waits for results.
-    // For very large documents, this could be made async later.
-    const processed = await processDocument(doc.id);
+    // Fire-and-forget for large documents — return immediately with doc ID.
+    // Poll GET ?id=X to check processing_status.
+    processDocument(doc.id).catch(err => {
+      console.error('[Documents API] Background processing failed:', err);
+    });
 
     return NextResponse.json({
       success: true,
       document: {
-        id: processed.id,
-        title: processed.title,
-        processing_status: processed.processing_status,
-        chunks_count: processed.chunks_count,
-        knowledge_statements_count: processed.knowledge_statements?.length ?? 0,
-        knowledge_summary_length: processed.knowledge_summary?.length ?? 0,
+        id: doc.id,
+        title: doc.title,
+        processing_status: 'processing',
+        message: 'Document ingested. Processing in background. Poll GET ?id=<id> for status.',
       },
     });
   } catch (err) {
