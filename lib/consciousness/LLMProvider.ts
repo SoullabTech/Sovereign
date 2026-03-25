@@ -32,6 +32,14 @@ export interface LLMResponse {
     tokenCount?: number;
     /** Why the model stopped: 'end_turn' | 'max_tokens' | 'stop_sequence'. 'max_tokens' = truncated. */
     stopReason?: string;
+    /** Memory tool pilot: number of tool-use round-trips (0 = no tools used) */
+    toolRounds?: number;
+    /** Memory tool pilot: paths that Claude read via memory tool */
+    pathsRead?: string[];
+    /** Memory tool pilot: cumulative input tokens across all rounds */
+    totalInputTokens?: number;
+    /** Memory tool pilot: cumulative output tokens across all rounds */
+    totalOutputTokens?: number;
   };
 }
 
@@ -112,9 +120,13 @@ export class MultiLLMProvider {
     forceClaude?: boolean;
     forceOllama?: boolean;
     maxTokensOverride?: number;
+    /** Memory tool pilot: tool definitions to pass to Claude (e.g. memory tool) */
+    tools?: Array<any>;
+    /** Memory tool pilot: handler called when Claude issues tool_use blocks */
+    toolHandler?: (name: string, input: any) => Promise<string>;
   }): Promise<LLMResponse> {
 
-    const { systemPrompt, userInput, messages, level, forceClaude, forceOllama, maxTokensOverride } = params;
+    const { systemPrompt, userInput, messages, level, forceClaude, forceOllama, maxTokensOverride, tools, toolHandler } = params;
     const baseConfig = LEVEL_LLM_CONFIG[level];
     // Route-computed maxTokens wins over level default (MAIA-PAI depth scaling)
     const config = maxTokensOverride
@@ -142,6 +154,10 @@ export class MultiLLMProvider {
     // Default: Try Claude first (primary provider)
     if (this.anthropic) {
       try {
+        // Memory tool pilot: route to tool-aware method when tools provided
+        if (tools && tools.length > 0 && toolHandler) {
+          return await this.generateClaudeWithTools(systemPrompt, userInput, config, startTime, messages, tools, toolHandler);
+        }
         return await this.generateClaude(systemPrompt, userInput, config, startTime, messages);
       } catch (error) {
         console.error('Claude generation failed:', error);
@@ -301,6 +317,169 @@ export class MultiLLMProvider {
     }
 
     // Should never reach here, but TypeScript needs it
+    throw lastError;
+  }
+
+  /**
+   * Generate using Claude with tool-use loop (Memory Tool pilot).
+   *
+   * Calls messages.create() with tools. If Claude issues tool_use blocks,
+   * handles them via toolHandler, returns results, and loops until Claude
+   * produces a final text response or maxToolRounds is hit.
+   *
+   * Retry/backoff for 529 errors is handled per-round (same pattern as generateClaude).
+   */
+  private async generateClaudeWithTools(
+    systemPrompt: string,
+    userInput: string,
+    config: LLMConfig,
+    startTime: number,
+    messages: Array<{ role: 'user' | 'assistant'; content: string }> | undefined,
+    tools: Array<any>,
+    toolHandler: (name: string, input: any) => Promise<string>,
+    maxToolRounds: number = 3
+  ): Promise<LLMResponse> {
+    if (!this.anthropic) {
+      throw new Error('Claude not configured');
+    }
+
+    // Build initial messages
+    const claudeMessages: Array<any> =
+      messages && messages.length > 0
+        ? [...messages]
+        : [{ role: 'user', content: userInput }];
+
+    let toolRounds = 0;
+    const pathsRead: string[] = [];
+    let cumulativeInputTokens = 0;
+    let cumulativeOutputTokens = 0;
+
+    for (let round = 0; round <= maxToolRounds; round++) {
+      const response = await this.callClaudeWithRetry(
+        config, systemPrompt, claudeMessages, tools
+      );
+
+      cumulativeInputTokens += response.usage.input_tokens;
+      cumulativeOutputTokens += response.usage.output_tokens;
+
+      // Check if Claude wants to use tools
+      if (response.stop_reason === 'tool_use') {
+        toolRounds++;
+
+        // Process all tool_use blocks in this response
+        const toolResults: Array<any> = [];
+
+        for (const block of response.content) {
+          if (block.type === 'tool_use') {
+            // Track which paths were read
+            if (block.input?.command === 'view' && block.input?.path) {
+              pathsRead.push(block.input.path);
+            }
+
+            const result = await toolHandler(block.name, block.input);
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: block.id,
+              content: result
+            });
+          }
+        }
+
+        // Append assistant response and tool results to messages
+        claudeMessages.push({ role: 'assistant', content: response.content });
+        claudeMessages.push({ role: 'user', content: toolResults });
+
+        continue; // Loop for next round
+      }
+
+      // Final response — extract text
+      const textBlock = response.content.find((b: any) => b.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') {
+        throw new Error('No text in Claude tool-use response');
+      }
+
+      const generationTime = Date.now() - startTime;
+
+      if (response.stop_reason === 'max_tokens') {
+        console.warn(JSON.stringify({
+          tag: 'llm.truncated', stop_reason: 'max_tokens',
+          output_tokens: response.usage.output_tokens, max_tokens: config.maxTokens,
+          model: config.model, toolRounds
+        }));
+      }
+
+      return {
+        text: textBlock.text,
+        provider: 'anthropic',
+        model: config.model,
+        metadata: {
+          generationTime,
+          tokenCount: cumulativeOutputTokens,
+          stopReason: response.stop_reason ?? undefined,
+          toolRounds,
+          pathsRead,
+          totalInputTokens: cumulativeInputTokens,
+          totalOutputTokens: cumulativeOutputTokens
+        }
+      };
+    }
+
+    // Safety: maxToolRounds exceeded — return whatever text we have
+    console.warn(`[LLMProvider] maxToolRounds (${maxToolRounds}) exceeded, returning partial`);
+    return {
+      text: '[MAIA paused — please continue.]',
+      provider: 'anthropic',
+      model: config.model,
+      metadata: {
+        generationTime: Date.now() - startTime,
+        toolRounds,
+        pathsRead,
+        totalInputTokens: cumulativeInputTokens,
+        totalOutputTokens: cumulativeOutputTokens
+      }
+    };
+  }
+
+  /**
+   * Single Claude API call with 529 retry/backoff. Shared by both generateClaude and generateClaudeWithTools.
+   */
+  private async callClaudeWithRetry(
+    config: LLMConfig,
+    systemPrompt: string,
+    messages: Array<any>,
+    tools?: Array<any>
+  ): Promise<any> {
+    if (!this.anthropic) throw new Error('Claude not configured');
+
+    const maxRetries = 3;
+    const baseDelay = 1000;
+    let lastError: any;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const params: any = {
+          model: config.model,
+          max_tokens: config.maxTokens,
+          temperature: config.temperature,
+          system: systemPrompt,
+          messages,
+        };
+        if (tools && tools.length > 0) {
+          params.tools = tools;
+        }
+        return await this.anthropic.messages.create(params);
+      } catch (error: any) {
+        lastError = error;
+        const is529 = error?.status === 529 ||
+                      error?.message?.includes('529') ||
+                      error?.message?.includes('overloaded');
+        if (!is529 || attempt === maxRetries) throw error;
+
+        const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 500;
+        console.warn(`⏳ Claude 529 overload, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
     throw lastError;
   }
 
