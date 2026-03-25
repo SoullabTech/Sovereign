@@ -7,7 +7,7 @@ import { Holoflower } from '@/components/ui/Holoflower';
 import { apiUrl } from '@/lib/http/apiBase';
 import type { DescentStep } from '@/lib/consciousness/firstDescent';
 
-const OPENING_QUESTION = `what's been going on with you lately`;
+const OPENING_QUESTION = `what's happening in your world?`;
 
 export default function FirstDescentPage() {
   const router = useRouter();
