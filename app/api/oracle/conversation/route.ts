@@ -301,6 +301,8 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  /** Sanctuary Mode: when true, no memory writes, no memory tool access */
+  isSanctuary?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -1626,13 +1628,41 @@ async function generateSpiralogicResponseWithLLM(
     ? buildDescentContextBlock(descentSeed)
     : '';
 
-  const finalSystemPrompt = [
-    systemPrompt,
-    reportContextBlock,
-    descentContextBlock,
-    councilInsights,
-    collectiveWisdom,
-  ].filter(Boolean).join('');
+  // ─── Memory Tool Pilot: feature-flagged selective retrieval ───────────
+  const MEMORY_TOOL_PILOT = process.env.MAIA_MEMORY_TOOL_PILOT === 'true';
+  const wisdomAvailable = !!collectiveWisdom;
+  const councilAvailable = !!councilInsights;
+
+  let finalSystemPrompt: string;
+  let memoryToolActive = false;
+
+  if (MEMORY_TOOL_PILOT && !body.isSanctuary) {
+    // Memory tool path: deterministic layers only in system prompt.
+    // Wisdom + council stored in DB for on-demand retrieval by Claude.
+    const { writeMemoryContent } = await import('@/lib/memory/memoryToolBackend');
+
+    // Fire-and-forget: write pre-computed context to memory store
+    if (wisdomAvailable) writeMemoryContent(userId, 'wisdom.txt', collectiveWisdom, false);
+    if (councilAvailable) writeMemoryContent(userId, 'council.txt', councilInsights, false);
+
+    finalSystemPrompt = [
+      systemPrompt,
+      reportContextBlock,
+      descentContextBlock,
+      `\n\n[MEMORY INSTRUCTION: You have access to a memory tool containing field awareness and council insights for this member at /memories/${userId}/. If council or field awareness could improve your response, you SHOULD read from memory before answering. This is not optional context — it represents the collective field and advisory council relevant to this person's current position.]`,
+    ].filter(Boolean).join('');
+
+    memoryToolActive = true;
+  } else {
+    // Standard path: direct injection (existing behavior, zero change)
+    finalSystemPrompt = [
+      systemPrompt,
+      reportContextBlock,
+      descentContextBlock,
+      councilInsights,
+      collectiveWisdom,
+    ].filter(Boolean).join('');
+  }
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
@@ -1640,14 +1670,48 @@ async function generateSpiralogicResponseWithLLM(
   let modelUsed = 'none';
   let usedProviderFallback = false;  // true when Claude failed and Ollama took over
   let generationTimeMs: number | undefined;
+  let memoryToolRounds = 0;
+  let memoryFallbackInjected = false;
 
   try {
-    const llmResponse = await llmProvider.generate({
+    let generateParams: any = {
       systemPrompt: finalSystemPrompt,
       userInput: fullUserInput,
       level: consciousnessLevel as any // Use computed level (DEEP -> 5 -> Opus 4.5)
-      // Claude is now primary by default
-    });
+    };
+
+    // Memory tool pilot: add tools + handler when active
+    if (memoryToolActive) {
+      const { handleMemoryToolUse } = await import('@/lib/memory/memoryToolBackend');
+      generateParams.tools = [{ type: 'memory_20250818' as any, name: 'memory' }];
+      generateParams.toolHandler = (name: string, input: any) => handleMemoryToolUse(userId, input);
+    }
+
+    let llmResponse = await llmProvider.generate(generateParams);
+
+    // Memory tool determinism fallback: if tools were available but Claude
+    // didn't read them, and wisdom/council existed, inject a one-liner summary
+    if (memoryToolActive && (llmResponse.metadata?.toolRounds ?? 0) === 0 && (wisdomAvailable || councilAvailable)) {
+      const { buildOneLiner } = await import('@/lib/telemetry/memoryToolMetrics');
+      const wisdomSummary = wisdomAvailable ? buildOneLiner(collectiveWisdom) : '';
+      const councilSummary = councilAvailable ? buildOneLiner(councilInsights) : '';
+      const fallbackNote = [
+        '[System note: Field awareness and council insights were available but not consulted.',
+        wisdomSummary ? `Field: ${wisdomSummary}` : '',
+        councilSummary ? `Council: ${councilSummary}` : '',
+        ']',
+      ].filter(Boolean).join(' ');
+
+      // Re-call without tools, appending the one-liner to user input
+      llmResponse = await llmProvider.generate({
+        systemPrompt: finalSystemPrompt,
+        userInput: `${fullUserInput}\n\n${fallbackNote}`,
+        level: consciousnessLevel as any,
+      });
+      memoryFallbackInjected = true;
+    }
+
+    memoryToolRounds = llmResponse.metadata?.toolRounds ?? 0;
     coreMessage = llmResponse.text;
 
     // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
@@ -1655,6 +1719,39 @@ async function generateSpiralogicResponseWithLLM(
     modelUsed = llmResponse.model || 'unknown';
     generationTimeMs = llmResponse.metadata?.generationTime;
     usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
+
+    // Memory tool pilot telemetry
+    if (memoryToolActive) {
+      const { logMemoryToolMetrics } = await import('@/lib/telemetry/memoryToolMetrics');
+      logMemoryToolMetrics({
+        tag: 'memory-tool-pilot',
+        memberId: userId,
+        path: 'memory-tool',
+        toolRounds: memoryToolRounds,
+        memoryPathsRead: llmResponse.metadata?.pathsRead ?? [],
+        fallbackInjected: memoryFallbackInjected,
+        wisdomAvailable,
+        councilAvailable,
+        totalInputTokens: llmResponse.metadata?.totalInputTokens,
+        totalOutputTokens: llmResponse.metadata?.totalOutputTokens,
+        directInjectionChars: (collectiveWisdom?.length ?? 0) + (councilInsights?.length ?? 0),
+        latencyMs: llmResponse.metadata?.generationTime ?? 0,
+      });
+    } else {
+      // Log direct-injection baseline for comparison
+      const directInjectionChars = (collectiveWisdom?.length ?? 0) + (councilInsights?.length ?? 0);
+      if (directInjectionChars > 0) {
+        console.log(JSON.stringify({
+          tag: 'memory-tool-pilot',
+          memberId: userId,
+          path: 'direct-injection',
+          wisdomAvailable,
+          councilAvailable,
+          directInjectionChars,
+          latencyMs: llmResponse.metadata?.generationTime ?? 0,
+        }));
+      }
+    }
 
     console.log('🌀 [MAIA Hybrid LLM Response]', {
       provider: llmResponse.provider,
@@ -1665,7 +1762,8 @@ async function generateSpiralogicResponseWithLLM(
       conversationDepth,
       trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
       targetMaxTokens: maxTokens,
-      usedProviderFallback
+      usedProviderFallback,
+      ...(memoryToolActive ? { memoryToolRounds, memoryFallbackInjected } : {}),
     });
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);

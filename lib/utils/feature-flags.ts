@@ -17,6 +17,7 @@ export interface FeatureFlags {
   fieldTraining: boolean;               // V1: corrections, examples, preferences, builds
   livingNotebook: boolean;              // Living Notebook: capture + basic structuring
   livingNotebookActivation: boolean;    // Living Notebook: MAIA context injection
+  memoryToolPilot: boolean;             // Server-side: Anthropic Memory Tool for selective retrieval (env: MAIA_MEMORY_TOOL_PILOT)
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -33,6 +34,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   fieldTraining: false,               // Off until training UI ready
   livingNotebook: false,              // Off until Phase 1 complete
   livingNotebookActivation: false,    // Off until Phase 2 complete
+  memoryToolPilot: false,             // Off; activate via MAIA_MEMORY_TOOL_PILOT=true in env
 };
 
 /**
