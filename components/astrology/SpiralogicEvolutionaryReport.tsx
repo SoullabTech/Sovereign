@@ -376,6 +376,61 @@ export function SpiralogicEvolutionaryReport({ report, memberName, onRegenerate 
         </p>
       </section>
 
+      {/* ---- Continue with MAIA CTA ---- */}
+      <section className="mt-12 mb-8">
+        <div
+          className="relative overflow-hidden rounded-xl border p-8 text-center"
+          style={{
+            borderColor: '#D88A2D40',
+            background: 'linear-gradient(135deg, rgba(216,138,45,0.08) 0%, rgba(30,20,10,0.6) 100%)',
+          }}
+        >
+          <h3
+            className="text-2xl font-serif mb-3"
+            style={{ color: '#D88A2D', fontWeight: 400 }}
+          >
+            Continue Your Spiral
+          </h3>
+          <p
+            className="text-sm leading-relaxed max-w-md mx-auto mb-6"
+            style={{ color: '#E7E2CF', fontWeight: 300, opacity: 0.85 }}
+          >
+            This report is a snapshot of where you are now — not the full arc.
+            MAIA can help you track how your patterns evolve, work with what
+            surfaced here, and deepen over time.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href="/signin"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-colors"
+              style={{
+                backgroundColor: 'rgba(216,138,45,0.85)',
+                color: '#1a0f00',
+              }}
+            >
+              Continue with MAIA
+            </a>
+            <a
+              href="/begin"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm border transition-colors"
+              style={{
+                borderColor: '#D88A2D50',
+                color: '#D88A2D',
+                backgroundColor: 'transparent',
+              }}
+            >
+              New here? Begin your journey
+            </a>
+          </div>
+          <p
+            className="text-xs mt-5 italic"
+            style={{ color: '#9B6B3C', fontWeight: 300, opacity: 0.6 }}
+          >
+            Save this report · Track your evolution · Talk with MAIA about your chart
+          </p>
+        </div>
+      </section>
+
       {/* Regenerate */}
       {onRegenerate && (
         <div className="text-center mt-8">

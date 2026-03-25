@@ -658,10 +658,20 @@ export function SpiralogicReportView({ reportId, report, birthData }: Props) {
 
       {/* ---- Footer CTA ---- */}
       <div className="text-center pb-8 border-t border-gray-700 pt-8">
-        <p className="text-sm text-gray-500 leading-relaxed max-w-lg mx-auto">
+        <p className="text-sm text-gray-500 leading-relaxed max-w-lg mx-auto mb-6">
           This report is a reflective mirror, not a prescription. Bring what resonates
           into dialogue with a practitioner or with MAIA for deeper integration.
         </p>
+        <a
+          href="/maia"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-colors"
+          style={{
+            backgroundColor: 'rgba(216,138,45,0.85)',
+            color: '#1a0f00',
+          }}
+        >
+          Talk with MAIA about your chart
+        </a>
       </div>
     </div>
   );
