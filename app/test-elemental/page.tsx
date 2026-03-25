@@ -65,7 +65,7 @@ function TestElementalContent() {
   // Show loading while checking auth status
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
           <p className="text-lg font-light">Loading...</p>
@@ -117,7 +117,7 @@ function TestElementalContent() {
 // Loading component for Suspense fallback
 function TestElementalLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 to-maia-navy-800 flex items-center justify-center">
       <div className="text-center text-white">
         <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
         <p className="text-lg font-light">Loading...</p>

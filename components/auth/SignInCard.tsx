@@ -182,7 +182,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
               <button
                 type="button"
                 onClick={() => setView('username-help')}
-                className="mx-auto flex items-center gap-2 text-sm font-medium text-teal-800/90 hover:text-teal-900 transition"
+                className="mx-auto flex items-center gap-2 text-sm font-medium text-maia-spice-400/80 hover:text-maia-spice-400 transition"
               >
                 <span className="inline-block">▾</span>
                 Having trouble? Enter username
@@ -221,7 +221,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
               <button
                 type="button"
                 onClick={() => setView('magic-link')}
-                className="w-full rounded-2xl bg-teal-600 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-teal-700 hover:bg-teal-700 transition"
+                className="w-full rounded-2xl bg-maia-spice-500 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-maia-spice-600 hover:bg-maia-spice-600 transition"
               >
                 ✧ Email me a sign-in link
               </button>
@@ -266,7 +266,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
             </button>
             <a
               href="/reset-password"
-              className="block text-center text-sm font-medium text-teal-800/90 hover:text-teal-900 transition"
+              className="block text-center text-sm font-medium text-maia-spice-400/80 hover:text-maia-spice-400 transition"
             >
               Forgot password?
             </a>
@@ -313,7 +313,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
         {view === 'magic-link' && (
           <div className="mt-6 space-y-4">
             {magicLinkSent ? (
-              <div className="rounded-2xl bg-teal-700/10 px-5 py-4 text-sm text-teal-900">
+              <div className="rounded-2xl bg-maia-spice-500/10 px-5 py-4 text-sm text-maia-ink-100">
                 If that email exists, a sign-in link is on the way. Check your inbox.
               </div>
             ) : (
@@ -333,7 +333,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
                   type="button"
                   onClick={handleMagicLink}
                   disabled={loading || !email}
-                  className="w-full rounded-2xl bg-teal-600 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-teal-700 hover:bg-teal-700 transition disabled:bg-teal-600/50 disabled:text-white/70"
+                  className="w-full rounded-2xl bg-maia-spice-500 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-maia-spice-600 hover:bg-maia-spice-600 transition disabled:bg-maia-spice-500/50 disabled:text-white/70"
                 >
                   {loading ? 'Sending...' : 'Send sign-in link'}
                 </button>
