@@ -473,6 +473,23 @@ export default function SpiralogicReportPage() {
                 ))}
               </div>
             </div>
+            {!isAuthenticated && (
+              <div className="mt-10 text-center py-8 border-t border-white/10">
+                <p className="text-sm text-white/60 mb-3">
+                  Save your report, talk with MAIA about your chart, and track your evolution over time.
+                </p>
+                <Link href="/begin"
+                  className="inline-block px-6 py-2.5 text-sm bg-amber-500/15 border border-amber-500
+                             text-amber-200 rounded-xl hover:bg-amber-500/25 transition-colors">
+                  Join Soullab
+                </Link>
+                <p className="mt-2">
+                  <Link href="/signin" className="text-xs text-white/30 hover:text-white/50 transition-colors">
+                    Already a member? Sign in
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
