@@ -66,6 +66,27 @@ export async function POST(
       return NextResponse.json({ error: 'No persona found' }, { status: 404 });
     }
 
+    // Check if this is a process request for existing document (no body needed)
+    const action = req.nextUrl.searchParams.get('action');
+    const existingId = req.nextUrl.searchParams.get('id');
+
+    if (action === 'process' && existingId) {
+      console.log('[Documents API] Processing document %s synchronously', existingId);
+      const processed = await processDocument(existingId);
+      return NextResponse.json({
+        success: true,
+        document: {
+          id: processed.id,
+          title: processed.title,
+          processing_status: processed.processing_status,
+          chunks_count: processed.chunks_count,
+          knowledge_statements_count: processed.knowledge_statements?.length ?? 0,
+          knowledge_summary_length: processed.knowledge_summary?.length ?? 0,
+        },
+      });
+    }
+
+    // Ingest new document — requires body
     const body = await req.json() as IngestDocumentInput;
 
     if (!body.title?.trim() || !body.content?.trim() || !body.source_type) {
@@ -80,27 +101,6 @@ export async function POST(
         { error: 'source_type must be md, txt, pdf, or transcript' },
         { status: 400 }
       );
-    }
-
-    // Check if this is a process request for existing document
-    const action = req.nextUrl.searchParams.get('action');
-    const existingId = req.nextUrl.searchParams.get('id');
-
-    if (action === 'process' && existingId) {
-      // Process an already-ingested document (synchronous — caller waits)
-      console.log('[Documents API] Processing document %s synchronously', existingId);
-      const processed = await processDocument(existingId);
-      return NextResponse.json({
-        success: true,
-        document: {
-          id: processed.id,
-          title: processed.title,
-          processing_status: processed.processing_status,
-          chunks_count: processed.chunks_count,
-          knowledge_statements_count: processed.knowledge_statements?.length ?? 0,
-          knowledge_summary_length: processed.knowledge_summary?.length ?? 0,
-        },
-      });
     }
 
     // 1. Ingest (store raw)
