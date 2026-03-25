@@ -307,7 +307,7 @@ async function synthesize(
   prompt: string
 ): Promise<{ voice_block: string; stance_block: string }> {
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250514',
+    model: 'claude-sonnet-4-20250514',
     max_tokens: 4096,
     system:
       'You are a persona synthesis engine. You analyze training data and produce structured persona blocks. Always return valid JSON.',
