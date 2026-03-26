@@ -52,15 +52,21 @@ export async function GET(
         s.payment_status,
         s.google_event_id,
         s.calendar_sync_status,
-        s.scribe_session_id,
+        s.intake_presenting_issue,
+        s.intake_focus_area,
+        s.intake_desired_outcome,
+        s.intake_signal,
+        s.practitioner_prep,
+        s.booking_source,
         s.created_at,
         s.updated_at,
         s.completed_at,
-        c.name as client_name,
-        c.email as client_email,
+        COALESCE(c.name, sc.name) as client_name,
+        COALESCE(c.email, sc.email) as client_email,
         svc.name as service_name
       FROM sessions s
       LEFT JOIN practitioner_clients c ON s.client_id = c.id
+      LEFT JOIN stellium_clients sc ON s.client_id = sc.id
       LEFT JOIN services svc ON s.service_id = svc.id
       WHERE s.id = $1 AND s.practitioner_id = $2`,
       [sessionId, practitionerId]
@@ -87,7 +93,13 @@ export async function GET(
       payment_status: row.payment_status,
       google_event_id: row.google_event_id,
       calendar_sync_status: row.calendar_sync_status,
-      scribe_session_id: row.scribe_session_id,
+      scribe_session_id: null, // Column not yet created
+      intake_presenting_issue: row.intake_presenting_issue,
+      intake_focus_area: row.intake_focus_area,
+      intake_desired_outcome: row.intake_desired_outcome,
+      intake_signal: row.intake_signal,
+      practitioner_prep: row.practitioner_prep,
+      booking_source: row.booking_source,
       created_at: row.created_at,
       updated_at: row.updated_at,
       completed_at: row.completed_at,
