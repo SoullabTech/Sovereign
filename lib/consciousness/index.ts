@@ -1,4 +1,7 @@
 // @ts-nocheck - Barrel file, not type-checked
+// DEPRECATED: Do not import from this module.
+// This file remains temporarily to avoid breaking legacy references.
+// Scheduled for full removal.
 /**
  * MAIA Consciousness Field Science Library
  *
