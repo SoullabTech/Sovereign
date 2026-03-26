@@ -4,13 +4,13 @@
  * Powers the Essence Interview and field profile management.
  * Two responsibilities:
  *
- * 1. POST /api/masters/[field]/author
+ * 1. POST /api/masters/[slug]/author
  *    - action: 'save-session'   → store a completed interview module
  *    - action: 'synthesize'     → MAIA synthesizes a module's raw answers into profile sections
  *    - action: 'correct'        → append a correction to the correction log
  *    - action: 'approve'        → master marks a section as true
  *
- * 2. GET /api/masters/[field]/author
+ * 2. GET /api/masters/[slug]/author
  *    - return current profile + interview state
  *
  * Storage: file-based JSON for now (no new DB migration needed).
@@ -73,9 +73,9 @@ async function saveProfile(profile: MasterFieldProfile): Promise<void> {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ field: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { field: slug } = await params;
+  const { slug } = await params;
   const master = getFieldBySlug(slug);
   if (!master) return NextResponse.json({ error: 'Field not found' }, { status: 404 });
 
@@ -89,9 +89,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ field: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { field: slug } = await params;
+  const { slug } = await params;
   const master = getFieldBySlug(slug);
   if (!master) return NextResponse.json({ error: 'Field not found' }, { status: 404 });
 
