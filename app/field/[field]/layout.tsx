@@ -11,9 +11,9 @@ export default async function FieldSlugLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ slug: string }>;
+  params: Promise<{ field: string }>;
 }) {
-  const { slug } = await params;
+  const { field: slug } = await params;
   const field = await resolveField(slug);
 
   if (!field) notFound();

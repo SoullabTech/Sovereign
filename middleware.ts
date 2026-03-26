@@ -118,19 +118,20 @@ export async function middleware(req: NextRequest) {
   const host = req.headers.get('host') ?? '';
 
   // ---------------------------------------------------------------------
-  // MASTER FIELDS: Subdomain routing — jondi.soullab.life → /fields/jondi
-  // Must run before all other checks so the field gets its own routing context.
+  // PRACTITIONER FIELDS: Subdomain routing — kelly.soullab.life → /field/kelly-nezat
+  // Unified field system: /field/[slug] serves both practitioners and masters
   // ---------------------------------------------------------------------
   const SOULLAB_ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'soullab.life';
   const subdomainMatch = host.match(new RegExp(`^([a-z0-9-]+)\\.${SOULLAB_ROOT.replace('.', '\\.')}(:\\d+)?$`));
-  const masterSlug = subdomainMatch?.[1];
-  const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app'];
+  const fieldSubdomain = subdomainMatch?.[1];
+  const RESERVED_SUBDOMAINS = ['www', 'api', 'oldhead', 'app', 'maia', 'chart', 'elementalalchemy', 'demo', 'marc', 'rudeboy', 'nostr'];
 
-  if (masterSlug && !RESERVED_SUBDOMAINS.includes(masterSlug)) {
+  if (fieldSubdomain && !RESERVED_SUBDOMAINS.includes(fieldSubdomain)) {
     const url = req.nextUrl.clone();
     const isStaticAsset = pathname.startsWith('/_next/') || /\.[a-zA-Z0-9]+$/.test(pathname);
-    if (!isStaticAsset && !pathname.startsWith('/fields/') && !pathname.startsWith('/api/')) {
-      url.pathname = pathname === '/' ? `/fields/${masterSlug}` : `/fields/${masterSlug}${pathname}`;
+    if (!isStaticAsset && !pathname.startsWith('/field/') && !pathname.startsWith('/fields/') && !pathname.startsWith('/api/') && !pathname.startsWith('/portal/')) {
+      // Route to unified field system
+      url.pathname = pathname === '/' ? `/field/${fieldSubdomain}` : `/field/${fieldSubdomain}${pathname}`;
     }
     return NextResponse.rewrite(url);
   }

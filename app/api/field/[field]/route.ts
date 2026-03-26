@@ -16,10 +16,10 @@ import { resolveField } from '@/lib/field/resolve';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ field: string }> }
 ) {
   try {
-    const { slug } = await params;
+    const { field: slug } = await params;
 
     if (!slug || typeof slug !== 'string') {
       return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
