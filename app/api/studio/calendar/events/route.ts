@@ -61,11 +61,19 @@ export async function GET(request: NextRequest) {
       memberId = '00000000-0000-0000-0000-000000000001';
     }
 
-    // Support ?slug= param for multi-practitioner future; default to stellium
-    const practitionerSlug = searchParams.get('slug') || 'stellium';
+    // Look up practitioner by member_id (or fall back to slug param)
+    const slugParam = searchParams.get('slug');
+    let practitionerIdentifier: { type: 'member_id' | 'slug'; value: string };
+    if (slugParam) {
+      practitionerIdentifier = { type: 'slug', value: slugParam };
+    } else if (memberId) {
+      practitionerIdentifier = { type: 'member_id', value: memberId };
+    } else {
+      practitionerIdentifier = { type: 'slug', value: 'stellium' };
+    }
 
     // Fetch MAIA bookings
-    const bookingsPromise = fetchMAIABookings(practitionerSlug, fromDate, toDate);
+    const bookingsPromise = fetchMAIABookings(practitionerIdentifier, fromDate, toDate);
 
     // Fetch Google Calendar events (if connected)
     const googlePromise = memberId
@@ -98,10 +106,14 @@ export async function GET(request: NextRequest) {
 }
 
 async function fetchMAIABookings(
-  practitionerSlug: string,
+  identifier: { type: 'member_id' | 'slug'; value: string },
   from: Date,
   to: Date
 ): Promise<CalendarEvent[]> {
+  const whereClause = identifier.type === 'member_id'
+    ? 'p.member_id = $1'
+    : 'p.slug = $1';
+
   const sql = `
     SELECT
       s.id,
@@ -109,18 +121,19 @@ async function fetchMAIABookings(
       s.scheduled_end,
       s.status,
       sv.name as service_name,
-      c.name as client_name
+      COALESCE(c.name, sc.name) as client_name
     FROM sessions s
     LEFT JOIN services sv ON s.service_id = sv.id
     LEFT JOIN practitioner_clients c ON s.client_id = c.id
+    LEFT JOIN stellium_clients sc ON s.client_id = sc.id
     JOIN practitioners p ON s.practitioner_id = p.id
-    WHERE p.slug = $1
+    WHERE ${whereClause}
       AND s.scheduled_start >= $2
       AND s.scheduled_start <= $3
     ORDER BY s.scheduled_start ASC
   `;
 
-  const result = await db.query(sql, [practitionerSlug, from.toISOString(), to.toISOString()]);
+  const result = await db.query(sql, [identifier.value, from.toISOString(), to.toISOString()]);
 
   return result.rows.map(row => ({
     id: `maia-${row.id}`,

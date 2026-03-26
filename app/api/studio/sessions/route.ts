@@ -28,12 +28,10 @@ function isValidLocationType(t: string): t is LocationType {
   return VALID_LOCATION_TYPES.includes(t as LocationType);
 }
 
-async function getPractitionerId(): Promise<string | null> {
-  // TODO: Link members to practitioners properly
-  // For now, use hardcoded 'stellium' practitioner
+async function getPractitionerId(memberId: string): Promise<string | null> {
   const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
+    `SELECT id FROM practitioners WHERE member_id = $1 AND status = 'active' LIMIT 1`,
+    [memberId]
   );
   return result.rows[0]?.id || null;
 }
@@ -45,7 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerId(memberId);
     if (!practitionerId) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
@@ -160,7 +158,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerId(memberId);
     if (!practitionerId) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
@@ -328,7 +326,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerId(memberId);
     if (!practitionerId) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }
@@ -473,7 +471,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerId(memberId);
     if (!practitionerId) {
       return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
     }

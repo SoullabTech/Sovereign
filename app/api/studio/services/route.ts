@@ -12,18 +12,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 
-// For dev: default practitioner ID (Stellium)
-const DEV_PRACTITIONER_ID = '0a93962d-55a2-4deb-ad46-5268ee19be54';
-
 async function getPractitionerId(memberId: string): Promise<string | null> {
-  // In dev mode, use the default practitioner
-  if (process.env.NODE_ENV === 'development') {
-    return DEV_PRACTITIONER_ID;
-  }
-
-  // TODO: In production, look up practitioner by member_id
-  // For now, return the dev practitioner
-  return DEV_PRACTITIONER_ID;
+  const result = await db.query(
+    `SELECT id FROM practitioners WHERE member_id = $1 AND status = 'active' LIMIT 1`,
+    [memberId]
+  );
+  return result.rows[0]?.id || null;
 }
 
 export async function GET(request: NextRequest) {
