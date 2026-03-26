@@ -4,17 +4,24 @@ export async function generateStaticParams() { return []; }
 /**
  * PORTAL AVAILABILITY API
  *
- * Returns available time slots for booking
+ * Returns available time slots for public booking.
+ * Delegates to shared calculateAvailability engine.
+ *
+ * Query params:
+ *   date    — YYYY-MM-DD (single day mode, backward compat)
+ *   service — service UUID (optional, used for duration lookup)
+ *   start   — YYYY-MM-DD range start (range mode)
+ *   end     — YYYY-MM-DD range end (range mode)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
-
-interface TimeSlot {
-  start: string;
-  end: string;
-  available: boolean;
-}
+import {
+  calculateAvailability,
+  loadAvailabilityInputs,
+  type GoogleBusyBlock,
+} from '@/lib/availability/calculateAvailability';
+import { getEventsInRange } from '@/lib/calendar/GoogleCalendarService';
 
 export async function GET(
   request: NextRequest,
@@ -24,119 +31,113 @@ export async function GET(
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ slots: [] });
   }
+
   try {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
+
+    // Support both single-date (backward compat) and range modes
     const dateStr = searchParams.get('date');
+    const rangeStart = searchParams.get('start') || dateStr;
+    const rangeEnd = searchParams.get('end') || dateStr;
     const serviceId = searchParams.get('service');
 
-    if (!dateStr) {
+    if (!rangeStart) {
       return NextResponse.json({ error: 'Date is required' }, { status: 400 });
     }
 
-    // Get practitioner with availability settings
+    // Get practitioner
     const practitionerResult = await db.query(
-      `SELECT id, settings FROM practitioners WHERE slug = $1 AND status = 'active'`,
-      [slug]
+      `SELECT id, member_id FROM practitioners WHERE slug = $1 AND status = 'active'`,
+      [slug],
     );
 
     if (practitionerResult.rows.length === 0) {
       return NextResponse.json({ error: 'Portal not found' }, { status: 404 });
     }
 
-    const practitioner = practitionerResult.rows[0];
-    const practitionerId = practitioner.id;
-    const settings = practitioner.settings || {};
+    const practitionerId = practitionerResult.rows[0].id;
+    const memberId = practitionerResult.rows[0].member_id;
 
     // Get service duration
-    let duration = 60; // default
+    let duration = 60;
     if (serviceId) {
       const serviceResult = await db.query(
-        `SELECT duration_minutes FROM services WHERE id = $1 AND practitioner_id = $2`,
-        [serviceId, practitionerId]
+        `SELECT duration_minutes FROM services WHERE id = $1 AND practitioner_id = $2 AND is_active = true`,
+        [serviceId, practitionerId],
       );
       if (serviceResult.rows.length > 0) {
         duration = serviceResult.rows[0].duration_minutes;
       }
     }
 
-    // Parse the date
-    const date = new Date(dateStr);
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Load all availability data from shared engine
+    const loaded = await loadAvailabilityInputs({
+      practitionerId,
+      rangeStart: rangeStart!,
+      rangeEnd: rangeEnd || rangeStart!,
+    });
 
-    // Get availability for this day of week
-    const availabilityResult = await db.query(
-      `SELECT start_time, end_time
-       FROM practitioner_availability
-       WHERE practitioner_id = $1 AND day_of_week = $2 AND is_available = true
-       ORDER BY start_time`,
-      [practitionerId, dayOfWeek]
-    );
-
-    if (availabilityResult.rows.length === 0) {
-      // Fallback to default hours if no availability set
-      const defaultHours = settings.default_hours || { start: '09:00', end: '17:00' };
-      availabilityResult.rows = [{ start_time: defaultHours.start, end_time: defaultHours.end }];
-    }
-
-    // Get existing bookings for this date
-    const bookingsResult = await db.query(
-      `SELECT scheduled_start, scheduled_end
-       FROM sessions
-       WHERE practitioner_id = $1
-       AND DATE(scheduled_start) = $2
-       AND status NOT IN ('cancelled', 'no_show')`,
-      [practitionerId, dateStr]
-    );
-
-    const bookedSlots = bookingsResult.rows.map(b => ({
-      start: new Date(b.scheduled_start),
-      end: new Date(b.scheduled_end),
-    }));
-
-    // Generate available time slots
-    const slots: TimeSlot[] = [];
-    const slotInterval = 30; // 30-minute intervals
-
-    for (const window of availabilityResult.rows) {
-      const [startHour, startMin] = window.start_time.split(':').map(Number);
-      const [endHour, endMin] = window.end_time.split(':').map(Number);
-
-      let currentTime = startHour * 60 + startMin;
-      const windowEnd = endHour * 60 + endMin;
-
-      while (currentTime + duration <= windowEnd) {
-        const slotStart = `${String(Math.floor(currentTime / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
-        const slotEndMinutes = currentTime + duration;
-        const slotEnd = `${String(Math.floor(slotEndMinutes / 60)).padStart(2, '0')}:${String(slotEndMinutes % 60).padStart(2, '0')}`;
-
-        // Check if this slot conflicts with existing bookings
-        const slotStartDate = new Date(`${dateStr}T${slotStart}`);
-        const slotEndDate = new Date(`${dateStr}T${slotEnd}`);
-
-        const isBooked = bookedSlots.some(booking =>
-          (slotStartDate >= booking.start && slotStartDate < booking.end) ||
-          (slotEndDate > booking.start && slotEndDate <= booking.end) ||
-          (slotStartDate <= booking.start && slotEndDate >= booking.end)
+    // Fetch Google Calendar busy blocks (graceful skip if not connected)
+    let googleBusyBlocks: GoogleBusyBlock[] = [];
+    if (memberId) {
+      try {
+        const events = await getEventsInRange(
+          memberId,
+          new Date(`${rangeStart}T00:00:00.000Z`),
+          new Date(`${rangeEnd || rangeStart}T23:59:59.999Z`),
         );
-
-        // Check if slot is in the past
-        const now = new Date();
-        const isPast = slotStartDate < now;
-
-        if (!isBooked && !isPast) {
-          slots.push({
-            start: slotStart,
-            end: slotEnd,
-            available: true,
-          });
-        }
-
-        currentTime += slotInterval;
+        googleBusyBlocks = events.map(e => ({
+          start: new Date(e.start.dateTime || e.start.date || '').toISOString(),
+          end: new Date(e.end.dateTime || e.end.date || '').toISOString(),
+        }));
+      } catch {
+        // Google Calendar not connected — continue without
       }
     }
 
-    return NextResponse.json({ slots });
+    const slots = calculateAvailability({
+      practitionerId,
+      serviceDurationMinutes: duration,
+      rangeStart: rangeStart!,
+      rangeEnd: rangeEnd || rangeStart!,
+      settings: loaded.settings,
+      weeklyAvailability: loaded.weeklyAvailability,
+      overrides: loaded.overrides,
+      existingSessions: loaded.existingSessions,
+      googleBusyBlocks,
+    });
+
+    // Map to portal API contract (backward compatible with existing frontend)
+    // Old format: { start: "10:00", end: "11:00", available: true }
+    // New format adds ISO timestamps for timezone-aware clients
+    const mappedSlots = slots.map(s => ({
+      start: s.displayTime,
+      end: (() => {
+        // Calculate end display time
+        const endDate = new Date(s.end);
+        const fmt = new Intl.DateTimeFormat('en-CA', {
+          timeZone: loaded.settings.timezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        });
+        const parts = fmt.formatToParts(endDate);
+        const hourPart = parts.find(p => p.type === 'hour')?.value ?? '00';
+        const minutePart = parts.find(p => p.type === 'minute')?.value ?? '00';
+        return `${hourPart === '24' ? '00' : hourPart}:${minutePart}`;
+      })(),
+      available: true,
+      // Enhanced fields for new clients
+      startUtc: s.start,
+      endUtc: s.end,
+      displayDate: s.displayDate,
+    }));
+
+    return NextResponse.json({
+      slots: mappedSlots,
+      timezone: loaded.settings.timezone,
+    });
   } catch (error) {
     console.error('Portal availability error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
