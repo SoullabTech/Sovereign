@@ -8,7 +8,7 @@
  * expand inline for detail/edit.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen,
   Search,
@@ -24,9 +24,13 @@ import {
   Check,
   Archive,
   Pencil,
+  Plus,
+  Send,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '@/lib/http/apiBase';
+import { classifyEntry } from '@/lib/notebook/classifyEntry';
 import type {
   NotebookEntry,
   EntryType,
@@ -95,6 +99,11 @@ export default function NotebookPage() {
   const [searchDebounce, setSearchDebounce] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerContent, setComposerContent] = useState('');
+  const [composerSaving, setComposerSaving] = useState(false);
+  const [composerDetectedType, setComposerDetectedType] = useState<EntryType>('note');
+  const composerRef = useRef<HTMLTextAreaElement>(null);
 
   // Debounced search
   useEffect(() => {
@@ -157,6 +166,52 @@ export default function NotebookPage() {
     }
   }, []);
 
+  // Inline composer: create entry inheriting current filters
+  const handleComposerSave = useCallback(async () => {
+    if (!composerContent.trim() || composerSaving) return;
+    setComposerSaving(true);
+    try {
+      const res = await apiFetch('/api/notebook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: composerContent.trim(),
+          source: 'manual',
+          primary_context: contextFilter !== 'all' ? contextFilter : 'personal',
+          field_slug: fieldFilter !== 'all' ? fieldFilter : undefined,
+        }),
+      });
+      if (res.ok) {
+        setComposerContent('');
+        setComposerDetectedType('note');
+        setComposerOpen(false);
+        fetchEntries(); // refresh list in place
+      }
+    } catch (error) {
+      console.error('[Notebook] Composer save failed:', error);
+    } finally {
+      setComposerSaving(false);
+    }
+  }, [composerContent, composerSaving, contextFilter, fieldFilter, fetchEntries]);
+
+  // Live type detection for composer
+  const handleComposerChange = useCallback((value: string) => {
+    setComposerContent(value);
+    if (value.trim().length > 5) {
+      const c = classifyEntry(value);
+      setComposerDetectedType(c.detected_type);
+    } else {
+      setComposerDetectedType('note');
+    }
+  }, []);
+
+  // Auto-focus composer
+  useEffect(() => {
+    if (composerOpen && composerRef.current) {
+      composerRef.current.focus();
+    }
+  }, [composerOpen]);
+
   // Format relative time
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -177,14 +232,96 @@ export default function NotebookPage() {
     <div className="min-h-screen p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-6 h-6 text-[#D4B896]" />
-          <h1 className="text-2xl font-bold text-[#D4B896]">Notebook</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-6 h-6 text-[#D4B896]" />
+            <h1 className="text-2xl font-bold text-[#D4B896]">Notebook</h1>
+          </div>
+          <button
+            onClick={() => setComposerOpen(!composerOpen)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              composerOpen
+                ? 'bg-white/10 text-white/60'
+                : 'bg-[#D4B896]/20 text-[#D4B896] border border-[#D4B896]/30 hover:bg-[#D4B896]/30'
+            }`}
+          >
+            {composerOpen ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+            {composerOpen ? 'Cancel' : 'New Entry'}
+          </button>
         </div>
         <p className="text-white/40 text-sm">
           Capture, structure, activate. Your living cognitive workspace.
         </p>
       </div>
+
+      {/* Inline Composer */}
+      <AnimatePresence>
+        {composerOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden mb-4"
+          >
+            <div className="bg-white/[0.03] border border-[#D4B896]/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-white/30">New entry</span>
+                {composerContent.trim().length > 5 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 ${TYPE_COLORS[composerDetectedType]?.split(' ')[0] || 'text-white/50'}`}>
+                    {composerDetectedType}
+                  </span>
+                )}
+                {fieldFilter !== 'all' && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#D4B896]/10 text-[#D4B896]/60 capitalize">
+                    {fieldFilter}
+                  </span>
+                )}
+              </div>
+              <textarea
+                ref={composerRef}
+                value={composerContent}
+                onChange={(e) => handleComposerChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleComposerSave();
+                  }
+                  if (e.key === 'Escape') setComposerOpen(false);
+                }}
+                placeholder="Drop a thought, task, insight..."
+                className="w-full min-h-[80px] bg-white/5 border border-[#D4B896]/10 rounded-lg
+                           p-3 text-white/90 text-sm leading-relaxed
+                           placeholder:text-white/30
+                           focus:outline-none focus:border-[#D4B896]/30
+                           resize-none mb-3"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/25">
+                  {composerContent.trim() ? `⌘+Enter to save` : 'Start typing...'}
+                </span>
+                <button
+                  onClick={handleComposerSave}
+                  disabled={!composerContent.trim() || composerSaving}
+                  className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    composerContent.trim()
+                      ? 'bg-[#D4B896]/20 text-[#D4B896] border border-[#D4B896]/30 hover:bg-[#D4B896]/30'
+                      : 'bg-white/5 text-white/20 border border-white/10 cursor-not-allowed'
+                  }`}
+                >
+                  {composerSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3" />
+                      Save
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Search */}
       <div className="relative mb-4">
