@@ -290,19 +290,69 @@ jondi.soullab.life {
     }
 }
 
-# Middleware rewrites kelly.soullab.life/* → /fields/kelly/*
+# Kelly Nezat - Soullab Practice Portal
+# kelly.soullab.life → /portal/kelly-nezat
 kelly.soullab.life {
+    # Root → booking page
+    handle / {
+        rewrite * /portal/kelly-nezat
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # /book → booking page
+    handle /book {
+        rewrite * /portal/kelly-nezat/book
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Portal paths pass through directly
+    handle /portal/* {
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Other page paths → rewrite to portal namespace
+    @pages {
+        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+    }
+    handle @pages {
+        rewrite * /portal/kelly-nezat{uri}
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Static assets and API pass through
     reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
     }
 
     header {
-        X-MAIA-Origin "caddy-sovereign-field"
-        X-Field-Slug "kelly"
+        X-MAIA-Origin "caddy-sovereign-portal"
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "SAMEORIGIN"
         X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
         -Server
     }
 
