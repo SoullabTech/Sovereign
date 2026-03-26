@@ -120,6 +120,7 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
   const servicesResult = await db.query<{
     id: string;
     name: string;
+    slug: string | null;
     description: string | null;
     duration_minutes: number | null;
     price_cents: number | null;
@@ -127,7 +128,7 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
     is_bookable: boolean;
   }>(
     `SELECT
-       id, name, description, duration_minutes, price_cents,
+       id, name, slug, description, duration_minutes, price_cents,
        COALESCE(is_featured, false) AS is_featured,
        COALESCE(is_bookable, true) AS is_bookable
      FROM services
