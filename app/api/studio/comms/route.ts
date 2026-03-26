@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       recipientEmail,
+      recipientPhone,
       recipientName,
       subject,
       message,
@@ -121,8 +122,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    if (!recipientEmail && !clientId) {
-      return NextResponse.json({ error: 'Recipient email or client ID is required' }, { status: 400 });
+    if (!recipientEmail && !recipientPhone && !clientId) {
+      return NextResponse.json({ error: 'Recipient email, phone, or client ID is required' }, { status: 400 });
     }
 
     // Resolve or create client reference
@@ -162,7 +163,11 @@ export async function POST(request: NextRequest) {
         subject || null,
         JSON.stringify({
           practitioner: practitionerId,
-          recipient: { email: recipientEmail, name: recipientName || null },
+          recipient: {
+            email: recipientEmail || null,
+            phone: recipientPhone || null,
+            name: recipientName || null,
+          },
         }),
       ]
     );
@@ -218,6 +223,56 @@ export async function POST(request: NextRequest) {
             [String(emailError), messageId]
           );
         }
+      }
+    }
+
+    // Send via SMS if channel is sms
+    if (channelType === 'sms' && recipientPhone) {
+      const accountSid = process.env.TWILIO_ACCOUNT_SID;
+      const authToken = process.env.TWILIO_AUTH_TOKEN;
+      const fromNumber = process.env.TWILIO_FROM_NUMBER;
+
+      if (accountSid && authToken && fromNumber) {
+        try {
+          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+          const params = new URLSearchParams({
+            To: recipientPhone,
+            From: fromNumber,
+            Body: message.trim(),
+          });
+
+          const twilioRes = await fetch(twilioUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+          });
+
+          const twilioData = await twilioRes.json();
+
+          if (twilioRes.ok && twilioData.sid) {
+            await db.query(
+              `UPDATE comms_messages SET delivery_status = 'sent', sent_at = NOW(), external_message_id = $1 WHERE id = $2`,
+              [twilioData.sid, messageId]
+            );
+          } else {
+            console.error('[Studio Comms] SMS send failed:', twilioData);
+            await db.query(
+              `UPDATE comms_messages SET delivery_status = 'failed', delivery_error = $1 WHERE id = $2`,
+              [JSON.stringify(twilioData), messageId]
+            );
+          }
+        } catch (smsError) {
+          console.error('[Studio Comms] SMS send error:', smsError);
+          await db.query(
+            `UPDATE comms_messages SET delivery_status = 'failed', delivery_error = $1 WHERE id = $2`,
+            [String(smsError), messageId]
+          );
+        }
+      } else {
+        console.warn('[Studio Comms] SMS credentials not configured');
       }
     }
 

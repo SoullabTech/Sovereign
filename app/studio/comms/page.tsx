@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, Mail, Send, Search, Plus, X, Loader2,
-  ChevronLeft, User, Clock, Check, CheckCheck, AlertCircle,
+  ChevronLeft, User, Clock, Check, CheckCheck, AlertCircle, Phone,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
@@ -86,6 +86,8 @@ export default function CommsPage() {
   const [composeToName, setComposeToName] = useState('');
   const [composeSubject, setComposeSubject] = useState('');
   const [composeMessage, setComposeMessage] = useState('');
+  const [composeChannel, setComposeChannel] = useState<'email' | 'sms'>('email');
+  const [composePhone, setComposePhone] = useState('');
   const [sending, setSending] = useState(false);
 
   // Reply state
@@ -126,21 +128,30 @@ export default function CommsPage() {
 
   // Send new message (compose)
   async function handleCompose() {
-    if (!composeTo || !composeMessage.trim()) return;
+    const hasRecipient = composeChannel === 'sms' ? composePhone.trim() : composeTo.trim();
+    if (!hasRecipient || !composeMessage.trim()) return;
     setSending(true);
     try {
+      const payload: Record<string, string | undefined> = {
+        recipientName: composeToName || undefined,
+        message: composeMessage,
+        channelType: composeChannel,
+        domain: 'ops',
+        threadType: 'logistics',
+      };
+
+      if (composeChannel === 'sms') {
+        payload.recipientPhone = composePhone;
+        payload.recipientEmail = composeTo || undefined; // optional for SMS
+      } else {
+        payload.recipientEmail = composeTo;
+        payload.subject = composeSubject || undefined;
+      }
+
       const res = await apiFetch('/api/studio/comms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipientEmail: composeTo,
-          recipientName: composeToName || undefined,
-          subject: composeSubject || undefined,
-          message: composeMessage,
-          channelType: 'email',
-          domain: 'ops',
-          threadType: 'logistics',
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
@@ -149,6 +160,8 @@ export default function CommsPage() {
         setComposeToName('');
         setComposeSubject('');
         setComposeMessage('');
+        setComposePhone('');
+        setComposeChannel('email');
         // Refresh inbox
         const inboxRes = await apiFetch('/api/studio/comms');
         const inboxData = await inboxRes.json();
@@ -409,51 +422,105 @@ export default function CommsPage() {
               </div>
 
               <div className="p-4 space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="email"
-                    value={composeTo}
-                    onChange={e => setComposeTo(e.target.value)}
-                    placeholder="Recipient email"
-                    className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
-                  />
-                  <input
-                    type="text"
-                    value={composeToName}
-                    onChange={e => setComposeToName(e.target.value)}
-                    placeholder="Name"
-                    className="w-32 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
-                  />
+                {/* Channel toggle */}
+                <div className="flex gap-1 p-0.5 bg-slate-900 rounded-lg w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setComposeChannel('email')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      composeChannel === 'email'
+                        ? 'bg-slate-700 text-white'
+                        : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <Mail size={12} />
+                    Email
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setComposeChannel('sms')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      composeChannel === 'sms'
+                        ? 'bg-slate-700 text-white'
+                        : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <Phone size={12} />
+                    Text
+                  </button>
                 </div>
-                <input
-                  type="text"
-                  value={composeSubject}
-                  onChange={e => setComposeSubject(e.target.value)}
-                  placeholder="Subject (optional)"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
-                />
+
+                {composeChannel === 'sms' ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      value={composePhone}
+                      onChange={e => setComposePhone(e.target.value)}
+                      placeholder="Phone number"
+                      className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                    />
+                    <input
+                      type="text"
+                      value={composeToName}
+                      onChange={e => setComposeToName(e.target.value)}
+                      placeholder="Name"
+                      className="w-32 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        value={composeTo}
+                        onChange={e => setComposeTo(e.target.value)}
+                        placeholder="Recipient email"
+                        className="flex-1 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                      />
+                      <input
+                        type="text"
+                        value={composeToName}
+                        onChange={e => setComposeToName(e.target.value)}
+                        placeholder="Name"
+                        className="w-32 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={composeSubject}
+                      onChange={e => setComposeSubject(e.target.value)}
+                      placeholder="Subject (optional)"
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700"
+                    />
+                  </>
+                )}
                 <textarea
                   value={composeMessage}
                   onChange={e => setComposeMessage(e.target.value)}
-                  placeholder="Write your message..."
-                  rows={6}
+                  placeholder={composeChannel === 'sms' ? 'Write your text...' : 'Write your message...'}
+                  rows={composeChannel === 'sms' ? 3 : 6}
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-700 resize-none"
                 />
+                {composeChannel === 'sms' && (
+                  <div className="text-right text-xs text-slate-600">
+                    {composeMessage.length}/160 characters
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between p-4 border-t border-slate-800/50">
                 <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <Mail size={12} />
-                  Sends via email
+                  {composeChannel === 'sms' ? <Phone size={12} /> : <Mail size={12} />}
+                  {composeChannel === 'sms' ? 'Sends via text' : 'Sends via email'}
                 </div>
                 <button
                   onClick={handleCompose}
-                  disabled={sending || !composeTo || !composeMessage.trim()}
+                  disabled={sending || !(composeChannel === 'sms' ? composePhone : composeTo) || !composeMessage.trim()}
                   className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium
                              hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                  Send
+                  {composeChannel === 'sms' ? 'Send SMS' : 'Send'}
                 </button>
               </div>
             </motion.div>
