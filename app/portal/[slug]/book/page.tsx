@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ArrowLeft, Clock, ChevronLeft, ChevronRight, Check, Globe, User } from 'lucide-react';
 import Link from 'next/link';
 
 interface Service {
@@ -20,11 +20,36 @@ interface TimeSlot {
   available: boolean;
 }
 
+interface PractitionerProfile {
+  name: string;
+  tagline: string;
+  bio: string;
+  photo_url: string | null;
+  brand: {
+    name: string;
+  };
+}
+
+interface BookingResult {
+  success: boolean;
+  details: {
+    service_name: string;
+    date: string;
+    time: string;
+    duration: number;
+    practitioner: string;
+    confirmation_instructions: string | null;
+  };
+  email_sent: boolean;
+}
+
 function BookingContent() {
-  const params = useParams();
+  const params = useParams() ?? {};
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const serviceId = searchParams.get('service');
+  const slug = (params.slug as string) || '';
+  const serviceId = searchParams?.get('service') ?? null;
+  const preselectedDate = searchParams?.get('date') ?? null;
+  const preselectedTime = searchParams?.get('time') ?? null;
 
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -35,17 +60,35 @@ function BookingContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [step, setStep] = useState<'service' | 'datetime' | 'info' | 'confirm'>('service');
+  const [profile, setProfile] = useState<PractitionerProfile | null>(null);
+  const [consentChecked, setConsentChecked] = useState(false);
 
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [clientNotes, setClientNotes] = useState('');
+  const [presentingIssue, setPresentingIssue] = useState('');
+  const [focusArea, setFocusArea] = useState('');
+  const [desiredOutcome, setDesiredOutcome] = useState('');
 
-  // Fetch services
+  // Client timezone
+  const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Fetch practitioner profile + services
   useEffect(() => {
     if (!slug) return;
+
+    // Fetch profile
+    fetch(`/api/portal/${slug}/home`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.profile) setProfile(data.profile);
+      })
+      .catch(() => {});
+
+    // Fetch services
     fetch(`/api/portal/${slug}/services`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -53,12 +96,25 @@ function BookingContent() {
         setServices(data.services || []);
         if (serviceId) {
           const svc = (data.services || []).find((s: Service) => s.id === serviceId);
-          if (svc) { setSelectedService(svc); setStep('datetime'); }
+          if (svc) {
+            setSelectedService(svc);
+            setStep('datetime');
+            // If date and time are preselected from the portal calendar
+            if (preselectedDate) {
+              const d = new Date(preselectedDate + 'T00:00:00');
+              setSelectedDate(d);
+              setCurrentMonth(d);
+              if (preselectedTime) {
+                setSelectedTime(preselectedTime);
+                setStep('info');
+              }
+            }
+          }
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [slug, serviceId]);
+  }, [slug, serviceId, preselectedDate, preselectedTime]);
 
   // Fetch time slots when date changes
   useEffect(() => {
@@ -101,8 +157,21 @@ function BookingContent() {
     return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
   };
 
+  // Reload slots (for after conflict)
+  function reloadSlots() {
+    if (!selectedDate || !selectedService) return;
+    setLoadingSlots(true);
+    setSelectedTime(null);
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    fetch(`/api/portal/${slug}/availability?date=${dateStr}&service=${selectedService.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setTimeSlots(data?.slots || []))
+      .catch(() => setTimeSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }
+
   async function handleConfirm() {
-    if (!selectedService || !selectedDate || !selectedTime || !clientName || !clientEmail) return;
+    if (!selectedService || !selectedDate || !selectedTime || !clientName || !clientEmail || !consentChecked) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -111,16 +180,26 @@ function BookingContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          serviceId: selectedService.id,
+          service_id: selectedService.id,
           date: dateStr,
           time: selectedTime,
-          clientName,
-          clientEmail,
-          notes: clientNotes,
+          name: clientName,
+          email: clientEmail,
+          intake_presenting_issue: presentingIssue || undefined,
+          intake_focus_area: focusArea || undefined,
+          intake_desired_outcome: desiredOutcome || undefined,
+          timezone: clientTimezone,
         }),
       });
+
       if (res.ok) {
+        const data = await res.json();
+        setBookingResult(data);
         setConfirmed(true);
+      } else if (res.status === 409) {
+        setError('This time slot was just booked by someone else. Refreshing available times...');
+        reloadSlots();
+        setTimeout(() => setStep('datetime'), 2000);
       } else {
         const d = await res.json();
         setError(d.error || 'Something went wrong. Please try again.');
@@ -143,6 +222,7 @@ function BookingContent() {
     );
   }
 
+  // ── Confirmation view ──
   if (confirmed) {
     return (
       <div className="min-h-screen bg-[#09090F] flex items-center justify-center px-6">
@@ -155,12 +235,33 @@ function BookingContent() {
             <Check size={24} className="text-emerald-400" />
           </div>
           <h1 className="text-2xl font-semibold text-white mb-2">Booking confirmed</h1>
-          <p className="text-sm text-zinc-400 mb-2">
-            {selectedService?.name} on {selectedDate && formatDate(selectedDate)} at {selectedTime && formatTime(selectedTime)}
+          <p className="text-sm text-zinc-400 mb-1">
+            {bookingResult?.details.service_name || selectedService?.name} with {bookingResult?.details.practitioner || profile?.name}
           </p>
-          <p className="text-sm text-zinc-500 mb-8">
-            A confirmation email has been sent to {clientEmail}.
+          <p className="text-sm text-zinc-300 mb-1">
+            {selectedDate && formatDate(selectedDate)} at {selectedTime && formatTime(selectedTime)}
           </p>
+          <p className="text-xs text-zinc-600 mb-4">
+            <Globe size={11} className="inline mr-1" />
+            {clientTimezone}
+          </p>
+
+          {bookingResult?.email_sent && (
+            <p className="text-sm text-zinc-500 mb-4">
+              A confirmation email has been sent to {clientEmail}.
+            </p>
+          )}
+
+          {/* Confirmation instructions from the service */}
+          {bookingResult?.details.confirmation_instructions && (
+            <div className="mt-4 mb-6 p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-left">
+              <p className="text-xs font-medium text-zinc-400 mb-2 uppercase tracking-wider">Before your session</p>
+              <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">
+                {bookingResult.details.confirmation_instructions}
+              </p>
+            </div>
+          )}
+
           <Link
             href={`/portal/${slug}`}
             className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors"
@@ -187,6 +288,29 @@ function BookingContent() {
             Back
           </Link>
         </div>
+
+        {/* Practitioner intro */}
+        {profile && (
+          <div className="flex items-center gap-4 mb-8 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+            {profile.photo_url ? (
+              <img
+                src={profile.photo_url}
+                alt={profile.name}
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                <User size={20} className="text-zinc-500" />
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium text-white">{profile.name}</p>
+              {profile.tagline && (
+                <p className="text-xs text-zinc-500 mt-0.5">{profile.tagline}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         <h1 className="text-2xl font-semibold text-white mb-2">Book a session</h1>
 
@@ -254,6 +378,12 @@ function BookingContent() {
               <button onClick={() => setStep('service')} className="text-xs text-zinc-500 hover:text-white transition-colors">
                 Change
               </button>
+            </div>
+
+            {/* Timezone indicator */}
+            <div className="flex items-center gap-1.5 mb-4 text-xs text-zinc-500">
+              <Globe size={12} />
+              Times shown in {clientTimezone}
             </div>
 
             {/* Calendar */}
@@ -374,16 +504,64 @@ function BookingContent() {
                            placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1.5">Notes (optional)</label>
-              <textarea
-                value={clientNotes}
-                onChange={e => setClientNotes(e.target.value)}
-                placeholder="Anything you'd like to share before the session"
-                rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
-              />
+            {/* Structured intake */}
+            <div className="border-t border-zinc-800 pt-4 mt-2">
+              <p className="text-xs text-zinc-600 mb-4">Help us prepare for your session (optional)</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What brings you here right now?</label>
+                  <textarea
+                    value={presentingIssue}
+                    onChange={e => setPresentingIssue(e.target.value)}
+                    placeholder="A few words is enough. What feels most present or important right now?"
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                               placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What feels most active?</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Stress or overwhelm',
+                      'Transition or uncertainty',
+                      'Relationship',
+                      'Work or purpose',
+                      'Health or energy',
+                      'Emotional healing',
+                      'Spiritual or existential',
+                      'I\'m not sure yet',
+                    ].map(area => (
+                      <button
+                        key={area}
+                        type="button"
+                        onClick={() => setFocusArea(focusArea === area ? '' : area)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
+                          ${focusArea === area
+                            ? 'bg-white text-zinc-900'
+                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+                          }`}
+                      >
+                        {area}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What would make this session meaningful?</label>
+                  <textarea
+                    value={desiredOutcome}
+                    onChange={e => setDesiredOutcome(e.target.value)}
+                    placeholder="What would you hope to leave with, understand, or shift?"
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                               placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  />
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setStep('confirm')}
@@ -404,7 +582,7 @@ function BookingContent() {
               {[
                 { label: 'Service', value: selectedService.name },
                 { label: 'Date', value: formatDate(selectedDate) },
-                { label: 'Time', value: formatTime(selectedTime) },
+                { label: 'Time', value: `${formatTime(selectedTime)} (${clientTimezone})` },
                 { label: 'Duration', value: `${selectedService.duration_minutes} min` },
                 { label: 'Name', value: clientName },
                 { label: 'Email', value: clientEmail },
@@ -422,6 +600,42 @@ function BookingContent() {
               ))}
             </div>
 
+            {/* Intake summary */}
+            {(presentingIssue || focusArea || desiredOutcome) && (
+              <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 p-4 mb-6">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Session context</p>
+                {presentingIssue && (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    <span className="text-zinc-600">Brings you here:</span> {presentingIssue}
+                  </p>
+                )}
+                {focusArea && (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    <span className="text-zinc-600">Focus:</span> {focusArea}
+                  </p>
+                )}
+                {desiredOutcome && (
+                  <p className="text-sm text-zinc-400">
+                    <span className="text-zinc-600">Seeking:</span> {desiredOutcome}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Consent checkbox */}
+            <label className="flex items-start gap-3 mb-6 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={consentChecked}
+                onChange={e => setConsentChecked(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-white focus:ring-zinc-500"
+              />
+              <span className="text-xs text-zinc-500 leading-relaxed group-hover:text-zinc-400 transition-colors">
+                I understand that this booking is subject to the practitioner&apos;s cancellation policy.
+                I consent to being contacted at the email provided regarding this session.
+              </span>
+            </label>
+
             {error && (
               <p className="text-sm text-red-400 mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                 {error}
@@ -430,11 +644,11 @@ function BookingContent() {
 
             <button
               onClick={handleConfirm}
-              disabled={submitting}
+              disabled={submitting || !consentChecked}
               className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
                          transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Booking…' : 'Confirm booking'}
+              {submitting ? 'Booking...' : 'Confirm booking'}
             </button>
             <button
               onClick={() => setStep('info')}

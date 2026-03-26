@@ -45,6 +45,12 @@ interface SessionDetail {
   google_event_id: string | null;
   calendar_sync_status: string | null;
   scribe_session_id: string | null;
+  intake_presenting_issue: string | null;
+  intake_focus_area: string | null;
+  intake_desired_outcome: string | null;
+  intake_signal: Record<string, unknown> | null;
+  practitioner_prep: Record<string, unknown> | null;
+  booking_source: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -284,6 +290,71 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
               </div>
             )}
           </div>
+
+          {/* Session Intake / Preparation */}
+          {(session.intake_presenting_issue || session.intake_focus_area || session.intake_desired_outcome) && (
+            <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6">
+              <h2 className="flex items-center gap-2 text-sm font-medium text-white mb-4">
+                <BookOpen className="w-4 h-4 text-amber-400" />
+                Client Intake
+                {session.booking_source === 'portal' && (
+                  <span className="text-xs text-slate-600 font-normal ml-1">via portal</span>
+                )}
+              </h2>
+
+              <div className="space-y-3">
+                {session.intake_presenting_issue && (
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">What brings them here</div>
+                    <p className="text-slate-300 text-sm leading-relaxed">{session.intake_presenting_issue}</p>
+                  </div>
+                )}
+
+                {session.intake_focus_area && (
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">Primary focus</div>
+                    <span className="inline-block px-2.5 py-1 bg-slate-800 text-slate-300 text-xs rounded-full">
+                      {session.intake_focus_area}
+                    </span>
+                  </div>
+                )}
+
+                {session.intake_desired_outcome && (
+                  <div>
+                    <div className="text-xs text-slate-500 mb-1">What they hope to gain</div>
+                    <p className="text-slate-300 text-sm leading-relaxed">{session.intake_desired_outcome}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* MAIA Practitioner Prep (when available) */}
+              {session.practitioner_prep && (
+                <div className="mt-4 pt-4 border-t border-slate-800/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400/70" />
+                    <span className="text-xs text-slate-500 uppercase tracking-wider">MAIA Preparation</span>
+                  </div>
+                  {(session.practitioner_prep as Record<string, string>).summary && (
+                    <p className="text-slate-400 text-sm leading-relaxed mb-2">
+                      {(session.practitioner_prep as Record<string, string>).summary}
+                    </p>
+                  )}
+                  {(session.practitioner_prep as Record<string, string>).tone && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                      <span className="text-slate-600">Tone:</span>
+                      <span className="text-slate-400">{(session.practitioner_prep as Record<string, string>).tone}</span>
+                    </div>
+                  )}
+                  {(session.practitioner_prep as Record<string, string>).stance && (
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span className="text-slate-600">Suggested stance:</span>
+                      <span className="text-slate-400 italic">{(session.practitioner_prep as Record<string, string>).stance}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Notes Section */}
           {(session.notes || session.practitioner_notes) && (

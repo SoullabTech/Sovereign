@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
         id, name, description, long_description, category,
         duration_minutes, price_cents,
         is_active, is_featured, display_order,
-        includes, created_at, updated_at
+        includes, slug, is_bookable, confirmation_instructions,
+        created_at, updated_at
       FROM services
       WHERE practitioner_id = $1
     `;
@@ -75,6 +76,9 @@ export async function GET(request: NextRequest) {
       isFeatured: row.is_featured,
       displayOrder: row.display_order,
       includes: row.includes || [],
+      slug: row.slug,
+      isBookable: row.is_bookable ?? true,
+      confirmationInstructions: row.confirmation_instructions,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));
@@ -116,6 +120,9 @@ export async function POST(request: NextRequest) {
       isFeatured = false,
       displayOrder = 0,
       includes = [],
+      slug,
+      isBookable = true,
+      confirmationInstructions,
     } = body;
 
     if (!name?.trim()) {
@@ -136,11 +143,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Auto-generate slug from name if not provided
+    const serviceSlug = slug?.trim() || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || null;
+
     const result = await db.query(
       `INSERT INTO services
         (practitioner_id, name, description, long_description, category,
-         duration_minutes, price_cents, is_active, is_featured, display_order, includes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         duration_minutes, price_cents, is_active, is_featured, display_order, includes,
+         slug, is_bookable, confirmation_instructions)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
       [
         practitionerId,
@@ -154,6 +165,9 @@ export async function POST(request: NextRequest) {
         isFeatured,
         displayOrder,
         includes,
+        serviceSlug,
+        isBookable,
+        confirmationInstructions?.trim() || null,
       ]
     );
 
@@ -171,6 +185,9 @@ export async function POST(request: NextRequest) {
         isFeatured: service.is_featured,
         displayOrder: service.display_order,
         includes: service.includes || [],
+        slug: service.slug,
+        isBookable: service.is_bookable ?? true,
+        confirmationInstructions: service.confirmation_instructions,
         createdAt: service.created_at,
         updatedAt: service.updated_at,
       },
@@ -275,6 +292,22 @@ export async function PATCH(request: NextRequest) {
       params.push(updates.includes);
     }
 
+    if (updates.slug !== undefined) {
+      const serviceSlug = updates.slug?.trim() || null;
+      updateFields.push(`slug = $${params.length + 1}`);
+      params.push(serviceSlug);
+    }
+
+    if (updates.isBookable !== undefined) {
+      updateFields.push(`is_bookable = $${params.length + 1}`);
+      params.push(updates.isBookable);
+    }
+
+    if (updates.confirmationInstructions !== undefined) {
+      updateFields.push(`confirmation_instructions = $${params.length + 1}`);
+      params.push(updates.confirmationInstructions?.trim() || null);
+    }
+
     if (updateFields.length === 0) {
       return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
     }
@@ -307,6 +340,9 @@ export async function PATCH(request: NextRequest) {
         isFeatured: service.is_featured,
         displayOrder: service.display_order,
         includes: service.includes || [],
+        slug: service.slug,
+        isBookable: service.is_bookable ?? true,
+        confirmationInstructions: service.confirmation_instructions,
         createdAt: service.created_at,
         updatedAt: service.updated_at,
       },

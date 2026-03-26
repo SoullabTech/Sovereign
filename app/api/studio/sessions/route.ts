@@ -74,11 +74,18 @@ export async function GET(request: NextRequest) {
         s.created_at,
         s.updated_at,
         s.completed_at,
-        c.name as client_name,
-        c.email as client_email,
+        s.intake_presenting_issue,
+        s.intake_focus_area,
+        s.intake_desired_outcome,
+        s.intake_signal,
+        s.practitioner_prep,
+        s.booking_source,
+        COALESCE(c.name, sc.name) as client_name,
+        COALESCE(c.email, sc.email) as client_email,
         svc.name as service_name
       FROM sessions s
       LEFT JOIN practitioner_clients c ON s.client_id = c.id
+      LEFT JOIN stellium_clients sc ON s.client_id = sc.id
       LEFT JOIN services svc ON s.service_id = svc.id
       WHERE s.practitioner_id = $1
     `;
@@ -123,6 +130,13 @@ export async function GET(request: NextRequest) {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       completedAt: row.completed_at,
+      // Intake fields
+      intakePresentingIssue: row.intake_presenting_issue,
+      intakeFocusArea: row.intake_focus_area,
+      intakeDesiredOutcome: row.intake_desired_outcome,
+      intakeSignal: row.intake_signal,
+      practitionerPrep: row.practitioner_prep,
+      bookingSource: row.booking_source,
       // Joined fields
       clientName: row.client_name,
       clientEmail: row.client_email,

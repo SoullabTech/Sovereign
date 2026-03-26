@@ -43,7 +43,7 @@ export async function GET(
         includes,
         display_order
       FROM services
-      WHERE practitioner_id = $1 AND is_active = true
+      WHERE practitioner_id = $1 AND is_active = true AND (is_bookable IS NULL OR is_bookable = true)
       ORDER BY display_order ASC, is_featured DESC, name ASC`,
       [practitionerId]
     );

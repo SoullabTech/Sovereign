@@ -29,6 +29,7 @@ import {
   Wind,
   Globe,
   BookOpen,
+  Clock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -50,9 +51,11 @@ export type ModuleSlug =
   | 'clients'
   | 'groups'
   | 'sessions'
+  | 'schedule'
   | 'caseload'
   | 'services'
   | 'calendar'
+  | 'availability'
   | 'tasks'
   | 'comms'
   | 'marketing'
@@ -164,6 +167,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     mode: 'practice',
   },
   {
+    slug: 'schedule',
+    label: 'Schedule',
+    icon: CalendarDays,
+    href: '/studio/schedule',
+    category: 'operations',
+    description: 'Week view with client intake and preparation',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
     slug: 'caseload',
     label: 'Caseload',
     icon: Briefcase,
@@ -190,6 +203,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     href: '/studio/calendar',
     category: 'operations',
     description: 'Availability and booking calendar',
+    alwaysOn: false,
+    mode: 'practice',
+  },
+  {
+    slug: 'availability',
+    label: 'Availability',
+    icon: Clock,
+    href: '/studio/availability',
+    category: 'operations',
+    description: 'Working hours, booking rules, and date overrides',
     alwaysOn: false,
     mode: 'practice',
   },
@@ -365,13 +388,13 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
-  astrology: ['clients', 'portal', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  generalist: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'teams'],
   personal: ['notebook', 'decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 

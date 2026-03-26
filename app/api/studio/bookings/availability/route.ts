@@ -4,11 +4,24 @@ export async function generateStaticParams() { return []; }
 /**
  * STUDIO AVAILABILITY API
  *
- * Returns available time slots for booking
+ * Returns available time slots for booking.
+ * Delegates to shared calculateAvailability engine.
+ *
+ * Query params:
+ *   from     — YYYY-MM-DD range start
+ *   to       — YYYY-MM-DD range end
+ *   duration — minutes (default 60)
+ *   slug     — practitioner slug (default 'stellium')
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import {
+  calculateAvailability,
+  loadAvailabilityInputs,
+  type GoogleBusyBlock,
+} from '@/lib/availability/calculateAvailability';
+import { getEventsInRange } from '@/lib/calendar/GoogleCalendarService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,22 +29,19 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from');
     const to = searchParams.get('to');
     const durationMinutes = parseInt(searchParams.get('duration') || '60');
+    const practitionerSlug = searchParams.get('slug') || 'stellium';
 
     if (!from || !to) {
       return NextResponse.json(
         { error: 'from and to dates are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const practitionerSlug = 'stellium';
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
-
-    // Get practitioner ID
+    // Get practitioner
     const practitionerResult = await db.query(
-      `SELECT id FROM practitioners WHERE slug = $1`,
-      [practitionerSlug]
+      `SELECT id, member_id FROM practitioners WHERE slug = $1`,
+      [practitionerSlug],
     );
 
     if (practitionerResult.rows.length === 0) {
@@ -39,87 +49,58 @@ export async function GET(request: NextRequest) {
     }
 
     const practitionerId = practitionerResult.rows[0].id;
+    const memberId = practitionerResult.rows[0].member_id;
 
-    // Get availability rules
-    const rulesResult = await db.query(
-      `SELECT day_of_week, start_time, end_time
-       FROM practitioner_availability
-       WHERE practitioner_id = $1 AND is_available = true
-       ORDER BY day_of_week, start_time`,
-      [practitionerId]
-    );
+    // Load all availability data from shared engine
+    const loaded = await loadAvailabilityInputs({
+      practitionerId,
+      rangeStart: from,
+      rangeEnd: to,
+    });
 
-    if (rulesResult.rows.length === 0) {
-      return NextResponse.json({ slots: [] });
-    }
-
-    // Get existing bookings in range
-    const bookingsResult = await db.query(
-      `SELECT scheduled_start, scheduled_end FROM sessions
-       WHERE practitioner_id = $1
-       AND status NOT IN ('cancelled', 'no_show')
-       AND scheduled_start >= $2 AND scheduled_start < $3`,
-      [practitionerId, fromDate.toISOString(), toDate.toISOString()]
-    );
-
-    const existingBookings = bookingsResult.rows;
-    const slots: { startAt: string; endAt: string; available: boolean }[] = [];
-    const slotDuration = durationMinutes * 60 * 1000;
-    const now = new Date();
-
-    // Iterate through each day
-    const current = new Date(fromDate);
-    while (current < toDate) {
-      const dayOfWeek = current.getDay();
-      const dayRules = rulesResult.rows.filter(r => r.day_of_week === dayOfWeek);
-
-      for (const rule of dayRules) {
-        // Parse time (HH:MM:SS format)
-        const [startHour, startMin] = rule.start_time.split(':').map(Number);
-        const [endHour, endMin] = rule.end_time.split(':').map(Number);
-
-        const windowStart = new Date(current);
-        windowStart.setHours(startHour, startMin, 0, 0);
-
-        const windowEnd = new Date(current);
-        windowEnd.setHours(endHour, endMin, 0, 0);
-
-        let slotStart = new Date(windowStart);
-        while (slotStart.getTime() + slotDuration <= windowEnd.getTime()) {
-          const slotEnd = new Date(slotStart.getTime() + slotDuration);
-
-          // Skip past times
-          if (slotStart <= now) {
-            slotStart = new Date(slotStart.getTime() + 30 * 60 * 1000);
-            continue;
-          }
-
-          // Check for conflicts
-          const hasConflict = existingBookings.some(booking => {
-            const bookingStart = new Date(booking.scheduled_start);
-            const bookingEnd = new Date(booking.scheduled_end);
-            return slotStart < bookingEnd && slotEnd > bookingStart;
-          });
-
-          slots.push({
-            startAt: slotStart.toISOString(),
-            endAt: slotEnd.toISOString(),
-            available: !hasConflict,
-          });
-
-          slotStart = new Date(slotStart.getTime() + 30 * 60 * 1000);
-        }
+    // Fetch Google Calendar busy blocks (graceful skip if not connected)
+    let googleBusyBlocks: GoogleBusyBlock[] = [];
+    if (memberId) {
+      try {
+        const events = await getEventsInRange(
+          memberId,
+          new Date(`${from}T00:00:00.000Z`),
+          new Date(`${to}T23:59:59.999Z`),
+        );
+        googleBusyBlocks = events.map(e => ({
+          start: new Date(e.start.dateTime || e.start.date || '').toISOString(),
+          end: new Date(e.end.dateTime || e.end.date || '').toISOString(),
+        }));
+      } catch {
+        // Google Calendar not connected — continue without
       }
-
-      current.setDate(current.getDate() + 1);
     }
 
-    return NextResponse.json({ slots });
+    const slots = calculateAvailability({
+      practitionerId,
+      serviceDurationMinutes: durationMinutes,
+      rangeStart: from,
+      rangeEnd: to,
+      settings: loaded.settings,
+      weeklyAvailability: loaded.weeklyAvailability,
+      overrides: loaded.overrides,
+      existingSessions: loaded.existingSessions,
+      googleBusyBlocks,
+    });
+
+    // Map to existing API contract for backward compatibility
+    const mappedSlots = slots.map(s => ({
+      startAt: s.start,
+      endAt: s.end,
+      available: true,
+    }));
+
+    return NextResponse.json({ slots: mappedSlots });
   } catch (error) {
     console.error('[Studio Availability] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch availability' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -4,12 +4,13 @@ export async function generateStaticParams() { return []; }
 /**
  * PORTAL BOOKING API
  *
- * Handles session booking from the portal
- * Sends confirmation emails when enabled for the practitioner
+ * Handles session booking from the portal.
+ * Transaction-safe to prevent double bookings.
+ * Creates service snapshot, sets booking_source, syncs to Google Calendar.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/postgres';
+import db, { transaction } from '@/lib/db/postgres';
 import crypto from 'crypto';
 import { getPractitionerFeaturesById } from '@/lib/practitioner/features';
 import {
@@ -17,6 +18,7 @@ import {
   sendBookingNotificationToPractitioner,
 } from '@/lib/portal/notifications';
 import { logAction } from '@/lib/focus/weightTracking';
+import { createEvent as createGoogleCalendarEvent } from '@/lib/calendar/GoogleCalendarService';
 
 export async function POST(
   request: NextRequest,
@@ -25,7 +27,17 @@ export async function POST(
   try {
     const { slug } = await params;
     const body = await request.json();
-    const { service_id, date, time, name, email, phone, notes } = body;
+    const {
+      service_id, date, time, name, email, phone, notes, timezone,
+      intake_presenting_issue, intake_focus_area, intake_desired_outcome,
+    } = body;
+
+    // Compose legacy notes from intake fields (backward compatible)
+    const composedNotes = notes || [
+      intake_presenting_issue && `What brings you here: ${intake_presenting_issue}`,
+      intake_focus_area && `Most active area: ${intake_focus_area}`,
+      intake_desired_outcome && `Desired outcome: ${intake_desired_outcome}`,
+    ].filter(Boolean).join('\n') || null;
 
     // Validate required fields
     if (!service_id || !date || !time || !name || !email) {
@@ -50,9 +62,10 @@ export async function POST(
     const practitioner = practitionerResult.rows[0];
     const practitionerId = practitioner.id;
 
-    // Get service details
+    // Get full service details (including new booking fields)
     const serviceResult = await db.query(
-      `SELECT id, name, duration_minutes, price_cents
+      `SELECT id, name, duration_minutes, price_cents, description, category,
+              slug as service_slug, confirmation_instructions
        FROM services
        WHERE id = $1 AND practitioner_id = $2 AND is_active = true`,
       [service_id, practitionerId]
@@ -64,100 +77,140 @@ export async function POST(
 
     const service = serviceResult.rows[0];
 
-    // Check if this client already exists
-    let clientId: string;
-    const existingClient = await db.query(
-      `SELECT id FROM stellium_clients
-       WHERE practitioner_id = $1 AND email = $2`,
-      [practitionerId, email]
-    );
-
-    if (existingClient.rows.length > 0) {
-      clientId = existingClient.rows[0].id;
-      // Update client info
-      await db.query(
-        `UPDATE stellium_clients
-         SET name = $1, phone = COALESCE($2, phone), updated_at = NOW()
-         WHERE id = $3`,
-        [name, phone, clientId]
-      );
-    } else {
-      // Create new client
-      clientId = crypto.randomUUID();
-      await db.query(
-        `INSERT INTO stellium_clients
-         (id, practitioner_id, name, email, phone, status, created_at)
-         VALUES ($1, $2, $3, $4, $5, 'active', NOW())`,
-        [clientId, practitionerId, name, email, phone || null]
-      );
-    }
+    // Build service snapshot (frozen record of what was booked)
+    const serviceSnapshot = {
+      id: service.id,
+      name: service.name,
+      duration_minutes: service.duration_minutes,
+      price_cents: service.price_cents,
+      description: service.description,
+      category: service.category,
+      slug: service.service_slug,
+    };
 
     // Calculate session times
-    const [hours, minutes] = time.split(':').map(Number);
     const scheduledStart = new Date(`${date}T${time}`);
     const scheduledEnd = new Date(scheduledStart.getTime() + service.duration_minutes * 60 * 1000);
 
-    // Check for conflicts
-    const conflictResult = await db.query(
-      `SELECT id FROM sessions
-       WHERE practitioner_id = $1
-       AND status NOT IN ('cancelled', 'no_show')
-       AND (
-         (scheduled_start <= $2 AND scheduled_end > $2)
-         OR (scheduled_start < $3 AND scheduled_end >= $3)
-         OR (scheduled_start >= $2 AND scheduled_end <= $3)
-       )`,
-      [practitionerId, scheduledStart.toISOString(), scheduledEnd.toISOString()]
-    );
-
-    if (conflictResult.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'This time slot is no longer available' },
-        { status: 409 }
-      );
-    }
-
-    // Create the session
+    // Transaction-safe booking: client upsert + conflict check + session insert
     const sessionId = crypto.randomUUID();
-    await db.query(
-      `INSERT INTO sessions
-       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW())`,
-      [
-        sessionId,
-        practitionerId,
-        clientId,
-        service_id,
-        scheduledStart.toISOString(),
-        scheduledEnd.toISOString(),
-        notes || null,
-        service.price_cents,
-      ]
-    );
+    const manageToken = crypto.randomUUID().replace(/-/g, '');
 
-    // Also create/update marketing contact if one doesn't exist
-    const existingContact = await db.query(
-      `SELECT id FROM marketing_contacts WHERE practitioner_id = $1 AND email = $2`,
-      [practitionerId, email]
-    );
+    await transaction(async (client) => {
+      // Upsert client
+      let clientId: string;
+      const existingClient = await client.query(
+        `SELECT id FROM stellium_clients
+         WHERE practitioner_id = $1 AND email = $2`,
+        [practitionerId, email]
+      );
 
-    if (existingContact.rows.length === 0) {
-      await db.query(
-        `INSERT INTO marketing_contacts
-         (id, practitioner_id, email, name, status, source, lead_score, created_at)
-         VALUES ($1, $2, $3, $4, 'converted', 'booking', 100, NOW())`,
-        [crypto.randomUUID(), practitionerId, email, name]
+      if (existingClient.rows.length > 0) {
+        clientId = existingClient.rows[0].id;
+        await client.query(
+          `UPDATE stellium_clients
+           SET name = $1, phone = COALESCE($2, phone), updated_at = NOW()
+           WHERE id = $3`,
+          [name, phone, clientId]
+        );
+      } else {
+        clientId = crypto.randomUUID();
+        await client.query(
+          `INSERT INTO stellium_clients
+           (id, practitioner_id, name, email, phone, status, created_at)
+           VALUES ($1, $2, $3, $4, $5, 'active', NOW())`,
+          [clientId, practitionerId, name, email, phone || null]
+        );
+      }
+
+      // Lock + check for conflicts (SELECT FOR UPDATE prevents race conditions)
+      const conflictResult = await client.query(
+        `SELECT id FROM sessions
+         WHERE practitioner_id = $1
+         AND status NOT IN ('cancelled', 'no_show')
+         AND (
+           (scheduled_start <= $2 AND scheduled_end > $2)
+           OR (scheduled_start < $3 AND scheduled_end >= $3)
+           OR (scheduled_start >= $2 AND scheduled_end <= $3)
+         )
+         FOR UPDATE`,
+        [practitionerId, scheduledStart.toISOString(), scheduledEnd.toISOString()]
       );
-    } else {
-      await db.query(
-        `UPDATE marketing_contacts
-         SET status = 'converted', lead_score = GREATEST(lead_score, 100), updated_at = NOW()
-         WHERE id = $1`,
-        [existingContact.rows[0].id]
+
+      if (conflictResult.rows.length > 0) {
+        throw new Error('SLOT_TAKEN');
+      }
+
+      // Create the session with booking_source, service_snapshot, and manage_token
+
+      await client.query(
+        `INSERT INTO sessions
+         (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end,
+          status, notes, price_cents, booking_source, service_snapshot, manage_token,
+          intake_presenting_issue, intake_focus_area, intake_desired_outcome, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, 'portal', $9, $10, $11, $12, $13, NOW())`,
+        [
+          sessionId,
+          practitionerId,
+          clientId,
+          service_id,
+          scheduledStart.toISOString(),
+          scheduledEnd.toISOString(),
+          composedNotes,
+          service.price_cents,
+          JSON.stringify(serviceSnapshot),
+          manageToken,
+          intake_presenting_issue || null,
+          intake_focus_area || null,
+          intake_desired_outcome || null,
+        ]
       );
+    });
+
+    // Marketing contact upsert (fire-and-forget, outside transaction)
+    const nameParts = name.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    db.query(
+      `INSERT INTO marketing_contacts
+       (id, practitioner_id, email, first_name, last_name, status, source, lead_score, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'converted', 'booking', 100, NOW())
+       ON CONFLICT (practitioner_id, email) DO UPDATE SET
+         status = 'converted',
+         lead_score = GREATEST(marketing_contacts.lead_score, 100),
+         updated_at = NOW()`,
+      [crypto.randomUUID(), practitionerId, email, firstName, lastName]
+    ).catch(err => console.warn('[Portal Booking] Marketing contact upsert skipped:', err));
+
+    // Google Calendar sync (fire-and-forget)
+    if (practitioner.member_id) {
+      (async () => {
+        try {
+          const eventId = await createGoogleCalendarEvent(practitioner.member_id, {
+            summary: `${service.name} — ${name}`,
+            description: `Booked via portal\nClient: ${name} (${email})\n${notes ? `Notes: ${notes}` : ''}`,
+            start: scheduledStart,
+            end: scheduledEnd,
+          });
+
+          if (eventId) {
+            await db.query(
+              `UPDATE sessions SET google_event_id = $1, calendar_sync_status = 'synced' WHERE id = $2`,
+              [eventId, sessionId]
+            );
+          }
+        } catch (err) {
+          console.warn('[Portal Booking] Google Calendar sync skipped:', err);
+          db.query(
+            `UPDATE sessions SET calendar_sync_status = 'failed', calendar_sync_error = $1 WHERE id = $2`,
+            [String(err), sessionId]
+          ).catch(() => {});
+        }
+      })();
     }
 
-    // Send confirmation emails if enabled for this practitioner
+    // Send confirmation emails if enabled (fire-and-forget)
     const features = await getPractitionerFeaturesById(practitionerId);
 
     if (features.bookingConfirmationEmailsEnabled && practitioner.email) {
@@ -174,17 +227,16 @@ export async function POST(
         sessionType: service.name,
         dateTime: scheduledStart,
         duration: service.duration_minutes,
-        timezone: body.timezone || 'America/Chicago', // Default if not provided
+        timezone: timezone || 'America/Chicago',
         notes: notes,
+        confirmationInstructions: service.confirmation_instructions || undefined,
+        sessionId: sessionId,
       };
 
-      // Send emails asynchronously (don't block the response)
       Promise.all([
         sendBookingConfirmation(bookingDetails, practitionerInfo),
         sendBookingNotificationToPractitioner(bookingDetails, practitionerInfo),
       ]).then(async (results) => {
-        // Log weight for practitioner (silent, Phase 1)
-        // 2 emails sent = 2 x email_send (weight 3 each = 6 total)
         if (practitioner.member_id) {
           const successCount = results.filter(r => r.success).length;
           for (let i = 0; i < successCount; i++) {
@@ -206,6 +258,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       session_id: sessionId,
+      manage_token: manageToken,
       message: 'Booking confirmed successfully',
       details: {
         service_name: service.name,
@@ -213,10 +266,18 @@ export async function POST(
         time: time,
         duration: service.duration_minutes,
         practitioner: practitioner.practitioner_name,
+        confirmation_instructions: service.confirmation_instructions,
       },
       email_sent: features.bookingConfirmationEmailsEnabled,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === 'SLOT_TAKEN') {
+      return NextResponse.json(
+        { error: 'This time slot is no longer available' },
+        { status: 409 }
+      );
+    }
+
     console.error('Portal booking error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

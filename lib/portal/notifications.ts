@@ -36,6 +36,8 @@ export interface BookingDetails {
   duration: number; // minutes
   timezone: string;
   notes?: string;
+  confirmationInstructions?: string;
+  sessionId?: string;
 }
 
 export interface PractitionerInfo {
@@ -74,6 +76,9 @@ export async function sendBookingConfirmation(
   const practitionerDisplay = practitioner.businessName || practitioner.name;
 
   try {
+    // Generate ICS calendar attachment
+    const icsContent = generateICS(booking, practitioner);
+
     const result = await resend.emails.send({
       from: `${practitionerDisplay} <bookings@soullab.life>`,
       replyTo: practitioner.email,
@@ -81,6 +86,13 @@ export async function sendBookingConfirmation(
       subject: `Booking Confirmed: ${booking.sessionType} with ${practitioner.name}`,
       html: generateBookingConfirmationHtml(booking, practitioner, formattedDate),
       text: generateBookingConfirmationText(booking, practitioner, formattedDate),
+      attachments: [
+        {
+          filename: 'session.ics',
+          content: Buffer.from(icsContent).toString('base64'),
+          content_type: 'text/calendar',
+        },
+      ],
       tags: [
         { name: 'type', value: 'booking-confirmation' },
         { name: 'portal', value: practitioner.portalSlug },
@@ -162,6 +174,18 @@ function generateBookingConfirmationHtml(
               </p>
               ` : ''}
 
+              ${booking.confirmationInstructions ? `
+              <!-- Preparation Instructions -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fffbf0; border-radius: 8px; border-left: 4px solid #D4AF37; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 8px; color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Before Your Session</p>
+                    <p style="margin: 0; color: #333; font-size: 15px; line-height: 1.6; white-space: pre-line;">${booking.confirmationInstructions}</p>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <p style="margin: 0 0 16px; color: #333; font-size: 16px; line-height: 1.6;">
                 If you need to reschedule or have any questions, please reply to this email or contact ${practitioner.name} directly.
               </p>
@@ -212,7 +236,11 @@ Date & Time: ${formattedDate}
 Duration: ${booking.duration} minutes
 Timezone: ${booking.timezone}
 ${booking.notes ? `Notes: ${booking.notes}` : ''}
-
+${booking.confirmationInstructions ? `
+BEFORE YOUR SESSION
+-------------------
+${booking.confirmationInstructions}
+` : ''}
 If you need to reschedule or have any questions, please reply to this email or contact ${practitioner.name} directly.
 
 Looking forward to seeing you!
@@ -696,4 +724,50 @@ function formatDateTime(date: Date, timezone: string): string {
       minute: '2-digit',
     });
   }
+}
+
+// ============================================================================
+// ICS Calendar Attachment
+// ============================================================================
+
+function formatICSDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function generateICS(booking: BookingDetails, practitioner: PractitionerInfo): string {
+  const start = booking.dateTime;
+  const end = new Date(start.getTime() + booking.duration * 60 * 1000);
+  const uid = `${booking.sessionId || Date.now()}@soullab.life`;
+  const now = new Date();
+
+  const description = [
+    `${booking.sessionType} with ${practitioner.name}`,
+    booking.confirmationInstructions ? `\\n\\nBefore your session:\\n${booking.confirmationInstructions.replace(/\n/g, '\\n')}` : '',
+    booking.notes ? `\\n\\nYour notes: ${booking.notes.replace(/\n/g, '\\n')}` : '',
+  ].join('');
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Soullab//Booking//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${formatICSDate(now)}`,
+    `DTSTART:${formatICSDate(start)}`,
+    `DTEND:${formatICSDate(end)}`,
+    `SUMMARY:${booking.sessionType} with ${practitioner.name}`,
+    `DESCRIPTION:${description}`,
+    `ORGANIZER;CN=${practitioner.name}:mailto:${practitioner.email}`,
+    `ATTENDEE;CN=${booking.clientName}:mailto:${booking.clientEmail}`,
+    'STATUS:CONFIRMED',
+    `BEGIN:VALARM`,
+    `TRIGGER:-PT30M`,
+    `ACTION:DISPLAY`,
+    `DESCRIPTION:Session in 30 minutes`,
+    `END:VALARM`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
 }

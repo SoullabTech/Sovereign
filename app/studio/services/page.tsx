@@ -31,6 +31,9 @@ interface Service {
   isFeatured: boolean;
   displayOrder: number;
   includes: string[];
+  slug: string | null;
+  isBookable: boolean;
+  confirmationInstructions: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +48,9 @@ interface ServiceFormData {
   isActive: boolean;
   isFeatured: boolean;
   includes: string[];
+  slug: string;
+  isBookable: boolean;
+  confirmationInstructions: string;
 }
 
 const DURATION_OPTIONS = [
@@ -86,6 +92,9 @@ export default function ServicesPage() {
     isActive: true,
     isFeatured: false,
     includes: [],
+    slug: '',
+    isBookable: true,
+    confirmationInstructions: '',
   });
   const [newInclude, setNewInclude] = useState('');
   const [saving, setSaving] = useState(false);
@@ -120,6 +129,9 @@ export default function ServicesPage() {
       isActive: true,
       isFeatured: false,
       includes: [],
+      slug: '',
+      isBookable: true,
+      confirmationInstructions: '',
     });
     setNewInclude('');
     setError(null);
@@ -138,6 +150,9 @@ export default function ServicesPage() {
       isActive: service.isActive,
       isFeatured: service.isFeatured,
       includes: service.includes || [],
+      slug: service.slug || '',
+      isBookable: service.isBookable ?? true,
+      confirmationInstructions: service.confirmationInstructions || '',
     });
     setNewInclude('');
     setError(null);
@@ -628,6 +643,39 @@ export default function ServicesPage() {
                   )}
                 </div>
 
+                {/* Booking Settings */}
+                <div className="space-y-3 border-t border-slate-700 pt-4">
+                  <div className="text-sm font-medium text-slate-300">Booking</div>
+
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">
+                      Booking slug
+                      <span className="text-slate-600 ml-1">(for direct links)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-500">/portal/.../book/</span>
+                      <input
+                        type="text"
+                        value={formData.slug}
+                        onChange={e => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
+                        placeholder="auto-generated from name"
+                        className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Confirmation instructions</label>
+                    <textarea
+                      value={formData.confirmationInstructions}
+                      onChange={e => setFormData(prev => ({ ...prev, confirmationInstructions: e.target.value }))}
+                      placeholder="Instructions shown to client after booking (e.g., preparation steps, what to bring)"
+                      rows={3}
+                      className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-y"
+                    />
+                  </div>
+                </div>
+
                 {/* Toggles */}
                 <div className="flex gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -647,6 +695,15 @@ export default function ServicesPage() {
                       className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500"
                     />
                     <span className="text-sm text-slate-300">Featured</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isBookable}
+                      onChange={e => setFormData(prev => ({ ...prev, isBookable: e.target.checked }))}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-amber-500 focus:ring-amber-500"
+                    />
+                    <span className="text-sm text-slate-300">Publicly bookable</span>
                   </label>
                 </div>
 
