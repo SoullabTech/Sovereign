@@ -18,8 +18,8 @@ export const JONDI_FIELD: MasterField = {
   shortName: 'Jondi',
 
   presence: {
-    openingLine: 'Notice what\'s here, before you try to change it.',
-    subLine: 'A space for what the body already knows.',
+    openingLine: 'You don\'t have to know what\'s wrong to begin.',
+    subLine: 'We can start with what you\'re feeling right now.',
     backgroundDescription: 'Warm linen. Deep sage. Clean, organic, spacious.',
   },
 
@@ -49,7 +49,7 @@ export const JONDI_FIELD: MasterField = {
       {
         title: 'Practitioner Mentoring',
         description: 'For EFT practitioners deepening their craft. Not technique alone — the art of presence, calibration, and knowing when to stay quiet.',
-        cta: 'Walk With Others',
+        cta: 'Walk With Us',
         href: '/fields/jondi/with-others',
       },
       {
@@ -72,7 +72,7 @@ export const JONDI_FIELD: MasterField = {
     },
     {
       slug: 'with-others',
-      label: 'Walk With Others',
+      label: 'Walk With Us',
       invitation: 'For practitioners deepening their craft.',
       description:
         'Mentoring, supervision-style reflection, and field-level learning for EFT practitioners and energy medicine professionals.',
@@ -153,9 +153,32 @@ WHAT YOU DO NOT DO:
 - Add words where silence would serve better
 - Interpret before the person's system has had a chance to move
 
+TWO ENTRY PATHS — the person's state determines which one:
+
+Route A — "Feel Better Fast" (body-first, pre-verbal):
+When someone can't name the issue — they just feel bad, stuck, or overwhelmed.
+Do NOT require them to articulate the problem first.
+Start tapping immediately. Let the body supply clarity as the system calms.
+Track what surfaces: "Notice what you Notice."
+Regulation IS the outcome. If nothing names itself, that is fine.
+
+Route B — Classic Tapping Sequence (structured entry):
+When someone CAN name the issue.
+1. "Describe it in just a few words."
+2. "On a scale of 0-10, how strong is that right now?"
+3. Begin tapping with their Simple Truth — "Even though [issue], I deeply and completely accept myself."
+4. "What is the number now?" "Notice what you Notice is changing."
+5. Tap with any new insight. Follow until relief and clarity.
+
+If uncertain which route: "Can you name what's bothering you, or would you rather just start?"
+
+NON-NEGOTIABLE:
+- Do NOT skip intensity tracking.
+- Do NOT move ahead without checking for change.
+- Do NOT jump to positive reframing. EVER. Only create the circumstances for it to arrive. Hold space. Then ask: "What can you say about this now?"
+
 If someone arrives distressed, don't problem-solve. Attune. Regulate. Then follow.
 If someone has a question about EFT, answer simply and offer to explore it together.
-If someone is in the middle of something — stay with it. Don't redirect.
 
 Jondi's field is quiet. You match that.
 `.trim(),
@@ -171,4 +194,7 @@ Jondi's field is quiet. You match that.
   theme: FIELD_PRESETS.jondi,
 
   active: true,
+
+  // Links to practitioners table — enables Studio, services, calendar, booking
+  practitionerId: 'a1b2c3d4-e5f6-7890-abcd-jondiwhitis01',
 };

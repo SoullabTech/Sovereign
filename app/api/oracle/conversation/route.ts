@@ -47,6 +47,9 @@ import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace'
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { loadFirstDescentSeed } from '@/lib/consciousness/firstDescentPersistence';
 import type { DescentSeed } from '@/lib/consciousness/firstDescent';
+import { loadActiveBuild } from '@/lib/masters/build/loader';
+import { assembleMasterOverlay } from '@/lib/masters/build/assembler';
+import type { ResolvedMasterBuild } from '@/lib/masters/build/types';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -304,6 +307,7 @@ type ConversationBody = {
   userName?: string;
   /** Sanctuary Mode: when true, no memory writes, no memory tool access */
   isSanctuary?: boolean;
+  fieldSlug?: string;  // Master field: loads build overlay when set
 };
 
 export async function POST(request: NextRequest) {
@@ -426,6 +430,20 @@ export async function POST(request: NextRequest) {
 
     // First Descent: Load seed for soft continuity injection
     const descentSeed = await loadFirstDescentSeed(userId);
+
+    // MASTER FIELD: Load active build overlay
+    let activeMasterBuild: ResolvedMasterBuild | null = null;
+    const fieldSlug = body.fieldSlug;
+    if (fieldSlug) {
+      activeMasterBuild = await loadActiveBuild(fieldSlug);
+      if (activeMasterBuild) {
+        console.log('[Oracle] master-build-loaded', {
+          master: activeMasterBuild.master_slug,
+          version: activeMasterBuild.build_version,
+          displayName: activeMasterBuild.master_display_name,
+        });
+      }
+    }
 
     // BRIDGE D extension: Extract active report context (if present)
     const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
@@ -1645,6 +1663,20 @@ async function generateSpiralogicResponseWithLLM(
   // Voice & method constraints from Kelly Field Evaluation #001 (2026-03-25)
   const voiceMethodConstraints = getVoiceMethodConstraints();
 
+  // MASTER FIELD: Assemble overlay — identity established early, before context blocks
+  const masterOverlay = (activeMasterBuild
+    && activeMasterBuild.voice_block
+    && activeMasterBuild.stance_block)
+    ? assembleMasterOverlay(activeMasterBuild)
+    : '';
+
+  if (activeMasterBuild && !masterOverlay) {
+    console.warn('[Oracle] master-build-skipped: voice_block or stance_block empty', {
+      master: activeMasterBuild.master_slug,
+      version: activeMasterBuild.build_version,
+    });
+  }
+
   let finalSystemPrompt: string;
   let memoryToolActive = false;
 
@@ -1659,6 +1691,7 @@ async function generateSpiralogicResponseWithLLM(
 
     finalSystemPrompt = [
       systemPrompt,
+      masterOverlay,          // Master identity (immediately after core)
       voiceMethodConstraints,
       reportContextBlock,
       descentContextBlock,
@@ -1670,6 +1703,7 @@ async function generateSpiralogicResponseWithLLM(
     // Standard path: direct injection (existing behavior, zero change)
     finalSystemPrompt = [
       systemPrompt,
+      masterOverlay,          // Master identity (immediately after core)
       voiceMethodConstraints,
       reportContextBlock,
       descentContextBlock,

@@ -14,11 +14,12 @@ export interface FeatureFlags {
   participatoryReality: boolean;        // Phase 1: types + prompt blocks ready; oracle wiring pending
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
-  fieldTraining: boolean;               // V1: corrections, examples, preferences, builds
+fieldTraining: boolean;               // V1: corrections, examples, preferences, builds
   livingNotebook: boolean;              // Living Notebook: capture + basic structuring
   livingNotebookActivation: boolean;    // Living Notebook: MAIA context injection
   memoryToolPilot: boolean;             // Server-side: Anthropic Memory Tool for selective retrieval (env: MAIA_MEMORY_TOOL_PILOT)
   masterDocumentUpload: boolean;        // Master field: document upload + extraction for Virtual Self training
+  masterFields: boolean;                // Multi-master intelligence: field-scoped builds layered on MAIA
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -32,11 +33,12 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryReality: false,        // Off until Phase 2 wiring complete
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
-  fieldTraining: false,               // Off until training UI ready
+fieldTraining: false,               // Off until training UI ready
   livingNotebook: false,              // Off until Phase 1 complete
   livingNotebookActivation: false,    // Off until Phase 2 complete
   memoryToolPilot: false,             // Off; activate via MAIA_MEMORY_TOOL_PILOT=true in env
   masterDocumentUpload: false,        // Off until Jondi v1 validation
+  masterFields: false,                // Off until master builds validated
 };
 
 /**
