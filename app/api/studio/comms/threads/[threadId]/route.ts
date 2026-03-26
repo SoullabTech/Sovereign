@@ -137,7 +137,7 @@ export async function POST(
        FROM comms_threads t
        LEFT JOIN practitioner_clients pc ON pc.id = t.client_id
        LEFT JOIN stellium_clients sc ON sc.id = t.client_id
-       JOIN practitioners p ON p.id = t.practitioner_id
+       JOIN practitioners p ON p.member_id = t.practitioner_id
        WHERE t.id = $1 AND t.practitioner_id = $2`,
       [threadId, practitionerId]
     );
