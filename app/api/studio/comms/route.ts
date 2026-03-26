@@ -13,24 +13,10 @@ import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import crypto from 'crypto';
 
-async function getPractitionerId(memberId: string): Promise<string | null> {
-  // Look up by member_id first
-  const byMember = await db.query(
-    'SELECT id FROM practitioners WHERE member_id = $1',
-    [memberId]
-  );
-  if (byMember.rows[0]?.id) return byMember.rows[0].id;
-
-  // Fallback: check if member has a linked practitioner via any other path
-  // In dev, use hardcoded stellium practitioner
-  if (process.env.NODE_ENV === 'development') {
-    const devResult = await db.query(
-      "SELECT id FROM practitioners WHERE slug = 'stellium' LIMIT 1"
-    );
-    return devResult.rows[0]?.id || null;
-  }
-
-  return null;
+// NOTE: comms_threads.practitioner_id FK references members(id), not practitioners(id)
+// So we use the member_id directly as the "practitioner_id" in comms tables
+function getMemberId(memberId: string): string {
+  return memberId;
 }
 
 // ── GET: Inbox ──
@@ -44,10 +30,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    // comms_threads.practitioner_id FK → members(id), so use memberId directly
+    const practitionerId = memberId;
 
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get('domain') || 'all';
@@ -118,10 +102,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
-    if (!practitionerId) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
+    // comms_threads.practitioner_id FK → members(id), so use memberId directly
+    const practitionerId = memberId;
 
     const body = await request.json();
     const {
@@ -202,9 +184,9 @@ export async function POST(request: NextRequest) {
       if (apiKey) {
         const resend = new Resend(apiKey);
         try {
-          // Get practitioner info for from name
+          // Get practitioner info for from name (practitionerId here is actually memberId)
           const practResult = await db.query(
-            `SELECT name, email, business_name FROM practitioners WHERE id = $1`,
+            `SELECT name, email, business_name FROM practitioners WHERE member_id = $1`,
             [practitionerId]
           );
           const pract = practResult.rows[0];
