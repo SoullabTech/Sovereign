@@ -24,7 +24,7 @@ const VALID_SIGNALS: CorrectionSignal[] = ['positive', 'negative', 'neutral'];
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ field: string }> }
 ) {
   try {
     // Auth check
@@ -33,7 +33,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { slug } = await params;
+    const { field: slug } = await params;
 
     // Verify the member owns this master field
     const masterResult = await query<{ id: string }>(
