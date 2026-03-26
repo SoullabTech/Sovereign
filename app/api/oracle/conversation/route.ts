@@ -669,7 +669,8 @@ export async function POST(request: NextRequest) {
       memberWebPrompt,
       descentSeed,
       userId,
-      body
+      body,
+      activeMasterBuild
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1510,7 +1511,8 @@ async function generateSpiralogicResponseWithLLM(
   memberWebPrompt?: string,
   descentSeed?: DescentSeed | null,
   userId?: string,
-  body?: ConversationBody
+  body?: ConversationBody,
+  activeMasterBuild?: ResolvedMasterBuild | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
