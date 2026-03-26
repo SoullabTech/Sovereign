@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get('client_id');
     if (clientId) filter.client_id = clientId;
 
+    const fieldSlug = searchParams.get('field');
+    if (fieldSlug) filter.field_slug = fieldSlug;
+
     const tag = searchParams.get('tag');
     if (tag) filter.tag = tag;
 

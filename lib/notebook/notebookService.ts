@@ -12,6 +12,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { classifyEntry } from './classifyEntry';
+import { getAllActiveSlugs } from '@/lib/masters/registry';
 import type {
   NotebookEntry,
   CreateEntryInput,
@@ -19,6 +20,18 @@ import type {
   NotebookFilter,
   EntryClassification,
 } from './types';
+
+// ═══════════════════════════════════════════════════════════════
+// Field slug validation — coerce unknown/malformed to null
+// ═══════════════════════════════════════════════════════════════
+
+function normalizeFieldSlug(raw?: string | null): string | null {
+  if (!raw) return null;
+  const slug = raw.trim().toLowerCase();
+  if (!slug) return null;
+  const valid = getAllActiveSlugs();
+  return valid.includes(slug) ? slug : null;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // 1. Create Entry (awaited — caller needs ID back)
@@ -58,11 +71,11 @@ export async function createEntry(
       `INSERT INTO notebook_entries (
         member_id, content, entry_type, title, tags, source,
         source_ref, client_id, conversation_id, session_id,
-        primary_context, classification, priority, due_at
+        primary_context, field_slug, classification, priority, due_at
       ) VALUES (
         $1, $2, $3, $4, $5, $6,
         $7, $8, $9, $10,
-        $11, $12, $13, $14
+        $11, $12, $13, $14, $15
       )
       RETURNING *`,
       [
@@ -77,6 +90,7 @@ export async function createEntry(
         input.conversation_id || null,
         input.session_id || null,
         input.primary_context || 'personal',
+        normalizeFieldSlug(input.field_slug),
         classification ? JSON.stringify(classification) : null,
         input.priority || null,
         input.due_at || null,
@@ -123,6 +137,7 @@ export function updateEntry(
     ['conversation_id', 'conversation_id'],
     ['session_id', 'session_id'],
     ['primary_context', 'primary_context'],
+    ['field_slug', 'field_slug'],
     ['weight', 'weight'],
     ['occurrence_count', 'occurrence_count'],
     ['last_seen_at', 'last_seen_at'],
@@ -243,6 +258,12 @@ export async function listEntries(
     if (filter.client_id) {
       conditions.push(`client_id = $${paramIdx}`);
       values.push(filter.client_id);
+      paramIdx++;
+    }
+
+    if (filter.field_slug) {
+      conditions.push(`field_slug = $${paramIdx}`);
+      values.push(filter.field_slug);
       paramIdx++;
     }
 

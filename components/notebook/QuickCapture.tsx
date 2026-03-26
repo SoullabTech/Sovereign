@@ -33,6 +33,8 @@ export interface QuickCaptureProps {
   sessionId?: string;
   /** Default context for entries created here */
   primaryContext?: PrimaryContext;
+  /** Master field slug — auto-set when mounted inside /fields/[field]/* */
+  fieldSlug?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -61,12 +63,21 @@ const TYPE_LABELS: Record<EntryType, string> = {
 // Component
 // ═══════════════════════════════════════════════════════════════
 
+/** Available fields for picker — null = unscoped */
+const FIELD_OPTIONS: { slug: string | null; label: string }[] = [
+  { slug: null, label: 'None' },
+  { slug: 'kelly', label: 'Kelly' },
+  { slug: 'jondi', label: 'Jondi' },
+  { slug: 'nathan', label: 'Nathan' },
+];
+
 export function QuickCapture({
   source = 'manual',
   conversationId,
   clientId,
   sessionId,
   primaryContext = 'personal',
+  fieldSlug: initialFieldSlug,
 }: QuickCaptureProps) {
   const { flags } = useFeatureFlags();
   const [isOpen, setIsOpen] = useState(false);
@@ -75,6 +86,7 @@ export function QuickCapture({
   const [confidence, setConfidence] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [selectedField, setSelectedField] = useState<string | null>(initialFieldSlug ?? null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Live type detection as user types
@@ -106,6 +118,7 @@ export function QuickCapture({
           client_id: clientId,
           session_id: sessionId,
           primary_context: clientId ? 'client' : primaryContext,
+          field_slug: selectedField || undefined,
         }),
       });
 
@@ -122,7 +135,7 @@ export function QuickCapture({
     } finally {
       setIsSaving(false);
     }
-  }, [content, isSaving, source, conversationId, clientId, sessionId, primaryContext]);
+  }, [content, isSaving, source, conversationId, clientId, sessionId, primaryContext, selectedField]);
 
   // Keyboard shortcut: Cmd+Enter to save
   const handleKeyDown = useCallback(
@@ -225,6 +238,26 @@ export function QuickCapture({
                 >
                   <X className="w-4 h-4" />
                 </button>
+              </div>
+
+              {/* Field picker */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] text-white/25 uppercase tracking-wider">Field</span>
+                <div className="flex gap-1">
+                  {FIELD_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.slug ?? 'none'}
+                      onClick={() => setSelectedField(opt.slug)}
+                      className={`text-xs px-2 py-0.5 rounded-full transition-all ${
+                        selectedField === opt.slug
+                          ? 'bg-[#D4B896]/20 text-[#D4B896] border border-[#D4B896]/30'
+                          : 'bg-white/5 text-white/30 border border-white/5 hover:text-white/50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Textarea */}

@@ -70,6 +70,7 @@ export interface NotebookEntry {
   conversation_id: string | null;
   session_id: string | null;
   primary_context: PrimaryContext;
+  field_slug: string | null;
   classification: EntryClassification | null;
   weight: number;
   occurrence_count: number;
@@ -98,6 +99,7 @@ export interface CreateEntryInput {
   conversation_id?: string;
   session_id?: string;
   primary_context?: PrimaryContext;
+  field_slug?: string;          // master field slug (jondi, kelly, nathan)
 }
 
 export interface UpdateEntryInput {
@@ -112,6 +114,7 @@ export interface UpdateEntryInput {
   conversation_id?: string | null;
   session_id?: string | null;
   primary_context?: PrimaryContext;
+  field_slug?: string | null;
   weight?: number;
   occurrence_count?: number;
   last_seen_at?: string;
@@ -127,6 +130,7 @@ export interface NotebookFilter {
   status?: EntryStatus;
   primary_context?: PrimaryContext;
   client_id?: string;
+  field_slug?: string;          // filter by master field
   tag?: string;
   search?: string;            // full-text search query
   limit?: number;             // default 20

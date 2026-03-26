@@ -55,6 +55,13 @@ const CONTEXT_FILTERS: { value: PrimaryContext | 'all'; label: string }[] = [
   { value: 'project', label: 'Project' },
 ];
 
+const FIELD_FILTERS: { value: string | 'all'; label: string }[] = [
+  { value: 'all', label: 'All Fields' },
+  { value: 'kelly', label: 'Kelly' },
+  { value: 'jondi', label: 'Jondi' },
+  { value: 'nathan', label: 'Nathan' },
+];
+
 const TYPE_COLORS: Record<EntryType, string> = {
   note: 'text-white/60 bg-white/5',
   task: 'text-blue-400 bg-blue-500/10',
@@ -82,6 +89,7 @@ export default function NotebookPage() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState<EntryType | 'all'>('all');
   const [contextFilter, setContextFilter] = useState<PrimaryContext | 'all'>('all');
+  const [fieldFilter, setFieldFilter] = useState<string | 'all'>('all');
   const [showDone, setShowDone] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchDebounce, setSearchDebounce] = useState('');
@@ -101,6 +109,7 @@ export default function NotebookPage() {
       const params = new URLSearchParams();
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (contextFilter !== 'all') params.set('context', contextFilter);
+      if (fieldFilter !== 'all') params.set('field', fieldFilter);
       if (showDone) params.set('status', 'done');
       if (searchDebounce) params.set('search', searchDebounce);
       params.set('limit', '50');
@@ -115,7 +124,7 @@ export default function NotebookPage() {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, contextFilter, showDone, searchDebounce]);
+  }, [typeFilter, contextFilter, fieldFilter, showDone, searchDebounce]);
 
   useEffect(() => {
     fetchEntries();
@@ -225,6 +234,19 @@ export default function NotebookPage() {
           ))}
         </select>
 
+        <select
+          value={fieldFilter}
+          onChange={(e) => setFieldFilter(e.target.value)}
+          className="bg-white/5 border border-[#D4B896]/10 rounded-lg px-3 py-1.5
+                     text-white/60 text-xs focus:outline-none focus:border-[#D4B896]/30"
+        >
+          {FIELD_FILTERS.map(({ value, label }) => (
+            <option key={value} value={value} className="bg-[#1a1f2e]">
+              {label}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={() => setShowDone(!showDone)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs
@@ -317,6 +339,11 @@ export default function NotebookPage() {
 
                     {/* Metadata */}
                     <div className="flex-shrink-0 flex items-center gap-2">
+                      {entry.field_slug && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#D4B896]/10 text-[#D4B896]/60 capitalize">
+                          {entry.field_slug}
+                        </span>
+                      )}
                       <span className="text-[10px] text-white/20">
                         {formatTime(entry.created_at)}
                       </span>
@@ -385,6 +412,12 @@ export default function NotebookPage() {
                               <span className="text-white/25">Weight:</span>{' '}
                               <span className="text-white/50">{entry.weight}</span>
                             </div>
+                            {entry.field_slug && (
+                              <div>
+                                <span className="text-white/25">Field:</span>{' '}
+                                <span className="text-[#D4B896]/70 capitalize">{entry.field_slug}</span>
+                              </div>
+                            )}
                             {entry.classification && (
                               <div className="col-span-2">
                                 <span className="text-white/25">Classification:</span>{' '}
