@@ -196,5 +196,5 @@ Jondi's field is quiet. You match that.
   active: true,
 
   // Links to practitioners table — enables Studio, services, calendar, booking
-  practitionerId: 'a1b2c3d4-e5f6-7890-abcd-jondiwhitis01',
+  practitionerId: '5ec9b705-a1e7-443a-9584-83e86fe666b0',
 };
