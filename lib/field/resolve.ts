@@ -91,11 +91,12 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
   const fc = (p.field_config ?? {}) as Record<string, unknown>;
 
   // --- 2. Theme row ---
+  // practitioner_themes has: theme_json (JSONB), vibe (text)
   const themeResult = await db.query<{
     theme_json: Record<string, unknown> | null;
-    color_palette: Record<string, unknown> | null;
+    vibe: string | null;
   }>(
-    `SELECT theme_json, color_palette
+    `SELECT theme_json, vibe
      FROM practitioner_themes
      WHERE practitioner_id = $1`,
     [p.id]
@@ -108,8 +109,10 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
     (fc.theme as FieldTheme | null) ??
     defaultThemeForSlug(slug);
 
+  // Palette: extract from theme_json if present, else from field_config, else generate
+  const themeJsonPalette = themeRow?.theme_json as Record<string, unknown> | null;
   const palette: FieldPalette =
-    (themeRow?.color_palette as FieldPalette | null) ??
+    (themeJsonPalette?.palette as FieldPalette | null) ??
     (fc.palette as FieldPalette | null) ??
     defaultPalette(theme);
 
@@ -157,9 +160,10 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
   const maiaResult = await db.query<{
     voice_style: string | null;
     tone: Record<string, unknown> | null;
-    persona_config: Record<string, unknown> | null;
+    frameworks: string[] | null;
+    system_prompt_template: string | null;
   }>(
-    `SELECT voice_style, tone, persona_config
+    `SELECT voice_style, tone, frameworks, system_prompt_template
      FROM ai_companion_configs
      WHERE practitioner_id = $1
      LIMIT 1`,
@@ -169,7 +173,7 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
   let maia: MaiaPersona | null = null;
   if (maiaResult.rows.length > 0) {
     const m = maiaResult.rows[0];
-    const pcfg = (m.persona_config ?? {}) as Record<string, unknown>;
+    const toneJson = (m.tone ?? {}) as Record<string, unknown>;
     // Map DB voice_style to MaiaPersona tone
     const toneMap: Record<string, MaiaPersona['tone']> = {
       somatic:  'somatic-precise',
@@ -182,13 +186,13 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
     };
     maia = {
       tone:            toneMap[m.voice_style ?? 'warm'] ?? 'relational-warm',
-      cadence:         (pcfg.cadence as MaiaPersona['cadence']) ?? 'measured',
-      responseStyle:   (pcfg.responseStyle as MaiaPersona['responseStyle']) ?? 'medium',
-      frameworks:      (pcfg.frameworks as string[]) ?? [],
-      trackFor:        (pcfg.trackFor as string[]) ?? [],
-      avoidPatterns:   (pcfg.avoidPatterns as string[]) ?? [],
-      preferPatterns:  (pcfg.preferPatterns as string[]) ?? [],
-      systemPromptBlock: (pcfg.systemPromptBlock as string) ?? '',
+      cadence:         (toneJson.cadence as MaiaPersona['cadence']) ?? 'measured',
+      responseStyle:   (toneJson.responseStyle as MaiaPersona['responseStyle']) ?? 'medium',
+      frameworks:      m.frameworks ?? [],
+      trackFor:        (toneJson.trackFor as string[]) ?? [],
+      avoidPatterns:   (toneJson.avoidPatterns as string[]) ?? [],
+      preferPatterns:  (toneJson.preferPatterns as string[]) ?? [],
+      systemPromptBlock: m.system_prompt_template ?? '',
     };
   }
 
