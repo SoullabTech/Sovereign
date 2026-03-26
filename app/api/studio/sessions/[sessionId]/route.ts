@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { generatePractitionerPrep } from '@/lib/studio/generatePractitionerPrep';
 
 async function getPractitionerId(): Promise<string | null> {
   const result = await db.query(
@@ -107,6 +108,26 @@ export async function GET(
       client_email: row.client_email,
       service_name: row.service_name,
     };
+
+    // Generate practitioner prep on first load (if intake exists but prep doesn't)
+    if (
+      !session.practitioner_prep &&
+      session.status === 'scheduled' &&
+      (session.intake_presenting_issue || session.intake_focus_area || session.intake_desired_outcome)
+    ) {
+      // Fire-and-forget: generate prep asynchronously, don't block response
+      generatePractitionerPrep(session.id, {
+        presentingIssue: session.intake_presenting_issue,
+        focusArea: session.intake_focus_area,
+        desiredOutcome: session.intake_desired_outcome,
+      }).then(prep => {
+        if (prep) {
+          console.log(`[Studio Session] Practitioner prep generated for ${session.id}`);
+        }
+      }).catch(err => {
+        console.warn('[Studio Session] Prep generation skipped:', err);
+      });
+    }
 
     return NextResponse.json({ success: true, session });
   } catch (error) {
