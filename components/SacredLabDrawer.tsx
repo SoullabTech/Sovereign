@@ -382,6 +382,36 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       ],
     },
     {
+      title: 'PRACTITIONER STUDIO',
+      icon: '⚡',
+      items: [
+        {
+          icon: Compass,
+          label: "Today's Field",
+          action: () => onNavigate('/studio/today'),
+          description: "Your sessions and what's arriving",
+        },
+        {
+          icon: User,
+          label: 'Clients',
+          action: () => onNavigate('/studio/caseload'),
+          description: 'Client relationships & sessions',
+        },
+        {
+          icon: BookOpen,
+          label: 'Services',
+          action: () => onNavigate('/studio/portal'),
+          description: 'Your bookable services',
+        },
+        {
+          icon: Activity,
+          label: 'Calendar',
+          action: () => onNavigate('/studio/calendar'),
+          description: 'Availability & scheduling',
+        },
+      ],
+    },
+    {
       title: 'YOUR MATRIX',
       icon: '🧬',
       items: [

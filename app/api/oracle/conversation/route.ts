@@ -44,6 +44,9 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { loadActiveBuild } from '@/lib/masters/build/loader';
+import { assembleMasterOverlay } from '@/lib/masters/build/assembler';
+import type { ResolvedMasterBuild } from '@/lib/masters/build/types';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -299,6 +302,7 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  fieldSlug?: string;  // Master field: loads build overlay when set
 };
 
 export async function POST(request: NextRequest) {
@@ -418,6 +422,20 @@ export async function POST(request: NextRequest) {
 
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
+
+    // MASTER FIELD: Load active build overlay (feature-flagged)
+    let activeMasterBuild: ResolvedMasterBuild | null = null;
+    const fieldSlug = body.fieldSlug;
+    if (fieldSlug) {
+      activeMasterBuild = await loadActiveBuild(fieldSlug);
+      if (activeMasterBuild) {
+        console.log('[Oracle] master-build-loaded', {
+          master: activeMasterBuild.master_slug,
+          version: activeMasterBuild.build_version,
+          displayName: activeMasterBuild.master_display_name,
+        });
+      }
+    }
 
     // BRIDGE D extension: Extract active report context (if present)
     const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
@@ -1602,12 +1620,27 @@ async function generateSpiralogicResponseWithLLM(
     ? buildReportContextBlock(activeReportContext)
     : '';
 
+  // MASTER FIELD: Assemble overlay — identity established early, before context blocks
+  const masterOverlay = (activeMasterBuild
+    && activeMasterBuild.voice_block
+    && activeMasterBuild.stance_block)
+    ? assembleMasterOverlay(activeMasterBuild)
+    : '';
+
+  if (activeMasterBuild && !masterOverlay) {
+    console.warn('[Oracle] master-build-skipped: voice_block or stance_block empty', {
+      master: activeMasterBuild.master_slug,
+      version: activeMasterBuild.build_version,
+    });
+  }
+
   const finalSystemPrompt = [
-    systemPrompt,
+    systemPrompt,           // MAIA core (always — the substrate)
+    masterOverlay,          // Master identity (immediately after core — voice before context)
     reportContextBlock,
     councilInsights,
     collectiveWisdom,
-  ].filter(Boolean).join('');
+  ].filter(Boolean).join('\n\n');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';

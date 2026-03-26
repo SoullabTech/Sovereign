@@ -27,16 +27,29 @@ export interface ConversationTurn {
   createdAt: string;
   meta?: TurnMeta;
   parentTurnId?: string;
+  fieldSlug?: string;  // Master field scoping — null = MAIA core
 }
 
 export const TurnsStore = {
   /**
-   * Get recent turns for a user (most recent N, returned in chronological order)
+   * Get recent turns for a user (most recent N, returned in chronological order).
+   *
+   * When fieldSlug is provided, only returns turns from that master field.
+   * When fieldSlug is undefined, only returns MAIA core turns (field_slug IS NULL).
+   * This ensures memory partitioning: masters never see each other's conversations.
    */
   async getRecentTurns(
     userId: string,
-    limit: number = 12
+    limit: number = 12,
+    fieldSlug?: string
   ): Promise<Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>> {
+    const fieldCondition = fieldSlug
+      ? 'AND field_slug = $3'
+      : 'AND field_slug IS NULL';
+    const params: unknown[] = fieldSlug
+      ? [userId, limit, fieldSlug]
+      : [userId, limit];
+
     const result = await query<{ role: 'user' | 'assistant'; content: string; createdAt: string }>(
       `
       SELECT
@@ -45,10 +58,11 @@ export const TurnsStore = {
         created_at as "createdAt"
       FROM conversation_turns
       WHERE user_id = $1
+      ${fieldCondition}
       ORDER BY created_at DESC, seq DESC
       LIMIT $2
       `,
-      [userId, limit]
+      params
     );
 
     // Return in chronological order (oldest first) for natural prompt flow
@@ -84,8 +98,8 @@ export const TurnsStore = {
     // Note: meta and parent_turn_id are not in the production schema — omitted
     const result = await query<{ id: string }>(
       `
-      INSERT INTO conversation_turns (user_id, session_id, role, content)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO conversation_turns (user_id, session_id, role, content, field_slug)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id
       `,
       [
@@ -93,6 +107,7 @@ export const TurnsStore = {
         turn.sessionId ?? null,
         turn.role,
         turn.content,
+        turn.fieldSlug ?? null,
       ]
     );
     return result.rows[0]?.id ?? null;
@@ -151,26 +166,28 @@ export const TurnsStore = {
     sessionId: string | undefined,
     userMessage: string,
     assistantResponse: string,
-    exchangeId?: string
+    exchangeId?: string,
+    fieldSlug?: string
   ): Promise<void> {
     if (!exchangeId) {
       console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     }
     const eid = exchangeId ?? null;
+    const fSlug = fieldSlug ?? null;
     // User turn first (seq=0) — use clock_timestamp() so each INSERT gets its
     // own wall-clock value even inside the same transaction.
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, field_slug)
+       VALUES ($1, $2, 'user', $3, $4, 0, clock_timestamp(), $5)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, userMessage, eid]
+      [userId, sessionId ?? null, userMessage, eid, fSlug]
     );
     // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at)
-       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp())
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, field_slug)
+       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), $5)
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, assistantResponse, eid]
+      [userId, sessionId ?? null, assistantResponse, eid, fSlug]
     );
   },
 
@@ -188,20 +205,27 @@ export const TurnsStore = {
   /**
    * Clean up old turns (keep last N per user)
    */
-  async pruneOldTurns(userId: string, keepCount: number = 100): Promise<number> {
+  async pruneOldTurns(userId: string, keepCount: number = 100, fieldSlug?: string): Promise<number> {
+    const fieldCondition = fieldSlug
+      ? 'AND field_slug = $3'
+      : 'AND field_slug IS NULL';
+    const params: unknown[] = fieldSlug
+      ? [userId, keepCount, fieldSlug]
+      : [userId, keepCount];
+
     const result = await query(
       `
       WITH turns_to_keep AS (
         SELECT id FROM conversation_turns
-        WHERE user_id = $1
+        WHERE user_id = $1 ${fieldCondition}
         ORDER BY created_at DESC
         LIMIT $2
       )
       DELETE FROM conversation_turns
-      WHERE user_id = $1
+      WHERE user_id = $1 ${fieldCondition}
         AND id NOT IN (SELECT id FROM turns_to_keep)
       `,
-      [userId, keepCount]
+      params
     );
 
     return result.rowCount ?? 0;

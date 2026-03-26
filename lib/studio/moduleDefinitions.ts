@@ -28,6 +28,7 @@ import {
   Scale,
   Wind,
   Globe,
+  Sun,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export type PortalType =
 
 export type ModuleSlug =
   | 'command_center'
+  | 'today'
   | 'threshold'
   | 'clients'
   | 'groups'
@@ -106,6 +108,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
     category: 'core',
     description: 'Your daily dashboard and triage queue',
     alwaysOn: true,
+    mode: 'practice',
+  },
+  {
+    slug: 'today',
+    label: "Today's Field",
+    icon: Sun,
+    href: '/studio/today',
+    category: 'core',
+    description: "Your upcoming sessions and what's arriving with them",
+    alwaysOn: false,
     mode: 'practice',
   },
   {
@@ -343,8 +355,8 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
   generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
   astrology: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  therapy: ['today', 'clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['today', 'clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
   bodywork: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
   groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
   consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
