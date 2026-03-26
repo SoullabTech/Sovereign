@@ -29,7 +29,7 @@ export default function FieldNav() {
     const route = MODULE_ROUTES[moduleId];
     const full = `${baseHref}${route}`;
     if (route === '') return pathname === baseHref || pathname === `${baseHref}/`;
-    return pathname.startsWith(full);
+    return pathname?.startsWith(full) ?? false;
   }
 
   return (

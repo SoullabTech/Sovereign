@@ -18,7 +18,7 @@ import { useField } from '@/lib/field/FieldProvider';
 function BookingRedirectInner() {
   const field = useField();
   const searchParams = useSearchParams();
-  const serviceParam = searchParams.get('service');
+  const serviceParam = searchParams?.get('service') ?? null;
   const { palette, theme, slug } = field;
   const isSpacious = theme.density === 'spacious';
 

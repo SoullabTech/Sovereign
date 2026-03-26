@@ -60,8 +60,9 @@ function defaultOpeningLine(name: string): string {
 // Main resolver
 // ---------------------------------------------------------------------------
 
-export async function resolveField(slug: string): Promise<PractitionerField | null> {
+export async function resolveField(slugOrSubdomain: string): Promise<PractitionerField | null> {
   // --- 1. Core practitioner row ---
+  // Try exact slug match first, then check practitioner_domains.subdomain
   const practResult = await db.query<{
     id: string;
     slug: string;
@@ -74,16 +75,19 @@ export async function resolveField(slug: string): Promise<PractitionerField | nu
     field_config: Record<string, unknown> | null;
   }>(
     `SELECT
-       id, slug, name, business_name, tagline, bio, photo_url, specialties,
-       field_config
-     FROM practitioners
-     WHERE slug = $1 AND status = 'active'`,
-    [slug]
+       p.id, p.slug, p.name, p.business_name, p.tagline, p.bio, p.photo_url, p.specialties,
+       p.field_config
+     FROM practitioners p
+     LEFT JOIN practitioner_domains pd ON pd.practitioner_id = p.id
+     WHERE (p.slug = $1 OR pd.subdomain = $1) AND p.status = 'active'
+     LIMIT 1`,
+    [slugOrSubdomain]
   );
 
   if (practResult.rows.length === 0) return null;
 
   const p = practResult.rows[0];
+  const slug = p.slug; // Use the canonical slug from DB (not the input which may be a subdomain)
   const fc = (p.field_config ?? {}) as Record<string, unknown>;
 
   // --- 2. Theme row ---

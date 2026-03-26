@@ -116,3 +116,17 @@ SET field_config = '{
   ]
 }'::jsonb
 WHERE slug = 'jondi';
+
+-- ---------------------------------------------------------------------------
+-- 4. Subdomain records (for resolve by subdomain)
+-- ---------------------------------------------------------------------------
+
+INSERT INTO practitioner_domains (id, practitioner_id, subdomain, created_at, updated_at)
+SELECT gen_random_uuid(), id, 'kelly', NOW(), NOW()
+FROM practitioners WHERE slug = 'kelly-nezat'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO practitioner_domains (id, practitioner_id, subdomain, created_at, updated_at)
+SELECT gen_random_uuid(), id, 'jondi', NOW(), NOW()
+FROM practitioners WHERE slug = 'jondi'
+ON CONFLICT DO NOTHING;
