@@ -13,15 +13,24 @@ import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import crypto from 'crypto';
 
-const DEV_PRACTITIONER_ID = '0a93962d-55a2-4deb-ad46-5268ee19be54';
-
 async function getPractitionerId(memberId: string): Promise<string | null> {
-  if (process.env.NODE_ENV === 'development') return DEV_PRACTITIONER_ID;
-  const result = await db.query(
+  // Look up by member_id first
+  const byMember = await db.query(
     'SELECT id FROM practitioners WHERE member_id = $1',
     [memberId]
   );
-  return result.rows[0]?.id || DEV_PRACTITIONER_ID;
+  if (byMember.rows[0]?.id) return byMember.rows[0].id;
+
+  // Fallback: check if member has a linked practitioner via any other path
+  // In dev, use hardcoded stellium practitioner
+  if (process.env.NODE_ENV === 'development') {
+    const devResult = await db.query(
+      "SELECT id FROM practitioners WHERE slug = 'stellium' LIMIT 1"
+    );
+    return devResult.rows[0]?.id || null;
+  }
+
+  return null;
 }
 
 // ── GET: Inbox ──
