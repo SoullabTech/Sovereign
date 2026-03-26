@@ -217,8 +217,7 @@ export default function FieldVirtualSelfTraining({
     boundaries: false,
   });
 
-  // Materials step state
-  const { flags } = useFeatureFlags();
+  // Materials step state (uses `flags` from useFeatureFlags() above)
   const showMaterials = flags.masterDocumentUpload;
   const [documents, setDocuments] = useState<PersonaDocumentItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
