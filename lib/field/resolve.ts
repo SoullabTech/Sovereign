@@ -253,9 +253,15 @@ export async function resolveField(slugOrSubdomain: string): Promise<Practitione
     theme,
     maia,
 
+    // Forward structured field_config keys for page components
+    heroImage: (fc.heroImage as string | undefined) ?? null,
+    workIntro: (fc.workIntro as Record<string, string> | undefined) ?? null,
+    serviceLanes: (fc.serviceLanes as Array<{ label: string; slugs: string[] }> | undefined) ?? null,
+
     services: servicesResult.rows.map(s => ({
       id:              s.id,
       name:            s.name,
+      slug:            s.slug,
       description:     s.description,
       durationMinutes: s.duration_minutes,
       priceCents:      s.price_cents,

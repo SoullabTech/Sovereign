@@ -64,11 +64,23 @@ export type FieldModule = {
 export type FieldService = {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   durationMinutes: number | null;
   priceCents: number | null;
   featured: boolean;
   bookable: boolean;
+};
+
+export type ServiceLane = {
+  label: string;
+  slugs: string[];
+};
+
+export type WorkIntro = {
+  headline?: string;
+  lead?: string;
+  closingNote?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -140,6 +152,13 @@ export type PractitionerField = {
 
   // --- MAIA persona (optional — falls back to defaults if not configured) ---
   maia: MaiaPersona | null;
+
+  // --- Hero / visual ---
+  heroImage: string | null;
+
+  // --- Work With Me page config ---
+  workIntro: WorkIntro | null;
+  serviceLanes: ServiceLane[] | null;
 
   // --- Services (active, bookable) ---
   services: FieldService[];
