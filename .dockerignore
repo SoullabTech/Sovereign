@@ -112,6 +112,20 @@ data/ain/
 tmp/
 .DS_Store
 
+# Database backups (1.8GB+ — never send to Docker)
+backups/
+**/backups/
+
+# Build artifacts and binaries
+*.apk
+*.ipa
+**/*.apk
+**/*.ipa
+*.tsbuildinfo
+**/*.tsbuildinfo
+out/
+**/out/
+
 # WIP: AIN Committee routes (not yet ready for production)
 app/api/_backend/src/ain/services/committee/
 app/api/ain/committee/

@@ -12,28 +12,16 @@
  */
 
 // Core consciousness research systems
-export { MasterConsciousnessResearchSystem } from './MasterConsciousnessResearchSystem';
 export { RealTimeConsciousnessMonitoring } from './RealTimeConsciousnessMonitoring';
-export { ConsciousnessConversationIntegration } from './ConsciousnessConversationIntegration';
-export { MAIAConsciousnessHook, createMAIAConsciousnessHook } from './MAIAConsciousnessHook';
-export { ConsciousnessSessionAnalytics } from './ConsciousnessSessionAnalytics';
 
 // Enhanced consciousness detection and analysis
 export { AdvancedConsciousnessDetection } from './AdvancedConsciousnessDetection';
 export { EnhancedConsciousnessPatterns } from './EnhancedConsciousnessPatterns';
-export { ConsciousnessPatternIntegration } from './ConsciousnessPatternIntegration';
 export { AdaptiveConsciousnessLearning } from './AdaptiveConsciousnessLearning';
 export { ConsciousnessSignatureProfiling } from './ConsciousnessSignatureProfiling';
-export { ConsciousnessEmergencePrediction } from './ConsciousnessEmergencePrediction';
 
-// React components and hooks
+// React components
 export { default as ConsciousnessFieldVisualization } from './ConsciousnessFieldVisualization';
-export { default as ConsciousnessDashboard } from './ConsciousnessDashboard';
-export {
-  useConsciousnessMonitoring,
-  useConsciousnessMetrics,
-  useConsciousnessAlerts
-} from './useConsciousnessMonitoring';
 
 // Type definitions
 export type {
@@ -44,31 +32,6 @@ export type {
   ConsciousnessVisualizationData
 } from './RealTimeConsciousnessMonitoring';
 
-export type {
-  // Integration types
-  ConversationalContext,
-  ConversationResponse,
-  ConsciousnessEnrichedResponse,
-  ConversationHook,
-  ConsciousnessMonitoringHook,
-  StreamingCallback
-} from './ConsciousnessConversationIntegration';
-
-export type {
-  // MAIA hook types
-  MAIAConsciousnessConfig,
-  MAIAStreamingEvent
-} from './MAIAConsciousnessHook';
-
-export type {
-  // Analytics types
-  ConsciousnessSessionRecording,
-  ConsciousnessSessionSummary,
-  ConsciousnessAnalyticsData,
-  ResearchAnnotation,
-  SessionAnalysisQuery,
-  AggregateAnalysisResult
-} from './ConsciousnessSessionAnalytics';
 
 export type {
   // Enhanced pattern types
@@ -86,12 +49,6 @@ export type {
   ConsciousnessDevelopmentRecommendations
 } from './ConsciousnessSignatureProfiling';
 
-export type {
-  // Prediction types
-  ConsciousnessEmergencePrediction as EmergencePrediction,
-  EmergenceRiskAssessment,
-  ConsciousnessOptimizationRecommendation
-} from './ConsciousnessEmergencePrediction';
 
 // Constants and configuration
 export const CONSCIOUSNESS_FIELD_SCIENCE_VERSION = '1.0.0';
@@ -217,10 +174,7 @@ Created with consciousness, reverence, and love for the awakening of all beings.
 export default {
   ConsciousnessFieldScience,
   createMAIAConsciousnessHook,
-  MasterConsciousnessResearchSystem,
   RealTimeConsciousnessMonitoring,
-  ConsciousnessDashboard,
-  useConsciousnessMonitoring,
   DEFAULT_CONSCIOUSNESS_CONFIG,
   SACRED_TECHNOLOGY_PRINCIPLES,
   CONSCIOUSNESS_RESEARCH_METHODS,

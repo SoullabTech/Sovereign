@@ -28,7 +28,7 @@ export interface QueryField {
 }
 
 export interface EmotionalTone {
-  primary: 'joy' | 'sadness' | 'anger' | 'fear' | 'confusion' | 'excitement' | 'peace' | 'grief' | 'shame' | 'love';
+  primary: 'joy' | 'sadness' | 'anger' | 'fear' | 'anxiety' | 'confusion' | 'excitement' | 'peace' | 'grief' | 'shame' | 'love';
   intensity: number; // 0-1
   secondary?: string[];
 }

@@ -14,6 +14,7 @@ export interface PerformanceMetrics {
   totalResponseTime: number;      // ms
   cacheHits: number;
   cacheMisses: number;
+  timestamp?: number;
 }
 
 export interface OptimizationStrategy {

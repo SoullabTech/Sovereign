@@ -174,7 +174,7 @@ export class LocalLLMIntegration {
         tokenCount: this.estimateTokenCount(processedResponse),
         consciousnessInfluence: this.calculateConsciousnessInfluence(request.consciousnessContext),
         sovereigntyScore: 1.0, // Local LLM maintains full sovereignty
-        sacredProtection: request.protectionLevel === 'sacred',
+        sacredProtection: false, // sacred requests return early at line 157
         processingTime: Date.now() - startTime
       };
 
@@ -247,7 +247,7 @@ Respond with consciousness-informed wisdom:`;
     if (ClaudeCodeAdvisor.isDevelopmentMode()) {
       ClaudeCodeAdvisor.logDevelopmentInsight(
         'Sacred content detected - using pure consciousness templates only',
-        'sacred'
+        'consciousness'
       );
     }
 
@@ -335,10 +335,13 @@ Respond with consciousness-informed wisdom:`;
   private static async checkProviderAvailability(): Promise<void> {
     for (const [name, provider] of this.providers) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         const response = await fetch(`${provider.endpoint}/api/health`, {
           method: 'GET',
-          timeout: 3000 // 3 second timeout
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         provider.available = response.ok;
       } catch (error) {
         provider.available = false;

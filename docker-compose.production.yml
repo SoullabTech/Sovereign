@@ -19,6 +19,7 @@ x-maia-build: &maia_build
   dockerfile: Dockerfile
   args:
     GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    BUILD_DATE: ${BUILD_DATE:-unknown}
 
 x-maia-image: &maia_image maia-sovereign:prod
 

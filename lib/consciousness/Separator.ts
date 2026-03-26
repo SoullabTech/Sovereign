@@ -277,7 +277,7 @@ export class Separator {
       const issue: CircuitIssue = {
         type: 'stagnation',
         severity: 'medium',
-        location: this.position.element || 'unknown',
+        location: this.position.element || 'earth',
         description: `Flow stagnant at ${this.position.element} for ${elementDuration}ms. Energy not circulating.`,
         timestamp: new Date()
       };

@@ -15,6 +15,7 @@ export interface OracleRequest {
     previousInteractions?: number;
     userNeed?: string;
     sessionHistory?: string[];
+    sessionId?: string;
   };
 }
 

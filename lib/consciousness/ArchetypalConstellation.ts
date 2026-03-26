@@ -669,9 +669,9 @@ export class ArchetypalConstellation {
   getConstellationState() {
     return {
       primaryRole: this.primaryRole,
-      archetypes: Array.from(this.archetypes.entries()).map(([name, state]) => ({
-        name,
+      archetypes: Array.from(this.archetypes.entries()).map(([archetypeName, state]) => ({
         ...state,
+        name: archetypeName,
       })),
       pendingConsultations: this.getPendingConsultations(),
       totalActivations: Array.from(this.archetypes.values()).reduce(

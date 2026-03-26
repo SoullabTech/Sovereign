@@ -36,7 +36,7 @@ export interface ShadowFlowStep {
   /** Time suggestion in seconds */
   suggestedTime?: number;
   /** Element association */
-  element?: 'fire' | 'water' | 'earth' | 'air';
+  element?: string;
 }
 
 export interface ShadowFlow {
@@ -376,7 +376,7 @@ export function generateHouseShadowFlow(house: number): ShadowFlow | null {
           'Which of these patterns do you recognize in yourself? ' +
           'When do they tend to show up?',
         suggestedTime: 120,
-        element: houseData.element,
+        element: String(houseData.element),
       },
       {
         id: 'trigger',
