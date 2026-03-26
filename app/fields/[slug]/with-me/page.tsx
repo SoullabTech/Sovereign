@@ -1,0 +1,10 @@
+import { notFound } from 'next/navigation';
+import { getFieldBySlug } from '@/lib/masters/registry';
+import FieldPathwayPage from '@/components/masters/FieldPathwayPage';
+
+export default async function WithMePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { field: slug } = await params;
+  const master = getFieldBySlug(slug);
+  if (!master) notFound();
+  return <FieldPathwayPage master={master} portalSlug="with-me" />;
+}
