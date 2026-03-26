@@ -13,22 +13,8 @@ import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import crypto from 'crypto';
 
-async function getPractitionerId(memberId: string): Promise<string | null> {
-  const byMember = await db.query(
-    'SELECT id FROM practitioners WHERE member_id = $1',
-    [memberId]
-  );
-  if (byMember.rows[0]?.id) return byMember.rows[0].id;
-
-  if (process.env.NODE_ENV === 'development') {
-    const devResult = await db.query(
-      "SELECT id FROM practitioners WHERE slug = 'stellium' LIMIT 1"
-    );
-    return devResult.rows[0]?.id || null;
-  }
-
-  return null;
-}
+// NOTE: comms_threads.practitioner_id FK references members(id), not practitioners(id)
+// So we use memberId directly as practitioner_id in comms tables
 
 // ── GET: Thread messages ──
 export async function GET(
@@ -46,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = memberId; // comms FK → members(id)
 
     // Get thread (fall back to participants JSON for name/email)
     const threadResult = await db.query(
@@ -140,7 +126,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = memberId; // comms FK → members(id)
 
     // Verify thread belongs to practitioner
     // COALESCE: try client tables first, then fall back to participants JSON
