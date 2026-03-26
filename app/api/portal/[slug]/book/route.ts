@@ -27,7 +27,17 @@ export async function POST(
   try {
     const { slug } = await params;
     const body = await request.json();
-    const { service_id, date, time, name, email, phone, notes, timezone } = body;
+    const {
+      service_id, date, time, name, email, phone, notes, timezone,
+      intake_presenting_issue, intake_focus_area, intake_desired_outcome,
+    } = body;
+
+    // Compose legacy notes from intake fields (backward compatible)
+    const composedNotes = notes || [
+      intake_presenting_issue && `What brings you here: ${intake_presenting_issue}`,
+      intake_focus_area && `Most active area: ${intake_focus_area}`,
+      intake_desired_outcome && `Desired outcome: ${intake_desired_outcome}`,
+    ].filter(Boolean).join('\n') || null;
 
     // Validate required fields
     if (!service_id || !date || !time || !name || !email) {
@@ -136,8 +146,9 @@ export async function POST(
       await client.query(
         `INSERT INTO sessions
          (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end,
-          status, notes, price_cents, booking_source, service_snapshot, manage_token, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, 'portal', $9, $10, NOW())`,
+          status, notes, price_cents, booking_source, service_snapshot, manage_token,
+          intake_presenting_issue, intake_focus_area, intake_desired_outcome, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, 'portal', $9, $10, $11, $12, $13, NOW())`,
         [
           sessionId,
           practitionerId,
@@ -145,10 +156,13 @@ export async function POST(
           service_id,
           scheduledStart.toISOString(),
           scheduledEnd.toISOString(),
-          notes || null,
+          composedNotes,
           service.price_cents,
           JSON.stringify(serviceSnapshot),
           manageToken,
+          intake_presenting_issue || null,
+          intake_focus_area || null,
+          intake_desired_outcome || null,
         ]
       );
     });

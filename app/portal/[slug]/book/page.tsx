@@ -69,7 +69,9 @@ function BookingContent() {
 
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
-  const [clientNotes, setClientNotes] = useState('');
+  const [presentingIssue, setPresentingIssue] = useState('');
+  const [focusArea, setFocusArea] = useState('');
+  const [desiredOutcome, setDesiredOutcome] = useState('');
 
   // Client timezone
   const clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -183,7 +185,9 @@ function BookingContent() {
           time: selectedTime,
           name: clientName,
           email: clientEmail,
-          notes: clientNotes,
+          intake_presenting_issue: presentingIssue || undefined,
+          intake_focus_area: focusArea || undefined,
+          intake_desired_outcome: desiredOutcome || undefined,
           timezone: clientTimezone,
         }),
       });
@@ -500,16 +504,64 @@ function BookingContent() {
                            placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
               />
             </div>
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1.5">What brings you here? (optional)</label>
-              <textarea
-                value={clientNotes}
-                onChange={e => setClientNotes(e.target.value)}
-                placeholder="Anything you'd like to share before the session"
-                rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
-              />
+            {/* Structured intake */}
+            <div className="border-t border-zinc-800 pt-4 mt-2">
+              <p className="text-xs text-zinc-600 mb-4">Help us prepare for your session (optional)</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What brings you here right now?</label>
+                  <textarea
+                    value={presentingIssue}
+                    onChange={e => setPresentingIssue(e.target.value)}
+                    placeholder="A few words is enough. What feels most present or important right now?"
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                               placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What feels most active?</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Stress or overwhelm',
+                      'Transition or uncertainty',
+                      'Relationship',
+                      'Work or purpose',
+                      'Health or energy',
+                      'Emotional healing',
+                      'Spiritual or existential',
+                      'I\'m not sure yet',
+                    ].map(area => (
+                      <button
+                        key={area}
+                        type="button"
+                        onClick={() => setFocusArea(focusArea === area ? '' : area)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors
+                          ${focusArea === area
+                            ? 'bg-white text-zinc-900'
+                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+                          }`}
+                      >
+                        {area}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-zinc-500 mb-1.5">What would make this session meaningful?</label>
+                  <textarea
+                    value={desiredOutcome}
+                    onChange={e => setDesiredOutcome(e.target.value)}
+                    placeholder="What would you hope to leave with, understand, or shift?"
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
+                               placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                  />
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setStep('confirm')}
@@ -547,6 +599,28 @@ function BookingContent() {
                 </div>
               ))}
             </div>
+
+            {/* Intake summary */}
+            {(presentingIssue || focusArea || desiredOutcome) && (
+              <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 p-4 mb-6">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Session context</p>
+                {presentingIssue && (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    <span className="text-zinc-600">Brings you here:</span> {presentingIssue}
+                  </p>
+                )}
+                {focusArea && (
+                  <p className="text-sm text-zinc-400 mb-2">
+                    <span className="text-zinc-600">Focus:</span> {focusArea}
+                  </p>
+                )}
+                {desiredOutcome && (
+                  <p className="text-sm text-zinc-400">
+                    <span className="text-zinc-600">Seeking:</span> {desiredOutcome}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Consent checkbox */}
             <label className="flex items-start gap-3 mb-6 cursor-pointer group">
