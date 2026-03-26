@@ -16,6 +16,10 @@
     "dev:https": "node server.mjs",
     "worker": "env -u DATABASE_URL AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
     "comms:worker": "npx tsx scripts/run-comms-analysis-worker.ts",
+    "codex": "bash scripts/codex-run.sh --mode suggest",
+    "codex:feature": "bash scripts/codex-run.sh --mode auto-edit",
+    "codex:auto": "bash scripts/codex-run.sh --mode full-auto",
+    "codex:contract": "bash scripts/codex-run.sh --contract",
     "build": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && next build",
     "build:docker": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && next build --webpack",
     "build:sovereign": "bash scripts/sovereign-build.sh",
@@ -264,6 +268,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.0.2",
     "@mermaid-js/mermaid-cli": "^11.12.0",
+    "@openai/codex": "^0.116.0",
     "@storybook/addon-essentials": "^8.3.5",
     "@storybook/addon-interactions": "^8.3.5",
     "@storybook/addon-links": "^8.3.5",

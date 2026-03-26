@@ -10,7 +10,7 @@
  * - Exogenous: "Cosmic architecture as star, this life as scene inside it"
  */
 
-import type { ConsciousnessMatrixV2, MatrixV2Assessment } from './matrix-v2-implementation.js';
+import type { MatrixV2Assessment } from './matrix-v2-implementation.js';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PHENOMENOLOGICAL SIGNATURES
@@ -400,8 +400,19 @@ export class EndogenousPhenomenologyDetector {
     return matches;
   }
 
-  private calculateScore(indicators: any): number {
-    return Object.values(indicators).reduce((sum: number, arr: any) => sum + arr.length, 0);
+  private calculateScore(indicators: EndogenousIndicators | ExogenousIndicators): number {
+    if ('biographicalAnchoring' in indicators) {
+      return indicators.biographicalAnchoring.length +
+        indicators.relationalFocus.length +
+        indicators.embodiedReferences.length +
+        indicators.proceduralUnfolding.length +
+        indicators.vocationIntegration.length;
+    }
+    return indicators.patternFocus.length +
+      indicators.entityContact.length +
+      indicators.geometricVisions.length +
+      indicators.discontinuityMarkers.length +
+      indicators.cosmicArchitecture.length;
   }
 
   private assessTemporalSignature(

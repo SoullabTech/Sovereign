@@ -1,0 +1,31 @@
+{
+  "_comment": "Codex handoff contract — Claude generates, Codex executes",
+  "_usage": "./scripts/codex-run.sh --contract path/to/handoff.json",
+
+  "goal": "Describe the single objective Codex should accomplish",
+
+  "scope": [
+    "file1.ts",
+    "file2.ts"
+  ],
+
+  "constraints": [
+    "Do not modify files outside scope unless necessary for type alignment",
+    "Preserve existing export signatures",
+    "No Supabase imports — use lib/db/postgres.ts",
+    "Run npm run typecheck before considering done"
+  ],
+
+  "expected_output": [
+    "Working implementation of the goal",
+    "Types aligned with existing interfaces",
+    "No new lint or typecheck errors"
+  ],
+
+  "context": {
+    "architecture_notes": "Optional: brief context about how this fits the system",
+    "related_files": [
+      "Optional: files Codex should read for context but not modify"
+    ]
+  }
+}
