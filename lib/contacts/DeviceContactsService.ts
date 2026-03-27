@@ -45,7 +45,7 @@ async function initPlugin(): Promise<boolean> {
 
   try {
     // @capacitor-community/contacts must be installed separately
-    const module = await import('@capacitor-community/contacts');
+    const module = await import(/* webpackIgnore: true */ '@capacitor-community/contacts');
     ContactsPlugin = module.Contacts;
     return true;
   } catch (error) {
