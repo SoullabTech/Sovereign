@@ -1714,6 +1714,16 @@ async function generateSpiralogicResponseWithLLM(
     ].filter(Boolean).join('');
   }
 
+  // Composition invariant log — runtime proof of prompt assembly
+  console.log('[Oracle] composition', {
+    hasMAIA: true,
+    hasMaster: !!masterOverlay,
+    field: body?.fieldSlug || 'none',
+    masterSlug: activeMasterBuild?.master_slug || null,
+    overlayLength: masterOverlay?.length || 0,
+    memoryTool: memoryToolActive,
+  });
+
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
   let providerUsed: 'anthropic' | 'ollama' | 'fallback' = 'fallback';
