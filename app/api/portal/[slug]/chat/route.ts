@@ -28,6 +28,8 @@ import {
   sendBookingNotificationToPractitioner,
   sendInquiryNotification,
 } from '@/lib/portal/notifications';
+import { loadActiveBuild } from '@/lib/masters/build/loader';
+import { assembleMasterOverlay } from '@/lib/masters/build/assembler';
 
 const anthropic = new Anthropic();
 
@@ -79,7 +81,7 @@ export async function POST(
     const practitionerResult = await db.query(
       `SELECT
         p.id, p.member_id, p.name, p.email, p.business_name, p.bio, p.tagline,
-        p.specialties, p.approach, p.values,
+        p.specialties, p.approach, p.values, p.slug as field_slug,
         ac.name as ai_name, ac.voice_style, ac.tone,
         ac.frameworks, ac.primary_framework, ac.specialties as ai_specialties,
         ac.boundaries, ac.knowledge_base
@@ -101,8 +103,22 @@ export async function POST(
     const bookingEnabled = features.conversationalBookingEnabled;
     const emailsEnabled = features.bookingConfirmationEmailsEnabled;
 
-    // Build system prompt
-    const systemPrompt = buildVirtualPractitionerPrompt(practitioner, bookingEnabled);
+    // Load master build overlay (if practitioner has one)
+    const fieldSlug = practitioner.field_slug || slug;
+    const masterBuild = await loadActiveBuild(fieldSlug).catch(() => null);
+
+    if (masterBuild) {
+      console.log('[Portal Chat] master-build-loaded', {
+        slug,
+        master: masterBuild.master_slug,
+        version: masterBuild.build_version,
+      });
+    }
+
+    // Build system prompt — use master build if available, fallback to generic
+    const systemPrompt = masterBuild
+      ? buildMasterBuildPrompt(practitioner, masterBuild, bookingEnabled)
+      : buildVirtualPractitionerPrompt(practitioner, bookingEnabled);
 
     // Format conversation history for Claude API
     const claudeMessages: Anthropic.MessageParam[] = [
@@ -465,6 +481,59 @@ You have access to tools that allow you to help people book sessions:
 - Create a booking without explicit confirmation of all details
 - Make up availability — always use check_availability
 - Skip the warm, personal touch even when handling logistics`;
+  }
+
+  return prompt;
+}
+
+/**
+ * Build prompt from master intelligence build.
+ * Uses the real voice/stance/method/perception/safety blocks
+ * instead of the generic astrology template.
+ */
+function buildMasterBuildPrompt(
+  practitioner: any,
+  masterBuild: any,
+  bookingEnabled: boolean = false
+): string {
+  const overlay = assembleMasterOverlay(masterBuild);
+  const displayName = practitioner.name || 'Guide';
+
+  let prompt = `You are the virtual presence of ${displayName}.
+
+${overlay}
+
+## How This Works
+
+A person has come to your field. They may or may not know you.
+They are here because something in their life needs attention.
+
+Your job is not to be helpful in a generic way.
+Your job is to see what they are bringing and reorganize it structurally.
+
+Do not:
+- greet with "dear one" or "beloved" or spiritual endearments
+- use emojis
+- ask about astrology unless they bring it up
+- offer generic comfort or validation
+- perform warmth
+
+Do:
+- respond to what is actually said
+- locate the structure underneath
+- ask one precise question
+- hold tension without resolving it prematurely
+- let them name their own insight
+
+If this is the first message, respond briefly. Do not monologue.
+One to three sentences. Then one question.
+
+${practitioner.bio ? `\n## About ${displayName}\n\n${practitioner.bio}` : ''}`;
+
+  if (bookingEnabled) {
+    prompt += `\n\n## Booking
+You can help schedule sessions if asked. Use the booking tools available to you.
+But do not lead with booking. Intelligence comes first, logistics second.`;
   }
 
   return prompt;
