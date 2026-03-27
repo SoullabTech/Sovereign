@@ -108,11 +108,11 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
   const serviceObj = services.find(s => s.id === selectedService);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+    <div className="rounded-xl border border-stone-800 bg-stone-900 overflow-hidden">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-zinc-800">
+      <div className="px-5 py-4 border-b border-stone-800">
         <h2 className="text-sm font-semibold text-white mb-0.5">Available Times</h2>
-        <p className="text-xs text-zinc-500">Select a date to see open slots</p>
+        <p className="text-xs text-stone-500">Select a date to see open slots</p>
       </div>
 
       {/* Service selector */}
@@ -125,8 +125,8 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
                 onClick={() => { setSelectedService(svc.id); setSelectedDate(null); setSlots([]); }}
                 className={`text-xs px-3 py-1.5 rounded-full border transition-colors
                   ${selectedService === svc.id
-                    ? 'bg-white text-zinc-900 border-white'
-                    : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white'
+                    ? 'bg-white text-stone-900 border-white'
+                    : 'border-stone-700 text-stone-400 hover:border-stone-500 hover:text-white'
                   }`}
               >
                 {svc.name}
@@ -141,7 +141,7 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1)); setSelectedDate(null); }}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
@@ -150,7 +150,7 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
           </span>
           <button
             onClick={() => { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1)); setSelectedDate(null); }}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-stone-800 text-stone-400 hover:text-white transition-colors"
           >
             <ChevronRight size={16} />
           </button>
@@ -159,7 +159,7 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 mb-1">
           {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-            <div key={d} className="text-center text-xs text-zinc-600 py-1">{d}</div>
+            <div key={d} className="text-center text-xs text-stone-600 py-1">{d}</div>
           ))}
         </div>
 
@@ -175,9 +175,9 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
                 onClick={() => date && setSelectedDate(date)}
                 className={`aspect-square rounded-lg text-xs font-medium transition-colors
                   ${!date ? 'invisible' : ''}
-                  ${date && !sel ? 'text-zinc-700 cursor-not-allowed' : ''}
-                  ${isSelected ? 'bg-white text-zinc-900' : ''}
-                  ${date && sel && !isSelected ? 'text-zinc-300 hover:bg-zinc-800' : ''}
+                  ${date && !sel ? 'text-stone-700 cursor-not-allowed' : ''}
+                  ${isSelected ? 'bg-white text-stone-900' : ''}
+                  ${date && sel && !isSelected ? 'text-stone-300 hover:bg-stone-800' : ''}
                 `}
               >
                 {date?.getDate()}
@@ -189,23 +189,23 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
         {/* Time slots */}
         {selectedDate && (
           <div>
-            <p className="text-xs text-zinc-500 mb-3">
+            <p className="text-xs text-stone-500 mb-3">
               {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
             {loadingSlots ? (
               <div className="flex justify-center py-6">
-                <div className="w-5 h-5 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-stone-700 border-t-stone-400 rounded-full animate-spin" />
               </div>
             ) : slots.length === 0 ? (
-              <p className="text-sm text-zinc-500 text-center py-4">No open times on this date.</p>
+              <p className="text-sm text-stone-500 text-center py-4">No open times on this date.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {slots.map(slot => (
                   <Link
                     key={slot.start}
                     href={`/portal/${slug}/book?service=${selectedService}&date=${selectedDate.toISOString().split('T')[0]}&time=${slot.start}`}
-                    className="py-2.5 rounded-lg text-sm font-medium text-center bg-zinc-800 text-zinc-300
-                               hover:bg-white hover:text-zinc-900 transition-colors"
+                    className="py-2.5 rounded-lg text-sm font-medium text-center bg-stone-800 text-stone-300
+                               hover:bg-white hover:text-stone-900 transition-colors"
                   >
                     {formatTime(slot.start)}
                   </Link>
@@ -219,8 +219,8 @@ function AvailabilityCalendar({ slug, services }: { slug: string; services: Serv
         {!selectedDate && (
           <Link
             href={`/portal/${slug}/book${selectedService ? `?service=${selectedService}` : ''}`}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-zinc-700
-                       text-sm text-zinc-400 hover:border-zinc-500 hover:text-white transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-stone-700
+                       text-sm text-stone-400 hover:border-stone-500 hover:text-white transition-colors"
           >
             <Calendar size={15} />
             {serviceObj ? `Book: ${serviceObj.name}` : 'View availability'}
@@ -253,7 +253,7 @@ export default function PortalHomePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-stone-600 border-t-stone-300 rounded-full animate-spin" />
       </div>
     );
   }
@@ -262,8 +262,8 @@ export default function PortalHomePage() {
     return (
       <div className="min-h-screen bg-[#09090F] flex items-center justify-center px-4">
         <div className="text-center">
-          <p className="text-zinc-400 mb-4">This portal could not be found.</p>
-          <Link href="/" className="text-sm text-zinc-500 hover:text-white transition-colors">
+          <p className="text-stone-400 mb-4">This portal could not be found.</p>
+          <Link href="/" className="text-sm text-stone-500 hover:text-white transition-colors">
             Return to Soullab
           </Link>
         </div>
@@ -276,22 +276,25 @@ export default function PortalHomePage() {
   const firstName = profile.name.split(' ')[0];
 
   return (
-    <div className="min-h-screen bg-[#09090F] text-white">
+    <div className="min-h-screen bg-[#141210] text-stone-200">
 
       {/* Nav */}
-      <header className="border-b border-zinc-800/60 px-6 py-4">
+      <header className="border-b border-stone-800/40 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="text-sm font-medium text-white">{displayName}</span>
+          <div className="flex items-center gap-3">
+            <img src="/holoflower.svg" alt="" className="w-5 h-5 opacity-30" />
+            <span className="text-sm text-amber-100/70">{displayName}</span>
+          </div>
           <div className="flex items-center gap-4">
-            <Link href={`/portal/${slug}/services`} className="text-xs text-zinc-400 hover:text-white transition-colors hidden sm:block">
-              Services
+            <Link href={`/portal/${slug}/services`} className="text-xs text-stone-500 hover:text-amber-200/80 transition-colors hidden sm:block">
+              Work
             </Link>
-            <Link href={`/portal/${slug}/chat`} className="text-xs text-zinc-400 hover:text-white transition-colors hidden sm:block">
-              Message
+            <Link href={`/portal/${slug}/chat`} className="text-xs text-stone-500 hover:text-amber-200/80 transition-colors hidden sm:block">
+              Begin Here
             </Link>
             <Link
               href={`/portal/${slug}/signin`}
-              className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-stone-800/60 text-stone-400 border border-stone-700/50 hover:border-amber-700/30 hover:text-amber-200/70 transition-colors"
             >
               Sign in
             </Link>
@@ -300,7 +303,7 @@ export default function PortalHomePage() {
       </header>
 
       {/* Hero */}
-      <section className="px-6 py-16 border-b border-zinc-800/50">
+      <section className="px-6 py-16 border-b border-stone-800/30">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
 
@@ -312,31 +315,31 @@ export default function PortalHomePage() {
               className="flex-1"
             >
               {profile.photo_url ? (
-                <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-zinc-700 mb-5">
+                <div className="w-16 h-16 rounded-full overflow-hidden ring-1 ring-stone-700/50 mb-5">
                   <img src={profile.photo_url} alt={displayName} className="w-full h-full object-cover" />
                 </div>
               ) : (
-                <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center mb-5">
-                  <User size={24} className="text-zinc-500" />
+                <div className="w-16 h-16 rounded-full bg-stone-900/50 flex items-center justify-center mb-5 ring-1 ring-stone-700/30">
+                  <img src="/holoflower.svg" alt="" className="w-8 h-8 opacity-30" />
                 </div>
               )}
 
-              <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight mb-2">
+              <h1 className="text-3xl md:text-4xl font-semibold text-amber-100/90 tracking-tight mb-2">
                 {displayName}
               </h1>
 
-              <p className="text-base text-zinc-400 mb-2 max-w-lg leading-relaxed">
-                {profile.tagline || 'Elemental Alchemy for Inner Coherence and Real Change'}
+              <p className="text-base text-stone-400 mb-2 max-w-lg leading-relaxed">
+                {profile.tagline || 'Sovereign infrastructure for the people who hold others.'}
               </p>
 
-              <p className="text-sm text-zinc-600 mb-8 max-w-md leading-relaxed">
-                Work through what&apos;s actually shaping your life — not just what&apos;s visible.
+              <p className="text-sm text-stone-600 mb-8 max-w-md leading-relaxed">
+                Reorganize how you see the problem. Not just respond to it.
               </p>
 
               {profile.specialties?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                   {profile.specialties.slice(0, 6).map((s, i) => (
-                    <span key={i} className="px-3 py-1 text-xs rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span key={i} className="px-3 py-1 text-xs rounded-full bg-stone-900/50 text-stone-400 border border-stone-700/40">
                       {s}
                     </span>
                   ))}
@@ -345,18 +348,17 @@ export default function PortalHomePage() {
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
+                  href={`/portal/${slug}/chat`}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-amber-700/80 text-amber-100 text-sm font-medium hover:bg-amber-600/80 transition-colors"
+                >
+                  Begin Here
+                </Link>
+                <Link
                   href={`/portal/${slug}/book`}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-stone-800/60 text-stone-300 text-sm font-medium border border-stone-700/40 hover:border-amber-700/30 hover:text-amber-200/70 transition-colors"
                 >
                   <Calendar size={15} />
                   Book a Session
-                </Link>
-                <Link
-                  href={`/portal/${slug}/signin`}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
-                >
-                  <Lock size={15} />
-                  Enter Your Portal
                 </Link>
               </div>
             </motion.div>
@@ -378,14 +380,14 @@ export default function PortalHomePage() {
 
       {/* Services */}
       {services.length > 0 && (
-        <section className="py-14 px-6 border-b border-zinc-800/50">
+        <section className="py-14 px-6 border-b border-stone-800/50">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-lg font-semibold text-white">Sessions</h2>
-                <p className="text-sm text-zinc-500 mt-0.5">Choose the session that fits your needs</p>
+                <p className="text-sm text-stone-500 mt-0.5">Choose the session that fits your needs</p>
               </div>
-              <Link href={`/portal/${slug}/services`} className="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">
+              <Link href={`/portal/${slug}/services`} className="text-xs text-stone-500 hover:text-white transition-colors flex items-center gap-1">
                 All services <ArrowRight size={12} />
               </Link>
             </div>
@@ -398,7 +400,7 @@ export default function PortalHomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
-                  className="group p-5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors"
+                  className="group p-5 rounded-xl bg-stone-900 border border-stone-800 hover:border-stone-600 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-sm font-medium text-white leading-snug">{service.name}</h3>
@@ -409,21 +411,21 @@ export default function PortalHomePage() {
                     )}
                   </div>
                   {service.description && (
-                    <p className="text-xs text-zinc-500 mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
+                    <p className="text-xs text-stone-500 mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
                   )}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-1 text-xs text-zinc-600">
+                    <div className="flex items-center gap-1 text-xs text-stone-600">
                       <Clock size={11} />
                       {service.duration_minutes} min
                     </div>
-                    <span className="text-sm font-medium text-zinc-300">
+                    <span className="text-sm font-medium text-stone-300">
                       ${(service.price_cents / 100).toFixed(0)}
                     </span>
                   </div>
                   <Link
                     href={`/portal/${slug}/book?service=${service.id}`}
                     className="flex items-center justify-center gap-1 w-full py-2 rounded-lg text-xs font-medium
-                               bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors"
+                               bg-stone-800 text-stone-300 hover:bg-stone-700 hover:text-white transition-colors"
                   >
                     Book
                     <ArrowRight size={11} />
@@ -437,7 +439,7 @@ export default function PortalHomePage() {
 
       {/* Testimonials */}
       {testimonials.length > 0 && (
-        <section className="py-14 px-6 border-b border-zinc-800/50">
+        <section className="py-14 px-6 border-b border-stone-800/50">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-lg font-semibold text-white mb-8">What clients say</h2>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -448,17 +450,17 @@ export default function PortalHomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08 }}
-                  className="p-5 rounded-xl bg-zinc-900 border border-zinc-800"
+                  className="p-5 rounded-xl bg-stone-900 border border-stone-800"
                 >
                   <div className="flex gap-0.5 mb-3">
                     {[...Array(5)].map((_, j) => (
-                      <span key={j} className={`text-xs ${j < t.rating ? 'text-amber-400' : 'text-zinc-700'}`}>★</span>
+                      <span key={j} className={`text-xs ${j < t.rating ? 'text-amber-400' : 'text-stone-700'}`}>★</span>
                     ))}
                   </div>
-                  <p className="text-sm text-zinc-300 mb-4 leading-relaxed">"{t.content}"</p>
+                  <p className="text-sm text-stone-300 mb-4 leading-relaxed">"{t.content}"</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-500">— {t.client_name}</span>
-                    {t.service_name && <span className="text-xs text-zinc-600">{t.service_name}</span>}
+                    <span className="text-xs text-stone-500">— {t.client_name}</span>
+                    {t.service_name && <span className="text-xs text-stone-600">{t.service_name}</span>}
                   </div>
                 </motion.div>
               ))}
@@ -469,23 +471,23 @@ export default function PortalHomePage() {
 
       {/* About */}
       {profile.bio && (
-        <section className="py-14 px-6 border-b border-zinc-800/50">
+        <section className="py-14 px-6 border-b border-stone-800/50">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-lg font-semibold text-white mb-4">About {firstName}</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed whitespace-pre-line">{profile.bio}</p>
+            <p className="text-sm text-stone-400 leading-relaxed whitespace-pre-line">{profile.bio}</p>
             {profile.years_experience > 0 && (
-              <p className="mt-4 text-xs text-zinc-600">{profile.years_experience}+ years of experience</p>
+              <p className="mt-4 text-xs text-stone-600">{profile.years_experience}+ years of experience</p>
             )}
           </div>
         </section>
       )}
 
       {/* How it works */}
-      <section className="py-14 px-6 border-b border-zinc-800/50">
+      <section className="py-14 px-6 border-b border-stone-800/50">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10">
             <h2 className="text-lg font-semibold text-white mb-1">The work</h2>
-            <p className="text-sm text-zinc-500">A process, not a transaction. Each session builds on the last.</p>
+            <p className="text-sm text-stone-500">A process, not a transaction. Each session builds on the last.</p>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
@@ -509,12 +511,12 @@ export default function PortalHomePage() {
               },
             ].map(({ icon: Icon, step, title, desc }) => (
               <div key={step} className="relative pl-10">
-                <span className="absolute left-0 top-0 text-xs font-mono text-zinc-700">{step}</span>
+                <span className="absolute left-0 top-0 text-xs font-mono text-stone-700">{step}</span>
                 <div className="mb-3">
-                  <Icon size={18} className="text-zinc-400" />
+                  <Icon size={18} className="text-stone-400" />
                 </div>
                 <h3 className="text-sm font-medium text-white mb-1.5">{title}</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
+                <p className="text-xs text-stone-500 leading-relaxed">{desc}</p>
               </div>
             ))}
           </div>
@@ -522,35 +524,35 @@ export default function PortalHomePage() {
       </section>
 
       {/* Client portal access */}
-      <section className="py-14 px-6 border-b border-zinc-800/50">
+      <section className="py-14 px-6 border-b border-stone-800/50">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-white mb-1">Your ongoing field of work</h2>
-              <p className="text-sm text-zinc-500 mb-6 max-w-md">
+              <p className="text-sm text-stone-500 mb-6 max-w-md">
                 A living record of the work — not a dashboard. Everything that matters from your sessions, in one place.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link
                   href={`/portal/${slug}/signin`}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-stone-800 text-white text-sm font-medium border border-stone-700 hover:bg-stone-700 transition-colors"
                 >
                   <Lock size={14} />
                   Enter your space
                 </Link>
                 <Link
                   href={`/portal/${slug}/chat`}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-zinc-400 text-sm font-medium hover:text-white transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-stone-400 text-sm font-medium hover:text-white transition-colors"
                 >
                   <MessageCircle size={14} />
                   Message between sessions
                 </Link>
               </div>
             </div>
-            <div className="w-full lg:w-72 rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex-shrink-0">
+            <div className="w-full lg:w-72 rounded-xl border border-stone-800 bg-stone-900 p-5 flex-shrink-0">
               <div className="flex items-center gap-2 mb-4">
-                <Layers size={14} className="text-zinc-500" />
-                <span className="text-xs font-medium text-zinc-400">Inside your portal</span>
+                <Layers size={14} className="text-stone-500" />
+                <span className="text-xs font-medium text-stone-400">Inside your portal</span>
               </div>
               <ul className="space-y-3">
                 {[
@@ -560,8 +562,8 @@ export default function PortalHomePage() {
                   'Resources and integration prompts',
                   'Your evolving process, in one place',
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-xs text-zinc-400">
-                    <span className="mt-0.5 w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0" />
+                  <li key={item} className="flex items-start gap-2.5 text-xs text-stone-400">
+                    <span className="mt-0.5 w-1 h-1 rounded-full bg-stone-600 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -572,23 +574,23 @@ export default function PortalHomePage() {
       </section>
 
       {/* Footer CTA */}
-      <section className="py-14 px-6 border-b border-zinc-800/50">
+      <section className="py-14 px-6 border-b border-stone-800/50">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-lg font-semibold text-white mb-2">Start where you are.</h2>
-          <p className="text-sm text-zinc-400 mb-6">
+          <p className="text-sm text-stone-400 mb-6">
             We&apos;ll work from there.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href={`/portal/${slug}/book`}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-white text-stone-900 text-sm font-medium hover:bg-stone-100 transition-colors"
             >
               <Calendar size={15} />
               Book a session
             </Link>
             <Link
               href={`/portal/${slug}/chat`}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-zinc-800 text-white text-sm font-medium border border-zinc-700 hover:bg-zinc-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-stone-800 text-white text-sm font-medium border border-stone-700 hover:bg-stone-700 transition-colors"
             >
               <MessageCircle size={15} />
               Send a message
@@ -600,10 +602,10 @@ export default function PortalHomePage() {
       {/* Footer */}
       <footer className="py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">
-            Powered by <a href="https://soullab.life" className="hover:text-zinc-400 transition-colors">Soullab</a>
+          <p className="text-xs text-stone-600">
+            Powered by <a href="https://soullab.life" className="hover:text-stone-400 transition-colors">Soullab</a>
           </p>
-          <Link href={`/portal/${slug}/signin`} className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+          <Link href={`/portal/${slug}/signin`} className="text-xs text-stone-600 hover:text-stone-400 transition-colors">
             Client sign in
           </Link>
         </div>
