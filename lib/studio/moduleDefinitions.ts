@@ -60,6 +60,7 @@ export type ModuleSlug =
   | 'camera'
   | 'code'
   | 'scribe'
+  | 'ideas'
   | 'decisions'
   | 'changes'
   | 'teams'
@@ -223,6 +224,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 
   // ── Field modules (personal orientation) ──
   {
+    slug: 'ideas',
+    label: 'Idea Field',
+    icon: Sparkles,
+    href: '/studio/ideas',
+    category: 'tools',
+    description: 'Seed, refine, and forge ideas into decisions',
+    alwaysOn: false,
+    mode: 'field',
+  },
+  {
     slug: 'decisions',
     label: 'Decisions',
     icon: Scale,
@@ -341,14 +352,14 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'vault'],
-  astrology: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  generalist: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'ideas', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'portal', 'sessions', 'calendar', 'ideas', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'ideas', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['clients', 'portal', 'sessions', 'caseload', 'calendar', 'ideas', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'calendar', 'ideas', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'calendar', 'ideas', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'calendar', 'tasks', 'ideas', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  personal: ['ideas', 'decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
