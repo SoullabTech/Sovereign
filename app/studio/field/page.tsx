@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wind, Scale, BookOpen, Calendar, CheckSquare, Mic,
-  ArrowRight, Sparkles, ChevronRight, RefreshCw,
+  ArrowRight, Sparkles, ChevronRight, RefreshCw, Palette,
 } from 'lucide-react';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/http/apiBase';
@@ -228,6 +228,7 @@ export default function FieldPage() {
                 <FieldCard href="/studio/vault" icon={BookOpen} title="Vault" subtitle="Private notes and reflections" accent="purple" />
                 <FieldCard href="/studio/calendar" icon={Calendar} title="Calendar" subtitle="What is coming" accent="slate" />
                 <FieldCard href="/studio/tasks" icon={CheckSquare} title="Tasks" subtitle="What needs doing" accent="slate" />
+                <FieldCard href="/studio/field/edit" icon={Palette} title="Field Editor" subtitle="Shape your public field" accent="amber" />
               </div>
             </section>
           </>
