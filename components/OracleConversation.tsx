@@ -149,11 +149,8 @@ import { FloatingSessionIndicator } from './session/SessionArcIndicator';
 import { SessionRecap, type SessionRecapData } from './session/SessionRecap';
 import { DailyCheckin, type EmotionalState } from './checkin/DailyCheckin';
 import { ElementDiscovery } from './discovery/ElementDiscovery';
-import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
-import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
 import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
 import { generateWelcomeGreeting } from '@/lib/maia/welcomeGreeting';
-import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
@@ -1259,18 +1256,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return true;
   });
 
-  // Wisdom Council state
+  // Wisdom Council state (modules removed — retained for interface stability)
   const [showWisdomCouncil, setShowWisdomCouncil] = useState(false);
   const [showCurrentTeaching, setShowCurrentTeaching] = useState(false);
-  const [activeTradition, setActiveTradition] = useState<WisdomTradition | null>(() => {
-    if (typeof window !== 'undefined') {
-      const storedId = localStorage.getItem('maia.activeTradition');
-      if (storedId) {
-        return ELDER_COUNCIL_TRADITIONS.find(t => t.id === storedId) || null;
-      }
-    }
-    return null;
-  });
+  const [activeTradition, setActiveTradition] = useState<{ id: string; name: string } | null>(null);
 
   // Handle initial action from URL (e.g., /maia?action=choose-guide)
   useEffect(() => {
@@ -8721,29 +8710,7 @@ I'm not sure what I'm feeling yet.`;
         />
       )}
 
-      {/* Wisdom Council Picker Modal */}
-      <WisdomCouncilPicker
-        isOpen={showWisdomCouncil}
-        onClose={() => setShowWisdomCouncil(false)}
-        currentTraditionId={activeTradition?.id}
-        onSelect={(tradition) => {
-          setActiveTradition(tradition);
-          localStorage.setItem('maia.activeTradition', tradition.id);
-          setShowWisdomCouncil(false);
-          toast.success(`Now guided by ${tradition.name.split('(')[0].trim()}`);
-        }}
-      />
-
-      {/* Current Teaching Modal */}
-      <CurrentTeachingModal
-        isOpen={showCurrentTeaching}
-        onClose={() => setShowCurrentTeaching(false)}
-        tradition={activeTradition}
-        onChangeGuide={() => {
-          setShowCurrentTeaching(false);
-          setShowWisdomCouncil(true);
-        }}
-      />
+      {/* Wisdom Council Picker + Current Teaching Modal — modules removed */}
 
       {/* Return Path Pill - shows when user came from Guide/Academy via seed prompt */}
       {returnPath && !showLabDrawer && (

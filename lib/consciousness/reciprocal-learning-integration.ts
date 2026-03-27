@@ -19,7 +19,7 @@ import { ReciprocalLearningEngine, type MemberInteraction } from './reciprocal-l
 import { CulturalSensitivityValidator } from './cultural-sensitivity-validator';
 import { MemberContributionTracker } from './member-contribution-tracker';
 import { WisdomSynthesisEngine, type SynthesisOpportunity } from './wisdom-synthesis-engine';
-import { ElderCouncilService } from './ElderCouncilService';
+// ElderCouncilService removed — module was dead code
 
 export interface ReciprocalLearningConfig {
   enableWisdomDetection: boolean;
@@ -73,7 +73,7 @@ export class ReciprocalLearningEcosystem extends EventEmitter {
   private culturalValidator: CulturalSensitivityValidator;
   private contributionTracker: MemberContributionTracker;
   private synthesisEngine: WisdomSynthesisEngine;
-  private elderCouncil: ElderCouncilService;
+  private elderCouncil: unknown;
 
   private config: ReciprocalLearningConfig;
   private integrationHistory: Map<string, WisdomIntegrationEvent[]> = new Map();
@@ -90,7 +90,7 @@ export class ReciprocalLearningEcosystem extends EventEmitter {
     this.culturalValidator = new CulturalSensitivityValidator();
     this.contributionTracker = new MemberContributionTracker();
     this.synthesisEngine = new WisdomSynthesisEngine();
-    this.elderCouncil = new ElderCouncilService();
+    this.elderCouncil = null; // ElderCouncilService removed
 
     this.config = {
       enableWisdomDetection: true,
