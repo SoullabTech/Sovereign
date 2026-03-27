@@ -109,12 +109,19 @@ export default function PortalChatPage() {
               className="text-center py-16"
             >
               {/* Holoflower */}
-              <img src="/holoflower.svg" alt="" className="w-12 h-12 mx-auto mb-4 opacity-40" />
-              <h2 className="text-xl text-amber-100/80 mb-2 tracking-wide">
+              <img src="/holoflower.svg" alt="" className="w-12 h-12 mx-auto mb-6 opacity-40" />
+              <h2 className="text-xl text-amber-100/80 mb-3 tracking-wide">
                 {aiName}
               </h2>
-              <p className="text-sm text-stone-500 max-w-md mx-auto">
-                Start with what is actually going on. This is not intake — this is where we begin.
+              <p className="text-sm text-stone-400 max-w-lg mx-auto leading-relaxed mb-2">
+                This is a space to think clearly about what is actually going on in your life.
+              </p>
+              <p className="text-sm text-stone-500 max-w-lg mx-auto leading-relaxed mb-2">
+                You will not be coached, soothed, or given a plan. Instead, the question you bring
+                will be reorganized — so you can see the structure underneath it.
+              </p>
+              <p className="text-xs text-stone-600 max-w-md mx-auto leading-relaxed">
+                Just say what is real. A few sentences is enough. The conversation will find its shape.
               </p>
 
               <div className="mt-8 flex flex-wrap justify-center gap-2">
