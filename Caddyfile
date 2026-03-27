@@ -304,6 +304,17 @@ kelly.soullab.life {
         }
     }
 
+    # /chat → portal chat
+    handle /chat {
+        rewrite * /portal/kelly-nezat/chat
+        reverse_proxy maia-sovereign:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
     # /book → booking page
     handle /book {
         rewrite * /portal/kelly-nezat/book
