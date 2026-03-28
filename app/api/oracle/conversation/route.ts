@@ -42,6 +42,9 @@ import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/service
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
+import { checkRateLimit } from '@/lib/rateLimit/pgRateLimit';
+import { logger } from '@/lib/logging/logger';
+import { generateTraceId } from '@/lib/logging/traceId';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
@@ -80,42 +83,16 @@ const ORACLE_LEVEL = 5 as const;
 // Optional hard gate for the premium endpoint (recommended for beta)
 const ORACLE_API_KEY = process.env.ORACLE_API_KEY || '';
 
-// Simple in-memory rate limit (good for dev + single-instance; see below for prod-grade)
+// Rate limiting: Postgres-backed via lib/rateLimit/pgRateLimit.ts
+// Survives container restarts, works across multiple instances.
 const RATE_WINDOW_MS = 60_000; // 1 minute
-const RATE_MAX = 12; // per IP per window (tune this)
-type RateState = { windowStart: number; count: number };
-const __oracleRateMap: Map<string, RateState> =
-  // @ts-ignore
-  globalThis.__oracleRateMap || new Map();
-// @ts-ignore
-globalThis.__oracleRateMap = __oracleRateMap;
+const RATE_MAX = 12; // per IP per window
 
 function getClientIp(req: NextRequest) {
   // Works behind most proxies; first IP is the client
   const xff = req.headers.get('x-forwarded-for');
   if (xff) return xff.split(',')[0].trim();
   return req.headers.get('x-real-ip') || 'unknown';
-}
-
-function rateLimitOrThrow(ip: string) {
-  const now = Date.now();
-  const state = __oracleRateMap.get(ip);
-
-  if (!state || now - state.windowStart > RATE_WINDOW_MS) {
-    __oracleRateMap.set(ip, { windowStart: now, count: 1 });
-    return;
-  }
-
-  state.count += 1;
-  __oracleRateMap.set(ip, state);
-
-  if (state.count > RATE_MAX) {
-    const retryAfterSec = Math.ceil((RATE_WINDOW_MS - (now - state.windowStart)) / 1000);
-    const err = new Error('rate_limited');
-    // @ts-ignore
-    err.retryAfterSec = retryAfterSec;
-    throw err;
-  }
 }
 
 /**
@@ -309,6 +286,7 @@ export async function POST(request: NextRequest) {
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
+  const traceId = generateTraceId();
   const startedAt = Date.now();
   const ip = getClientIp(request);
 
@@ -335,12 +313,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Rate limit check
-    try {
-      rateLimitOrThrow(ip);
-    } catch (e: any) {
-      const retryAfterSec = e?.retryAfterSec ?? 60;
-      console.warn(JSON.stringify({ tag: 'oracle.rate_limited', requestId, ip, retryAfterSec }));
+    // Rate limit check (Postgres-backed — survives restarts)
+    const rateResult = await checkRateLimit(`oracle:ip:${ip}`, RATE_MAX, RATE_WINDOW_MS);
+    if (!rateResult.allowed) {
+      const retryAfterSec = Math.ceil(rateResult.retryAfterMs / 1000) || 60;
+      logger.warn({ tag: 'oracle.rate_limited', traceId, requestId, ip, retryAfterSec }, 'Rate limited');
 
       // Log rate limited attempt (fire-and-forget)
       logOracleUsage({
@@ -353,7 +330,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         { success: false, error: 'Rate limited', retryAfterSec },
-        { status: 429, headers: { 'Retry-After': String(retryAfterSec) } }
+        { status: 429, headers: { 'Retry-After': String(retryAfterSec), 'X-Trace-ID': traceId } }
       );
     }
 
@@ -371,6 +348,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Structured request log — spine for debugging
+    logger.info({
+      tag: 'oracle.request',
+      traceId,
+      requestId,
+      userId: userId.substring(0, 8),
+      mode: parsed.realtimeMode || 'talk',
+      ip,
+    }, 'Oracle request start');
 
     // =========================================================================
     // SERVER-SIDE IDENTITY: Derive userName from session, not client request
@@ -1205,20 +1192,18 @@ export async function POST(request: NextRequest) {
       })(),
     };
 
-    // Log successful oracle usage
+    // Log successful oracle usage — structured with trace ID
     const durationMs = Date.now() - startedAt;
-    console.info(
-      JSON.stringify({
-        tag: 'oracle.response',
-        requestId,
-        durationMs,
-        level: ORACLE_LEVEL,
-        provider: maiaResponse.providerMetadata.providerUsed,
-        model: maiaResponse.providerMetadata.modelUsed,
-        usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
-        ok: true,
-      })
-    );
+    logger.info({
+      tag: 'oracle.response',
+      traceId,
+      requestId,
+      durationMs,
+      level: ORACLE_LEVEL,
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
+    }, 'Oracle response complete');
 
     // Log usage for tracking and quotas (fire-and-forget)
     logOracleUsage({
@@ -1306,6 +1291,7 @@ export async function POST(request: NextRequest) {
     Object.entries(canonHeaders).forEach(([key, value]) => {
       jsonResponse.headers.set(key, value);
     });
+    jsonResponse.headers.set('X-Trace-ID', traceId);
     return jsonResponse;
 
   } catch (error) {
@@ -1316,18 +1302,16 @@ export async function POST(request: NextRequest) {
     const isServiceUnavailable = (error as any)?.code === 'SERVICE_UNAVAILABLE';
     const failedProvider = (error as any)?.provider;
 
-    // Structured error logging
-    console.error(
-      JSON.stringify({
-        tag: isServiceUnavailable ? 'oracle.service_unavailable' : 'oracle.error',
-        requestId,
-        durationMs,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        strict503: isServiceUnavailable,
-        failedProvider,
-      })
-    );
+    // Structured error logging with trace ID
+    logger.error({
+      tag: isServiceUnavailable ? 'oracle.service_unavailable' : 'oracle.error',
+      traceId,
+      requestId,
+      durationMs,
+      error: error instanceof Error ? error.message : String(error),
+      strict503: isServiceUnavailable,
+      failedProvider,
+    }, 'Oracle request failed');
 
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
@@ -1372,11 +1356,12 @@ export async function POST(request: NextRequest) {
         errorResponse.headers.set(key, value);
       });
       errorResponse.headers.set('X-MAIA-Strict-Mode', '1');
+      errorResponse.headers.set('X-Trace-ID', traceId);
 
       return errorResponse;
     }
 
-    return NextResponse.json(
+    const fallbackResponse = NextResponse.json(
       {
         success: false,
         error: 'Failed to process spiralogic conversation',
@@ -1384,6 +1369,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+    fallbackResponse.headers.set('X-Trace-ID', traceId);
+    return fallbackResponse;
   }
 }
 
