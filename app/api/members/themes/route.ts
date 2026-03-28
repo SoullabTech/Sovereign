@@ -8,12 +8,21 @@ function generateCorrelationId(): string {
   return `themes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+export interface ThemeSignalTypeDistribution {
+  active: number;
+  emerging: number;
+  blocked: number;
+  integrating: number;
+}
+
 export interface ThemeSummary {
   theme: string;
   count: number;
+  first_detected_at: string;
   latest_detected_at: string;
   strongest_resonance: number | null;
   element: string | null;
+  signal_types: ThemeSignalTypeDistribution;
 }
 
 export interface ThemesResponse {
@@ -59,13 +68,19 @@ export async function GET(request: NextRequest) {
     const result = await query<{
       theme: string;
       count: string;
+      first_detected_at: string;
       latest_detected_at: string;
       strongest_resonance: string | null;
       element: string | null;
+      active_count: string;
+      emerging_count: string;
+      blocked_count: string;
+      integrating_count: string;
     }>(
       `SELECT
          theme,
          COUNT(*)::int                       AS count,
+         MIN(detected_at)                    AS first_detected_at,
          MAX(detected_at)                    AS latest_detected_at,
          MAX(resonance_strength)             AS strongest_resonance,
          (
@@ -75,7 +90,11 @@ export async function GET(request: NextRequest) {
              AND  sub.theme     = mts.theme
            ORDER  BY sub.detected_at DESC
            LIMIT  1
-         )                                   AS element
+         )                                   AS element,
+         COUNT(*) FILTER (WHERE signal_type = 'active')::int       AS active_count,
+         COUNT(*) FILTER (WHERE signal_type = 'emerging')::int     AS emerging_count,
+         COUNT(*) FILTER (WHERE signal_type = 'blocked')::int      AS blocked_count,
+         COUNT(*) FILTER (WHERE signal_type = 'integrating')::int  AS integrating_count
        FROM   member_theme_signals mts
        WHERE  member_id   = $1
          AND  detected_at > NOW() - ($2 || ' days')::interval
@@ -97,9 +116,16 @@ export async function GET(request: NextRequest) {
     const themes: ThemeSummary[] = result.rows.map((row) => ({
       theme: row.theme,
       count: Number(row.count),
+      first_detected_at: row.first_detected_at,
       latest_detected_at: row.latest_detected_at,
       strongest_resonance: row.strongest_resonance != null ? Number(row.strongest_resonance) : null,
       element: row.element,
+      signal_types: {
+        active: Number(row.active_count),
+        emerging: Number(row.emerging_count),
+        blocked: Number(row.blocked_count),
+        integrating: Number(row.integrating_count),
+      },
     }));
 
     return NextResponse.json(
