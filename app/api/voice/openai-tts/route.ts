@@ -1,8 +1,9 @@
 // backend: app/api/voice/openai-tts/route.ts
 //
-// SOVEREIGNTY: When MAIA_LOCAL_VOICE_ENABLED=1, this route tries Kokoro (local)
-// first before falling back to OpenAI. The frontend doesn't need to change —
-// all existing calls to /api/voice/openai-tts automatically get local voice.
+// SOVEREIGNTY FLIP (2026-03-28): Kokoro is default primary.
+// This route tries Kokoro first via ttsRouter, then falls back to OpenAI.
+// When OpenAI IS used (fallback or explicit), the Speech Director layer
+// generates context-aware instructions for gpt-4o-mini-tts.
 //
 import OpenAI from "openai";
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -13,6 +14,9 @@ import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { logFallbackEvent, checkCloudConsent, resolveVoicePolicy } from '@/lib/tts/voiceSovereignty';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
 import { getMemberVoicePreferences } from '@/lib/voice/voiceControlsService';
+import { resolveStylePreset } from '@/lib/voice/agentToneMap';
+import { buildOpenAIInstructions } from '@/lib/tts/prosody/openaiInstructions';
+import { shapeForSpeech } from '@/lib/voice/textShaper';
 
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
@@ -112,8 +116,9 @@ export async function POST(req: NextRequest) {
 
     // ═══════════════════════════════════════════════════════════════════
     // ARCHETYPE-AWARE VOICE ROUTING
-    // MAIA vow: default voice is always maia_core (OpenAI Alloy).
-    // Load member's archetype → resolve provider → route accordingly.
+    // SOVEREIGNTY FLIP (2026-03-28): All archetypes default to Kokoro.
+    // OpenAI is fallback only (when Kokoro is unavailable).
+    // Load member's archetype → resolve Kokoro voice → route through ttsRouter.
     // ═══════════════════════════════════════════════════════════════════
     let memberArchetype: string | null = null;
     if (memberId) {
@@ -127,83 +132,24 @@ export async function POST(req: NextRequest) {
     const effectiveArchetype = memberArchetype || 'maia_core';
     const archetypeResolution = resolveArchetypeVoice(effectiveArchetype);
 
-    // If archetype routes to OpenAI (MAIA feminine voices), skip Kokoro entirely
-    if (archetypeResolution.provider === 'openai') {
-      const voice = archetypeResolution.voice;
-      const t0 = Date.now();
-      console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → OpenAI ${voice} (skipping Kokoro)`);
-
-      if (!process.env.OPENAI_API_KEY) {
-        return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
-      }
-
-      const speechParams: any = {
-        // gpt-4o-mini-tts is MAIA's default voice model (supports instructions + better quality)
-        // Client can override via body.model; ttsInstructions always requires gpt-4o-mini-tts
-        model: ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts"),
-        voice: voice,
-        input: text,
-        response_format: format,
-        speed,
-        ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
-      };
-      const speech = await getOpenAI().audio.speech.create(speechParams);
-
-      const audioBuffer = Buffer.from(await speech.arrayBuffer());
-      const ms = Date.now() - t0;
-
-      console.log(`[openai-tts:${requestId}] ARCHETYPE provider=openai voice=${voice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} bytes=${audioBuffer.length} ms=${ms}`);
-
-      const actualSeconds = Math.ceil(ms / 1000) || estimatedSeconds;
-      LimitsEnforcer.recordUsage({
-        memberId: memberId || undefined,
-        anonId,
-        tier: memberTier,
-        resource: 'voice_tts',
-        amount: actualSeconds,
-      }).catch(err => console.error(`[openai-tts:${requestId}] Usage recording failed:`, err));
-
-      const contentType =
-        format === "mp3" ? "audio/mpeg"
-        : format === "wav" ? "audio/wav"
-        : format === "opus" ? "audio/opus"
-        : format === "aac" ? "audio/aac"
-        : format === "flac" ? "audio/flac"
-        : "application/octet-stream";
-
-      return new Response(new Uint8Array(audioBuffer), {
-        status: 200,
-        headers: {
-          "Content-Type": contentType,
-          "Content-Length": audioBuffer.length.toString(),
-          "Cache-Control": "no-store",
-          "X-Request-Id": requestId,
-          "X-TTS-Provider": "openai",
-          "X-TTS-Fallback": "0",
-          "X-Voice-Archetype": effectiveArchetype,
-          "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",  // Observability: 0 = sovereignty leak
-          "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
-        },
-      });
-    }
-
-    // Kokoro archetype (Atlas, Puck) — use voice from archetype, not from client
+    // All archetypes go through ttsRouter (Kokoro primary)
     const voice = archetypeResolution.voice;
-    console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → Kokoro ${voice}`);
+    console.log(`[openai-tts:${requestId}] archetype=${effectiveArchetype} → Kokoro ${voice} (sovereignty default)`);
 
     const t0 = Date.now();
 
     // ═══════════════════════════════════════════════════════════════════
-    // SOVEREIGN LOCAL VOICE INTERCEPT
-    // Only attempt Kokoro when explicitly configured as the primary provider.
-    // Default ('auto') now routes directly to OpenAI for reliability.
-    // Set MAIA_TTS_PROVIDER=kokoro to re-enable local-first routing.
+    // SOVEREIGN LOCAL VOICE — KOKORO PRIMARY (2026-03-28)
+    // All TTS goes through ttsRouter which defaults to Kokoro.
+    // Prosody, text shaping, and cache are handled inside ttsRouter.
+    // OpenAI fallback only triggers when Kokoro is down + consent allows.
     // ═══════════════════════════════════════════════════════════════════
-    const configuredProvider = ttsRouter.getConfiguredProvider();
-    const useLocalFirst = ttsRouter.isLocalVoiceEnabled() && configuredProvider === 'kokoro';
-    if (useLocalFirst) {
+    {
       try {
-        const result = await ttsRouter.synthesize({ text, voice, format: format as any, speed });
+        const result = await ttsRouter.synthesize({
+          text, voice, format: format as any, speed,
+          voiceArchetype: effectiveArchetype,
+        });
         const ms = Date.now() - t0;
 
         console.log(`[openai-tts:${requestId}] LOCAL provider=${result.provider} voice=${voice} bytes=${result.audioBuffer.length} ms=${ms}`);
@@ -248,6 +194,7 @@ export async function POST(req: NextRequest) {
             "X-TTS-Provider": result.provider,
             "X-TTS-Fallback": "0",
             "X-Voice-Policy": localPolicy,
+            "X-Voice-Archetype": effectiveArchetype,
             "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
             "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
           },
@@ -296,7 +243,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // OPENAI TTS (original path, or fallback from local)
+    // OPENAI TTS — SPEECH DIRECTOR LAYER (fallback or explicit provider)
+    //
+    // When OpenAI IS used, drive it properly:
+    //   1. Resolve style preset from agent/element/context
+    //   2. Shape text for speech (clause breaking, cleanup)
+    //   3. Build instruction-guided prosody for gpt-4o-mini-tts
+    //
+    // This turns OpenAI from a "renderer" into a "co-performer."
     // ═══════════════════════════════════════════════════════════════════
     if (!process.env.OPENAI_API_KEY) {
       return jsonError("Missing OPENAI_API_KEY on server", 500, { requestId });
@@ -304,16 +258,33 @@ export async function POST(req: NextRequest) {
 
     // For Kokoro archetypes falling back to OpenAI, use alloy (Kokoro voice IDs aren't valid for OpenAI)
     const openaiVoice = archetypeResolution.provider === 'kokoro' ? 'alloy' : voice;
-    const fallbackModel = ttsInstructions ? "gpt-4o-mini-tts" : (body?.model ?? "gpt-4o-mini-tts");
-    console.log(`[openai-tts:${requestId}] FALLBACK model=${fallbackModel} voice=${openaiVoice} archetype=${effectiveArchetype} hasInstructions=${Boolean(ttsInstructions)} format=${format} chars=${text.length}`);
+
+    // ── Speech Director: style preset → instructions ──
+    const element = body?.voice ? undefined : 'earth'; // TODO: pass element from conductor when available
+    const stylePreset = resolveStylePreset({
+      agent: undefined, // TODO: pass agent context from request
+      element: element as any,
+    });
+    const shapedText = shapeForSpeech(text);
+
+    // Build instruction string: use client-provided ttsInstructions if present,
+    // otherwise generate from style preset (Speech Director)
+    const effectiveInstructions = ttsInstructions || buildOpenAIInstructions({
+      preset: stylePreset,
+      element: element as any,
+    });
+
+    // Always use gpt-4o-mini-tts (supports instructions field)
+    const fallbackModel = "gpt-4o-mini-tts";
+    console.log(`[openai-tts:${requestId}] FALLBACK model=${fallbackModel} voice=${openaiVoice} archetype=${effectiveArchetype} preset=${stylePreset} hasClientInstructions=${Boolean(ttsInstructions)} format=${format} chars=${shapedText.length}`);
 
     const fallbackSpeechParams: any = {
       model: fallbackModel,
       voice: openaiVoice,
-      input: text,
+      input: shapedText,
       response_format: format,
       speed,
-      ...(ttsInstructions ? { instructions: ttsInstructions } : {}),
+      instructions: effectiveInstructions,
     };
     const speech = await getOpenAI().audio.speech.create(fallbackSpeechParams);
 
@@ -352,8 +323,11 @@ export async function POST(req: NextRequest) {
         "X-TTS-Provider": "openai",
         "X-TTS-Fallback": isFallbackFromLocal ? "1" : "0",
         "X-Voice-Policy": isFallbackFromLocal ? "local-prefer" : "cloud-primary",
+        "X-Voice-Archetype": effectiveArchetype,
+        "X-Voice-Style-Preset": stylePreset,
+        "X-Speech-Director": ttsInstructions ? "client" : "auto",
         "X-PFI-Voice-Plan": ttsInstructions ? "1" : "0",
-        "X-PFI-TTS-Text-Len": String(text?.length ?? 0),
+        "X-PFI-TTS-Text-Len": String(shapedText?.length ?? 0),
       },
     });
   } catch (err: any) {

@@ -1,24 +1,21 @@
 /**
  * TTS Router — sovereign provider selection with fallback chain.
  *
- * Routes TTS requests to the configured provider, falling back gracefully
- * if local services are unavailable — but only with consent.
+ * SOVEREIGNTY FLIP (2026-03-28): Kokoro is now the DEFAULT primary provider.
+ * OpenAI TTS is fallback only (consent-gated).
  *
- * Provider chain (when MAIA_LOCAL_VOICE_ENABLED=1):
- *   1. Kokoro (local) → fastest, sovereign
- *   2. OpenAI TTS (cloud) → fallback if local is down AND consent allows
+ * Provider chain (default):
+ *   1. Kokoro (local) → primary, sovereign
+ *   2. OpenAI TTS (cloud) → fallback if Kokoro is down AND consent allows
  *   3. Browser Web Speech API → ultimate fallback (client-side only)
  *
- * When MAIA_LOCAL_VOICE_ENABLED=0 (default):
- *   Existing behavior unchanged. OpenAI TTS as primary.
- *
- * SOVEREIGNTY: When local voice is enabled and healthy, no audio data
- * leaves the machine. Fallback to cloud is logged and audited.
+ * SOVEREIGNTY: When Kokoro is healthy, no audio data leaves the machine.
+ * Fallback to cloud is logged and audited via voiceSovereignty.ts.
  *
  * Env flags:
- *   MAIA_LOCAL_VOICE_ENABLED — "0" (default) or "1"
- *   MAIA_TTS_PROVIDER — "auto" (default), "kokoro", "openai", "sesame"
+ *   MAIA_TTS_PROVIDER — "auto" (default=kokoro), "kokoro", "openai", "sesame"
  *   KOKORO_TTS_URL — Kokoro endpoint (default: http://localhost:8880)
+ *   MAIA_LOCAL_VOICE_ENABLED — DEPRECATED. Kokoro is always primary now.
  */
 
 import * as kokoro from './providers/kokoro';
@@ -26,8 +23,11 @@ import * as sesame from './providers/sesame';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
 import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
 import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
+import { resolveStylePreset, type ToneContext } from '@/lib/voice/agentToneMap';
+import { applyKokoroProsodySimple } from '@/lib/tts/prosody/kokoroProsody';
+import { createCacheKey, getCached, setCache } from '@/lib/tts/voiceCache';
 
-export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'auto';
+export type TTSProvider = 'kokoro' | 'openai' | 'sesame' | 'voxtral' | 'auto';
 
 /** Single-line JSON log for grep-friendly TTS routing proof. */
 function logTtsResolve(payload: Record<string, unknown>) {
@@ -57,9 +57,17 @@ interface TTSResult {
 
 /**
  * Is local voice mode enabled?
+ * DEPRECATED: Kokoro is always the default primary. This remains for backward compat
+ * with sovereignty logging and health check paths.
  */
 export function isLocalVoiceEnabled(): boolean {
-  return process.env.MAIA_LOCAL_VOICE_ENABLED === '1';
+  // Always true now — Kokoro is default. Only false if explicitly set to "0"
+  // AND MAIA_TTS_PROVIDER is explicitly "openai".
+  if (process.env.MAIA_LOCAL_VOICE_ENABLED === '0' &&
+      (process.env.MAIA_TTS_PROVIDER || '').toLowerCase() === 'openai') {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -67,7 +75,7 @@ export function isLocalVoiceEnabled(): boolean {
  */
 export function getConfiguredProvider(): TTSProvider {
   const provider = (process.env.MAIA_TTS_PROVIDER || 'auto').toLowerCase();
-  if (['kokoro', 'openai', 'sesame', 'auto'].includes(provider)) {
+  if (['kokoro', 'openai', 'sesame', 'voxtral', 'auto'].includes(provider)) {
     return provider as TTSProvider;
   }
   return 'auto';
@@ -76,59 +84,43 @@ export function getConfiguredProvider(): TTSProvider {
 /**
  * Route a TTS request to the appropriate provider with fallback.
  *
- * When provider is "auto":
- *   - If local voice enabled → try Kokoro first, fall back to OpenAI
- *   - If local voice disabled → OpenAI only (existing behavior)
+ * SOVEREIGNTY FLIP (2026-03-28):
+ *   - "auto" now means Kokoro first (was OpenAI)
+ *   - All archetypes route through Kokoro by default
+ *   - OpenAI is fallback only (consent-gated)
  *
- * When provider is explicit (e.g. "kokoro"):
- *   - Try that provider, fall back to OpenAI on failure
+ * When provider is explicit (e.g. "openai"):
+ *   - Use that provider directly
  */
 export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   const provider = getConfiguredProvider();
-  const localEnabled = isLocalVoiceEnabled();
 
   // Determine primary provider
+  // auto = kokoro (sovereignty default)
   const primary: TTSProvider =
-    provider !== 'auto' ? provider
-    : localEnabled ? 'kokoro'
-    : 'openai';
+    provider !== 'auto' ? provider : 'kokoro';
 
-  // ── Archetype intercept: OpenAI archetypes skip Kokoro entirely ──
+  const memberPref = params.ttsProviderPref || 'auto';
+
+  // ── Archetype resolution: determine Kokoro voice from archetype ──
   if (params.voiceArchetype) {
     const archetypeResolution = resolveArchetypeVoice(params.voiceArchetype);
 
     logTtsResolve({
       path: 'ttsRouter',
-      stage: 'archetype_intercept',
+      stage: 'archetype_resolve',
       voiceArchetype: params.voiceArchetype,
       resolvedProvider: archetypeResolution.provider,
       resolvedVoice: archetypeResolution.voice,
-      localEnabled,
+      primary,
       ttsProviderEnv: process.env.MAIA_TTS_PROVIDER || null,
     });
 
-    if (archetypeResolution.provider === 'openai') {
-      const reason = `archetype_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
+    // Only force OpenAI if member explicitly set provider preference to 'openai'
+    if (memberPref === 'openai' && archetypeResolution.provider === 'openai') {
+      const reason = `member_pref_openai:${params.voiceArchetype}:${archetypeResolution.voice}`;
       throw new TTSFallbackToOpenAI(false, reason, archetypeResolution.voice);
     }
-  }
-
-  // ── GUARDRAIL: MAIA OpenAI family cannot hit Kokoro unless member explicitly chose "local" ──
-  const memberPref = params.ttsProviderPref || 'auto';
-  const archetype = params.voiceArchetype || null;
-  const isMaiaOpenAiFamily =
-    typeof archetype === 'string' &&
-    archetype.startsWith('maia_') &&
-    resolveArchetypeVoice(archetype).provider === 'openai';
-
-  if (isMaiaOpenAiFamily && memberPref !== 'local') {
-    logTtsResolve({
-      path: 'ttsRouter',
-      stage: 'guardrail_force_openai',
-      voiceArchetype: archetype,
-      memberPref,
-    });
-    throw new TTSFallbackToOpenAI(false, 'maia_default_guardrail', resolveArchetypeVoice(archetype).voice);
   }
 
   // Try primary
@@ -141,26 +133,71 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
         : params.voiceHint
           ? resolveKokoroVoice(params.voiceHint.element)
           : params.voice;
-      const kokoroSpeed = params.voiceHint
-        ? resolveSpeed(params.voiceHint.element, params.voiceHint.speed)
-        : params.speed;
+
+      // ── PROSODY LAYER: style preset → text shaping → speed resolution ──
+      const element = params.voiceHint?.element ?? 'earth';
+      const toneCtx: ToneContext = {
+        element,
+        agent: params.voiceHint?.archetype,
+      };
+      const stylePreset = resolveStylePreset(toneCtx);
+
+      // Apply Kokoro-specific prosody (text shaping + speed from preset)
+      const prosody = applyKokoroProsodySimple({
+        text: params.text,
+        preset: stylePreset,
+        element,
+        voice: kokoroVoice || 'af_kore',
+      });
+
+      // ── CACHE CHECK ──
+      const cacheKey = createCacheKey({
+        text: prosody.text,
+        voiceId: prosody.voice,
+        stylePreset,
+        speed: prosody.speed,
+      });
+      const cached = getCached(cacheKey);
+      if (cached) {
+        logTtsResolve({
+          path: 'ttsRouter',
+          stage: 'cache_hit',
+          provider: 'kokoro',
+          voice: prosody.voice,
+          stylePreset,
+          cacheKey,
+        });
+        return {
+          audioBuffer: cached.audioBuffer,
+          contentType: cached.contentType,
+          provider: 'kokoro',
+          fallback: false,
+          reason: 'cache_hit',
+        };
+      }
 
       logTtsResolve({
         path: 'ttsRouter',
         stage: 'dispatch',
         provider: 'kokoro',
-        voice: kokoroVoice,
+        voice: prosody.voice,
         voiceArchetype: params.voiceArchetype || null,
-        element: params.voiceHint?.element,
+        element,
+        stylePreset,
+        speed: prosody.speed,
         memberPref,
       });
 
       const result = await kokoro.synthesize({
-        text: params.text,
-        voice: kokoroVoice,
+        text: prosody.text,
+        voice: prosody.voice,
         format: params.format,
-        speed: kokoroSpeed,
+        speed: prosody.speed,
       });
+
+      // ── CACHE STORE (fire-and-forget) ──
+      setCache(cacheKey, { audioBuffer: result.audioBuffer, contentType: result.contentType });
+
       return { ...result, fallback: false, reason: 'kokoro_healthy' };
     } catch (err: any) {
       const reason = err.message?.includes('timeout') ? 'kokoro_timeout'
@@ -220,7 +257,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     }
   }
 
-  // OpenAI as primary (not a fallback)
+  // OpenAI as explicit provider (only when MAIA_TTS_PROVIDER=openai)
   logTtsResolve({
     path: 'ttsRouter',
     stage: 'dispatch',
@@ -229,8 +266,9 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
     voiceArchetype: params.voiceArchetype || null,
     element: params.voiceHint?.element,
     memberPref,
+    note: 'openai_explicit_config',
   });
-  throw new TTSFallbackToOpenAI(false, 'openai_primary');
+  throw new TTSFallbackToOpenAI(false, 'openai_explicit_config');
 }
 
 /**
