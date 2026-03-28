@@ -1,16 +1,14 @@
 'use client';
 
 /**
- * Regulation Minute - Quick nervous system reset
+ * Breathwork — Deeper breath practice space
  *
- * A 60-120 second guided downshift. Zero advice, just a guided sequence.
- * Three protocols: Downshift / Energize / Stabilize
- * Three durations: 60s / 90s / 120s
- *
- * This is the fast-entry reset tool in the Somatic domain.
- * For deeper breath practice, see Breathwork.
+ * Expanded protocol library for working with your state.
+ * Box breathing, coherent breathing, extended exhale, alternate nostril.
+ * Longer sessions available (up to 5 minutes).
  *
  * Uses shared breath engine from lib/somatic/.
+ * Same orb/haptic/audio system as Regulation Minute.
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
@@ -22,8 +20,8 @@ import { triggerHapticPulse, HapticBreathSync, supportsHaptics } from '@/lib/hap
 import { ToolBridge } from '@/components/labtools/ToolBridge';
 import {
   BREATH_PROTOCOLS,
-  REGULATION_PROTOCOLS,
-  REGULATION_DURATIONS,
+  BREATHWORK_PROTOCOLS,
+  BREATHWORK_DURATIONS,
   type BreathProtocolId,
 } from '@/lib/somatic/breathProtocols';
 import {
@@ -68,12 +66,12 @@ function tryPlayTone(freq: number, durationSec: number, volume: number): boolean
 // COMPONENT
 // ─────────────────────────────────────────────────────
 
-export default function RegulationMinutePage() {
+export default function BreathworkPage() {
   const router = useRouter();
 
   // ── Setup state ──
-  const [protocolId, setProtocolId] = useState<BreathProtocolId>('downshift');
-  const [duration, setDuration] = useState<number>(60);
+  const [protocolId, setProtocolId] = useState<BreathProtocolId>('box');
+  const [duration, setDuration] = useState<number>(120);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [sessionPhase, setSessionPhase] = useState<SessionPhase>('setup');
 
@@ -81,10 +79,8 @@ export default function RegulationMinutePage() {
   const [elapsed, setElapsed] = useState(0);
   const [cycleCount, setCycleCount] = useState(0);
 
-  // ── Completion record ──
+  // ── Completion ──
   const [completionRecord, setCompletionRecord] = useState<CompletionRecord | null>(null);
-
-  // ── Audio availability ──
   const [soundAvailable, setSoundAvailable] = useState(true);
 
   // ── Refs ──
@@ -112,8 +108,7 @@ export default function RegulationMinutePage() {
 
   const tick = useCallback(() => {
     const now = performance.now();
-    const elapsedMs = now - startTimeRef.current;
-    const elapsedSec = elapsedMs / 1000;
+    const elapsedSec = (now - startTimeRef.current) / 1000;
 
     if (elapsedSec >= duration) {
       setElapsed(duration);
@@ -125,7 +120,6 @@ export default function RegulationMinutePage() {
     setElapsed(elapsedSec);
     setCycleCount(getCompletedCycles(cycleConfig, elapsedSec));
 
-    // Haptic on inhale start
     const ps = getPhaseAtSecond(cycleConfig, elapsedSec);
     if (ps.phase === 'inhale' && ps.phaseProgress < 0.05) {
       const cycleStartTime = getCompletedCycles(cycleConfig, elapsedSec) * cycleLengthSec;
@@ -135,7 +129,6 @@ export default function RegulationMinutePage() {
     }
   }, [duration, cycleConfig, cycleLengthSec]);
 
-  // ── Start ──
   const start = useCallback(() => {
     setSessionPhase('running');
     setElapsed(0);
@@ -160,12 +153,8 @@ export default function RegulationMinutePage() {
     triggerHapticPulse('medium');
   }, [protocol, soundEnabled]);
 
-  // ── Stop / cleanup ──
   const stop = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     hapticSyncRef.current?.stop();
     hapticSyncRef.current = null;
   }, []);
@@ -178,13 +167,10 @@ export default function RegulationMinutePage() {
     setCompletionRecord(null);
   }, [stop]);
 
-  // ── Interval management ──
   useEffect(() => {
     if (sessionPhase === 'running') {
       intervalRef.current = setInterval(tick, 16);
-      return () => {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-      };
+      return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
     } else {
       stop();
     }
@@ -221,13 +207,7 @@ export default function RegulationMinutePage() {
     }
   }, [sessionPhase, protocolId, protocol.label, duration, cycleCount, soundEnabled, soundAvailable]);
 
-  useEffect(() => {
-    return () => { stop(); };
-  }, [stop]);
-
-  // ─────────────────────────────────────────────────
-  // FORMAT
-  // ─────────────────────────────────────────────────
+  useEffect(() => { return () => { stop(); }; }, [stop]);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -241,23 +221,19 @@ export default function RegulationMinutePage() {
 
   return (
     <div className="min-h-screen bg-[#0a0f14] text-white flex flex-col">
-      {/* ── Header ── */}
       <header className="flex items-center gap-3 px-5 pt-5 pb-3">
         <button
-          onClick={() => {
-            if (sessionPhase === 'running') { reset(); } else { router.push('/labtools'); }
-          }}
+          onClick={() => { if (sessionPhase === 'running') { reset(); } else { router.push('/labtools'); } }}
           className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 text-white/60" />
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-lg">{'\u{1FAC1}'}</span>
-          <h1 className="text-base font-medium text-white/80">Regulation Minute</h1>
+          <span className="text-lg">{'\u{1F32C}'}</span>
+          <h1 className="text-base font-medium text-white/80">Breathwork</h1>
         </div>
       </header>
 
-      {/* ── Main ── */}
       <main className="flex-1 flex flex-col items-center justify-center px-5 pb-10">
         <AnimatePresence mode="wait">
           {/* ══════════ SETUP ══════════ */}
@@ -269,11 +245,15 @@ export default function RegulationMinutePage() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-sm space-y-8"
             >
+              <p className="text-xs text-white/30 text-center leading-relaxed">
+                Work with your state through breath.
+              </p>
+
               {/* Protocol selection */}
               <section className="space-y-3">
                 <p className="text-xs text-white/30 uppercase tracking-wider font-medium">Protocol</p>
                 <div className="space-y-2">
-                  {REGULATION_PROTOCOLS.map((id) => {
+                  {BREATHWORK_PROTOCOLS.map((id) => {
                     const p = BREATH_PROTOCOLS[id];
                     const isSelected = protocolId === id;
                     return (
@@ -303,16 +283,16 @@ export default function RegulationMinutePage() {
                 </div>
               </section>
 
-              {/* Duration selection */}
+              {/* Duration */}
               <section className="space-y-3">
                 <p className="text-xs text-white/30 uppercase tracking-wider font-medium">Duration</p>
-                <div className="flex gap-2">
-                  {REGULATION_DURATIONS.map((d) => (
+                <div className="flex gap-2 flex-wrap">
+                  {BREATHWORK_DURATIONS.map((d) => (
                     <button
                       key={d}
                       onClick={() => setDuration(d)}
                       className={`
-                        flex-1 py-2.5 rounded-xl text-sm font-medium
+                        flex-1 min-w-[60px] py-2.5 rounded-xl text-sm font-medium
                         transition-all duration-200
                         ${duration === d
                           ? 'bg-white/10 text-white/90 border border-white/20'
@@ -320,7 +300,7 @@ export default function RegulationMinutePage() {
                         }
                       `}
                     >
-                      {d}s
+                      {d >= 60 ? `${d / 60}m` : `${d}s`}
                     </button>
                   ))}
                 </div>
@@ -342,7 +322,7 @@ export default function RegulationMinutePage() {
                 </button>
               </div>
 
-              {/* Start button */}
+              {/* Start */}
               <motion.button
                 onClick={start}
                 whileTap={{ scale: 0.96 }}
@@ -352,7 +332,7 @@ export default function RegulationMinutePage() {
               </motion.button>
 
               <p className="text-center text-[11px] text-white/20 leading-relaxed">
-                {Math.floor(duration / cycleLengthSec)} breath cycles &middot; {formatTime(duration)} total
+                {cycleLengthSec > 0 ? Math.floor(duration / cycleLengthSec) : 0} breath cycles &middot; {formatTime(duration)} total
               </p>
             </motion.div>
           )}
@@ -395,15 +375,15 @@ export default function RegulationMinutePage() {
                 </div>
               </div>
 
-              {/* Time remaining */}
+              {/* Timer */}
               <div className="text-center space-y-2">
-                <div className="text-3xl font-light text-white/60 font-mono tracking-wider">
-                  {formatTime(remaining)}
-                </div>
+                <div className="text-3xl font-light text-white/60 font-mono tracking-wider">{formatTime(remaining)}</div>
                 <div className="w-48 h-0.5 bg-white/5 rounded-full overflow-hidden mx-auto">
                   <div className="h-full bg-[#D4B896]/40 rounded-full transition-all duration-500" style={{ width: `${progress * 100}%` }} />
                 </div>
-                <div className="text-[10px] text-white/20 font-mono">cycle {cycleCount + 1}</div>
+                <div className="text-[10px] text-white/20 font-mono">
+                  {protocol.label} &middot; cycle {cycleCount + 1}
+                </div>
               </div>
 
               <button onClick={reset} className="flex items-center gap-1.5 text-xs text-white/20 hover:text-white/40 transition-colors">
@@ -456,7 +436,7 @@ export default function RegulationMinutePage() {
                 </motion.button>
               </div>
 
-              <ToolBridge text="You may notice something more clearly now." href="/labtools/breathwork" className="mt-3" />
+              <ToolBridge text="You might want to check in with yourself now." href="/labtools/coherence" className="mt-3" />
             </motion.div>
           )}
         </AnimatePresence>
