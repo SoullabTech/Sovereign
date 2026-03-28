@@ -45,21 +45,24 @@ export interface VoiceArchetypeEntry {
 }
 
 /**
- * MAIA_VOICE_OVERRIDE — env-driven A/B test switch for MAIA's core voice.
+ * MAIA_VOICE_OVERRIDE — env-driven escape hatch for MAIA's core voice.
  *
- * Set MAIA_VOICE_OVERRIDE=kokoro in docker-compose or .env to route
- * all three MAIA feminine archetypes through Kokoro (af_kore, af_sarah, af_nicole)
- * instead of OpenAI (alloy, shimmer, nova).
+ * SOVEREIGNTY FLIP (2026-03-28): Kokoro is now the DEFAULT for all MAIA voices.
+ * Set MAIA_VOICE_OVERRIDE=openai to route back through OpenAI TTS (cloud).
  *
- * Default (unset or "openai"): OpenAI voices. Set to "kokoro" to go fully local.
+ * Default (unset or "kokoro"): Kokoro local voices. No data leaves the machine.
+ * Set to "openai" to use OpenAI TTS (requires OPENAI_API_KEY, sends audio data to cloud).
+ *
  * No redeploy needed — just set the env var and restart the container:
  *   docker restart maia-sovereign
  */
 const voiceOverride = (process.env.MAIA_VOICE_OVERRIDE || '').toLowerCase();
-const maiaProvider: VoiceProvider = voiceOverride === 'kokoro' ? 'kokoro' : 'openai';
+const maiaProvider: VoiceProvider = voiceOverride === 'openai' ? 'openai' : 'kokoro';
 
-if (maiaProvider === 'kokoro') {
-  console.log('[voiceArchetypes] MAIA_VOICE_OVERRIDE=kokoro — MAIA voices routed through Kokoro (sovereign local)');
+if (maiaProvider === 'openai') {
+  console.log('[voiceArchetypes] MAIA_VOICE_OVERRIDE=openai — MAIA voices routed through OpenAI (cloud)');
+} else {
+  console.log('[voiceArchetypes] MAIA voices routed through Kokoro (sovereign local)');
 }
 
 export const MAIA_VOICE_ARCHETYPES: VoiceArchetypeEntry[] = [
