@@ -53,6 +53,8 @@ import type { DescentSeed } from '@/lib/consciousness/firstDescent';
 import { loadActiveBuild } from '@/lib/masters/build/loader';
 import { assembleMasterOverlay } from '@/lib/masters/build/assembler';
 import type { ResolvedMasterBuild } from '@/lib/masters/build/types';
+import { getRecentThemes, findRecurringThemes, buildParticipatorryHint, detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
+import { logIntervention, detectShift, captureShift, synthesizeLearning } from '@/lib/consciousness/interventionOutcome';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -439,6 +441,32 @@ export async function POST(request: NextRequest) {
         reportId: activeReportContext.reportId,
         phase: activeReportContext.currentPhase?.spiralogicPhase,
       });
+    }
+
+    // TRANSFORMATION LOOP: Load theme history + learning synthesis (non-blocking)
+    // These read back accumulated signals to shape future responses
+    const [recentThemes, learningHint] = await Promise.all([
+      getRecentThemes(userId, 20, 30).catch(() => []),
+      synthesizeLearning(userId).catch(() => ({
+        effective_stances: [], cautious_stances: [], autonomy_trend: 'unknown' as const,
+        repetition_rate: 0, total_observations: 0, hint_text: null,
+      })),
+    ]);
+
+    // Build participatory hint from recurring themes (if sufficient data)
+    const recurringThemes = findRecurringThemes(recentThemes);
+    const participatoryHint = buildParticipatorryHint(recurringThemes);
+
+    // TRANSFORMATION LOOP: Detect shift from previous turn (fire-and-forget)
+    // Compares current message against previous user message in history
+    if (conversationHistory.length >= 2) {
+      const prevUserMsg = [...conversationHistory]
+        .reverse()
+        .find((turn: any) => turn.role === 'user')?.content;
+      if (prevUserMsg) {
+        const shift = detectShift(message, prevUserMsg);
+        captureShift(userId, sessionId, shift);
+      }
     }
 
     // VOICE CONTROLS: Load MAIA norm + member preferences (graceful fallback on error)
@@ -1151,6 +1179,44 @@ export async function POST(request: NextRequest) {
       signals: relationalHint.signals,
     });
 
+    // TRANSFORMATION LOOP: Derive interaction context + tone profile (lightweight heuristics)
+    const interactionContext: 'self' | 'relationship' | 'group' | 'practitioner_client' | 'unknown' = (() => {
+      const lower = message.toLowerCase();
+      const relationshipMarkers = ['partner', 'spouse', 'husband', 'wife', 'relationship', 'between us', 'we are', 'they said', 'our dynamic'];
+      const groupMarkers = ['team', 'group', 'community', 'collective', 'meeting', 'family'];
+      if (relationshipMarkers.some(m => lower.includes(m))) return 'relationship';
+      if (groupMarkers.some(m => lower.includes(m))) return 'group';
+      return 'self';
+    })();
+
+    const toneProfile: 'grounded' | 'directive' | 'reflective' | 'ceremonial' | 'neutral' = (() => {
+      const stance = relationalHint.stance;
+      if (stance === 'CHALLENGE') return 'directive';
+      if (stance === 'MIRROR') return 'reflective';
+      if (stance === 'HOLD') return 'grounded';
+      if (stance === 'RELEASE' || stance === 'SEASONAL_RETURN') return 'grounded';
+      return 'neutral';
+    })();
+
+    // TRANSFORMATION LOOP: Log intervention (fire-and-forget)
+    // Records what MAIA did this turn — stance + element + phase + context + tone
+    logIntervention(userId, sessionId, {
+      relational_stance: relationalHint.stance,
+      element: voiceHint.element,
+      phase: voiceHint.phase,
+      intensity: voiceHint.intensity,
+      interaction_context: interactionContext,
+      tone_profile: toneProfile,
+      conversation_depth: conversationDepth,
+      trust_level: trustLevel,
+    });
+
+    // TRANSFORMATION LOOP: Detect and store theme signals from member message (fire-and-forget)
+    const themeSignals = detectThemes(message, voiceHint.element as any);
+    for (const signal of themeSignals) {
+      storeThemeSignal(userId, signal, { sessionId });
+    }
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
@@ -1685,6 +1751,8 @@ async function generateSpiralogicResponseWithLLM(
       reportContextBlock,
       descentContextBlock,
       `\n\n[MEMORY INSTRUCTION: You have access to a memory tool containing field awareness and council insights for this member at /memories/${userId}/. If council or field awareness could improve your response, you SHOULD read from memory before answering. This is not optional context — it represents the collective field and advisory council relevant to this person's current position.]`,
+      participatoryHint ? `\n\n${participatoryHint}` : '',
+      learningHint.hint_text ? `\n\n${learningHint.hint_text}` : '',
     ].filter(Boolean).join('');
 
     memoryToolActive = true;
@@ -1698,6 +1766,8 @@ async function generateSpiralogicResponseWithLLM(
       descentContextBlock,
       councilInsights,
       collectiveWisdom,
+      participatoryHint ? `\n\n${participatoryHint}` : '',
+      learningHint.hint_text ? `\n\n${learningHint.hint_text}` : '',
     ].filter(Boolean).join('');
   }
 
