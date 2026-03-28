@@ -170,11 +170,11 @@ export default function StudioIdeasPage() {
   }
 
   const filterOptions = [
-    { value: '' as StatusFilter, label: 'All' },
-    { value: 'spark' as StatusFilter, label: 'Spark' },
-    { value: 'developing' as StatusFilter, label: 'Developing' },
-    { value: 'intensifying' as StatusFilter, label: 'Intensifying' },
-    { value: 'ripe' as StatusFilter, label: 'Ripe' },
+    { value: '' as StatusFilter, label: 'All', tooltip: 'All ideas across every stage' },
+    { value: 'spark' as StatusFilter, label: 'Spark', tooltip: 'Raw, fragile, just emerging — the first glimmer of something' },
+    { value: 'developing' as StatusFilter, label: 'Developing', tooltip: 'Taking shape — adding context, early iterations, finding form' },
+    { value: 'intensifying' as StatusFilter, label: 'Intensifying', tooltip: 'Gaining energy — keeps recurring, attracting attention' },
+    { value: 'ripe' as StatusFilter, label: 'Ripe', tooltip: 'Ready to harvest — mature enough to forge into a decision' },
   ];
 
   const boardColumns: IdeaStatus[] = ['spark', 'developing', 'intensifying', 'ripe'];
@@ -349,10 +349,15 @@ export default function StudioIdeasPage() {
             {/* View toggle */}
             <button
               onClick={() => setViewMode(viewMode === 'stream' ? 'board' : 'stream')}
+              title={viewMode === 'stream' ? 'Board view — ideas arranged by lifecycle stage' : 'Stream view — ideas ordered by aliveness and recency'}
               className="px-3 py-1.5 text-xs bg-slate-800/50 text-slate-400 border border-slate-700/50 rounded-lg hover:border-slate-600 transition-colors"
             >
               {viewMode === 'stream' ? 'Board' : 'Stream'}
             </button>
+            {/* View mode tooltip hint */}
+            <span className="text-[10px] text-slate-600 hidden lg:inline">
+              {viewMode === 'stream' ? 'temporal flow' : 'spatial overview'}
+            </span>
             <button
               onClick={() => setShowCreate(!showCreate)}
               className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"
@@ -369,6 +374,7 @@ export default function StudioIdeasPage() {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
+              title={f.tooltip}
               className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                 filter === f.value
                   ? 'bg-amber-600/30 text-amber-200 border border-amber-500/30'

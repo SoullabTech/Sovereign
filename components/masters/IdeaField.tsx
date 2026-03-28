@@ -584,12 +584,12 @@ export default function IdeaField({ fieldSlug, palette }: Props) {
     setPromoting(false);
   }
 
-  const filterTabs: { id: StatusFilter; label: string }[] = [
-    { id: 'all', label: 'All' },
-    { id: 'spark', label: 'Spark' },
-    { id: 'developing', label: 'Developing' },
-    { id: 'intensifying', label: 'Intensifying' },
-    { id: 'ripe', label: 'Ripe' },
+  const filterTabs: { id: StatusFilter; label: string; tooltip: string }[] = [
+    { id: 'all', label: 'All', tooltip: 'All ideas across every stage' },
+    { id: 'spark', label: 'Spark', tooltip: 'Raw, fragile, just emerging — the first glimmer of something' },
+    { id: 'developing', label: 'Developing', tooltip: 'Taking shape — adding context, early iterations, finding form' },
+    { id: 'intensifying', label: 'Intensifying', tooltip: 'Gaining energy — keeps recurring, attracting attention' },
+    { id: 'ripe', label: 'Ripe', tooltip: 'Ready to harvest — mature enough to forge into a decision' },
   ];
 
   // Board grouping
@@ -644,7 +644,7 @@ export default function IdeaField({ fieldSlug, palette }: Props) {
               cursor: 'pointer',
               color: mutedText,
             }}
-            title={viewMode === 'stream' ? 'Switch to board' : 'Switch to stream'}
+            title={viewMode === 'stream' ? 'Board view — ideas arranged by lifecycle stage' : 'Stream view — ideas ordered by aliveness and recency'}
           >
             {viewMode === 'stream' ? '\u2630' : '\u2261'}
           </button>
@@ -663,6 +663,7 @@ export default function IdeaField({ fieldSlug, palette }: Props) {
               <button
                 key={tab.id}
                 onClick={() => setStatusFilter(tab.id)}
+                title={tab.tooltip}
                 style={{
                   background: statusFilter === tab.id ? palette.primary : 'transparent',
                   border: 'none',
