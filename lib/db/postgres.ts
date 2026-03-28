@@ -15,9 +15,10 @@ let pool: Pool | null = null;
 
 if (isServer) {
   const { Pool: PgPool } = require('pg');
+  const poolMax = parseInt(process.env.PG_POOL_MAX || '30', 10);
   const newPool = new PgPool({
     connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
-    max: 20,
+    max: poolMax,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
     // Detect dead connections from postgres restarts
@@ -25,9 +26,28 @@ if (isServer) {
     keepAliveInitialDelayMillis: 10000,
   });
 
-  // Handle pool errors
+  // Handle pool errors — structured JSON for log parsing
   newPool.on('error', (err: Error) => {
-    console.error('❌ [POSTGRES] Unexpected pool error:', err);
+    console.error(JSON.stringify({
+      ts: new Date().toISOString(), level: 'error', tag: 'db.pool',
+      msg: 'Unexpected pool error', error: err.message,
+    }));
+  });
+
+  // Pool saturation monitoring — log when clients are waiting for connections
+  let lastSaturationLog = 0;
+  const SATURATION_LOG_INTERVAL_MS = 60_000; // Max once per minute
+  newPool.on('connect', () => {
+    const now = Date.now();
+    if (newPool.waitingCount > 0 && now - lastSaturationLog > SATURATION_LOG_INTERVAL_MS) {
+      lastSaturationLog = now;
+      console.warn(JSON.stringify({
+        ts: new Date().toISOString(), level: 'warn', tag: 'db.pool.saturation',
+        msg: 'Clients waiting for DB connections',
+        total: newPool.totalCount, idle: newPool.idleCount,
+        waiting: newPool.waitingCount, max: poolMax,
+      }));
+    }
   });
 
   pool = newPool;
@@ -58,9 +78,13 @@ export async function query<T extends QueryResultRow = any>(
     const result = await pool.query<T>(sql, params);
     const duration = Date.now() - start;
 
-    // Log slow queries (>100ms)
+    // Log slow queries (>100ms) — structured for log parsing
     if (duration > 100) {
-      console.warn(`⚠️  [POSTGRES] Slow query (${duration}ms):`, sql.substring(0, 100));
+      console.warn(JSON.stringify({
+        ts: new Date().toISOString(), level: 'warn', tag: 'db.slow_query',
+        msg: 'Slow query detected', durationMs: duration,
+        sql: sql.substring(0, 120),
+      }));
     }
 
     return result;
@@ -152,12 +176,13 @@ export async function testConnection(): Promise<boolean> {
  */
 export function getPoolStats() {
   if (!pool) {
-    return { totalCount: 0, idleCount: 0, waitingCount: 0 };
+    return { totalCount: 0, idleCount: 0, waitingCount: 0, maxPool: 0 };
   }
   return {
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
     waitingCount: pool.waitingCount,
+    maxPool: parseInt(process.env.PG_POOL_MAX || '30', 10),
   };
 }
 

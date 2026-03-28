@@ -18,7 +18,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
+import { query, getPoolStats } from '@/lib/db/postgres';
 
 // Timeout-bounded DB query wrapper
 // Health checks MUST return within a bounded time, even if DB is wedged
@@ -56,9 +56,11 @@ interface HealthResponse {
   timestamp: string;
   uptime: number;
   version: string;
+  hostId: string;
   safeMode: boolean;
   components: {
     database: ComponentHealth;
+    pool: ComponentHealth;
     memory: ComponentHealth;
     tables: ComponentHealth;
   };
@@ -159,6 +161,27 @@ async function checkTables(): Promise<ComponentHealth> {
   }
 }
 
+// Check connection pool saturation
+function checkPool(): ComponentHealth {
+  const stats = getPoolStats();
+  const saturated = stats.waitingCount > 0;
+  const utilization = stats.maxPool > 0
+    ? Math.round((stats.totalCount / stats.maxPool) * 100)
+    : 0;
+
+  return {
+    status: saturated ? 'degraded' : 'ok',
+    details: {
+      total: stats.totalCount,
+      idle: stats.idleCount,
+      waiting: stats.waitingCount,
+      max: stats.maxPool,
+      utilizationPercent: utilization,
+    },
+    ...(saturated ? { error: `${stats.waitingCount} clients waiting for connections` } : {}),
+  };
+}
+
 // Check memory usage against V8 heap limit (not dynamic heapTotal)
 function checkMemory(): ComponentHealth {
   try {
@@ -225,13 +248,14 @@ export async function GET(request: NextRequest) {
   }
 
   // Full health check
-  const [database, tables, memory] = await Promise.all([
+  const [database, tables, memory, pool] = await Promise.all([
     checkDatabase(),
     checkTables(),
     Promise.resolve(checkMemory()),
+    Promise.resolve(checkPool()),
   ]);
 
-  const components = { database, tables, memory };
+  const components = { database, pool, tables, memory };
   const health = aggregateHealth(components);
 
   const response: HealthResponse = {
@@ -240,6 +264,7 @@ export async function GET(request: NextRequest) {
     timestamp: new Date().toISOString(),
     uptime: Math.round((Date.now() - startTime) / 1000),
     version: process.env.GIT_COMMIT || 'unknown',
+    hostId: process.env.MAIA_HOST_ID || 'unknown',
     safeMode: isSafeMode,
     components,
   };
