@@ -5,6 +5,7 @@ import PartnerBoard from './PartnerBoard';
 import PartnerCommsPanel from './PartnerCommsPanel';
 import FieldActivityFeed from './FieldActivityFeed';
 import DecisionLedger from './DecisionLedger';
+import IdeaField from './IdeaField';
 
 const PALETTE = {
   primary: '#B08060',
@@ -140,6 +141,17 @@ export default function PartnerWorkspace({ viewerSlug = 'kelly' }: Props) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Idea Field — pre-decisional creative intelligence */}
+      <div style={{
+        marginTop: '2.5rem',
+        background: `${palette.primary}06`,
+        border: `1px solid ${palette.primary}15`,
+        padding: '1.5rem',
+        borderRadius: '2px',
+      }}>
+        <IdeaField fieldSlug="nathan" palette={palette} />
       </div>
 
       {/* Decision Ledger */}

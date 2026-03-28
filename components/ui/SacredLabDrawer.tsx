@@ -265,6 +265,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           action: () => onNavigate('/studio'),
           description: 'Pro suite: clients, sessions, caseload, calendar & MAIA consult',
         },
+        {
+          icon: Sparkles,
+          label: 'Idea Field',
+          action: () => onNavigate('/studio/ideas'),
+          description: 'Seed, refine, and forge ideas into decisions',
+        },
       ],
     },
     {

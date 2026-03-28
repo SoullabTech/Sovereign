@@ -66,6 +66,7 @@ export type ModuleSlug =
   | 'camera'
   | 'code'
   | 'scribe'
+  | 'ideas'
   | 'decisions'
   | 'changes'
   | 'teams'
@@ -261,6 +262,16 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 
   // ── Field modules (personal orientation) ──
   {
+    slug: 'ideas',
+    label: 'Idea Field',
+    icon: Sparkles,
+    href: '/studio/ideas',
+    category: 'tools',
+    description: 'Seed, refine, and forge ideas into decisions',
+    alwaysOn: false,
+    mode: 'field',
+  },
+  {
     slug: 'decisions',
     label: 'Decisions',
     icon: Scale,
@@ -400,14 +411,14 @@ export const MODULE_DEFINITIONS: ModuleDefinition[] = [
 // ─── Presets per Portal Type ────────────────────────────
 
 const MODULE_PRESETS: Record<PortalType, ModuleSlug[]> = {
-generalist: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
-  astrology: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault'],
-  therapy: ['today', 'clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  clinician: ['today', 'clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'vault', 'comms'],
-  bodywork: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'services'],
-  groups: ['clients', 'portal', 'groups', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
-  consultant: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'decisions', 'changes', 'maia', 'comms', 'teams'],
-  personal: ['notebook', 'decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
+  generalist: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'vault'],
+  astrology: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'vault'],
+  therapy: ['today', 'clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  clinician: ['today', 'clients', 'portal', 'sessions', 'schedule', 'caseload', 'calendar', 'availability', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'vault', 'comms'],
+  bodywork: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'services'],
+  groups: ['clients', 'portal', 'groups', 'sessions', 'schedule', 'calendar', 'availability', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'comms', 'marketing'],
+  consultant: ['clients', 'portal', 'sessions', 'schedule', 'calendar', 'availability', 'tasks', 'notebook', 'ideas', 'decisions', 'changes', 'maia', 'comms', 'teams'],
+  personal: ['notebook', 'ideas', 'decisions', 'changes', 'maia', 'vault', 'threshold', 'tools'],
 };
 
 // ─── Helpers ────────────────────────────────────────────
