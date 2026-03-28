@@ -2704,7 +2704,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
-          await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
+          // Persist spiralogic conductor state per-turn for elemental arc rendering
+          const spiralogicMeta = atlasResult ? {
+            spiralogic: {
+              element: atlasResult.element,
+              phase: atlasResult.phase,
+              facet: atlasResult.facet,
+              motion: (meta as any)?.motion ?? null,
+            }
+          } : undefined;
+          await TurnsStore.addExchange(effectiveUserId, sessionId, input, text, undefined, undefined, spiralogicMeta);
           console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
         } catch (turnsErr) {
           console.error('❌ [TurnsStore] persist failed', turnsErr);

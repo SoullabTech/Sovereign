@@ -167,13 +167,15 @@ export const TurnsStore = {
     userMessage: string,
     assistantResponse: string,
     exchangeId?: string,
-    fieldSlug?: string
+    fieldSlug?: string,
+    meta?: Record<string, unknown>
   ): Promise<void> {
     if (!exchangeId) {
       console.warn('[TurnsStore] addExchange called without exchangeId — turns will not be idempotent');
     }
     const eid = exchangeId ?? null;
     const fSlug = fieldSlug ?? null;
+    const metaJson = meta ? JSON.stringify(meta) : null;
     // User turn first (seq=0) — use clock_timestamp() so each INSERT gets its
     // own wall-clock value even inside the same transaction.
     await query(
@@ -183,11 +185,12 @@ export const TurnsStore = {
       [userId, sessionId ?? null, userMessage, eid, fSlug]
     );
     // Assistant turn second (seq=1) — clock_timestamp() will be strictly later
+    // Include meta (with spiralogic data) on the assistant turn only
     await query(
-      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, field_slug)
-       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), $5)
+      `INSERT INTO conversation_turns (user_id, session_id, role, content, exchange_id, seq, created_at, field_slug, meta)
+       VALUES ($1, $2, 'assistant', $3, $4, 1, clock_timestamp(), $5, COALESCE($6::jsonb, '{}'::jsonb))
        ON CONFLICT (exchange_id, seq) WHERE exchange_id IS NOT NULL DO NOTHING`,
-      [userId, sessionId ?? null, assistantResponse, eid, fSlug]
+      [userId, sessionId ?? null, assistantResponse, eid, fSlug, metaJson]
     );
   },
 
