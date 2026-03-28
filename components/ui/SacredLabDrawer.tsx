@@ -47,6 +47,7 @@ import {
   Gift,
   Hexagon,
   PenLine,
+  Layers,
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -426,6 +427,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Spiralogic Report',
           action: () => onNavigate('/dashboard/spiralogic-report'),
           description: 'Evolutionary report — all 12 facets'
+        },
+        {
+          icon: Layers,
+          label: 'Pattern Ledger',
+          action: () => onNavigate('/dashboard/pattern-ledger'),
+          description: 'What your process keeps returning to'
         },
         {
           icon: Heart,
