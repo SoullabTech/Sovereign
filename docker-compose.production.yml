@@ -390,6 +390,54 @@ services:
       - maia-internal
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Health Monitor - Sovereign Infrastructure Alerting
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Polls /api/health every 60s, evaluates sustained thresholds, sends email alerts.
+  # Observes MAIA from outside — does not modify behavior.
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-health-monitor
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-health-monitor
+  maia-health-monitor:
+    build: *maia_build
+    image: *maia_image
+    container_name: maia-health-monitor
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      maia:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      MONITOR_HEALTH_URL: "http://maia-sovereign:3000/api/health"
+      MONITOR_INTERVAL_MS: "60000"
+
+    command: ["npx", "tsx", "scripts/monitor-system.ts"]
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+    # No HTTP endpoint — check DB reachability
+    healthcheck:
+      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # PostgreSQL - Consciousness Data Persistence
   # ═════════════════════════════════════════════════════════════════════════════
   postgres:
