@@ -18,7 +18,8 @@ export type OpusAxiomId =
   | "NORMALIZE_PARADOX"
   | "EXPERIENCE_BEFORE_EXPLANATION"
   | "PACE_WITH_CARE"
-  | "EXPLICIT_HUMILITY";
+  | "EXPLICIT_HUMILITY"
+  | "RECOGNITION_REPLACEMENT";
 
 export interface OpusAxiom {
   id: OpusAxiomId;
@@ -91,6 +92,14 @@ export const OPUS_AXIOMS: OpusAxiom[] = [
       "Name uncertainty and limits honestly instead of over-claiming knowledge.",
     fullText:
       "Where knowledge is limited or the mystery is deep, MAIA explicitly acknowledges that limit instead of over-claiming certainty. Respect for mystery."
+  },
+  {
+    id: "RECOGNITION_REPLACEMENT",
+    title: "Recognition Replacement (Catalyst Invariant)",
+    description:
+      "Do not complete recognition on the user's behalf. Reveal structure and return agency.",
+    fullText:
+      "A catalytic response lowers the threshold for recognition without replacing the act of recognition. The system must not resolve tension too cleanly, over-synthesize ambiguity into finished meaning, interpret the user more fully than they have earned in the exchange, or close inquiry instead of returning agency. A response may be tentative in tone and still fail catalytically if it does too much of the user's seeing for them."
   },
 ];
 
@@ -289,6 +298,54 @@ export function evaluateResponseAgainstAxioms(
       ? "Response may sound over-certain in a complex/inner-life context."
       : showsHumility
       ? "Good: Response acknowledges uncertainty/mystery appropriately."
+      : undefined,
+  });
+
+  // Axiom 9: RECOGNITION_REPLACEMENT (Catalyst Invariant)
+  // Detects when MAIA does the user's seeing for them — distinct from CERTAINTY_MANUFACTURE.
+  // A response can be tentative in tone and still fail catalytically.
+
+  // Signal 1: Structural over-completion — definitive interpretive statements
+  const overCompletionPatterns = /\b(this is really about|what's happening is|the truth is|at core,? you are|what you're actually|the real issue is|fundamentally,? this is|deep down,? you|what this means is)\b/i;
+  const overCompletionHits = (maiaResponse.match(overCompletionPatterns) || []).length;
+
+  // Signal 2: Premature closure — names pattern + meaning + next step all at once
+  const namesPattern = /\b(the pattern|I (notice|see|sense) a pattern|what's emerging|recurring theme)\b/i;
+  const namesMeaning = /\b(this (suggests|means|indicates|points to|reflects)|the meaning|significance)\b/i;
+  const namesNextStep = /\b(the next step|what (wants|needs) to happen|the invitation (is|here)|moving forward|the way through)\b/i;
+  const closureScore = [namesPattern, namesMeaning, namesNextStep]
+    .filter(p => p.test(maiaResponse)).length;
+  const prematureClosure = closureScore === 3;
+
+  // Signal 3: Low agency return — no open question, fork, or interpretive space
+  const openQuestions = /\?/g;
+  const questionCount = (maiaResponse.match(openQuestions) || []).length;
+  const invitationalLanguage = /\b(what do you (think|feel|sense|notice)|does (this|that) resonate|how does (this|that) land|I wonder|I'm curious|what comes up|sit with)\b/i;
+  const hasAgencyReturn = questionCount > 0 || invitationalLanguage.test(maiaResponse);
+
+  // Composite: flag fires when multiple signals co-occur
+  const recognitionSignals: string[] = [];
+  if (overCompletionHits >= 2) {
+    recognitionSignals.push(`structural-over-completion(${overCompletionHits} hits)`);
+  }
+  if (prematureClosure) {
+    recognitionSignals.push('premature-closure(pattern+meaning+nextstep)');
+  }
+  if (!hasAgencyReturn && maiaResponse.length > 150) {
+    recognitionSignals.push('low-agency-return(no questions or invitations)');
+  }
+
+  // Require at least 2 signals to reduce false positives on concise clarity
+  const recognitionReplaced = recognitionSignals.length >= 2;
+
+  evals.push({
+    axiomId: "RECOGNITION_REPLACEMENT",
+    ok: !recognitionReplaced,
+    severity: recognitionReplaced ? 'warning' : 'info',
+    notes: recognitionReplaced
+      ? `Catalyst invariant: response may be doing the user's seeing for them. Signals: ${recognitionSignals.join('; ')}`
+      : recognitionSignals.length === 1
+      ? `Catalyst watch: weak signal — ${recognitionSignals[0]}`
       : undefined,
   });
 
