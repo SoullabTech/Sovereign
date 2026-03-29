@@ -103,56 +103,70 @@ function buildTTSInstructions(opts: {
 }): string {
   const { stance, element, tone, maxWords } = opts;
 
-  // Pacing
+  // ── ANTI-STACKING RULE ──────────────────────────────────────────────────
+  // Each dimension uses DISTINCT vocabulary. No two dimensions may both say
+  // "slow", "soft", "gentle", or "unhurried". When multiple signals push
+  // the same direction, the TTS model compounds them and sounds sedated.
+  //
+  // Dimension vocabulary lanes:
+  //   Pace     → tempo words only (slow, moderate, deliberate, brisk)
+  //   Tone     → color words only (warm, bright, cool, rich)
+  //   Energy   → projection words only (contained, open, full, projected)
+  //   Texture  → tactile words only (smooth, textured, crisp, round)
+  //   Cadence  → rhythm words only (measured, flowing, staccato, legato)
+
+  // Pacing — tempo only, no softness words
   const basePace =
-    stance === 'hold_silence' || stance === 'witness' ? 'slow' :
-    stance === 'mirror' ? 'slow-to-moderate' :
-    stance === 'guide' ? 'moderate' :
+    stance === 'hold_silence' || stance === 'witness' ? 'unhurried' :
+    stance === 'mirror' ? 'moderate' :
+    stance === 'guide' ? 'moderate-to-brisk' :
     'deliberate'; // challenge
 
-  // Intimacy from warmth
-  const intimacy =
-    tone.warmth >= 0.8 ? 'intimate and warm' :
-    tone.warmth >= 0.6 ? 'present and clear' :
-    'grounded and direct';
+  // Tone color from warmth — warmth/brightness, NOT pace or volume
+  const toneColor =
+    tone.warmth >= 0.8 ? 'warm and rich' :
+    tone.warmth >= 0.6 ? 'warm and present' :
+    'bright and direct';
 
-  // Energy intensity from directness + stance
-  const intensity =
-    stance === 'challenge' ? 'grounded, with weight' :
-    stance === 'hold_silence' ? 'very soft, contained' :
-    tone.directness >= 0.6 ? 'steady and clear' :
-    'gentle, unhurried';
+  // Energy — projection level, NOT softness or speed
+  const energy =
+    stance === 'challenge' ? 'full, with weight behind it' :
+    stance === 'hold_silence' ? 'contained, close to the mic' :
+    tone.directness >= 0.6 ? 'open and steady' :
+    'contained but clear';
 
-  // Elemental texture
+  // Elemental texture — tactile quality, NOT tempo or volume
   const ELEMENT_TEXTURES: Partial<Record<Element, string>> = {
-    water:  'soft, tender, emotionally attuned',
-    fire:   'warm, alive, energised',
-    earth:  'grounded, steady, embodied',
-    air:    'clear, light, spacious',
-    aether: 'resonant, open, unhurried',
+    water:  'smooth and round',
+    fire:   'textured and alive',
+    earth:  'grounded and embodied',
+    air:    'crisp and spacious',
+    aether: 'resonant and open',
   };
-  const texture = ELEMENT_TEXTURES[element] ?? 'present and clear';
+  const texture = ELEMENT_TEXTURES[element] ?? 'natural and present';
 
-  // Cadence density from maxWords
-  const density =
+  // Cadence — rhythm pattern, NOT speed
+  const cadence =
     maxWords <= 40 ? 'sparse' :
     maxWords <= 80 ? 'measured' :
-    'full';
+    'flowing';
 
-  // Pauses from poetry weight
+  // Pauses from poetry weight — ONE instruction, not compounding
   const pauses =
-    tone.poetry >= 0.7 ? 'let silence land between phrases' :
-    tone.poetry >= 0.4 ? 'brief pauses at natural breaks' :
-    'minimal pausing';
+    tone.poetry >= 0.7 ? 'let phrases land before continuing' :
+    tone.poetry >= 0.4 ? 'natural breathing pauses' :
+    '';
 
-  return [
-    `Voice: ${intimacy}.`,
+  const parts = [
+    `Tone: ${toneColor}.`,
     `Pace: ${basePace}.`,
-    `Energy intensity: ${intensity}.`,
+    `Energy: ${energy}.`,
     `Texture: ${texture}.`,
-    `Cadence: ${density}; ${pauses}.`,
-    `Avoid: sounding rushed, overly theatrical, or preachy.`,
-  ].join(' ');
+    `Cadence: ${cadence}${pauses ? '; ' + pauses : ''}.`,
+    `Avoid: sounding rushed, theatrical, or preachy.`,
+  ];
+
+  return parts.join(' ');
 }
 
 // ── buildMaiaPlan ─────────────────────────────────────────────────────────
