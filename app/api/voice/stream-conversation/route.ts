@@ -212,7 +212,7 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── Member chose "cloud" → OpenAI only, no Kokoro fallback ──
+  // ── Member chose "cloud" → OpenAI with Speech Director, no Kokoro fallback ──
   if (memberProvider === 'cloud') {
     const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
       || !process.env.OPENAI_API_KEY;
@@ -220,15 +220,31 @@ async function synthesizeWithFallback(
       console.warn('[TTS] cloud TTS requested but DISABLE_OPENAI_COMPLETELY=true — returning null');
       return null;
     }
-    const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
-    console.info('[tts.attempt]', JSON.stringify({ provider: 'openai', voice: finalOpenaiVoice, reason: 'member_chose_cloud' }));
+    // Use member's archetype voice, fall back to alloy (not element-based shimmer)
+    const finalOpenaiVoice = openaiVoice ?? 'alloy';
+
+    // Speech Director: same quality regardless of how member chose OpenAI
+    const stylePreset = resolveStylePreset({ element: elementKey || undefined });
+    const shapedText = shapeForSpeech(text);
+    const instructions = buildOpenAIInstructions({
+      preset: stylePreset,
+      element: elementKey || undefined,
+    });
+
+    console.info('[tts.attempt]', JSON.stringify({
+      provider: 'openai',
+      voice: finalOpenaiVoice,
+      reason: 'member_chose_cloud',
+      stylePreset,
+      hasInstructions: true,
+    }));
     try {
       const response = await synthesizeSpeech({
-        text,
+        text: shapedText,
         voice: finalOpenaiVoice,
         format: 'mp3',
         speed: options.speed,
+        instructions,
       });
       const buffer = Buffer.from(await response.arrayBuffer());
       return { audio: buffer.toString('base64'), format: 'mp3', source: 'openai' };
