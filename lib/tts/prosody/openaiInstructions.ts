@@ -21,7 +21,7 @@ import type { StylePreset } from '@/lib/voice/stylePresets';
 
 // ── Core MAIA Voice Identity (always present) ────────────────────────────────
 
-const MAIA_IDENTITY_INSTRUCTION = `Speak naturally as a warm, intelligent woman. Clear, bright, and grounded. Keep a light, feminine vocal quality throughout — never drop into a low or husky register. Express dynamics through pacing and emphasis, not pitch.`;
+const MAIA_IDENTITY_INSTRUCTION = `Speak naturally as a warm, intelligent woman. Clear, bright, and settled. Keep a light, feminine vocal quality throughout — never drop into a low or husky register. Relaxed pacing. Gentle emphasis. Not too dynamic — steady and present.`;
 
 // ── Style Preset → Instruction Templates ─────────────────────────────────────
 // IMPORTANT: Keep these SHORT. gpt-4o-mini-tts over-complies with long instructions
