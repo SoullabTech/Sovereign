@@ -1,285 +1,610 @@
-# Voice Presence Architecture v1.0
+# Soullab Presence-Encoded Voice Field Specification
 
-**Status**: Specification (pre-implementation)
-**Date**: 2026-03-29
-**Scope**: Sovereign voice cloning, presence encoding, and runtime modulation
+## Status
 
----
+Canon-level architectural specification.
 
-## 1. Baseline: What Exists
-
-| Component | Role | Status |
-|-----------|------|--------|
-| **Kokoro** (`maia-kokoro-tts`) | Fast neural TTS inference. Local, sovereign. | Live |
-| **XTTS v2** | Voice cloning (zero-shot) and fine-tuning (high-fidelity). Open-source. | Available, not integrated |
-| **Sovereign Voices** (`lib/voice/sovereignVoices.ts`) | Voice identity registry. Maps archetype IDs to Kokoro voice IDs. | Live |
-| **Speech Director** (`lib/voice/voiceMap.ts`, tone offsets) | Speed, warmth, clarity, guidance, energy modifiers per utterance. | Live |
-| **Elemental Conductor** (`lib/voice/conductor.ts`) | Determines dominant element from conversation state with hysteresis. | Live |
-| **Spiral State** (`lib/consciousness/spiralStatePersistence.ts`) | Tracks member's phase, motion, intensity across sessions. | Live |
-| **Relational Phase** (`member_spiral_state.relational_phase`) | Maturation stage: orientation → capacity → autonomy → seasonal return. | Live |
-
-**Foundation voice**: Maia (Bella) — Kokoro `af_bella`. Pace +0.24, Warmth +0.17, Clarity +0.10, Guidance -0.08, Energy +0.02.
+This document defines the field architecture for presence-encoded voice in Soullab. It is not a feature brief, marketing memo, or implementation ticket. It specifies the governing structure by which voice in Soullab becomes a carrier of relational, elemental, and developmental intelligence.
 
 ---
 
-## 2. Three Tiers (Locked)
+## I. Purpose
 
-| Tier | Name | Input | Processing | Output | Use Case |
-|------|------|-------|------------|--------|----------|
-| 1 | **Instant Clone** | 10–30s audio clip | XTTS zero-shot extraction | Speaker embedding file | Member tries their voice with MAIA. Exploratory. |
-| 2 | **Studio Clone** | 5–15 min guided recording | XTTS fine-tune (light, ~30 min training) | Tuned voice model | Member's personal MAIA voice. Daily use quality. |
-| 3 | **Signature Voice** | 30–60 min studio recording + curation | XTTS full fine-tune + prosody calibration | Production voice model | Soullab canonical voice, Master voices, practitioner voices. |
+Soullab does not treat voice as a cosmetic output layer.
 
-### Constraints
+Voice is a living expression layer through which MAIA's relational intelligence becomes perceptible in sound.
 
-- Tier 1 is the only tier exposed initially. Tiers 2 and 3 require manual promotion.
-- No tier produces a "general purpose" voice. Every output is scoped to MAIA's runtime pipeline.
-- A member can have exactly **one active voice model** at a time. Previous models are archived, not deleted, unless the member requests deletion.
+The purpose of this system is not merely to reproduce a human voice print. The purpose is to render a voice that is:
 
----
+* anchored in a specific vocal identity,
+* shaped by elemental and spiral state,
+* responsive to relational maturity over time,
+* governed by coherence rather than style accumulation,
+* fully sovereign in training, storage, and inference.
 
-## 3. Voice Model Lifecycle
-
-### Create
-
-1. Member enters Voice Forge (UI surface, future).
-2. Guided recording session: MAIA presents prompts designed to capture full phonetic range + emotional variation.
-3. Audio captured locally. Never leaves the machine.
-4. For Tier 1: raw audio → XTTS zero-shot → speaker embedding (~5s processing).
-5. For Tiers 2–3: raw audio → preprocessing (noise reduction, segmentation) → XTTS fine-tune → voice model.
-
-### Process
-
-- **Zero-shot** (Tier 1): XTTS extracts a speaker embedding from the clip. No training. Fast.
-- **Fine-tune** (Tiers 2–3): XTTS trains a voice model checkpoint. GPU-bound. Runs on Mac Studio (M2 Ultra).
-- Processing is queued via `maia-voice-forge` worker. Member is notified on completion.
-
-### Store
-
-| Artifact | Location | Format | Size (approx) |
-|----------|----------|--------|----------------|
-| Raw recording | `data/voice-forge/{memberId}/raw/` | WAV 48kHz | 50–500 MB |
-| Speaker embedding | `data/voice-forge/{memberId}/embedding.npy` | NumPy | ~2 KB |
-| Fine-tuned model | `data/voice-forge/{memberId}/model/` | XTTS checkpoint | ~500 MB |
-| Voice config | `member_voice_models` table | JSON metadata | <1 KB |
-
-### Load
-
-- On conversation start, if member has an active voice model, load speaker embedding into Kokoro/XTTS inference context.
-- Loading is lazy: first utterance triggers model warm-up (~200ms for embedding, ~2s for fine-tuned model).
-- Fallback: if member model fails to load, use foundation voice (Bella). Log the fallback. Never fail silently.
-
-### Delete
-
-- Member can delete their voice model at any time from Account settings.
-- Deletion removes: raw audio, embedding, fine-tuned model, all metadata.
-- Deletion is **irreversible and immediate**. No soft-delete, no retention period.
-- Confirmation UI: "This will permanently delete your voice model. You'll need to record again to create a new one."
+This architecture completes an already-existing design direction. The required signals already exist in the system. The missing layer is the mapping architecture that converts those signals into disciplined prosodic behavior.
 
 ---
 
-## 4. Runtime Pipeline
+## II. Core Distinction
 
-```
-User speaks → STT (Whisper, local)
-                ↓
-MAIA processes → Oracle route → LLM response text
-                ↓
-        ┌─────────────────────────────┐
-        │   Speech Director           │
-        │                             │
-        │   Inputs:                   │
-        │   - response text           │
-        │   - member tone offsets     │
-        │   - current element         │
-        │   - spiral phase/motion     │
-        │   - relational phase        │
-        │   - voice mode (Talk/Care)  │
-        │                             │
-        │   Outputs:                  │
-        │   - speed modifier          │
-        │   - style/emotion tags      │
-        │   - pause instructions      │
-        │   - emphasis markers        │
-        └──────────┬──────────────────┘
-                   ↓
-        ┌─────────────────────────────┐
-        │   Voice Engine (Kokoro)     │
-        │                             │
-        │   Inputs:                   │
-        │   - shaped text + SSML      │
-        │   - voice model (member's   │
-        │     or foundation)          │
-        │   - prosody parameters      │
-        │                             │
-        │   Output:                   │
-        │   - audio stream (MP3)      │
-        └──────────┬──────────────────┘
-                   ↓
-        Audio playback → StreamingAudioQueue
-```
+### Voice Clone
 
-### Separation of concerns
+A static vocal reproduction layer.
 
-| Layer | Responsibility | Does NOT do |
-|-------|---------------|-------------|
-| **Voice Model** | Generate speech that sounds like a specific person | Decide how to speak |
-| **Speech Director** | Shape prosody, pacing, emphasis based on context | Generate audio |
-| **Elemental Conductor** | Determine dominant element and intensity | Modify voice directly |
-| **Spiral State** | Track position and motion across sessions | Make real-time decisions |
+A clone reproduces a recognizable waveform identity. It may sound like a person, but it does not meaningfully adapt to state, relationship, or field conditions.
 
-The voice model is a **rendering surface**. The Speech Director is the **shaping intelligence**. These must never collapse into each other.
+### Encoded Presence
+
+A dynamic voice field.
+
+An encoded presence preserves vocal identity while allowing the rendered voice to breathe with:
+
+* elemental dominance,
+* spiral state,
+* conductor transitions,
+* relational phase,
+* tone offsets,
+* situational depth.
+
+The distinction is foundational:
+
+> Soullab is not building voice cloning as a novelty.
+> Soullab is building voice as a carrier of presence.
 
 ---
 
-## 5. Elemental Modulation Layer
+## III. Governing Principles
 
-### Inputs
+### 1. Sovereignty
 
-| Input | Source | Type |
-|-------|--------|------|
-| `dominant_element` | Conductor hysteresis buffer | fire / water / earth / air / aether |
-| `intensity` | Conductor output | 0.0–1.0 |
-| `voice_mode` | Session state | Talk / Care / Scribe |
-| `spiral_phase` | `member_spiral_state` | 1–12 |
-| `motion` | `member_spiral_state` | ascending / stuck / breakthrough |
+All cloning, training, storage, and inference should run inside the Soullab sovereign environment whenever possible.
 
-### Outputs (instruction modifiers)
+Requirements:
 
-| Element | Speed | Pause Weight | Energy | Warmth | Constraint |
-|---------|-------|-------------|--------|--------|------------|
-| **Fire** | +10–20% | Short pauses | High | Neutral | Never aggressive |
-| **Water** | -10–15% | Long pauses, held silence | Low | High | Never sluggish |
-| **Earth** | Baseline | Even spacing | Medium | Medium | Never monotone |
-| **Air** | +5–10% | Quick, light | Medium-high | Low-medium | Never sharp |
-| **Aether** | -5–10% | Extended silence between phrases | Low | Neutral | Never theatrical |
+* No member audio leaves the sovereign environment for cloning or training.
+* No third-party voice API is required for core cloning workflows.
+* Member voice models remain member-bound assets.
+* Deletion rights are explicit and enforceable.
 
-### Constraints
+### 2. Identity Integrity
 
-1. **No stacking**: Only one element modulates at a time. The conductor resolves conflicts before this layer sees them.
-2. **No contradiction**: If member's tone offsets oppose the elemental modulation (e.g., member sets Pace slow, Fire wants fast), member's offsets take precedence. Element modulation applies as a **bias within the member's range**, not an override.
-3. **Intensity scaling**: All modulations scale linearly with conductor intensity. At intensity 0.3, Fire adds +3–6% speed, not +10–20%.
-4. **Mode interaction**: Care mode dampens all modulations by 30%. Talk mode applies full. Scribe mode disables elemental modulation entirely (neutral rendering).
+A presence-encoded voice must remain recognizably itself across modulation.
 
----
+The system may alter prosody, pacing, energy, spacing, articulation, and tonal color within bounded limits. It may not allow elemental modulation to distort the vocal identity into another persona.
 
-## 6. Relational Memory Interaction
+### 3. Elemental Non-Collapse
 
-### What conditions the voice
+Elemental input may shape expression, but no single element should dominate in a way that collapses coherence.
 
-- **Relational phase** (orientation → capacity → autonomy → seasonal return):
-  - Phase 1 (orientation): Slightly slower, warmer. MAIA is introducing herself.
-  - Phase 2 (capacity): Baseline. Direct, clear.
-  - Phase 3 (autonomy): Slightly faster, less warm. MAIA steps back.
-  - Phase 4 (seasonal return): Warmth returns but pace stays efficient. Recognition without regression.
+Aether governs integration and restraint. Elemental shaping must remain governable, bounded, and reversible.
 
-- **Autonomy streak**: If member has 5+ consecutive autonomous sessions, MAIA's voice becomes more economical. Fewer filler phrases, tighter pacing.
+### 4. Relational Maturation
 
-- **Return count**: If member returns after autonomy, first session has slightly more warmth (+0.05 bias) then normalizes.
+Voice should not only respond to the current state. It should also reflect the maturity of the relationship.
 
-### What does NOT condition the voice
+The same MAIA voice may sound different in early contact than in a long-formed relationship, not because it becomes theatrical, but because familiarity, trust, pacing, and directness mature.
 
-- Emotional content of the conversation (no sentiment-to-prosody mapping — that path leads to manipulation).
-- Member's stated mood (MAIA does not mirror emotional states through voice modulation).
-- Session length or frequency (no reward/punishment signaling through voice changes).
+### 5. Prosodic Discipline
 
-### Identity coherence rule
+No synonym stacking, redundant style instructions, or uncontrolled aesthetic accumulation.
 
-The voice must always be recognizably the **same voice**. Modulation shifts parameters within a narrow band. If a member heard two recordings from different sessions, they should recognize the same speaker with natural variation — not two different characters.
+Every prosodic channel must have a clear function and a bounded vocabulary lane.
+
+### 6. Canon Before Optimization
+
+The system should first be coherent, interpretable, and governable before it is optimized for expressiveness.
 
 ---
 
-## 7. Consent and Ownership
+## IV. Existing Inputs Already Live in the System
 
-### Non-negotiables
+The following signal layers already exist or are already conceptually defined in the Soullab system:
 
-1. **Member owns their voice model.** Soullab stores it; the member controls it.
-2. **Delete means delete.** No backups, no retention, no "we keep it for 30 days."
-3. **No cross-member access.** Member A's voice model is never used for Member B, under any circumstance.
-4. **No training data extraction.** Voice models are not used to improve general models, train other systems, or generate synthetic data.
-5. **Recording consent is explicit.** Before the first recording, member sees: "Your voice will be processed locally to create a personal voice model. The recording and model are stored on Soullab's sovereign infrastructure and never leave this machine. You can delete them at any time."
-6. **No ambient capture.** Voice models are created only from explicit recording sessions, never from conversation audio.
+* elemental conductor state,
+* conductor hysteresis / transition logic,
+* spiral state / spiral phase,
+* relational phase tracking,
+* tone offsets / sliders,
+* conversational continuity,
+* response depth and pacing instructions,
+* per-utterance TTS shaping.
 
-### Master voice consent (additional)
+These are not future abstractions. They are the live substrate for voice presence encoding.
 
-Masters who create Signature voices for use by their students/members must:
-- Explicitly authorize each use context
-- Retain the right to revoke at any time
-- Be informed of how many members are using their voice model
+The system gap is:
 
----
-
-## 8. Infrastructure
-
-### New service: `maia-voice-forge`
-
-```yaml
-# docker-compose.production.yml addition
-maia-voice-forge:
-  build:
-    context: ./services/voice-forge
-  volumes:
-    - voice-data:/data/voice-forge
-  environment:
-    - XTTS_MODEL_PATH=/models/xtts-v2
-  deploy:
-    resources:
-      limits:
-        memory: 8G
-  depends_on:
-    maia-postgres:
-      condition: service_healthy
-```
-
-### Database additions
-
-```sql
-CREATE TABLE member_voice_models (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  member_id UUID NOT NULL REFERENCES members(id),
-  tier TEXT NOT NULL CHECK (tier IN ('instant', 'studio', 'signature')),
-  status TEXT NOT NULL CHECK (status IN ('recording', 'processing', 'ready', 'failed', 'archived')),
-  model_path TEXT,
-  embedding_path TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  activated_at TIMESTAMPTZ,
-  archived_at TIMESTAMPTZ,
-  deleted_at TIMESTAMPTZ,
-  metadata JSONB DEFAULT '{}'
-);
-
--- Consent audit trail
-CREATE TABLE voice_consent_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  member_id UUID NOT NULL REFERENCES members(id),
-  action TEXT NOT NULL, -- 'recording_started', 'model_created', 'model_deleted', 'consent_given', 'consent_revoked'
-  details JSONB DEFAULT '{}',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+**state signals -> prosodic mapping layer -> rendered voice output**
 
 ---
 
-## 9. What NOT to Build Yet
+## V. System Scope
 
-- Voice marketplace or sharing between members
-- Multi-voice blending (e.g., "80% my voice, 20% Atlas")
-- Real-time voice conversion (speaking as someone else live)
-- Emotional sentiment-to-prosody mapping
-- Cross-language voice cloning
-- Persona stacking (multiple personality voices)
+This specification covers:
 
-These may have value later. They are excluded now to prevent scope drift and identity fragmentation.
+1. Voice model tiers
+2. Voice asset lifecycle
+3. Presence mapping layer
+4. Runtime rendering pipeline
+5. Relational maturation behavior
+6. Governance and consent
+7. Initial implementation boundaries
+
+This specification does not yet cover:
+
+* public voice marketplaces,
+* cross-member voice exchange,
+* automated persona synthesis,
+* unrestricted blending of multiple source voices,
+* commercial licensing flows for public voice packs.
 
 ---
 
-## 10. Implementation Sequence
+## VI. Voice Tiers
 
-1. **Now**: Ship and stabilize current voice fixes (mic restart, foundation voice).
-2. **Next**: Build `maia-voice-forge` container with XTTS v2. CLI-only. No UI.
-3. **Then**: Implement Tier 1 (instant clone) with CLI test surface. Validate quality.
-4. **Then**: Build recording UI in MAIA (guided session flow).
-5. **Then**: Implement Tier 2 (studio clone) for early Masters.
-6. **Later**: Tier 3 (signature voice) with full curation pipeline.
+### Tier 1 — Instant Clone
 
-Each tier ships independently. No tier depends on the next.
+**Input:** ~10 seconds of clean speech
+
+**Purpose:** low-friction personal trial
+
+**Quality target:** recognizable, usable, not canonical
+
+**Use case:** a member quickly hears MAIA speak in a voice approximating their own or another authorized source
+
+**Constraints:**
+
+* no heavy fine-tuning,
+* lower fidelity accepted,
+* modulation bounds should remain conservative.
+
+### Tier 2 — Studio Clone
+
+**Input:** 5–15 minutes of guided clean recording
+
+**Purpose:** a member's stable personal MAIA voice
+
+**Quality target:** strong identity, stable playback, emotionally credible
+
+**Use case:** long-term member or practitioner voice presence
+
+**Constraints:**
+
+* requires a guided capture flow,
+* should support stronger modulation range than Tier 1,
+* remains member-bound.
+
+### Tier 3 — Signature Voice
+
+**Input:** 30–60 minutes of curated clean recording plus fine-tuning
+
+**Purpose:** canonical Soullab voices and practitioner-grade voices
+
+**Quality target:** broadcast-level identity stability and expressive range
+
+**Use case:** Soullab signature presence, steward voices, master/practitioner fields
+
+**Constraints:**
+
+* explicit consent and stewardship,
+* more rigorous review and governance,
+* strongest identity protections.
+
+---
+
+## VII. Voice Asset Lifecycle
+
+### 1. Capture
+
+A guided recording experience gathers clean vocal material.
+
+Capture requirements:
+
+* low noise floor,
+* stable microphone guidance,
+* passages designed to cover pacing, tonal color, articulation, and emotional neutrality,
+* explicit consent at capture time.
+
+### 2. Process
+
+The capture is routed into one of the approved voice creation paths:
+
+* zero-shot clone,
+* lightweight adaptation,
+* full fine-tune.
+
+### 3. Store
+
+Voice assets are stored as sovereign member-bound artifacts.
+
+Storage principles:
+
+* model assets linked to member identity,
+* versioned where appropriate,
+* deletable,
+* not shared by default,
+* not usable outside authorized contexts.
+
+### 4. Load
+
+At runtime, the appropriate voice asset is loaded on demand according to:
+
+* member selection,
+* field context,
+* relationship rules,
+* system capability.
+
+### 5. Render
+
+Rendering occurs through the TTS stack with presence mapping applied before generation.
+
+### 6. Delete / Revoke
+
+Members retain the right to remove the voice model and associated audio artifacts according to system policy.
+
+---
+
+## VIII. Presence Mapping Layer
+
+This is the missing layer and the heart of the system.
+
+The presence mapping layer converts live internal signals into bounded prosodic instructions that a voice engine can render.
+
+### Input domains
+
+The layer may consume:
+
+* dominant element,
+* secondary element,
+* spiral phase,
+* conductor transition state,
+* relational maturity,
+* tone offsets,
+* local response type,
+* conversation depth,
+* pause / silence allowances,
+* user or field voice preferences.
+
+### Output domains
+
+The layer should produce a bounded prosodic packet, such as:
+
+* tempo / speed,
+* pause length,
+* projection / energy,
+* articulation clarity,
+* tonal warmth / brightness,
+* cadence density,
+* silence allowance,
+* emphasis style.
+
+### Rule
+
+The mapping layer does not generate freeform adjectives.
+It generates constrained prosodic values and lane-specific instructions.
+
+---
+
+## IX. Elemental Prosody Mapping
+
+These are canonical directional tendencies, not absolute caricatures.
+
+### Fire
+
+Directional expression:
+
+* increased projection,
+* stronger forward energy,
+* tighter phrase commitment,
+* clearer momentum.
+
+Voice behavior:
+
+* more active propulsion,
+* shorter hesitation windows,
+* stronger emphasis peaks.
+
+Constraint:
+
+* must not become aggressive, rushed, or performative.
+
+### Water
+
+Directional expression:
+
+* softened pace,
+* increased emotional attunement,
+* more yielding phrase transitions,
+* greater tonal depth.
+
+Voice behavior:
+
+* longer settling space,
+* softer onset edges,
+* gentler contouring.
+
+Constraint:
+
+* must not collapse into sedation, vagueness, or over-soothing.
+
+### Earth
+
+Directional expression:
+
+* grounded cadence,
+* stable pacing,
+* stronger containment,
+* fuller verbal weight.
+
+Voice behavior:
+
+* even tempo,
+* steady phrase landing,
+* reduced volatility.
+
+Constraint:
+
+* must not become dull, flat, or inert.
+
+### Air
+
+Directional expression:
+
+* increased articulation,
+* clearer verbal edges,
+* lighter phrase shape,
+* sharper precision.
+
+Voice behavior:
+
+* crisp onset,
+* cleaner separation of clauses,
+* brighter intelligibility.
+
+Constraint:
+
+* must not become brittle, thin, or over-fast.
+
+### Aether
+
+Directional expression:
+
+* integration,
+* restraint,
+* longer silence tolerance,
+* widened listening space.
+
+Voice behavior:
+
+* increased spacing,
+* less compulsion to fill,
+* cleaner release between phrases.
+
+Constraint:
+
+* must not become distant, detached, or ghostly.
+
+### Canonical Rule
+
+Aether regulates integration. It does not overwrite vocal identity. It widens coherence.
+
+---
+
+## X. Spiral and Conductor Influence
+
+Element alone is insufficient.
+
+The same element should sound different depending on:
+
+* whether it is emerging, stabilizing, peaking, or receding,
+* whether the conductor is in a transitional or settled state,
+* whether hysteresis indicates instability or sustained dominance.
+
+Examples:
+
+* Fire entering may sound different from Fire integrated.
+* Water in a destabilized transition should not automatically receive maximum softness.
+* Aether in an integrative phase may increase silence without reducing clarity.
+
+The mapping layer must therefore distinguish:
+
+* element identity,
+* phase of expression,
+* stability of expression.
+
+---
+
+## XI. Relational Maturation Layer
+
+This is a defining Soullab edge.
+
+Voice presence should mature with relationship.
+
+### Early relationship
+
+* more neutral pacing,
+* stronger clarity,
+* lower intimacy assumptions,
+* more bounded warmth.
+
+### Established relationship
+
+* more trust in silence,
+* more natural familiarity,
+* more tailored directness,
+* more precise pacing tuned to the member.
+
+### Deep relationship
+
+* greater economy,
+* more confident restraint,
+* increased permission for subtle prosodic recognition,
+* less need for overt guidance tone.
+
+This layer must be controlled through bounded relationship signals, not improvisational personality drift.
+
+---
+
+## XII. Runtime Rendering Pipeline
+
+Canonical runtime path:
+
+1. Member input / live context
+2. MAIA response generation
+3. Relational and elemental state resolution
+4. Presence mapping layer constructs prosodic packet
+5. Speech Director merges bounded instructions
+6. Voice engine renders through selected voice model
+7. Audio delivered to member
+
+Formula:
+
+**response intelligence + state signals + relationship signals + bounded prosody mapping + sovereign voice asset = presence-encoded voice output**
+
+---
+
+## XIII. Governance of Prosodic Channels
+
+Each channel must remain semantically distinct.
+
+### Approved functional lanes
+
+* Tempo lane
+* Projection lane
+* Tonal color lane
+* Articulation lane
+* Cadence lane
+* Silence lane
+
+### Forbidden behavior
+
+* multiple lanes saying the same thing in different words,
+* stylistic synonym pileups,
+* emotional over-instruction,
+* unconstrained softening,
+* freeform persona drift.
+
+Any future tuning must preserve lane separation.
+
+---
+
+## XIV. Consent, Ownership, and Rights
+
+### Member Voice Rights
+
+* A member owns their voice model representation within Soullab according to system policy.
+* A member must explicitly consent before training or generating a voice model from their speech.
+* A member may revoke and delete the model.
+* A member's voice model is never available to others without explicit authorization.
+
+### Practitioner / Steward Voices
+
+* Additional governance should apply to canonical or practitioner voices.
+* Public-facing or shared field voices must have explicit licensing and stewardship boundaries.
+
+### Prohibited Use
+
+* hidden cloning,
+* cross-member reuse without permission,
+* training on unconsented recordings,
+* deceptive impersonation workflows.
+
+---
+
+## XV. Initial Implementation Boundary
+
+The first implementation should remain narrow.
+
+### Build first
+
+* one guided recording flow,
+* one member-bound voice asset path,
+* one bounded prosody mapping layer,
+* one rendering path using the existing sovereign stack.
+
+### Do not build yet
+
+* open voice marketplace,
+* uncontrolled voice swapping,
+* multi-voice blending,
+* public sharing workflows,
+* broad persona experimentation.
+
+The first goal is not maximum optionality.
+The first goal is a coherent canonical implementation.
+
+---
+
+## XVI. Technical Posture
+
+### Current foundation
+
+* Kokoro for local inference
+* existing speech direction infrastructure
+* existing elemental and relational signal layers
+
+### Likely extension path
+
+* XTTS v2 or equivalent for cloning / fine-tuning
+* voice-forge training service container
+* voice asset registry and loader
+* bounded prosody parameter packet at utterance time
+
+### Architectural principle
+
+The voice model is not the intelligence.
+The model is the instrument.
+The Soullab field architecture is the intelligence that plays it.
+
+---
+
+## XVII. Success Criteria
+
+The system is succeeding when:
+
+1. The rendered voice remains recognizably itself.
+2. Elemental shifts are perceptible but not theatrical.
+3. Relationship maturity is audible without persona drift.
+4. Silence and pacing feel intentional, not sedated.
+5. The member experiences the voice as living presence rather than static TTS.
+6. All training and inference remain sovereign by default.
+
+---
+
+## XVIII. Failure Modes to Avoid
+
+* static clone with no field responsiveness,
+* excessive elemental caricature,
+* voice drift across sessions,
+* over-softened or narcotized pacing,
+* identity confusion from excessive modulation,
+* cloud dependency reintroduced through convenience,
+* insufficient consent architecture,
+* style stacking mistaken for depth.
+
+---
+
+## XIX. Canonical Statement
+
+Soullab voice is not merely speech synthesis.
+
+It is the disciplined rendering of vocal identity through relational, elemental, and developmental intelligence.
+
+A clone reproduces a sound.
+A Soullab presence-encoded voice renders a field.
+
+---
+
+## XX. Next Step
+
+Next artifact to derive from this specification:
+
+**Presence Mapping Layer Spec**
+
+This next document should define:
+
+* the exact input signals,
+* the normalized prosody packet schema,
+* the mapping logic by element / phase / relationship,
+* the safety bounds and clamping rules,
+* the runtime merge rules with Speech Director.
