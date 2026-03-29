@@ -75,17 +75,16 @@ export const RhetoricalCheck = [
 ];
 
 /**
- * For returning visitors
+ * For returning visitors — quiet familiarity, not demonstrated recall
  */
 export const ReturnGreetings = [
   "Back again.",
-  "Thought you might.",
   "Here's good.",
-  "Knew you'd return.",
-  "Pulled back.",
-  "Circle complete.",
+  "Still here.",
+  "We can pick this up.",
+  "Right where you are.",
   "Again.",
-  "Still here."
+  "This is still here."
 ];
 
 /**
@@ -230,80 +229,65 @@ export class PresenceGreeting {
   }
 
   /**
-   * Named return greetings: More personable, warm welcome back
+   * Named return greetings: quiet familiarity, not demonstrated recall
    */
   private static getNamedReturnGreeting(name: string, timeContext: string): string {
-    // Map time context to proper greeting
-    const timeGreeting = timeContext === 'morning' ? 'Good morning' :
-                        timeContext === 'afternoon' ? 'Good afternoon' :
-                        timeContext === 'evening' ? 'Good evening' :
+    const timeGreeting = timeContext === 'morning' ? 'Morning' :
+                        timeContext === 'afternoon' ? 'Afternoon' :
+                        timeContext === 'evening' ? 'Evening' :
                         timeContext === 'night' ? 'Hey' :
                         timeContext === 'late night' ? 'Hey' : 'Hi';
 
     const patterns = [
-      `${timeGreeting}, ${name}! Glad to see you back.`,
-      `${name}! Good to see you again.`,
-      `Hey ${name}, welcome back! How have you been?`,
-      `${timeGreeting}, ${name}! Nice to see you again.`,
-      `${name}! Hey, glad you're back.`,
-      `Welcome back, ${name}. How are you doing?`,
-      `${timeGreeting}, ${name}. Good to have you back.`,
-      `${name}! How have things been?`
+      `${timeGreeting}, ${name}.`,
+      `${name}. We can pick this up wherever it is.`,
+      `Hey ${name}. Right where you are.`,
+      `${timeGreeting}, ${name}. What's here?`,
+      `${name}. Still here.`,
+      `${name}. How are you arriving?`,
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
   }
 
   /**
-   * Named time greetings: More personable, warm first-contact style
+   * Named time greetings: quiet presence, not customer-service warmth
    */
   private static getNamedTimeGreeting(name: string, timeContext: string): string {
-    // Map time context to proper greeting
-    const timeGreeting = timeContext === 'morning' ? 'Good morning' :
-                        timeContext === 'afternoon' ? 'Good afternoon' :
-                        timeContext === 'evening' ? 'Good evening' :
-                        timeContext === 'night' ? 'Hey' :
-                        timeContext === 'late night' ? 'Hey' : 'Hi';
-
-    // Time-specific greetings (use only when time matches)
     const timeSpecificGreetings: { [key: string]: string[] } = {
       'morning': [
-        `Good morning, ${name}! How are you?`,
-        `Good morning, ${name}. How's your day starting?`,
-        `Morning, ${name}! How are things?`
+        `Morning, ${name}.`,
+        `Morning, ${name}. What's here?`,
+        `${name}. Early yet.`,
       ],
       'afternoon': [
-        `Good afternoon, ${name}! How's it going?`,
-        `Good afternoon, ${name}. How's your day been?`,
-        `Afternoon, ${name}! How are you doing?`
+        `Afternoon, ${name}.`,
+        `${name}. Middle of the day.`,
+        `Hey ${name}. How are you arriving?`,
       ],
       'evening': [
-        `Good evening, ${name}! How are you?`,
-        `Good evening, ${name}. How's it been today?`,
-        `Evening, ${name}! How are things?`
+        `Evening, ${name}.`,
+        `${name}. Winding down or opening up?`,
+        `Hey ${name}.`,
       ],
       'night': [
-        `Hey ${name}, late night. How are you?`,
-        `Hey ${name}. Still up? How are things?`,
-        `${name}, late one. How are you doing?`
+        `Hey ${name}. Late one.`,
+        `${name}. Still up.`,
+        `Hey ${name}. What's on your mind?`,
       ],
       'late night': [
-        `Hey ${name}, late night. How are you?`,
-        `${name}. Late hours. What's on your mind?`,
-        `Hey ${name}. Can't sleep either?`
+        `${name}. Late hours.`,
+        `Hey ${name}. Can't sleep either?`,
+        `${name}. Dark hours. What's here?`,
       ]
     };
 
-    // Generic greetings that work anytime (no time reference)
     const genericGreetings = [
-      `Hi ${name}! How are you?`,
-      `Hey ${name}, good to see you. How are things?`,
-      `${name}! How are you doing?`,
-      `Hi ${name}. Good to see you. How are you?`,
-      `Hey ${name}! What's going on?`,
-      `${name}! How have you been?`
+      `Hey ${name}.`,
+      `${name}. What's present?`,
+      `Hi ${name}. Begin from where you are.`,
+      `${name}. I'm here.`,
     ];
 
-    // Use time-specific greeting 70% of the time, generic 30%
     if (Math.random() > 0.3 && timeSpecificGreetings[timeContext]) {
       const timeGreetings = timeSpecificGreetings[timeContext];
       return timeGreetings[Math.floor(Math.random() * timeGreetings.length)];
@@ -375,12 +359,19 @@ export const NeverSayGreetings = [
   "Hello! How may I help?",
   "Greetings! What brings you here?",
   "Welcome back! Ready to continue?",
-  "Hi there! What shall we discuss?"
+  "Hi there! What shall we discuss?",
+  "Glad to see you back!",
+  "Nice to see you again!",
+  "How have you been?",
 ];
 
 // These are what NOT to do - included as reference
 // Maia never uses customer service energy
 // She's already there, already present
 // You're walking into a space she inhabits, not summoning her
+//
+// The principle: continuity without display.
+// Hold a lot, show very little, show only what matters now.
+// Memory expressed as quiet familiarity, never demonstrated recall.
 
 export default PresenceGreeting;

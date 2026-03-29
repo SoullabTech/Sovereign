@@ -1774,7 +1774,7 @@ ${getPhaseThemes(spiralogicCell.element, spiralogicCell.phase)}
 # Conversation Context (IMPLICIT)
 - Conversation Depth: ${conversationDepth} exchanges
 - Trust Level: ${(trustLevel * 100).toFixed(0)}%
-- Stage: ${conversationDepth === 0 ? 'First contact' : conversationDepth <= 3 ? 'Early connection' : conversationDepth <= 10 ? 'Building trust' : 'Deep relationship'}
+- Stage: ${conversationDepth === 0 ? (trustLevel > 0.15 ? 'Continuing — this person has been here before. Begin from where they are, not from the beginning.' : 'First meeting') : conversationDepth <= 3 ? 'Early in this conversation' : conversationDepth <= 10 ? 'Building depth' : 'Deep conversation'}
 
 ${memoryContext ? memoryPalaceOrchestrator.generateMemoryContextPrompt(memoryContext) : ''}
 
