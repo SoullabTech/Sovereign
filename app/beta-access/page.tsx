@@ -100,7 +100,7 @@ export default function BetaAccessPage() {
     setTimeout(() => {
       setIsValidating(false);
       // Redirect to MAIA with success message
-      router.push('/maia?welcome=beta');
+      router.push('/maia/chat?welcome=beta');
     }, 2000);
   };
 

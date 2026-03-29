@@ -236,7 +236,7 @@ export default function DivinationReflectionsPage() {
         `Help me understand how this reading has unfolded in my life.`;
     }
 
-    router.push(`/maia?context=${encodeURIComponent(context)}`);
+    router.push(`/maia/chat?context=${encodeURIComponent(context)}`);
   };
 
   return (

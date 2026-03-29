@@ -735,7 +735,7 @@ export default function TarotOraclePage() {
                             `Guidance: ${reading.advice}\n\n` +
                             `Help me understand how this applies to my situation and what the cards are revealing.`
                           );
-                          router.push(`/maia?context=${context}`);
+                          router.push(`/maia/chat?context=${context}`);
                         }}
                         className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >

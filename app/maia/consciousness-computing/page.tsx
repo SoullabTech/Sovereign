@@ -25,7 +25,7 @@ export default function MAIAConsciousnessComputingPage() {
 
     // Route to MAIA main interface with consciousness computing context
     setTimeout(() => {
-      router.push('/maia?mode=consciousness-computing&session=pioneer');
+      router.push('/maia/chat?mode=consciousness-computing&session=pioneer');
     }, 1500);
   };
 
