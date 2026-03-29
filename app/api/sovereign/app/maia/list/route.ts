@@ -695,39 +695,42 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const providerUsed = rawProvider || 'unknown';
     const modelUsed = rawModel || 'unknown';
 
-    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair (ported from between/chat)
-    // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
-    // Applied before telemetry so the shape evaluator sees the final anchored text.
+    // 🎯 CLOSING ANCHOR: Conditional, rare, skippable (ported from between/chat)
+    // Silence is a valid ending. Only add closure when the response genuinely needs it.
     let sovereignText = orchestratorResult.text ?? '';
     const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
-    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching/i;
-    const isCareAnchorEligible =
-      _conversationMode === 'counsel' &&
-      _historyLen >= 2 &&
-      sovereignText.length > 120 &&
-      !isSanctuary &&
-      !ANCHOR_ALREADY_PRESENT.test(sovereignText);
-    if (isCareAnchorEligible) {
-      const questionAnchors = [
-        '\n\nSit with that for a moment.',
-        '\n\nYou might notice what surfaces.',
-        '\n\nLet it rest — see how it settles.',
-        '\n\nHow does that land?',
+
+    const shouldOfferClosure = (text: string): boolean => {
+      const trimmed = text.trim();
+      const NATURAL_LANDING = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching|that may be enough|stay there|that's the turn|let that stand|enough for now/i;
+      if (NATURAL_LANDING.test(trimmed)) return false;
+      if (trimmed.endsWith('?')) return false;
+      if (trimmed.split(/\s+/).length < 25) return false;
+      const DIRECTIVE = /\btry\b|do this|take (one |a )?step|consider\b|start by|here's what|you could|i'd suggest|one thing to/i;
+      if (DIRECTIVE.test(trimmed)) return false;
+      const lastSentence = trimmed.split(/[.!]\s+/).pop() ?? '';
+      const STRONG_CLOSE = /that matters|that's real|that's worth|that counts|you know this|you already know|trust that/i;
+      if (/\.\s*$/.test(trimmed) && STRONG_CLOSE.test(lastSentence)) return false;
+      return Math.random() < 0.35;
+    };
+
+    if (_conversationMode === 'counsel' &&
+        _historyLen >= 2 &&
+        sovereignText.length > 120 &&
+        !isSanctuary &&
+        shouldOfferClosure(sovereignText)) {
+      const closures = [
+        '\n\nYou don\'t need to resolve this right now.',
+        '\n\nLet that be enough for now.',
+        '\n\nNothing needs to be done with this yet.',
+        '\n\nThat can just be what it is.',
+        '\n\nNo next step required.',
       ];
-      const statementAnchors = [
-        '\n\nYou might sit with that and see what surfaces.',
-        '\n\nNotice what happens when you let that breathe.',
-        '\n\nOne small thing to carry with you from this.',
-        '\n\nLet it rest — no need to resolve it tonight.',
-        '\n\nYou might try holding that lightly for a day or two.',
-        '\n\nNotice what surfaces when you stop reaching for an answer.',
-      ];
-      const pool = sovereignText.trimEnd().endsWith('?') ? questionAnchors : statementAnchors;
-      const anchor = pool[Math.floor(Math.random() * pool.length)];
+      const anchor = closures[Math.floor(Math.random() * closures.length)];
       sovereignText = sovereignText + anchor;
-      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
+      console.info('[closing-anchor] appended (conditional) — mode=counsel turn=%d responseLen=%d',
         _historyLen + 1, sovereignText.length);
     }
 

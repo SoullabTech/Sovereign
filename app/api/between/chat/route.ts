@@ -2073,38 +2073,45 @@ This user is in guest mode (no authenticated identity).
 
     const crystallization = detectCrystallization(message, finalMessage);
 
-    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair
-    // Conditions: Care mode + turn 3+ + meaningful response length + no anchor already present + not sanctuary
-    // Appended BEFORE voice renderer so it naturalises with the rest of the response.
-    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching/i;
-    const isCareAnchorEligible =
-      mode === 'counsel' &&
-      conversationHistory.length >= 2 &&        // at least 3rd turn
-      finalMessage.length > 120 &&              // not a one-liner
-      !isSanctuary &&
-      !ANCHOR_ALREADY_PRESENT.test(finalMessage);
+    // 🎯 CLOSING ANCHOR: Conditional, rare, skippable
+    // Silence is a valid ending. Only add closure when the response genuinely needs it.
+    // Most responses should end as the model wrote them.
+    const shouldOfferClosure = (text: string): boolean => {
+      const trimmed = text.trim();
+      // Already has a natural landing — skip
+      const NATURAL_LANDING = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching|that may be enough|stay there|that's the turn|let that stand|enough for now/i;
+      if (NATURAL_LANDING.test(trimmed)) return false;
+      // Questions already land — skip
+      if (trimmed.endsWith('?')) return false;
+      // Short responses land on their own — skip
+      if (trimmed.split(/\s+/).length < 25) return false;
+      // Directive responses already give next steps — skip
+      const DIRECTIVE = /\btry\b|do this|take (one |a )?step|consider\b|start by|here's what|you could|i'd suggest|one thing to/i;
+      if (DIRECTIVE.test(trimmed)) return false;
+      // Clean declarative endings land fine — skip
+      const CLEAN_ENDING = /\.\s*$/;
+      const lastSentence = trimmed.split(/[.!]\s+/).pop() ?? '';
+      const STRONG_CLOSE = /that matters|that's real|that's worth|that counts|you know this|you already know|trust that/i;
+      if (CLEAN_ENDING.test(trimmed) && STRONG_CLOSE.test(lastSentence)) return false;
+      // Passed all filters — eligible, but still only 35% chance
+      return Math.random() < 0.35;
+    };
 
-    if (isCareAnchorEligible) {
-      // Pick a varied closing anchor that maps to the AIN nextStep evaluator
-      // All variants match ANCHOR_ALREADY_PRESENT regex so they won't double-append
-      const questionAnchors = [
-        '\n\nSit with that for a moment.',
-        '\n\nYou might notice what surfaces.',
-        '\n\nLet it rest — see how it settles.',
-        '\n\nHow does that land?',
+    if (mode === 'counsel' &&
+        conversationHistory.length >= 2 &&
+        finalMessage.length > 120 &&
+        !isSanctuary &&
+        shouldOfferClosure(finalMessage)) {
+      const closures = [
+        '\n\nYou don\'t need to resolve this right now.',
+        '\n\nLet that be enough for now.',
+        '\n\nNothing needs to be done with this yet.',
+        '\n\nThat can just be what it is.',
+        '\n\nNo next step required.',
       ];
-      const statementAnchors = [
-        '\n\nYou might sit with that and see what surfaces.',
-        '\n\nNotice what happens when you let that breathe.',
-        '\n\nOne small thing to carry with you from this.',
-        '\n\nLet it rest — no need to resolve it tonight.',
-        '\n\nYou might try holding that lightly for a day or two.',
-        '\n\nNotice what surfaces when you stop reaching for an answer.',
-      ];
-      const pool = finalMessage.trimEnd().endsWith('?') ? questionAnchors : statementAnchors;
-      const anchor = pool[Math.floor(Math.random() * pool.length)];
+      const anchor = closures[Math.floor(Math.random() * closures.length)];
       finalMessage = finalMessage + anchor;
-      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
+      console.info('[closing-anchor] appended (conditional) — mode=counsel turn=%d responseLen=%d',
         conversationHistory.length + 1, finalMessage.length);
     }
 
