@@ -52,7 +52,7 @@ export interface KokoroProsodyResult {
 const CHUNK_SPEED_MODIFIER: Record<ChunkType, number> = {
   'question':     0.97,   // Slightly slower — genuine, not searching
   'exclamation':  1.02,   // Slightly faster — energy, not urgency
-  'short-clause': 0.95,   // Slower — presence signal, grounding
+  'short-clause': 0.91,   // Noticeably slower — presence signal, grounding, let it breathe
   'invitation':   0.96,   // Slower — spacious, open
   'transition':   1.01,   // Neutral — connective, carry forward
   'list-item':    1.00,   // Even — consistent across items
@@ -85,8 +85,8 @@ const ELEMENT_SPEED_BIAS: Record<Element, number> = {
 
 // ── First/Last Chunk Adjustments ─────────────────────────────────────────────
 
-const FIRST_CHUNK_SPEED_MODIFIER = 0.97;    // Settle before speaking
-const FIRST_CHUNK_PAUSE_MODIFIER = 1.2;     // Extra breath after opening
+const FIRST_CHUNK_SPEED_MODIFIER = 0.93;    // Settle before speaking — noticeably slower opening
+const FIRST_CHUNK_PAUSE_MODIFIER = 1.4;     // Extra breath after opening — let it land
 const LAST_CHUNK_PAUSE_MS = 0;              // No trailing silence (player handles)
 
 // ── Main Export ──────────────────────────────────────────────────────────────

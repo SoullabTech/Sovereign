@@ -39,9 +39,9 @@ export interface PresetParams {
  */
 export const STYLE_PRESETS: Record<StylePreset, PresetParams> = {
   grounded_reflective: {
-    speed: 0.95,
-    pauseBetweenSentences: 250,
-    pauseBetweenParagraphs: 400,
+    speed: 0.92,
+    pauseBetweenSentences: 300,
+    pauseBetweenParagraphs: 450,
     emphasisStrength: 'selective',
     contour: 'soft',
   },
