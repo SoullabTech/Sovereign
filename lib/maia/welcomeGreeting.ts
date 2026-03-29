@@ -13,7 +13,7 @@
 
 export type MemberStyleProfile = 'direct' | 'warm' | 'playful' | 'minimal' | 'mystic' | 'professional';
 
-export type WelcomeEnrichmentType = 'memory' | 'time_gap' | 'time_flavor' | 'default';
+export type WelcomeEnrichmentType = 'memory' | 'time_gap' | 'time_flavor' | 'relational_depth' | 'default';
 
 export interface WelcomeGreetingContext {
   userName?: string;
@@ -21,6 +21,7 @@ export interface WelcomeGreetingContext {
   lastConversationTheme?: string;     // short phrase, already summarized upstream
   memberStyleProfile?: MemberStyleProfile;
   hourLocal?: number;                  // 0-23 (optional)
+  relationalPhase?: number;           // 1-4 from member_spiral_state.relational_phase
 }
 
 export interface WelcomeGreeting {
@@ -154,6 +155,27 @@ function timeFlavorLine(hour: number, style: MemberStyleProfile): string {
   return '';
 }
 
+/**
+ * Relational depth line — varies by developmental phase.
+ *
+ * Phase 1 (orientation):  "We can start anywhere."
+ * Phase 2 (capacity):     "Something has been taking shape."
+ * Phase 3 (autonomy):     "We're already in the middle of this."
+ * Phase 4 (seasonal):     "You've moved something real here."
+ *
+ * Returns empty string if phase is absent or 0 → falls through to default.
+ */
+function relationalDepthLine(phase: number | undefined): string {
+  if (!phase || phase < 1) return '';
+
+  switch (phase) {
+    case 1: return 'We can start anywhere.';
+    case 2: return 'Something has been taking shape.';
+    case 3: return 'Something here has already begun.';
+    default: return 'You\'ve moved something real here.'; // phase 4+
+  }
+}
+
 function defaultLine(style: MemberStyleProfile): string {
   switch (style) {
     case 'direct':
@@ -253,7 +275,16 @@ export function generateWelcomeGreeting(ctx: WelcomeGreetingContext): WelcomeGre
     }
   }
 
-  // 4) Default fallback
+  // 4) Relational depth (if still nothing — shapes default by phase)
+  if (!subtext && ctx.relationalPhase) {
+    const line = relationalDepthLine(ctx.relationalPhase);
+    if (line) {
+      subtext = line;
+      enrichmentType = 'relational_depth';
+    }
+  }
+
+  // 5) Default fallback
   if (!subtext) {
     subtext = defaultLine(style);
     enrichmentType = 'default';
