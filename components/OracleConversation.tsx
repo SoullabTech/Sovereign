@@ -2350,7 +2350,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         setIsActivating(false);
 
         setTimeout(() => {
-          if (voiceSession.state.capabilities.canStartListening && !showChatInterface && streamingVoiceMode) {
+          // 🔥 FIX: Don't gate on voiceSession.state.capabilities.canStartListening here.
+          // That value is a stale closure capture from when the effect ran — at that point
+          // isSpeaking was still true (setIsAudioPlaying(false) hadn't propagated yet),
+          // so canStartListening was false and startListening never fired.
+          // voiceSession.methods.startListening uses a ref internally (current value),
+          // and ContinuousConversation.startListening has its own authority guard.
+          if (!showChatInterface && streamingVoiceMode) {
             setIsMuted(false);
             voiceSession.methods.startListening('streaming_response_complete');
           }
