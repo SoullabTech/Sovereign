@@ -2076,7 +2076,7 @@ This user is in guest mode (no authenticated identity).
     // 🎯 CLOSING ANCHOR: Deterministic post-generation repair
     // Conditions: Care mode + turn 3+ + meaningful response length + no anchor already present + not sanctuary
     // Appended BEFORE voice renderer so it naturalises with the rest of the response.
-    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching/i;
     const isCareAnchorEligible =
       mode === 'counsel' &&
       conversationHistory.length >= 2 &&        // at least 3rd turn
@@ -2085,11 +2085,24 @@ This user is in guest mode (no authenticated identity).
       !ANCHOR_ALREADY_PRESENT.test(finalMessage);
 
     if (isCareAnchorEligible) {
-      // Pick an anchor that maps to the AIN nextStep evaluator
-      // "sit with (this|that|it)" and "you might sit" both match nextStep natural markers
-      const anchor = finalMessage.trimEnd().endsWith('?')
-        ? '\n\nSit with that for a moment.'
-        : '\n\nYou might sit with that tonight and see what arrives.';
+      // Pick a varied closing anchor that maps to the AIN nextStep evaluator
+      // All variants match ANCHOR_ALREADY_PRESENT regex so they won't double-append
+      const questionAnchors = [
+        '\n\nSit with that for a moment.',
+        '\n\nYou might notice what surfaces.',
+        '\n\nLet it rest — see how it settles.',
+        '\n\nHow does that land?',
+      ];
+      const statementAnchors = [
+        '\n\nYou might sit with that and see what surfaces.',
+        '\n\nNotice what happens when you let that breathe.',
+        '\n\nOne small thing to carry with you from this.',
+        '\n\nLet it rest — no need to resolve it tonight.',
+        '\n\nYou might try holding that lightly for a day or two.',
+        '\n\nNotice what surfaces when you stop reaching for an answer.',
+      ];
+      const pool = finalMessage.trimEnd().endsWith('?') ? questionAnchors : statementAnchors;
+      const anchor = pool[Math.floor(Math.random() * pool.length)];
       finalMessage = finalMessage + anchor;
       console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
         conversationHistory.length + 1, finalMessage.length);
