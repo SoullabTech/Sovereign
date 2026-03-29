@@ -24,7 +24,7 @@ function SettingsContent() {
 
       // Redirect to /maia after showing success
       setTimeout(() => {
-        router.push('/maia?openSettings=true');
+        router.push('/maia/chat?openSettings=true');
       }, 2000);
     } else if (error) {
       setStatus('error');
@@ -35,7 +35,7 @@ function SettingsContent() {
 
       // Redirect to /maia after showing error
       setTimeout(() => {
-        router.push('/maia?openSettings=true');
+        router.push('/maia/chat?openSettings=true');
       }, 3000);
     } else {
       // No special params, redirect to full account settings page
