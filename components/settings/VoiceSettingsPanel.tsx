@@ -21,9 +21,9 @@ import {
 import type { TTSProviderPref } from '@/lib/types/voiceControls';
 
 const TTS_PROVIDER_OPTIONS: { id: TTSProviderPref; label: string; desc: string }[] = [
-  { id: 'auto',  label: 'Auto',        desc: 'Cloud voice with local fallback.' },
-  { id: 'cloud', label: 'Cloud Voice',  desc: 'Higher quality. Requires internet.' },
-  { id: 'local', label: 'Local Voice',  desc: 'Sovereign. Private. Works offline.' },
+  { id: 'auto',  label: 'Sovereign',    desc: 'Local voice with cloud fallback if needed.' },
+  { id: 'cloud', label: 'Cloud Voice',  desc: 'Premium online voice. Requires internet.' },
+  { id: 'local', label: 'Local Only',   desc: 'Fully sovereign. No cloud. Works offline.' },
 ];
 
 type Offsets = {
@@ -254,9 +254,13 @@ export default function VoiceSettingsPanel() {
     return <div className="text-sm text-stone-400">Loading voice settings...</div>;
   }
 
-  // Split voices into female (maia_*) and male (atlas*) groups
-  const femaleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('maia_'));
-  const maleVoices = SOVEREIGN_VOICES.filter(v => v.id.startsWith('atlas'));
+  // Split voices into female and male groups
+  const femaleVoices = SOVEREIGN_VOICES.filter(v =>
+    v.id.startsWith('maia_') || v.id.startsWith('kore_')
+  );
+  const maleVoices = SOVEREIGN_VOICES.filter(v =>
+    v.id.startsWith('atlas') || v.id === 'puck'
+  );
 
   return (
     <div className="space-y-6 font-sans">
