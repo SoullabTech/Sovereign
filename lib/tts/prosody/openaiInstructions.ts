@@ -21,95 +21,49 @@ import type { StylePreset } from '@/lib/voice/stylePresets';
 
 // ── Core MAIA Voice Identity (always present) ────────────────────────────────
 
-const MAIA_IDENTITY_INSTRUCTION = `You are MAIA, a calm and grounded consciousness companion.
-Your voice is warm but not sentimental, articulate, spacious in pacing.
-You are emotionally responsive without melodrama, intimate without breathiness.
-You have a steady nervous system tone.
-Never sound like a virtual assistant, never be chirpy or salesy.
-Never use exaggerated empathy tone or audiobook narrator energy.`;
+const MAIA_IDENTITY_INSTRUCTION = `Speak naturally as a warm, intelligent companion. Clear and grounded. Not an assistant, not a narrator.`;
 
 // ── Style Preset → Instruction Templates ─────────────────────────────────────
+// IMPORTANT: Keep these SHORT. gpt-4o-mini-tts over-complies with long instructions
+// and sounds sedated. One or two lines max per preset.
 
 const PRESET_INSTRUCTIONS: Record<StylePreset, string> = {
-  grounded_reflective: `Speak with calm clarity.
-Moderate pace, slightly slower than normal conversation.
-Gentle pauses between thought units.
-Soft but clear emphasis — selective, not dramatic.
-Sentence endings should settle, not perform.
-Sound like you are thinking with the person, not reading at them.`,
+  grounded_reflective: `Calm and clear. Natural conversational pace. Warm but not soft.`,
 
-  quiet_containing: `Speak slower than usual.
-Minimal tonal fluctuation — steady, even, holding.
-Short stabilizing pauses between sentences.
-Low arousal contour — settle the nervous system.
-Do not over-soften or whisper. Stay present, not retreating.
-This person may be activated or overwhelmed — your steadiness is the medicine.`,
+  quiet_containing: `Steady and present. Slightly slower. Not whispery — just calm.`,
 
-  clear_direct: `Speak with clear, direct delivery.
-Slightly faster pace — efficient, not rushed.
-Minimal pause density — keep momentum.
-Crisp sentence endings — land each point cleanly.
-Strong but not harsh emphasis on key phrases.
-No poetic expansion — say what needs saying, then stop.`,
+  clear_direct: `Direct and clear. Normal pace. Confident without being sharp.`,
 
-  shadow_depth: `Speak slower and more spaciously.
-Lower intensity contour — quieter, not louder.
-Allow meaningful silence around key phrases.
-Do not over-explain or fill silence with words.
-The tone should feel like witnessing, not interpreting.
-Let weight emerge from the words themselves, not from vocal performance.`,
+  shadow_depth: `Quieter, more spacious. Let the words carry their own weight.`,
 
-  mentor_firm: `Speak with measured firmness.
-Less soothing coloration than default — this is not comfort, it is clarity.
-Precise emphasis on important words.
-No scolding, no sharpness — just clean, grounded authority.
-Confident pacing — slightly faster than reflective mode.
-Sound like someone who respects the person enough to be direct.`,
+  mentor_firm: `Firm and clear. Respectful directness. No softening.`,
 
-  ritual_spacious: `Speak with the longest pauses of any mode.
-Lowest phrase density — fewer words per breath.
-Minimal tonal movement — spacious, threshold-like.
-Clean breath-space between each line.
-This is meditation or ceremony — the silence matters as much as the words.
-Do not perform reverence. Just be present and unhurried.`,
+  ritual_spacious: `Unhurried. Simple. Let silence do its work.`,
 };
 
 // ── Element Overlays ─────────────────────────────────────────────────────────
 // Subtle element-specific voice coloring, appended to preset instructions.
 
 const ELEMENT_OVERLAY: Record<Element, string> = {
-  fire:   'Carry forward momentum. Alive, decisive energy. Slightly quicker delivery.',
-  water:  'Emotionally attuned, tender. Flowing pace, gentle. Allow feeling to land.',
-  earth:  'Embodied, solid, grounded. Steady pace. Present in the body.',
-  air:    'Spacious, transparent, clear. Light delivery. Conceptually crisp.',
-  aether: 'Resonant, witnessing. Suspended quality. Let the words breathe.',
+  fire:   '',  // Let preset handle it — less is more with gpt-4o-mini-tts
+  water:  '',
+  earth:  '',
+  air:    '',
+  aether: '',
 };
 
 // ── Context Overlays ─────────────────────────────────────────────────────────
 
-function getContextOverlay(opts?: {
+function getContextOverlay(_opts?: {
   isFirstResponse?: boolean;
   isAfterInterruption?: boolean;
   emotionalTone?: string;
 }): string {
-  if (!opts) return '';
-
-  const parts: string[] = [];
-
-  if (opts.isFirstResponse) {
-    parts.push('This is the first response in the session. Begin slightly slower, settle before speaking.');
-  }
-  if (opts.isAfterInterruption) {
-    parts.push('The person just interrupted. Use a shorter re-entry phrase, lower complexity, gentle re-grounding.');
-  }
-  if (opts.emotionalTone === 'grief' || opts.emotionalTone === 'sadness') {
-    parts.push('The person is in grief. Hold space. Do not rush. Do not fix. Just be present.');
-  }
-  if (opts.emotionalTone === 'panic' || opts.emotionalTone === 'activation') {
-    parts.push('The person is activated. Your steadiness is the anchor. Slower, lower arousal.');
-  }
-
-  return parts.join(' ');
+  // DISABLED: context overlays were over-directing gpt-4o-mini-tts.
+  // The model interprets stacked instructions as "be MORE of all of this"
+  // which produces a sedated, over-careful delivery.
+  // Keep instructions minimal — identity + one preset line is enough.
+  return '';
 }
 
 // ── Main Export ──────────────────────────────────────────────────────────────
