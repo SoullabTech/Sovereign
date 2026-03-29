@@ -2,7 +2,7 @@
 
 import OpenAI from 'openai';
 
-const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
+const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
 
 // Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
 let _openai: OpenAI | null = null;
@@ -24,25 +24,29 @@ export async function synthesizeSpeech(params: {
   voice?: string;
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
-  model?: 'tts-1' | 'tts-1-hd';
+  model?: string;
+  /** gpt-4o-mini-tts instruction field — controls tone, pacing, emotion */
+  instructions?: string;
 }) {
-  const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model } = params;
+  const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model, instructions } = params;
+  const effectiveModel = instructions ? 'gpt-4o-mini-tts' : (model || DEFAULT_TTS_MODEL);
 
   console.log('🔊 [openai-tts] request', {
-    model: model || DEFAULT_TTS_MODEL,
+    model: effectiveModel,
     voice,
     inputLength: text?.length ?? 0,
+    hasInstructions: Boolean(instructions),
     hasApiKey: Boolean(process.env.OPENAI_API_KEY),
-    keyLength: process.env.OPENAI_API_KEY?.length || 0,
   });
 
   const response = await getOpenAI().audio.speech.create({
-    model: model || DEFAULT_TTS_MODEL,
+    model: effectiveModel,
     input: text,
     voice: voice as any,
     response_format: format,
-    speed: speed,
-  });
+    speed,
+    ...(instructions ? { instructions } : {}),
+  } as any);
 
   return response;
 }
