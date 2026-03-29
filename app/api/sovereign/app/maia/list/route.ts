@@ -702,7 +702,7 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
-    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching/i;
     const isCareAnchorEligible =
       _conversationMode === 'counsel' &&
       _historyLen >= 2 &&
@@ -710,9 +710,22 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       !isSanctuary &&
       !ANCHOR_ALREADY_PRESENT.test(sovereignText);
     if (isCareAnchorEligible) {
-      const anchor = sovereignText.trimEnd().endsWith('?')
-        ? '\n\nSit with that for a moment.'
-        : '\n\nYou might sit with that tonight and see what arrives.';
+      const questionAnchors = [
+        '\n\nSit with that for a moment.',
+        '\n\nYou might notice what surfaces.',
+        '\n\nLet it rest — see how it settles.',
+        '\n\nHow does that land?',
+      ];
+      const statementAnchors = [
+        '\n\nYou might sit with that and see what surfaces.',
+        '\n\nNotice what happens when you let that breathe.',
+        '\n\nOne small thing to carry with you from this.',
+        '\n\nLet it rest — no need to resolve it tonight.',
+        '\n\nYou might try holding that lightly for a day or two.',
+        '\n\nNotice what surfaces when you stop reaching for an answer.',
+      ];
+      const pool = sovereignText.trimEnd().endsWith('?') ? questionAnchors : statementAnchors;
+      const anchor = pool[Math.floor(Math.random() * pool.length)];
       sovereignText = sovereignText + anchor;
       console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
         _historyLen + 1, sovereignText.length);
