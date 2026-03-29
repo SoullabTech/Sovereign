@@ -65,6 +65,7 @@ import {
 } from '@/lib/voice/personaplex/personaPlexClient';
 import { buildProsodyHints } from '@/lib/voice/prosody/buildProsodyHints';
 import { scaleProsody } from '@/lib/voice/prosody/scaleProsody';
+import { applyMemberOffsets } from '@/lib/voice/prosody/applyMemberOffsets';
 import {
   applyProsodyToText as applyProsodyHintsToText,
   mapProsodyToSpeed,
@@ -870,7 +871,20 @@ export async function POST(req: NextRequest) {
         });
 
         // Scale hints by user's Range of Effect preference
-        const prosodyHints: ProsodyHints = scaleProsody(baseHints, effectiveRange);
+        const scaledHints = scaleProsody(baseHints, effectiveRange);
+
+        // Apply member voice offsets from Settings/Voice (multiplicative, bounded)
+        // Canonical order: buildProsodyHints → scaleProsody → applyMemberOffsets → aetherGuard
+        const prosodyHints: ProsodyHints = applyMemberOffsets(scaledHints, voiceOffsets);
+
+        // Log member offset application for observability
+        if (voiceOffsets && (voiceOffsets.pace || voiceOffsets.warmth || voiceOffsets.poetry || voiceOffsets.directiveness || voiceOffsets.energy)) {
+          console.info('[prosody.member]', JSON.stringify({
+            offsets: voiceOffsets,
+            pre: { pace: scaledHints.pace, warmth: scaledHints.warmth, energy: scaledHints.energy },
+            post: { pace: prosodyHints.pace, warmth: prosodyHints.warmth, energy: prosodyHints.energy },
+          }));
+        }
 
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
@@ -1184,11 +1198,18 @@ export async function POST(req: NextRequest) {
                 timer.mark('tts_0_requested');
               }
 
+              // Per-chunk speed variation (gated: only when pace isn't brisk)
+              // Opening sentence slightly forward, subsequent sentences settle
+              const useChunkVariation = prosodyHints.pace !== 'brisk' && !sanctuary;
+              const chunkSpeed = useChunkVariation && chunkIndex === 0
+                ? Math.min(1.15, effectiveSpeed * 1.02)  // Opening: 2% forward
+                : effectiveSpeed;
+
               const result = await synthesizeWithFallback(safeChunkText, {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-                speed: effectiveSpeed,
+                speed: chunkSpeed,
                 brevity: effectiveBrevity,
                 wisdomDirective,
                 voice: effectiveVoice,
