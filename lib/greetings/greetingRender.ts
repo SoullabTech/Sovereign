@@ -87,19 +87,19 @@ function renderIdentity(
 ): Greeting {
   const templates: Record<GreetingStyle, string[]> = {
     warm: [
-      "I'm glad you're here. How are you arriving right now?",
+      "How are you arriving right now?",
       'How are you? Take your time.',
-      "It's good to see you. What's present for you?",
+      "What's present for you?",
     ],
     clear: [
-      'How are you? What do you want to focus on?',
+      'What do you want to focus on?',
       "What's the priority today?",
-      "Good to see you. What's on your mind?",
+      "What's on your mind?",
     ],
     playful: [
-      "Welcome back! Want the gentle version or the 'let's get it done' version?",
-      'Hey! Ready to figure something out, or just vibing today?',
-      "What's the vibe today — deep, light, or somewhere in between?",
+      "Gentle version or the 'let's get it done' version?",
+      'Deep, light, or somewhere in between?',
+      "What's the vibe today?",
     ],
     spacious: [
       "I'm here.",
@@ -133,29 +133,29 @@ function renderContinuity(
 
   const templates: Record<GreetingStyle, string[]> = {
     warm: [
-      `Last time we were with ${softTheme}. Want to pick that up, or start fresh?`,
-      `Still working with ${softTheme}? Or has something new come in?`,
-      `How's ${softTheme} been landing since we last talked?`,
+      `${softTheme} is still here. Pick it up or start fresh.`,
+      `Still with ${softTheme}? Or has something new come in?`,
+      `We can continue from ${softTheme}. Or not. Up to you.`,
     ],
     clear: [
-      `We left off with ${softTheme}. Continue, or new direction?`,
-      `${softTheme} — still the focus, or shifting?`,
-      `Picking up ${softTheme}, or a new thread today?`,
+      `${softTheme} — still the thread, or shifting?`,
+      `We were with ${softTheme}. Continue or new direction?`,
+      `${softTheme}. Still live?`,
     ],
     playful: [
-      `Still on the ${softTheme} adventure, or starting a new one?`,
-      `${softTheme} again? Or are we switching it up today?`,
-      `Back for more ${softTheme}… or something completely different?`,
+      `${softTheme} again? Or something new today?`,
+      `Still on the ${softTheme} thing, or switching it up?`,
+      `${softTheme}… or something completely different?`,
     ],
     spacious: [
       `${softTheme} is still here if you want it.`,
-      `We were with ${softTheme}. No pressure either way.`,
-      `That thread is still open. Want it?`,
+      `That thread is still open.`,
+      `No pressure either way. ${softTheme} is here.`,
     ],
     ritual: [
-      `The work with ${softTheme} continues. Shall we deepen, or turn?`,
       `${softTheme} was the living question. Is it still alive?`,
-      `Last we met, ${softTheme} was unfolding. Where has it gone?`,
+      `The work with ${softTheme} continues if you want it to.`,
+      `${softTheme} was unfolding. Where has it gone?`,
     ],
   };
 
@@ -184,29 +184,29 @@ function renderGentleRecall(
 ): Greeting {
   const templates: Record<GreetingStyle, string[]> = {
     warm: [
-      "There's something I hold from our conversations. What's moving in you today?",
-      "Something in me recognizes something in you. How are you?",
-      "I'm here with you. Do you want warmth, clarity, or momentum today?",
+      "How are you arriving right now?",
+      "What's present for you today?",
+      "We can pick this up wherever it is.",
     ],
     clear: [
-      "Good to see you again. What do you want to work on?",
-      "We have a good rhythm. What's the focus today?",
-      "I know your patterns. What needs attention?",
+      "What do you want to work with today?",
+      "What needs attention?",
+      "What's the focus?",
     ],
     playful: [
-      "Hey, we've been through some things together. What's today's chapter?",
-      "You again! Love it. What are we getting into?",
-      "The band is back together. What's the set list?",
+      "What's today's chapter?",
+      "What are we getting into?",
+      "Something new, or something ongoing?",
     ],
     spacious: [
-      "We've been here before. You know the way in.",
+      "You know the way in.",
       "Something familiar in this space.",
-      "I remember. Take your time.",
+      "Take your time.",
     ],
     ritual: [
       "The thread continues. What does this encounter ask of you?",
-      "We return to the work. What's the living edge today?",
-      "Recognition before recall. What do you bring?",
+      "What's the living edge today?",
+      "What do you bring?",
     ],
   };
 
