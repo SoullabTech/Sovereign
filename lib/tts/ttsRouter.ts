@@ -96,9 +96,10 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
   const provider = getConfiguredProvider();
 
   // Determine primary provider
-  // auto = kokoro (sovereignty default)
+  // TWO-LANE (2026-03-28): auto = openai with Speech Director (quality primary)
+  // Use 'kokoro' explicitly for sovereign/offline mode
   const primary: TTSProvider =
-    provider !== 'auto' ? provider : 'kokoro';
+    provider !== 'auto' ? provider : 'openai';
 
   const memberPref = params.ttsProviderPref || 'auto';
 
