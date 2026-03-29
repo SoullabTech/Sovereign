@@ -896,7 +896,7 @@ function MAIAPageContent() {
                     )}
                   </motion.button>
 
-                  {/* ✨ Capture Button - Mobile (after Scribe, before Session) */}
+                  {/* ✨ Mark Button - Mobile (after Scribe, before Begin) */}
                   <motion.button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('labAction', {
@@ -907,13 +907,13 @@ function MAIAPageContent() {
                              bg-[#D4B896]/10 hover:bg-[#D4B896]/20
                              border border-[#D4B896]/30 hover:border-[#D4B896]/50
                              text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
-                    title="Capture the spirit of the last few turns"
+                    title="Mark the spirit of the last few turns"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span className="text-xs">Capture</span>
+                    <span className="text-xs">Mark</span>
                   </motion.button>
 
-                  {/* Session Button - Inside mode selector, after Capture */}
+                  {/* Begin Button - Inside mode selector, after Mark */}
                   {!hasActiveSession ? (
                     <motion.button
                       onClick={() => setShowSessionSelector(true)}
@@ -921,10 +921,10 @@ function MAIAPageContent() {
                                bg-maia-navy-800/40 hover:bg-maia-navy-800
                                border border-maia-success/30 hover:border-maia-success/50
                                text-maia-success text-xs font-light transition-all flex-shrink-0"
-                      title="Start Session"
+                      title="Begin"
                     >
                       <Clock className="w-3 h-3" />
-                      <span className="text-xs">Start</span>
+                      <span className="text-xs">Begin</span>
                     </motion.button>
                   ) : (
                     <motion.button
@@ -1203,7 +1203,7 @@ function MAIAPageContent() {
                     </motion.button>
                   </FeatureTooltip>
 
-                  {/* Capture Button - Desktop (after Scribe, before Session) */}
+                  {/* Mark Button - Desktop (after Scribe, before Begin) */}
                   <FeatureTooltip featureId="capture" side="bottom">
                     <motion.button
                       onClick={() => {
@@ -1217,14 +1217,14 @@ function MAIAPageContent() {
                                text-[#D4B896] text-xs font-light transition-all"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      title="Capture the spirit of the last few turns"
+                      title="Mark the spirit of the last few turns"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      Capture
+                      Mark
                     </motion.button>
                   </FeatureTooltip>
 
-                  {/* Session Button - Desktop (after Capture) */}
+                  {/* Begin Button - Desktop (after Mark) */}
                   {!hasActiveSession ? (
                     <FeatureTooltip featureId="session-start" side="bottom">
                       <motion.button
@@ -1237,7 +1237,7 @@ function MAIAPageContent() {
                         whileTap={{ scale: 0.98 }}
                       >
                         <Clock className="w-4 h-4" />
-                        <span className="hidden sm:inline">Start Session</span>
+                        <span className="hidden sm:inline">Begin</span>
                       </motion.button>
                     </FeatureTooltip>
                   ) : (

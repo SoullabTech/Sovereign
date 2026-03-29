@@ -138,6 +138,8 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 // import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
+import { OpenThreads } from './field/OpenThreads';
+import { NextDoorway } from './field/NextDoorway';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { getCounselFramework, getScribeLens, setCounselFramework, setScribeLens, getMentorStance } from '@/lib/consciousness/therapeuticFrameworks';
 import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
@@ -6658,6 +6660,13 @@ I'm not sure what I'm feeling yet.`;
             lastAssistantText: typeof lastAssistantMsg?.content === 'string' ? lastAssistantMsg.content : undefined,
           });
 
+          // Read cached relational phase (set by OpenThreads on previous visit)
+          let relationalPhase: number | undefined;
+          try {
+            const cached = localStorage.getItem('maia_relational_phase');
+            if (cached) relationalPhase = parseInt(cached, 10) || undefined;
+          } catch { /* ignore */ }
+
           // Generate personalized welcome greeting (one clean signal)
           const hourLocal = new Date().getHours();
           const welcomeGreeting = generateWelcomeGreeting({
@@ -6666,6 +6675,7 @@ I'm not sure what I'm feeling yet.`;
             hourLocal,
             memberStyleProfile,
             lastConversationTheme,
+            relationalPhase,
           });
 
           // Debug log removed - was causing console spam on every re-render
@@ -6729,6 +6739,31 @@ I'm not sure what I'm feeling yet.`;
                   {welcomeGreeting.subtext}
                 </p>
               </motion.div>
+
+              {/* Field Continuity — what's still unfolding */}
+              <OpenThreads memberId={userId || ''} />
+
+              {/* Next Doorway — one grounded suggestion */}
+              <NextDoorway
+                hasThreads={!!lastConversationTheme}
+                spiralMotion={(() => {
+                  try {
+                    return localStorage.getItem('maia_spiral_motion') || null;
+                  } catch { return null; }
+                })()}
+                onActivate={() => setHasActivated(true)}
+              />
+
+              {/* Field orientation — subtle, below everything */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8, duration: 0.8 }}
+                className="text-xs text-white/15 font-light mt-6"
+                style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              >
+                This space reflects what&apos;s been unfolding for you over time.
+              </motion.p>
             </div>
           </motion.div>
           );
