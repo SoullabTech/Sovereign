@@ -21,8 +21,14 @@ export type SovereignVoiceId =
   | 'maia_core'
   | 'maia_warm'
   | 'maia_clear'
+  | 'maia_echo'
+  | 'maia_fable'
   | 'atlas'
-  | 'atlas_deep';
+  | 'atlas_deep'
+  | 'atlas_adam'
+  | 'puck'
+  | 'kore_heart'
+  | 'kore_bella';
 
 export type VoiceProvider = 'sovereign' | 'local' | 'browser';
 
@@ -83,6 +89,54 @@ export const SOVEREIGN_VOICES: readonly SovereignVoice[] = [
     openai: 'onyx',
     elements: ['aether', 'water'],
   },
+  {
+    id: 'atlas_adam',
+    label: 'Atlas (Adam)',
+    description: 'Warm masculine. Gentle strength. Approachable.',
+    kokoro: 'am_adam',
+    openai: 'echo',
+    elements: ['earth'],
+  },
+  {
+    id: 'puck',
+    label: 'Puck',
+    description: 'Light, quick, playfully confident. When you need play, not solemnity.',
+    kokoro: 'am_puck',
+    openai: 'fable',
+    elements: ['air', 'fire'],
+  },
+  {
+    id: 'kore_heart',
+    label: 'Kore (Heart)',
+    description: 'Warm and nurturing. The original local presence.',
+    kokoro: 'af_heart',
+    openai: 'shimmer',
+    elements: ['water'],
+  },
+  {
+    id: 'kore_bella',
+    label: 'Kore (Bella)',
+    description: 'Clear and articulate. Bright without sharpness.',
+    kokoro: 'af_bella',
+    openai: 'nova',
+    elements: ['air', 'fire'],
+  },
+  {
+    id: 'maia_echo',
+    label: 'Maia (Echo)',
+    description: 'Measured and resonant. A contemplative quality.',
+    kokoro: 'af_heart',
+    openai: 'echo',
+    elements: ['aether'],
+  },
+  {
+    id: 'maia_fable',
+    label: 'Maia (Fable)',
+    description: 'Expressive and narrative. Storytelling warmth.',
+    kokoro: 'af_bella',
+    openai: 'fable',
+    elements: ['water', 'air'],
+  },
 ] as const;
 
 // ═══════════════════════════════════════════════════════════════
@@ -135,9 +189,18 @@ export function migrateLegacyVoice(legacyVoice: string): SovereignVoiceId {
     alloy: 'maia_core',
     shimmer: 'maia_warm',
     nova: 'maia_clear',
-    echo: 'atlas',
+    echo: 'maia_echo',
     onyx: 'atlas_deep',
-    fable: 'maia_clear',
+    fable: 'maia_fable',
+    // Legacy archetype IDs from voiceArchetypes.ts
+    maia_onyx: 'atlas_deep',
+    maia_echo: 'maia_echo',
+    maia_fable: 'maia_fable',
+    mentor: 'atlas',
+    elder: 'atlas_deep',
+    heart: 'kore_heart',
+    bella: 'kore_bella',
+    adam: 'atlas_adam',
   };
   return LEGACY_MAP[legacyVoice] ?? 'maia_core';
 }
