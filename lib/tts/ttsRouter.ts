@@ -21,8 +21,8 @@
 import * as kokoro from './providers/kokoro';
 import * as sesame from './providers/sesame';
 import type { VoiceIntent } from '@/lib/types/voiceIntent';
-import { resolveKokoroVoice, resolveSpeed, resolveVoiceWithArchetype } from '@/lib/voice/voiceMap';
-import { resolveArchetypeVoice } from '@/lib/voice/voiceArchetypes';
+import { resolveKokoroVoice, resolveSpeed } from '@/lib/voice/voiceMap';
+import { resolveArchetypeVoice, resolveArchetypeToKokoro } from '@/lib/voice/voiceArchetypes';
 import { resolveStylePreset, type ToneContext } from '@/lib/voice/agentToneMap';
 import { applyKokoroProsodySimple } from '@/lib/tts/prosody/kokoroProsody';
 import { createCacheKey, getCached, setCache } from '@/lib/tts/voiceCache';
@@ -129,7 +129,7 @@ export async function synthesize(params: TTSRequest): Promise<TTSResult> {
       // Archetype overrides element-based selection (member chose a fixed voice)
       // Otherwise, Bridge B: element from Conductor determines the voice
       const kokoroVoice = params.voiceArchetype
-        ? resolveVoiceWithArchetype(params.voiceHint?.element ?? 'earth', params.voiceArchetype)
+        ? resolveArchetypeToKokoro(params.voiceArchetype)
         : params.voiceHint
           ? resolveKokoroVoice(params.voiceHint.element)
           : params.voice;
