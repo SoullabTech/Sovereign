@@ -599,6 +599,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         console.log('🎧 [onend] Persistent listening mode - staying open for Care/Scribe');
       }
 
+      // 🔥 FIX: If recognition died during MAIA's speech (normal Chrome timeout, not quick abort),
+      // mark for refresh. Chrome creates zombie recognition objects where onstart fires
+      // but onresult silently never fires — user sees "listening" but nothing transcribes.
+      // The quick-abort path (timeSinceStart < 500ms above) already handles this, but
+      // normal timeouts (5-8s of silence during TTS) also produce zombies.
+      if (isSpeakingRef.current || inputSuppressedRef.current) {
+        console.log('⏸️ [onend] Recognition timed out during MAIA speech — marking for refresh on next start');
+        recognitionNeedsRefreshRef.current = true;
+        return; // Don't restart while MAIA is speaking — auto-resume will handle it
+      }
+
       // Only restart if we're actively listening and not processing/speaking
       // CRITICAL: Use refs instead of closure state to avoid stale values
       if (isListeningRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
