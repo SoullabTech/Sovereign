@@ -2611,12 +2611,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               source: 'restored'
             }));
 
-            // Use PostgreSQL if it has more messages
-            if (pgMessages.length > loadedMessages.length) {
+            // Use PostgreSQL if it has more messages — but NOT on navigation return.
+            // Nav return should restore what was on screen (localStorage), not accumulated DB history.
+            const isNavReturn = sessionStorage.getItem('maia_nav_teardown') === 'true';
+            if (pgMessages.length > loadedMessages.length && !isNavReturn) {
               loadedMessages = pgMessages;
               console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
               // Sync to localStorage for faster next load
               localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
+            } else if (isNavReturn && loadedMessages.length > 0) {
+              console.log(`💾 [PostgreSQL] Nav return — keeping localStorage (${loadedMessages.length} msgs) for UI, DB has ${pgMessages.length} for context`);
             }
           }
         }
