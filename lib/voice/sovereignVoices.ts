@@ -50,6 +50,14 @@ export interface SovereignVoice {
 
 export const SOVEREIGN_VOICES: readonly SovereignVoice[] = [
   {
+    id: 'maia_clear',
+    label: 'Maia (Bella)',
+    description: 'Clear and articulate. Bright without sharpness. The foundation voice.',
+    kokoro: 'af_bella',
+    openai: 'nova',
+    elements: ['fire', 'air', 'earth', 'aether'],
+  },
+  {
     id: 'maia_core',
     label: 'Maia (Kore)',
     description: 'Steady center. Neutral warmth. Clear attunement.',
@@ -64,14 +72,6 @@ export const SOVEREIGN_VOICES: readonly SovereignVoice[] = [
     kokoro: 'af_sarah',
     openai: 'shimmer',
     elements: ['water'],
-  },
-  {
-    id: 'maia_clear',
-    label: 'Maia (Clear)',
-    description: 'Bright and precise. Cuts through. For direction.',
-    kokoro: 'af_bella',
-    openai: 'nova',
-    elements: ['fire', 'air'],
   },
   {
     id: 'atlas',
@@ -162,6 +162,7 @@ export const VOICE_PROVIDERS = [
 
 /** Look up a sovereign voice by ID */
 export function getSovereignVoice(id: string): SovereignVoice {
+  // Foundation voice: maia_clear (Bella) is first in array = default fallback
   return SOVEREIGN_VOICES.find((v) => v.id === id) ?? SOVEREIGN_VOICES[0];
 }
 
@@ -186,7 +187,7 @@ export function voiceForElement(element: Element): SovereignVoice {
  */
 export function migrateLegacyVoice(legacyVoice: string): SovereignVoiceId {
   const LEGACY_MAP: Record<string, SovereignVoiceId> = {
-    alloy: 'maia_core',
+    alloy: 'maia_clear',
     shimmer: 'maia_warm',
     nova: 'maia_clear',
     echo: 'maia_echo',
@@ -202,7 +203,7 @@ export function migrateLegacyVoice(legacyVoice: string): SovereignVoiceId {
     bella: 'kore_bella',
     adam: 'atlas_adam',
   };
-  return LEGACY_MAP[legacyVoice] ?? 'maia_core';
+  return LEGACY_MAP[legacyVoice] ?? 'maia_clear';
 }
 
 /**
