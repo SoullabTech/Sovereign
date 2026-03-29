@@ -96,6 +96,20 @@ export function resolveArchetypeVoice(archetype?: string | null): { provider: Vo
 }
 
 /**
+ * Resolve archetype → OpenAI voice ID.
+ * Used when routing through OpenAI regardless of the archetype's default provider.
+ * Falls back to alloy if archetype is unknown or unset.
+ */
+export function resolveArchetypeToOpenAI(archetype?: string | null): string {
+  if (!archetype) return 'alloy';
+  const entry = MAIA_VOICE_ARCHETYPES.find((x) => x.id === archetype);
+  return entry?.kokoroVoice
+    // Map Kokoro voice → OpenAI equivalent
+    ? ({ af_kore: 'alloy', af_sarah: 'shimmer', af_nicole: 'nova', af_heart: 'shimmer', af_bella: 'nova', am_adam: 'echo', am_michael: 'onyx', am_puck: 'fable', bm_lewis: 'onyx' }[entry.kokoroVoice] ?? 'alloy')
+    : 'alloy';
+}
+
+/**
  * Resolve archetype string → Kokoro voice ID.
  * Used as fallback when OpenAI is unavailable or for local-only mode.
  * Falls back to af_kore (Maia Kore) if archetype is unknown or unset.
