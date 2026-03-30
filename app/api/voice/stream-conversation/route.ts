@@ -30,9 +30,62 @@ import { TTSFallbackToOpenAI } from '@/lib/tts/ttsRouter';
 import { resolveOpenAIVoice, resolveKokoroVoice } from '@/lib/voice/voiceMap';
 import { SOVEREIGN_VOICES, resolveToKokoro, resolveToOpenAI } from '@/lib/voice/sovereignVoices';
 import type { Element } from '@/lib/types/voiceIntent';
-import { resolveStylePreset } from '@/lib/voice/agentToneMap';
-import { buildOpenAIInstructions } from '@/lib/tts/prosody/openaiInstructions';
 import { shapeForSpeech } from '@/lib/voice/textShaper';
+
+// ── PFI Speech Director: relational state → compact TTS instructions ─────────
+// Computed ONCE per turn from live relational signals. NOT a static preset.
+// Kept short (6-30 words) to avoid gpt-4o-mini-tts over-compliance.
+
+const MAIA_VOICE_BASE = `Speak naturally as a warm, intelligent woman. Clear, bright, and settled. Keep a light, feminine vocal quality throughout — never drop into a low or husky register. Relaxed pacing. Gentle emphasis. Not too dynamic — steady and present.`;
+
+function buildRelationalSpeechInstructions(input: {
+  posture?: string;
+  mode?: string;
+  activation?: number;
+  element?: string;
+  sanctuary?: boolean;
+  prosodyHints?: { warmth?: number; pace?: number; emphasis?: number; intentTag?: string };
+}): string {
+  const parts: string[] = [MAIA_VOICE_BASE];
+
+  // Posture-driven delivery (from relational stack)
+  if (input.posture === 'HOLD') {
+    parts.push('Unhurried. Present. Space around each phrase.');
+  } else if (input.posture === 'MEET_REGULATE') {
+    parts.push('Steady and grounding. Slightly slower. Settling.');
+  } else if (input.posture === 'MEET_BOUNDARY') {
+    parts.push('Clear and firm. Respectful directness.');
+  }
+  // MEET = default, no extra instruction needed
+
+  // Activation level (high = contain, don't match energy)
+  if (typeof input.activation === 'number' && input.activation > 0.7) {
+    parts.push('Contained. Do not match high energy. Settle.');
+  }
+
+  // Sanctuary = more spacious
+  if (input.sanctuary) {
+    parts.push('Spacious pacing. Let silence carry meaning.');
+  }
+
+  // Element flavor (subtle, one phrase max)
+  if (input.element === 'water') parts.push('Softer. Emotionally attuned.');
+  else if (input.element === 'fire') parts.push('Clearer. More precise.');
+  else if (input.element === 'aether') parts.push('Spare. Open. Unhurried.');
+  // earth and air = default, no extra instruction
+
+  // Prosody hints (from relational stack computed values)
+  if (input.prosodyHints) {
+    if (typeof input.prosodyHints.warmth === 'number' && input.prosodyHints.warmth > 0.7) {
+      parts.push('Warmer.');
+    }
+    if (typeof input.prosodyHints.pace === 'number' && input.prosodyHints.pace < 0.3) {
+      parts.push('Slower.');
+    }
+  }
+
+  return parts.join(' ');
+}
 import {
   processThreshold,
   createInitialThresholdState,
@@ -118,6 +171,11 @@ async function synthesizeWithFallback(
      * Omit or pass null to use plain shaped text.
      */
     ssml?: string | null;
+    /**
+     * PFI Speech Director instructions for OpenAI TTS.
+     * Computed once per turn from relational state. Passed to gpt-4o-mini-tts `instructions` field.
+     */
+    speechInstructions?: string | null;
   }
 ): Promise<{ audio: string; format: string; source: string } | null> {
   // ── PersonaPlex (Sesame CSM) — gate on health cache to avoid stalling ──
@@ -212,7 +270,7 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── Member chose "cloud" → OpenAI with Speech Director, no Kokoro fallback ──
+  // ── Member chose "cloud" → OpenAI with relational instructions, no Kokoro fallback ──
   if (memberProvider === 'cloud') {
     const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
       || !process.env.OPENAI_API_KEY;
@@ -220,23 +278,16 @@ async function synthesizeWithFallback(
       console.warn('[TTS] cloud TTS requested but DISABLE_OPENAI_COMPLETELY=true — returning null');
       return null;
     }
-    // Use member's archetype voice, fall back to alloy (not element-based shimmer)
     const finalOpenaiVoice = openaiVoice ?? 'alloy';
-
-    // Speech Director: same quality regardless of how member chose OpenAI
-    const stylePreset = resolveStylePreset({ element: elementKey || undefined });
     const shapedText = shapeForSpeech(text);
-    const instructions = buildOpenAIInstructions({
-      preset: stylePreset,
-      element: elementKey || undefined,
-    });
+    // Use per-turn relational instructions if available, otherwise base identity only
+    const instructions = options.speechInstructions || MAIA_VOICE_BASE;
 
     console.info('[tts.attempt]', JSON.stringify({
       provider: 'openai',
       voice: finalOpenaiVoice,
       reason: 'member_chose_cloud',
-      stylePreset,
-      hasInstructions: true,
+      hasRelationalInstructions: Boolean(options.speechInstructions),
     }));
     try {
       const response = await synthesizeSpeech({
@@ -254,28 +305,20 @@ async function synthesizeWithFallback(
     }
   }
 
-  // ── DEFAULT: OpenAI with Speech Director — full-utterance prosody ──
+  // ── DEFAULT: OpenAI with relational instructions — full-utterance prosody ──
   const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
     || !process.env.OPENAI_API_KEY;
 
   if (!openaiDisabled) {
-    const elementFallback = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const finalOpenaiVoice = openaiVoice ?? elementFallback ?? 'alloy';
-
-    // ── Speech Director: resolve style preset → build instructions ──
-    const stylePreset = resolveStylePreset({ element: elementKey || undefined });
+    const finalOpenaiVoice = openaiVoice ?? 'alloy';
     const shapedText = shapeForSpeech(text);
-    const instructions = buildOpenAIInstructions({
-      preset: stylePreset,
-      element: elementKey || undefined,
-    });
+    const instructions = options.speechInstructions || MAIA_VOICE_BASE;
 
     console.info('[tts.attempt]', JSON.stringify({
       provider: 'openai',
       voice: finalOpenaiVoice,
-      reason: 'speech_director_primary',
-      stylePreset,
-      hasInstructions: true,
+      reason: 'relational_primary',
+      hasRelationalInstructions: Boolean(options.speechInstructions),
       shapedLength: shapedText.length,
     }));
 
@@ -520,7 +563,7 @@ interface StreamRequest {
 
 /**
  * Synthesize a single sentence to audio.
- * TWO-LANE: OpenAI with Speech Director (primary), Kokoro (sovereign fallback).
+ * TWO-LANE: OpenAI with relational instructions (primary), Kokoro (sovereign fallback).
  * Returns base64 audio data or null on failure.
  */
 async function synthesizeSentence(
@@ -528,6 +571,7 @@ async function synthesizeSentence(
   voice: string = 'maia_core',
   speed: number = 1.0,
   element?: string | null,
+  speechInstructions?: string | null,
 ): Promise<{ audio: string; format: string } | null> {
   const elementKey = (element ?? '').toLowerCase() as Element;
 
@@ -540,18 +584,11 @@ async function synthesizeSentence(
   const openaiDisabled = process.env.DISABLE_OPENAI_COMPLETELY === 'true'
     || !process.env.OPENAI_API_KEY;
 
-  // ── Lane 1: OpenAI with Speech Director ──
+  // ── Lane 1: OpenAI with relational instructions ──
   if (!openaiDisabled) {
-    const elementVoice = elementKey ? resolveOpenAIVoice(elementKey) : null;
-    const openaiVoice = resolvedOpenai ?? elementVoice ?? 'alloy';
-
-    // Speech Director: style preset → delivery instructions
-    const stylePreset = resolveStylePreset({ element: elementKey || undefined });
+    const openaiVoice = resolvedOpenai ?? 'alloy';
     const shapedText = shapeForSpeech(text);
-    const instructions = buildOpenAIInstructions({
-      preset: stylePreset,
-      element: elementKey || undefined,
-    });
+    const instructions = speechInstructions || MAIA_VOICE_BASE;
 
     try {
       const response = await synthesizeSpeech({
@@ -565,7 +602,6 @@ async function synthesizeSentence(
       return { audio: buffer.toString('base64'), format: 'mp3' };
     } catch (e) {
       console.error(`[synthesizeSentence] OpenAI failed: ${e instanceof Error ? e.message : e}`);
-      // Fall through to Kokoro
     }
   }
 
@@ -875,6 +911,37 @@ export async function POST(req: NextRequest) {
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
 
+        // ─── PFI SPEECH DIRECTOR: RELATIONAL STATE → TTS INSTRUCTIONS ───
+        // Computed ONCE per turn. Same instructions for all sentences in this response.
+        // This is the wire that connects relational intelligence to voice rendering.
+        const turnSpeechInstructions = buildRelationalSpeechInstructions({
+          posture: guidance?.posture,
+          mode: wisdomPayload?.mode ?? mode,
+          activation: voiceSession.relationalStack.smoother.lastActivation,
+          element: wisdomPayload?.element ?? element ?? undefined,
+          sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+          prosodyHints: {
+            warmth: prosodyHints.warmth,
+            pace: prosodyHints.pace,
+            emphasis: prosodyHints.emphasis,
+            intentTag: prosodyHints.intentTag,
+          },
+        });
+
+        // Log the final applied speech intelligence (grep: prosody.final)
+        console.info('[prosody.final]', JSON.stringify({
+          turnId,
+          posture: guidance?.posture,
+          mode: wisdomPayload?.mode ?? mode,
+          activation: voiceSession.relationalStack.smoother.lastActivation?.toFixed(2),
+          element: wisdomPayload?.element ?? element,
+          sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+          warmth: prosodyHints.warmth?.toFixed(2),
+          pace: prosodyHints.pace?.toFixed(2),
+          speed: effectiveSpeed?.toFixed(3),
+          instructionLength: turnSpeechInstructions.length,
+        }));
+
         // ─── UPDATE SESSION PROSODY BASELINE ───
         // Conversation Prosody Memory: baseline drifts toward current delivery
         const baselineTs = Date.now();
@@ -945,13 +1012,14 @@ export async function POST(req: NextRequest) {
             mode: wisdomPayload?.mode ?? mode,
             element: wisdomPayload?.element ?? element ?? null,
             sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-            speed: effectiveSpeed,  // Use prosody-adjusted speed
+            speed: effectiveSpeed,
             brevity: effectiveBrevity,
             wisdomDirective,
             voice: effectiveVoice,
             ttsProvider: memberTtsProvider,
             skipPersonaPlex: isIosPwa,
             ssml: thresholdSSML,
+            speechInstructions: turnSpeechInstructions,
           }) : null;
 
           if (thresholdTtsResult) {
@@ -1195,6 +1263,7 @@ export async function POST(req: NextRequest) {
                 ttsProvider: memberTtsProvider,
                 skipPersonaPlex: isIosPwa,
                 ssml: chunkSSML,
+                speechInstructions: turnSpeechInstructions,
               });
 
               if (result) {
