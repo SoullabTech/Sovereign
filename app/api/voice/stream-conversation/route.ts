@@ -84,9 +84,9 @@ function buildRelationalSpeechInstructions(input: {
     }
 
     const p = input.prosodyHints.pace;
-    if (p === 'slow' || p === 'steady' || (typeof p === 'number' && p < 0.3)) {
+    if (p === 'slow') {
       parts.push('Slower, more settled.');
-    } else if (p === 'brisk' || (typeof p === 'number' && p > 0.7)) {
+    } else if (p === 'brisk') {
       parts.push('Lightly quicker.');
     }
 
