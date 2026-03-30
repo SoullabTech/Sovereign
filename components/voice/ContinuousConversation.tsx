@@ -20,9 +20,10 @@ import { getFeatureFlag } from '@/lib/features/flags';
 export type ListeningMode = 'PUSH_TO_TALK' | 'HANDS_FREE' | 'OFF';
 
 export type MicState =
-  | 'IDLE'                  // Mic off, ready for user tap
+  | 'IDLE'                  // Session closed, ready for new conversation
   | 'ARMING'                // Permissions/setup in progress
   | 'LISTENING'             // Mic active, waiting for speech
+  | 'HOLDING'               // Recognition paused, conversation still open — tap to resume
   | 'CAPTURING'             // User speaking, accumulating transcript
   | 'SUBMITTING'            // Transcript sent, waiting for response
   | 'WAITING_FOR_TTS'       // MAIA processing, mic paused
@@ -93,7 +94,14 @@ function authorityGuard(args: {
     console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: 'restart_in_flight' }));
     return { allowed: false, reason: 'restart_in_flight' };
   }
-  if (args.micState !== 'IDLE' && args.micState !== 'ERROR') {
+  if (args.micState === 'HOLDING') {
+    // HOLDING = conversation open, recognition paused. Only explicit user tap can resume.
+    if (args.source !== 'user_tap' && args.source !== 'user_gesture') {
+      console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: 'holding_no_auto_restart' }));
+      return { allowed: false, reason: 'holding_no_auto_restart' };
+    }
+    // User tap from HOLDING → allowed (instant resume)
+  } else if (args.micState !== 'IDLE' && args.micState !== 'ERROR') {
     console.log('🛡️ [AUTHORITY] BLOCKED', JSON.stringify({ ...snapshot, decision: 'blocked', block_reason: `mic_state_${args.micState}` }));
     return { allowed: false, reason: `mic_state_${args.micState}` };
   }
@@ -582,16 +590,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // In that case, definitely don't restart - the mic timed out without any speech
       const hasEverSpoken = lastSpeechTime.current > 0;
       const timeSinceLastSpeech = hasEverSpoken ? Date.now() - lastSpeechTime.current : Infinity;
-      const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
+      const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 75000; // 75s: hold space for thinking, feeling, composing
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
       // In Care/Scribe modes, ALWAYS restart to stay open for the user
       if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
-        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
-        console.log('   (User can tap mic to restart when ready to speak)');
+        console.log('🔕 [onend] No recent speech (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's' : 'never spoke') + ') — entering HOLDING (conversation still open)');
         setIsListening(false);
         isListeningRef.current = false;
-        setMicState('IDLE', 'no_recent_speech');
+        setMicState('HOLDING', 'no_recent_speech');
         onRecordingStateChange?.(false);
         return;
       }

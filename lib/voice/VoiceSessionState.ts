@@ -15,9 +15,10 @@
  * Use `capabilities` for action enablement, phase for UI rendering/feedback.
  */
 export type VoicePhase =
-  | 'idle'           // Ready for user tap or auto-start
+  | 'idle'           // Session closed, ready for user tap
   | 'arming'         // Permissions/setup in progress
   | 'listening'      // Mic active, waiting for speech
+  | 'holding'        // Recognition paused, conversation still open — tap to resume
   | 'capturing'      // User speaking, accumulating transcript
   | 'submitting'     // Transcript sent to server
   | 'processing'     // MAIA processing, mic suppressed/soft

@@ -53,6 +53,7 @@ export function useVoiceSession(
       case 'IDLE': return 'idle';
       case 'ARMING': return 'arming';
       case 'LISTENING': return 'listening';
+      case 'HOLDING': return 'holding';
       case 'CAPTURING': return 'capturing';
       case 'SUBMITTING': return 'submitting';
       case 'WAITING_FOR_TTS': return 'processing';
@@ -155,7 +156,7 @@ export function useVoiceSession(
   // Derive capabilities based on phase + context
   // (These can differ for same phase under different modes)
   const capabilities: VoiceCapabilities = {
-    canStartListening: currentPhase === 'idle' && !error && !isSpeaking && !isProcessing,
+    canStartListening: (currentPhase === 'idle' || currentPhase === 'holding') && !error && !isSpeaking && !isProcessing,
     canStopListening: (currentPhase === 'listening' || currentPhase === 'capturing' || currentPhase === 'arming') && !isSpeaking,
     canInterrupt: (currentPhase === 'capturing' || currentPhase === 'submitting') && !isSpeaking,
     canSubmit: currentPhase === 'capturing' && !isSpeaking && transcript.trim().length > 0,
