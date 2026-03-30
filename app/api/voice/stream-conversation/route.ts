@@ -957,8 +957,8 @@ export async function POST(req: NextRequest) {
           activation: voiceSession.relationalStack.smoother.lastActivation?.toFixed(2),
           element: wisdomPayload?.element ?? element,
           sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-          warmth: prosodyHints.warmth?.toFixed(2),
-          pace: prosodyHints.pace?.toFixed(2),
+          warmth: prosodyHints.warmth,
+          pace: prosodyHints.pace,
           speed: effectiveSpeed?.toFixed(3),
           instructionLength: turnSpeechInstructions.length,
         }));
