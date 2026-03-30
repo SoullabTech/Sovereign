@@ -74,14 +74,35 @@ function buildRelationalSpeechInstructions(input: {
   else if (input.element === 'aether') parts.push('Spare. Open. Unhurried.');
   // earth and air = default, no extra instruction
 
-  // Prosody hints (from relational stack computed values)
+  // Prosody hints (from relational stack — can be string labels or numbers)
   if (input.prosodyHints) {
-    if (typeof input.prosodyHints.warmth === 'number' && input.prosodyHints.warmth > 0.7) {
+    const w = input.prosodyHints.warmth;
+    if (w === 'warm' || w === 'intimate' || (typeof w === 'number' && w > 0.7)) {
       parts.push('Warmer.');
+    } else if (w === 'cool' || w === 'direct' || (typeof w === 'number' && w < 0.3)) {
+      parts.push('Cooler, more direct.');
     }
-    if (typeof input.prosodyHints.pace === 'number' && input.prosodyHints.pace < 0.3) {
-      parts.push('Slower.');
+
+    const p = input.prosodyHints.pace;
+    if (p === 'slow' || p === 'steady' || (typeof p === 'number' && p < 0.3)) {
+      parts.push('Slower, more settled.');
+    } else if (p === 'brisk' || (typeof p === 'number' && p > 0.7)) {
+      parts.push('Lightly quicker.');
     }
+
+    const e = input.prosodyHints.emphasis;
+    if (e === 'strong' || e === 'pointed') {
+      parts.push('Clear emphasis on key phrases.');
+    } else if (e === 'soft' || e === 'gentle') {
+      parts.push('Gentle. No hard emphasis.');
+    }
+  }
+
+  // Mode-driven delivery
+  if (input.mode === 'care') {
+    parts.push('Therapeutic presence. Steady and holding.');
+  } else if (input.mode === 'note') {
+    parts.push('Crisp and clear. Summarizing.');
   }
 
   return parts.join(' ');
