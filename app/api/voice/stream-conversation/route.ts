@@ -44,7 +44,7 @@ function buildRelationalSpeechInstructions(input: {
   activation?: number;
   element?: string;
   sanctuary?: boolean;
-  prosodyHints?: { warmth?: number; pace?: number; emphasis?: number; intentTag?: string };
+  prosodyHints?: { warmth?: string; pace?: string; emphasis?: string; intentTag?: string };
 }): string {
   const parts: string[] = [MAIA_VOICE_BASE];
 
@@ -74,12 +74,12 @@ function buildRelationalSpeechInstructions(input: {
   else if (input.element === 'aether') parts.push('Spare. Open. Unhurried.');
   // earth and air = default, no extra instruction
 
-  // Prosody hints (from relational stack computed values)
+  // Prosody hints (semantic strings from ProsodyHints: 'cool'|'neutral'|'warm'|'very_warm' etc)
   if (input.prosodyHints) {
-    if (typeof input.prosodyHints.warmth === 'number' && input.prosodyHints.warmth > 0.7) {
+    if (input.prosodyHints.warmth === 'very_warm') {
       parts.push('Warmer.');
     }
-    if (typeof input.prosodyHints.pace === 'number' && input.prosodyHints.pace < 0.3) {
+    if (input.prosodyHints.pace === 'slow') {
       parts.push('Slower.');
     }
   }
@@ -950,8 +950,8 @@ export async function POST(req: NextRequest) {
           activation: voiceSession.relationalStack.smoother.lastActivation?.toFixed(2),
           element: wisdomPayload?.element ?? element,
           sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-          warmth: prosodyHints.warmth?.toFixed(2),
-          pace: prosodyHints.pace?.toFixed(2),
+          warmth: prosodyHints.warmth,
+          pace: prosodyHints.pace,
           speed: effectiveSpeed?.toFixed(3),
           instructionLength: turnSpeechInstructions.length,
         }));
