@@ -44,7 +44,7 @@ function buildRelationalSpeechInstructions(input: {
   activation?: number;
   element?: string;
   sanctuary?: boolean;
-  prosodyHints?: { warmth?: string; pace?: string; emphasis?: string; intentTag?: string };
+  prosodyHints?: { warmth?: number; pace?: number; emphasis?: number; intentTag?: string };
 }): string {
   const parts: string[] = [MAIA_VOICE_BASE];
 
@@ -74,14 +74,35 @@ function buildRelationalSpeechInstructions(input: {
   else if (input.element === 'aether') parts.push('Spare. Open. Unhurried.');
   // earth and air = default, no extra instruction
 
-  // Prosody hints (semantic strings from ProsodyHints: 'cool'|'neutral'|'warm'|'very_warm' etc)
+  // Prosody hints (from relational stack — can be string labels or numbers)
   if (input.prosodyHints) {
-    if (input.prosodyHints.warmth === 'very_warm') {
+    const w = input.prosodyHints.warmth;
+    if (w === 'warm' || w === 'intimate' || (typeof w === 'number' && w > 0.7)) {
       parts.push('Warmer.');
+    } else if (w === 'cool' || w === 'direct' || (typeof w === 'number' && w < 0.3)) {
+      parts.push('Cooler, more direct.');
     }
-    if (input.prosodyHints.pace === 'slow') {
-      parts.push('Slower.');
+
+    const p = input.prosodyHints.pace;
+    if (p === 'slow' || p === 'steady' || (typeof p === 'number' && p < 0.3)) {
+      parts.push('Slower, more settled.');
+    } else if (p === 'brisk' || (typeof p === 'number' && p > 0.7)) {
+      parts.push('Lightly quicker.');
     }
+
+    const e = input.prosodyHints.emphasis;
+    if (e === 'strong' || e === 'pointed') {
+      parts.push('Clear emphasis on key phrases.');
+    } else if (e === 'soft' || e === 'gentle') {
+      parts.push('Gentle. No hard emphasis.');
+    }
+  }
+
+  // Mode-driven delivery
+  if (input.mode === 'care') {
+    parts.push('Therapeutic presence. Steady and holding.');
+  } else if (input.mode === 'note') {
+    parts.push('Crisp and clear. Summarizing.');
   }
 
   return parts.join(' ');
@@ -118,7 +139,6 @@ import {
 } from '@/lib/voice/personaplex/personaPlexClient';
 import { buildProsodyHints } from '@/lib/voice/prosody/buildProsodyHints';
 import { scaleProsody } from '@/lib/voice/prosody/scaleProsody';
-import { applyMemberOffsets } from '@/lib/voice/prosody/applyMemberOffsets';
 import {
   applyProsodyToText as applyProsodyHintsToText,
   mapProsodyToSpeed,
@@ -907,20 +927,7 @@ export async function POST(req: NextRequest) {
         });
 
         // Scale hints by user's Range of Effect preference
-        const scaledHints = scaleProsody(baseHints, effectiveRange);
-
-        // Apply member voice offsets from Settings/Voice (multiplicative, bounded)
-        // Canonical order: buildProsodyHints → scaleProsody → applyMemberOffsets → aetherGuard
-        const prosodyHints: ProsodyHints = applyMemberOffsets(scaledHints, voiceOffsets);
-
-        // Log member offset application for observability
-        if (voiceOffsets && (voiceOffsets.pace || voiceOffsets.warmth || voiceOffsets.poetry || voiceOffsets.directiveness || voiceOffsets.energy)) {
-          console.info('[prosody.member]', JSON.stringify({
-            offsets: voiceOffsets,
-            pre: { pace: scaledHints.pace, warmth: scaledHints.warmth, energy: scaledHints.energy },
-            post: { pace: prosodyHints.pace, warmth: prosodyHints.warmth, energy: prosodyHints.energy },
-          }));
-        }
+        const prosodyHints: ProsodyHints = scaleProsody(baseHints, effectiveRange);
 
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
@@ -950,8 +957,8 @@ export async function POST(req: NextRequest) {
           activation: voiceSession.relationalStack.smoother.lastActivation?.toFixed(2),
           element: wisdomPayload?.element ?? element,
           sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-          warmth: prosodyHints.warmth,
-          pace: prosodyHints.pace,
+          warmth: prosodyHints.warmth?.toFixed(2),
+          pace: prosodyHints.pace?.toFixed(2),
           speed: effectiveSpeed?.toFixed(3),
           instructionLength: turnSpeechInstructions.length,
         }));
@@ -1266,18 +1273,11 @@ export async function POST(req: NextRequest) {
                 timer.mark('tts_0_requested');
               }
 
-              // Per-chunk speed variation (gated: only when pace isn't brisk)
-              // Opening sentence slightly forward, subsequent sentences settle
-              const useChunkVariation = prosodyHints.pace !== 'brisk' && !sanctuary;
-              const chunkSpeed = useChunkVariation && chunkIndex === 0
-                ? Math.min(1.15, effectiveSpeed * 1.02)  // Opening: 2% forward
-                : effectiveSpeed;
-
               const result = await synthesizeWithFallback(safeChunkText, {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
-                speed: chunkSpeed,
+                speed: effectiveSpeed,
                 brevity: effectiveBrevity,
                 wisdomDirective,
                 voice: effectiveVoice,
