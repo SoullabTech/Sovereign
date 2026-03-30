@@ -508,6 +508,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setIsListening(false);
           isListeningRef.current = false;
           wantsContinuousConversationRef.current = false; // Prevent auto-restart
+          setMicState('IDLE', 'network_error_stop');
           onRecordingStateChange?.(false);
           return;
         }
@@ -590,6 +591,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
+        setMicState('IDLE', 'no_recent_speech');
         onRecordingStateChange?.(false);
         return;
       }
