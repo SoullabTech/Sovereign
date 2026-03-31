@@ -95,6 +95,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/partner/', public: true, notes: 'Partner portals' },
   { exact: '/partner-welcome', public: true, notes: 'Partner welcome' },
 
+  // Wisdom Keepers (public)
+  { prefix: '/wisdom-keepers', public: true, notes: 'Wisdom keepers pages' },
+
   // Community browse (public, no contribution)
   { exact: '/maia/community', public: true, notes: 'Community hub browse' },
   { exact: '/maia/community/library', public: true, notes: 'Library browse' },
