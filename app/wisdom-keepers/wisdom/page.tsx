@@ -7,12 +7,16 @@
  *
  * Three layers:
  * 1. Orientation — what this place is
- * 2. Emerging Reflections — rotating curated wisdom
- * 3. Pathways & Sources — searchable domain catalog
+ * 2. Emerging Reflections — rotating curated wisdom (actionable)
+ * 3. Pathways & Sources — searchable domain catalog (actionable)
+ *
+ * Every quote, source, and domain is a doorway into MAIA conversation
+ * via the seedMaiaPrompt system (localStorage → auto-send on /maia mount).
  */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -20,8 +24,10 @@ import {
   Brain,
   ChevronDown,
   ChevronUp,
+  Compass,
   Heart,
   Leaf,
+  MessageCircle,
   Moon,
   RefreshCw,
   Search,
@@ -33,6 +39,7 @@ import {
 import { WISDOM_SOURCES, type WisdomDomain } from '@/lib/wisdom/wisdomSources';
 import { WISDOM_QUOTES, type WisdomQuote } from '@/lib/wisdom/WisdomQuotes';
 import { WISDOM_FACETS } from '@/lib/wisdom/WisdomFacets';
+import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 
 // ---------------------------------------------------------------------------
 // Icon resolver — maps string icon names from data to Lucide components
@@ -95,6 +102,12 @@ function getFacetQuestion(voiceKey?: string): string | null {
   return facet?.coreQuestion ?? null;
 }
 
+function getFacetName(voiceKey?: string): string | null {
+  if (!voiceKey) return null;
+  const facet = (WISDOM_FACETS as Record<string, { tradition?: string }>)[voiceKey];
+  return facet?.tradition ?? null;
+}
+
 function matchesQuery(domain: WisdomDomain, source: { title: string; author: string; focus: string }, query: string): boolean {
   if (!query.trim()) return true;
   const hay = [domain.title, source.title, source.author, source.focus].join(' ').toLowerCase();
@@ -102,10 +115,39 @@ function matchesQuery(domain: WisdomDomain, source: { title: string; author: str
 }
 
 // ---------------------------------------------------------------------------
+// Action button component
+// ---------------------------------------------------------------------------
+
+function ActionButton({
+  onClick,
+  children,
+  variant = 'default',
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  variant?: 'default' | 'primary';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition
+        ${variant === 'primary'
+          ? 'bg-[#D4B896]/20 text-[#D4B896] border border-[#D4B896]/30 hover:bg-[#D4B896]/30'
+          : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80'
+        }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export default function WisdomPage() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [openDomains, setOpenDomains] = useState<Record<string, boolean>>({});
   const [featuredQuotes, setFeaturedQuotes] = useState<WisdomQuote[]>(() => pickRandomQuotes(4));
@@ -128,6 +170,51 @@ export default function WisdomPage() {
     setOpenDomains((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const refreshQuotes = () => setFeaturedQuotes(pickRandomQuotes(4));
+
+  // ── Seed + Navigate to MAIA ──
+  const goToMaia = useCallback((prompt: string, sourceLabel: string) => {
+    seedMaiaPrompt({
+      prompt,
+      source: 'wisdom-keepers',
+      sourceLabel,
+      returnTo: '/wisdom-keepers/wisdom',
+      tone: 'exploratory',
+    });
+    router.push('/maia');
+  }, [router]);
+
+  // Quote actions
+  const reflectOnQuote = useCallback((q: WisdomQuote) => {
+    const tradition = getFacetName(q.voice) || q.voice || 'this tradition';
+    goToMaia(
+      `I want to reflect on this: "${q.text}" What might this mean for where I am right now?`,
+      `Wisdom: ${tradition}`,
+    );
+  }, [goToMaia]);
+
+  const exploreTradition = useCallback((q: WisdomQuote) => {
+    const tradition = getFacetName(q.voice) || q.voice || 'this tradition';
+    goToMaia(
+      `Tell me about the ${tradition} tradition and how it might be relevant to my inner work right now.`,
+      `Tradition: ${tradition}`,
+    );
+  }, [goToMaia]);
+
+  // Source action
+  const exploreSource = useCallback((source: { title: string; author: string; focus: string }) => {
+    goToMaia(
+      `I'm curious about "${source.title}" by ${source.author}. What does this source offer for the kind of inner work I might be doing right now?`,
+      `Source: ${source.title}`,
+    );
+  }, [goToMaia]);
+
+  // Domain pathway action
+  const enterPathway = useCallback((domain: WisdomDomain) => {
+    goToMaia(
+      `Guide me into the ${domain.title} pathway. What are the key themes, and where should I begin?`,
+      `Pathway: ${domain.title}`,
+    );
+  }, [goToMaia]);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] text-[#f6f1e8]">
@@ -172,9 +259,8 @@ export default function WisdomPage() {
             </p>
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-white/55">
-              This is not a content feed. It is a sanctuary of sources — wisdom traditions,
-              foundational texts, and lineages of inquiry gathered for reflection,
-              not consumption.
+              Tap any quote, source, or pathway to explore it with MAIA.
+              This is a threshold into practice, not a reference page.
             </p>
           </motion.div>
         </section>
@@ -213,16 +299,30 @@ export default function WisdomPage() {
                     &ldquo;{q.text}&rdquo;
                   </p>
 
-                  <div className="text-xs text-[#D4B896]">
+                  <div className="text-xs text-[#D4B896] mb-1">
                     {q.source || q.voice}
                   </div>
 
                   {facetQuestion && (
-                    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/50">
+                    <div className="mb-3 rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-white/50">
                       <span className="text-[#D4B896]/80">Inquiry:</span>{' '}
                       {facetQuestion}
                     </div>
                   )}
+
+                  {/* Quote actions */}
+                  <div className="flex flex-wrap gap-2 mt-auto pt-2">
+                    <ActionButton variant="primary" onClick={() => reflectOnQuote(q)}>
+                      <MessageCircle className="h-3 w-3" />
+                      Reflect with MAIA
+                    </ActionButton>
+                    {q.voice && (
+                      <ActionButton onClick={() => exploreTradition(q)}>
+                        <Compass className="h-3 w-3" />
+                        Explore tradition
+                      </ActionButton>
+                    )}
+                  </div>
                 </motion.article>
               );
             })}
@@ -291,18 +391,38 @@ export default function WisdomPage() {
                     }
                   </button>
 
+                  {/* Pathway action bar */}
+                  {isOpen && (
+                    <div className="px-5 py-3 border-t border-white/5 bg-white/[0.02]">
+                      <ActionButton variant="primary" onClick={() => enterPathway(domain)}>
+                        <Compass className="h-3 w-3" />
+                        Enter this pathway with MAIA
+                      </ActionButton>
+                    </div>
+                  )}
+
                   {/* Source list */}
                   {isOpen && (
                     <div className="border-t border-white/5 bg-black/20">
                       <div className="divide-y divide-white/5">
                         {domain.sources.map((source, sIdx) => (
-                          <div key={sIdx} className="px-5 py-3 hover:bg-white/[0.03] transition">
+                          <div
+                            key={sIdx}
+                            className="group px-5 py-3 hover:bg-white/[0.03] transition cursor-pointer"
+                            onClick={() => exploreSource(source)}
+                          >
                             <div className="flex items-start gap-3">
                               <BookOpen className="mt-0.5 h-4 w-4 text-white/25 shrink-0" />
-                              <div className="min-w-0">
+                              <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium text-white/90">{source.title}</div>
                                 <div className="text-xs text-[#D4B896]/70 mt-0.5">{source.author}</div>
                                 <div className="text-xs text-white/45 mt-1">{source.focus}</div>
+                              </div>
+                              <div className="opacity-0 group-hover:opacity-100 transition shrink-0 self-center">
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-[#D4B896]/20 px-2.5 py-1 text-[11px] text-[#D4B896] border border-[#D4B896]/30">
+                                  <MessageCircle className="h-3 w-3" />
+                                  Explore
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -325,9 +445,8 @@ export default function WisdomPage() {
             </div>
             <p className="max-w-3xl text-sm leading-7 text-white/60">
               Read slowly. Return over time. Let themes constellate rather than
-              resolve too quickly. Bring what stirs you into MAIA, reflection,
-              journaling, or council. Wisdom becomes alive when it enters
-              relationship.
+              resolve too quickly. Tap anything that stirs you to explore it with MAIA.
+              Wisdom becomes alive when it enters relationship.
             </p>
             <p className="mt-3 text-xs text-white/40">
               MAIA doesn&apos;t quote sources directly. She weaves their wisdom into presence.
