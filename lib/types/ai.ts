@@ -35,3 +35,40 @@ export interface AIOptions {
   systemPrompt?: string;
   stream?: boolean;
 }
+
+// === Relational Routing v1 ===
+
+export type MaiaIntent =
+  | 'journal_entry'
+  | 'reflection_mark'
+  | 'idea_emergence'
+  | 'decision_point'
+  | 'change_process'
+  | 'unknown';
+
+export type RoutedCapability =
+  | 'journal'
+  | 'reflection'
+  | 'ideas'
+  | 'decisions'
+  | 'changes'
+  | 'conversation';
+
+export interface IntentRoute {
+  intent: MaiaIntent;
+  capability: RoutedCapability;
+  openUi: 'none' | 'panel' | 'card';
+}
+
+export interface MaiaUiAction {
+  type:
+    | 'open_journal'
+    | 'open_reflection'
+    | 'open_ideas'
+    | 'open_decisions'
+    | 'open_changes'
+    | 'none';
+  label?: string;
+  leadIn?: string;
+  confidence?: number;
+}

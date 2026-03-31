@@ -162,6 +162,9 @@ import { BookPlus } from 'lucide-react';
 // Reflection Capsules - "Capture the Spirit"
 import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
 import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
+import RelationalDoorway from '@/components/maia/RelationalDoorway';
+import { useFeatureFlags } from '@/lib/utils/feature-flags';
+import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
@@ -476,6 +479,9 @@ interface ConversationMessage {
   } | null;
   // 🌌 ASTROLOGY HANDOFF: Structured transition into the Cosmic Blueprint
   astrologyHandoff?: import('@/lib/astrology/astrologyHandoff').AstrologyHandoff | null;
+  // 🚪 RELATIONAL ROUTING: intent-driven doorway
+  intent?: import('@/lib/types/ai').MaiaIntent;
+  uiAction?: import('@/lib/types/ai').MaiaUiAction;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -840,6 +846,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
+
+  // 🚪 RELATIONAL ROUTING: intent-driven doorways
+  const { flags: featureFlags } = useFeatureFlags();
+  const [doorwayDismissedAt, setDoorwayDismissedAt] = useState<number | null>(null);
+  const [lastDoorwayTimestamp, setLastDoorwayTimestamp] = useState(0);
 
   // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
   const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
@@ -3886,6 +3897,32 @@ I'm not sure what I'm feeling yet.`;
     handleCaptureSpiritRef.current = handleCaptureSpirit;
   }, [handleCaptureSpirit]);
 
+  // 🚪 RELATIONAL ROUTING: Doorway action handler
+  const handleDoorwayAction = useCallback((action: MaiaUiAction) => {
+    setLastDoorwayTimestamp(Date.now());
+    setDoorwayDismissedAt(Date.now());
+    switch (action.type) {
+      case 'open_journal':
+        window.location.href = '/journal';
+        break;
+      case 'open_reflection':
+        // Use existing capture spirit flow
+        if (handleCaptureSpiritRef.current) {
+          handleCaptureSpiritRef.current();
+        }
+        break;
+      case 'open_ideas':
+        window.location.href = '/dashboard/ideas';
+        break;
+      case 'open_decisions':
+        window.location.href = '/dashboard/decisions';
+        break;
+      case 'open_changes':
+        window.location.href = '/dashboard/changes';
+        break;
+    }
+  }, []);
+
   // Update captured capsule (quick edits)
   const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
     if (!capturedCapsule) return;
@@ -5106,7 +5143,15 @@ I'm not sure what I'm feeling yet.`;
         consultation: responseData.consultation || null,
         // 🌌 ASTROLOGY HANDOFF: Structured threshold transition into the Cosmic Blueprint
         astrologyHandoff: responseData.astrologyHandoff || null,
+        // 🚪 RELATIONAL ROUTING: intent-driven doorway
+        intent: responseData.intent || undefined,
+        uiAction: responseData.uiAction || undefined,
       };
+
+      // 🚪 RELATIONAL ROUTING: Reset doorway dismissal for new turn
+      if (responseData.uiAction && responseData.uiAction.type !== 'none') {
+        setDoorwayDismissedAt(null);
+      }
 
       // 🌀 AIN: Track field wisdom presence at conversation level
       if (responseData.fieldState?.wisdomPresent) {
@@ -7894,6 +7939,28 @@ I'm not sure what I'm feeling yet.`;
                     </motion.div>
                     );
                   })}
+                  {/* 🚪 RELATIONAL ROUTING: Intent-driven doorway after last oracle message */}
+                  {(() => {
+                    const lastMsg = messages[messages.length - 1];
+                    const dismissedRecently = doorwayDismissedAt && (Date.now() - doorwayDismissedAt < 15000);
+                    const shouldShow = featureFlags.relationalRouting
+                      && lastMsg?.role === 'oracle'
+                      && lastMsg?.uiAction
+                      && lastMsg.uiAction.type !== 'none'
+                      && !dismissedRecently
+                      && (Date.now() - lastDoorwayTimestamp > 15000);
+                    return shouldShow ? (
+                      <RelationalDoorway
+                        action={lastMsg.uiAction!}
+                        onSelect={handleDoorwayAction}
+                        onDismiss={() => {
+                          setDoorwayDismissedAt(Date.now());
+                          setLastDoorwayTimestamp(Date.now());
+                        }}
+                        visible={true}
+                      />
+                    ) : null;
+                  })()}
                   {/* Scroll anchor */}
                   <div ref={messagesEndRef} />
                 </div>
