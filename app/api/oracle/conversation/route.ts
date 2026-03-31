@@ -642,7 +642,8 @@ export async function POST(request: NextRequest) {
       astrologyContext,
       preferredAssistantName,
       activeReportContext,
-      memberWebPrompt
+      memberWebPrompt,
+      userId
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1480,7 +1481,8 @@ async function generateSpiralogicResponseWithLLM(
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
   activeReportContext?: ActiveReportContext | null,
-  memberWebPrompt?: string
+  memberWebPrompt?: string,
+  userId?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
