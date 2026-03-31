@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const revalidate = false;
 import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
+import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import {
   ruptureDetectionService,
   enhanceResponseIfRuptureDetected,
@@ -2349,6 +2350,14 @@ This user is in guest mode (no authenticated identity).
       console.log(`[Chat API] 🌀 State Vector (inferred/full): ${finalStateVector.primary.element} | kairos: ${finalStateVector.kairos.assessment} | confidence: ${finalStateVector.confidence.toFixed(2)}`);
     }
 
+    // 🚪 RELATIONAL ROUTING: detect intent from the conversational field (user + MAIA)
+    const intentResult = detectIntent({ userInput: message, maiaResponse: cleanedText });
+    const intentRoute = intentResult.intent !== 'unknown' ? getIntentRoute(intentResult.intent) : null;
+    const doorwayAction = intentRoute ? buildUiAction(intentRoute, intentResult.confidence) : null;
+    if (intentResult.intent !== 'unknown') {
+      console.log('[Doorway] shown', { intent: intentResult.intent, confidence: intentResult.confidence });
+    }
+
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
@@ -2396,6 +2405,9 @@ This user is in guest mode (no authenticated identity).
       fieldState: fieldWisdomAddendum ? {
         wisdomPresent: true,
       } : null,
+      // 🚪 RELATIONAL ROUTING: intent-driven doorway for frontend rendering
+      intent: doorwayAction ? intentResult.intent : undefined,
+      uiAction: doorwayAction?.type !== 'none' ? doorwayAction : undefined,
       metadata: {
         ...orchestratorResult.metadata,
         consciousnessLayers: orchestratorResult.metadata.consciousnessLayers,
