@@ -59,6 +59,8 @@ import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, 
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
+import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
+import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
@@ -1732,6 +1734,42 @@ async function generateSpiralogicResponseWithLLM(
     });
   }
 
+  // ────────────────────────────────────────────────────────────────
+  // CM Practitioner Environment — four-layer perceptual field
+  // Injected after systemPrompt, before reportContextBlock.
+  // Auto-decays: layer focus applies to this response only.
+  // ────────────────────────────────────────────────────────────────
+  let cmEnvironmentBlock = '';
+  let cmState: CMEnvironmentState | null = null;
+  try {
+    const cmRow = await query(
+      `SELECT cm_environment_enabled, cm_active_layer, cm_layer_weights FROM members WHERE id = $1`,
+      [userId]
+    );
+    if (cmRow.rows[0]?.cm_environment_enabled) {
+      const detection = detectLayerIntent(message);
+      cmState = {
+        activeLayer: detection.layer || (cmRow.rows[0].cm_active_layer as any) || 'weave',
+        layerWeights: cmRow.rows[0].cm_layer_weights || { energy: 0.2, symbolic: 0.3, embodiment: 0.3, integration: 0.2 },
+        source: detection.layer ? 'detected' : (cmRow.rows[0].cm_active_layer !== 'weave' ? 'profile' : 'default'),
+        confidence: detection.layer ? detection.confidence : 1.0,
+      };
+      cmEnvironmentBlock = getCMEnvironmentBlock(cmState);
+      console.log(`[Oracle] cm-environment { layer: ${cmState.activeLayer}, source: ${cmState.source}, confidence: ${cmState.confidence.toFixed(2)}, blockLength: ${cmEnvironmentBlock.length} }`);
+
+      // Fire-and-forget: store layer signal if detected
+      if (detection.layer) {
+        storeCMLayerSignal(userId, detection.layer, {
+          resonanceStrength: detection.confidence,
+          context: message.substring(0, 200),
+        });
+      }
+    }
+  } catch (cmError) {
+    // Non-blocking — MAIA proceeds without CM environment
+    console.warn('[Oracle] CM environment load failed (non-critical):', cmError);
+  }
+
   let finalSystemPrompt: string;
   let memoryToolActive = false;
 
@@ -1746,6 +1784,7 @@ async function generateSpiralogicResponseWithLLM(
 
     finalSystemPrompt = [
       systemPrompt,
+      cmEnvironmentBlock,
       masterOverlay,          // Master identity (immediately after core)
       voiceMethodConstraints,
       reportContextBlock,
@@ -1760,6 +1799,7 @@ async function generateSpiralogicResponseWithLLM(
     // Standard path: direct injection (existing behavior, zero change)
     finalSystemPrompt = [
       systemPrompt,
+      cmEnvironmentBlock,
       masterOverlay,          // Master identity (immediately after core)
       voiceMethodConstraints,
       reportContextBlock,

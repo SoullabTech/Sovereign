@@ -20,6 +20,7 @@ fieldTraining: boolean;               // V1: corrections, examples, preferences,
   memoryToolPilot: boolean;             // Server-side: Anthropic Memory Tool for selective retrieval (env: MAIA_MEMORY_TOOL_PILOT)
   masterDocumentUpload: boolean;        // Master field: document upload + extraction for Virtual Self training
   masterFields: boolean;                // Multi-master intelligence: field-scoped builds layered on MAIA
+  cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -39,6 +40,7 @@ fieldTraining: false,               // Off until training UI ready
   memoryToolPilot: false,             // Off; activate via MAIA_MEMORY_TOOL_PILOT=true in env
   masterDocumentUpload: false,        // Off until Jondi v1 validation
   masterFields: false,                // Off until master builds validated
+  cmPractitionerEnvironment: false,   // Off until v1 tested
 };
 
 /**
