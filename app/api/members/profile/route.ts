@@ -103,6 +103,7 @@ export async function GET(request: NextRequest) {
           m.birth_location_name, m.birth_timezone,
           m.astrology_consent,
           m.nostr_pubkey, m.nostr_registered_at,
+          m.cm_environment_enabled, m.cm_active_layer, m.cm_layer_weights,
           ms.circle_tier, ms.circle_amount, ms.circle_joined_at
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -184,6 +185,10 @@ export async function GET(request: NextRequest) {
       // Nostr sovereign messaging identity (public key only — private key never stored)
       nostrPubkey: member.nostr_pubkey ?? null,
       nostrRegisteredAt: member.nostr_registered_at ?? null,
+      // CM Practitioner Environment
+      cmEnvironmentEnabled: member.cm_environment_enabled ?? false,
+      cmActiveLayer: member.cm_active_layer ?? 'weave',
+      cmLayerWeights: member.cm_layer_weights ?? null,
       correlationId,
     }, { headers });
 
