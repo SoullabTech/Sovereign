@@ -156,7 +156,7 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
     description: 'World mythology, shamanic traditions, and archetypal narratives',
     sources: [
       { title: 'The Shaman\'s Body', author: 'Arnold Mindell', focus: 'Process-oriented shamanism' },
-      { title: 'Jung and Shamanism in Dialogue', author: 'Academic Study', focus: 'Soul retrieval psychology' },
+      { title: 'Jung and Shamanism in Dialogue', author: 'C. Michael Smith', focus: 'Soul retrieval psychology' },
       { title: 'How to Know Higher Worlds', author: 'Rudolf Steiner', focus: 'Esoteric development' },
       { title: 'Norse Mythology', author: 'Mythological Text', focus: 'Northern tradition' },
       { title: 'Ancient Sumerian Mythology', author: 'Gilgamesh and Beyond', focus: 'Mesopotamian origins' },
