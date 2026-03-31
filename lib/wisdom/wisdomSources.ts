@@ -146,6 +146,7 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
       { title: 'Handbook of Panpsychism', author: 'Academic Collection', focus: 'Mind in nature' },
       { title: 'Postmodern Stress Disorder', author: 'Cultural Critique', focus: 'Dopamine and left-brain dominance' },
       { title: 'Tree of Knowledge', author: 'Maturana & Varela', focus: 'Autopoiesis and cognition' },
+      { title: 'The Significance of Free Will', author: 'Robert Kane', focus: 'Libertarian free will, self-forming actions, and the roots of genuine human agency' },
     ],
   },
   {
