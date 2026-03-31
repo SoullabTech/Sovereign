@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  * Do not infer these deeper in the stack.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -695,42 +696,26 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const providerUsed = rawProvider || 'unknown';
     const modelUsed = rawModel || 'unknown';
 
-    // 🎯 CLOSING ANCHOR: Conditional, rare, skippable (ported from between/chat)
-    // Silence is a valid ending. Only add closure when the response genuinely needs it.
+    // 🎯 CLOSING ANCHOR: Deterministic post-generation repair (ported from between/chat)
+    // Conditions: Care/counsel mode + turn 3+ + meaningful length + no anchor already present + not sanctuary
+    // Applied before telemetry so the shape evaluator sees the final anchored text.
     let sovereignText = orchestratorResult.text ?? '';
     const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
-
-    const shouldOfferClosure = (text: string): boolean => {
-      const trimmed = text.trim();
-      const NATURAL_LANDING = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest|let that breathe|stop reaching|that may be enough|stay there|that's the turn|let that stand|enough for now/i;
-      if (NATURAL_LANDING.test(trimmed)) return false;
-      if (trimmed.endsWith('?')) return false;
-      if (trimmed.split(/\s+/).length < 25) return false;
-      const DIRECTIVE = /\btry\b|do this|take (one |a )?step|consider\b|start by|here's what|you could|i'd suggest|one thing to/i;
-      if (DIRECTIVE.test(trimmed)) return false;
-      const lastSentence = trimmed.split(/[.!]\s+/).pop() ?? '';
-      const STRONG_CLOSE = /that matters|that's real|that's worth|that counts|you know this|you already know|trust that/i;
-      if (/\.\s*$/.test(trimmed) && STRONG_CLOSE.test(lastSentence)) return false;
-      return Math.random() < 0.35;
-    };
-
-    if (_conversationMode === 'counsel' &&
-        _historyLen >= 2 &&
-        sovereignText.length > 120 &&
-        !isSanctuary &&
-        shouldOfferClosure(sovereignText)) {
-      const closures = [
-        '\n\nYou don\'t need to resolve this right now.',
-        '\n\nLet that be enough for now.',
-        '\n\nNothing needs to be done with this yet.',
-        '\n\nThat can just be what it is.',
-        '\n\nNo next step required.',
-      ];
-      const anchor = closures[Math.floor(Math.random() * closures.length)];
+    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
+    const isCareAnchorEligible =
+      _conversationMode === 'counsel' &&
+      _historyLen >= 2 &&
+      sovereignText.length > 120 &&
+      !isSanctuary &&
+      !ANCHOR_ALREADY_PRESENT.test(sovereignText);
+    if (isCareAnchorEligible) {
+      const anchor = sovereignText.trimEnd().endsWith('?')
+        ? '\n\nSit with that for a moment.'
+        : '\n\nYou might sit with that tonight and see what arrives.';
       sovereignText = sovereignText + anchor;
-      console.info('[closing-anchor] appended (conditional) — mode=counsel turn=%d responseLen=%d',
+      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
         _historyLen + 1, sovereignText.length);
     }
 
@@ -807,6 +792,14 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       })();
     }
 
+    // 🚪 RELATIONAL ROUTING: detect intent from the conversational field
+    const intentResult = detectIntent({ userInput: message as string, maiaResponse: sovereignText });
+    const intentRoute = intentResult.intent !== 'unknown' ? getIntentRoute(intentResult.intent) : null;
+    const doorwayAction = intentRoute ? buildUiAction(intentRoute, intentResult.confidence) : null;
+    if (intentResult.intent !== 'unknown') {
+      console.log('[Doorway] shown', { intent: intentResult.intent, confidence: intentResult.confidence });
+    }
+
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: sovereignText,  // Uses closing-anchored text for counsel mode turns
@@ -841,6 +834,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
         id: session.id,
         turns: session.turn_count,
       },
+      // 🚪 RELATIONAL ROUTING: intent-driven doorway for frontend rendering
+      intent: doorwayAction ? intentResult.intent : undefined,
+      uiAction: doorwayAction?.type !== 'none' ? doorwayAction : undefined,
       metadata: {
         processingProfile: orchestratorResult.processingProfile,
         processingTimeMs: orchestratorResult.processingTimeMs,
