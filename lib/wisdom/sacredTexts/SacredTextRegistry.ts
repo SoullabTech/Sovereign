@@ -22,6 +22,7 @@ import type {
 import { toSacredPassage } from './types';
 import { QURAN_ENTRIES, QURAN_DISCLAIMER } from './quran';
 import { TAO_ENTRIES, TAO_DISCLAIMER } from './tao';
+import { GITA_ENTRIES, GITA_DISCLAIMER } from './gita';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // REGISTRY
@@ -30,11 +31,13 @@ import { TAO_ENTRIES, TAO_DISCLAIMER } from './tao';
 const ALL_ENTRIES: SacredPassageEntry[] = [
   ...QURAN_ENTRIES,
   ...TAO_ENTRIES,
+  ...GITA_ENTRIES,
 ];
 
 const DISCLAIMERS: Partial<Record<SacredTradition, TraditionDisclaimer>> = {
   quran: QURAN_DISCLAIMER,
   tao: TAO_DISCLAIMER,
+  gita: GITA_DISCLAIMER,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
