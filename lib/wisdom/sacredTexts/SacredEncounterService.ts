@@ -4,135 +4,110 @@
  * Governing principle:
  *   MAIA introduces the passage and then gets out of the way.
  *
- * This is an encounter layer, not a delivery system.
- * Passages are rare, non-intrusive, and never explained.
- *
  * Hard rules:
  * - Never on the first reply
  * - Minimum 3 user turns before eligible
- * - Max 1 passage per session (tracked by sessionId)
+ * - Max 1 passage per session
  * - Block for crisis language, urgent practical requests, analytical mode
+ * - Max 1 tradition switch per session
  * - MAIA does not explain why the passage was chosen
- * - MAIA does not interpret the passage after showing it
- * - Reason codes are internal only — never surfaced
  */
 
-import { QURAN_ENTRIES, type QuranEntry } from './quran';
+import type {
+  SacredPassage,
+  SacredTradition,
+  Element,
+  EncounterSessionContext,
+  TraditionDisclaimer,
+} from './types';
+import { toSacredPassage } from './types';
+import { selectSacredPassage } from './selectSacredPassage';
+import { SacredTextRegistry } from './SacredTextRegistry';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INPUT TYPES
+// INPUT / OUTPUT TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface EncounterInput {
-  /** The user's latest message text */
   latestMessage: string;
-  /** Recent conversation turns (role + content pairs), most recent last */
   recentTurns: Array<{ role: 'user' | 'assistant'; content: string }>;
-  /** Session or conversation identifier — used for once-per-session tracking */
   sessionId: string;
-  /** Current timestamp (ISO string or Date) */
   timestamp: string | Date;
-  /** Optional affect data from upstream detection */
   affect?: {
     mood?: 'bright' | 'concerned' | 'calm';
     archetype?: 'Fire' | 'Water' | 'Earth' | 'Air' | 'Aether';
   };
-  /** Current conversation mode if available */
-  mode?: string;
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// OUTPUT TYPES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export interface SacredPassagePayload {
-  id: string;
-  title: string;
-  citation: string;
-  arabic?: string;
-  translation: string;
-  translator: string;
-  contextualFraming?: string;
-  reflectionPrompts?: string[];
-  integrationPractice?: string;
+  /** SpiralogicCell element if available */
+  element?: Element;
 }
 
 export interface EncounterResult {
-  /** The passage payload to render, or null if no encounter */
-  passage: SacredPassagePayload;
-  /** The introduction line MAIA uses before the passage */
+  passage: SacredPassage;
   introduction: string;
-  /** Optional single follow-up question (undefined = silence, which is v1 default) */
   followUp?: string;
+  disclaimer?: TraditionDisclaimer;
+  showDisclaimer: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INTERNAL TYPES (never exposed)
+// INTERNAL TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/** Internal reason codes — for logging/debugging only, never surfaced */
-type GateReason =
-  | 'too_early'           // fewer than MIN_TURNS user messages
-  | 'already_shown'       // passage already surfaced this session
-  | 'crisis_block'        // crisis/safety language detected
-  | 'practical_block'     // user seeking concrete advice/steps
-  | 'analytical_block'    // analytical/evaluative mode
-  | 'fast_exchange'       // rapid back-and-forth (short turns)
-  | 'no_state_match'      // no detectable encounter state
-  | 'no_passage_found';   // state matched but no passage (shouldn't happen)
-
-/** Detectable lived states that may resonate with a passage */
-type EncounterState =
-  | 'strain'       // overwhelm, pressure, difficulty
-  | 'searching'    // seeking direction, feeling lost
-  | 'remorse'      // regret, desire for repair
-  | 'restlessness' // agitation, inability to settle
-  | 'endurance';   // sustained effort, needing steadfastness
+type EncounterState = 'strain' | 'searching' | 'remorse' | 'restlessness' | 'endurance';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const MIN_USER_TURNS = 3;
-const FAST_EXCHANGE_THRESHOLD = 40; // avg chars per recent user message
+const FAST_EXCHANGE_THRESHOLD = 40;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SESSION TRACKING (in-memory, per-process)
-//
-// Simple Map keyed by sessionId. Entries are cleaned on check if stale.
-// This is intentionally lightweight — no database, no persistence.
-// Server restart resets tracking, which is acceptable (errs toward showing
-// fewer passages, not more, since most sessions don't span restarts).
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const sessionLog = new Map<string, { shownAt: string; passageId: string }>();
-const SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
-
-function hasShownThisSession(sessionId: string, now: Date): boolean {
-  const entry = sessionLog.get(sessionId);
-  if (!entry) return false;
-  // Expire stale entries
-  if (now.getTime() - new Date(entry.shownAt).getTime() > SESSION_TTL_MS) {
-    sessionLog.delete(sessionId);
-    return false;
-  }
-  return true;
+interface SessionRecord {
+  shownAt: string;
+  passageId: string;
+  tradition: SacredTradition;
+  sessionContext: EncounterSessionContext;
 }
 
-function recordShown(sessionId: string, passageId: string, now: Date): void {
-  sessionLog.set(sessionId, { shownAt: now.toISOString(), passageId });
-  // Lazy cleanup: prune entries older than TTL
+const sessionLog = new Map<string, SessionRecord>();
+const SESSION_TTL_MS = 4 * 60 * 60 * 1000;
+
+function getSessionContext(sessionId: string, now: Date): EncounterSessionContext & { alreadyShown: boolean } {
+  const record = sessionLog.get(sessionId);
+  if (!record) {
+    return { activeTradition: undefined, hasSwitchedTradition: false, disclaimerShown: false, alreadyShown: false };
+  }
+  // Expire stale
+  if (now.getTime() - new Date(record.shownAt).getTime() > SESSION_TTL_MS) {
+    sessionLog.delete(sessionId);
+    return { activeTradition: undefined, hasSwitchedTradition: false, disclaimerShown: false, alreadyShown: false };
+  }
+  return { ...record.sessionContext, alreadyShown: true };
+}
+
+function recordShown(sessionId: string, passageId: string, tradition: SacredTradition, prevContext: EncounterSessionContext, now: Date): EncounterSessionContext {
+  const hasSwitched = prevContext.activeTradition !== undefined && prevContext.activeTradition !== tradition;
+  const ctx: EncounterSessionContext = {
+    activeTradition: tradition,
+    hasSwitchedTradition: prevContext.hasSwitchedTradition || hasSwitched,
+    disclaimerShown: true,
+  };
+  sessionLog.set(sessionId, { shownAt: now.toISOString(), passageId, tradition, sessionContext: ctx });
+  // Lazy cleanup
   if (sessionLog.size > 500) {
     for (const [key, val] of sessionLog) {
-      if (now.getTime() - new Date(val.shownAt).getTime() > SESSION_TTL_MS) {
-        sessionLog.delete(key);
-      }
+      if (now.getTime() - new Date(val.shownAt).getTime() > SESSION_TTL_MS) sessionLog.delete(key);
     }
   }
+  return ctx;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BLOCK PATTERNS (three separate categories for clear reason codes)
+// BLOCK PATTERNS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const CRISIS_PATTERNS = /\b(kill myself|suicide|want to die|self.harm|end it all|emergency|panic attack|can't breathe|hurting myself)\b/i;
@@ -159,36 +134,6 @@ function detectState(text: string): EncounterState | null {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATE → PASSAGE MAPPING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const STATE_TO_PASSAGE: Record<EncounterState, string> = {
-  strain: 'quran-ease-01',         // 94:5-6 — hardship and ease coexist
-  searching: 'quran-guidance-01',  // 1:6   — the opening prayer for direction
-  remorse: 'quran-mercy-01',      // 6:54  — mercy after error
-  restlessness: 'quran-remembrance-01', // 13:28 — hearts at rest
-  endurance: 'quran-patience-01', // 2:153 — patience and prayer
-};
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// INTRODUCTION LINES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const INTRODUCTIONS = [
-  'Something comes to mind \u2014 not as an answer, just something you might sit with.',
-  'There is a passage that surfaces here \u2014 not to explain, just to be with.',
-  'Something quiet comes to mind. You can take it or leave it.',
-] as const;
-
-// v1: follow-up is suppressed by default. The passage speaks; MAIA stops.
-// Future: gate on tone, whether MAIA's response already ends with a question, etc.
-const FOLLOW_UP: string | undefined = undefined;
-
-function pickIntroduction(): string {
-  return INTRODUCTIONS[Math.floor(Math.random() * INTRODUCTIONS.length)];
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -204,77 +149,71 @@ function isFastExchange(turns: EncounterInput['recentTurns']): boolean {
   return avgLen < FAST_EXCHANGE_THRESHOLD;
 }
 
-function stripInternalFields(entry: QuranEntry): SacredPassagePayload {
-  return {
-    id: entry.id,
-    title: entry.title,
-    citation: entry.citation,
-    arabic: entry.arabic,
-    translation: entry.translation,
-    translator: entry.translator,
-    contextualFraming: entry.contextualFraming,
-    reflectionPrompts: entry.reflectionPrompts,
-    integrationPractice: entry.integrationPractice,
-  };
+// ═══════════════════════════════════════════════════════════════════════════════
+// INTRODUCTION LINES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const INTRODUCTIONS = [
+  'Something comes to mind \u2014 not as an answer, just something you might sit with.',
+  'There is a passage that surfaces here \u2014 not to explain, just to be with.',
+  'Something quiet comes to mind. You can take it or leave it.',
+] as const;
+
+function pickIntroduction(): string {
+  return INTRODUCTIONS[Math.floor(Math.random() * INTRODUCTIONS.length)];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN ENTRY POINT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Evaluate whether a sacred passage encounter should occur.
- *
- * Returns an EncounterResult if a passage should surface, or null if not.
- * All gating logic is internal. Callers should treat null as "do nothing."
- *
- * Usage:
- *   const encounter = evaluateEncounter({ latestMessage, recentTurns, sessionId, timestamp });
- *   if (encounter) {
- *     // Append encounter.introduction + passage block to MAIA's response
- *   }
- */
 export function evaluateEncounter(input: EncounterInput): EncounterResult | null {
   const now = typeof input.timestamp === 'string' ? new Date(input.timestamp) : input.timestamp;
   const text = input.latestMessage;
 
-  // ── Gate 1: Minimum conversation depth ──
-  const userTurns = countUserTurns(input.recentTurns);
-  if (userTurns < MIN_USER_TURNS) return null; // reason: too_early
+  // Gate 1: Minimum conversation depth
+  if (countUserTurns(input.recentTurns) < MIN_USER_TURNS) return null;
 
-  // ── Gate 2: Once per session ──
-  if (hasShownThisSession(input.sessionId, now)) return null; // reason: already_shown
+  // Gate 2: Session check (once per session)
+  const { alreadyShown, ...sessionContext } = getSessionContext(input.sessionId, now);
+  if (alreadyShown) return null;
 
-  // ── Gate 3: Crisis language (highest priority block) ──
-  if (CRISIS_PATTERNS.test(text)) return null; // reason: crisis_block
+  // Gate 3: Crisis
+  if (CRISIS_PATTERNS.test(text)) return null;
 
-  // ── Gate 4: Practical help-seeking ──
-  if (PRACTICAL_PATTERNS.test(text)) return null; // reason: practical_block
+  // Gate 4: Practical help-seeking
+  if (PRACTICAL_PATTERNS.test(text)) return null;
 
-  // ── Gate 5: Analytical mode ──
-  if (ANALYTICAL_PATTERNS.test(text)) return null; // reason: analytical_block
+  // Gate 5: Analytical mode
+  if (ANALYTICAL_PATTERNS.test(text)) return null;
 
-  // ── Gate 6: Fast-paced exchange ──
-  if (isFastExchange(input.recentTurns)) return null; // reason: fast_exchange
+  // Gate 6: Fast exchange
+  if (isFastExchange(input.recentTurns)) return null;
 
-  // ── Gate 7: Affect hint — skip if mood is bright (no need) ──
-  if (input.affect?.mood === 'bright') return null; // reason: no_state_match
+  // Gate 7: Bright mood
+  if (input.affect?.mood === 'bright') return null;
 
-  // ── Gate 8: Detect lived state ──
+  // Gate 8: Detect state
   const state = detectState(text);
-  if (!state) return null; // reason: no_state_match
+  if (!state) return null;
 
-  // ── Gate 9: Find matching passage ──
-  const passageId = STATE_TO_PASSAGE[state];
-  const entry = QURAN_ENTRIES.find(e => e.id === passageId);
-  if (!entry) return null; // reason: no_passage_found
+  // Gate 9: Select passage (multi-tradition, mode-aware)
+  const selection = selectSacredPassage({
+    state,
+    element: input.element,
+    sessionContext,
+  });
+  if (!selection) return null;
 
-  // ── All gates passed — record and return ──
-  recordShown(input.sessionId, entry.id, now);
+  // Record and build result
+  const entry = selection.entry;
+  const updatedContext = recordShown(input.sessionId, entry.id, entry.tradition, sessionContext, now);
+  const disclaimer = SacredTextRegistry.getDisclaimer(entry.tradition);
 
   return {
-    passage: stripInternalFields(entry),
+    passage: toSacredPassage(entry),
     introduction: pickIntroduction(),
-    followUp: FOLLOW_UP,
+    disclaimer,
+    showDisclaimer: !sessionContext.disclaimerShown,
   };
 }

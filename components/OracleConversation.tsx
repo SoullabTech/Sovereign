@@ -53,6 +53,7 @@ import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
 import { AstrologyHandoffCard } from '@/components/astrology/AstrologyHandoffCard';
 import { SacredPassageBlock } from '@/components/wisdom/SacredPassageBlock';
 import type { EncounterResult } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
+import type { SacredPassage } from '@/lib/wisdom/sacredTexts/types';
 import { formatMessageText } from '@/lib/text/formatMessageText';
 import { HighlightedText } from './vocabulary/VocabularyTooltip';
 import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
@@ -7900,7 +7901,8 @@ I'm not sure what I'm feeling yet.`;
                           )}
                           <SacredPassageBlock
                             passage={message.sacredEncounter.passage}
-                            showDisclaimer={true}
+                            showDisclaimer={message.sacredEncounter.showDisclaimer !== false}
+                            disclaimerText={message.sacredEncounter.disclaimer?.short}
                             compact={false}
                           />
                         </div>
