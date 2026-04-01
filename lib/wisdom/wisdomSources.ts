@@ -208,6 +208,8 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
       { title: 'The Gospel of Thomas', author: 'Trans. Marvin Meyer', focus: 'Early Christian sayings gospel — contemplative and gnostic wisdom' },
       { title: 'The Zohar', author: 'Kabbalistic Text', focus: 'Jewish mystical commentary on the Torah and hidden dimensions of reality' },
       { title: 'The Yoga Sutras of Patanjali', author: 'Trans. Edwin Bryant', focus: 'Classical yoga philosophy on mind, meditation, and liberation' },
+      { title: 'Foundations of Tibetan Mysticism', author: 'Lama Anagarika Govinda', focus: 'Mantra, mandala, and meditation in Vajrayana Buddhism' },
+      { title: 'The Life & Spiritual Songs of Milarepa', author: 'Khenchen Thrangu Rinpoche', focus: 'Kagyu lineage master — poetry, devotion, and realization' },
     ],
   },
   {
