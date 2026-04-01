@@ -234,13 +234,32 @@ export default function SacredTextsPage() {
             <h1 className="text-4xl font-semibold tracking-tight mb-3 sm:text-5xl">
               Sacred Texts
             </h1>
-            <p className="max-w-2xl text-lg leading-relaxed text-white/70 mb-2">
+            <p className="max-w-2xl text-lg leading-relaxed text-white/70 mb-4">
               Four ways wisdom meets you — not as content, but as encounter.
             </p>
-            <p className="max-w-2xl text-sm text-white/40 mb-12">
-              Each tradition expresses a different movement of consciousness.
-              The system selects by how a text speaks, not what it says.
-            </p>
+
+            {/* How to use */}
+            <div className="max-w-2xl rounded-xl border border-white/10 bg-white/[0.03] p-5 mb-12">
+              <p className="text-sm font-medium text-[#D4B896] mb-2">How to use this page</p>
+              <ul className="space-y-1.5 text-sm text-white/50 leading-relaxed">
+                <li className="flex gap-2">
+                  <span className="text-amber-700/50 mt-0.5 flex-shrink-0">&bull;</span>
+                  <span>The <strong className="text-white/60">field map</strong> below shows four cardinal movements of consciousness — ascending, releasing, contracting, descending.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-700/50 mt-0.5 flex-shrink-0">&bull;</span>
+                  <span>Scroll down to <strong className="text-white/60">Feel the Difference</strong> — choose a state and see how all four traditions respond differently to the same inner condition.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-700/50 mt-0.5 flex-shrink-0">&bull;</span>
+                  <span>Click <strong className="text-white/60">Enter with MAIA</strong> on any tradition to begin a conversation shaped by that mode of knowing.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-700/50 mt-0.5 flex-shrink-0">&bull;</span>
+                  <span>During conversation, passages may also surface on their own when the moment fits — you don&apos;t need to choose.</span>
+                </li>
+              </ul>
+            </div>
 
             {/* Toroidal Field Map */}
             <div className="grid grid-cols-3 grid-rows-3 gap-4 max-w-3xl mx-auto mb-8">
