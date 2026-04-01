@@ -188,6 +188,7 @@ soullab.life {
         not path /api/* /_next/* /icons/* /*.json /*.ico /*.png /*.svg /*.jpg /*.webp /*.woff2
     }
     handle @html_pages {
+        header X-Cache-Strategy "html-no-cache"
         reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
