@@ -29,3 +29,4 @@ export type { EncounterInput, EncounterResult } from './SacredEncounterService';
 // Tradition-specific
 export { QURAN_ENTRIES, QURAN_DISCLAIMER } from './quran';
 export { TAO_ENTRIES, TAO_DISCLAIMER } from './tao';
+export { GITA_ENTRIES, GITA_DISCLAIMER } from './gita';
