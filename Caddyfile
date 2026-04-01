@@ -198,18 +198,20 @@ soullab.life {
         }
     }
 
-    # Regular reverse proxy for remaining requests (favicon, etc.)
-    reverse_proxy maia-sovereign:3000 {
-        # Health checks
-        health_uri /api/consciousness/health
-        health_interval 30s
-        health_timeout 5s
+    # Fallback for remaining requests (favicon, images, etc.)
+    handle {
+        reverse_proxy maia-sovereign:3000 {
+            # Health checks
+            health_uri /api/consciousness/health
+            health_interval 30s
+            health_timeout 5s
 
-        # Headers
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-        header_up X-Forwarded-Proto {scheme}
+            # Headers
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
 
     # Security headers + origin marker
