@@ -12,14 +12,31 @@ const ROOT = process.cwd();
 const SRC_DIRS = ['app', 'components', 'lib', 'hooks', 'types', 'config'];
 const EXTS = ['.ts', '.tsx', '.js', '.jsx'];
 
+// Skip directories and files with known broken/dead/legacy imports
+const SKIP_DIRS = [
+  'node_modules', '.next', '.git', 'dist', 'build',
+  '_backend',      // separate backend with its own @/ root
+  'dist-minimal',  // compiled output
+  '__tests__',     // test files may reference mocks
+  '_tests_',       // alternate test dir
+];
+const SKIP_PATTERNS = [
+  '.broken.',      // explicitly marked broken files
+  '.DISABLED',     // explicitly disabled modules
+  'page-beta.',    // beta pages with unresolved deps
+  '.test.',        // test files
+  '.spec.',        // spec files
+];
+
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (['node_modules', '.next', '.git', 'dist', 'build'].includes(entry.name)) continue;
+      if (SKIP_DIRS.includes(entry.name)) continue;
       walk(full, out);
     } else if (EXTS.includes(path.extname(entry.name))) {
+      if (SKIP_PATTERNS.some(p => entry.name.includes(p))) continue;
       out.push(full);
     }
   }
@@ -42,6 +59,8 @@ function resolveAliasImport(specifier) {
 }
 
 function extractImports(content) {
+  // Remove single-line comments before scanning
+  const cleaned = content.replace(/\/\/.*$/gm, '');
   const patterns = [
     /import\s+[^'"]*from\s+['"]([^'"]+)['"]/g,
     /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
@@ -51,7 +70,7 @@ function extractImports(content) {
   const found = [];
   for (const pattern of patterns) {
     let match;
-    while ((match = pattern.exec(content)) !== null) {
+    while ((match = pattern.exec(cleaned)) !== null) {
       found.push(match[1]);
     }
   }
