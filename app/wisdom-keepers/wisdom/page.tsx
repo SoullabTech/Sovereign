@@ -40,6 +40,7 @@ import { WISDOM_SOURCES, type WisdomDomain } from '@/lib/wisdom/wisdomSources';
 import { WISDOM_QUOTES, type WisdomQuote } from '@/lib/wisdom/WisdomQuotes';
 import { WISDOM_FACETS } from '@/lib/wisdom/WisdomFacets';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
+import WisdomSubmissionForm from '@/components/wisdom/WisdomSubmissionForm';
 
 // ---------------------------------------------------------------------------
 // Icon resolver — maps string icon names from data to Lucide components
@@ -453,6 +454,9 @@ export default function WisdomPage() {
             </p>
           </div>
         </section>
+
+        {/* ── Layer 4: Submit a Source ── */}
+        <WisdomSubmissionForm />
 
       </div>
     </main>

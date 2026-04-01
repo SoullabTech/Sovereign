@@ -97,6 +97,7 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Wisdom Keepers (public)
   { prefix: '/wisdom-keepers', public: true, notes: 'Wisdom keepers pages' },
+  { exact: '/api/wisdom-keepers/submit', public: true, notes: 'Wisdom source submission' },
 
   // Community browse (public, no contribution)
   { exact: '/maia/community', public: true, notes: 'Community hub browse' },
