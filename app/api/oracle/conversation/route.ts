@@ -1150,11 +1150,13 @@ export async function POST(request: NextRequest) {
       sessionId,
       timestamp: new Date().toISOString(),
       affect: voiceHint ? { mood: voiceHint.mood, archetype: voiceHint.archetype } : undefined,
+      element: spiralogicCell?.element?.toLowerCase() as any,
     });
 
     if (sacredEncounter) {
       console.info('[sacred-encounter]', {
         passageId: sacredEncounter.passage.id,
+        tradition: sacredEncounter.passage.tradition,
         citation: sacredEncounter.passage.citation,
       });
     }

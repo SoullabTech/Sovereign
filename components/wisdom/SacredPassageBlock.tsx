@@ -3,25 +3,16 @@
 /**
  * SacredPassageBlock — Distinct rendering for sacred text entries.
  *
- * This component renders sacred text passages with clear structural
- * separation between the passage itself, contextual framing, reflection
- * prompts, and integration practices.
+ * Renders passages from any tradition with clear structural separation
+ * between the passage itself, contextual framing, reflection prompts,
+ * and integration practices.
  *
- * It is intentionally NOT a card, quote, or facet. It is a dedicated
- * block that treats the source text with reverence and clear boundaries.
- *
- * Design principles:
- * - Passage is visually primary and unadorned
- * - Framing is clearly labeled as context, not interpretation
- * - Reflection uses invitational language ("you might sit with...")
- * - Integration is a gentle, optional practice
- * - Disclaimer is always visible
- * - No elemental tags, no system metadata, no gamification
+ * Supports per-tradition disclaimers and optional original script (e.g. Arabic).
  */
 
 import React, { useState } from 'react';
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
-import type { SacredPassage } from '@/lib/wisdom/sacredTexts/QuranService';
+import type { SacredPassage } from '@/lib/wisdom/sacredTexts/types';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -29,17 +20,19 @@ import type { SacredPassage } from '@/lib/wisdom/sacredTexts/QuranService';
 
 interface SacredPassageBlockProps {
   passage: SacredPassage;
-  /** Whether to show the disclaimer inline (default: true) */
+  /** Whether to show the disclaimer (default: true) */
   showDisclaimer?: boolean;
+  /** Custom disclaimer text (overrides default) */
+  disclaimerText?: string;
   /** Compact mode for embedding in lists */
   compact?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DISCLAIMER
+// DEFAULT DISCLAIMER
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const DISCLAIMER_TEXT = 'The Qur\'an is a sacred text within Islam. This space offers selected passages for personal reflection while honoring their original context and tradition. MAIA does not interpret doctrine or speak on behalf of Islam.';
+const DEFAULT_DISCLAIMER = 'These texts come from living traditions. They are offered here as doors to reflection, not as replacements for study within their original lineages.';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENT
@@ -48,6 +41,7 @@ const DISCLAIMER_TEXT = 'The Qur\'an is a sacred text within Islam. This space o
 export function SacredPassageBlock({
   passage,
   showDisclaimer = true,
+  disclaimerText,
   compact = false,
 }: SacredPassageBlockProps) {
   const [expanded, setExpanded] = useState(!compact);
@@ -84,14 +78,14 @@ export function SacredPassageBlock({
 
       {/* Passage — always visible */}
       <div className="px-5 pb-4">
-        {/* Arabic text if available */}
-        {passage.arabic && (
+        {/* Original script (Arabic, etc.) if available */}
+        {passage.originalScript && (
           <p
             className="text-right text-lg text-amber-100/70 font-serif leading-relaxed mb-3"
             dir="rtl"
             lang="ar"
           >
-            {passage.arabic}
+            {passage.originalScript}
           </p>
         )}
 
@@ -102,10 +96,10 @@ export function SacredPassageBlock({
 
         {/* Citation */}
         <p className="text-xs text-amber-600/50 mt-2">
-          Qur&apos;an {passage.citation}
+          {passage.citation}
           {passage.translator && (
             <span className="ml-1">
-              &mdash; Translation: {passage.translator}
+              &mdash; {passage.translator}
             </span>
           )}
         </p>
@@ -170,7 +164,7 @@ export function SacredPassageBlock({
           {showDisclaimer && (
             <div className="px-5 py-3 bg-stone-900/30">
               <p className="text-xs text-stone-600 leading-relaxed">
-                {DISCLAIMER_TEXT}
+                {disclaimerText || DEFAULT_DISCLAIMER}
               </p>
             </div>
           )}

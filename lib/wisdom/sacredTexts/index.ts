@@ -2,15 +2,30 @@
  * Sacred Texts — Barrel export
  *
  * Entry point for all sacred text modules.
- * Each tradition gets its own file; this index re-exports the public API.
  */
 
-// Qur'an
-export { QuranService } from './QuranService';
-export type { SacredPassage } from './QuranService';
-export { QURAN_DISCLAIMER } from './quran';
-export type { QuranEntry } from './quran';
+// Shared types
+export type {
+  SacredTradition,
+  SacredMode,
+  EngagementStyle,
+  SacredPassageEntry,
+  SacredPassage,
+  TraditionDisclaimer,
+  EncounterSessionContext,
+} from './types';
+export { toSacredPassage } from './types';
 
-// Encounter layer
+// Registry
+export { SacredTextRegistry } from './SacredTextRegistry';
+
+// Selection
+export { selectSacredPassage } from './selectSacredPassage';
+
+// Encounter service
 export { evaluateEncounter } from './SacredEncounterService';
-export type { EncounterInput, EncounterResult, SacredPassagePayload } from './SacredEncounterService';
+export type { EncounterInput, EncounterResult } from './SacredEncounterService';
+
+// Tradition-specific
+export { QURAN_ENTRIES, QURAN_DISCLAIMER } from './quran';
+export { TAO_ENTRIES, TAO_DISCLAIMER } from './tao';
