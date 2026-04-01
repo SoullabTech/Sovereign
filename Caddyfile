@@ -183,16 +183,18 @@ soullab.life {
     }
 
     # HTML pages — never cache, always get fresh chunk references
+    # Uses header_down to OVERRIDE Next.js s-maxage=31536000 on prerendered pages
     @html_pages {
         not path /api/* /_next/* /icons/* /*.json /*.ico /*.png /*.svg /*.jpg /*.webp /*.woff2
     }
     handle @html_pages {
-        header Cache-Control "no-cache, no-store, must-revalidate"
         reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
             header_up X-Forwarded-Proto {scheme}
+            header_down Cache-Control "no-cache, no-store, must-revalidate"
+            header_down Pragma "no-cache"
         }
     }
 
