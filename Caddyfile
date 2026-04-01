@@ -233,6 +233,15 @@ soullab.life {
         -Server
     }
 
+    # ── Cache control: split by content type ──
+    # HTML/RSC responses: never cache (overrides Next.js s-maxage)
+    @html_response header Content-Type *text/html*
+    header @html_response Cache-Control "no-cache, no-store, must-revalidate"
+    header @html_response Pragma "no-cache"
+
+    @rsc_response header Content-Type *text/x-component*
+    header @rsc_response Cache-Control "no-cache, no-store, must-revalidate"
+
     # ── Admin route protection (Tailscale / VPN — enable when ready) ───────────
     # Uncomment to restrict /api/admin/* to Tailscale IPs (100.x.x.x) only.
     # Without Tailscale: replace with your static IP (home/office).
