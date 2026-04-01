@@ -182,24 +182,8 @@ soullab.life {
         }
     }
 
-    # HTML pages — never cache, always get fresh chunk references
-    # Uses header_down to OVERRIDE Next.js s-maxage=31536000 on prerendered pages
-    @html_pages {
-        not path /api/* /_next/* /icons/* /*.json /*.ico /*.png /*.svg /*.jpg /*.webp /*.woff2
-    }
-    handle @html_pages {
-        header X-Cache-Strategy "html-no-cache"
-        reverse_proxy maia-sovereign:3000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
-            header_down Cache-Control "no-cache, no-store, must-revalidate"
-            header_down Pragma "no-cache"
-        }
-    }
-
-    # Fallback for remaining requests (favicon, images, etc.)
+    # Fallback for remaining requests (HTML pages, favicon, images, etc.)
+    # Overrides Next.js s-maxage on prerendered HTML so deploys take effect immediately
     handle {
         reverse_proxy maia-sovereign:3000 {
             # Health checks
@@ -212,6 +196,10 @@ soullab.life {
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
             header_up X-Forwarded-Proto {scheme}
+
+            # Override upstream cache headers on HTML responses
+            header_down Cache-Control "no-cache, no-store, must-revalidate"
+            header_down -X-Nextjs-Cache
         }
     }
 
@@ -233,15 +221,6 @@ soullab.life {
         # Remove server header
         -Server
     }
-
-    # ── Cache control: split by content type ──
-    # HTML/RSC responses: never cache (overrides Next.js s-maxage)
-    @html_response header Content-Type *text/html*
-    header @html_response Cache-Control "no-cache, no-store, must-revalidate"
-    header @html_response Pragma "no-cache"
-
-    @rsc_response header Content-Type *text/x-component*
-    header @rsc_response Cache-Control "no-cache, no-store, must-revalidate"
 
     # ── Admin route protection (Tailscale / VPN — enable when ready) ───────────
     # Uncomment to restrict /api/admin/* to Tailscale IPs (100.x.x.x) only.
