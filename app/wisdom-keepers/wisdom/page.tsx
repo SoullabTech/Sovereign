@@ -437,6 +437,26 @@ export default function WisdomPage() {
           </div>
         </section>
 
+        {/* ── Sacred Texts ── */}
+        <section className="mt-16 mb-8">
+          <Link
+            href="/wisdom-keepers/sacred-texts"
+            className="block rounded-2xl border border-amber-900/30 bg-stone-950/40 p-8 backdrop-blur hover:bg-stone-950/60 transition group"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="h-5 w-5 text-amber-600/70" />
+              <h2 className="text-lg font-semibold text-amber-200/90">Sacred Texts</h2>
+            </div>
+            <p className="max-w-3xl text-sm leading-7 text-white/60">
+              Four ways wisdom meets consciousness — orientation, dissolution,
+              participation, and interpretive depth. Not content, but encounter.
+            </p>
+            <p className="mt-3 text-xs text-amber-600/50 group-hover:text-amber-500/70 transition">
+              Enter the field &rarr;
+            </p>
+          </Link>
+        </section>
+
         {/* ── Footer: Working with wisdom ── */}
         <section className="mt-16 mb-8">
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur">
