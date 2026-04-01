@@ -27,6 +27,7 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -1137,6 +1138,27 @@ export async function POST(request: NextRequest) {
       signals: relationalHint.signals,
     });
 
+    // SACRED ENCOUNTER: evaluate whether a sacred passage should surface
+    // This runs after MAIA's response is drafted — it does not alter the response,
+    // it optionally appends an encounter payload for the client to render separately.
+    const sacredEncounter = evaluateEncounter({
+      latestMessage: message,
+      recentTurns: (conversationHistory || []).map((t: any) => ({
+        role: t.role as 'user' | 'assistant',
+        content: typeof t.content === 'string' ? t.content : '',
+      })),
+      sessionId,
+      timestamp: new Date().toISOString(),
+      affect: voiceHint ? { mood: voiceHint.mood, archetype: voiceHint.archetype } : undefined,
+    });
+
+    if (sacredEncounter) {
+      console.info('[sacred-encounter]', {
+        passageId: sacredEncounter.passage.id,
+        citation: sacredEncounter.passage.citation,
+      });
+    }
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
@@ -1207,6 +1229,9 @@ export async function POST(request: NextRequest) {
         }
         return handoff;
       })(),
+      // Sacred encounter: present if gates passed, null otherwise.
+      // Client renders this as a separate block — MAIA does not comment on it.
+      sacredEncounter: sacredEncounter ?? undefined,
     };
 
     // Log successful oracle usage

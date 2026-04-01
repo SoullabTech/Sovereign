@@ -99,6 +99,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/community', public: true, notes: 'Community hub browse' },
   { exact: '/maia/community/library', public: true, notes: 'Library browse' },
   { exact: '/maia/community/wisdom-sources', public: true, notes: 'Wisdom sources browse' },
+  { prefix: '/wisdom-keepers', public: true, notes: 'Wisdom keepers pages' },
+  { exact: '/api/wisdom-keepers/submit', public: true, notes: 'Wisdom source submission (honeypot-protected)' },
   { exact: '/maia/community/faq', public: true, notes: 'Community FAQ' },
   { exact: '/maia/community/events', public: true, notes: 'Events browse' },
   { exact: '/maia/community/commons', public: true, notes: 'Commons home browse' },
