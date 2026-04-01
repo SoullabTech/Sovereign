@@ -140,13 +140,13 @@ export const WISDOM_SOURCES: WisdomDomain[] = [
     sources: [
       { title: 'Being and Time', author: 'Martin Heidegger', focus: 'Fundamental ontology' },
       { title: 'Modes of Thought', author: 'Alfred North Whitehead', focus: 'Process philosophy' },
+      { title: 'The Significance of Free Will', author: 'Robert Kane', focus: 'Libertarian free will, self-forming actions, and the roots of genuine human agency' },
       { title: 'The Master and His Emissary (Full)', author: 'Iain McGilchrist', focus: 'Hemispheric differences and worldview' },
       { title: 'The Divided Brain and the Search for Meaning', author: 'McGilchrist', focus: 'Shortened edition' },
       { title: 'Divided Brain, Divided World', author: 'RSA Research', focus: 'Cultural implications' },
       { title: 'Handbook of Panpsychism', author: 'Academic Collection', focus: 'Mind in nature' },
       { title: 'Postmodern Stress Disorder', author: 'Cultural Critique', focus: 'Dopamine and left-brain dominance' },
       { title: 'Tree of Knowledge', author: 'Maturana & Varela', focus: 'Autopoiesis and cognition' },
-      { title: 'The Significance of Free Will', author: 'Robert Kane', focus: 'Libertarian free will, self-forming actions, and the roots of genuine human agency' },
     ],
   },
   {
