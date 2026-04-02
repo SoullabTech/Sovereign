@@ -17,8 +17,8 @@ export interface RateLimitResult {
   retryAfterSeconds: number | null;
 }
 
-const MAX_ATTEMPTS = 5;
-const WINDOW_MINUTES = 15;
+const MAX_ATTEMPTS = 10;
+const WINDOW_MINUTES = 5;
 
 /**
  * Check rate limit for an authentication attempt

@@ -115,6 +115,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '📚',
       items: [
         {
+          icon: BookOpen,
+          label: 'Sacred Study',
+          action: () => onNavigate('/sacred-learning'),
+          description: 'Qur\'an, contemplation & practice',
+          badge: '✨ New'
+        },
+        {
           icon: Sparkles,
           label: 'Ask MAIA',
           action: () => onNavigate('/ask-maia'),

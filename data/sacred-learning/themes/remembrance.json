@@ -1,0 +1,192 @@
+{
+  "theme": {
+    "slug": "remembrance",
+    "name": "Remembrance (Dhikr)",
+    "arabicTerm": "ذكر",
+    "description": "The practice of remembering — what it means to remember God, to be remembered, to return to awareness. Dhikr is foundational across Islamic contemplative traditions.",
+    "displayOrder": 1
+  },
+  "sources": [
+    {
+      "ref": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "work": "Qur'an",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "sourceEdition": "Medina Mushaf (Uthmani script)",
+      "language": "ar",
+      "reviewStatus": "approved"
+    },
+    {
+      "ref": "ibn-kathir-tafsir",
+      "authorityLevel": 2,
+      "author": "Ibn Kathir",
+      "work": "Tafsir al-Qur'an al-Azim",
+      "language": "ar",
+      "reviewStatus": "approved"
+    },
+    {
+      "ref": "rumi-masnavi-nicholson",
+      "authorityLevel": 4,
+      "author": "Rumi",
+      "work": "Masnavi-i Ma'navi",
+      "translator": "R. A. Nicholson",
+      "translationEdition": "Gibb Memorial Trust, 1926",
+      "language": "fa",
+      "reviewStatus": "approved"
+    }
+  ],
+  "passages": [
+    {
+      "dayNumber": 1,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Al-Baqarah",
+      "surahNumber": 2,
+      "ayahStart": 152,
+      "ayahEnd": 152,
+      "arabicText": "فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ",
+      "translationText": "So remember Me; I will remember you. Be thankful to Me, and never ungrateful.",
+      "contextNote": "This ayah appears in the context of the change of qiblah (direction of prayer) from Jerusalem to Mecca, a moment of reorientation for the early Muslim community. The command to remember is reciprocal — a mutual turning.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [
+        {
+          "sourceRef": "ibn-kathir-tafsir",
+          "authorityLevel": 2,
+          "author": "Ibn Kathir",
+          "work": "Tafsir al-Qur'an al-Azim",
+          "text": "Ibn Kathir notes that this ayah establishes a covenant of mutual remembrance between the servant and the Lord. The remembrance of God is not merely verbal repetition but encompasses obedience, gratitude, and awareness of divine presence in all states.",
+          "reviewStatus": "approved",
+          "displayOrder": 1
+        },
+        {
+          "sourceRef": "rumi-masnavi-nicholson",
+          "authorityLevel": 4,
+          "author": "Rumi",
+          "work": "Masnavi-i Ma'navi",
+          "sectionRef": "Book III",
+          "translator": "R. A. Nicholson",
+          "text": "The thirsty man is moaning, 'O delicious water!' The water too is moaning, 'Where is the one who will drink me?'",
+          "reviewStatus": "approved",
+          "displayOrder": 3
+        }
+      ],
+      "practices": [
+        {
+          "practiceType": "contemplation",
+          "text": "Sit quietly for five minutes. With each breath, silently hold the word 'remember.' Do not try to remember anything specific. Simply let the act of remembering itself be present. Notice what arises.",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "What does it mean to you that remembrance is described as reciprocal — 'remember Me and I will remember you'? Where in your day do you already practice a kind of remembering?"
+    },
+    {
+      "dayNumber": 2,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Ar-Ra'd",
+      "surahNumber": 13,
+      "ayahStart": 28,
+      "ayahEnd": 28,
+      "arabicText": "الَّذِينَ آمَنُوا وَتَطْمَئِنُّ قُلُوبُهُم بِذِكْرِ اللَّهِ ۗ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",
+      "translationText": "Those who have faith and whose hearts find rest in the remembrance of God — truly it is in the remembrance of God that hearts find rest.",
+      "contextNote": "This ayah connects remembrance directly to the heart (qalb) and to a specific quality: rest, tranquility, settledness. The Arabic word 'tatma'innu' carries a sense of being at ease, not agitated or scattered.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [
+        {
+          "sourceRef": "ibn-kathir-tafsir",
+          "authorityLevel": 2,
+          "author": "Ibn Kathir",
+          "work": "Tafsir al-Qur'an al-Azim",
+          "text": "Ibn Kathir explains that the hearts of believers become tranquil and satisfied through dhikr because it connects them to certainty and trust. The repetition of the phrase emphasizes that there is no substitute — only God's remembrance can truly settle the restless heart.",
+          "reviewStatus": "approved",
+          "displayOrder": 1
+        }
+      ],
+      "practices": [
+        {
+          "practiceType": "embodied",
+          "text": "Place your hand on your chest. Take three slow breaths. With each exhale, notice if there is any settling, any quieting, any rest. You are not trying to create rest — only noticing whether it is already present.",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "When was the last time your heart felt truly at rest? What were the conditions? Is rest something you make, or something you return to?"
+    },
+    {
+      "dayNumber": 3,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Al-Ankabut",
+      "surahNumber": 29,
+      "ayahStart": 45,
+      "ayahEnd": 45,
+      "arabicText": "اتْلُ مَا أُوحِيَ إِلَيْكَ مِنَ الْكِتَابِ وَأَقِمِ الصَّلَاةَ ۖ إِنَّ الصَّلَاةَ تَنْهَىٰ عَنِ الْفَحْشَاءِ وَالْمُنكَرِ ۗ وَلَذِكْرُ اللَّهِ أَكْبَرُ ۗ وَاللَّهُ يَعْلَمُ مَا تَصْنَعُونَ",
+      "translationText": "Recite what has been revealed to you of the Scripture; keep up the prayer: prayer restrains outrageous and unacceptable behaviour. Remembering God is greater: God knows everything you do.",
+      "contextNote": "The phrase 'wa la-dhikru Allahi akbar' — 'and remembrance of God is greater' — has been read by classical scholars in two ways: that remembrance of God is greater than prayer, or that God's remembrance of you is greater than your remembrance of Him.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [
+        {
+          "sourceRef": "rumi-masnavi-nicholson",
+          "authorityLevel": 4,
+          "author": "Rumi",
+          "work": "Masnavi-i Ma'navi",
+          "sectionRef": "Book I",
+          "translator": "R. A. Nicholson",
+          "text": "Every prophet and every saint has a way, but all lead to God. All ways are really one.",
+          "reviewStatus": "approved",
+          "displayOrder": 3
+        }
+      ],
+      "practices": [
+        {
+          "practiceType": "dhikr",
+          "text": "For three minutes, silently repeat a phrase that means something to you: 'God is greater,' 'I remember,' or simply 'here.' Let the repetition carry you rather than thinking about it. When the time ends, sit in silence for one more minute.",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "What does it mean that remembrance is called 'greater' — greater than what? What would it look like to carry remembrance beyond formal prayer into the rest of your day?"
+    },
+    {
+      "dayNumber": 4,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Al-Ahzab",
+      "surahNumber": 33,
+      "ayahStart": 41,
+      "ayahEnd": 42,
+      "arabicText": "يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا ○ وَسَبِّحُوهُ بُكْرَةً وَأَصِيلًا",
+      "translationText": "Believers, remember God often and glorify Him morning and evening.",
+      "contextNote": "The emphasis here is on frequency — 'dhikran kathiran' (much remembrance). The invitation is not to occasional remembrance but to a life permeated by awareness. Morning and evening frame the entire day.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [],
+      "practices": [
+        {
+          "practiceType": "contemplation",
+          "text": "Choose one ordinary moment today — washing hands, opening a door, taking a first sip of water. Before you do it, pause for one breath and silently acknowledge: this too is within awareness. This is your practice of 'much remembrance' — not quantity, but quality of presence.",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "What would 'much remembrance' look like in your life — not as obligation, but as something you genuinely wanted to do? What currently helps you remember?"
+    }
+  ]
+}

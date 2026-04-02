@@ -30,6 +30,7 @@ import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getVoiceMethodConstraints } from '@/lib/maia/prompts/voiceMethodConstraints';
 import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
+import { detectSacredIntent, getSacredLearningPromptBlock } from '@/lib/sacred-learning/sacredLearningLens';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
 import { logOracleUsage } from '@/lib/learning/oracleUsageLoggingService';
@@ -589,6 +590,9 @@ export async function POST(request: NextRequest) {
 
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
+
+    // SACRED INTENT: Progressive disclosure — surface (gentle pointer) or deep (full lens)
+    const sacredIntentDepth = detectSacredIntent(message, conversationHistory);
 
     // Generate disposable pixel configuration with spiralogic enhancements
     const disposablePixels = PanconsciousFieldService.generateDisposablePixels(
@@ -1839,6 +1843,17 @@ async function generateSpiralogicResponseWithLLM(
     ].filter(Boolean).join('');
   }
 
+  // Sacred learning lens — progressive: surface = gentle pointer, deep = full constraints
+  const sacredLensBlock = getSacredLearningPromptBlock(sacredIntentDepth);
+  if (sacredIntentDepth !== 'none') {
+    console.info(`[Oracle] sacred-lens { depth: ${sacredIntentDepth}, blockLength: ${sacredLensBlock.length} }`);
+  }
+
+  // Append sacred lens to whichever path was assembled
+  if (sacredLensBlock) {
+    finalSystemPrompt += sacredLensBlock;
+  }
+
   // Composition invariant log — runtime proof of prompt assembly
   console.log('[Oracle] composition', {
     hasMAIA: true,
@@ -1847,6 +1862,7 @@ async function generateSpiralogicResponseWithLLM(
     masterSlug: activeMasterBuild?.master_slug || null,
     overlayLength: masterOverlay?.length || 0,
     memoryTool: memoryToolActive,
+    sacredDepth: sacredIntentDepth,
   });
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)

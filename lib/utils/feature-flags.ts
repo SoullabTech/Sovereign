@@ -22,6 +22,7 @@ export interface FeatureFlags {
   masterFields: boolean;                // Multi-master intelligence: field-scoped builds layered on MAIA
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
   cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
+  sacredLearning: boolean;              // Sacred Study domain — daily encounter + corpus
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -43,6 +44,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   masterFields: false,                // Off until master builds validated
   relationalRouting: false,           // Off until v1 tested
   cmPractitionerEnvironment: false,   // Off until v1 tested
+  sacredLearning: false,              // Off until seed corpus reviewed and approved
 };
 
 /**
