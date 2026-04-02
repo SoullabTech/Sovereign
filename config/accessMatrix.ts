@@ -331,6 +331,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // 6) API ROUTES
   // -------------------------------------------------------------------------
 
+  // Telemetry API (POST = free, GET = admin-gated in route handler)
+  { prefix: '/api/telemetry', minTier: 'free', notes: 'World telemetry events' },
+
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },

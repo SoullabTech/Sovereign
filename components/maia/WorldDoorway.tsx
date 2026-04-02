@@ -11,6 +11,7 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { MaiaUiAction } from '@/lib/types/ai';
+import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
 
 interface WorldDoorwayProps {
   action: MaiaUiAction;
@@ -40,8 +41,10 @@ export default function WorldDoorway({
           className="mt-4 mb-3 ml-2"
           onAnimationComplete={() => {
             shownAt.current = Date.now();
-            console.log('[World] doorway-shown', {
+            emitWorldEvent({
+              eventType: 'doorway_shown',
               intent: action.type,
+              world: action.type.replace('enter_', ''),
               confidence: action.confidence,
             });
           }}
@@ -60,9 +63,11 @@ export default function WorldDoorway({
                 const timeToClick = shownAt.current
                   ? Math.round((Date.now() - shownAt.current) / 1000)
                   : null;
-                console.log('[World] doorway-clicked', {
+                emitWorldEvent({
+                  eventType: 'doorway_clicked',
                   intent: action.type,
                   world: action.type.replace('enter_', ''),
+                  confidence: action.confidence,
                   timeToClick,
                 });
                 onSelect(action);
@@ -78,7 +83,11 @@ export default function WorldDoorway({
             {/* Dismiss */}
             <button
               onClick={() => {
-                console.log('[World] doorway-dismissed', { intent: action.type });
+                emitWorldEvent({
+                  eventType: 'doorway_dismissed',
+                  intent: action.type,
+                  world: action.type.replace('enter_', ''),
+                });
                 onDismiss();
               }}
               className="block mt-2 text-white/20 hover:text-white/35 text-xs transition-colors duration-300"

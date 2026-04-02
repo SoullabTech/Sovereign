@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DepthBoundary } from '@/components/maia/DepthBoundary';
+import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
 
 const DEPTH_OFFERINGS = [
   {
@@ -45,9 +46,10 @@ export default function DepthWorld() {
   useEffect(() => {
     const idx = Math.floor(Math.random() * DEPTH_OFFERINGS.length);
     setOffering(DEPTH_OFFERINGS[idx]);
-    console.log('[World] entered', { world: 'depth' });
+    emitWorldEvent({ eventType: 'world_entered', world: 'depth' });
     return () => {
-      console.log('[World] exited', {
+      emitWorldEvent({
+        eventType: 'world_exited',
         world: 'depth',
         timeInWorld: Math.round((Date.now() - enteredAt.current) / 1000),
       });

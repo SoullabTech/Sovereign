@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DepthBoundary } from '@/components/maia/DepthBoundary';
+import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
 
 const ContinuityView = dynamic(
   () => import('@/components/consciousness/ContinuityView'),
@@ -24,9 +25,10 @@ export default function JourneyWorld() {
   const enteredAt = useRef(Date.now());
 
   useEffect(() => {
-    console.log('[World] entered', { world: 'journey' });
+    emitWorldEvent({ eventType: 'world_entered', world: 'journey' });
     return () => {
-      console.log('[World] exited', {
+      emitWorldEvent({
+        eventType: 'world_exited',
         world: 'journey',
         timeInWorld: Math.round((Date.now() - enteredAt.current) / 1000),
       });

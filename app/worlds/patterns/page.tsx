@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DepthBoundary } from '@/components/maia/DepthBoundary';
+import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
 
 const PatternLedger = dynamic(
   () => import('@/components/consciousness/PatternLedger'),
@@ -24,9 +25,10 @@ export default function PatternsWorld() {
   const enteredAt = useRef(Date.now());
 
   useEffect(() => {
-    console.log('[World] entered', { world: 'patterns' });
+    emitWorldEvent({ eventType: 'world_entered', world: 'patterns' });
     return () => {
-      console.log('[World] exited', {
+      emitWorldEvent({
+        eventType: 'world_exited',
         world: 'patterns',
         timeInWorld: Math.round((Date.now() - enteredAt.current) / 1000),
       });
