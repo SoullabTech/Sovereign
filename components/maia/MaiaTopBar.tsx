@@ -8,7 +8,7 @@
  * Never fully disappears — always reassuringly present.
  */
 
-import { HelpCircle, User, Mic, MicOff } from 'lucide-react';
+import { HelpCircle, User, Mic, MessageSquare } from 'lucide-react';
 import type { MaiaBehavior } from '@/lib/navigation/types';
 
 const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = {
@@ -20,23 +20,24 @@ const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = 
 
 interface MaiaTopBarProps {
   explorerName: string;
-  voiceEnabled: boolean;
+  /** true = voice mode, false = text mode */
+  isVoiceMode: boolean;
   behavior: MaiaBehavior;
   calmMode: boolean;
-  /** After 12s of continuous calm, restore to 40% for orientation */
   calmCeiling: boolean;
-  onToggleVoice: () => void;
+  /** Toggle between voice and text input */
+  onToggleInputMode: () => void;
   onOpenHelp: () => void;
   onOpenAccount: () => void;
 }
 
 export function MaiaTopBar({
   explorerName,
-  voiceEnabled,
+  isVoiceMode,
   behavior,
   calmMode,
   calmCeiling,
-  onToggleVoice,
+  onToggleInputMode,
   onOpenHelp,
   onOpenAccount,
 }: MaiaTopBarProps) {
@@ -70,12 +71,20 @@ export function MaiaTopBar({
 
       {/* Right: utilities */}
       <div className="flex items-center gap-1">
+        {/* Voice / Text toggle */}
         <button
-          onClick={onToggleVoice}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-stone-400 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all"
-          title={voiceEnabled ? 'Mute voice' : 'Enable voice'}
+          onClick={onToggleInputMode}
+          className={`h-8 flex items-center gap-1.5 px-2 rounded-lg transition-all ${
+            isVoiceMode
+              ? 'text-[#D4B896]/70 bg-[#D4B896]/5'
+              : 'text-blue-400/70 bg-blue-400/5'
+          } hover:opacity-100`}
+          title={isVoiceMode ? 'Switch to text' : 'Switch to voice'}
         >
-          {voiceEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          {isVoiceMode ? <Mic className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+          <span className="text-[10px] font-light tracking-wide">
+            {isVoiceMode ? 'Voice' : 'Text'}
+          </span>
         </button>
 
         <button
