@@ -205,6 +205,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/book/ask', minTier: 'personal', notes: 'Book companion ask' },
   { exact: '/book-companion/ain', minTier: 'personal', notes: 'Book companion AIN' },
 
+  // Worlds (experiential spaces entered via MAIA doorways)
+  { prefix: '/worlds', minTier: 'free', notes: 'World portals — entry always free' },
+
   // Journey & evolution
   { exact: '/journey', minTier: 'personal', notes: 'Journey view' },
   { exact: '/evolution', minTier: 'personal', notes: 'Evolution tracking' },

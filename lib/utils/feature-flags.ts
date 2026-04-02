@@ -15,6 +15,7 @@ export interface FeatureFlags {
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
+  worldDoorways: boolean;               // v1: world-entry doorways from MAIA conversation
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -29,6 +30,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
   relationalRouting: false,           // Off until v1 tested
+  worldDoorways: true,               // On — core experience shift
 };
 
 /**

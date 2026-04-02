@@ -32,6 +32,21 @@ const LEAD_IN_POOLS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
     'There\'s movement happening.',
     'This feels like a turning point.',
   ],
+  pattern_encounter: [
+    'Something keeps returning here\u2026 almost the same shape each time.',
+    'There\u2019s a pattern in this\u2026 it\u2019s not the first time.',
+    'This has a shape to it\u2026 something you\u2019ve circled before.',
+  ],
+  journey_recognition: [
+    'You\u2019ve been moving through this for longer than this conversation\u2026',
+    'There\u2019s a longer arc here\u2026 this didn\u2019t start today.',
+    'Something has been unfolding\u2026 quietly, across time.',
+  ],
+  depth_emergence: [
+    'There may be more beneath this\u2026 something that hasn\u2019t surfaced yet.',
+    'Something deeper is stirring here\u2026 not quite words yet.',
+    'This touches something beyond the surface\u2026 worth staying with.',
+  ],
 };
 
 // --- Keyword patterns per intent ---
@@ -42,6 +57,9 @@ const INTENT_KEYWORDS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
   idea_emergence: ['idea', 'forming', 'emerging', 'what if', 'imagine', 'could we', 'thinking about'],
   decision_point: ['decide', 'decision', 'choose', 'which way', "don't know what to do", 'torn between', 'should i', 'weigh', 'options'],
   change_process: ['change', 'shifting', 'transform', 'letting go', 'moving on', 'turning point', 'transition', 'evolving'],
+  pattern_encounter: ['pattern', 'loop', 'again', 'stuck', 'keep doing', 'repeating', 'cycle', 'same thing', 'over and over', 'habit', 'recurring'],
+  journey_recognition: ['been through', 'journey', 'growing', 'over time', 'looking back', 'how far', 'progress', 'evolution', 'where i was', 'different now', 'changed'],
+  depth_emergence: ['meaning', 'soul', 'sacred', 'beneath', 'deeper', 'spiritual', 'symbol', 'dream', 'mystery', 'why am i here', 'existential', 'divine', 'purpose'],
 };
 
 // --- Detection ---
@@ -109,6 +127,12 @@ export function getIntentRoute(intent: MaiaIntent): IntentRoute {
       return { intent, capability: 'decisions', openUi: 'panel' };
     case 'change_process':
       return { intent, capability: 'changes', openUi: 'panel' };
+    case 'pattern_encounter':
+      return { intent, capability: 'patterns', openUi: 'panel' };
+    case 'journey_recognition':
+      return { intent, capability: 'journey', openUi: 'panel' };
+    case 'depth_emergence':
+      return { intent, capability: 'depth', openUi: 'panel' };
     default:
       return { intent, capability: 'conversation', openUi: 'none' };
   }
@@ -122,6 +146,9 @@ const ACTION_LABELS: Record<Exclude<MaiaIntent, 'unknown'>, string> = {
   idea_emergence: 'Develop this idea',
   decision_point: 'Enter Decision Space',
   change_process: 'Track this change',
+  pattern_encounter: 'Step into this pattern',
+  journey_recognition: 'See where you\u2019ve been',
+  depth_emergence: 'Go deeper',
 };
 
 function pickRandom<T>(arr: T[]): T {
@@ -144,12 +171,20 @@ export function buildUiAction(
     idea_emergence: 'open_ideas',
     decision_point: 'open_decisions',
     change_process: 'open_changes',
+    pattern_encounter: 'enter_patterns',
+    journey_recognition: 'enter_journey',
+    depth_emergence: 'enter_depth',
   };
+
+  const WORLD_INTENTS: Set<string> = new Set([
+    'pattern_encounter', 'journey_recognition', 'depth_emergence',
+  ]);
 
   return {
     type: typeMap[intent],
     label: ACTION_LABELS[intent],
     leadIn: pickRandom(LEAD_IN_POOLS[intent]),
     confidence,
+    isWorldDoorway: WORLD_INTENTS.has(intent),
   };
 }
