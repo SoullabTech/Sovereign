@@ -716,6 +716,8 @@ function MAIAPageContent() {
             onOpenJournalSheet={() => setShowJournalSheet(true)}
             onOpenShadowWork={() => setShowShadowWork(true)}
             onOpenAcademy={() => setShowAcademySheet(true)}
+            onOpenChanges={() => setShowChangesSheet(true)}
+            onOpenDecisions={() => setShowDecisionsSheet(true)}
             onLabAction={handleLabAction}
           >
             {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}

@@ -8,14 +8,16 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { Moon, Hexagon, Compass, Layers } from 'lucide-react';
+import { Moon, Hexagon, Compass, Layers, GitFork, Scale } from 'lucide-react';
 
 interface DepthPanelProps {
   explorerId: string;
   onOpenShadowWork: () => void;
+  onOpenChanges: () => void;
+  onOpenDecisions: () => void;
 }
 
-export function DepthPanel({ explorerId, onOpenShadowWork }: DepthPanelProps) {
+export function DepthPanel({ explorerId, onOpenShadowWork, onOpenChanges, onOpenDecisions }: DepthPanelProps) {
   const router = useRouter();
 
   return (
@@ -69,6 +71,30 @@ export function DepthPanel({ explorerId, onOpenShadowWork }: DepthPanelProps) {
         <div>
           <p className="text-sm text-[#D4B896]/90 font-light">Consciousness Map</p>
           <p className="text-xs text-stone-500 mt-0.5">Field protocol and awareness terrain</p>
+        </div>
+      </button>
+
+      {/* Book of Changes */}
+      <button
+        onClick={onOpenChanges}
+        className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
+      >
+        <GitFork className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-[#D4B896]/90 font-light">Book of Changes</p>
+          <p className="text-xs text-stone-500 mt-0.5">Track transformations in your life</p>
+        </div>
+      </button>
+
+      {/* Decisions */}
+      <button
+        onClick={onOpenDecisions}
+        className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
+      >
+        <Scale className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-[#D4B896]/90 font-light">Decisions</p>
+          <p className="text-xs text-stone-500 mt-0.5">Consult and commit on what matters</p>
         </div>
       </button>
     </div>

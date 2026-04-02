@@ -17,14 +17,13 @@ import type { MaiaWorldId, MaiaRailItemId } from '@/lib/navigation/types';
 interface MaiaLeftRailProps {
   activeWorld: MaiaWorldId;
   calmMode: boolean;
-  /** After 12s of continuous calm, restore to 40% for orientation */
   calmCeiling: boolean;
-  /** Which worlds have a cognition hint to breathe (single pulse, not persistent) */
   worldHints?: Partial<Record<MaiaWorldId, boolean>>;
   onWorldChange: (world: MaiaWorldId) => void;
+  onOpenAccount?: () => void;
 }
 
-export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, onWorldChange }: MaiaLeftRailProps) {
+export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, onWorldChange, onOpenAccount }: MaiaLeftRailProps) {
   const router = useRouter();
   const { presenceState, amplitude } = useVoiceState();
 
@@ -130,7 +129,8 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
             <button
               key={accountUtil.id}
               onClick={() => {
-                if (accountUtil.route) router.push(accountUtil.route);
+                if (onOpenAccount) onOpenAccount();
+                else if (accountUtil.route) router.push(accountUtil.route);
               }}
               className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200"
               title={accountUtil.label}
