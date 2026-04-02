@@ -82,3 +82,58 @@ export const shareArtifactSchema = z.object({
   sharedSummary: z.string().max(1200).optional().nullable(),
   sharedText: z.string().max(12000).optional().nullable(),
 });
+
+// ── Living Circles — Field Intelligence ────────────────────
+
+export type InquiryStatus = 'open' | 'closed' | 'integrating';
+export type ResponseType = 'reflection' | 'witness' | 'offering';
+export type FieldPhase = 'forming' | 'active' | 'integrating' | 'quiet';
+
+export interface CircleInquiryRow {
+  id: string;
+  circle_id: string;
+  opened_by: string;
+  question: string;
+  status: InquiryStatus;
+  opened_at: string;
+  closed_at: string | null;
+  field_synthesis: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CircleInquiryResponseRow {
+  id: string;
+  inquiry_id: string;
+  member_id: string;
+  response_text: string;
+  response_type: ResponseType;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FieldSignal {
+  description: string;
+  element: string;
+  _themeKey: string; // internal, not rendered
+}
+
+export interface CircleState {
+  phase: FieldPhase;
+  signals: FieldSignal[];
+  hasActiveInquiry: boolean;
+  activeInquiryId?: string;
+  activeInquiryQuestion?: string;
+  lastMovementAt: string | null;
+}
+
+// ── Inquiry Zod schemas ────────────────────────────────────
+
+export const createInquirySchema = z.object({
+  question: z.string().min(10).max(500),
+});
+
+export const respondToInquirySchema = z.object({
+  responseText: z.string().min(5).max(2000),
+  responseType: z.enum(['reflection', 'witness', 'offering']).default('reflection'),
+});
