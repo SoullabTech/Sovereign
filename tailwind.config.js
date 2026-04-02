@@ -192,6 +192,12 @@ module.exports = {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.02)', opacity: '0.9' },
         },
+        // Talk-first: subtle cognition hint on left rail world icons
+        'rail-breath': {
+          '0%': { opacity: '0.5', filter: 'drop-shadow(0 0 0px rgba(212, 184, 150, 0))' },
+          '50%': { opacity: '0.9', filter: 'drop-shadow(0 0 4px rgba(212, 184, 150, 0.4))' },
+          '100%': { opacity: '0.5', filter: 'drop-shadow(0 0 0px rgba(212, 184, 150, 0))' },
+        },
       },
       animation: {
         'spice-pulse': 'spice-pulse 2s ease-in-out infinite',

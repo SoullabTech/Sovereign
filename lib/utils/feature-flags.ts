@@ -19,6 +19,7 @@ export interface FeatureFlags {
   cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
   soullabStore: boolean;                // Store/offerings surface for product purchases
   promptLibrary: boolean;               // Weekly elemental theme activation via prompt library
+  spatialMaiaShell: boolean;            // Spatial restructuring: left rail + right panel + minimal top bar
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -37,6 +38,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   cmPractitionerEnvironment: false,   // Off until v1 tested
   soullabStore: false,                // Off until store verified in production
   promptLibrary: false,               // Off until first theme seeded and tested
+  spatialMaiaShell: false,            // Off until Pass A verified
 };
 
 /**
