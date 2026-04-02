@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Users, Plus, KeyRound, LogIn, ArrowLeft } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import type { FieldPhase } from '@/lib/circles/types';
 
 type CircleListItem = {
   id: string;
@@ -16,9 +17,34 @@ type CircleListItem = {
   consentMode: 'manual' | 'not_now';
 };
 
+type PulseSummary = {
+  phase: FieldPhase;
+  lastMovementAt: string | null;
+  hasActiveInquiry: boolean;
+};
+
+const PHASE_LABELS: Record<FieldPhase, { text: string; className: string }> = {
+  active: { text: 'Active', className: 'bg-amber-900/20 text-amber-400/80' },
+  integrating: { text: 'Integrating', className: 'bg-teal-900/20 text-teal-400/70' },
+  forming: { text: 'Forming', className: 'bg-violet-900/20 text-violet-400/70' },
+  quiet: { text: 'Quiet', className: 'bg-maia-navy-800 text-maia-ink-30' },
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 export default function CirclesPage() {
   const router = useRouter();
   const [circles, setCircles] = useState<CircleListItem[]>([]);
+  const [summaries, setSummaries] = useState<Record<string, PulseSummary>>({});
   const [loading, setLoading] = useState(true);
   const [signedOut, setSignedOut] = useState(false);
 
@@ -33,6 +59,13 @@ export default function CirclesPage() {
         }
         const json = await res.json();
         if (!cancelled) setCircles(json.circles ?? []);
+
+        // Fetch pulse summaries in parallel
+        const pulseRes = await apiFetch('/api/circles/pulse-summary');
+        if (pulseRes.ok) {
+          const pulseJson = await pulseRes.json();
+          if (!cancelled) setSummaries(pulseJson.summaries ?? {});
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -129,34 +162,58 @@ export default function CirclesPage() {
 
           {!loading && !signedOut && circles.length > 0 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {circles.map((c, i) => (
-                <motion.div
-                  key={c.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <Link
-                    href={`/commons/circles/${c.id}`}
-                    className="block rounded-2xl border border-maia-navy-700 bg-maia-navy-850 p-5 transition-all hover:border-maia-spice-500/30 hover:shadow-maia-panel"
+              {circles.map((c, i) => {
+                const pulse = summaries[c.id];
+                const phaseInfo = pulse ? PHASE_LABELS[pulse.phase] : null;
+
+                return (
+                  <motion.div
+                    key={c.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-lg font-semibold text-maia-ink-100">{c.name}</h3>
-                        {c.description && (
-                          <p className="mt-1 truncate text-sm text-maia-ink-40">{c.description}</p>
-                        )}
-                        <div className="mt-3 flex items-center gap-3 text-xs text-maia-ink-40">
-                          <span className="rounded-md border border-maia-navy-700 bg-maia-navy-900 px-2 py-0.5">
-                            {c.myRole}
-                          </span>
-                          <span>{c.consentMode === 'manual' ? 'Sharing enabled' : 'Sharing paused'}</span>
+                    <Link
+                      href={`/commons/circles/${c.id}`}
+                      className="block rounded-2xl border border-maia-navy-700 bg-maia-navy-850 p-5 transition-all hover:border-maia-spice-500/30 hover:shadow-maia-panel"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold text-maia-ink-100">{c.name}</h3>
+                          {c.description && (
+                            <p className="mt-1 truncate text-sm text-maia-ink-40">{c.description}</p>
+                          )}
+                          <div className="mt-3 flex items-center gap-3 text-xs text-maia-ink-40">
+                            <span className="rounded-md border border-maia-navy-700 bg-maia-navy-900 px-2 py-0.5">
+                              {c.myRole}
+                            </span>
+                            <span>{c.consentMode === 'manual' ? 'Sharing enabled' : 'Sharing paused'}</span>
+                          </div>
+
+                          {/* Field state — phase badge + last movement */}
+                          {pulse && (
+                            <div className="mt-2 flex items-center gap-2 text-xs">
+                              {phaseInfo && (
+                                <span className={`rounded-md px-1.5 py-0.5 ${phaseInfo.className}`}>
+                                  {phaseInfo.text}
+                                </span>
+                              )}
+                              {pulse.hasActiveInquiry && (
+                                <span className="text-amber-400/60">An inquiry is open</span>
+                              )}
+                              {pulse.lastMovementAt && (
+                                <span className="text-maia-ink-20">
+                                  {timeAgo(pulse.lastMovementAt)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </motion.div>

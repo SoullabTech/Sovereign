@@ -1,0 +1,30 @@
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getCircleWithMembership } from '@/lib/circles/circleService';
+import { getCirclePulse } from '@/lib/circles/fieldPulseService';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ circleId: string }> }
+) {
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const { circleId } = await params;
+    await getCircleWithMembership(circleId, memberId);
+
+    const pulse = await getCirclePulse(circleId);
+    return NextResponse.json({ pulse });
+  } catch (error: any) {
+    const msg = error?.message;
+    if (msg === 'FORBIDDEN') return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    if (msg === 'NOT_FOUND') return NextResponse.json({ error: 'Circle not found' }, { status: 404 });
+    console.error('[Circles] GET pulse error:', error);
+    return NextResponse.json({ error: 'Failed to get pulse' }, { status: 500 });
+  }
+}
