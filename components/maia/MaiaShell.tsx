@@ -21,9 +21,10 @@ import type { ConversationInsight } from '@/lib/maia/cognitionEvents';
 interface MaiaShellProps {
   explorerName: string;
   explorerId: string;
-  voiceEnabled: boolean;
+  /** true = voice mode (showChatInterface false), false = text mode */
+  isVoiceMode: boolean;
   behavior: MaiaBehavior;
-  onToggleVoice: () => void;
+  onToggleInputMode: () => void;
   onOpenHelp: () => void;
   onOpenAccount: () => void;
   onOpenJournalSheet: () => void;
@@ -36,9 +37,9 @@ interface MaiaShellProps {
 export function MaiaShell({
   explorerName,
   explorerId,
-  voiceEnabled,
+  isVoiceMode,
   behavior,
-  onToggleVoice,
+  onToggleInputMode,
   onOpenHelp,
   onOpenAccount,
   onOpenJournalSheet,
@@ -209,11 +210,11 @@ export function MaiaShell({
     <div className="min-h-screen bg-[#1a1a2e]">
       <MaiaTopBar
         explorerName={explorerName}
-        voiceEnabled={voiceEnabled}
+        isVoiceMode={isVoiceMode}
         behavior={behavior}
         calmMode={calmMode}
         calmCeiling={calmCeiling}
-        onToggleVoice={onToggleVoice}
+        onToggleInputMode={onToggleInputMode}
         onOpenHelp={onOpenHelp}
         onOpenAccount={onOpenAccount}
       />

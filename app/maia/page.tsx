@@ -708,9 +708,9 @@ function MAIAPageContent() {
           <MaiaShell
             explorerName={explorerName}
             explorerId={explorerId}
-            voiceEnabled={voiceEnabled}
+            isVoiceMode={!showChatInterface}
             behavior={currentBehavior}
-            onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
+            onToggleInputMode={() => setShowChatInterface(!showChatInterface)}
             onOpenHelp={() => setShowHelpHub(true)}
             onOpenAccount={() => setShowAccountMenu(true)}
             onOpenJournalSheet={() => setShowJournalSheet(true)}
