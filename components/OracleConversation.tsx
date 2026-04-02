@@ -166,6 +166,7 @@ import { BookPlus } from 'lucide-react';
 import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
 import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
 import RelationalDoorway from '@/components/maia/RelationalDoorway';
+import WorldDoorway from '@/components/maia/WorldDoorway';
 import { useFeatureFlags } from '@/lib/utils/feature-flags';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
@@ -3924,6 +3925,16 @@ I'm not sure what I'm feeling yet.`;
         break;
       case 'open_changes':
         window.location.href = '/dashboard/changes';
+        break;
+      // 🌐 WORLD DOORWAYS: Experiential spaces
+      case 'enter_patterns':
+        window.location.href = '/worlds/patterns';
+        break;
+      case 'enter_journey':
+        window.location.href = '/worlds/journey';
+        break;
+      case 'enter_depth':
+        window.location.href = '/worlds/depth';
         break;
     }
   }, []);
@@ -7973,8 +7984,34 @@ I'm not sure what I'm feeling yet.`;
                       && lastMsg.uiAction.type !== 'none'
                       && !dismissedRecently
                       && (Date.now() - lastDoorwayTimestamp > 15000);
+                    // Process doorways (journal, ideas, decisions, changes)
+                    if (shouldShow && !lastMsg.uiAction!.isWorldDoorway) {
+                      return (
+                        <RelationalDoorway
+                          action={lastMsg.uiAction!}
+                          onSelect={handleDoorwayAction}
+                          onDismiss={() => {
+                            setDoorwayDismissedAt(Date.now());
+                            setLastDoorwayTimestamp(Date.now());
+                          }}
+                          visible={true}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                  {/* 🌐 WORLD DOORWAYS: Experiential spaces (patterns, journey, depth) */}
+                  {(() => {
+                    const lastMsg = messages[messages.length - 1];
+                    const dismissedRecently = doorwayDismissedAt && (Date.now() - doorwayDismissedAt < 15000);
+                    const shouldShow = featureFlags.worldDoorways
+                      && lastMsg?.role === 'oracle'
+                      && lastMsg?.uiAction
+                      && lastMsg.uiAction.isWorldDoorway
+                      && !dismissedRecently
+                      && (Date.now() - lastDoorwayTimestamp > 15000);
                     return shouldShow ? (
-                      <RelationalDoorway
+                      <WorldDoorway
                         action={lastMsg.uiAction!}
                         onSelect={handleDoorwayAction}
                         onDismiss={() => {
