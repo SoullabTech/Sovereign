@@ -201,54 +201,25 @@ function SigninContent() {
     }
   }, []);
 
-  // NEVER block on native - always show form immediately
-  const [checkingAuth, setCheckingAuth] = useState(false);
-
+  // Auth check — NEVER blocks the form. Redirects silently if already authed.
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
     console.log('[SIGNIN PAGE] Mounted, isNative:', isNative);
 
-    // DEBUG BYPASS: if debug=1 in URL, skip all redirects
+    if (isNative) return;
+
     const params = new URLSearchParams(window.location.search);
-    if (params.get('debug') === '1') {
-      console.log('[SIGNIN PAGE] debug=1 - skipping auth check redirects');
-      setCheckingAuth(false);
-      return;
-    }
+    if (params.get('debug') === '1') return;
 
-    // SIGNOUT LATCH: If user explicitly signed out, stay on signin
-    // This prevents any auto-redirect from overriding explicit signout
-    const signedOut = localStorage.getItem('maia_signed_out') === '1';
-    if (signedOut) {
-      console.log('[SIGNIN PAGE] latch active - skipping auto-redirect');
-      setCheckingAuth(false);
-      return;
-    }
+    // If user explicitly signed out, don't auto-redirect
+    if (localStorage.getItem('maia_signed_out') === '1') return;
 
-    // NATIVE: Never do auth preflight
-    if (isNative) {
-      console.log('[SIGNIN PAGE] Native - form ready');
-      return;
-    }
+    // If middleware told us there's no session, don't bother checking
+    if (params.get('reason')) return;
 
-    // MIDDLEWARE ALREADY TOLD US: if reason param exists, middleware already
-    // determined auth state — skip the whoami check entirely (fixes Chrome iOS hang)
-    const reason = params.get('reason');
-    if (reason) {
-      console.log('[SIGNIN PAGE] reason param present — skipping auth check:', reason);
-      setCheckingAuth(false);
-      return;
-    }
-
-    // WEB ONLY: Quick auth check (can fail safely)
-    // Timeout ensures form always appears even if fetch hangs (Chrome iOS)
-    setCheckingAuth(true);
+    // Silent background check — form is already visible, redirect only if authed
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      controller.abort();
-      setCheckingAuth(false);
-      console.log('[SIGNIN PAGE] Auth check timed out — showing form');
-    }, 3000);
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
     fetch('/api/auth/whoami', { credentials: 'include', signal: controller.signal })
       .then(res => res.json())
@@ -257,14 +228,9 @@ function SigninContent() {
         if (data.authed) {
           const next = getSearchParam('next') || '/maia';
           window.location.replace(next);
-        } else {
-          setCheckingAuth(false);
         }
       })
-      .catch(() => {
-        clearTimeout(timeout);
-        setCheckingAuth(false);
-      });
+      .catch(() => clearTimeout(timeout));
   }, []);
 
   // Trust device helper
@@ -670,14 +636,7 @@ function SigninContent() {
     }
   };
 
-  // Show loading while checking server session
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 via-emerald-50/30 to-amber-50/20">
-        <div className="text-teal-600/60 animate-pulse">Checking session...</div>
-      </div>
-    );
-  }
+  // "Checking session..." screen removed — form always renders immediately
 
   return (
     <>
