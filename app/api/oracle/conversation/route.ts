@@ -27,6 +27,7 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -58,6 +59,9 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
+import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
+import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
+import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 
 // Skip during static export (Capacitor builds)
 
@@ -640,7 +644,8 @@ export async function POST(request: NextRequest) {
       astrologyContext,
       preferredAssistantName,
       activeReportContext,
-      memberWebPrompt
+      memberWebPrompt,
+      userId
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -689,7 +694,8 @@ export async function POST(request: NextRequest) {
             memoryContext,
             anamnesisPrompt,
             astrologyContext,
-            preferredAssistantName
+            preferredAssistantName,
+            memberWebPrompt
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -1133,6 +1139,29 @@ export async function POST(request: NextRequest) {
       signals: relationalHint.signals,
     });
 
+    // SACRED ENCOUNTER: evaluate whether a sacred passage should surface
+    // This runs after MAIA's response is drafted — it does not alter the response,
+    // it optionally appends an encounter payload for the client to render separately.
+    const sacredEncounter = evaluateEncounter({
+      latestMessage: message,
+      recentTurns: (conversationHistory || []).map((t: any) => ({
+        role: t.role as 'user' | 'assistant',
+        content: typeof t.content === 'string' ? t.content : '',
+      })),
+      sessionId,
+      timestamp: new Date().toISOString(),
+      affect: voiceHint ? { mood: voiceHint.mood, archetype: voiceHint.archetype } : undefined,
+      element: spiralogicCell?.element?.toLowerCase() as any,
+    });
+
+    if (sacredEncounter) {
+      console.info('[sacred-encounter]', {
+        passageId: sacredEncounter.passage.id,
+        tradition: sacredEncounter.passage.tradition,
+        citation: sacredEncounter.passage.citation,
+      });
+    }
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
@@ -1203,6 +1232,9 @@ export async function POST(request: NextRequest) {
         }
         return handoff;
       })(),
+      // Sacred encounter: present if gates passed, null otherwise.
+      // Client renders this as a separate block — MAIA does not comment on it.
+      sacredEncounter: sacredEncounter ?? undefined,
     };
 
     // Log successful oracle usage
@@ -1477,7 +1509,8 @@ async function generateSpiralogicResponseWithLLM(
   astrologyContext?: AstrologyContext | null,
   preferredAssistantName?: string,
   activeReportContext?: ActiveReportContext | null,
-  memberWebPrompt?: string
+  memberWebPrompt?: string,
+  userId?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1508,7 +1541,8 @@ async function generateSpiralogicResponseWithLLM(
     memoryContext,
     anamnesisPrompt,
     astrologyContext,
-    preferredAssistantName
+    preferredAssistantName,
+    memberWebPrompt
   );
 
   // Format conversation history for LLM
@@ -1602,9 +1636,60 @@ async function generateSpiralogicResponseWithLLM(
     ? buildReportContextBlock(activeReportContext)
     : '';
 
+  // ────────────────────────────────────────────────────────────────
+  // CM Practitioner Environment — four-layer perceptual field
+  // Injected after systemPrompt, before reportContextBlock.
+  // Auto-decays: layer focus applies to this response only.
+  // ────────────────────────────────────────────────────────────────
+  let cmEnvironmentBlock = '';
+  let cmState: CMEnvironmentState | null = null;
+  try {
+    const cmRow = await query(
+      `SELECT cm_environment_enabled, cm_active_layer, cm_layer_weights FROM members WHERE id = $1`,
+      [userId]
+    );
+    if (cmRow.rows[0]?.cm_environment_enabled) {
+      const detection = detectLayerIntent(message);
+      cmState = {
+        activeLayer: detection.layer || (cmRow.rows[0].cm_active_layer as any) || 'weave',
+        layerWeights: cmRow.rows[0].cm_layer_weights || { energy: 0.2, symbolic: 0.3, embodiment: 0.3, integration: 0.2 },
+        source: detection.layer ? 'detected' : (cmRow.rows[0].cm_active_layer !== 'weave' ? 'profile' : 'default'),
+        confidence: detection.layer ? detection.confidence : 1.0,
+      };
+      cmEnvironmentBlock = getCMEnvironmentBlock(cmState);
+      console.log(`[Oracle] cm-environment { layer: ${cmState.activeLayer}, source: ${cmState.source}, confidence: ${cmState.confidence.toFixed(2)}, blockLength: ${cmEnvironmentBlock.length} }`);
+
+      // Fire-and-forget: store layer signal if detected
+      if (detection.layer) {
+        storeCMLayerSignal(userId, detection.layer, {
+          resonanceStrength: detection.confidence,
+          context: message.substring(0, 200),
+        });
+      }
+    }
+  } catch (cmError) {
+    // Non-blocking — MAIA proceeds without CM environment
+    console.warn('[Oracle] CM environment load failed (non-critical):', cmError);
+  }
+
+  // PROMPT LIBRARY: load active weekly theme with cycle fallback (non-blocking)
+  let activeThemeBlock = '';
+  try {
+    const memberElement = spiralState?.dominant_element || null;
+    const themeResult = await buildActiveThemeBlock(memberElement);
+    if (themeResult) {
+      activeThemeBlock = themeResult.block;
+      console.log(`[Oracle] prompt-library { theme: ${themeResult.theme.slug}, element: ${themeResult.theme.element}, items: ${themeResult.theme.items.length}, cycleWeek: ${themeResult.cycleContext.cycleWeek}, memberResonance: ${themeResult.memberResonance} }`);
+    }
+  } catch (themeError) {
+    console.warn('[Oracle] Prompt library load failed (non-critical):', themeError);
+  }
+
   const finalSystemPrompt = [
     systemPrompt,
+    cmEnvironmentBlock,
     reportContextBlock,
+    activeThemeBlock,
     councilInsights,
     collectiveWisdom,
   ].filter(Boolean).join('');
@@ -1715,7 +1800,8 @@ function buildSacredAttendingPrompt(
   memoryContext?: any,
   anamnesisPrompt?: string | null,
   astrologyContext?: AstrologyContext | null,
-  preferredAssistantName?: string
+  preferredAssistantName?: string,
+  memberWebPrompt?: string
 ): string {
   // Build the custom name instruction if member has set a preferred name
   const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'

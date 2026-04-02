@@ -17,6 +17,11 @@ const NAV_ITEMS = [
   { href: '/practitioner/labtools/pipeline', label: 'Pipeline', icon: 'funnel' },
 ];
 
+// Creativity section
+const CREATIVITY_ITEMS = [
+  { href: '/maia/songwriter', label: 'Songwriter', icon: 'pen' },
+];
+
 // Pro section - practice management and sharing
 const PRO_ITEMS = [
   { href: '/practitioner/dashboard', label: 'Practice', icon: 'briefcase' },
@@ -64,6 +69,11 @@ function NavIcon({ icon, className }: { icon: string; className?: string }) {
     star: (
       <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+    ),
+    pen: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
       </svg>
     ),
     portal: (
@@ -123,6 +133,26 @@ export default function LabtoolsLayout({
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                   isActive(item.href)
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+              >
+                <NavIcon icon={item.icon} className="w-4 h-4" />
+                {item.label}
+              </Link>
+            ))}
+
+            {/* Divider */}
+            <div className="h-6 w-px bg-gray-700 mx-2" />
+
+            {/* Creativity Section */}
+            <span className="text-xs text-rose-400 font-medium uppercase tracking-wide px-2">Create</span>
+            {CREATIVITY_ITEMS.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                  isActive(item.href)
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                     : 'text-gray-400 hover:text-white hover:bg-gray-800'
                 }`}
               >

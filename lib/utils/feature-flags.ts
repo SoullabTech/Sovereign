@@ -16,6 +16,9 @@ export interface FeatureFlags {
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
   worldDoorways: boolean;               // v1: world-entry doorways from MAIA conversation
+  cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
+  soullabStore: boolean;                // Store/offerings surface for product purchases
+  promptLibrary: boolean;               // Weekly elemental theme activation via prompt library
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -31,6 +34,9 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryPractitioner: false,   // Off until Phase 3
   relationalRouting: false,           // Off until v1 tested
   worldDoorways: true,               // On — core experience shift
+  cmPractitionerEnvironment: false,   // Off until v1 tested
+  soullabStore: false,                // Off until store verified in production
+  promptLibrary: false,               // Off until first theme seeded and tested
 };
 
 /**

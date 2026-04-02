@@ -359,6 +359,21 @@ export default function LabtoolsHub() {
           </section>
         )}
 
+        {/* Creativity */}
+        <section className="mb-8">
+          <h2 className="text-xs font-medium tracking-wider text-gray-500 uppercase mb-4">
+            Creativity
+          </h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <QuickActionCard
+              title="Songwriter"
+              description="Write and develop songs with MAIA"
+              href="/maia/songwriter"
+              icon="🎵"
+            />
+          </div>
+        </section>
+
         {/* Back to Dashboard */}
         <div className="mt-8 pt-6 border-t border-gray-800">
           <Link

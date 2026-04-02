@@ -51,6 +51,9 @@ import { FieldStateIndicator } from './ain/FieldStateIndicator';
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
 import { AstrologyHandoffCard } from '@/components/astrology/AstrologyHandoffCard';
+import { SacredPassageBlock } from '@/components/wisdom/SacredPassageBlock';
+import type { EncounterResult } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
+import type { SacredPassage } from '@/lib/wisdom/sacredTexts/types';
 import { formatMessageText } from '@/lib/text/formatMessageText';
 import { HighlightedText } from './vocabulary/VocabularyTooltip';
 import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
@@ -480,6 +483,8 @@ interface ConversationMessage {
   } | null;
   // 🌌 ASTROLOGY HANDOFF: Structured transition into the Cosmic Blueprint
   astrologyHandoff?: import('@/lib/astrology/astrologyHandoff').AstrologyHandoff | null;
+  // 📖 SACRED ENCOUNTER: Optional passage surfaced by encounter layer
+  sacredEncounter?: EncounterResult | null;
   // 🚪 RELATIONAL ROUTING: intent-driven doorway
   intent?: import('@/lib/types/ai').MaiaIntent;
   uiAction?: import('@/lib/types/ai').MaiaUiAction;
@@ -5154,6 +5159,8 @@ I'm not sure what I'm feeling yet.`;
         consultation: responseData.consultation || null,
         // 🌌 ASTROLOGY HANDOFF: Structured threshold transition into the Cosmic Blueprint
         astrologyHandoff: responseData.astrologyHandoff || null,
+        // 📖 SACRED ENCOUNTER: passage surfaced by encounter layer (rendered separately)
+        sacredEncounter: responseData.sacredEncounter ?? null,
         // 🚪 RELATIONAL ROUTING: intent-driven doorway
         intent: responseData.intent || undefined,
         uiAction: responseData.uiAction || undefined,
@@ -7893,6 +7900,23 @@ I'm not sure what I'm feeling yet.`;
                       {/* 🌌 ASTROLOGY HANDOFF: Threshold card into the Cosmic Blueprint */}
                       {message.role === 'oracle' && message.astrologyHandoff && (
                         <AstrologyHandoffCard handoff={message.astrologyHandoff} />
+                      )}
+
+                      {/* 📖 SACRED ENCOUNTER: Passage rendered below MAIA's response, visually distinct */}
+                      {message.role === 'oracle' && message.sacredEncounter && (
+                        <div className="mt-4">
+                          {message.sacredEncounter.introduction && (
+                            <p className="text-sm text-stone-400/80 italic mb-3">
+                              {message.sacredEncounter.introduction}
+                            </p>
+                          )}
+                          <SacredPassageBlock
+                            passage={message.sacredEncounter.passage}
+                            showDisclaimer={message.sacredEncounter.showDisclaimer !== false}
+                            disclaimerText={message.sacredEncounter.disclaimer?.short}
+                            compact={false}
+                          />
+                        </div>
                       )}
 
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
