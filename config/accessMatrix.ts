@@ -117,6 +117,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/patterns', public: true, notes: 'Patterns landing - symbolic systems & cycles' },
   { exact: '/astrology', public: true, notes: 'Cycle lens module (nested under Patterns)' },
 
+  // Worlds (experiential spaces)
+  { prefix: '/worlds', public: true, notes: 'Worlds triptych - patterns, journey, depth' },
+
   // Practitioner pricing (public for discovery)
   { regex: /^\/api\/practitioner\/[^/]+\/pricing$/, public: true, notes: 'Practitioner pricing is public' },
 
