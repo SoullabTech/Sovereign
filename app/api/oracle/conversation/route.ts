@@ -28,6 +28,7 @@ import {
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
+import { detectSacredIntent, getSacredLearningPromptBlock } from '@/lib/sacred-learning/sacredLearningLens';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
 import { logOracleUsage } from '@/lib/learning/oracleUsageLoggingService';
@@ -545,6 +546,9 @@ export async function POST(request: NextRequest) {
 
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
+
+    // SACRED INTENT: Progressive disclosure — surface (gentle pointer) or deep (full lens)
+    const sacredIntentDepth = detectSacredIntent(message, conversationHistory);
 
     // Generate disposable pixel configuration with spiralogic enhancements
     const disposablePixels = PanconsciousFieldService.generateDisposablePixels(
@@ -1602,11 +1606,18 @@ async function generateSpiralogicResponseWithLLM(
     ? buildReportContextBlock(activeReportContext)
     : '';
 
+  // Sacred learning lens — progressive: surface = gentle pointer, deep = full constraints
+  const sacredLensBlock = getSacredLearningPromptBlock(sacredIntentDepth);
+  if (sacredIntentDepth !== 'none') {
+    console.info(`[Oracle] sacred-lens { depth: ${sacredIntentDepth}, blockLength: ${sacredLensBlock.length} }`);
+  }
+
   const finalSystemPrompt = [
     systemPrompt,
     reportContextBlock,
     councilInsights,
     collectiveWisdom,
+    sacredLensBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)

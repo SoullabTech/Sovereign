@@ -1,0 +1,153 @@
+{
+  "theme": {
+    "slug": "heart",
+    "name": "The Heart (Qalb)",
+    "arabicTerm": "قلب",
+    "description": "The heart as the organ of perception, the seat of understanding, the place where knowledge becomes wisdom. In Islamic tradition, the qalb is not merely emotional — it is the center of intelligence, discernment, and spiritual receptivity.",
+    "displayOrder": 2
+  },
+  "sources": [
+    {
+      "ref": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "work": "Qur'an",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "sourceEdition": "Medina Mushaf (Uthmani script)",
+      "language": "ar",
+      "reviewStatus": "approved"
+    },
+    {
+      "ref": "ibn-kathir-tafsir",
+      "authorityLevel": 2,
+      "author": "Ibn Kathir",
+      "work": "Tafsir al-Qur'an al-Azim",
+      "language": "ar",
+      "reviewStatus": "approved"
+    },
+    {
+      "ref": "rumi-masnavi-nicholson",
+      "authorityLevel": 4,
+      "author": "Rumi",
+      "work": "Masnavi-i Ma'navi",
+      "translator": "R. A. Nicholson",
+      "translationEdition": "Gibb Memorial Trust, 1926",
+      "language": "fa",
+      "reviewStatus": "approved"
+    }
+  ],
+  "passages": [
+    {
+      "dayNumber": 5,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Al-Hajj",
+      "surahNumber": 22,
+      "ayahStart": 46,
+      "ayahEnd": 46,
+      "arabicText": "أَفَلَمْ يَسِيرُوا فِي الْأَرْضِ فَتَكُونَ لَهُمْ قُلُوبٌ يَعْقِلُونَ بِهَا أَوْ آذَانٌ يَسْمَعُونَ بِهَا ۖ فَإِنَّهَا لَا تَعْمَى الْأَبْصَارُ وَلَٰكِن تَعْمَى الْقُلُوبُ الَّتِي فِي الصُّدُورِ",
+      "translationText": "Have they not travelled through the land with hearts to understand and ears to hear? It is not the eyes that are blind but the hearts within the breasts.",
+      "contextNote": "This ayah makes a remarkable claim: the heart is the organ of understanding. Blindness is not a condition of the eyes but of the heart. The Qur'an consistently locates intelligence, perception, and discernment in the qalb rather than the brain.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [
+        {
+          "sourceRef": "ibn-kathir-tafsir",
+          "authorityLevel": 2,
+          "author": "Ibn Kathir",
+          "work": "Tafsir al-Qur'an al-Azim",
+          "text": "Ibn Kathir explains that true blindness is the inability of the heart to perceive truth and guidance. Physical sight may function perfectly while the heart remains veiled from understanding the signs that are everywhere present in creation.",
+          "reviewStatus": "approved",
+          "displayOrder": 1
+        },
+        {
+          "sourceRef": "rumi-masnavi-nicholson",
+          "authorityLevel": 4,
+          "author": "Rumi",
+          "work": "Masnavi-i Ma'navi",
+          "sectionRef": "Book I",
+          "translator": "R. A. Nicholson",
+          "text": "The eye of the heart has seven hundred layers. The eyes of the head have only two.",
+          "reviewStatus": "approved",
+          "displayOrder": 3
+        }
+      ],
+      "practices": [
+        {
+          "practiceType": "embodied",
+          "text": "Close your eyes for two minutes. Place your attention in the center of your chest — not thinking about the heart, but listening from it. What do you notice when you shift from seeing the world to sensing it from your center?",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "What does it mean that understanding lives in the heart rather than the mind? Can you recall a time when you 'knew' something with your heart before your mind caught up?"
+    },
+    {
+      "dayNumber": 6,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Qaf",
+      "surahNumber": 50,
+      "ayahStart": 37,
+      "ayahEnd": 37,
+      "arabicText": "إِنَّ فِي ذَٰلِكَ لَذِكْرَىٰ لِمَن كَانَ لَهُ قَلْبٌ أَوْ أَلْقَى السَّمْعَ وَهُوَ شَهِيدٌ",
+      "translationText": "There truly is a reminder in this for whoever has a heart, whoever listens attentively.",
+      "contextNote": "This ayah identifies the conditions for receiving a reminder: having a heart (qalb) and attentive listening (ilqa' al-sam'). The word 'shahid' (witness, attentive) suggests not just hearing but being fully present to what is heard.",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [],
+      "practices": [
+        {
+          "practiceType": "contemplation",
+          "text": "Read today's passage aloud, slowly. Then sit in silence. The passage says a reminder is available 'for whoever has a heart.' You do not need to acquire a heart — you already have one. The invitation is only to listen from it.",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "What does it mean to 'have a heart' in the sense used here — not emotionality, but receptivity? What helps you listen attentively?"
+    },
+    {
+      "dayNumber": 7,
+      "sourceRef": "quran-abdel-haleem",
+      "authorityLevel": 1,
+      "surahName": "Ash-Shu'ara",
+      "surahNumber": 26,
+      "ayahStart": 89,
+      "ayahEnd": 89,
+      "arabicText": "إِلَّا مَنْ أَتَى اللَّهَ بِقَلْبٍ سَلِيمٍ",
+      "translationText": "Only the one who comes to God with a sound heart.",
+      "contextNote": "The 'qalb salim' — sound heart, whole heart, heart at peace — is presented as the one thing that matters on the Day of Reckoning. Neither wealth nor children benefit; only the condition of the heart. The word 'salim' shares its root with 'islam' (surrender) and 'salam' (peace).",
+      "translator": "M. A. S. Abdel Haleem",
+      "translationEdition": "Oxford University Press, 2004",
+      "reviewStatus": "approved",
+      "sensitivityFlags": [],
+      "commentary": [
+        {
+          "sourceRef": "ibn-kathir-tafsir",
+          "authorityLevel": 2,
+          "author": "Ibn Kathir",
+          "work": "Tafsir al-Qur'an al-Azim",
+          "text": "Ibn Kathir describes the sound heart (qalb salim) as one that is free from shirk (associating partners with God), free from doubt, and free from attachment to what distracts from God. It is not a heart without feeling, but a heart whose fundamental orientation is clear.",
+          "reviewStatus": "approved",
+          "displayOrder": 1
+        }
+      ],
+      "practices": [
+        {
+          "practiceType": "contemplation",
+          "text": "The 'sound heart' shares its linguistic root with peace (salam) and surrender (islam). Sit with this: what would it mean for your heart to be sound — not perfect, not without pain, but fundamentally oriented and at peace? What is one thing that obscures that orientation today?",
+          "authorityLevel": 6,
+          "label": "Practice Invitation (AI-composed)",
+          "reviewStatus": "approved"
+        }
+      ],
+      "reflectionPrompt": "If only the condition of the heart matters in the end, what does that change about how you relate to success, appearance, and accumulation? What does a 'sound heart' feel like from the inside?"
+    }
+  ]
+}

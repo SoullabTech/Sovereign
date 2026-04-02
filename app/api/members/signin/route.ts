@@ -169,11 +169,15 @@ export async function POST(request: NextRequest) {
       } : undefined
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[PasswordSignin] Error:', error);
 
+    const isDev = process.env.NODE_ENV === 'development';
     return NextResponse.json(
-      { error: 'Sign in failed' },
+      {
+        error: 'Sign in failed',
+        ...(isDev && { detail: error?.message, stack: error?.stack?.split('\n').slice(0, 5) })
+      },
       { status: 500 }
     );
   }

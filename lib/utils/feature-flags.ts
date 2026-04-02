@@ -15,6 +15,7 @@ export interface FeatureFlags {
   participatoryJournalingLens: boolean; // Phase 2: journal theme tagging
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
+  sacredLearning: boolean;              // Sacred Study domain — daily encounter + corpus
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -29,6 +30,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryJournalingLens: false, // Off until Phase 2
   participatoryPractitioner: false,   // Off until Phase 3
   relationalRouting: false,           // Off until v1 tested
+  sacredLearning: false,              // Off until seed corpus reviewed and approved
 };
 
 /**
