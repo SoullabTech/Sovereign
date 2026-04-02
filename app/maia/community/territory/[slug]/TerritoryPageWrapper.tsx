@@ -63,45 +63,22 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   wrench: Wrench
 };
 
-// Mock posts data (will be replaced with real API)
-const mockPosts = [
-  {
-    id: 'post-1',
-    title: 'Welcome to this Sacred Territory',
-    content: 'This is a space for elevated discourse and consciousness expansion...',
-    author: 'MAIA System',
-    createdAt: '2 hours ago',
-    replies: 5,
-    hearts: 12,
-    views: 89,
-    isPinned: true,
-    isBreakthrough: false
-  },
-  {
-    id: 'post-2',
-    title: 'Profound Breakthrough Experience',
-    content: 'I wanted to share an incredible moment of consciousness expansion I experienced...',
-    author: 'SacredSeeker',
-    createdAt: '4 hours ago',
-    replies: 15,
-    hearts: 28,
-    views: 156,
-    isPinned: false,
-    isBreakthrough: true
-  },
-  {
-    id: 'post-3',
-    title: 'Field Integration Techniques',
-    content: 'Sharing some practical methods for integrating field states into daily practice...',
-    author: 'FieldExplorer',
-    createdAt: '1 day ago',
-    replies: 8,
-    hearts: 19,
-    views: 134,
-    isPinned: false,
-    isBreakthrough: false
-  }
-];
+// Post type from API — matches community_posts columns
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  excerpt: string;
+  user_name: string;
+  user_id: string;
+  territory_slug: string;
+  content_type: string;
+  created_at: string;
+  comment_count: number;
+  heart_count: number;
+  view_count: number;
+  is_pinned: boolean;
+}
 
 // Map slug to icon - matches actual territory slugs from database
 function getTerritoryIcon(slug: string): React.ComponentType<{ className?: string }> {
@@ -118,6 +95,93 @@ function getTerritoryIcon(slug: string): React.ComponentType<{ className?: strin
   return map[slug] || MessageSquare;
 }
 
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Territory-specific empty states — each room has its own voice
+const TERRITORY_EMPTY: Record<string, { heading: string; body: string; cta: string }> = {
+  threshold: {
+    heading: 'This is where journeys begin',
+    body: 'Introduce yourself. Share what brought you here. Name what you are seeking.',
+    cta: 'Open the Threshold',
+  },
+  seeking: {
+    heading: 'Questions welcome here',
+    body: 'What is alive in you right now? What are you curious about? What refuses to resolve?',
+    cta: 'Ask Something Real',
+  },
+  practice: {
+    heading: 'A quiet room for practitioners',
+    body: 'Share what you are doing — a ritual, a discipline, an experiment in living. What works. What doesn\'t.',
+    cta: 'Share a Practice',
+  },
+  breakthrough: {
+    heading: 'Something shifted',
+    body: 'Breakthroughs deserve witness. If something moved in you — an insight, a release, a sudden clarity — name it here.',
+    cta: 'Name What Shifted',
+  },
+  offering: {
+    heading: 'Give back what you\'ve learned',
+    body: 'Essays, guides, reviews, teachings. What do you know now that you wish someone had told you?',
+    cta: 'Make an Offering',
+  },
+  circle: {
+    heading: 'We journey alone, but not in isolation',
+    body: 'Support, connection, and mutual recognition. What do you need? What can you hold for someone else?',
+    cta: 'Gather Here',
+  },
+  foundation: {
+    heading: 'Core teachings live here',
+    body: 'The foundational wisdom this community is built on. Engage with it, question it, deepen it.',
+    cta: 'Engage the Foundation',
+  },
+  workshop: {
+    heading: 'The lab is open',
+    body: 'Technical discussions, platform development, and consciousness technology. Build something.',
+    cta: 'Start Building',
+  },
+};
+
+function EmptyTerritory({ slug, icon, onPost }: { slug: string; icon: React.ReactNode; onPost: () => void }) {
+  const voice = TERRITORY_EMPTY[slug] || {
+    heading: 'This territory is open',
+    body: 'No conversations have gathered here yet. Be the first to share something.',
+    cta: 'Start a Conversation',
+  };
+
+  return (
+    <div className="bg-slate-900/30 border border-amber-500/10 rounded-xl p-12 text-center">
+      <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-500/5 border border-amber-500/20 flex items-center justify-center">
+        {icon}
+      </div>
+      <h3 className="text-lg font-light text-amber-100/80 mb-2">
+        {voice.heading}
+      </h3>
+      <p className="text-amber-300/40 text-sm max-w-md mx-auto leading-relaxed mb-6">
+        {voice.body}
+      </p>
+      <button
+        onClick={onPost}
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-amber-50 rounded-lg hover:bg-amber-700 transition-colors text-sm"
+      >
+        <Plus className="w-4 h-4" />
+        {voice.cta}
+      </button>
+    </div>
+  );
+}
+
 export default function TerritoryPageWrapper() {
   const params = useParams();
   const router = useRouter();
@@ -127,11 +191,13 @@ export default function TerritoryPageWrapper() {
   const [territory, setTerritory] = useState<Territory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
 
-  // Load territory data
+  // Load territory data + posts
   useEffect(() => {
     loadTerritoryData();
+    loadPosts();
   }, [slug]);
 
   const loadTerritoryData = async () => {
@@ -157,6 +223,21 @@ export default function TerritoryPageWrapper() {
       setError('Failed to load territory');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadPosts = async () => {
+    try {
+      setPostsLoading(true);
+      const response = await apiFetch(`/api/community/posts?territory=${slug}&limit=20`);
+      const data = await response.json();
+      if (data.ok && data.posts) {
+        setPosts(data.posts);
+      }
+    } catch (err) {
+      console.error('Error loading posts:', err);
+    } finally {
+      setPostsLoading(false);
     }
   };
 
@@ -216,7 +297,10 @@ export default function TerritoryPageWrapper() {
               <SearchIcon className="w-4 h-4" />
               Search
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-amber-50 rounded-lg hover:bg-amber-700 transition-colors">
+            <button
+              onClick={() => router.push(`/maia/community/new-post?territory=${slug}`)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-amber-50 rounded-lg hover:bg-amber-700 transition-colors"
+            >
               <Plus className="w-4 h-4" />
               New Post
             </button>
@@ -255,72 +339,89 @@ export default function TerritoryPageWrapper() {
 
         {/* Posts List */}
         <div className="space-y-4">
-          {posts.map((post) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`
-                bg-slate-900/30 border border-amber-500/20 rounded-xl p-6
-                hover:border-amber-500/40 hover:bg-slate-800/30 transition-all cursor-pointer
-                ${post.isPinned ? 'ring-1 ring-amber-500/30' : ''}
-                ${post.isBreakthrough ? 'border-yellow-500/30' : ''}
-              `}
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center text-amber-50 font-bold text-sm">
-                  {post.author.substring(0, 2).toUpperCase()}
-                </div>
+          {postsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+              <span className="ml-3 text-amber-300/60 text-sm">Loading posts...</span>
+            </div>
+          ) : posts.length === 0 ? (
+            /* Honest empty state — each territory has its own voice */
+            <EmptyTerritory slug={slug} icon={<IconComponent className="w-8 h-8 text-amber-400/40" />} onPost={() => router.push(`/maia/community/new-post?territory=${slug}`)} />
+          ) : (
+            posts.map((post) => {
+              const timeAgo = formatTimeAgo(post.created_at);
+              const isBreakthrough = post.content_type === 'breakthrough';
+              return (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`
+                    bg-slate-900/30 border border-amber-500/20 rounded-xl p-6
+                    hover:border-amber-500/40 hover:bg-slate-800/30 transition-all cursor-pointer
+                    ${post.is_pinned ? 'ring-1 ring-amber-500/30' : ''}
+                    ${isBreakthrough ? 'border-yellow-500/30' : ''}
+                  `}
+                  onClick={() => router.push(`/maia/community/post/${post.id}`)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center text-amber-50 font-bold text-sm">
+                      {(post.user_name || '??').substring(0, 2).toUpperCase()}
+                    </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {post.isPinned && <Pin className="w-4 h-4 text-amber-400" />}
-                    {post.isBreakthrough && <Sparkles className="w-4 h-4 text-yellow-400" />}
-                    <h3 className="font-medium text-amber-100 hover:text-amber-50 transition-colors">
-                      {post.title}
-                    </h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {post.is_pinned && <Pin className="w-4 h-4 text-amber-400" />}
+                        {isBreakthrough && <Sparkles className="w-4 h-4 text-yellow-400" />}
+                        <h3 className="font-medium text-amber-100 hover:text-amber-50 transition-colors">
+                          {post.title}
+                        </h3>
+                      </div>
+
+                      <p className="text-amber-300/70 text-sm mb-3 leading-relaxed line-clamp-2">
+                        {post.excerpt || post.content}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-xs text-amber-300/60">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {post.user_name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {timeAgo}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          {post.comment_count}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          {post.heart_count}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {post.view_count}
+                        </span>
+                      </div>
+                    </div>
+
+                    <ChevronRight className="w-5 h-5 text-amber-400/60" />
                   </div>
-
-                  <p className="text-amber-300/70 text-sm mb-3 leading-relaxed">
-                    {post.content}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-amber-300/60">
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {post.author}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {post.createdAt}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageSquare className="w-3 h-3" />
-                      {post.replies}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3 h-3" />
-                      {post.hearts}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-3 h-3" />
-                      {post.views}
-                    </span>
-                  </div>
-                </div>
-
-                <ChevronRight className="w-5 h-5 text-amber-400/60" />
-              </div>
-            </motion.div>
-          ))}
+                </motion.div>
+              );
+            })
+          )}
         </div>
 
-        {/* Load More */}
-        <div className="mt-8 text-center">
-          <button className="px-6 py-3 bg-slate-800/50 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-slate-700/50 transition-colors">
-            Load More Posts
-          </button>
-        </div>
+        {/* Load More — only show when there are posts */}
+        {posts.length >= 20 && (
+          <div className="mt-8 text-center">
+            <button className="px-6 py-3 bg-slate-800/50 border border-amber-500/30 text-amber-300 rounded-lg hover:bg-slate-700/50 transition-colors">
+              Load More Posts
+            </button>
+          </div>
+        )}
 
       </div>
     </div>

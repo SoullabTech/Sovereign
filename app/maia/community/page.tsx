@@ -161,6 +161,7 @@ export default function CommunityBBSPage() {
     comments: 0,
     hearts: 0,
     breakthroughs: 0,
+    conversations: 0,
     cohort: 1,
     joinedDate: ''
   });
@@ -191,6 +192,7 @@ export default function CommunityBBSPage() {
           comments: 0,
           hearts: 0,
           breakthroughs: 0,
+          conversations: 0,
           cohort: 1,
           joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''
         });
@@ -206,7 +208,8 @@ export default function CommunityBBSPage() {
                   posts: data.stats.posts || 0,
                   comments: data.stats.comments || 0,
                   hearts: data.stats.hearts || 0,
-                  breakthroughs: data.stats.breakthroughs || 0
+                  breakthroughs: data.stats.breakthroughs || 0,
+                  conversations: data.stats.conversations || 0
                 }));
               }
             })
@@ -398,8 +401,8 @@ export default function CommunityBBSPage() {
                   <div className="text-xs text-white/50">Posts</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-orange-500">{currentUser.comments}</div>
-                  <div className="text-xs text-white/50">Comments</div>
+                  <div className="text-lg font-bold text-orange-500">{currentUser.conversations.toLocaleString()}</div>
+                  <div className="text-xs text-white/50">Conversations</div>
                 </div>
                 <div>
                   <div className="text-lg font-bold text-orange-500">{currentUser.hearts}</div>

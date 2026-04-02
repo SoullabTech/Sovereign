@@ -181,9 +181,22 @@ function NewPostContent() {
     setSubmitting(true);
 
     try {
+      // Get user identity from session
+      const storedUser = localStorage.getItem('beta_user');
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      if (!user?.id) {
+        setError('You must be signed in to post.');
+        setSubmitting(false);
+        return;
+      }
+
       const res = await fetch('/api/community/posts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+          'x-user-name': user.name || user.username || 'Anonymous',
+        },
         body: JSON.stringify({
           title: title.trim(),
           content: content.trim(),
@@ -197,7 +210,12 @@ function NewPostContent() {
       const data = await res.json();
 
       if (data.ok) {
-        router.push(`/maia/community/post/${data.post.id}`);
+        // Return to territory so they see their post appear in context
+        if (territorySlug) {
+          router.push(`/maia/community/territory/${territorySlug}`);
+        } else {
+          router.push(`/maia/community/post/${data.post.id}`);
+        }
       } else {
         setError(data.error || 'Failed to create post');
       }
