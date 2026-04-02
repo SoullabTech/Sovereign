@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -12,19 +11,14 @@ export default function PatternsWorldPage() {
   const router = useRouter();
 
   return (
-    <motion.main
-      initial={{ opacity: 0, scale: 0.985 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.38, ease: 'easeOut' }}
-      className="min-h-screen bg-[#070b14] text-white"
-    >
+    <main className="min-h-screen bg-[#070b14] text-white">
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:px-8">
         <button
           type="button"
           onClick={() => router.push('/maia')}
-          className="mb-10 inline-flex items-center gap-2 text-sm text-white/[0.36] transition hover:text-white/[0.58]"
+          className="mb-10 inline-flex items-center gap-1.5 text-xs text-white/[0.24] transition hover:text-white/[0.44]"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={14} />
           <span>Back</span>
         </button>
 
@@ -39,6 +33,6 @@ export default function PatternsWorldPage() {
           </div>
         </div>
       </div>
-    </motion.main>
+    </main>
   );
 }
