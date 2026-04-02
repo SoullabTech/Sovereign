@@ -33,6 +33,13 @@ import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
+import { useFeatureFlags } from '@/lib/utils/feature-flags';
+import { MaiaShell } from '@/components/maia/MaiaShell';
+import { MaiaModalManager } from '@/components/maia/MaiaModalManager';
+import { AccountDropdown } from '@/components/maia/AccountDropdown';
+import { MaiaCenterField } from '@/components/maia/MaiaCenterField';
+import { VoiceStateProvider } from '@/lib/maia/voiceStateContext';
+import type { MaiaBehavior, VoicePresenceState } from '@/lib/navigation/types';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
 import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine } from 'lucide-react';
@@ -314,6 +321,7 @@ function MAIAPageContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const labToolsAccess = useFeatureAccess(PREMIUM_FEATURES.LAB_TOOLS);
+  const { flags: featureFlags } = useFeatureFlags();
 
   // URL-based panel control (preserves other query params, uses replace for clean history)
   const sp = searchParams?.toString() ?? '';
@@ -649,6 +657,140 @@ function MAIAPageContent() {
   }, []);
 
   // Onboarding removed - direct access only
+
+  // --- Spatial Shell (behind feature flag) ---
+  // When spatialMaiaShell is enabled, wrap the existing content in the new spatial layout.
+  // The existing center field renders inside {children}. Nothing is removed — only wrapped.
+  // Derive behavior from maiaMode for the spatial shell
+  const currentBehavior: MaiaBehavior = maiaMode === 'patient' ? 'care' : maiaMode === 'session' ? 'scribe' : 'default';
+
+  // Shared journal ask-maia handler
+  const handleJournalAskMaia = useCallback((content: string, type: string) => {
+    setShowJournalSheet(false);
+    window.dispatchEvent(new CustomEvent('journalAskMaia', {
+      detail: { content, type, prompt: type === 'dream' ? `Here's a dream I just captured:\n\n${content}` : `Something I'm sitting with:\n\n${content}` }
+    }));
+  }, []);
+
+  // Shared lab action dispatcher
+  const handleLabAction = useCallback((action: string) => {
+    if (action === 'open-academy') { setShowAcademySheet(true); return; }
+    window.dispatchEvent(new CustomEvent('labAction', { detail: { action } }));
+  }, []);
+
+  // --- Talk-first: derive voice presence state from conversation signals ---
+  const voicePresenceState: VoicePresenceState = hasActiveSession ? 'listening' : 'idle';
+  const voiceAmplitude = 0; // Placeholder — wire to onAudioLevelChange in Tier 2
+
+  // Sanctuary mode: read from maia_settings in localStorage (same source as VoiceHUD)
+  const [isSanctuary, setIsSanctuary] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('maia_settings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        setIsSanctuary(settings.sanctuary === true);
+      }
+    } catch { /* ignore */ }
+    // Listen for sanctuary toggle changes from VoiceHUD
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.sanctuary !== undefined) setIsSanctuary(detail.sanctuary);
+    };
+    window.addEventListener('maia-settings-changed', handler);
+    return () => window.removeEventListener('maia-settings-changed', handler);
+  }, []);
+
+  if (featureFlags.spatialMaiaShell) {
+    return (
+      <ErrorBoundary>
+        <VoiceStateProvider presenceState={voicePresenceState} amplitude={voiceAmplitude} isSanctuary={isSanctuary}>
+          <MaiaShell
+            explorerName={explorerName}
+            explorerId={explorerId}
+            voiceEnabled={voiceEnabled}
+            behavior={currentBehavior}
+            onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
+            onOpenHelp={() => setShowHelpHub(true)}
+            onOpenAccount={() => setShowAccountMenu(true)}
+            onOpenJournalSheet={() => setShowJournalSheet(true)}
+            onOpenShadowWork={() => setShowShadowWork(true)}
+            onOpenAcademy={() => setShowAcademySheet(true)}
+            onLabAction={handleLabAction}
+          >
+            {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}
+            <SwipeNavigation currentPage="maia">
+              <MaiaCenterField>
+                <OracleConversation
+                  userId={explorerId}
+                  userName={explorerName}
+                  userBirthDate={userBirthDate}
+                  sessionId={sessionId}
+                  voiceEnabled={voiceEnabled}
+                  voice={selectedVoice}
+                  voiceSpeed={voiceSpeed}
+                  voiceModel={voiceModel}
+                  voiceVolume={voiceVolume}
+                  initialMode={maiaMode}
+                  onModeChange={setMaiaMode}
+                  apiEndpoint="/api/sovereign/app/maia/list"
+                  consciousnessType="maia"
+                  initialShowChatInterface={showChatInterface}
+                  onShowChatInterfaceChange={setShowChatInterface}
+                  showSessionSelector={showSessionSelector}
+                  onCloseSessionSelector={() => setShowSessionSelector(false)}
+                  onSessionActiveChange={setHasActiveSession}
+                  initialAction={searchParams?.get('action') || undefined}
+                />
+              </MaiaCenterField>
+            </SwipeNavigation>
+          </MaiaShell>
+        </VoiceStateProvider>
+
+        {/* All modals — single location */}
+        <MaiaModalManager
+          explorerId={explorerId}
+          explorerName={explorerName}
+          showHelpHub={showHelpHub}
+          onCloseHelpHub={() => setShowHelpHub(false)}
+          showVoiceHelp={showVoiceHelp}
+          onCloseVoiceHelp={() => setShowVoiceHelp(false)}
+          showTestFlightHelp={showTestFlightHelp}
+          onCloseTestFlightHelp={() => setShowTestFlightHelp(false)}
+          onOpenVoiceHelp={() => setShowVoiceHelp(true)}
+          onOpenTestFlightHelp={() => setShowTestFlightHelp(true)}
+          showFeedbackSheet={showFeedbackSheet}
+          onCloseFeedbackSheet={() => setShowFeedbackSheet(false)}
+          showPasswordChangeModal={showPasswordChangeModal}
+          onClosePasswordChangeModal={() => setShowPasswordChangeModal(false)}
+          showFrameworkSelector={showFrameworkSelector}
+          onCloseFrameworkSelector={() => setShowFrameworkSelector(false)}
+          frameworkSelectorMode={frameworkSelectorMode}
+          showJournalSheet={showJournalSheet}
+          onCloseJournalSheet={() => setShowJournalSheet(false)}
+          onJournalAskMaia={handleJournalAskMaia}
+          showShadowWork={showShadowWork}
+          onCloseShadowWork={() => setShowShadowWork(false)}
+          showAcademySheet={showAcademySheet}
+          onCloseAcademySheet={() => setShowAcademySheet(false)}
+          showChangesSheet={showChangesSheet}
+          onCloseChangesSheet={() => setShowChangesSheet(false)}
+          showDecisionsSheet={showDecisionsSheet}
+          onCloseDecisionsSheet={() => setShowDecisionsSheet(false)}
+        />
+
+        {/* Account dropdown — extracted from inline bottom sheet */}
+        <AccountDropdown
+          isOpen={showAccountMenu}
+          onClose={() => setShowAccountMenu(false)}
+          onOpenFeedback={() => setShowFeedbackSheet(true)}
+          onSignOut={handleSignOut}
+        />
+      </ErrorBoundary>
+    );
+  }
+
+  // --- Legacy layout (flag off — unchanged) ---
   return (
     <ErrorBoundary>
       <SwipeNavigation currentPage="maia">

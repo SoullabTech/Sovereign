@@ -5,6 +5,8 @@
  * They feel like things you'd say to a thoughtful human.
  */
 
+import { dispatchVoiceNavigation } from '@/lib/maia/voiceNavigationBridge';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -92,7 +94,9 @@ export interface VoiceCommandResult {
     | 'journal-save' | 'journal-dream' | 'journal-title'
     | 'astrology-transits' | 'astrology-personal'
     | 'scribe-summarize-partial' | 'scribe-action-capture'
-    | 'voice-pause' | 'voice-resume';
+    | 'voice-pause' | 'voice-resume'
+    // Talk-first: world navigation
+    | 'world-navigate';
   // For scribe operations
   scribeAction?: {
     type: 'start' | 'pause' | 'resume' | 'stop' | 'mark' | 'aside' | 'consent-yes' | 'consent-no' | 'transcript-on' | 'transcript-off';
@@ -114,6 +118,8 @@ export interface VoiceCommandResult {
     type: 'summarize' | 'action-capture';
     minutes?: number;
   };
+  // Talk-first: world navigation target
+  worldNavigationTarget?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1267,6 +1273,78 @@ const COMMANDS: Record<string, CommandDefinition> = {
     settingsDelta: { prosodyDelta: -1 },
     acknowledgment: 'silent',
   },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Talk-First: World Navigation
+  // Conservative — requires "MAIA" prefix for all navigation commands.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  'world-navigate-maia': {
+    patterns: [
+      /maia,?\s*(go\s+)?(back\s+)?(to\s+)?center/i,
+      /maia,?\s*come\s+back/i,
+      /maia,?\s*go\s+home/i,
+      /maia,?\s*back\s+to\s+maia/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'silent',
+  },
+
+  'world-navigate-journal': {
+    patterns: [
+      /maia,?\s*(open|show|go\s+to)\s+journal/i,
+      /maia,?\s*journal\s+mode/i,
+      /maia,?\s*let'?s?\s+journal(\s+this)?/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'brief',
+    acknowledgmentText: 'Opening Journal.',
+  },
+
+  'world-navigate-patterns': {
+    patterns: [
+      /maia,?\s*(open|show|go\s+to)\s+patterns/i,
+      /maia,?\s*(show|what\s+are)\s+my\s+patterns/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'brief',
+    acknowledgmentText: 'Opening Patterns.',
+  },
+
+  'world-navigate-depth': {
+    patterns: [
+      /maia,?\s*(open|go\s+to)\s+depth/i,
+      /maia,?\s*take\s+(me|this)\s+(to\s+)?depth/i,
+      /maia,?\s*enter\s+depth/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'brief',
+    acknowledgmentText: 'Going deeper.',
+  },
+
+  'world-navigate-wisdom': {
+    patterns: [
+      /maia,?\s*(open|show|go\s+to)\s+wisdom/i,
+      /maia,?\s*sacred\s+texts/i,
+      /maia,?\s*show\s+me\s+wisdom/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'brief',
+    acknowledgmentText: 'Opening Wisdom.',
+  },
+
+  // NOTE: Ideas and Relationships voice commands deferred until worlds are more semantically stable.
+  // Add them when cognition layer is active and these destinations feel canonical to users.
+
+  'world-navigate-studio': {
+    patterns: [
+      /maia,?\s*(open|go\s+to|move\s+to)\s+studio/i,
+      /maia,?\s*this\s+is\s+studio\s+work/i,
+    ],
+    action: 'world-navigate',
+    acknowledgment: 'brief',
+    acknowledgmentText: 'Moving to Studio.',
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1353,6 +1431,16 @@ export function matchVoiceCommand(transcript: string): VoiceCommandResult {
           case 'scribe-action-capture':
             result.scribePartialAction = { type: 'action-capture' };
             break;
+        }
+
+        // Talk-first: dispatch world navigation event
+        if (result.action === 'world-navigate') {
+          // Extract world target from command ID: 'world-navigate-journal' → 'journal'
+          const worldTarget = commandId.replace('world-navigate-', '');
+          result.worldNavigationTarget = worldTarget;
+          // Fire event immediately — MaiaShell listens for this
+          dispatchVoiceNavigation(worldTarget as any, commandId);
+          console.log(`🧭 [VoiceNav] Command: ${commandId} → world: ${worldTarget}`);
         }
 
         return result;

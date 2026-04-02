@@ -16,6 +16,7 @@ export interface FeatureFlags {
   participatoryPractitioner: boolean;   // Phase 3: studio pattern cards
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
   cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
+  spatialMaiaShell: boolean;            // Spatial restructuring: left rail + right panel + minimal top bar
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -31,6 +32,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   participatoryPractitioner: false,   // Off until Phase 3
   relationalRouting: false,           // Off until v1 tested
   cmPractitionerEnvironment: false,   // Off until v1 tested
+  spatialMaiaShell: false,            // Off until Pass A verified
 };
 
 /**
