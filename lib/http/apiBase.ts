@@ -417,14 +417,16 @@ export function getOrCreateVisitorId(): string {
     }
 
     // Generate new stable visitor ID (16 hex chars for collision safety at scale)
-    const newId = `anon_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+    const newId = `anon_${uuid.replace(/-/g, '').slice(0, 16)}`;
     localStorage.setItem(VISITOR_ID_KEY, newId);
     console.log('[visitor] Created stable visitor ID:', newId);
     return newId;
   } catch {
     // localStorage blocked (private mode, etc) - generate per-session ID
     // This is better than nothing, at least accumulates within a single session
-    return `anon_session_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    const fallbackUuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+    return `anon_session_${fallbackUuid.replace(/-/g, '').slice(0, 16)}`;
   }
 }
 
