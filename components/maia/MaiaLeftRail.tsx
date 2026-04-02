@@ -10,7 +10,7 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { MAIA_WORLDS, STUDIO_RAIL_ITEM, MAIA_UTILITIES } from '@/lib/navigation/maiaNav';
+import { MAIA_WORLDS, STUDIO_RAIL_ITEM, CIRCLES_RAIL_ITEM, MAIA_UTILITIES } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import type { MaiaWorldId, MaiaRailItemId } from '@/lib/navigation/types';
 
@@ -28,7 +28,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
   const { presenceState, amplitude } = useVoiceState();
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio') {
+    if (id === 'studio' || id === 'circles') {
       router.push(route);
     } else {
       onWorldChange(id as MaiaWorldId);
@@ -113,6 +113,23 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
               <Icon className="w-5 h-5" />
               <span className="absolute left-full ml-2 px-2 py-1 text-xs text-blue-300/90 bg-[#1a1510]/95 border border-blue-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
                 {STUDIO_RAIL_ITEM.label}
+              </span>
+            </button>
+          );
+        })()}
+
+        {/* Circles — shared field transition */}
+        {(() => {
+          const Icon = CIRCLES_RAIL_ITEM.icon;
+          return (
+            <button
+              onClick={() => handleItemClick(CIRCLES_RAIL_ITEM.id, CIRCLES_RAIL_ITEM.route)}
+              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-amber-400/70 hover:bg-amber-400/5 transition-all duration-200"
+              title={CIRCLES_RAIL_ITEM.tooltip || CIRCLES_RAIL_ITEM.label}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-amber-300/90 bg-[#1a1510]/95 border border-amber-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+                {CIRCLES_RAIL_ITEM.label}
               </span>
             </button>
           );
