@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -25,19 +24,14 @@ export default function DepthWorldPage() {
   }, []);
 
   return (
-    <motion.main
-      initial={{ opacity: 0, y: 8, scale: 0.992 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.56, ease: 'easeOut' }}
-      className="min-h-screen bg-[#03050a] text-white"
-    >
+    <main className="min-h-screen bg-[#03050a] text-white">
       <div className="mx-auto max-w-6xl px-6 pb-24 pt-8 md:px-8">
         <button
           type="button"
           onClick={() => router.push('/maia')}
-          className="mb-10 inline-flex items-center gap-2 text-sm text-white/[0.30] transition hover:text-white/[0.52]"
+          className="mb-10 inline-flex items-center gap-1.5 text-xs text-white/[0.24] transition hover:text-white/[0.44]"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={14} />
           <span>Back</span>
         </button>
 
@@ -52,6 +46,6 @@ export default function DepthWorldPage() {
           </div>
         </div>
       </div>
-    </motion.main>
+    </main>
   );
 }
