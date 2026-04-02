@@ -38,7 +38,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   cmPractitionerEnvironment: false,   // Off until v1 tested
   soullabStore: false,                // Off until store verified in production
   promptLibrary: false,               // Off until first theme seeded and tested
-  spatialMaiaShell: false,            // Off until Pass A verified
+  spatialMaiaShell: true,             // On — spatial shell is the primary experience
 };
 
 /**
@@ -50,18 +50,24 @@ export const getFeatureFlags = (): FeatureFlags => {
   if (typeof window === 'undefined') {
     return DEFAULT_FLAGS;
   }
-  
+
   try {
     const stored = localStorage.getItem('spiralogic-feature-flags');
     if (stored) {
       const parsed = JSON.parse(stored);
+      // Migrate: if spatialMaiaShell was never explicitly set (or was set to false
+      // before it became the default), upgrade it. Users who manually disabled it
+      // after it became default will have _spatialShellExplicit = true.
+      if (!parsed._spatialShellExplicit && parsed.spatialMaiaShell === false) {
+        parsed.spatialMaiaShell = true;
+      }
       // Merge with defaults to ensure all flags are present
       return { ...DEFAULT_FLAGS, ...parsed };
     }
   } catch (error) {
     console.warn('Failed to load feature flags from localStorage:', error);
   }
-  
+
   return DEFAULT_FLAGS;
 };
 
