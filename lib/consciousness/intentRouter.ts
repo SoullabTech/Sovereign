@@ -86,6 +86,7 @@ export function detectIntent(field: {
     return { intent: 'unknown', confidence: 0 };
   }
 
+
   let bestIntent: MaiaIntent = 'unknown';
   let bestScore = 0;
 

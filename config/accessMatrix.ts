@@ -102,6 +102,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/community', public: true, notes: 'Community hub browse' },
   { exact: '/maia/community/library', public: true, notes: 'Library browse' },
   { exact: '/maia/community/wisdom-sources', public: true, notes: 'Wisdom sources browse' },
+  { prefix: '/wisdom-keepers', public: true, notes: 'Wisdom keepers pages' },
+  { exact: '/api/wisdom-keepers/submit', public: true, notes: 'Wisdom source submission (honeypot-protected)' },
   { exact: '/maia/community/faq', public: true, notes: 'Community FAQ' },
   { exact: '/maia/community/events', public: true, notes: 'Events browse' },
   { exact: '/maia/community/commons', public: true, notes: 'Commons home browse' },
@@ -117,6 +119,9 @@ export const ACCESS_RULES: AccessRule[] = [
   // Patterns (symbolic lenses)
   { exact: '/patterns', public: true, notes: 'Patterns landing - symbolic systems & cycles' },
   { exact: '/astrology', public: true, notes: 'Cycle lens module (nested under Patterns)' },
+
+  // Worlds (experiential spaces)
+  { prefix: '/worlds', public: true, notes: 'Worlds triptych - patterns, journey, depth' },
 
   // Practitioner pricing (public for discovery)
   { regex: /^\/api\/practitioner\/[^/]+\/pricing$/, public: true, notes: 'Practitioner pricing is public' },
