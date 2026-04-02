@@ -162,13 +162,15 @@ async function synthesizeWithFallback(
   const memberProvider = options.ttsProvider || 'auto';
 
   // ── Resolve sovereign voice IDs before passing to any provider ──
+  const VALID_OPENAI_VOICES = new Set(['nova', 'shimmer', 'echo', 'onyx', 'fable', 'alloy', 'ash', 'sage', 'coral']);
   const rawVoice = options.voice && options.voice !== 'maya' ? options.voice : undefined;
   const isSovereignId = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
   const kokoroVoice = rawVoice
     ? (isSovereignId ? resolveToKokoro(rawVoice) : rawVoice)
     : undefined;
+  // Only pass valid OpenAI voices — unknown/sovereign names fall back to alloy
   const openaiVoice = rawVoice
-    ? (isSovereignId ? resolveToOpenAI(rawVoice) : rawVoice)
+    ? (isSovereignId ? resolveToOpenAI(rawVoice) : (VALID_OPENAI_VOICES.has(rawVoice) ? rawVoice : undefined))
     : undefined;
 
   // ── Resolve log: what this request decided BEFORE any synthesis ──
@@ -473,10 +475,11 @@ async function synthesizeSentence(
   const elementKey = (element ?? '').toLowerCase() as Element;
 
   // ── Resolve sovereign voice IDs before passing to any provider ──
+  const VALID_OPENAI = new Set(['nova', 'shimmer', 'echo', 'onyx', 'fable', 'alloy', 'ash', 'sage', 'coral']);
   const rawVoice = voice && voice !== 'maya' ? voice : undefined;
   const isSovereign = rawVoice ? SOVEREIGN_VOICES.some(v => v.id === rawVoice) : false;
   const resolvedKokoro = rawVoice ? (isSovereign ? resolveToKokoro(rawVoice) : rawVoice) : undefined;
-  const resolvedOpenai = rawVoice ? (isSovereign ? resolveToOpenAI(rawVoice) : rawVoice) : undefined;
+  const resolvedOpenai = rawVoice ? (isSovereign ? resolveToOpenAI(rawVoice) : (VALID_OPENAI.has(rawVoice) ? rawVoice : undefined)) : undefined;
 
   // Try Kokoro via ttsRouter
   try {
