@@ -232,10 +232,19 @@ function SigninContent() {
     }
 
     // WEB ONLY: Quick auth check (can fail safely)
+    // Timeout ensures form always appears even if fetch hangs (Chrome iOS)
     setCheckingAuth(true);
-    fetch('/api/auth/whoami', { credentials: 'include' })
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+      setCheckingAuth(false);
+      console.log('[SIGNIN PAGE] Auth check timed out — showing form');
+    }, 3000);
+
+    fetch('/api/auth/whoami', { credentials: 'include', signal: controller.signal })
       .then(res => res.json())
       .then(data => {
+        clearTimeout(timeout);
         if (data.authed) {
           const next = getSearchParam('next') || '/maia';
           window.location.replace(next);
@@ -243,7 +252,10 @@ function SigninContent() {
           setCheckingAuth(false);
         }
       })
-      .catch(() => setCheckingAuth(false));
+      .catch(() => {
+        clearTimeout(timeout);
+        setCheckingAuth(false);
+      });
   }, []);
 
   // Trust device helper
