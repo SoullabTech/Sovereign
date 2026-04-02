@@ -31,6 +31,8 @@ interface MaiaRightPanelHostProps {
   onOpenJournalSheet: () => void;
   onOpenShadowWork: () => void;
   onOpenAcademy: () => void;
+  onOpenChanges: () => void;
+  onOpenDecisions: () => void;
   onChooseGuide: () => void;
   onShowCurrentElder: () => void;
 }
@@ -44,6 +46,8 @@ export function MaiaRightPanelHost({
   onOpenJournalSheet,
   onOpenShadowWork,
   onOpenAcademy,
+  onOpenChanges,
+  onOpenDecisions,
   onChooseGuide,
   onShowCurrentElder,
 }: MaiaRightPanelHostProps) {
@@ -75,6 +79,8 @@ export function MaiaRightPanelHost({
           <DepthPanel
             explorerId={explorerId}
             onOpenShadowWork={onOpenShadowWork}
+            onOpenChanges={onOpenChanges}
+            onOpenDecisions={onOpenDecisions}
           />
         );
       case 'ideas':

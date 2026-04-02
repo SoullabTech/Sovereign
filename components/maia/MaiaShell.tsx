@@ -30,6 +30,8 @@ interface MaiaShellProps {
   onOpenJournalSheet: () => void;
   onOpenShadowWork: () => void;
   onOpenAcademy: () => void;
+  onOpenChanges: () => void;
+  onOpenDecisions: () => void;
   onLabAction: (action: string) => void;
   children: React.ReactNode;
 }
@@ -45,6 +47,8 @@ export function MaiaShell({
   onOpenJournalSheet,
   onOpenShadowWork,
   onOpenAcademy,
+  onOpenChanges,
+  onOpenDecisions,
   onLabAction,
   children,
 }: MaiaShellProps) {
@@ -225,6 +229,7 @@ export function MaiaShell({
         calmCeiling={calmCeiling}
         worldHints={worldHints}
         onWorldChange={handleWorldChange}
+        onOpenAccount={onOpenAccount}
       />
 
       {/* Center field — offset for rail and top bar */}
@@ -244,6 +249,8 @@ export function MaiaShell({
         onOpenJournalSheet={onOpenJournalSheet}
         onOpenShadowWork={onOpenShadowWork}
         onOpenAcademy={onOpenAcademy}
+        onOpenChanges={onOpenChanges}
+        onOpenDecisions={onOpenDecisions}
         onChooseGuide={() => onLabAction('choose-guide')}
         onShowCurrentElder={() => onLabAction('show-current-elder')}
       />
