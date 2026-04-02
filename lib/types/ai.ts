@@ -44,6 +44,9 @@ export type MaiaIntent =
   | 'idea_emergence'
   | 'decision_point'
   | 'change_process'
+  | 'pattern_encounter'
+  | 'journey_recognition'
+  | 'depth_emergence'
   | 'unknown';
 
 export type RoutedCapability =
@@ -52,6 +55,9 @@ export type RoutedCapability =
   | 'ideas'
   | 'decisions'
   | 'changes'
+  | 'patterns'
+  | 'journey'
+  | 'depth'
   | 'conversation';
 
 export interface IntentRoute {
@@ -67,8 +73,13 @@ export interface MaiaUiAction {
     | 'open_ideas'
     | 'open_decisions'
     | 'open_changes'
+    | 'enter_patterns'
+    | 'enter_journey'
+    | 'enter_depth'
     | 'none';
   label?: string;
   leadIn?: string;
   confidence?: number;
+  /** True for world-entry doorways (distinct from process doorways) */
+  isWorldDoorway?: boolean;
 }
