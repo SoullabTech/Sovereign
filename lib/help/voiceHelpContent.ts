@@ -63,6 +63,7 @@ export const VOICE_HELP_STEPS = [
 ] as const;
 
 export const VOICE_HELP_SUPPORT_TEMPLATE = {
+  supportEmail: 'problem@soullab.life',
   fields: [
     'iPhone model + iOS version',
     'MAIA build # (TestFlight)',

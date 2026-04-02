@@ -10,6 +10,7 @@ import { Resend } from 'resend';
 
 const KELLY_EMAIL = 'kelly@soullab.life';
 const KELLY_PHONE = '+15044539009';
+const PROBLEM_EMAIL = 'problem@soullab.life';
 
 let resend: Resend | null = null;
 function getResend() {
@@ -20,14 +21,15 @@ function getResend() {
 async function notifyKelly(category: string, categoryLabel: string, message: string, userName: string) {
   const from = userName || 'Anonymous';
   const preview = message.length > 160 ? message.substring(0, 157) + '...' : message;
+  const recipient = category === 'problem' ? PROBLEM_EMAIL : KELLY_EMAIL;
 
   // Email (fire-and-forget)
   if (process.env.RESEND_API_KEY) {
     getResend().emails.send({
       from: 'MAIA Feedback <noreply@soullab.life>',
-      to: KELLY_EMAIL,
+      to: recipient,
       subject: `[${categoryLabel}] from ${from}`,
-      html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message}</p>`,
+      html: `<p><strong>${categoryLabel}</strong> from <strong>${from}</strong></p><p>${message.replace(/\n/g, '<br>')}</p>`,
     }).catch((e: unknown) => console.error('[Feedback] Email notify failed:', e));
   }
 

@@ -37,7 +37,7 @@ export default function TestFlightHelpSheet({ isOpen, onClose }: TestFlightHelpS
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
 
           {/* Sheet */}
@@ -46,7 +46,7 @@ export default function TestFlightHelpSheet({ isOpen, onClose }: TestFlightHelpS
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] overflow-y-auto
+            className="fixed bottom-0 left-0 right-0 z-[101] max-h-[85vh] overflow-y-auto
                        bg-gradient-to-b from-[#1a1512] to-[#0d0a08]
                        border-t border-amber-500/20 rounded-t-3xl"
           >
