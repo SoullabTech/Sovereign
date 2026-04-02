@@ -72,8 +72,6 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
-import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
-import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
 
 // Skip during static export (Capacitor builds)
 
