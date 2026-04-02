@@ -687,8 +687,10 @@ function SigninContent() {
         style={{
           background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.25))',
           backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
           border: '1px solid rgba(255, 255, 255, 0.4)',
+          willChange: 'transform',
         }}
       >
         {/* Reserved space for error messages - prevents layout shift */}
@@ -713,10 +715,10 @@ function SigninContent() {
         <form onSubmit={handlePasswordSignIn} className="space-y-3">
           <input
             value={username}
-            onChange={(e) => { console.log('[INPUT] username:', e.target.value); setUsername(e.target.value); }}
+            onChange={(e) => setUsername(e.target.value)}
             placeholder="Username"
             autoComplete="username"
-            className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+            className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 text-base text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
           />
           <div className="relative">
             <input
@@ -725,7 +727,7 @@ function SigninContent() {
               placeholder="Password"
               type={showPasswordText ? 'text' : 'password'}
               autoComplete="current-password"
-              className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 pr-11 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+              className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 pr-11 text-base text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
             />
             <button
               type="button"
@@ -895,7 +897,7 @@ function SigninContent() {
                   value={recoveryEmail}
                   onChange={(e) => setRecoveryEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:border-teal-400"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-base text-gray-900 outline-none focus:border-teal-400"
                 />
                 <button
                   type="button"
@@ -954,7 +956,7 @@ function SigninContent() {
                   onChange={(e) => setMagicLinkEmail(e.target.value)}
                   placeholder="your@email.com"
                   autoFocus
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:border-emerald-400"
+                  className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-base text-gray-900 outline-none focus:border-emerald-400"
                 />
                 <button
                   type="submit"
@@ -1290,7 +1292,9 @@ function LoadingFallback() {
 export default function SigninPage() {
   console.log('[SIGNIN] ===== PAGE COMPONENT RENDER =====');
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-[100dvh] bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center px-4 pt-[max(env(safe-area-inset-top),2rem)] pb-8 overflow-y-auto">
+      {/* Flexible spacer — centers content vertically but collapses when keyboard opens */}
+      <div className="flex-1 min-h-4 max-h-[15vh]" />
       {/* Slow breathing animation for Holoflower */}
       <style jsx global>{`
         @keyframes breathe {
@@ -1304,6 +1308,7 @@ export default function SigninPage() {
       <Suspense fallback={<LoadingFallback />}>
         <SigninContent />
       </Suspense>
+      <div className="flex-1 min-h-4" />
     </div>
   );
 }
