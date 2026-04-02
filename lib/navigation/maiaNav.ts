@@ -14,6 +14,7 @@ import {
   Heart,
   Library,
   Briefcase,
+  Users,
   User,
   Settings,
   HelpCircle,
@@ -98,6 +99,16 @@ export const STUDIO_RAIL_ITEM: MaiaRailItem = {
   route: '/studio',
   classification: 'studio',
   tooltip: 'Enter Studio workspace',
+  isBoundaryTransition: true,
+};
+
+export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
+  id: 'circles',
+  label: 'Circles',
+  icon: Users,
+  route: '/commons/circles',
+  classification: 'studio',
+  tooltip: 'Enter shared field',
   isBoundaryTransition: true,
 };
 
