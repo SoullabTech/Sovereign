@@ -231,6 +231,15 @@ function SigninContent() {
       return;
     }
 
+    // MIDDLEWARE ALREADY TOLD US: if reason param exists, middleware already
+    // determined auth state — skip the whoami check entirely (fixes Chrome iOS hang)
+    const reason = params.get('reason');
+    if (reason) {
+      console.log('[SIGNIN PAGE] reason param present — skipping auth check:', reason);
+      setCheckingAuth(false);
+      return;
+    }
+
     // WEB ONLY: Quick auth check (can fail safely)
     // Timeout ensures form always appears even if fetch hangs (Chrome iOS)
     setCheckingAuth(true);
