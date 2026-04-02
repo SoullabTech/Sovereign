@@ -61,6 +61,7 @@ import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
 import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
 import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
+import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 
 // Skip during static export (Capacitor builds)
 
@@ -1671,10 +1672,24 @@ async function generateSpiralogicResponseWithLLM(
     console.warn('[Oracle] CM environment load failed (non-critical):', cmError);
   }
 
+  // PROMPT LIBRARY: load active weekly theme with cycle fallback (non-blocking)
+  let activeThemeBlock = '';
+  try {
+    const memberElement = spiralState?.dominant_element || null;
+    const themeResult = await buildActiveThemeBlock(memberElement);
+    if (themeResult) {
+      activeThemeBlock = themeResult.block;
+      console.log(`[Oracle] prompt-library { theme: ${themeResult.theme.slug}, element: ${themeResult.theme.element}, items: ${themeResult.theme.items.length}, cycleWeek: ${themeResult.cycleContext.cycleWeek}, memberResonance: ${themeResult.memberResonance} }`);
+    }
+  } catch (themeError) {
+    console.warn('[Oracle] Prompt library load failed (non-critical):', themeError);
+  }
+
   const finalSystemPrompt = [
     systemPrompt,
     cmEnvironmentBlock,
     reportContextBlock,
+    activeThemeBlock,
     councilInsights,
     collectiveWisdom,
   ].filter(Boolean).join('');
