@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { detectUnresolvedThreads } from '@/lib/consciousness/unresolvedThreads';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +89,12 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         confidence: e.confidence,
         createdAt: e.created_at,
       })),
+      unresolvedThreads: detectUnresolvedThreads(entries.rows.map(e => ({
+        kind: e.kind,
+        feltSignals: e.felt_signals,
+        fieldToneSnapshot: e.field_tone_snapshot,
+        createdAt: e.created_at,
+      }))),
     });
   } catch (error) {
     console.error('[relationships/id] GET error:', error);
