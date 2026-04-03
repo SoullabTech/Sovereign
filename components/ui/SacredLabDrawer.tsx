@@ -82,8 +82,9 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   sessionMinutesRemaining,
 }) => {
   const menuSections = [
+    // ── ZONE 1: SESSION (what you're doing right now) ──────────────
     {
-      title: 'SOUL PROMPTS & SESSION',
+      title: 'SESSION',
       icon: '✨',
       items: [
         {
@@ -108,34 +109,58 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Review patterns & invitation forward'
         },
         {
-          icon: Flame,
-          label: 'Prompt Library',
-          action: () => onNavigate('/labtools/prompts'),
-          description: 'Full library: Seeker → Practitioner → Alchemist'
-        },
-        {
           icon: ClipboardList,
           label: 'Session Recap',
           action: () => onAction?.('session-recap'),
           description: 'Summary of themes, insights & invitation'
         },
-      ],
-    },
-    {
-      title: 'SHARE MAIA',
-      icon: '🎁',
-      items: [
         {
-          icon: Gift,
-          label: 'Beads',
-          action: () => onNavigate('/labtools/beads'),
-          description: 'Invite friends to experience MAIA'
+          icon: isScribing ? MicOff : Mic,
+          label: isScribing ? 'Stop Scribe & Download' : 'Start Scribe Mode',
+          action: () => onAction?.('scribe-mode'),
+          doubleClickAction: () => onNavigate('/sessions'),
+          description: isScribing
+            ? 'Complete session and download transcript'
+            : 'Record session passively with MAIA consultation',
+          isActive: isScribing,
+        },
+        ...(hasScribeSession && !isScribing ? [{
+          icon: MessageSquare,
+          label: 'Review Session with MAIA',
+          action: () => onAction?.('review-with-maia'),
+          description: 'Get MAIA supervision on completed session'
+        }] : []),
+        {
+          icon: Radio,
+          label: isFieldRecording ? 'Stop Field Recording' : 'Field Protocol',
+          action: () => onAction?.('field-protocol'),
+          description: 'Document consciousness explorations',
+          isActive: isFieldRecording,
+        },
+        {
+          icon: Upload,
+          label: 'Upload Files',
+          action: () => onAction?.('upload'),
+          description: 'Share files with MAIA'
+        },
+        {
+          icon: Download,
+          label: 'Download Conversation',
+          action: () => onAction?.('download-transcript'),
+          description: 'Save this conversation'
+        },
+        {
+          icon: showVoiceText ? Eye : EyeOff,
+          label: showVoiceText ? 'Hide Transcript' : 'Show Transcript',
+          action: () => onAction?.('toggle-text'),
+          description: 'Toggle voice transcript display'
         },
       ],
     },
+    // ── ZONE 2: WORLDS (where I can go) ──────────────────────────
     {
-      title: 'SELF-DISCOVERY',
-      icon: '🌱',
+      title: 'WORLDS',
+      icon: '🌀',
       items: [
         {
           icon: Smile,
@@ -150,41 +175,11 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Find your dominant elemental nature'
         },
         {
-          icon: BookOpen,
-          label: 'Vocabulary Guide',
-          action: () => onAction?.('toggle-vocabulary-tooltips'),
-          description: 'Highlight soul terms with definitions'
-        },
-      ],
-    },
-    {
-      title: 'WISDOM COUNCIL',
-      icon: '🌟',
-      items: [
-        {
-          icon: Sparkles,
-          label: 'Choose Your Guide',
-          action: () => onAction?.('choose-guide'),
-          description: '39 wisdom traditions as harmonic frequencies'
-        },
-        {
-          icon: Brain,
-          label: 'Current Teaching',
-          action: () => onAction?.('show-current-elder'),
-          description: 'See which wisdom guides you now'
-        },
-        {
           icon: Hexagon,
           label: 'I Ching — Consult the Changes',
           action: () => onNavigate('/oracle/iching?return=/maia'),
           description: 'The book of change and timing'
         },
-      ],
-    },
-    {
-      title: 'SOUL GUIDANCE',
-      icon: '📿',
-      items: [
         {
           icon: Sparkles,
           label: 'Story Creator',
@@ -197,29 +192,55 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           action: () => onNavigate('/oracle'),
           description: 'Intuitive guidance & insight'
         },
+        {
+          icon: Compass,
+          label: 'Archetypal Journey',
+          action: () => onNavigate('/journey'),
+          description: 'Your cosmic spiral & elemental blueprint'
+        },
+        {
+          icon: Sparkles,
+          label: 'Choose Your Guide',
+          action: () => onAction?.('choose-guide'),
+          description: '39 wisdom traditions as harmonic frequencies'
+        },
       ],
     },
+    // ── ZONE 3: OFFERINGS (what I can enter / threshold) ───────────
     {
-      title: 'KNOWLEDGE BASE',
+      title: 'OFFERINGS',
+      icon: '🔥',
+      items: [
+        {
+          icon: Flame,
+          label: 'Elemental Alchemy',
+          action: () => onNavigate('/store/elemental-alchemy'),
+          description: 'Book, audiobook, and guided journey'
+        },
+        {
+          icon: Library,
+          label: 'Your Library',
+          action: () => onNavigate('/store/library'),
+          description: 'Access your purchases'
+        },
+        {
+          icon: Gift,
+          label: 'Gift a Bead',
+          action: () => onNavigate('/labtools/beads'),
+          description: 'Invite someone into the experience'
+        },
+      ],
+    },
+    // ── ZONE 4: FIELD (memory / patterns / journal) ────────────────
+    {
+      title: 'FIELD',
       icon: '📚',
       items: [
         {
           icon: BookOpen,
-          label: 'User Guide',
-          action: () => onNavigate('/maia/guide'),
-          description: 'Complete guide to MAIA, LabTools, Commons & Settings'
-        },
-        {
-          icon: GraduationCap,
-          label: 'Soullab Academy',
-          action: () => onAction?.('open-academy'),
-          description: 'Guided learning paths & wisdom domains'
-        },
-        {
-          icon: Sparkles,
-          label: 'Capture the Spirit',
-          action: () => onAction?.('capture-spirit'),
-          description: 'Distill what mattered from this conversation'
+          label: 'Your Journal',
+          action: () => onNavigate('/labtools/journal'),
+          description: 'All entries, captures, and scribe sessions'
         },
         {
           icon: Sparkles,
@@ -235,9 +256,21 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
         {
           icon: BookOpen,
-          label: 'Your Journal',
-          action: () => onNavigate('/labtools/journal'),
-          description: 'All entries, captures, and scribe sessions'
+          label: 'Conversation Threads',
+          action: () => onNavigate('/maia?panel=journey'),
+          description: 'Patterns & trajectory across sessions'
+        },
+        {
+          icon: Heart,
+          label: 'Favorites',
+          action: () => onNavigate('/favorites'),
+          description: 'Cherished moments & insights'
+        },
+        {
+          icon: BookOpen,
+          label: 'View All Sessions',
+          action: () => onNavigate('/sessions'),
+          description: 'Browse past sessions & transcripts'
         },
         {
           icon: FileText,
@@ -254,144 +287,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
       ],
     },
-    {
-      title: 'PRACTITIONER',
-      icon: '⚕️',
-      items: [
-        {
-          icon: LayoutGrid,
-          label: 'Studio',
-          action: () => onNavigate('/studio'),
-          description: 'Pro suite: clients, sessions, caseload, calendar & MAIA consult',
-        },
-      ],
-    },
-    {
-      title: 'CONSCIOUSNESS TOOLS',
-      icon: '🧠',
-      items: [
-        {
-          icon: Globe,
-          label: 'Language',
-          action: () => {}, // Handled by component itself
-          description: 'MAIA speaks 30+ languages',
-          isLanguageSelector: true
-        },
-        {
-          icon: Cpu,
-          label: 'Lab Tools',
-          action: () => onNavigate('/labtools'),
-          description: 'Complete consciousness computing & research lab interface'
-        },
-        {
-          icon: Brain,
-          label: 'Pilot-Drone Interface',
-          action: () => onNavigate('/labtools#pilot-drone'),
-          description: 'Faggin\'s quantum consciousness field visualization - live demo'
-        },
-        {
-          icon: Zap,
-          label: 'AIN Evolution Demo',
-          action: () => window.open('/ain-demo', '_blank'),
-          description: 'Nested observer windows & recursive consciousness evolution'
-        },
-        {
-          icon: Brain,
-          label: 'Guardian Console',
-          action: () => onNavigate('/GuardianConsole'),
-          description: 'Multi-model consciousness weaver'
-        },
-        {
-          icon: Zap,
-          label: 'Claude Code',
-          action: () => onNavigate('/consciousness/claude-code'),
-          description: 'Co-creator & consciousness explorer'
-        },
-        {
-          icon: Brain,
-          label: 'Symbolic Consciousness',
-          action: () => onNavigate('/maia/symbolic'),
-          description: 'LISP-inspired meta-circular consciousness computation'
-        },
-      ],
-    },
-    {
-      title: 'DOCUMENTATION',
-      icon: '📊',
-      items: [
-        {
-          icon: Radio,
-          label: isFieldRecording ? 'Stop Field Recording' : 'Field Protocol',
-          action: () => onAction?.('field-protocol'),
-          description: 'Document consciousness explorations',
-          isActive: isFieldRecording,
-        },
-        {
-          icon: isScribing ? MicOff : Mic,
-          label: isScribing ? 'Stop Scribe & Download' : 'Start Scribe Mode',
-          action: () => onAction?.('scribe-mode'),
-          doubleClickAction: () => onNavigate('/sessions'),
-          description: isScribing
-            ? 'Complete session and download transcript'
-            : 'Record client session passively with MAIA consultation (double-tap for logs)',
-          isActive: isScribing,
-        },
-        ...(hasScribeSession && !isScribing ? [{
-          icon: MessageSquare,
-          label: 'Review Session with MAIA',
-          action: () => onAction?.('review-with-maia'),
-          description: 'Get MAIA supervision on completed session'
-        }] : []),
-        {
-          icon: BookOpen,
-          label: 'View All Sessions',
-          action: () => onNavigate('/sessions'),
-          description: 'Browse past scribe sessions & transcripts'
-        },
-        {
-          icon: Upload,
-          label: 'Upload Files',
-          action: () => onAction?.('upload'),
-          description: 'Share files with MAIA'
-        },
-        {
-          icon: Download,
-          label: 'Download Conversation',
-          action: () => onAction?.('download-transcript'),
-          description: 'Save this conversation as markdown'
-        },
-        {
-          icon: showVoiceText ? Eye : EyeOff,
-          label: showVoiceText ? 'Hide Transcript' : 'Show Transcript',
-          action: () => onAction?.('toggle-text'),
-          description: 'Toggle voice transcript display'
-        },
-      ],
-    },
-    {
-      title: 'WISDOM PATTERNS',
-      icon: '🌀',
-      items: [
-        {
-          icon: Compass,
-          label: 'Archetypal Journey',
-          action: () => onNavigate('/journey'),
-          description: 'Your cosmic spiral & elemental blueprint'
-        },
-        {
-          icon: BookOpen,
-          label: 'Conversation Threads',
-          action: () => onNavigate('/maia?panel=journey'),
-          description: 'Voice settings, patterns & trajectory'
-        },
-        {
-          icon: Sparkles,
-          label: 'Weaving Visualization',
-          action: () => onNavigate('/maia?panel=journey'),
-          description: 'Watch your wisdom threads unfold'
-        },
-      ],
-    },
+    // ── ZONE 5: SOUL SIGNATURE (who you are) ───────────────────────
     {
       title: 'SOUL SIGNATURE',
       icon: '🧬',
@@ -415,10 +311,54 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Evolutionary report — all 12 facets'
         },
         {
-          icon: Heart,
-          label: 'Favorites',
-          action: () => onNavigate('/favorites'),
-          description: 'Cherished moments & insights'
+          icon: Globe,
+          label: 'Language',
+          action: () => {}, // Handled by component itself
+          description: 'MAIA speaks 30+ languages',
+          isLanguageSelector: true
+        },
+        {
+          icon: BookOpen,
+          label: 'Vocabulary Guide',
+          action: () => onAction?.('toggle-vocabulary-tooltips'),
+          description: 'Highlight soul terms with definitions'
+        },
+      ],
+    },
+    // ── ZONE 6: TOOLS (practitioner / admin — power users) ─────────
+    {
+      title: 'TOOLS',
+      icon: '⚕️',
+      items: [
+        {
+          icon: LayoutGrid,
+          label: 'Studio',
+          action: () => onNavigate('/studio'),
+          description: 'Pro suite: clients, sessions, caseload & calendar',
+        },
+        {
+          icon: GraduationCap,
+          label: 'Soullab Academy',
+          action: () => onAction?.('open-academy'),
+          description: 'Guided learning paths & wisdom domains'
+        },
+        {
+          icon: BookOpen,
+          label: 'User Guide',
+          action: () => onNavigate('/maia/guide'),
+          description: 'Complete guide to MAIA & Soullab'
+        },
+        {
+          icon: Flame,
+          label: 'Prompt Library',
+          action: () => onNavigate('/labtools/prompts'),
+          description: 'Full library: Seeker to Alchemist'
+        },
+        {
+          icon: Cpu,
+          label: 'Lab Tools',
+          action: () => onNavigate('/labtools'),
+          description: 'Consciousness computing & research lab'
         },
       ],
     },

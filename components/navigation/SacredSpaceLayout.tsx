@@ -116,10 +116,12 @@ export function SacredSpaceLayout({ userId, children }: SacredSpaceLayoutProps) 
             onClick={() => setMenuOpen(false)}
           />
           <div className="relative bg-black/95 border border-white/20 rounded-lg shadow-2xl min-w-[200px] py-2">
+            <MenuLink href="/store">Offerings</MenuLink>
+            <MenuLink href="/community">Community</MenuLink>
+            <div className="h-px bg-white/10 my-2" />
             <MenuLink href="/settings">Settings</MenuLink>
             <MenuLink href="/settings/extensions">Extensions</MenuLink>
             <MenuLink href="/account">Account</MenuLink>
-            <MenuLink href="/community">Community</MenuLink>
             <div className="h-px bg-white/10 my-2" />
             <MenuLink href="/help">Help & Support</MenuLink>
             <MenuLink href="/api/auth/signout">Sign Out</MenuLink>
