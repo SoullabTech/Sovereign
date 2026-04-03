@@ -14,25 +14,35 @@ module.exports = {
         // The unified design system. Use these for all new UI.
         // ══════════════════════════════════════════════════════════════════════
         maia: {
-          // Primary surfaces ("night sky temple")
+          // ── Soullab Core: canonical surface system ──
+          // These are the actual values used across /maia, /signin, admin.
+          // See docs/canon/SOULLAB_THEME.md for usage rules.
           navy: {
-            950: '#0b0f1c',  // deepest backdrop
-            900: '#0f1328',  // app background
-            850: '#121833',  // panels/cards
-            800: '#161d3a',  // hover/raised
-            700: '#243054',  // borders/dividers
+            950: '#060D18',  // deepest canvas (page edges)
+            900: '#0A1628',  // primary page background
+            850: '#0F1D32',  // cards, inputs, panels
+            800: '#162640',  // hover/raised surfaces
+            700: '#1E3A5F',  // borders, dividers
+            600: '#2A4A73',  // focus rings, active borders
           },
 
-          // Typography / neutrals
+          // Typography / neutrals (maps to Tailwind slate)
           ink: {
-            100: '#f8fafc',  // primary text
-            80: '#e2e8f0',   // secondary text
-            60: '#94a3b8',   // muted text
-            40: '#64748b',   // tertiary (icons, chevrons)
-            20: '#475569',   // subtle hints
+            100: '#f8fafc',  // primary text (≈ white)
+            80: '#e2e8f0',   // secondary text (≈ slate-200)
+            60: '#94a3b8',   // muted text (≈ slate-400)
+            40: '#64748b',   // tertiary (≈ slate-500)
+            20: '#475569',   // subtle hints (≈ slate-600)
           },
 
-          // Soul accent ("spice" - warmth, sacred signal)
+          // Signal accent — gold (meaningful actions, step indicators)
+          gold: {
+            DEFAULT: '#B8860B',  // primary signal
+            hover: '#9c6f0a',    // hover/pressed
+            subtle: '#B8860B33', // 20% opacity backgrounds
+          },
+
+          // Soul accent ("spice" — warmth, sacred highlight)
           spice: {
             400: '#fbbf24',  // icon highlight
             500: '#f59e0b',  // primary accent
@@ -40,19 +50,69 @@ module.exports = {
             700: '#b45309',  // deep accent
           },
 
-          // Secondary wellness accent ("sage" - onboarding, calm, safety)
+          // Sage — reserved for onboarding/wellness contexts only.
+          // NOT for core navigation, chrome, or brand surfaces.
           sage: {
             400: '#5eead4',
             500: '#14b8a6',
             600: '#0d9488',
             700: '#0f766e',
-            bg: '#A0C4C7',   // onboarding background
           },
 
           // Semantic
           danger: '#ef4444',
           success: '#22c55e',
           warning: '#f59e0b',
+        },
+
+        // ══════════════════════════════════════════════════════════════════════
+        // SOULLAB CORE — Canonical token layer (CSS-variable-backed)
+        // See docs/canon/SOULLAB_THEME.md. Use bg-soullab-canvas, etc.
+        // ══════════════════════════════════════════════════════════════════════
+        soullab: {
+          // Field hierarchy: void → field → surface → signal
+          field: {
+            void: 'var(--sl-bg-canvas-deep)',   // cosmic depth, page edges
+            base: 'var(--sl-bg-canvas)',         // main environment
+            lift: 'var(--sl-bg-canvas-lift)',     // interaction threshold
+          },
+
+          // Legacy aliases (same values, flat namespace)
+          canvas:        'var(--sl-bg-canvas)',
+          'canvas-deep': 'var(--sl-bg-canvas-deep)',
+          'canvas-lift': 'var(--sl-bg-canvas-lift)',
+
+          surface:       'var(--sl-bg-surface)',
+          elevated:      'var(--sl-bg-elevated)',
+          soft:          'var(--sl-bg-soft)',
+
+          border: {
+            subtle: 'var(--sl-border-subtle)',
+            strong: 'var(--sl-border-strong)',
+          },
+
+          text: {
+            primary:   'var(--sl-text-primary)',
+            secondary: 'var(--sl-text-secondary)',
+            muted:     'var(--sl-text-muted)',
+          },
+
+          accent: {
+            primary:      'var(--sl-accent-primary)',
+            soft:         'var(--sl-accent-soft)',
+            maia:         'var(--sl-accent-maia)',
+            admin:        'var(--sl-accent-admin)',
+            practitioner: 'var(--sl-accent-practitioner)',
+            world:        'var(--sl-accent-world)',
+            archive:      'var(--sl-accent-archive)',
+          },
+
+          state: {
+            success: 'var(--sl-state-success)',
+            warning: 'var(--sl-state-warning)',
+            error:   'var(--sl-state-error)',
+            info:    'var(--sl-state-info)',
+          },
         },
 
         // ══════════════════════════════════════════════════════════════════════
@@ -210,6 +270,10 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        // Soullab Core field gradients — immersion, not decoration
+        'soullab-core': 'linear-gradient(to bottom, var(--sl-bg-canvas-lift), var(--sl-bg-canvas), var(--sl-bg-canvas-deep))',
+        'field-core': 'radial-gradient(120% 120% at 50% 0%, var(--sl-bg-canvas-lift) 0%, var(--sl-bg-canvas) 40%, var(--sl-bg-canvas-deep) 100%)',
+        'field-depth': 'radial-gradient(80% 100% at 50% 20%, var(--sl-bg-canvas-lift) 0%, var(--sl-bg-canvas) 50%, var(--sl-bg-canvas-deep) 100%)',
       },
     },
   },

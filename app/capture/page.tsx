@@ -34,14 +34,14 @@ export default function CapturePage() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e] flex items-center justify-center">
+      <div className="min-h-screen bg-soullab-core flex items-center justify-center">
         <div className="text-[#D4B896] animate-pulse">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+    <div className="min-h-screen bg-soullab-core">
       <div className="max-w-2xl mx-auto px-4 py-6">
 
         {/* Header */}

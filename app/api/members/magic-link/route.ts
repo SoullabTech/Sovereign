@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
-      return NextResponse.redirect(new URL('/magic-link-error?reason=no_token', baseUrl));
+      return NextResponse.redirect(new URL('/signin?link=invalid', baseUrl));
     }
 
     trackOnboarding({ event: 'magic_link_opened', path: 'GET /api/members/magic-link' });
@@ -294,7 +294,7 @@ export async function GET(request: NextRequest) {
       }
       trackOnboarding({ event: telemetryEvent, path: 'GET /api/members/magic-link' });
       console.log(`[MAGIC-LINK] Token failure (${reason}): ${token.substring(0, 8)}...`);
-      return NextResponse.redirect(new URL(`/magic-link-error?reason=${reason}`, baseUrl));
+      return NextResponse.redirect(new URL(`/signin?link=${reason}`, baseUrl));
     }
 
     const claimed = claimResult.rows[0];
@@ -374,6 +374,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[MAGIC-LINK] Verify error:', error);
-    return NextResponse.redirect(new URL('/magic-link-error?reason=verification_failed', baseUrl));
+    return NextResponse.redirect(new URL('/signin?link=failed', baseUrl));
   }
 }

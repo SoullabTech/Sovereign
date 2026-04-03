@@ -92,7 +92,7 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] to-[#1a1a2e] flex items-center justify-center">
+    <div className="min-h-screen bg-soullab-core flex items-center justify-center">
       <Suspense fallback={
         <div className="text-center p-8">
           <Loader2 className="w-12 h-12 text-amber-400 animate-spin mx-auto mb-4" />
