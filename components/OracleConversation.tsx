@@ -5178,15 +5178,15 @@ I'm not sure what I'm feeling yet.`;
 
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
       if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
-        const lastUserMsg = messages[messages.length - 1];
-        const userText = lastUserMsg?.role === 'user' ? (lastUserMsg.content || '') : '';
-        const detection = detectIntent({ userInput: userText, maiaResponse: oracleMessage.content });
+        const detection = detectIntent({ userInput: cleanedText, maiaResponse: oracleMessage.text || '' });
+        console.log('[World] intent-check', { userInput: cleanedText.slice(0, 60), intent: detection.intent, confidence: detection.confidence });
         if (detection.intent !== 'unknown' && detection.confidence > 0) {
           const route = getIntentRoute(detection.intent);
           const action = buildUiAction(route, detection.confidence);
           if (action.type !== 'none') {
             oracleMessage.intent = detection.intent;
             oracleMessage.uiAction = action;
+            console.log('[World] doorway-attached', { intent: detection.intent, actionType: action.type, isWorldDoorway: action.isWorldDoorway });
           }
         }
       }
