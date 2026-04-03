@@ -57,7 +57,7 @@ const TONE_SYNONYMS: Record<string, CanonicalTone> = {
   // unclear
   unclear: 'unclear', ambiguous: 'unclear', murky: 'unclear', confused: 'unclear', foggy: 'unclear', uncertain: 'unclear', unknown: 'unclear',
   // tense
-  tense: 'tense', pressurized: 'tense', charged: 'tense', strained: 'tense', agitated: 'tense', volatile: 'tense',
+  tense: 'tense', pressurized: 'tense', charged: 'tense', strained: 'tense', agitated: 'tense', volatile: 'tense', conflicted: 'tense', combative: 'tense', reactive: 'tense', defensive: 'tense',
   // warm
   warm: 'warm', tender: 'warm', loving: 'warm', affectionate: 'warm', gentle: 'warm', caring: 'warm', nourishing: 'warm',
   // distant
@@ -92,6 +92,11 @@ function truncateToSentences(text: string, maxSentences: number): string {
   const sentences = text.match(/[^.!?]+[.!?]+/g);
   if (!sentences) return text.substring(0, 200);
   return sentences.slice(0, maxSentences).join(' ').trim();
+}
+
+// ── Strip markdown artifacts ──
+function cleanOutput(text: string): string {
+  return text.replace(/\*{1,2}/g, '').replace(/^#+\s*/gm, '').trim();
 }
 
 function buildRecentContext(entries: CheckInInput['recentEntries']): string {
@@ -136,12 +141,16 @@ PATTERN: If something repeats across entries, name it simply. If not enough hist
 FIELD_TONE: One word or short phrase for the current atmosphere in this field.
 MOVEMENT: One grounded next step. Not advice. The next honest move.
 
+FIELD_TONE must be exactly one of: open, contracted, unclear, tense, warm, distant, fragile, active, quiet, unresolved. Choose the closest match.
+
 Constraints:
 - Do not diagnose. Do not prescribe. Do not flatten.
 - Language should feel like clear water, not clinical assessment.
 - Do not fabricate patterns where insufficient data exists.
 - The movement should feel like something a wise friend might quietly suggest.
-- Keep each section to 1-2 sentences. Brevity is clarity.`;
+- Keep each section to 1-2 sentences. Brevity is clarity.
+- Match your depth to the input depth. If the input is one signal with no free text, reflect simply. Do not add metaphor or richness that the input does not support.
+- Do not use markdown formatting (no ** or ## or *).`;
 }
 
 function parseResponse(text: string, entryCount: number): CheckInResult {
@@ -156,12 +165,12 @@ function parseResponse(text: string, entryCount: number): CheckInResult {
 
   // ── Hard guards ──
 
-  // Reflection: max 2 sentences
-  let reflection = sections.REFLECTION || 'Something is present here, even if not yet clear.';
+  // Reflection: max 2 sentences, strip markdown
+  let reflection = cleanOutput(sections.REFLECTION || 'Something is present here, even if not yet clear.');
   reflection = truncateToSentences(reflection, 2);
 
   // Pattern: enforce honesty with low data
-  let patternHint = sections.PATTERN || 'Not enough history yet.';
+  let patternHint = cleanOutput(sections.PATTERN || 'Not enough history yet.');
   if (entryCount < 3) {
     patternHint = 'Not enough history yet.';
   } else {
@@ -169,10 +178,10 @@ function parseResponse(text: string, entryCount: number): CheckInResult {
   }
 
   // Field tone: normalize to closed vocabulary
-  const fieldTone = normalizeFieldTone(sections.FIELD_TONE || 'unclear');
+  const fieldTone = normalizeFieldTone(cleanOutput(sections.FIELD_TONE || 'unclear'));
 
-  // Movement: max 1 sentence
-  let suggestedMovement = sections.MOVEMENT || 'Pause and notice what you are feeling.';
+  // Movement: max 1 sentence, strip markdown
+  let suggestedMovement = cleanOutput(sections.MOVEMENT || 'Pause and notice what you are feeling.');
   suggestedMovement = truncateToSentences(suggestedMovement, 1);
 
   return { reflection, patternHint, fieldTone, suggestedMovement };
