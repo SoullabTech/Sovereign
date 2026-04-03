@@ -7,8 +7,8 @@
  * Refactored from AppleCalendarSync.ts to be provider-agnostic.
  */
 
-// @ts-ignore - ical.js doesn't have proper TypeScript definitions
-import ical from 'ical.js';
+// Lightweight iCal parsing — no external dependency needed.
+// Generation is string-template based; parsing uses regex extraction.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Error types
@@ -362,25 +362,45 @@ export class CalDAVService {
 
   private parseICalEvent(icalData: string): CalendarEvent | null {
     try {
-      const jcalData = ical.parse(icalData);
-      const comp = new ical.Component(jcalData);
-      const vevent = comp.getFirstSubcomponent('vevent');
-      if (!vevent) return null;
+      // Lightweight regex extraction — no ical.js dependency
+      const getProp = (name: string): string => {
+        const re = new RegExp(`^${name}[;:](.*)$`, 'mi');
+        const match = icalData.match(re);
+        return match?.[1]?.trim() ?? '';
+      };
 
-      const event = new ical.Event(vevent);
+      const uid = getProp('UID');
+      if (!uid) return null;
+
+      const dtstart = getProp('DTSTART');
+      const dtend = getProp('DTEND');
+      if (!dtstart) return null;
+
       return {
-        id: event.uid,
-        title: event.summary || 'Untitled Event',
-        description: event.description || '',
-        startTime: event.startDate.toJSDate(),
-        endTime: event.endDate.toJSDate(),
-        location: event.location || '',
-        attendees: event.attendees?.map((a: any) => a.getParameter('cn') || a.getFirstValue()) ?? [],
-        status: this.mapICalStatus(vevent.getFirstPropertyValue('status')),
+        id: uid,
+        title: getProp('SUMMARY') || 'Untitled Event',
+        description: getProp('DESCRIPTION') || '',
+        startTime: this.parseICalDate(dtstart),
+        endTime: dtend ? this.parseICalDate(dtend) : this.parseICalDate(dtstart),
+        location: getProp('LOCATION') || '',
+        attendees: [],
+        status: this.mapICalStatus(getProp('STATUS')),
       };
     } catch {
       return null;
     }
+  }
+
+  private parseICalDate(dateStr: string): Date {
+    // Handle both 20260402T140000Z and TZID=...:20260402T140000 formats
+    const raw = dateStr.includes(':') ? dateStr.split(':').pop()! : dateStr;
+    const cleaned = raw.replace(/[^0-9TZ]/g, '');
+    // Convert YYYYMMDDTHHMMSS(Z) to ISO
+    const iso = cleaned.replace(
+      /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/,
+      '$1-$2-$3T$4:$5:$6$7'
+    );
+    return new Date(iso || dateStr);
   }
 
   private createICalEvent(event: CalendarEvent): string {
