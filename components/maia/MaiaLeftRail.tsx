@@ -30,7 +30,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
   const { presenceState, amplitude } = useVoiceState();
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles') {
+    if (id === 'studio' || id === 'circles' || id === 'astrology') {
       router.push(route);
     } else {
       onWorldChange(id as MaiaWorldId);
