@@ -186,8 +186,8 @@ export default function PlatformPulsePage() {
                 <Stat label="Onboarded" value={data.pulse.totalOnboarded} sub={`of ${data.pulse.totalOnboarded + data.pulse.newSignups} total`} />
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
-                <Stat label="Avg Session" value={msToLabel(data.pulse.avgSessionDuration)} />
-                <Stat label="Median Session" value={msToLabel(data.pulse.medianSessionDuration)} />
+                <Stat label="Avg Response" value={msToLabel(data.pulse.avgSessionDuration)} sub="per oracle turn" />
+                <Stat label="Median Response" value={msToLabel(data.pulse.medianSessionDuration)} sub="per oracle turn" />
               </div>
               <div className="bg-white/5 rounded-lg p-4">
                 <p className="text-white/40 text-xs mb-2">Daily active users</p>
