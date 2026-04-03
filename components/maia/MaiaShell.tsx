@@ -230,6 +230,7 @@ export function MaiaShell({
         worldHints={worldHints}
         onWorldChange={handleWorldChange}
         onOpenAccount={onOpenAccount}
+        onCaptureSpirit={() => onLabAction('capture-spirit')}
       />
 
       {/* Center field — offset for rail and top bar */}
