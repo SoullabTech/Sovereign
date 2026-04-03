@@ -56,11 +56,19 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
         const data = result.data;
         data.birthDate = new Date(data.birthDate);
 
+        // Rebuild previousPeriod/nextPeriod/currentPeriod as references
+        // into the periods array (JSON serialization breaks object identity)
+        const currentIndex = data.periods.findIndex((p: DaYunPeriod) => p.isActive);
+        if (currentIndex !== -1) {
+          data.currentPeriod = data.periods[currentIndex];
+          data.previousPeriod = currentIndex > 0 ? data.periods[currentIndex - 1] : null;
+          data.nextPeriod = currentIndex < data.periods.length - 1 ? data.periods[currentIndex + 1] : null;
+        }
+
         setProfile(data);
         setError(null);
 
         // Auto-expand current period
-        const currentIndex = data.periods.findIndex((p: DaYunPeriod) => p.isActive);
         if (currentIndex !== -1) {
           setExpandedPeriod(currentIndex);
         }
@@ -303,7 +311,7 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
         </div>
 
         {/* Expanded period detail */}
-        {expandedPeriod !== null && expandedPeriod !== profile.periods.findIndex(p => p.isActive) && (
+        {expandedPeriod !== null && expandedPeriod >= 0 && expandedPeriod < profile.periods.length && expandedPeriod !== profile.periods.findIndex(p => p.isActive) && (
           <motion.div
             className="mt-4 pt-4 border-t border-white/10"
             initial={{ opacity: 0, y: -10 }}
