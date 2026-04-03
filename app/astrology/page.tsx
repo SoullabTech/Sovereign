@@ -264,20 +264,14 @@ export default function AstrologyPage() {
 
   // Persist zodiac mode changes
   const setZodiacModeAndPersist = useCallback((mode: ZodiacSystem) => {
-    // Chinese is a separate system — route to its dedicated page
-    if (mode === 'chinese') {
-      router.push('/astrology/chinese');
-      return;
-    }
+    // Each system has its own authentic page
+    if (mode === 'chinese') { router.push('/astrology/chinese'); return; }
+    if (mode === 'sidereal') { router.push('/astrology/vedic'); return; }
+    // Tropical stays on this page
     setZodiacMode(mode);
     localStorage.setItem('astro_zodiac_mode', mode);
-    // Update URL without full navigation
     const url = new URL(window.location.href);
-    if (mode === 'sidereal') {
-      url.searchParams.set('zodiac', 'sidereal');
-    } else {
-      url.searchParams.delete('zodiac');
-    }
+    url.searchParams.delete('zodiac');
     window.history.replaceState({}, '', url.toString());
   }, [router]);
 
