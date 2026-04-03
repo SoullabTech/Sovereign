@@ -1097,80 +1097,12 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
-  // SETTINGS (utility)
+  // SETTINGS — removed from LabTools (2026-04-03)
+  // Profile, Voice, Data Sovereignty, and generic Settings are account-level
+  // concerns, not LabTools instruments. They belong under /account or /maia.
+  // A setting belongs in LabTools only if it changes how a LabTool behaves,
+  // how its outputs are generated, or how its sessions are stored.
   // ---------------------------------------------------------------------------
-  {
-    id: 'profile',
-    label: 'Profile',
-    shortDescription: 'Account & preferences',
-    longDescription: 'Your identity settings, avatar, and account details.',
-    emoji: '👤',
-    icon: User,
-    path: '/labtools/profile',
-    category: 'settings',
-    minTier: 'personal',
-    tags: ['profile', 'account', 'identity'],
-    defaultEnabled: true,
-    popularityRank: 1,
-  },
-  {
-    id: 'language',
-    label: 'Language',
-    shortDescription: 'MAIA speaks 30+ languages',
-    longDescription: 'Choose your preferred language for MAIA interactions.',
-    emoji: '🌐',
-    icon: Globe,
-    path: '/labtools/language',
-    category: 'settings',
-    minTier: 'personal',
-    tags: ['language', 'translation', 'multilingual'],
-    defaultEnabled: false,
-    popularityRank: 3,
-  },
-  {
-    id: 'voice',
-    label: 'Voice',
-    shortDescription: 'Voice synthesis & modes',
-    longDescription:
-      'Configure MAIA voice, speech speed, and audio preferences.',
-    emoji: '🔊',
-    icon: Mic,
-    path: '/labtools/voice',
-    category: 'settings',
-    minTier: 'personal',
-    tags: ['voice', 'audio', 'speech', 'tts'],
-    defaultEnabled: true,
-    popularityRank: 2,
-  },
-  {
-    id: 'sovereignty',
-    label: 'Data Sovereignty',
-    shortDescription: 'Control over your data',
-    longDescription:
-      'Export, delete, or manage your data. Your sovereignty is not a feature—it is a right.',
-    emoji: '🛡️',
-    icon: Shield,
-    path: '/labtools/sovereignty',
-    category: 'settings',
-    minTier: 'personal',
-    tags: ['privacy', 'data', 'export', 'sovereignty', 'gdpr'],
-    defaultEnabled: true,
-    popularityRank: 4,
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    shortDescription: 'App preferences',
-    longDescription: 'Theme, notifications, and general application settings.',
-    emoji: '⚙️',
-    icon: Settings,
-    path: '/labtools/settings',
-    category: 'settings',
-    minTier: 'personal',
-    tags: ['settings', 'preferences', 'config'],
-    defaultEnabled: false,
-    popularityRank: 5,
-  },
 
   // ---------------------------------------------------------------------------
   // DEVELOPER (utility)
