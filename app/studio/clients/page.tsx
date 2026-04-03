@@ -163,7 +163,7 @@ export default function ClientsPage() {
           </Link>
           <button
             onClick={() => setShowNewClientModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-maia-navy-700 text-white rounded-lg hover:bg-maia-navy-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Client
@@ -180,7 +180,7 @@ export default function ClientsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search clients..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function ClientsPage() {
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                 statusFilter === status
-                  ? 'bg-teal-500/20 text-teal-400'
+                  ? 'bg-maia-navy-700/20 text-maia-gold'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
@@ -296,8 +296,8 @@ export default function ClientsPage() {
 
                     {/* Next Session */}
                     {client.nextSession && (
-                      <div className="p-2 bg-teal-500/10 border border-teal-500/20 rounded-lg mb-4">
-                        <div className="flex items-center gap-2 text-sm text-teal-400">
+                      <div className="p-2 bg-maia-navy-700/10 border border-maia-navy-700/20 rounded-lg mb-4">
+                        <div className="flex items-center gap-2 text-sm text-maia-gold">
                           <Calendar className="w-4 h-4" />
                           <span>Next: {formatNextSession(client.nextSession)}</span>
                         </div>
@@ -345,7 +345,7 @@ export default function ClientsPage() {
                         <MessageSquare className="w-4 h-4" />
                         Message
                       </button>
-                      <button className="flex-1 flex items-center justify-center gap-2 py-2 bg-teal-500/20 text-teal-400 rounded-lg hover:bg-teal-500/30 transition-colors text-sm">
+                      <button className="flex-1 flex items-center justify-center gap-2 py-2 bg-maia-navy-700/20 text-maia-gold rounded-lg hover:bg-maia-navy-700/30 transition-colors text-sm">
                         <Calendar className="w-4 h-4" />
                         Schedule
                       </button>
@@ -453,7 +453,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Client's full name"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
               autoFocus
             />
           </div>
@@ -466,7 +466,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="client@example.com"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
             />
           </div>
 
@@ -478,7 +478,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
               value={phone}
               onChange={e => setPhone(e.target.value)}
               placeholder="+1 (555) 123-4567"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
             />
           </div>
 
@@ -488,7 +488,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
             <select
               value={status}
               onChange={e => setStatus(e.target.value as Client['status'])}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-maia-navy-600"
             >
               <option value="invited">Invited</option>
               <option value="active">Active</option>
@@ -507,7 +507,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
                   type="date"
                   value={birthDate}
                   onChange={e => setBirthDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50 input-dark-native"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-maia-navy-600 input-dark-native"
                 />
               </div>
               <div>
@@ -516,7 +516,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
                   type="time"
                   value={birthTime}
                   onChange={e => setBirthTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50 input-dark-native"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-maia-navy-600 input-dark-native"
                 />
               </div>
             </div>
@@ -528,7 +528,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
                 value={birthLocation}
                 onChange={e => setBirthLocation(e.target.value)}
                 placeholder="City, State, Country"
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
               />
             </div>
           </div>
@@ -541,7 +541,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
               value={tagsInput}
               onChange={e => setTagsInput(e.target.value)}
               placeholder="e.g., founder, weekly, VIP"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-maia-navy-600"
             />
           </div>
 
@@ -557,7 +557,7 @@ function NewClientModal({ onClose, onSubmit, saving }: NewClientModalProps) {
             <button
               type="submit"
               disabled={!name.trim() || !email.trim() || saving}
-              className="flex items-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-maia-navy-700 text-white rounded-lg hover:bg-maia-navy-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Add Client

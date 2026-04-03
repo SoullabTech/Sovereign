@@ -353,8 +353,8 @@ export default function ClientImportPage() {
             }`}
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-3 bg-teal-500/20 rounded-lg">
-                <Smartphone className="w-6 h-6 text-teal-400" />
+              <div className="p-3 bg-maia-navy-700/20 rounded-lg">
+                <Smartphone className="w-6 h-6 text-maia-gold" />
               </div>
               <h3 className="text-lg font-medium text-white">Phone Contacts</h3>
             </div>

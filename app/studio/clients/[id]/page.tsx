@@ -290,7 +290,7 @@ export default function ClientDetailPage() {
             <div className="flex items-center gap-3">
               <Link
                 href={`/studio/session-room?caseId=${client.id}`}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 rounded-xl hover:bg-emerald-400 transition-colors font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-maia-navy-700 text-white rounded-xl hover:bg-maia-navy-600 transition-colors font-medium"
               >
                 <Mic className="w-4 h-4" />
                 Start Session

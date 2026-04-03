@@ -930,7 +930,7 @@ function NowCard({
         {isInProgress ? (
           <button
             onClick={onComplete}
-            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 transition-colors font-medium"
+            className="flex items-center gap-2 px-5 py-2.5 bg-maia-navy-700 text-white rounded-xl hover:bg-maia-navy-600 transition-colors font-medium"
           >
             <CheckCircle2 className="w-4 h-4" />
             Done

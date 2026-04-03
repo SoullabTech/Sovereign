@@ -29,6 +29,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ══════════════════════════════════════════════════════════════════════
+   SOULLAB CORE — Canonical design tokens
+   See docs/canon/SOULLAB_THEME.md for usage rules and prohibitions.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Foundation */
+  --sl-bg-canvas: #0A1628;
+  --sl-bg-canvas-deep: #060D18;
+  --sl-bg-canvas-lift: #0F1D32;
+
+  /* Surfaces */
+  --sl-bg-surface: #121A2B;
+  --sl-bg-elevated: #1A2235;
+  --sl-bg-soft: #162033;
+
+  /* Borders */
+  --sl-border-subtle: #1E2F4D;
+  --sl-border-strong: #2A3F63;
+
+  /* Text */
+  --sl-text-primary: #F5F7FB;
+  --sl-text-secondary: #B7C0D1;
+  --sl-text-muted: #7F8AA3;
+
+  /* Signal / Accent */
+  --sl-accent-primary: #B8860B;
+  --sl-accent-soft: #D4AF37;
+
+  /* States */
+  --sl-state-success: #5E8F72;
+  --sl-state-warning: #B8860B;
+  --sl-state-error: #A65A5A;
+  --sl-state-info: #6C8BB8;
+
+  /* Domain accents */
+  --sl-accent-maia: #B8860B;
+  --sl-accent-admin: #C9A227;
+  --sl-accent-practitioner: #5E7FA6;
+  --sl-accent-world: #8A7FB8;
+  --sl-accent-archive: #8B8578;
+}
+
+/* ── Domain variance: same field, different signal ── */
+[data-domain="maia"]         { --sl-accent-primary: #B8860B; }
+[data-domain="admin"]        { --sl-accent-primary: #C9A227; }
+[data-domain="world"]        { --sl-accent-primary: #8A7FB8; }
+[data-domain="practitioner"] { --sl-accent-primary: #5E7FA6; }
+[data-domain="archive"]      { --sl-accent-primary: #8B8578; }
+
+/* ── Inner/outer layer depth modulation ── */
+[data-layer="inner"] { --sl-bg-surface: #162033; }
+[data-layer="outer"] { --sl-bg-surface: #1A2235; }
+
+/* ── Atmospheric vignette: presence, not decoration ── */
+.sl-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(255, 255, 255, 0.03),
+    transparent 60%
+  );
+}
+
+/* ── Field breath: not motion, but presence ── */
+@keyframes fieldBreath {
+  0%   { opacity: 0.97; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.97; }
+}
+.sl-field-alive {
+  animation: fieldBreath 12s ease-in-out infinite;
+}
+
 /* Bene Gesserit ceremonial theme */
 /* @import url('./styles/benegesserit-theme.css'); */
 

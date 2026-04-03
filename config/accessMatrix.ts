@@ -59,7 +59,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/reset-password', public: true, notes: 'Password reset' },
   { exact: '/magic-link', public: true, notes: 'Magic link landing page — button-click redeems token (scanner-safe)' },
   { exact: '/magic-link-success', public: true, notes: 'Magic link confirmation' },
-  { exact: '/magic-link-error', public: true, notes: 'Magic link failure — human-readable recovery page' },
+  // magic-link-error removed — expired/invalid links redirect to /signin?link=reason
   { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
 
   // Onboarding (pre-auth)
