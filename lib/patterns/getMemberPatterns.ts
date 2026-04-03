@@ -15,6 +15,9 @@ export interface MemberPattern {
   createdAt: Date;
   updatedAt: Date;
   source?: 'practitioner' | 'maia';
+  firstSeenAt?: string | null;
+  lastEvidenceAt?: string | null;
+  memberLabel?: string | null;
 }
 
 const SELECT_COLS = `
@@ -28,7 +31,8 @@ const SELECT_COLS = `
   member_response      AS "memberResponse",
   member_responded_at  AS "memberRespondedAt",
   created_at           AS "createdAt",
-  updated_at           AS "updatedAt"
+  updated_at           AS "updatedAt",
+  member_label         AS "memberLabel"
 `;
 
 // For practitioner: all patterns for a client (all statuses)
@@ -55,7 +59,12 @@ export async function getMemberVisiblePatterns(memberId: string): Promise<Member
      ORDER BY created_at DESC`,
     [memberId]
   );
-  return result.rows.map((r) => ({ ...r, source: 'practitioner' as const }));
+  return result.rows.map((r) => ({
+    ...r,
+    source: 'practitioner' as const,
+    firstSeenAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    lastEvidenceAt: null,
+  }));
 }
 
 // For member: MAIA-detected patterns from pattern_ledger (confidence >= 0.5, not retired)
@@ -72,6 +81,9 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
     member_response: string | null;
     member_response_at: Date | null;
     recurrence_count: number;
+    first_seen_at: Date;
+    last_evidence_at: Date;
+    member_label: string | null;
     created_at: Date;
     updated_at: Date;
   }>(
@@ -87,6 +99,9 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
        member_response,
        member_response_at,
        recurrence_count,
+       first_seen_at,
+       last_evidence_at,
+       member_label,
        created_at,
        updated_at
      FROM pattern_ledger
@@ -112,6 +127,9 @@ export async function getMaiaDetectedPatterns(memberId: string): Promise<MemberP
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     source: 'maia' as const,
+    firstSeenAt: r.first_seen_at?.toISOString() ?? r.created_at?.toISOString() ?? null,
+    lastEvidenceAt: r.last_evidence_at?.toISOString() ?? null,
+    memberLabel: r.member_label,
   }));
 
   // Inline fallback: schedule generation for any pattern missing description that meets threshold

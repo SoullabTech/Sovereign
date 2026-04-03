@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { seedMaiaPrompt, setReturnPath } from '@/lib/maia/seedPrompt';
 
 type PatternStatus = 'offered' | 'confirmed' | 'rejected';
 type PatternSource = 'practitioner' | 'maia';
@@ -18,6 +20,9 @@ interface MemberPattern {
   createdAt: string;
   updatedAt: string;
   source?: PatternSource;
+  firstSeenAt?: string | null;
+  lastEvidenceAt?: string | null;
+  memberLabel?: string | null;
 }
 
 const RESONANCE_BUTTONS: { value: ResonanceResponse; label: string; primary?: boolean }[] = [
@@ -36,6 +41,47 @@ const RESONANCE_TO_STATUS: Record<ResonanceResponse, 'confirmed' | 'rejected' | 
   not_now:  null,
   no:       'rejected',
 };
+
+function relativeTime(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? '1 month ago' : `${months} months ago`;
+}
+
+const FALLBACK_QUESTIONS = [
+  'Where does this still feel familiar?',
+  'What does this pattern ask you to notice?',
+  'When does this arise most clearly?',
+];
+
+function getLivingQuestion(pattern: MemberPattern): string {
+  if (pattern.integrationPrompt) return pattern.integrationPrompt;
+  // Deterministic fallback based on pattern id so it's stable across renders
+  const idx = pattern.id.charCodeAt(0) % FALLBACK_QUESTIONS.length;
+  return FALLBACK_QUESTIONS[idx];
+}
+
+function PatternTimeline({ firstSeenAt, lastEvidenceAt }: { firstSeenAt?: string | null; lastEvidenceAt?: string | null }) {
+  if (!firstSeenAt) return null;
+  const first = relativeTime(firstSeenAt);
+  // Show "Returned" only if last evidence is meaningfully later (> 1 hour)
+  const showReturn = lastEvidenceAt &&
+    (new Date(lastEvidenceAt).getTime() - new Date(firstSeenAt).getTime()) > 3600000;
+  return (
+    <p className="mt-2 text-[11px] text-white/25 tracking-wide">
+      First noticed {first}
+      {showReturn ? <> &middot; Returned {relativeTime(lastEvidenceAt)}</> : null}
+    </p>
+  );
+}
 
 function PatternLedgerSkeleton() {
   return (
@@ -71,12 +117,72 @@ function StatusBadge({ status, resonance }: { status: PatternStatus; resonance?:
   );
 }
 
+function EditablePatternTitle({
+  pattern,
+  onSave,
+}: {
+  pattern: MemberPattern;
+  onSave: (id: string, label: string, sourceType: string) => void;
+}) {
+  const displayName = pattern.memberLabel || pattern.theme;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(displayName);
+
+  function commit() {
+    const trimmed = draft.trim();
+    setEditing(false);
+    // Only save if actually changed
+    if (trimmed !== displayName) {
+      onSave(pattern.id, trimmed, pattern.source || 'maia');
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') { setDraft(displayName); setEditing(false); }
+        }}
+        className="w-full bg-transparent text-sm text-white/85 border-b border-white/20 outline-none py-0.5"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => { setDraft(displayName); setEditing(true); }}
+      className="text-left text-sm text-white/80 hover:text-white/95 transition-colors duration-200 border-b border-transparent hover:border-white/15 cursor-text"
+      title="Click to rename"
+    >
+      {displayName}
+    </button>
+  );
+}
+
 export default function PatternLedger() {
+  const router = useRouter();
   const [patterns, setPatterns] = useState<MemberPattern[]>([]);
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
-  const [expandedInvite, setExpandedInvite] = useState<string | null>(null);
+
+  function returnToPattern(displayName: string) {
+    seedMaiaPrompt({
+      prompt: `Let's return to this pattern: ${displayName}. Help me see how it is showing up now.`,
+      source: 'patterns:return',
+      returnTo: '/worlds/patterns',
+      tone: 'exploratory',
+    });
+    setReturnPath('/worlds/patterns', 'Patterns');
+    sessionStorage.setItem('maia_nav_teardown', 'true');
+    router.push('/maia');
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -128,14 +234,37 @@ export default function PatternLedger() {
         current.map((p) => (p.id === patternId ? { ...json.pattern, integrationPrompt: p.integrationPrompt } : p))
       );
 
-      // Auto-expand the invite when user wants to explore
-      if (resonance === 'explore' || resonance === 'fits') {
-        setExpandedInvite(patternId);
-      }
+      // No auto-expand needed — living question is always visible for settled patterns
     } catch (error) {
       console.error('Failed to respond to pattern:', error);
     } finally {
       setSubmittingId(null);
+    }
+  }
+
+  async function saveLabel(patternId: string, label: string, sourceType: string) {
+    // Optimistic update
+    setPatterns((current) =>
+      current.map((p) => (p.id === patternId ? { ...p, memberLabel: label || null } : p))
+    );
+    try {
+      const res = await fetch(`/api/members/patterns/${patternId}/label`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, sourceType }),
+      });
+      if (!res.ok) {
+        // Revert on failure — reload patterns
+        console.error('Failed to save label, reverting');
+        const reload = await fetch('/api/members/patterns', { credentials: 'include', cache: 'no-store' });
+        if (reload.ok) {
+          const json = await reload.json();
+          setPatterns(json.patterns ?? []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save pattern label:', error);
     }
   }
 
@@ -165,7 +294,6 @@ export default function PatternLedger() {
         const isOffered = pattern.status === 'offered';
         const isSubmitting = submittingId === pattern.id;
         const isMaia = pattern.source === 'maia';
-        const showInvite = expandedInvite === pattern.id && !!pattern.integrationPrompt;
 
         return (
           <div key={pattern.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -179,14 +307,18 @@ export default function PatternLedger() {
                   </p>
                 ) : null}
 
-                {/* Theme name — shown when no description yet */}
-                {!pattern.description ? (
-                  <p className="text-sm text-white/80">{pattern.theme}</p>
-                ) : null}
+                {/* Pattern name — editable for settled patterns */}
+                {!isOffered ? (
+                  <EditablePatternTitle pattern={pattern} onSave={saveLabel} />
+                ) : (
+                  <p className="text-sm text-white/80">
+                    {pattern.description || pattern.theme}
+                  </p>
+                )}
 
-                {/* Description (Air) */}
-                {pattern.description ? (
-                  <p className="text-sm leading-relaxed text-white/85">{pattern.description}</p>
+                {/* Description shown separately when there's a custom label */}
+                {!isOffered && pattern.description && (pattern.memberLabel || pattern.description !== pattern.theme) ? (
+                  <p className="mt-1 text-[13px] leading-relaxed text-white/55">{pattern.description}</p>
                 ) : null}
               </div>
 
@@ -195,14 +327,14 @@ export default function PatternLedger() {
               ) : null}
             </div>
 
-            {/* Earth layer — integration prompt, shown when expanded */}
-            {showInvite ? (
-              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <p className="text-xs uppercase tracking-wider text-white/35 mb-2">Sit with this</p>
-                <p className="text-sm leading-relaxed text-white/75 italic">
-                  {pattern.integrationPrompt}
-                </p>
-              </div>
+            {/* Timeline — when this pattern was noticed */}
+            <PatternTimeline firstSeenAt={pattern.firstSeenAt} lastEvidenceAt={pattern.lastEvidenceAt} />
+
+            {/* Living question — shown directly for settled patterns */}
+            {!isOffered ? (
+              <p className="mt-3 text-[13px] leading-relaxed text-white/40 italic">
+                {getLivingQuestion(pattern)}
+              </p>
             ) : null}
 
             {/* Resonance responses */}
@@ -226,20 +358,17 @@ export default function PatternLedger() {
               </div>
             ) : null}
 
-            {/* Show invite toggle for confirmed/exploring patterns */}
-            {!isOffered && pattern.integrationPrompt && !showInvite ? (
-              <button
-                type="button"
-                onClick={() => setExpandedInvite(expandedInvite === pattern.id ? null : pattern.id)}
-                className="mt-3 text-xs text-white/40 hover:text-white/65 transition"
-              >
-                {expandedInvite === pattern.id ? 'Close' : 'Sit with the question →'}
-              </button>
-            ) : null}
-
-            {/* Member's own note, if any */}
-            {!isOffered && pattern.memberResponse && pattern.memberResponse !== 'confirmed' && pattern.memberResponse !== 'rejected' ? (
-              <p className="mt-3 text-xs italic text-white/45">{pattern.memberResponse}</p>
+            {/* Return to this — bridge back into MAIA */}
+            {!isOffered ? (
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => returnToPattern(pattern.memberLabel || pattern.theme)}
+                  className="text-xs text-white/35 hover:text-white/60 transition-colors duration-300"
+                >
+                  Return to this &rarr;
+                </button>
+              </div>
             ) : null}
 
           </div>

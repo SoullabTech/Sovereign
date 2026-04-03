@@ -230,6 +230,7 @@ const SOURCE_LABELS: Record<string, { label: string; returnTo: string }> = {
   'academy:grounding': { label: 'Grounding Practice', returnTo: '/maia/academy' },
   'academy:discernment': { label: 'Discernment Practice', returnTo: '/maia/academy' },
   'fields:encounter': { label: 'Field Encounter', returnTo: '/maia/fields' },
+  'patterns:return': { label: 'Patterns', returnTo: '/worlds/patterns' },
 };
 
 /**
