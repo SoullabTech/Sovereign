@@ -196,6 +196,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '📈',
       items: [
         {
+          icon: Compass,
+          label: 'World Telemetry',
+          action: () => onNavigate('/admin/world-telemetry'),
+          description: 'Doorway follow rates, movement signals',
+          badge: 'Admin'
+        },
+        {
           icon: BarChart3,
           label: 'Cross-Portal Analytics',
           action: () => onNavigate('/consciousness/portals/analytics'),
