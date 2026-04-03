@@ -13,6 +13,7 @@ import {
 import Link from 'next/link';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import { ObsidianConnectSection } from '@/components/settings/ObsidianConnectSection';
+import { CalDAVConnectSection } from '@/components/settings/CalDAVConnectSection';
 import {
   getAccountSettings,
   saveAccountSettings,
@@ -2683,10 +2684,18 @@ export function AccountSettings() {
             <GoogleConnectSection userId={userId} />
           </div>
 
-          {/* Local & Sovereign */}
+          {/* Sovereign Coordination */}
           <div className="space-y-3">
             <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">
-              Local &amp; Sovereign
+              Sovereign Coordination
+            </h3>
+            <CalDAVConnectSection userId={userId} />
+          </div>
+
+          {/* Sovereign Archive */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">
+              Sovereign Archive
             </h3>
             <ObsidianConnectSection userId={userId} />
           </div>

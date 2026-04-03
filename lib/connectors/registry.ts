@@ -67,8 +67,57 @@ export const CONNECTOR_DEFINITIONS: ConnectorDefinition[] = [
     disconnectEndpoint: '/api/connectors/obsidian/configure',
   },
 
-  // ── Future: Credential-based ─────────────────────────────────────────────
-  // proton_bridge, smtp_custom, caldav, carddav — add here when ready
+  // ── Credential-based Connectors ───────────────────────────────────────────
+  {
+    id: 'caldav',
+    name: 'CalDAV Calendar',
+    class: 'credential',
+    description: 'Connect to Proton Calendar, Nextcloud, Fastmail, iCloud, or any CalDAV server.',
+    capabilities: ['create_calendar_event', 'read_calendar'],
+    icon: 'Calendar',
+    configFields: [
+      {
+        key: 'provider',
+        label: 'Calendar Service',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'proton', label: 'Proton Calendar' },
+          { value: 'nextcloud', label: 'Nextcloud' },
+          { value: 'fastmail', label: 'Fastmail' },
+          { value: 'icloud', label: 'iCloud' },
+          { value: 'other', label: 'Other CalDAV Server' },
+        ],
+      },
+      {
+        key: 'serverUrl',
+        label: 'Server URL',
+        type: 'text',
+        required: true,
+        helpText: 'CalDAV server URL. Auto-filled for known providers.',
+      },
+      {
+        key: 'username',
+        label: 'Username',
+        type: 'text',
+        required: true,
+        helpText: 'Your email or account username.',
+      },
+      {
+        key: 'password',
+        label: 'Password',
+        type: 'password',
+        required: true,
+        helpText: 'App-specific password recommended.',
+      },
+    ],
+    statusEndpoint: '/api/connectors/caldav/status',
+    connectEndpoint: '/api/connectors/caldav/configure',
+    disconnectEndpoint: '/api/connectors/caldav/configure',
+  },
+
+  // ── Future: more credential-based ────────────────────────────────────────
+  // proton_bridge, smtp_custom, carddav — add here when ready
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
