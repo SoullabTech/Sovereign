@@ -90,6 +90,7 @@ import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetec
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getRelationshipAnamnesis, saveRelationshipEssence, loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext } from '@/lib/memory/MemberLiveContext';
+import { MemoryWritebackService } from '@/lib/memory/MemoryWriteback';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 
 // 🚪 AIN Knowledge Gate (Phase 1): Local regex scoring, zero latency
@@ -437,15 +438,21 @@ export async function POST(req: NextRequest) {
                 console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
               }
 
-              // 🌟 WESTERN BIRTH DATA: Fetch birth date/time/location for astrological context
+              // 🌟 WESTERN BIRTH DATA + IDENTITY CONTEXT: Fetch birth data + pronouns for astrological and identity context
               try {
                 const birthResult = await pool.query(
-                  `SELECT birth_date, birth_time, birth_location_name, birth_timezone
+                  `SELECT birth_date, birth_time, birth_location_name, birth_timezone, pronouns
                    FROM members WHERE id = $1`,
                   [effectiveUserId]
                 );
-                if (birthResult.rows.length > 0 && birthResult.rows[0].birth_date) {
-                  westernBirthData = birthResult.rows[0];
+                if (birthResult.rows.length > 0) {
+                  if (birthResult.rows[0].birth_date) {
+                    westernBirthData = birthResult.rows[0];
+                  }
+                  // Surface pronouns as identity context for MAIA
+                  if (birthResult.rows[0].pronouns) {
+                    (meta as any).pronouns = birthResult.rows[0].pronouns;
+                  }
                 }
               } catch (birthErr) {
                 console.log(`🌟 [BIRTH] Western birth data not found (optional)`);
@@ -787,6 +794,34 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
           console.log(`💫 [ANAMNESIS] Essence saved: encounters=${updatedEssence.encounterCount} morphic=${updatedEssence.morphicResonance.toFixed(2)}`);
         } catch (anamnesisErr) {
           console.warn('[ANAMNESIS] Write failed (non-blocking):', anamnesisErr);
+        }
+      })();
+    }
+
+    // 🧠 MEMORY WRITEBACK (fire-and-forget): Learn durable facts from this conversation turn.
+    // Sovereign route is always longterm-capable — mode forced to 'longterm' for writeback only.
+    // This does NOT change the route-level memoryMode semantics; it only enables the write pipeline.
+    if (effectiveUserId && !isSanctuary && sovereignText) {
+      (async () => {
+        try {
+          const result = await MemoryWritebackService.writeBack({
+            userId: effectiveUserId,
+            sessionId: session.id,
+            userMessage: message,
+            assistantResponse: sovereignText,
+            facetCode: (meta as any)?.element,
+            element: (meta as any)?.element,
+            memoryMode: 'longterm', // forced for writeback only — sovereign is always longterm-capable
+            route: 'sovereign',
+            timestamp: new Date(),
+          });
+          if (result.wrote) {
+            console.log(`✅ [Sovereign/Writeback] Memory formed: ${result.memoryId} (significance threshold met)`);
+          } else {
+            console.log(`📝 [Sovereign/Writeback] Skipped: ${result.reason}`);
+          }
+        } catch (err) {
+          console.warn('[Sovereign/Writeback] Failed (non-blocking):', err);
         }
       })();
     }
