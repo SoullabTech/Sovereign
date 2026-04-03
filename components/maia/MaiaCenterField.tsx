@@ -129,9 +129,9 @@ export function MaiaCenterField({ children }: MaiaCenterFieldProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.8 }}
-        className="absolute bottom-2 left-0 right-0 flex justify-center z-50"
+        className="absolute bottom-2 left-0 right-0 flex justify-center z-50 pointer-events-none"
       >
-        <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full">
+        <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full pointer-events-auto">
           <img src="/logo_flower 2.png" alt="Holoflower" className="w-6 h-6 opacity-100" />
           <h1 className="text-lg font-light text-amber-300/90 tracking-wider">SOULLAB</h1>
         </div>
