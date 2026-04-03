@@ -22,6 +22,8 @@ interface RelationalMetadata {
   prosodySpeed?: number;
   /** Number of audio chunks received. 0 means TTS failed - no speech available. */
   audioChunksReceived?: number;
+  /** Idea candidate detected by heuristics (for client-side toast) */
+  ideaCandidate?: { title: string; summary: string; sourceText: string; confidence: number; fingerprint: string };
 }
 
 /** Silence response from relational stack */
@@ -818,6 +820,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       activation: data.relational?.activation ?? 0.5,
                       prosodySpeed: data.relational?.prosodySpeed,
                       audioChunksReceived, // Always include so parent knows if TTS worked
+                      ideaCandidate: data.ideaCandidate ?? undefined,
                     };
                     setState(prev => ({
                       ...prev,

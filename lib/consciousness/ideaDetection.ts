@@ -23,6 +23,12 @@ export interface IdeaCandidate {
 // --- Language markers weighted by generative intent ---
 
 const USER_IDEA_MARKERS: Array<{ pattern: RegExp; weight: number; label: string }> = [
+  // Explicit idea declaration — the strongest signal
+  { pattern: /\bi have an idea\b/i, weight: 0.55, label: 'idea-declaration' },
+  { pattern: /\bhere('s| is) (an |my |the )?idea\b/i, weight: 0.5, label: 'idea-declaration' },
+  { pattern: /\bi('ve| have) been thinking about\b/i, weight: 0.4, label: 'idea-declaration' },
+  { pattern: /\bi('d| would) like to (develop|start|launch|bring)\b/i, weight: 0.45, label: 'idea-declaration' },
+
   // Exploratory / generative
   { pattern: /\bwhat if\b/i, weight: 0.4, label: 'exploratory' },
   { pattern: /\bi wonder (if|whether|about)\b/i, weight: 0.35, label: 'wondering' },

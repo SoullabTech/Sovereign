@@ -76,6 +76,7 @@ import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/co
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
 import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 import { query } from '@/lib/db/postgres';
+import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -1202,6 +1203,16 @@ export async function POST(req: NextRequest) {
               });
             }
 
+            // 💡 IDEA FIELD: Detect generative moments in voice conversation
+            const ideaCandidate = !sanctuary ? detectIdeaCandidate(message, fullResponse.trim()) : null;
+            if (ideaCandidate) {
+              console.info('[idea-field]', {
+                title: ideaCandidate.title,
+                confidence: ideaCandidate.confidence,
+                fingerprint: ideaCandidate.fingerprint,
+              });
+            }
+
             emit('complete', {
               fullResponse: finalIdentityCheck.sanitized,
               sentenceCount,
@@ -1212,6 +1223,8 @@ export async function POST(req: NextRequest) {
               turnId,
               host,
               timing: timer.summary(),
+              // 💡 Idea candidate for client-side toast (null if none detected)
+              ideaCandidate: ideaCandidate ?? undefined,
               relational: {
                 maiaMode: voiceSession.relationalStack.currentMode,
                 activation: voiceSession.relationalStack.smoother.lastActivation,
