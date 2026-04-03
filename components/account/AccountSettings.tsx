@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
+import { ObsidianConnectSection } from '@/components/settings/ObsidianConnectSection';
 import {
   getAccountSettings,
   saveAccountSettings,
@@ -2673,7 +2674,23 @@ export function AccountSettings() {
       </p>
 
       {userId ? (
-        <GoogleConnectSection userId={userId} />
+        <div className="space-y-6">
+          {/* Connected Accounts (OAuth) */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">
+              Connected Accounts
+            </h3>
+            <GoogleConnectSection userId={userId} />
+          </div>
+
+          {/* Local & Sovereign */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">
+              Local &amp; Sovereign
+            </h3>
+            <ObsidianConnectSection userId={userId} />
+          </div>
+        </div>
       ) : (
         <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-stone-400 text-sm">
           Sign in to connect services

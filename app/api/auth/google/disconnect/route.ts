@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { upsertConnector } from '@/lib/connectors/connectorDb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +30,15 @@ export async function POST(request: NextRequest) {
     );
 
     console.log(`[GoogleDisconnect] Disconnected Google for user ${userId}`);
+
+    // Update service_connectors status
+    upsertConnector(userId, 'google', {
+      connectorClass: 'oauth',
+      status: 'disconnected',
+      capabilities: [],
+    }).catch((err) => {
+      console.error('[GoogleDisconnect] Failed to update service_connectors:', err.message);
+    });
 
     return NextResponse.json({
       success: true,

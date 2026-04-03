@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { upsertConnector } from '@/lib/connectors/connectorDb';
 
 // Get the base URL for redirects (production domain or request origin)
 function getBaseUrl(request: NextRequest): string {
@@ -69,6 +70,16 @@ export async function GET(request: NextRequest) {
     await GoogleCalendarService.storeTokens(userId, tokens);
 
     console.log(`[GoogleCallback] Successfully connected Google Calendar for user ${userId}`);
+
+    // Register in service_connectors for unified connector list
+    upsertConnector(userId, 'google', {
+      connectorClass: 'oauth',
+      status: 'connected',
+      displayName: 'Google',
+      capabilities: ['send_email', 'create_calendar_event', 'read_calendar', 'read_contacts'],
+    }).catch((err) => {
+      console.error('[GoogleCallback] Failed to register in service_connectors:', err.message);
+    });
 
     // Redirect to success page
     return NextResponse.redirect(new URL('/account/settings?calendar=connected', baseUrl));
