@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, User, Compass, Clock, ChevronDown, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
+import { apiUrl } from '@/lib/http/apiBase';
 import {
   ChineseZodiacAnimal,
   ChineseElement,
@@ -68,14 +69,71 @@ export default function ChineseAstrologyPage() {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  // Auto-load saved birth date (parity with Mayan page)
+  // Auto-load birth data from profile API, then localStorage fallback
   useEffect(() => {
     if (didAutoLoad.current) return;
-    const saved = localStorage.getItem('birthDate');
-    if (saved) {
-      setBirthDate(saved);
-      didAutoLoad.current = true;
-    }
+    didAutoLoad.current = true;
+
+    const loadBirthData = async () => {
+      // 1. Try profile API (database — single source of truth)
+      try {
+        const storedUser = localStorage.getItem('beta_user');
+        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
+
+        if (memberId) {
+          const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            if (profile.birthData?.date) {
+              const dateStr = typeof profile.birthData.date === 'string'
+                ? profile.birthData.date.split('T')[0]
+                : new Date(profile.birthData.date).toISOString().split('T')[0];
+
+              setBirthDate(dateStr);
+
+              if (profile.birthData.time) {
+                const timeStr = profile.birthData.time.includes(':')
+                  ? profile.birthData.time.substring(0, 5)
+                  : profile.birthData.time;
+                setBirthTime(timeStr);
+              }
+
+              // Also set birthYear for profile view
+              const year = dateStr.split('-')[0];
+              if (year) setBirthYear(year);
+
+              // Load saved gender from localStorage (not in DB)
+              const savedGender = localStorage.getItem('chineseAstrology_gender');
+              if (savedGender === 'male' || savedGender === 'female') {
+                setGender(savedGender);
+              }
+
+              return; // Got data from server
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Chinese Astrology] Error fetching profile:', err);
+      }
+
+      // 2. Fallback: localStorage birthDate (legacy/journey flow)
+      const saved = localStorage.getItem('birthDate');
+      if (saved) {
+        setBirthDate(saved);
+        const year = saved.split('-')[0];
+        if (year) setBirthYear(year);
+      }
+
+      const savedTime = localStorage.getItem('birthTime');
+      if (savedTime) setBirthTime(savedTime);
+
+      const savedGender = localStorage.getItem('chineseAstrology_gender');
+      if (savedGender === 'male' || savedGender === 'female') {
+        setGender(savedGender);
+      }
+    };
+
+    loadBirthData();
   }, []);
 
   // Auto-calculate when birthDate is set from localStorage
@@ -358,7 +416,7 @@ export default function ChineseAstrologyPage() {
                     </label>
                     <div className="flex gap-4">
                       <button
-                        onClick={() => setGender('male')}
+                        onClick={() => { setGender('male'); localStorage.setItem('chineseAstrology_gender', 'male'); }}
                         className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
                           gender === 'male'
                             ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
@@ -368,7 +426,7 @@ export default function ChineseAstrologyPage() {
                         Male
                       </button>
                       <button
-                        onClick={() => setGender('female')}
+                        onClick={() => { setGender('female'); localStorage.setItem('chineseAstrology_gender', 'female'); }}
                         className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
                           gender === 'female'
                             ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
