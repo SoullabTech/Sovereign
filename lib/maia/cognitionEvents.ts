@@ -20,13 +20,14 @@ export type MaiaCognitionEvent =
   | { type: 'relationship_thread'; person?: string; summary: string }
   | { type: 'studio_transition_suggested'; reason: string }
   | { type: 'world_shift'; world: MaiaWorldId }
-  | { type: 'capability_available'; capabilityId: MaiaCapability; label: string };
+  | { type: 'capability_available'; capabilityId: MaiaCapability; label: string }
+  | { type: 'idea_candidate'; title: string; summary: string; confidence: number; fingerprint: string };
 
 // --- Conversation Insight (for right panel rendering) ---
 
 export interface ConversationInsight {
   id: string;
-  type: 'pattern-match' | 'prior-thread' | 'sacred-resonance' | 'theme-emergence' | 'capability-offer';
+  type: 'pattern-match' | 'prior-thread' | 'sacred-resonance' | 'theme-emergence' | 'capability-offer' | 'idea-candidate';
   title: string;
   summary: string;
   /** 0-1 — controls fade-in timing and opacity */
