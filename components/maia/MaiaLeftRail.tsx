@@ -11,7 +11,7 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Bookmark } from 'lucide-react';
-import { MAIA_WORLDS, STUDIO_RAIL_ITEM, CIRCLES_RAIL_ITEM, ASTROLOGY_RAIL_ITEM, MAIA_UTILITIES } from '@/lib/navigation/maiaNav';
+import { MAIA_WORLDS, STUDIO_RAIL_ITEM, CIRCLES_RAIL_ITEM, ASTROLOGY_RAIL_ITEM, LABTOOLS_RAIL_ITEM, MAIA_UTILITIES } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import type { MaiaWorldId, MaiaRailItemId } from '@/lib/navigation/types';
 
@@ -30,7 +30,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
   const { presenceState, amplitude } = useVoiceState();
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology') {
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools') {
       router.push(route);
     } else {
       onWorldChange(id as MaiaWorldId);
@@ -149,6 +149,23 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
               <Icon className="w-5 h-5" />
               <span className="absolute left-full ml-2 px-2 py-1 text-xs text-violet-300/90 bg-[#1a1510]/95 border border-violet-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
                 {ASTROLOGY_RAIL_ITEM.label}
+              </span>
+            </button>
+          );
+        })()}
+
+        {/* Lab Tools — practice & experimentation (copper/ember tone) */}
+        {(() => {
+          const Icon = LABTOOLS_RAIL_ITEM.icon;
+          return (
+            <button
+              onClick={() => handleItemClick(LABTOOLS_RAIL_ITEM.id, LABTOOLS_RAIL_ITEM.route)}
+              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-orange-300/70 hover:bg-orange-400/5 transition-all duration-200"
+              title={LABTOOLS_RAIL_ITEM.tooltip || LABTOOLS_RAIL_ITEM.label}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-orange-300/90 bg-[#1a1510]/95 border border-orange-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+                {LABTOOLS_RAIL_ITEM.label}
               </span>
             </button>
           );

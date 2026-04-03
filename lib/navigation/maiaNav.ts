@@ -21,6 +21,7 @@ import {
   HelpCircle,
   Mic,
   MessageCircle,
+  FlaskConical,
 } from 'lucide-react';
 
 import type {
@@ -120,6 +121,16 @@ export const ASTROLOGY_RAIL_ITEM: MaiaRailItem = {
   route: '/astrology',
   classification: 'studio',
   tooltip: 'Your cosmic spiral',
+  isBoundaryTransition: true,
+};
+
+export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
+  id: 'labtools',
+  label: 'Lab Tools',
+  icon: FlaskConical,
+  route: '/labtools',
+  classification: 'studio',
+  tooltip: 'Consciousness tools & experiments',
   isBoundaryTransition: true,
 };
 
