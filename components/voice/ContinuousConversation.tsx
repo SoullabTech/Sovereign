@@ -589,13 +589,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // CRITICAL: lastSpeechTime.current === 0 means NO speech was ever detected in this session
       // In that case, definitely don't restart - the mic timed out without any speech
       const hasEverSpoken = lastSpeechTime.current > 0;
-      const timeSinceLastSpeech = hasEverSpoken ? Date.now() - lastSpeechTime.current : Infinity;
-      const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
+      const now = Date.now();
+      const timeSinceLastSpeech = hasEverSpoken ? now - lastSpeechTime.current : Infinity;
+      // 🔥 FIX: Also count MAIA finishing as "recent activity" — the user may be
+      // reflecting on what MAIA said. 45s window allows deep contemplative pauses.
+      const timeSinceLastAudioEnd = lastAudioEndAtRef.current > 0 ? now - lastAudioEndAtRef.current : Infinity;
+      const hasRecentActivity = (hasEverSpoken && timeSinceLastSpeech < 45000) || timeSinceLastAudioEnd < 45000;
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
       // In Care/Scribe modes, ALWAYS restart to stay open for the user
-      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
-        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
+      if (!hasRecentActivity && !hasAccumulatedTranscript && !persistentListeningRef.current) {
+        console.log('🔕 [onend] No recent activity (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since speech' : 'never spoke') + ', ' + (lastAudioEndAtRef.current > 0 ? Math.round(timeSinceLastAudioEnd/1000) + 's since MAIA' : 'no MAIA audio') + ') - stopping');
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
