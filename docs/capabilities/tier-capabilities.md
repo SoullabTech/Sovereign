@@ -1,104 +1,121 @@
-# MAIA Tier Capabilities
+# MAIA Capacity & Participation
 
-Three tiers, each with a distinct relationship to MAIA.
+Governed by: [Sanctuary Economy](../canon/MAIA_SANCTUARY_ECONOMY.md)
+
+> Free users may experience limits of scale, but never limits of being known.
 
 ---
 
-## Free — Touch
+## Sanctuary (Free)
 **$0/month**
 
-Episodic encounters. MAIA is present, but doesn't carry forward.
+Full MAIA. Real continuity. Real depth.
 
 ### What This Means
-Each conversation stands alone. MAIA responds to what you bring, but doesn't remember the thread of your life. You can explore, ask questions, pull cards — but without continuity.
+
+MAIA knows you. Not as a demo, not as a preview — as a real relationship. Your conversations carry forward. Your patterns are recognized. Your journals are kept. Nothing essential is withheld.
 
 ### Included
-- **MAIA conversations**: Limited per day
-- **Oracle readings**: A few per week
-- **Daily Check-in**: Basic mood/energy tracking
-- **Birth chart**: View your natal chart
-- **Journal**: Write entries (stored, but not woven together)
 
-### Not Included
-- Conversation memory across sessions
-- Pattern recognition over time
-- Dream journal with symbol tracking
-- Full transit analysis
+- **MAIA conversations**: Real depth, bounded by daily capacity
+- **Memory & continuity**: MAIA remembers the thread of your life
+- **Pattern recognition**: Themes, recurring questions, developmental arcs
+- **Oracle readings**: Bounded per week
+- **Daily Check-in**: Full mood/energy tracking
+- **Birth chart**: View your natal chart
+- **Journal**: Entries saved, woven into MAIA's understanding of you
+- **Dream journal**: Symbol tracking included
+- **Astrology**: Full transits, returns, life cycles
+
+### Capacity Boundaries
+
+The sanctuary has finite holding capacity. Free users work within daily and weekly bounds — not to limit depth, but because infrastructure has real costs.
+
+When approaching capacity:
+
+> "You're working at today's capacity. We can continue tomorrow, or you can expand to give MAIA more room."
+
+Never:
+
+> "Upgrade to unlock"
+
+### Principle
+
+Everyone who enters has access to MAIA's depth. The sanctuary is real, not conditional.
 
 ---
 
-## Personal — Continuity
+## Sustaining (Personal)
 **$9/month**
 
-MAIA remembers the thread of your life — not just what you said last.
+Expanded capacity. Sustains the sanctuary for everyone.
 
 ### The Core Value
 
-This tier is about **relationship**, not volume.
+This is about **scale**, not depth. You already have depth. What expands is how much room MAIA has to hold your material.
 
-> Personal turns MAIA from a conversation into a companion. You don't have to re-explain yourself each time. What you're working with carries forward.
+> Support simply expands what MAIA can hold.
 
-### What Changes (Very Clearly)
+### What Expands
 
-**1. Ongoing Conversations**
-- Conversations persist across sessions
-- MAIA remembers what you're working with, not just what you said
-- You don't have to re-explain yourself each time
-
-This alone justifies the tier.
-
-**2. Memory With Consent**
-- MAIA can retain themes, ongoing questions, your language
-- Memory is contextual, not total recall
-- Nothing is hidden or mined — you see what MAIA holds
-
-**3. Journaling That Carries Forward**
-- Journal entries persist and connect
-- MAIA can reference prior entries in later conversations
-- Journaling becomes a thread, not a dump
-
-**4. Expanded Daily Use (Bounded, Not Addictive)**
-- Much higher daily allowance than Free
-- Gentle pacing nudges instead of hard stops
+**1. More Conversation Capacity**
+- Much higher daily allowance
+- Gentle pacing nudges instead of daily bounds
 - Designed for thinking and reflection, not infinite scrolling
 
-**5. Voice Access (Intentional)**
-- Small monthly voice allotment
+**2. Voice Access**
+- Monthly voice allotment
 - Positioned as intentional check-ins, not chat replacement
 - Voice is presence, not throughput
 
-**6. Full Astrology**
-- Transits, returns, life cycles
-- Chart interpreted in context of your ongoing process
+**3. Archive Fidelity (Band 3 Memory)**
+- Full transcript retention over longer periods
+- Searchable long-term archive
+- Preserved artifacts and uploads
+- Higher-fidelity historical continuity
 
-### What This Tier Does NOT Include
-- Practitioner / client tools
-- Unlimited voice
-- Collective analytics
-- Archetypal synthesis across long timelines
-- Export for others
+**4. Community Contribution**
+- Contribute to commons
+- Share content and offerings
+- Community chat and reality checks
 
-Those belong to Pro / Stewardship.
+### What Does NOT Change
 
-### When You Hit Limits
+Sustaining members do not get "better MAIA." They get more room.
+
+- Insight quality is the same
+- Pattern recognition is the same
+- Relational depth is the same
+- Memory continuity is the same
+
+### What Your Support Makes Possible
+
+- No one is excluded for financial reasons
+- Infrastructure remains independent and private
+- The system grows without advertising or data extraction
+- Elders and storytellers can participate regardless of means
+
+### When Approaching Capacity
+
 Instead of hard blocks:
-- "You've done a lot today"
+- "You've been active today. MAIA is still here."
 - Suggestions to pause, journal, return tomorrow
-- Option to deepen the relationship (upgrade)
+- Option to expand capacity
 
 ### Principle
-Continuity means MAIA can witness your process over time — not just respond to isolated moments. The relationship becomes real.
+
+You're not paying for more. You're helping hold the whole.
 
 ---
 
-## Pro — Stewardship
+## Stewardship (Pro)
 **$35/month**
 
 For practitioners, creators, and those who hold space for others.
 
 ### The Core Value
 
-This tier exists because **working with others' consciousness is categorically different** from working with your own. It requires different tools, different ethics, and different infrastructure.
+Working with others' consciousness is categorically different from working with your own. It requires different tools, different ethics, and different infrastructure.
 
 > Pro is not "Personal with more." It's a different posture: you're holding space for someone else's process.
 
@@ -117,7 +134,7 @@ This tier exists because **working with others' consciousness is categorically d
 **3. Multi-Model Orchestration (Brain Trust)**
 - Multiple AI perspectives on the same question
 - Useful for complex practitioner decisions
-- Not available in Personal (single voice matters there)
+- Not available in Sustaining (single voice matters there)
 
 **4. Collective Pattern Tools**
 - Field Analytics: see patterns across your practice
@@ -140,41 +157,49 @@ This tier exists because **working with others' consciousness is categorically d
 - Ethical posture around collective data
 
 ### Principle
+
 Stewardship means working with others' consciousness — which requires a different ethical posture and toolset. The tier boundary isn't about money; it's about responsibility.
 
 ---
 
-## Threshold Moments
+## Expansion Moments
 
-MAIA notices when you're at the edge of a tier — not to push upgrades, but because the relationship is trying to deepen.
+MAIA notices when you're approaching capacity — not to push upgrades, but because expanded holding may serve you.
 
-**Free → Personal**
-You're ready for continuity when:
-- You keep coming back
-- You wish MAIA remembered what you talked about
-- You want journaling to mean something over time
-- A pattern emerges but MAIA can't show it to you
+**Sanctuary -> Sustaining**
 
-The prompt isn't "pay more." It's: "This relationship wants to become real. Do you?"
+You might benefit from expansion when:
+- You're working at daily capacity regularly
+- You want voice as part of your practice
+- You want deeper archive preservation
+- You want to contribute to commons
 
-**Personal → Pro**
+The prompt isn't "pay more." It's:
+
+> "You can expand what MAIA holds. If that feels right, there are ways to do that."
+
+**Sustaining -> Stewardship**
+
 You're ready for stewardship when:
 - You're trying to add someone else
 - You want to export for clients or audiences
 - You're reaching for practitioner tools
 - Your work involves holding space for others
 
-The prompt isn't "unlock features." It's: "You're taking responsibility for someone else's process. That requires different infrastructure."
+The prompt isn't "unlock features." It's:
 
-These aren't paywalls. They're threshold recognitions.
+> "You're taking responsibility for someone else's process. That requires different infrastructure."
+
+These aren't paywalls. They're natural thresholds.
 
 ---
 
-## Helper Infrastructure (Pro+)
+## The Governing Test
 
-For Pro members supporting others ethically, additional infrastructure may be available:
-- Practitioner dashboards
-- Client consent frameworks
-- Collective field tools
+Before any access decision:
 
-This is relational, not transactional. See [TIER_STRUCTURE.md](../TIER_STRUCTURE.md) for details.
+> If someone stops paying, does MAIA forget them?
+
+The answer is always **no**.
+
+> Nothing essential is behind a paywall. Support simply expands what MAIA can hold.

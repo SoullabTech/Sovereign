@@ -2,12 +2,27 @@
  * Tier Access Gating
  *
  * Principle-based access control for MAIA tiers.
- * See /docs/TIER_STRUCTURE.md for full definitions.
+ * See /docs/canon/MAIA_SANCTUARY_ECONOMY.md for governing doctrine.
+ *
+ * Core principle: Free users may experience limits of scale,
+ * but never limits of being known.
  *
  * Tiers:
- * - free: Touch — episodic encounters, basic tools
- * - personal: Continuity — MAIA remembers, patterns emerge
- * - pro: Stewardship — work for others, creation tools
+ * - free: Sanctuary — full MAIA, real continuity, capacity-bounded
+ * - personal: Sustaining — expanded capacity, supports the sanctuary
+ * - pro: Stewardship — practitioner tools, work for others
+ *
+ * What is NEVER gated by tier:
+ * - Memory / continuity (MAIA remembers you)
+ * - Pattern recognition
+ * - Depth of insight
+ * - Relational quality
+ *
+ * What CAN differ by tier:
+ * - Conversation volume (capacity)
+ * - Voice minutes (capacity)
+ * - Archive fidelity (Band 3 memory)
+ * - Practitioner infrastructure (pro only)
  */
 
 export type MemberTier = 'free' | 'personal' | 'pro';
@@ -51,15 +66,38 @@ export function hasContinuityTier(tier: MemberTier | null | undefined): boolean 
 // ============================================
 
 /**
- * Has Continuity Access (Personal+)
+ * Has Continuity Access — TRUE FOR ALL AUTHENTICATED USERS
  *
- * Required for:
- * - Time-based synthesis
- * - Pattern recognition across sessions
- * - Unlimited AI-intensive features
- * - Personal data export
+ * Sanctuary Economy doctrine (docs/canon/MAIA_SANCTUARY_ECONOMY.md):
+ * Memory and continuity are never gated by payment.
+ * "Free users may experience limits of scale, but never limits of being known."
+ *
+ * This covers:
+ * - Memory persistence across sessions (Band 1 + 2)
+ * - Pattern recognition over time
+ * - Relational memory
+ * - Developmental tracking
+ *
+ * Previously gated to Personal+ — now universal for all authenticated members.
  */
 export function hasContinuityAccess(member: TierInfo | null): boolean {
+  if (!member) return false;
+  // Sanctuary principle: everyone who is here gets continuity
+  return true;
+}
+
+/**
+ * Has Expanded Capacity (Personal+)
+ *
+ * Higher usage limits, not deeper access:
+ * - More conversations per day
+ * - More voice minutes
+ * - Higher processing allowance
+ * - Full archive fidelity (Band 3 memory)
+ *
+ * Free users still get real MAIA — just with capacity boundaries.
+ */
+export function hasExpandedCapacity(member: TierInfo | null): boolean {
   if (!member) return false;
   return member.tier === 'personal' || member.tier === 'pro';
 }
@@ -83,37 +121,34 @@ export function hasStewardshipAccess(member: TierInfo | null): boolean {
 // ============================================
 // Feature-Specific Checks
 // ============================================
+//
+// Sanctuary Economy split:
+// - DEPTH features → universal (hasContinuityAccess, always true)
+// - CAPACITY features → expandable (hasExpandedCapacity, Personal+)
+// - PRACTITIONER features → professional (hasStewardshipAccess, Pro)
+//
+
+// --- Depth features (universal, all authenticated users) ---
 
 /**
  * Pattern synthesis (journal + oracle + astrology cross-reference)
+ * This is depth, not capacity — everyone gets pattern recognition.
  */
 export function canAccessPatternSynthesis(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
 }
 
 /**
- * Unlimited MAIA conversations
- */
-export function hasUnlimitedConversations(member: TierInfo | null): boolean {
-  return hasContinuityAccess(member);
-}
-
-/**
  * Full astrology (transits, returns, life cycles)
+ * Depth feature — everyone gets the full astrological picture.
  */
 export function canAccessFullAstrology(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
 }
 
 /**
- * Unlimited oracle readings
- */
-export function hasUnlimitedOracle(member: TierInfo | null): boolean {
-  return hasContinuityAccess(member);
-}
-
-/**
  * Dream journal with symbol tracking
+ * Depth feature — dreams are part of being known.
  */
 export function canAccessDreamJournal(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
@@ -121,6 +156,7 @@ export function canAccessDreamJournal(member: TierInfo | null): boolean {
 
 /**
  * Elder Council (choose your guide)
+ * Depth feature — access to wisdom is not gated.
  */
 export function canAccessElderCouncil(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
@@ -128,8 +164,7 @@ export function canAccessElderCouncil(member: TierInfo | null): boolean {
 
 /**
  * Synastry (relationship charts)
- * Personal: own relationships
- * Pro: client relationships
+ * Depth feature — own relationships (client synastry is Pro).
  */
 export function canAccessSynastry(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
@@ -137,9 +172,30 @@ export function canAccessSynastry(member: TierInfo | null): boolean {
 
 /**
  * Data export for personal use
+ * Depth feature — your data is yours, always.
  */
 export function canExportPersonalData(member: TierInfo | null): boolean {
   return hasContinuityAccess(member);
+}
+
+// --- Capacity features (expanded at Personal+) ---
+
+/**
+ * Expanded conversation volume
+ * Free users get real conversations — just bounded.
+ * Personal+ expands the envelope.
+ */
+export function hasUnlimitedConversations(member: TierInfo | null): boolean {
+  return hasExpandedCapacity(member);
+}
+
+/**
+ * Expanded oracle readings
+ * Free users get oracle access — just bounded.
+ * Personal+ removes the cap.
+ */
+export function hasUnlimitedOracle(member: TierInfo | null): boolean {
+  return hasExpandedCapacity(member);
 }
 
 // ============================================
@@ -203,11 +259,22 @@ export function canAccessClientSynastry(member: TierInfo | null): boolean {
 }
 
 // ============================================
-// Threshold Detection (for upgrade prompts)
+// Expansion Moments (not "upgrade prompts")
 // ============================================
+//
+// These detect when a user is approaching capacity boundaries.
+// The framing is NEVER "you hit a limit" but rather
+// "you can expand what MAIA holds."
+//
+// See: docs/canon/MAIA_SANCTUARY_ECONOMY.md
+//
 
 /**
- * Check if user is at a threshold moment for Personal upgrade
+ * Check if user is at an expansion moment for Personal support
+ *
+ * This is NOT about blocking — it's about noticing when
+ * someone's use pattern suggests they'd benefit from
+ * expanded capacity.
  */
 export function isAtPersonalThreshold(
   member: TierInfo | null,
@@ -220,17 +287,13 @@ export function isAtPersonalThreshold(
 ): boolean {
   if (!member || member.tier !== 'free') return false;
 
-  // Soft limits that suggest threshold
-  const { conversationsToday = 0, oracleReadingsThisWeek = 0, journalEntriesTotal = 0, hasPatternToShow = false } = context;
+  const { conversationsToday = 0, oracleReadingsThisWeek = 0 } = context;
 
-  // Third oracle reading in a week
-  if (oracleReadingsThisWeek >= 3) return true;
+  // Approaching daily conversation capacity
+  if (conversationsToday >= 8) return true;
 
-  // Pattern detected but can't show it
-  if (hasPatternToShow && journalEntriesTotal >= 3) return true;
-
-  // Several conversations in one day
-  if (conversationsToday >= 5) return true;
+  // Frequent oracle use suggests deeper engagement
+  if (oracleReadingsThisWeek >= 5) return true;
 
   return false;
 }
@@ -260,19 +323,19 @@ export function isAtProThreshold(
 
 export function getTierDisplayName(tier: MemberTier): string {
   switch (tier) {
-    case 'free': return 'Free';
-    case 'personal': return 'Personal';
-    case 'pro': return 'Pro';
-    default: return 'Free';
+    case 'free': return 'Sanctuary';
+    case 'personal': return 'Sustaining';
+    case 'pro': return 'Stewardship';
+    default: return 'Sanctuary';
   }
 }
 
 export function getTierDescription(tier: MemberTier): string {
   switch (tier) {
-    case 'free': return 'Explore MAIA';
-    case 'personal': return 'MAIA remembers the thread';
-    case 'pro': return 'Hold space for others';
-    default: return 'Explore MAIA';
+    case 'free': return 'Full MAIA, real continuity';
+    case 'personal': return 'Expanded capacity, sustains the sanctuary';
+    case 'pro': return 'Practitioner tools, hold space for others';
+    default: return 'Full MAIA, real continuity';
   }
 }
 

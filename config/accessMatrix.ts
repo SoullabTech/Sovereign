@@ -130,95 +130,96 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/settings', minTier: 'free', notes: 'General settings' },
 
   // -------------------------------------------------------------------------
-  // 3) PERSONAL TIER ($12/mo) - Core MAIA membership
+  // 3) SANCTUARY TIER — Depth features open to all authenticated members
+  //
+  // Sanctuary Economy doctrine (docs/canon/MAIA_SANCTUARY_ECONOMY.md):
+  // Depth is universal. Scale is elastic. Contribution expands capacity.
+  // Route access = depth (open). Rate limits = capacity (enforced elsewhere).
   // -------------------------------------------------------------------------
 
-  // Dashboard - Base accessible to all authenticated users (no rule needed, falls through as auth-only)
-  // /dashboard, /dashboard/settings, /dashboard/export - accessible if logged in
+  // Dashboard — depth features open, capacity-governed by LimitsEnforcer
+  { prefix: '/dashboard/mentor', minTier: 'free', notes: 'Mentor experiences — depth, open to all' },
+  { prefix: '/dashboard/insights', minTier: 'free', notes: 'Pattern insights — depth, open to all' },
+  { prefix: '/dashboard/patterns', minTier: 'free', notes: 'Pattern tracking — depth, open to all' },
 
-  // Dashboard - Personal tier experiences
-  { prefix: '/dashboard/mentor', minTier: 'personal', notes: 'Mentor experiences' },
-  { prefix: '/dashboard/insights', minTier: 'personal', notes: 'Pattern insights' },
-  { prefix: '/dashboard/patterns', minTier: 'personal', notes: 'Pattern tracking' },
-
-  // Field routes — iOS/Capacitor voice-first entry (same auth level as /maia)
+  // Field routes — iOS/Capacitor voice-first entry
   { exact: '/field/enter', minTier: 'free', notes: 'Field entry router — smart session routing' },
   { exact: '/field/talk', minTier: 'free', notes: 'Field voice session — voice-first MAIA on iOS' },
   { prefix: '/field', minTier: 'free', notes: 'Field routes — all authenticated members' },
 
-  // MAIA Interface (core)
-  { exact: '/maia', minTier: 'free', notes: 'MAIA main interface - open to all authenticated users' },
-  { exact: '/maia/compact', minTier: 'personal', notes: 'MAIA compact' },
-  { exact: '/maia/mandala', minTier: 'personal', notes: 'Mandala interface' },
-  { exact: '/maia/field-dashboard', minTier: 'personal', notes: 'Field dashboard' },
-  { exact: '/maia/soul-consciousness', minTier: 'personal', notes: 'Soul consciousness' },
-  { exact: '/maia/consciousness-computing', minTier: 'personal', notes: 'Consciousness computing' },
-  { exact: '/maia/interfaces', minTier: 'personal', notes: 'Interface selection' },
-  { exact: '/maia/membership', minTier: 'free', notes: 'Membership management (accessible to all authed users)' },
-  { exact: '/maia/training', minTier: 'personal', notes: 'Training interface' },
-  { exact: '/ask-maia', minTier: 'personal', notes: 'Ask MAIA' },
+  // MAIA Interface (core) — all depth, open to all
+  { exact: '/maia', minTier: 'free', notes: 'MAIA main interface' },
+  { exact: '/maia/compact', minTier: 'free', notes: 'MAIA compact' },
+  { exact: '/maia/mandala', minTier: 'free', notes: 'Mandala interface' },
+  { exact: '/maia/field-dashboard', minTier: 'free', notes: 'Field dashboard' },
+  { exact: '/maia/soul-consciousness', minTier: 'free', notes: 'Soul consciousness' },
+  { exact: '/maia/consciousness-computing', minTier: 'free', notes: 'Consciousness computing' },
+  { exact: '/maia/interfaces', minTier: 'free', notes: 'Interface selection' },
+  { exact: '/maia/membership', minTier: 'free', notes: 'Membership management' },
+  { exact: '/maia/training', minTier: 'free', notes: 'Training interface' },
+  { exact: '/ask-maia', minTier: 'free', notes: 'Ask MAIA — depth, capacity-governed' },
 
-  // Community contribution (not browse)
-  { exact: '/maia/community/contribute', minTier: 'personal', notes: 'Contribute to commons' },
-  { exact: '/maia/community/commons/my-offerings', minTier: 'personal', notes: 'My offerings' },
-  { exact: '/maia/community/share', minTier: 'personal', notes: 'Share content' },
-  { exact: '/maia/community/new-post', minTier: 'personal', notes: 'Create post' },
-  { exact: '/maia/community/chat', minTier: 'personal', notes: 'Community chat' },
-  { exact: '/maia/community/reality-check', minTier: 'personal', notes: 'Reality check' },
+  // Community — contribution is participation, not a perk
+  { exact: '/maia/community/contribute', minTier: 'free', notes: 'Contribute to commons — participation is open' },
+  { exact: '/maia/community/commons/my-offerings', minTier: 'free', notes: 'My offerings' },
+  { exact: '/maia/community/share', minTier: 'free', notes: 'Share content' },
+  { exact: '/maia/community/new-post', minTier: 'free', notes: 'Create post' },
+  { exact: '/maia/community/chat', minTier: 'free', notes: 'Community chat' },
+  { exact: '/maia/community/reality-check', minTier: 'free', notes: 'Reality check' },
 
   // Circles Commons (Phase 1)
   { prefix: '/commons/circles', minTier: 'free', notes: 'Circles commons - all authenticated members' },
   { exact: '/commons/join', public: true, notes: 'Join circle via invite — public landing, auth required at submit' },
 
-  // Elemental Alchemy
-  { prefix: '/maia/community/elemental-alchemy', minTier: 'personal', notes: 'Elemental alchemy system' },
+  // Elemental Alchemy — depth
+  { prefix: '/maia/community/elemental-alchemy', minTier: 'free', notes: 'Elemental alchemy — depth, open to all' },
 
-  // Oracle tools (beyond browse)
-  { exact: '/oracle/iching', minTier: 'personal', notes: 'I-Ching readings' },
-  { exact: '/oracle/tarot', minTier: 'personal', notes: 'Tarot readings' },
-  { exact: '/oracle/runes', minTier: 'personal', notes: 'Rune readings' },
-  { exact: '/oracle/yijing', minTier: 'personal', notes: 'Yi Jing readings' },
-  { exact: '/oracle/consciousness', minTier: 'personal', notes: 'Consciousness oracle' },
-  { exact: '/oracle/interactive', minTier: 'personal', notes: 'Interactive oracle' },
+  // Oracle tools — depth, capacity-governed by LimitsEnforcer
+  { exact: '/oracle/iching', minTier: 'free', notes: 'I-Ching readings — depth, rate-limited' },
+  { exact: '/oracle/tarot', minTier: 'free', notes: 'Tarot readings — depth, rate-limited' },
+  { exact: '/oracle/runes', minTier: 'free', notes: 'Rune readings — depth, rate-limited' },
+  { exact: '/oracle/yijing', minTier: 'free', notes: 'Yi Jing readings — depth, rate-limited' },
+  { exact: '/oracle/consciousness', minTier: 'free', notes: 'Consciousness oracle — depth, rate-limited' },
+  { exact: '/oracle/interactive', minTier: 'free', notes: 'Interactive oracle — depth, rate-limited' },
 
-  // Astrology tools (beyond browse)
-  { exact: '/chart', minTier: 'personal', notes: 'Chart generator' },
-  { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
-  { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
-  { exact: '/astrology/vedic', minTier: 'personal', notes: 'Vedic astrology' },
-  { prefix: '/astrology/aspects/', public: true, notes: 'Aspect detail pages - public (chart page is public, aspects extend it)' },
-  { prefix: '/astrology/pathways/', minTier: 'personal', notes: 'Pathways' },
-  { exact: '/astrology/synastry', minTier: 'personal', notes: 'Synastry' },
-  { exact: '/astrology/synastry/saved', minTier: 'personal', notes: 'Saved synastry' },
-  { prefix: '/astrology/synastry/', minTier: 'personal', notes: 'Synastry analysis' },
+  // Astrology tools — depth, open to all
+  { exact: '/chart', minTier: 'free', notes: 'Chart generator — depth' },
+  { exact: '/astrology/chinese', minTier: 'free', notes: 'Chinese astrology — depth' },
+  { exact: '/astrology/mayan', minTier: 'free', notes: 'Mayan astrology — depth' },
+  { exact: '/astrology/vedic', minTier: 'free', notes: 'Vedic astrology — depth' },
+  { prefix: '/astrology/aspects/', public: true, notes: 'Aspect detail pages — public' },
+  { prefix: '/astrology/pathways/', minTier: 'free', notes: 'Pathways — depth' },
+  { exact: '/astrology/synastry', minTier: 'free', notes: 'Synastry — depth' },
+  { exact: '/astrology/synastry/saved', minTier: 'free', notes: 'Saved synastry — depth' },
+  { prefix: '/astrology/synastry/', minTier: 'free', notes: 'Synastry analysis — depth' },
 
-  // Consciousness features
-  { exact: '/consciousness/dashboard', minTier: 'personal', notes: 'Consciousness dashboard' },
-  { exact: '/consciousness/meditation', minTier: 'personal', notes: 'Meditation guide' },
-  { exact: '/consciousness/omnidimensional-test', minTier: 'personal', notes: 'Omnidimensional test' },
-  { exact: '/consciousness/portals', minTier: 'personal', notes: 'Consciousness portals' },
-  { exact: '/consciousness-computing', minTier: 'personal', notes: 'Consciousness computing' },
-  { exact: '/consciousness-computing/feedback', minTier: 'personal', notes: 'Computing feedback' },
-  { exact: '/consciousness-computing/pwa', minTier: 'personal', notes: 'Computing PWA' },
-  { exact: '/consciousness-insights', minTier: 'personal', notes: 'Consciousness insights' },
+  // Consciousness features — depth, open to all
+  { exact: '/consciousness/dashboard', minTier: 'free', notes: 'Consciousness dashboard — depth' },
+  { exact: '/consciousness/meditation', minTier: 'free', notes: 'Meditation guide — depth' },
+  { exact: '/consciousness/omnidimensional-test', minTier: 'free', notes: 'Omnidimensional test — depth' },
+  { exact: '/consciousness/portals', minTier: 'free', notes: 'Consciousness portals — depth' },
+  { exact: '/consciousness-computing', minTier: 'free', notes: 'Consciousness computing — depth' },
+  { exact: '/consciousness-computing/feedback', minTier: 'free', notes: 'Computing feedback — depth' },
+  { exact: '/consciousness-computing/pwa', minTier: 'free', notes: 'Computing PWA — depth' },
+  { exact: '/consciousness-insights', minTier: 'free', notes: 'Consciousness insights — depth' },
 
-  // Book companion
-  { exact: '/book/companion', minTier: 'personal', notes: 'Book companion' },
-  { exact: '/book/ask', minTier: 'personal', notes: 'Book companion ask' },
-  { exact: '/book-companion/ain', minTier: 'personal', notes: 'Book companion AIN' },
+  // Book companion — depth
+  { exact: '/book/companion', minTier: 'free', notes: 'Book companion — depth' },
+  { exact: '/book/ask', minTier: 'free', notes: 'Book companion ask — depth' },
+  { exact: '/book-companion/ain', minTier: 'free', notes: 'Book companion AIN — depth' },
 
   // Worlds (experiential spaces entered via MAIA doorways)
   { prefix: '/worlds', minTier: 'free', notes: 'World portals — entry always free' },
 
-  // Journey & evolution
-  { exact: '/journey', minTier: 'personal', notes: 'Journey view' },
-  { exact: '/evolution', minTier: 'personal', notes: 'Evolution tracking' },
-  { exact: '/soul-gateway', minTier: 'personal', notes: 'Soul gateway' },
-  { exact: '/capture', minTier: 'personal', notes: 'Capture interface' },
+  // Journey & evolution — depth (seeing your own development is not a perk)
+  { exact: '/journey', minTier: 'free', notes: 'Journey view — depth' },
+  { exact: '/evolution', minTier: 'free', notes: 'Evolution tracking — depth' },
+  { exact: '/soul-gateway', minTier: 'free', notes: 'Soul gateway — depth' },
+  { exact: '/capture', minTier: 'free', notes: 'Capture interface — depth' },
 
-  // AIN features
-  { exact: '/ain-demo', minTier: 'personal', notes: 'AIN demo' },
-  { exact: '/ain-evolution', minTier: 'personal', notes: 'AIN evolution' },
+  // AIN features — depth
+  { exact: '/ain-demo', minTier: 'free', notes: 'AIN demo — depth' },
+  { exact: '/ain-evolution', minTier: 'free', notes: 'AIN evolution — depth' },
 
   // -------------------------------------------------------------------------
   // 4) PRO TIER ($35/mo) - Practitioners + advanced features
@@ -243,49 +244,44 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/community/commons/review', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
 
   // ─────────────────────────────────────────────────────────────────
-  // Lab Tools - Tiered Access
-  // Personal tier: core self-work, identity, daily loop
-  // Pro tier: analytics, compute, audio, power tools
-  // Order matters: specific rules BEFORE the broad prefix fallback
+  // Lab Tools — Sanctuary Economy
+  // Self-work tools are depth (open to all).
+  // Professional/practitioner tools remain Pro.
+  // Order matters: specific rules BEFORE the broad prefix fallback.
   // ─────────────────────────────────────────────────────────────────
 
-  // Lab Tools - Personal tier (core daily use)
-  { exact: '/labtools', minTier: 'personal', notes: 'Lab tools index' },
-  { exact: '/labtools/profile', minTier: 'personal', notes: 'Profile settings' },
-  { exact: '/labtools/settings', minTier: 'personal', notes: 'App settings' },
-  { exact: '/labtools/language', minTier: 'personal', notes: 'Language preferences' },
-  { exact: '/labtools/journal', minTier: 'personal', notes: 'Daily journaling' },
-  { exact: '/labtools/reflections', minTier: 'personal', notes: 'Reflection feed' },
-  { prefix: '/labtools/reflections/', minTier: 'personal', notes: 'Individual reflections' },
-  { exact: '/labtools/favorites', minTier: 'personal', notes: 'Saved items' },
-  { exact: '/labtools/downloads', minTier: 'personal', notes: 'Downloads (content-gated separately)' },
-  { exact: '/labtools/books', minTier: 'personal', notes: 'Book access (content-gated separately)' },
-  { exact: '/labtools/sovereignty', minTier: 'personal', notes: 'Data sovereignty - rights not perks' },
-  { exact: '/labtools/gifts', minTier: 'personal', rolesAnyOf: ['admin'], notes: 'Admin gift creator' },
-  { exact: '/labtools/beads', minTier: 'personal', notes: 'Member bead sharing' },
-  { exact: '/labtools/beta-testing', minTier: 'personal', notes: 'Pioneer circle' },
-  { exact: '/labtools/voice', minTier: 'personal', notes: 'Voice settings' },
-  { exact: '/labtools/field-analytics', minTier: 'personal', notes: 'Field analytics' },
+  // Lab Tools — depth (open to all authenticated users)
+  { exact: '/labtools', minTier: 'free', notes: 'Lab tools index — depth' },
+  { exact: '/labtools/profile', minTier: 'free', notes: 'Profile settings — depth' },
+  { exact: '/labtools/settings', minTier: 'free', notes: 'App settings — depth' },
+  { exact: '/labtools/language', minTier: 'free', notes: 'Language preferences — depth' },
+  { exact: '/labtools/journal', minTier: 'free', notes: 'Daily journaling — depth (journals always saved)' },
+  { exact: '/labtools/reflections', minTier: 'free', notes: 'Reflection feed — depth' },
+  { prefix: '/labtools/reflections/', minTier: 'free', notes: 'Individual reflections — depth' },
+  { exact: '/labtools/favorites', minTier: 'free', notes: 'Saved items — depth' },
+  { exact: '/labtools/downloads', minTier: 'free', notes: 'Downloads (content-gated separately)' },
+  { exact: '/labtools/books', minTier: 'free', notes: 'Book access (content-gated separately)' },
+  { exact: '/labtools/sovereignty', minTier: 'free', notes: 'Data sovereignty — rights not perks' },
+  { exact: '/labtools/gifts', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Admin gift creator' },
+  { exact: '/labtools/beads', minTier: 'free', notes: 'Member bead sharing — depth' },
+  { exact: '/labtools/beta-testing', minTier: 'free', notes: 'Pioneer circle' },
+  { exact: '/labtools/voice', minTier: 'free', notes: 'Voice settings — depth (voice minutes capacity-governed)' },
+  { exact: '/labtools/field-analytics', minTier: 'free', notes: 'Field analytics — depth' },
 
   // Lab Tools - Admin only (before Pro fallback)
-  { prefix: '/labtools/admin', minTier: 'personal', rolesAnyOf: ['admin'], notes: 'Admin tools - role-gated' },
+  { prefix: '/labtools/admin', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Admin tools - role-gated' },
 
-  // Lab Tools - Pro tier (everything else)
-  { prefix: '/labtools', minTier: 'pro', notes: 'All other lab tools require Pro' },
+  // Lab Tools - Pro tier (practitioner infrastructure only)
+  { prefix: '/labtools', minTier: 'pro', notes: 'Remaining lab tools = practitioner infrastructure' },
 
   // ─────────────────────────────────────────────────────────────────
   // Legacy Redirects
-  // These routes exist only for backwards compatibility with old links.
-  // Each redirects to a canonical location; auth is enforced here to
-  // avoid double-redirect (legacy → signin → canonical).
+  // Backwards compatibility with old links.
   // ─────────────────────────────────────────────────────────────────
-  // public: only redirects to public page, avoids auth wall on old links
   { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /patterns' },
-  // personal: these now match Personal tier labtools
-  { exact: '/journal', minTier: 'personal', notes: '→ /labtools/journal' },
-  { exact: '/language', minTier: 'personal', notes: '→ /labtools/language' },
-  // personal: voice settings
-  { exact: '/voice', minTier: 'personal', notes: '→ /labtools/voice' },
+  { exact: '/journal', minTier: 'free', notes: '→ /labtools/journal' },
+  { exact: '/language', minTier: 'free', notes: '→ /labtools/language' },
+  { exact: '/voice', minTier: 'free', notes: '→ /labtools/voice' },
 
   // Consciousness Pro features
   { exact: '/consciousness/portals/admin', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal admin' },
@@ -347,9 +343,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
 
-  // Member API
-  { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'personal', notes: 'Contribution detail' },
-  { exact: '/api/commons/contributions/my-offerings', minTier: 'personal', notes: 'User offerings' },
+  // Member API — contribution is participation, open to all
+  { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'free', notes: 'Contribution detail — depth' },
+  { exact: '/api/commons/contributions/my-offerings', minTier: 'free', notes: 'User offerings — depth' },
   { exact: '/api/stripe/membership/checkout', minTier: 'free', notes: 'Create checkout' },
 
   // Circles API (Phase 1)
