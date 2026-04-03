@@ -76,7 +76,7 @@ function PatternTimeline({ firstSeenAt, lastEvidenceAt }: { firstSeenAt?: string
   const showReturn = lastEvidenceAt &&
     (new Date(lastEvidenceAt).getTime() - new Date(firstSeenAt).getTime()) > 3600000;
   return (
-    <p className="mt-2 text-[11px] text-white/25 tracking-wide">
+    <p className="mt-2 text-[11px] text-white/35 tracking-wide">
       First noticed {first}
       {showReturn ? <> &middot; Returned {relativeTime(lastEvidenceAt)}</> : null}
     </p>
@@ -157,12 +157,12 @@ function EditablePatternTitle({
     <button
       type="button"
       onClick={() => { setDraft(displayName); setEditing(true); }}
-      className="group text-left text-sm font-medium text-white/85 transition-colors duration-200 cursor-text flex items-center gap-1.5"
+      className="text-left text-sm font-medium text-white/90 transition-colors duration-200 cursor-text flex items-center gap-2"
     >
-      <span className="border-b border-dashed border-white/15 group-hover:border-white/40 transition-colors">
+      <span className="border-b border-dashed border-white/30">
         {displayName}
       </span>
-      <svg className="w-3 h-3 text-white/20 group-hover:text-white/50 transition-colors shrink-0" viewBox="0 0 16 16" fill="currentColor">
+      <svg className="w-3.5 h-3.5 text-white/30 shrink-0" viewBox="0 0 16 16" fill="currentColor">
         <path d="M12.1 3.9a1.5 1.5 0 0 0-2.12 0L4.5 9.38l-.88 3.5 3.5-.88 5.48-5.48a1.5 1.5 0 0 0 0-2.12L12.1 3.9zM6.5 11.5l-1.5.38.38-1.5L10 5.75l1.12 1.13L6.5 11.5z"/>
       </svg>
     </button>
@@ -294,13 +294,16 @@ export default function PatternLedger() {
 
   return (
     <div className="space-y-4">
+      <p className="text-[13px] text-white/35 leading-relaxed mb-2">
+        What keeps returning. Touch a name to make it yours.
+      </p>
       {patterns.map((pattern) => {
         const isOffered = pattern.status === 'offered';
         const isSubmitting = submittingId === pattern.id;
         const isMaia = pattern.source === 'maia';
 
         return (
-          <div key={pattern.id} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div key={pattern.id} className="rounded-2xl border border-white/15 bg-white/[0.07] p-5">
 
             {/* Air layer — recognition */}
             <div className="flex items-start justify-between gap-4">
@@ -336,7 +339,7 @@ export default function PatternLedger() {
 
             {/* Living question — shown directly for settled patterns */}
             {!isOffered ? (
-              <p className="mt-3 text-[13px] leading-relaxed text-white/45 italic pl-3 border-l border-white/10">
+              <p className="mt-3 text-[13px] leading-relaxed text-white/50 italic pl-3 border-l-2 border-amber-400/20">
                 {getLivingQuestion(pattern)}
               </p>
             ) : null}
@@ -364,11 +367,11 @@ export default function PatternLedger() {
 
             {/* Return to this — bridge back into MAIA */}
             {!isOffered ? (
-              <div className="mt-5 pt-4 border-t border-white/5">
+              <div className="mt-5 pt-4 border-t border-white/8">
                 <button
                   type="button"
                   onClick={() => returnToPattern(pattern.memberLabel || pattern.theme)}
-                  className="text-[13px] text-amber-200/50 hover:text-amber-200/80 transition-colors duration-300"
+                  className="rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-2 text-[13px] text-amber-200/70 hover:bg-amber-400/10 hover:text-amber-200/90 transition-all duration-300"
                 >
                   Return to this &rarr;
                 </button>
