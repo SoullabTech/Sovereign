@@ -2360,15 +2360,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
 
       // Hands-free mode: Try to restart mic (single attempt, not a retry loop)
-      // ContinuousConversation's own restart logic handles retries with proper backoff
+      // ContinuousConversation's own authority guard handles rejection if not ready.
+      // 🔥 FIX: Don't gate on voiceSession.state.capabilities — it's a stale closure
+      // from the render where isAudioPlaying was still true. Call startListening directly
+      // and let CC's authority guard decide.
       if (!showChatInterface && streamingVoiceMode) {
         console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
         setIsListening(true);
         setIsActivating(false);
 
         setTimeout(() => {
-          if (voiceSession.state.capabilities.canStartListening && !showChatInterface && streamingVoiceMode) {
+          if (!showChatInterface && streamingVoiceMode) {
             setIsMuted(false);
+            console.log('🎤 [StreamingVoice] Calling startListening after 300ms');
             voiceSession.methods.startListening('streaming_response_complete');
           }
         }, 300);
@@ -4784,8 +4788,10 @@ I'm not sure what I'm feeling yet.`;
                 // Check if hands-free is active
                 const isHandsFree = voiceMicRef.current?.isHandsFree ?? false;
 
-                if (isHandsFree && voiceSession.state.capabilities.canStartListening) {
+                if (isHandsFree) {
                   // Hands-free: single restart attempt after React flush
+                  // 🔥 FIX: Don't gate on voiceSession.state.capabilities (stale closure).
+                  // Use refs for current state, let CC authority guard handle the rest.
                   requestAnimationFrame(() => {
                     if (!isProcessingRef.current && !isRespondingRef.current && !isAudioPlayingRef.current && !isMicrophonePausedRef.current) {
                       setIsMuted(false);
