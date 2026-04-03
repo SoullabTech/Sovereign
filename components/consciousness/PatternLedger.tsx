@@ -148,7 +148,7 @@ function EditablePatternTitle({
           if (e.key === 'Enter') commit();
           if (e.key === 'Escape') { setDraft(displayName); setEditing(false); }
         }}
-        className="w-full bg-transparent text-sm text-white/85 border-b border-white/20 outline-none py-0.5"
+        className="w-full bg-transparent text-sm font-medium text-white/90 border-b border-amber-400/40 outline-none py-0.5"
       />
     );
   }
@@ -157,10 +157,14 @@ function EditablePatternTitle({
     <button
       type="button"
       onClick={() => { setDraft(displayName); setEditing(true); }}
-      className="text-left text-sm text-white/80 hover:text-white/95 transition-colors duration-200 border-b border-transparent hover:border-white/15 cursor-text"
-      title="Click to rename"
+      className="group text-left text-sm font-medium text-white/85 transition-colors duration-200 cursor-text flex items-center gap-1.5"
     >
-      {displayName}
+      <span className="border-b border-dashed border-white/15 group-hover:border-white/40 transition-colors">
+        {displayName}
+      </span>
+      <svg className="w-3 h-3 text-white/20 group-hover:text-white/50 transition-colors shrink-0" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M12.1 3.9a1.5 1.5 0 0 0-2.12 0L4.5 9.38l-.88 3.5 3.5-.88 5.48-5.48a1.5 1.5 0 0 0 0-2.12L12.1 3.9zM6.5 11.5l-1.5.38.38-1.5L10 5.75l1.12 1.13L6.5 11.5z"/>
+      </svg>
     </button>
   );
 }
@@ -332,7 +336,7 @@ export default function PatternLedger() {
 
             {/* Living question — shown directly for settled patterns */}
             {!isOffered ? (
-              <p className="mt-3 text-[13px] leading-relaxed text-white/40 italic">
+              <p className="mt-3 text-[13px] leading-relaxed text-white/45 italic pl-3 border-l border-white/10">
                 {getLivingQuestion(pattern)}
               </p>
             ) : null}
@@ -360,11 +364,11 @@ export default function PatternLedger() {
 
             {/* Return to this — bridge back into MAIA */}
             {!isOffered ? (
-              <div className="mt-4 flex items-center gap-3">
+              <div className="mt-5 pt-4 border-t border-white/5">
                 <button
                   type="button"
                   onClick={() => returnToPattern(pattern.memberLabel || pattern.theme)}
-                  className="text-xs text-white/35 hover:text-white/60 transition-colors duration-300"
+                  className="text-[13px] text-amber-200/50 hover:text-amber-200/80 transition-colors duration-300"
                 >
                   Return to this &rarr;
                 </button>
