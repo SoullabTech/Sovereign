@@ -4,7 +4,7 @@
 // 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft, Send, Phone, Loader2, CheckCircle, Users } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -8290,7 +8290,7 @@ I'm not sure what I'm feeling yet.`;
 
 
 
-      {/* Unified Voice Interaction Bar — state display, transcript, interruption, lab access */}
+      {/* Unified Voice Interaction Bar — state display, transcript, keyboard */}
       {isMounted && voiceEnabled && !showChatInterface && (
         <VoiceInteractionBar
           voiceState={voiceInteractionState}
@@ -8301,22 +8301,8 @@ I'm not sure what I'm feeling yet.`;
             setIsListening(false);
           }}
           onInterrupt={handleVoiceInterrupt}
-          onOpenLab={() => setShowLabDrawer(true)}
           onTextSubmit={(text) => handleTextMessage(text)}
         />
-      )}
-
-      {/* Lab access in chat mode — compact FAB since VoiceInteractionBar is voice-only */}
-      {isMounted && showChatInterface && (
-        <button
-          onClick={() => setShowLabDrawer(true)}
-          className="fixed bottom-20 right-4 z-40 p-3 rounded-full bg-amber-500/20 text-amber-400
-                     border border-amber-500/30 hover:bg-amber-500/30 active:scale-95 transition-all backdrop-blur-sm"
-          style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}
-          title="Open Lab"
-        >
-          <FlaskConical className="w-5 h-5" />
-        </button>
       )}
 
       {/* Voice Selection Menu - Popup from bottom */}

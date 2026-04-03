@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FlaskConical, Keyboard, Send, X } from 'lucide-react';
+import { Keyboard, Send, X } from 'lucide-react';
 
 export type VoiceInteractionState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'recovering';
 
@@ -11,7 +11,6 @@ interface VoiceInteractionBarProps {
   interimTranscript: string;
   onStop: () => void;
   onInterrupt: () => void;
-  onOpenLab: () => void;
   onTextSubmit: (text: string) => void;
   className?: string;
 }
@@ -88,7 +87,6 @@ export function VoiceInteractionBar({
   interimTranscript,
   onStop,
   onInterrupt,
-  onOpenLab,
   onTextSubmit,
   className = '',
 }: VoiceInteractionBarProps) {
@@ -249,19 +247,6 @@ export function VoiceInteractionBar({
           <Keyboard className="w-5 h-5" />
         </button>
 
-        {/* Lab button — min 44px touch target for iOS */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log('🧪 [VoiceBar] Lab button tapped');
-            onOpenLab();
-          }}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-amber-500 hover:text-amber-400
-                     hover:bg-amber-500/10 active:scale-95 transition-all"
-          aria-label="Open Lab"
-        >
-          <FlaskConical className="w-5 h-5" />
-        </button>
       </div>
     </div>
   );
