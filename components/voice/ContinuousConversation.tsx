@@ -571,6 +571,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
+      // 🔥 FIX: If MAIA is currently speaking (or input is suppressed for duplex),
+      // recognition timed out naturally but we're mid-conversation. Preserve isListening
+      // so the auto-resume effect can restart the mic after TTS ends.
+      if (isSpeakingRef.current || inputSuppressedRef.current) {
+        console.log('⏸️ [onend] Recognition timed out while MAIA speaking - preserving listening state for auto-resume');
+        recognitionNeedsRefreshRef.current = true;
+        return;
+      }
+
       // 🔥 FIX: DON'T auto-restart on silence timeouts (prevents "blinking listening")
       // Web Speech API times out after ~5-8 seconds of silence. If there's been no speech,
       // don't restart - let the user tap to restart when ready.
