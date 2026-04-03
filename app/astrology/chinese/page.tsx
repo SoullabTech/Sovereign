@@ -1,9 +1,11 @@
 // @ts-nocheck
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
+import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
 import {
   ChineseZodiacAnimal,
   ChineseElement,
@@ -50,6 +52,7 @@ interface ChineseReadingData {
 }
 
 export default function ChineseAstrologyPage() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('profile');
   const [birthYear, setBirthYear] = useState<string>('');
   const [birthDate, setBirthDate] = useState<string>('');
@@ -75,6 +78,14 @@ export default function ChineseAstrologyPage() {
       generateReading();
     }
   }, [birthDate]);
+
+  // System selector: navigate back to Western page for tropical/sidereal
+  const handleSystemChange = useCallback((mode: ZodiacSystem) => {
+    if (mode === 'tropical' || mode === 'sidereal') {
+      const params = mode === 'sidereal' ? '?zodiac=sidereal' : '';
+      router.push(`/astrology${params}`);
+    }
+  }, [router]);
 
   const generateReading = async () => {
     if (!birthDate) return;
@@ -179,6 +190,13 @@ export default function ChineseAstrologyPage() {
         >
           <span className="text-sm font-medium">Blueprint</span>
         </Link>
+      </div>
+
+      {/* System Selector */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="backdrop-blur-sm bg-black/20 rounded-xl p-2">
+          <ZodiacToggle value="chinese" onChange={handleSystemChange} compact />
+        </div>
       </div>
 
       {/* Floating Elements */}

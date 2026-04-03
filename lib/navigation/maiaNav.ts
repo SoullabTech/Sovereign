@@ -15,6 +15,7 @@ import {
   Library,
   Briefcase,
   Users,
+  Orbit,
   User,
   Settings,
   HelpCircle,
@@ -109,6 +110,16 @@ export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
   route: '/commons/circles',
   classification: 'studio',
   tooltip: 'Enter shared field',
+  isBoundaryTransition: true,
+};
+
+export const ASTROLOGY_RAIL_ITEM: MaiaRailItem = {
+  id: 'astrology',
+  label: 'Astrology',
+  icon: Orbit,
+  route: '/astrology',
+  classification: 'studio',
+  tooltip: 'Your cosmic spiral',
   isBoundaryTransition: true,
 };
 

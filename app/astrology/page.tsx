@@ -264,6 +264,11 @@ export default function AstrologyPage() {
 
   // Persist zodiac mode changes
   const setZodiacModeAndPersist = useCallback((mode: ZodiacSystem) => {
+    // Chinese is a separate system — route to its dedicated page
+    if (mode === 'chinese') {
+      router.push('/astrology/chinese');
+      return;
+    }
     setZodiacMode(mode);
     localStorage.setItem('astro_zodiac_mode', mode);
     // Update URL without full navigation
@@ -274,7 +279,7 @@ export default function AstrologyPage() {
       url.searchParams.delete('zodiac');
     }
     window.history.replaceState({}, '', url.toString());
-  }, []);
+  }, [router]);
 
   // Persist ayanamsa changes
   const setAyanamsaAndPersist = useCallback((value: AyanamsaType) => {
