@@ -29,6 +29,7 @@ export type ConnectorCapability =
   | 'read_contacts'
   | 'export_markdown'
   | 'export_transcript'
+  | 'publish_note'
   | 'send_webhook';
 
 /** Exhaustive list of known providers */
@@ -40,6 +41,7 @@ export type ConnectorProvider =
   | 'smtp_custom'
   | 'caldav'
   | 'carddav'
+  | 'nostr'
   | 'webhook';
 
 // ─────────────────────────────────────────────────────────────────────────────

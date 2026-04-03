@@ -2692,6 +2692,29 @@ export function AccountSettings() {
             <CalDAVConnectSection userId={userId} />
           </div>
 
+          {/* Sovereign Expression */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">
+              Sovereign Expression
+            </h3>
+            <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-violet-600/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="2"/><path d="M4.93 4.93l4.24 4.24"/><path d="M14.83 14.83l4.24 4.24"/><path d="M14.83 9.17l4.24-4.24"/><path d="M14.83 9.17l-1.41-1.41"/><path d="M4.93 19.07l4.24-4.24"/></svg>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-stone-200">Nostr</h4>
+                  <p className="text-xs text-stone-500">
+                    Publish reflections to your own relay. Decentralized, sovereign identity.
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-stone-400">
+                Manage your Nostr identity in the <button onClick={() => setActiveSection('messaging')} className="text-violet-400 hover:text-violet-300 underline">Messaging</button> section.
+              </p>
+            </div>
+          </div>
+
           {/* Sovereign Archive */}
           <div className="space-y-3">
             <h3 className="text-xs font-medium text-stone-500 uppercase tracking-wider">

@@ -116,6 +116,18 @@ export const CONNECTOR_DEFINITIONS: ConnectorDefinition[] = [
     disconnectEndpoint: '/api/connectors/caldav/configure',
   },
 
+  // ── Sovereign Expression ──────────────────────────────────────────────────
+  {
+    id: 'nostr',
+    name: 'Nostr',
+    class: 'credential',
+    description: 'Publish reflections and field notes to your own Nostr relay. Decentralized, sovereign identity.',
+    capabilities: ['publish_note'],
+    icon: 'Radio',
+    statusEndpoint: '/api/nostr/identity',
+    connectEndpoint: '/api/nostr/register',
+  },
+
   // ── Future: more credential-based ────────────────────────────────────────
   // proton_bridge, smtp_custom, carddav — add here when ready
 ];

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { upsertConnector } from '@/lib/connectors/connectorDb';
 
 const PUBKEY_HEX_RE = /^[0-9a-f]{64}$/;
 
@@ -68,6 +69,17 @@ export async function POST(request: NextRequest) {
 
     const { npubEncode } = await import('nostr-tools/nip19');
     const npub = npubEncode(pubkey);
+
+    // Register in service_connectors for unified connector list
+    upsertConnector(memberId, 'nostr', {
+      connectorClass: 'credential',
+      status: 'connected',
+      displayName: 'Nostr',
+      capabilities: ['publish_note'],
+      metadata: { pubkey, npub, relayUrl: 'wss://nostr.soullab.life' },
+    }).catch((err) => {
+      console.error(`[Nostr Register] ${correlationId} service_connectors upsert failed:`, err.message);
+    });
 
     return NextResponse.json({
       ok: true,
