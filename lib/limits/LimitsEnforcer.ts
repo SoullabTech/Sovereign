@@ -39,8 +39,8 @@ const LIMITS = {
   free: {
     text_turns_per_day: 10,
     voice_demo_seconds_lifetime: 180, // 3 min
-    journals_saved: false,
-    threads_saved: false,
+    journals_saved: true,   // Sanctuary Economy: journals are depth, not capacity. Always saved.
+    threads_saved: true,    // Sanctuary Economy: threads are continuity. Always saved.
   },
   member_plus: {
     text_turns_per_day_soft: 50, // Soft cap - nudge
@@ -62,10 +62,10 @@ const LIMITS = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const MESSAGES = {
-  // Free tier
-  free_text_limit: "You've reached today's conversation limit. This resets tomorrow.",
-  free_voice_exhausted: "Your voice introduction has completed.",
-  free_no_journal: "This conversation won't be saved.",
+  // Free tier (Sanctuary)
+  free_text_limit: "You're working at today's capacity. We can continue tomorrow, or you can expand to give MAIA more room.",
+  free_voice_exhausted: "Your voice time for now has completed.",
+  // free_no_journal removed — journals are always saved (Sanctuary Economy)
 
   // Member+ tier
   member_plus_text_nudge: "You've been active today. MAIA is still here — just pacing for sustainability.",
@@ -184,13 +184,9 @@ export class LimitsEnforcer {
     }
 
     if (resource === 'journal' || resource === 'thread') {
-      // Free tier: journals and threads are ephemeral
-      // We allow the action but with a nudge about the limitation
-      return {
-        action: 'nudge',
-        message: MESSAGES.free_no_journal,
-        nudgeType: 'ephemeral_content',
-      };
+      // Sanctuary Economy: journals and threads are always saved.
+      // Memory is depth, not capacity. Everyone is remembered.
+      return { action: 'allow' };
     }
 
     return { action: 'allow' };
