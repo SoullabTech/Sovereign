@@ -174,6 +174,7 @@ export default function AdminPage() {
           <div className="flex items-center space-x-4">
             <nav className="hidden md:flex items-center space-x-1">
               {[
+                { label: 'Platform Pulse', href: '/admin/activity-feed' },
                 { label: 'Beta Testers', href: '/admin/beta-testers' },
                 { label: 'Opus Pulse', href: '/admin/opus-pulse' },
                 { label: 'Analytics', href: '/admin/consciousness-analytics' },
