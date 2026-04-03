@@ -67,7 +67,7 @@ export default function PatternsWorld() {
 
       {/* Perceptual horizon */}
       <div className="max-w-2xl mx-auto px-6">
-        <DepthBoundary message="This pattern continues beyond what's visible\u2026" />
+        <DepthBoundary message="This pattern continues beyond what's visible…" />
       </div>
     </motion.div>
   );

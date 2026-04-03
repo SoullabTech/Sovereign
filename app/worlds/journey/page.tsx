@@ -74,7 +74,7 @@ export default function JourneyWorld() {
 
       {/* Perceptual horizon */}
       <div className="max-w-2xl mx-auto px-6">
-        <DepthBoundary message="There's a longer arc here\u2026" />
+        <DepthBoundary message="There's a longer arc here…" />
       </div>
     </motion.div>
   );

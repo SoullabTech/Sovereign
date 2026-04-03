@@ -104,7 +104,7 @@ export default function DepthWorld() {
 
       {/* Perceptual horizon */}
       <div className="max-w-2xl mx-auto px-6">
-        <DepthBoundary message="There's more here if you stay with it\u2026" />
+        <DepthBoundary message="There's more here if you stay with it…" />
       </div>
     </motion.div>
   );
