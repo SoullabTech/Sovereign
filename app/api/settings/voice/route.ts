@@ -93,9 +93,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const voiceIdOverride = typeof body.voiceIdOverride === 'string' && body.voiceIdOverride.length > 0
+    // Migrate legacy/Kokoro raw voice names to sovereign IDs
+    const VOICE_MIGRATION: Record<string, string> = {
+      alloy: 'maia_core', shimmer: 'maia_warm', nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+      af_kore: 'maia_core', af_sarah: 'maia_warm', af_bella: 'maia_clear', am_adam: 'atlas', am_michael: 'atlas_deep',
+      kore_bella: 'maia_core', bella: 'maia_clear', maia: 'maia_core',
+    };
+    const rawVoiceId = typeof body.voiceIdOverride === 'string' && body.voiceIdOverride.length > 0
       ? body.voiceIdOverride.slice(0, 64)
       : null;
+    const voiceIdOverride = rawVoiceId ? (VOICE_MIGRATION[rawVoiceId] ?? rawVoiceId) : null;
 
     // Voice archetype: validate if provided, null if not set or invalid
     const voiceArchetype = isValidArchetype(body.voiceArchetype) ? body.voiceArchetype : null;
