@@ -10,9 +10,10 @@
  * - Spiralogic integration
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Moon,
@@ -25,7 +26,7 @@ import {
   Settings2,
 } from 'lucide-react';
 
-import ZodiacToggle, { AyanamsaType } from '@/components/astrology/ZodiacToggle';
+import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
 import NakshatraCard from '@/components/astrology/NakshatraCard';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import type { CompleteVedicProfile, RashiInfo, GrahaPosition, GrahaName } from '@/lib/astrology/types/vedic';
@@ -36,6 +37,14 @@ import type { AshtakavargaProfile } from '@/lib/astrology/ashtakavarga';
 type ViewMode = 'profile' | 'dasha' | 'chart' | 'gochara' | 'ashtakavarga';
 
 export default function VedicAstrologyPage() {
+  const router = useRouter();
+
+  // System selector: navigate to sibling systems
+  const handleSystemChange = useCallback((mode: ZodiacSystem) => {
+    if (mode === 'tropical') { router.push('/astrology'); }
+    if (mode === 'chinese') { router.push('/astrology/chinese'); }
+  }, [router]);
+
   // State
   const [birthDate, setBirthDate] = useState<string>('');
   const [birthTime, setBirthTime] = useState<string>('');
@@ -208,6 +217,13 @@ export default function VedicAstrologyPage() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+      </div>
+
+      {/* System Selector */}
+      <div className="fixed top-4 right-4 z-50">
+        <div className="backdrop-blur-sm bg-black/20 rounded-xl p-2">
+          <ZodiacToggle value="sidereal" onChange={handleSystemChange} compact />
+        </div>
       </div>
 
       <div className="relative max-w-5xl mx-auto px-4 py-8">

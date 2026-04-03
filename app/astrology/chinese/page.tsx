@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Compass, Clock, ChevronDown, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
 import {
   ChineseZodiacAnimal,
@@ -60,7 +61,12 @@ export default function ChineseAstrologyPage() {
   const [gender, setGender] = useState<Gender | ''>('');
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const didAutoLoad = useRef(false);
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(prev => prev === section ? null : section);
+  };
 
   // Auto-load saved birth date (parity with Mayan page)
   useEffect(() => {
@@ -79,12 +85,10 @@ export default function ChineseAstrologyPage() {
     }
   }, [birthDate]);
 
-  // System selector: navigate back to Western page for tropical/sidereal
+  // System selector: each system has its own authentic page
   const handleSystemChange = useCallback((mode: ZodiacSystem) => {
-    if (mode === 'tropical' || mode === 'sidereal') {
-      const params = mode === 'sidereal' ? '?zodiac=sidereal' : '';
-      router.push(`/astrology${params}`);
-    }
+    if (mode === 'tropical') { router.push('/astrology'); }
+    if (mode === 'sidereal') { router.push('/astrology/vedic'); }
   }, [router]);
 
   const generateReading = async () => {
@@ -401,162 +405,485 @@ export default function ChineseAstrologyPage() {
         {/* Profile Reading Results */}
         {viewMode === 'profile' && reading && (
           <div className="max-w-6xl mx-auto space-y-8">
-            {/* Core Identity */}
-            <div className="bg-black/30 backdrop-blur-sm border border-red-500/30 rounded-2xl p-8">
-              <h2 className="text-3xl font-bold text-red-300 mb-6 text-center">
-                Your Chinese Cosmic Identity
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">{reading.zodiacAnimal.symbol}</div>
-                  <h3 className="text-2xl font-bold text-orange-200 mb-2">
-                    {reading.zodiacAnimal.name}
-                  </h3>
-                  <p className="text-orange-300">
-                    {reading.zodiacAnimal.description}
-                  </p>
+            {/* Core Identity — clickable cards */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Animal Card */}
+              <button
+                onClick={() => toggleSection('animal')}
+                className="bg-black/30 backdrop-blur-sm border border-red-500/30 rounded-2xl p-8 text-left transition-all hover:border-red-500/60 hover:bg-black/40"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-5xl">{reading.zodiacAnimal.symbol}</div>
+                  <div className="flex items-center gap-2 text-red-300/60">
+                    <Sparkles className="w-4 h-4" />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expandedSection === 'animal' ? 'rotate-180' : ''}`} />
+                  </div>
                 </div>
+                <h3 className="text-2xl font-bold text-orange-200 mb-1">{reading.zodiacAnimal.name}</h3>
+                <p className="text-orange-200/60 text-sm">{reading.zodiacAnimal.archetype}</p>
+                <p className="text-orange-300 mt-2 line-clamp-2">{reading.zodiacAnimal.description}</p>
+              </button>
 
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-2xl font-bold text-white">
+              {/* Element Card */}
+              <button
+                onClick={() => toggleSection('element')}
+                className="bg-black/30 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8 text-left transition-all hover:border-orange-500/60 hover:bg-black/40"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-xl font-bold text-white">
                     {reading.element.symbol}
                   </div>
-                  <h3 className="text-2xl font-bold text-orange-200 mb-2">
-                    {reading.element.name} Element
-                  </h3>
-                  <p className="text-orange-300">
-                    {reading.element.description}
-                  </p>
-                  <div className="mt-4 text-lg text-yellow-300">
-                    {reading.yinYang.toUpperCase()} Energy
+                  <div className="flex items-center gap-2 text-orange-300/60">
+                    <Sparkles className="w-4 h-4" />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expandedSection === 'element' ? 'rotate-180' : ''}`} />
                   </div>
                 </div>
-              </div>
+                <h3 className="text-2xl font-bold text-orange-200 mb-1">{reading.element.name} Element</h3>
+                <p className="text-yellow-300 text-sm">{reading.yinYang.toUpperCase()} Energy</p>
+                <p className="text-orange-300 mt-2 line-clamp-2">{reading.element.description}</p>
+              </button>
             </div>
 
-            {/* Personality Profile */}
-            <div className="bg-black/30 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8">
-              <h2 className="text-3xl font-bold text-orange-300 mb-6">Personality Essence</h2>
+            {/* Expanded Animal Wisdom */}
+            <AnimatePresence>
+              {expandedSection === 'animal' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-black/30 backdrop-blur-sm border border-red-500/20 rounded-2xl p-8 space-y-6">
+                    <h3 className="text-xl font-bold text-red-300">Deeper Wisdom: {reading.zodiacAnimal.name}</h3>
 
-              <div className="space-y-4">
-                {reading.personalityProfile.map((trait, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <p className="text-orange-200 text-lg">{trait}</p>
+                    <div className="space-y-4">
+                      {reading.personalityProfile.map((trait, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <span className="text-orange-400 mt-1">*</span>
+                          <p className="text-orange-200">{trait}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-semibold text-green-300 mb-3">Strengths</h4>
+                        <ul className="space-y-2">
+                          {reading.strengthsWeaknesses.strengths.map((s, i) => (
+                            <li key={i} className="text-green-200 flex items-center gap-2">
+                              <span className="text-green-400">+</span> {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-red-300 mb-3">Growth Areas</h4>
+                        <ul className="space-y-2">
+                          {reading.strengthsWeaknesses.weaknesses.map((w, i) => (
+                            <li key={i} className="text-red-200 flex items-center gap-2">
+                              <span className="text-red-400">~</span> {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Compatibility */}
+                    <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-red-500/20">
+                      <div>
+                        <h4 className="font-semibold text-green-300 mb-3">Most Compatible</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {reading.compatibility.mostCompatible.map((sign, i) => (
+                            <span key={i} className="px-3 py-1 bg-green-900/30 text-green-200 text-sm rounded-full border border-green-500/30">{sign}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-amber-300 mb-3">Challenging Pairings</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {reading.compatibility.challenging.map((sign, i) => (
+                            <span key={i} className="px-3 py-1 bg-amber-900/30 text-amber-200 text-sm rounded-full border border-amber-500/30">{sign}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Expanded Element Wisdom */}
+            <AnimatePresence>
+              {expandedSection === 'element' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-black/30 backdrop-blur-sm border border-orange-500/20 rounded-2xl p-8 space-y-6">
+                    <h3 className="text-xl font-bold text-orange-300">Deeper Wisdom: {reading.element.name} Element</h3>
+
+                    {/* Spiralogic Integration */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="font-semibold text-purple-300 mb-2">Elemental Pathway</h4>
+                        <p className="text-purple-100 text-sm mb-1"><strong>Primary:</strong> {reading.spiralogicIntegration.primaryElement}</p>
+                        <p className="text-purple-100 text-sm"><strong>Secondary:</strong> {reading.spiralogicIntegration.secondaryElements.join(', ')}</p>
+                        <p className="text-purple-200 mt-3">{reading.spiralogicIntegration.evolutionaryPath}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-purple-300 mb-2">Consciousness Activation</h4>
+                        <p className="text-purple-100">{reading.spiralogicIntegration.consciousnessActivation}</p>
+                      </div>
+                    </div>
+
+                    {/* Life Guidance */}
+                    <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-orange-500/20">
+                      <div>
+                        <h4 className="font-semibold text-blue-300 mb-3">Career & Purpose</h4>
+                        <ul className="space-y-2">
+                          {reading.lifeGuidance.careerPaths.map((p, i) => (
+                            <li key={i} className="text-blue-200 text-sm flex items-start gap-2">
+                              <span className="text-blue-400 mt-0.5">*</span> {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-pink-300 mb-3">Relationships</h4>
+                        <ul className="space-y-2">
+                          {reading.lifeGuidance.relationships.map((r, i) => (
+                            <li key={i} className="text-pink-200 text-sm flex items-start gap-2">
+                              <span className="text-pink-400 mt-0.5">*</span> {r}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-yellow-300 mb-3">Spiritual Development</h4>
+                        <ul className="space-y-2">
+                          {reading.lifeGuidance.spiritualDevelopment.map((s, i) => (
+                            <li key={i} className="text-yellow-200 text-sm flex items-start gap-2">
+                              <span className="text-yellow-400 mt-0.5">*</span> {s}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-green-300 mb-3">Health & Wellness</h4>
+                        <ul className="space-y-2">
+                          {reading.lifeGuidance.healthWellness.map((h, i) => (
+                            <li key={i} className="text-green-200 text-sm flex items-start gap-2">
+                              <span className="text-green-400 mt-0.5">*</span> {h}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Five-Layer Holistic Wisdom (nested inside Element) */}
+                    {reading.holisticProfile && (
+                      <div className="pt-4 border-t border-orange-500/20 space-y-3">
+                        <h4 className="font-semibold text-orange-200">Five-Layer Holistic Profile</h4>
+                        <p className="text-orange-200/50 text-xs">Tap a domain for deeper insight</p>
+
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { key: 'physical', label: 'Body', emoji: '+' },
+                            { key: 'emotional', label: 'Heart', emoji: '~' },
+                            { key: 'mental', label: 'Mind', emoji: '*' },
+                            { key: 'spiritual', label: 'Spirit', emoji: '*' },
+                            { key: 'ancestral', label: 'Roots', emoji: '*' },
+                          ].map(({ key, label }) => (
+                            <button
+                              key={key}
+                              onClick={(e) => { e.stopPropagation(); toggleSection(`holistic-${key}`); }}
+                              className={`py-2 px-1 rounded-lg text-xs font-medium text-center transition-all ${
+                                expandedSection === `holistic-${key}`
+                                  ? 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                                  : 'bg-black/30 text-orange-200/60 hover:bg-black/40 border border-orange-500/20'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <AnimatePresence>
+                          {expandedSection === 'holistic-physical' && reading.holisticProfile && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <div className="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-5 space-y-4 mt-2">
+                                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                                  <div className="space-y-1 text-emerald-100">
+                                    <p><strong className="text-emerald-400">Yin Organ:</strong> {reading.holisticProfile.physical.yinOrgan}</p>
+                                    <p><strong className="text-emerald-400">Yang Organ:</strong> {reading.holisticProfile.physical.yangOrgan}</p>
+                                    <p><strong className="text-emerald-400">Body Tissue:</strong> {reading.holisticProfile.physical.bodyTissue}</p>
+                                    <p><strong className="text-emerald-400">Sensory:</strong> {reading.holisticProfile.physical.sensoryOrgan}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-emerald-300 font-semibold mb-2">Health Tendencies</p>
+                                    {reading.holisticProfile.physical.healthTendencies.map((t, i) => (
+                                      <p key={i} className="text-emerald-100 text-sm">! {t}</p>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                          {expandedSection === 'holistic-emotional' && reading.holisticProfile && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <div className="bg-rose-900/10 border border-rose-500/20 rounded-xl p-5 mt-2">
+                                <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                                  <div><p className="text-rose-300 text-xs">Primary</p><p className="text-rose-100">{reading.holisticProfile.emotional.primaryEmotion}</p></div>
+                                  <div><p className="text-rose-300 text-xs">Shadow</p><p className="text-rose-100">{reading.holisticProfile.emotional.shadowEmotion}</p></div>
+                                  <div><p className="text-rose-300 text-xs">Balanced</p><p className="text-rose-100">{reading.holisticProfile.emotional.balancedExpression}</p></div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                          {expandedSection === 'holistic-mental' && reading.holisticProfile && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <div className="bg-cyan-900/10 border border-cyan-500/20 rounded-xl p-5 mt-2 text-sm">
+                                <p className="text-cyan-100">{reading.holisticProfile.mental.thinkingStyle}</p>
+                                <p className="text-cyan-200/70 mt-2"><strong>Learning:</strong> {reading.holisticProfile.mental.learningStyle}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                          {expandedSection === 'holistic-spiritual' && reading.holisticProfile && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <div className="bg-violet-900/10 border border-violet-500/20 rounded-xl p-5 mt-2 text-sm space-y-2">
+                                <p className="text-violet-100"><strong className="text-violet-300">Soul Lesson:</strong> {reading.holisticProfile.spiritual.soulLesson}</p>
+                                <p className="text-violet-100"><strong className="text-violet-300">Gift:</strong> {reading.holisticProfile.spiritual.spiritualGift}</p>
+                                <p className="text-violet-100"><strong className="text-violet-300">Karmic:</strong> {reading.holisticProfile.spiritual.karmicPattern}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                          {expandedSection === 'holistic-ancestral' && reading.holisticProfile && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                              <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-5 mt-2 text-sm space-y-2">
+                                <p className="text-amber-100"><strong className="text-amber-300">Lineage:</strong> {reading.holisticProfile.ancestral.lineageTheme}</p>
+                                <p className="text-amber-100"><strong className="text-amber-300">Healing:</strong> {reading.holisticProfile.ancestral.ancestralHealing}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Five holistic domains are nested inside Element Wisdom card above */}
+            {false && reading.holisticProfile && (
+              <div className="space-y-3">
+                <h2 className="text-2xl font-bold text-orange-300 mb-4">Five-Layer Wisdom</h2>
+                <p className="text-orange-200/60 text-sm mb-6">Tap each domain to explore the {reading.element.name} element's deeper teachings</p>
+
+                {[
+                  { key: 'physical', label: 'Physical Body & Health', color: 'emerald', icon: '+', summary: `${reading.holisticProfile.physical.yinOrgan} / ${reading.holisticProfile.physical.yangOrgan}` },
+                  { key: 'emotional', label: 'Emotional Patterns', color: 'rose', icon: '~', summary: reading.holisticProfile.emotional.primaryEmotion },
+                  { key: 'mental', label: 'Mental Qualities', color: 'cyan', icon: '*', summary: reading.holisticProfile.mental.thinkingStyle },
+                  { key: 'spiritual', label: 'Spiritual Themes', color: 'violet', icon: '*', summary: reading.holisticProfile.spiritual.soulLesson },
+                  { key: 'ancestral', label: 'Ancestral Patterns', color: 'amber', icon: '*', summary: reading.holisticProfile.ancestral.lineageTheme },
+                ].map(({ key, label, color, summary }) => (
+                  <div key={key}>
+                    <button
+                      onClick={() => toggleSection(key)}
+                      className={`w-full bg-black/30 backdrop-blur-sm border border-${color}-500/30 rounded-2xl p-6 text-left transition-all hover:border-${color}-500/60 hover:bg-black/40`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className={`text-lg font-bold text-${color}-300`}>{label}</h3>
+                          <p className={`text-${color}-200/60 text-sm mt-1`}>{summary}</p>
+                        </div>
+                        <div className={`flex items-center gap-2 text-${color}-300/60`}>
+                          <Sparkles className="w-4 h-4" />
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${expandedSection === key ? 'rotate-180' : ''}`} />
+                        </div>
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {expandedSection === key && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className={`bg-black/30 backdrop-blur-sm border border-${color}-500/20 rounded-2xl p-8 mt-2`}>
+                            {key === 'physical' && (
+                              <div className="space-y-6">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div className="space-y-2 text-emerald-100">
+                                    <h4 className="font-semibold text-emerald-200 mb-3">Organ Systems</h4>
+                                    <p><span className="text-emerald-400 font-semibold">Yin Organ:</span> {reading.holisticProfile!.physical.yinOrgan}</p>
+                                    <p><span className="text-emerald-400 font-semibold">Yang Organ:</span> {reading.holisticProfile!.physical.yangOrgan}</p>
+                                    <p><span className="text-emerald-400 font-semibold">Body Tissue:</span> {reading.holisticProfile!.physical.bodyTissue}</p>
+                                    <p><span className="text-emerald-400 font-semibold">Sensory Organ:</span> {reading.holisticProfile!.physical.sensoryOrgan}</p>
+                                    <p><span className="text-emerald-400 font-semibold">Body Fluid:</span> {reading.holisticProfile!.physical.bodyFluid}</p>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-emerald-200 mb-3">Health Tendencies</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.physical.healthTendencies.map((t, i) => (
+                                        <li key={i} className="text-emerald-100 flex items-start gap-2"><span className="text-amber-400">!</span> {t}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-emerald-200 mb-3">Support Practices</h4>
+                                  <ul className="grid md:grid-cols-2 gap-2">
+                                    {reading.holisticProfile!.physical.supportPractices.map((p, i) => (
+                                      <li key={i} className="text-emerald-100 flex items-start gap-2"><span className="text-emerald-400">+</span> {p}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            )}
+                            {key === 'emotional' && (
+                              <div className="space-y-6">
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                                    <p className="text-rose-300 text-xs font-semibold mb-1">Primary</p>
+                                    <p className="text-rose-100">{reading.holisticProfile!.emotional.primaryEmotion}</p>
+                                  </div>
+                                  <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                                    <p className="text-rose-300 text-xs font-semibold mb-1">Shadow</p>
+                                    <p className="text-rose-100">{reading.holisticProfile!.emotional.shadowEmotion}</p>
+                                  </div>
+                                  <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                                    <p className="text-rose-300 text-xs font-semibold mb-1">Balanced</p>
+                                    <p className="text-rose-100">{reading.holisticProfile!.emotional.balancedExpression}</p>
+                                  </div>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div>
+                                    <h4 className="font-semibold text-rose-200 mb-3">Imbalance Signals</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.emotional.imbalanceSignals.map((s, i) => (
+                                        <li key={i} className="text-rose-100 flex items-start gap-2"><span className="text-amber-400">~</span> {s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-rose-200 mb-3">Healing Practices</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.emotional.healingPractices.map((p, i) => (
+                                        <li key={i} className="text-rose-100 flex items-start gap-2"><span className="text-rose-400">+</span> {p}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {key === 'mental' && (
+                              <div className="space-y-6">
+                                <div className="bg-cyan-900/20 rounded-xl p-5">
+                                  <p className="text-cyan-100 text-lg">{reading.holisticProfile!.mental.thinkingStyle}</p>
+                                  <p className="text-cyan-200/70 mt-2 text-sm"><strong>Learning Style:</strong> {reading.holisticProfile!.mental.learningStyle}</p>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div>
+                                    <h4 className="font-semibold text-cyan-200 mb-3">Cognitive Strengths</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.mental.cognitiveStrengths.map((s, i) => (
+                                        <li key={i} className="text-cyan-100 flex items-start gap-2"><span className="text-cyan-400">*</span> {s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-cyan-200 mb-3">Mental Challenges</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.mental.mentalChallenges.map((c, i) => (
+                                        <li key={i} className="text-cyan-100 flex items-start gap-2"><span className="text-amber-400">~</span> {c}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            {key === 'spiritual' && (
+                              <div className="space-y-6">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                  {[
+                                    { label: 'Soul Lesson', value: reading.holisticProfile!.spiritual.soulLesson },
+                                    { label: 'Spiritual Gift', value: reading.holisticProfile!.spiritual.spiritualGift },
+                                    { label: 'Karmic Pattern', value: reading.holisticProfile!.spiritual.karmicPattern },
+                                    { label: 'Evolutionary Path', value: reading.holisticProfile!.spiritual.evolutionaryPath },
+                                  ].map((item, i) => (
+                                    <div key={i} className="bg-violet-900/20 rounded-xl p-4">
+                                      <p className="text-violet-300 text-xs font-semibold mb-1">{item.label}</p>
+                                      <p className="text-violet-100">{item.value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-violet-200 mb-3">Practices</h4>
+                                  <ul className="grid md:grid-cols-2 gap-2">
+                                    {reading.holisticProfile!.spiritual.practices.map((p, i) => (
+                                      <li key={i} className="text-violet-100 flex items-start gap-2"><span className="text-violet-400">*</span> {p}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            )}
+                            {key === 'ancestral' && (
+                              <div className="space-y-6">
+                                <div className="bg-amber-900/20 rounded-xl p-5 text-center">
+                                  <p className="text-amber-100 text-lg">{reading.holisticProfile!.ancestral.lineageTheme}</p>
+                                </div>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div>
+                                    <h4 className="font-semibold text-amber-200 mb-3">Inherited Strengths</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.ancestral.inheritedStrengths.map((s, i) => (
+                                        <li key={i} className="text-amber-100 flex items-start gap-2"><span className="text-amber-400">+</span> {s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-amber-200 mb-3">Inherited Challenges</h4>
+                                    <ul className="space-y-2">
+                                      {reading.holisticProfile!.ancestral.inheritedChallenges.map((c, i) => (
+                                        <li key={i} className="text-amber-100 flex items-start gap-2"><span className="text-amber-400">~</span> {c}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                                <div className="bg-amber-900/20 rounded-xl p-4">
+                                  <p className="text-amber-300 text-xs font-semibold mb-1">Ancestral Healing Focus</p>
+                                  <p className="text-amber-100">{reading.holisticProfile!.ancestral.ancestralHealing}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-amber-200 mb-3">Honoring Practices</h4>
+                                  <ul className="grid md:grid-cols-2 gap-2">
+                                    {reading.holisticProfile!.ancestral.honoringPractices.map((p, i) => (
+                                      <li key={i} className="text-amber-100 flex items-start gap-2"><span className="text-amber-400">*</span> {p}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ))}
               </div>
+            )}
 
-              <div className="grid md:grid-cols-2 gap-8 mt-8">
-                <div>
-                  <h4 className="text-xl font-bold text-green-300 mb-4">Strengths</h4>
-                  <ul className="space-y-2">
-                    {reading.strengthsWeaknesses.strengths.map((strength, index) => (
-                      <li key={index} className="text-green-200 flex items-center space-x-2">
-                        <span className="text-green-400">✦</span>
-                        <span>{strength}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-red-300 mb-4">Growth Areas</h4>
-                  <ul className="space-y-2">
-                    {reading.strengthsWeaknesses.weaknesses.map((weakness, index) => (
-                      <li key={index} className="text-red-200 flex items-center space-x-2">
-                        <span className="text-red-400">◈</span>
-                        <span>{weakness}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Spiralogic Integration */}
-            <div className="bg-black/30 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-8">
-              <h2 className="text-3xl font-bold text-purple-300 mb-6">Spiralogic Consciousness Integration</h2>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-xl font-bold text-purple-200 mb-4">Elemental Pathway</h4>
-                  <p className="text-purple-100 mb-2">
-                    <strong>Primary:</strong> {reading.spiralogicIntegration.primaryElement}
-                  </p>
-                  <p className="text-purple-100 mb-4">
-                    <strong>Secondary:</strong> {reading.spiralogicIntegration.secondaryElements.join(', ')}
-                  </p>
-                  <p className="text-purple-200">
-                    {reading.spiralogicIntegration.evolutionaryPath}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-purple-200 mb-4">Consciousness Activation</h4>
-                  <p className="text-purple-100 text-lg leading-relaxed">
-                    {reading.spiralogicIntegration.consciousnessActivation}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Life Guidance */}
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-black/30 backdrop-blur-sm border border-blue-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-blue-300 mb-4">Career & Purpose</h3>
-                <ul className="space-y-3">
-                  {reading.lifeGuidance.careerPaths.map((path, index) => (
-                    <li key={index} className="text-blue-200 flex items-start space-x-2">
-                      <span className="text-blue-400 mt-1">⚡</span>
-                      <span>{path}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-black/30 backdrop-blur-sm border border-pink-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-pink-300 mb-4">Relationships</h3>
-                <ul className="space-y-3">
-                  {reading.lifeGuidance.relationships.map((aspect, index) => (
-                    <li key={index} className="text-pink-200 flex items-start space-x-2">
-                      <span className="text-pink-400 mt-1">💝</span>
-                      <span>{aspect}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-black/30 backdrop-blur-sm border border-yellow-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-yellow-300 mb-4">Spiritual Development</h3>
-                <ul className="space-y-3">
-                  {reading.lifeGuidance.spiritualDevelopment.map((practice, index) => (
-                    <li key={index} className="text-yellow-200 flex items-start space-x-2">
-                      <span className="text-yellow-400 mt-1">🌟</span>
-                      <span>{practice}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-black/30 backdrop-blur-sm border border-green-500/30 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-green-300 mb-4">Health & Wellness</h3>
-                <ul className="space-y-3">
-                  {reading.lifeGuidance.healthWellness.map((guidance, index) => (
-                    <li key={index} className="text-green-200 flex items-start space-x-2">
-                      <span className="text-green-400 mt-1">🌿</span>
-                      <span>{guidance}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Five Element Holistic Reading */}
-            {reading.holisticProfile && (
+            {/* Old static holistic sections removed — now inside Element Wisdom card */}
+            {false && reading.holisticProfile && (
               <>
-                {/* Physical Health Section */}
+                {/* Physical Health Section — REMOVED: now in Element expansion */}
                 <div className="bg-black/30 backdrop-blur-sm border border-emerald-500/30 rounded-2xl p-8">
                   <h2 className="text-3xl font-bold text-emerald-300 mb-2">Physical Body & Health</h2>
                   <p className="text-emerald-200/60 text-sm mb-6">Traditional Chinese Medicine organ correspondences for {reading.element.name} element</p>
@@ -788,40 +1115,7 @@ export default function ChineseAstrologyPage() {
               </>
             )}
 
-            {/* Compatibility */}
-            <div className="bg-black/30 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-8">
-              <h2 className="text-3xl font-bold text-indigo-300 mb-6">Cosmic Compatibility</h2>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="text-xl font-bold text-green-300 mb-4">Most Compatible Signs</h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {reading.compatibility.mostCompatible.map((sign, index) => (
-                      <span key={index} className="bg-green-600/30 text-green-200 px-3 py-1 rounded-full text-sm">
-                        {sign}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-red-300 mb-4">Challenging Connections</h4>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {reading.compatibility.challenging.map((sign, index) => (
-                      <span key={index} className="bg-red-600/30 text-red-200 px-3 py-1 rounded-full text-sm">
-                        {sign}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-indigo-900/30 rounded-xl">
-                <p className="text-indigo-200 leading-relaxed">
-                  {reading.compatibility.analysis}
-                </p>
-              </div>
-            </div>
+            {/* Compatibility — now inside Animal Wisdom card */}
 
             {/* Cycle Information */}
             <div className="bg-black/30 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-8 text-center">
