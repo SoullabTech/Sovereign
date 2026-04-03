@@ -1102,6 +1102,7 @@ export async function POST(request: NextRequest) {
         dominant_element: spiralState.dominant_element,
         phase: spiralState.phase,
       } : null,
+      userMessage: message,
     });
 
     // Voice identity trace — oracle → conductor → body
