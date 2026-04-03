@@ -243,16 +243,19 @@ export default function AstrologyPage() {
 
   // Hydration-safe zodiac state initialization
   useEffect(() => {
-    // Read from URL first, then localStorage
+    // Sidereal now has its own page — redirect if stored or URL says sidereal
     const urlParams = new URLSearchParams(window.location.search);
     const urlZodiac = urlParams.get('zodiac');
     if (urlZodiac === 'sidereal') {
-      setZodiacMode('sidereal');
-    } else {
-      const storedMode = localStorage.getItem('astro_zodiac_mode');
-      if (storedMode === 'sidereal') {
-        setZodiacMode('sidereal');
-      }
+      localStorage.removeItem('astro_zodiac_mode');
+      router.replace('/astrology/vedic');
+      return;
+    }
+    const storedMode = localStorage.getItem('astro_zodiac_mode');
+    if (storedMode === 'sidereal') {
+      localStorage.removeItem('astro_zodiac_mode');
+      router.replace('/astrology/vedic');
+      return;
     }
 
     // Load ayanamsa preference
@@ -260,7 +263,7 @@ export default function AstrologyPage() {
     if (storedAyanamsa === 'lahiri' || storedAyanamsa === 'true_chitra' || storedAyanamsa === 'krishnamurti') {
       setAyanamsa(storedAyanamsa);
     }
-  }, []);
+  }, [router]);
 
   // Persist zodiac mode changes
   const setZodiacModeAndPersist = useCallback((mode: ZodiacSystem) => {
