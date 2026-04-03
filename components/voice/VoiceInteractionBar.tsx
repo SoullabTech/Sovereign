@@ -70,7 +70,7 @@ function stateLabel(state: VoiceInteractionState): string {
     case 'thinking': return 'thinking';
     case 'speaking': return 'speaking';
     case 'recovering': return '...';
-    case 'idle': return 'tap to speak';
+    case 'idle': return '';
   }
 }
 
