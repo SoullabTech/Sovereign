@@ -1143,15 +1143,20 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
+  // Pronouns are core identity context — surfaced here so MAIA respects them naturally
   const currentUserName = (meta as any)?.userName as string | undefined;
+  const currentUserPronouns = (meta as any)?.pronouns as string | undefined;
+  const pronounLine = currentUserPronouns
+    ? `\n- Use ${currentUserPronouns} pronouns when referring to this person`
+    : '';
   const userIdentification = currentUserName && currentUserName.toLowerCase() !== 'friend'
     ? `\n\n👤 USER IDENTIFICATION (CRITICAL):
 The person you are speaking with is named "${currentUserName}".
-- Use this name when greeting them or addressing them by name
+- Use this name when greeting them or addressing them by name${pronounLine}
 - Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
 - "${currentUserName}" is NOT Kelly unless their name is literally "Kelly"`
     : `\n\n👤 USER IDENTIFICATION:
-The current user has not provided their name. Address them as "friend" or "there" when needed.
+The current user has not provided their name. Address them as "friend" or "there" when needed.${pronounLine}
 - Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
 
   // 🌀 STATE VECTOR: Inject estimation contract when input looks like a check-in
