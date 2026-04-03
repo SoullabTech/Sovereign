@@ -3987,6 +3987,7 @@ I'm not sure what I'm feeling yet.`;
     setDoorwayDismissedAt(Date.now());
     switch (action.type) {
       case 'open_journal':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/journal';
         break;
       case 'open_reflection':
@@ -3996,22 +3997,31 @@ I'm not sure what I'm feeling yet.`;
         }
         break;
       case 'open_ideas':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/dashboard/ideas';
         break;
       case 'open_decisions':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/dashboard/decisions';
         break;
       case 'open_changes':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/dashboard/changes';
         break;
       // 🌐 WORLD DOORWAYS: Experiential spaces
+      // Set nav teardown flag BEFORE hard navigation so conversation restores on return.
+      // window.location.href is a full page load — React cleanup won't fire reliably,
+      // so we must set the flag explicitly here.
       case 'enter_patterns':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/worlds/patterns';
         break;
       case 'enter_journey':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/worlds/journey';
         break;
       case 'enter_depth':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/worlds/depth';
         break;
     }
@@ -8409,6 +8419,7 @@ I'm not sure what I'm feeling yet.`;
         onViewInLab={() => {
           setShowCapturePanel(false);
           if (capturedCapsule) {
+            sessionStorage.setItem('maia_nav_teardown', 'true');
             window.location.href = `/labtools/reflections/${capturedCapsule.id}`;
           }
         }}
@@ -8567,6 +8578,7 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showLabDrawer}
         onClose={() => setShowLabDrawer(false)}
         onNavigate={(path) => {
+          sessionStorage.setItem('maia_nav_teardown', 'true');
           window.location.href = path;
           setShowLabDrawer(false);
         }}
@@ -9049,6 +9061,7 @@ I'm not sure what I'm feeling yet.`;
             onClick={() => {
               clearReturnPath();
               setReturnPathState(null);
+              sessionStorage.setItem('maia_nav_teardown', 'true');
               window.location.href = returnPath.path;
             }}
             className="flex items-center gap-2 px-1.5 py-0.5 hover:opacity-90 transition-opacity"
