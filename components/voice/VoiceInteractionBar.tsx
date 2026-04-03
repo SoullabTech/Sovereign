@@ -127,8 +127,8 @@ export function VoiceInteractionBar({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-40 bg-maia-navy-900/90 backdrop-blur-md border-t border-white/5 ${className}`}
-      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
+      className={`fixed bottom-0 left-0 right-0 z-50 bg-maia-navy-900/95 backdrop-blur-md border-t border-white/5 ${className}`}
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)', pointerEvents: 'auto' }}
     >
       {/* Transcript row — fades in while listening */}
       <AnimatePresence>
@@ -232,23 +232,31 @@ export function VoiceInteractionBar({
           )}
         </AnimatePresence>
 
-        {/* Keyboard toggle */}
+        {/* Keyboard toggle — min 44px touch target for iOS */}
         <button
-          onClick={handleKeyboardToggle}
-          className={`p-2 rounded-full transition-colors ${
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('⌨️ [VoiceBar] Keyboard toggle tapped');
+            handleKeyboardToggle();
+          }}
+          className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition-colors ${
             showTextInput
               ? 'bg-maia-spice-500/20 text-maia-spice-500'
-              : 'text-stone-600 hover:text-stone-400'
+              : 'text-stone-400 hover:text-stone-300'
           }`}
           aria-label="Text input"
         >
-          <Keyboard className="w-4 h-4" />
+          <Keyboard className="w-5 h-5" />
         </button>
 
-        {/* Lab button */}
+        {/* Lab button — min 44px touch target for iOS */}
         <button
-          onClick={onOpenLab}
-          className="p-2 rounded-full text-amber-500 hover:text-amber-400
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log('🧪 [VoiceBar] Lab button tapped');
+            onOpenLab();
+          }}
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-amber-500 hover:text-amber-400
                      hover:bg-amber-500/10 active:scale-95 transition-all"
           aria-label="Open Lab"
         >
