@@ -83,12 +83,14 @@ export default function VedicAstrologyPage() {
     if (savedAyanamsa) setAyanamsa(savedAyanamsa as AyanamsaType);
   }, []);
 
-  // Auto-calculate when data is loaded
+  // Auto-calculate only when restoring saved data on mount (not during fresh input)
+  const isRestoringRef = useRef(true);
   useEffect(() => {
-    if (birthDate && !didAutoLoad.current && !profile) {
+    if (isRestoringRef.current && birthDate && !didAutoLoad.current && !profile) {
       didAutoLoad.current = true;
       calculateProfile();
     }
+    isRestoringRef.current = false;
   }, [birthDate]);
 
   // Save ayanamsa preference
@@ -202,7 +204,6 @@ export default function VedicAstrologyPage() {
     const value = e.target.value;
     setBirthDate(value);
     localStorage.setItem('birthDate', value);
-    didAutoLoad.current = false;
   };
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
