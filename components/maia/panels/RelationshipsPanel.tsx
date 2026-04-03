@@ -8,7 +8,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { Heart, Users, GitFork } from 'lucide-react';
+import { Heart, Users } from 'lucide-react';
 
 interface RelationshipsPanelProps {
   explorerId: string;
@@ -31,7 +31,7 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
         <Heart className="w-4 h-4 text-rose-400/70 mt-0.5 flex-shrink-0" />
         <div>
           <p className="text-sm text-rose-300/90 font-light">Relational Field</p>
-          <p className="text-xs text-stone-500 mt-0.5">People and patterns in your life</p>
+          <p className="text-xs text-stone-500 mt-0.5">Outer and inner relationships, made visible</p>
         </div>
       </button>
 
@@ -47,11 +47,10 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
         </div>
       </button>
 
-      {/* Future: relationship threads will appear here */}
+      {/* Guidance */}
       <div className="pt-4 text-center">
-        <GitFork className="w-4 h-4 text-stone-600 mx-auto mb-1" />
         <p className="text-[10px] text-stone-600 font-light">
-          Relational threads will surface as they emerge in conversation
+          Track outer relationships, inner figures, and the field between.
         </p>
       </div>
     </div>

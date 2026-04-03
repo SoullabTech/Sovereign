@@ -1,0 +1,125 @@
+/**
+ * Relationship Entries API — Timeline
+ *
+ * GET  — Paginated entries
+ * POST — Create entry (note, reflection, threshold, rupture, repair)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { query, queryOne, insertOne } from '@/lib/db/postgres';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+
+export const dynamic = 'force-dynamic';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '20'), 50);
+    const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0');
+
+    // Verify ownership
+    const rel = await queryOne(
+      `SELECT id FROM member_relationships WHERE id = $1 AND member_id = $2 AND archived_at IS NULL`,
+      [id, session.memberId]
+    );
+    if (!rel) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    const entries = await query(
+      `SELECT id, kind, felt_signals, free_text, maia_reflection, pattern_hint,
+              field_tone_snapshot, suggested_movement, content, confidence, created_at
+       FROM relationship_entries
+       WHERE relationship_id = $1 AND member_id = $2
+       ORDER BY created_at DESC
+       LIMIT $3 OFFSET $4`,
+      [id, session.memberId, limit, offset]
+    );
+
+    return NextResponse.json({
+      success: true,
+      entries: entries.rows.map(e => ({
+        id: e.id,
+        kind: e.kind,
+        feltSignals: e.felt_signals,
+        freeText: e.free_text,
+        maiaReflection: e.maia_reflection,
+        patternHint: e.pattern_hint,
+        fieldToneSnapshot: e.field_tone_snapshot,
+        suggestedMovement: e.suggested_movement,
+        content: e.content,
+        confidence: e.confidence,
+        createdAt: e.created_at,
+      })),
+    });
+  } catch (error) {
+    console.error('[relationships/entries] GET error:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { kind, content } = body;
+
+    const validKinds = ['note', 'reflection', 'threshold', 'rupture', 'repair'];
+    if (!validKinds.includes(kind)) {
+      return NextResponse.json({ success: false, error: 'Invalid kind' }, { status: 400 });
+    }
+
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return NextResponse.json({ success: false, error: 'Content is required' }, { status: 400 });
+    }
+
+    // Verify ownership
+    const rel = await queryOne(
+      `SELECT id FROM member_relationships WHERE id = $1 AND member_id = $2 AND archived_at IS NULL`,
+      [id, session.memberId]
+    );
+    if (!rel) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    const row = await insertOne('relationship_entries', {
+      relationship_id: id,
+      member_id: session.memberId,
+      kind,
+      content: content.trim(),
+    });
+
+    // Update relationship's updated_at
+    await query(
+      `UPDATE member_relationships SET updated_at = NOW() WHERE id = $1`,
+      [id]
+    );
+
+    return NextResponse.json({
+      success: true,
+      entry: {
+        id: row.id,
+        kind: row.kind,
+        content: row.content,
+        createdAt: row.created_at,
+      },
+    });
+  } catch (error) {
+    console.error('[relationships/entries] POST error:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}

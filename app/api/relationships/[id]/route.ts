@@ -1,0 +1,177 @@
+/**
+ * Relationship Detail API — Get, Update, Archive
+ *
+ * GET    — Full detail with field state + recent entries
+ * PATCH  — Update name, bond type, note
+ * DELETE — Soft archive
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { query, queryOne } from '@/lib/db/postgres';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+
+export const dynamic = 'force-dynamic';
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(_request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const relationship = await queryOne(
+      `SELECT id, name, realm, bond_type, note, created_at, updated_at
+       FROM member_relationships
+       WHERE id = $1 AND member_id = $2 AND archived_at IS NULL`,
+      [id, session.memberId]
+    );
+
+    if (!relationship) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    // Field state may not exist yet — that's valid
+    const fieldState = await queryOne(
+      `SELECT field_tone, active_signals, dominant_pattern, developmental_theme,
+              elemental_dynamics, last_checkin_at, updated_at
+       FROM relationship_field_state
+       WHERE relationship_id = $1`,
+      [id]
+    );
+
+    // Recent entries
+    const entries = await query(
+      `SELECT id, kind, felt_signals, free_text, maia_reflection, pattern_hint,
+              field_tone_snapshot, suggested_movement, content, confidence, created_at
+       FROM relationship_entries
+       WHERE relationship_id = $1 AND member_id = $2
+       ORDER BY created_at DESC
+       LIMIT 20`,
+      [id, session.memberId]
+    );
+
+    return NextResponse.json({
+      success: true,
+      relationship: {
+        id: relationship.id,
+        name: relationship.name,
+        realm: relationship.realm,
+        bondType: relationship.bond_type,
+        note: relationship.note,
+        createdAt: relationship.created_at,
+        updatedAt: relationship.updated_at,
+      },
+      fieldState: fieldState ? {
+        fieldTone: fieldState.field_tone,
+        activeSignals: fieldState.active_signals,
+        dominantPattern: fieldState.dominant_pattern,
+        developmentalTheme: fieldState.developmental_theme,
+        elementalDynamics: fieldState.elemental_dynamics,
+        lastCheckinAt: fieldState.last_checkin_at,
+      } : null,
+      entries: entries.rows.map(e => ({
+        id: e.id,
+        kind: e.kind,
+        feltSignals: e.felt_signals,
+        freeText: e.free_text,
+        maiaReflection: e.maia_reflection,
+        patternHint: e.pattern_hint,
+        fieldToneSnapshot: e.field_tone_snapshot,
+        suggestedMovement: e.suggested_movement,
+        content: e.content,
+        confidence: e.confidence,
+        createdAt: e.created_at,
+      })),
+    });
+  } catch (error) {
+    console.error('[relationships/id] GET error:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+    const { name, bondType, note } = body;
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updates.push(`name = $${paramIndex++}`);
+      values.push(name.trim());
+    }
+    if (bondType !== undefined) {
+      updates.push(`bond_type = $${paramIndex++}`);
+      values.push(bondType || null);
+    }
+    if (note !== undefined) {
+      updates.push(`note = $${paramIndex++}`);
+      values.push(note || null);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ success: false, error: 'No fields to update' }, { status: 400 });
+    }
+
+    updates.push(`updated_at = NOW()`);
+
+    const result = await queryOne(
+      `UPDATE member_relationships
+       SET ${updates.join(', ')}
+       WHERE id = $${paramIndex++} AND member_id = $${paramIndex}
+       RETURNING id, name, realm, bond_type, note, updated_at`,
+      [...values, id, session.memberId]
+    );
+
+    if (!result) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, relationship: result });
+  } catch (error) {
+    console.error('[relationships/id] PATCH error:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const result = await queryOne(
+      `UPDATE member_relationships
+       SET archived_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND member_id = $2 AND archived_at IS NULL
+       RETURNING id`,
+      [id, session.memberId]
+    );
+
+    if (!result) {
+      return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[relationships/id] DELETE error:', error);
+    return NextResponse.json({ success: false, error: 'Database error' }, { status: 500 });
+  }
+}
