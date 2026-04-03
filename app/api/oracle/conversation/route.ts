@@ -62,6 +62,7 @@ import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
 import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
 import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
 import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
+import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 
 // Skip during static export (Capacitor builds)
 
@@ -1319,6 +1320,21 @@ export async function POST(request: NextRequest) {
         console.error('⚠️ [Consciousness Trace] Failed to persist (non-critical):', traceError);
       }
     })();
+
+    // 💡 IDEA FIELD: Heuristic detection of generative moments
+    // Detection weighted toward user message (sovereignty: MAIA suggests, user decides)
+    const ideaCandidate: IdeaCandidate | null = detectIdeaCandidate(
+      message,
+      maiaResponse.coreMessage
+    );
+    if (ideaCandidate) {
+      response.ideaCandidate = ideaCandidate;
+      console.info('[idea-field]', {
+        title: ideaCandidate.title,
+        confidence: ideaCandidate.confidence,
+        fingerprint: ideaCandidate.fingerprint,
+      });
+    }
 
     // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
     // TRUTHFUL: Include actual provider/model info so observability never lies

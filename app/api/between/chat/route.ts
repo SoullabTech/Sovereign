@@ -84,6 +84,7 @@ import {
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
+import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
 import { classifyAssistantTurn } from '@/lib/ai/quality/assistantTurnType';
@@ -2358,6 +2359,17 @@ This user is in guest mode (no authenticated identity).
       console.log('[Doorway] shown', { intent: intentResult.intent, confidence: intentResult.confidence });
     }
 
+    // 💡 IDEA FIELD: Heuristic detection of generative moments
+    // Detection weighted toward user message (sovereignty: MAIA suggests, user decides)
+    const ideaCandidate = !isSanctuary ? detectIdeaCandidate(message, cleanedText) : null;
+    if (ideaCandidate) {
+      console.info('[idea-field]', {
+        title: ideaCandidate.title,
+        confidence: ideaCandidate.confidence,
+        fingerprint: ideaCandidate.fingerprint,
+      });
+    }
+
     const response2 = NextResponse.json({
       message: cleanedText,
       consciousness: orchestratorResult.consciousness,
@@ -2405,6 +2417,8 @@ This user is in guest mode (no authenticated identity).
       fieldState: fieldWisdomAddendum ? {
         wisdomPresent: true,
       } : null,
+      // 💡 IDEA FIELD: Heuristic idea candidate for user confirmation
+      ideaCandidate: ideaCandidate ?? undefined,
       // 🚪 RELATIONAL ROUTING: intent-driven doorway for frontend rendering
       intent: doorwayAction ? intentResult.intent : undefined,
       uiAction: doorwayAction?.type !== 'none' ? doorwayAction : undefined,

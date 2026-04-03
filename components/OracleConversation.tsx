@@ -948,6 +948,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This takes precedence over all other voice commands and mode states
   const crisisStateRef = useRef<CrisisOverride | null>(null);
 
+  // 💡 IDEA FIELD: Track dismissed/saved idea fingerprints to avoid re-suggesting
+  const ideaDismissedRef = useRef<Set<string>>(new Set());
+  // 💡 IDEA FIELD: Rate limiter — max 1 toast per 30 seconds to avoid feeling extractive
+  const ideaLastShownRef = useRef<number>(0);
+
   // 📝 SCRIBE SESSION STATE: Track active scribe/witness sessions
   const [scribeSession, setScribeSession] = useState<ScribeSessionState>(DEFAULT_SCRIBE_SESSION);
 
@@ -5053,6 +5058,74 @@ I'm not sure what I'm feeling yet.`;
         lensSwitchOptions = responseData.lensSwitchOptions as ConversationMessage['lensSwitchOptions'];
         if (integrity?.decision === 'offer_switch') {
           console.log(`🌀 [INTEGRITY] Lens switch offered: ${JSON.stringify(lensSwitchOptions)}`);
+        }
+
+        // 💡 IDEA FIELD: Surface idea candidates as non-intrusive toasts
+        // Sovereignty: MAIA suggests, user decides. Only saved on explicit confirmation.
+        // Rate limit: max 1 toast per 30s to avoid feeling extractive
+        const ideaCooldownMs = 30_000;
+        const timeSinceLastIdea = Date.now() - ideaLastShownRef.current;
+        if (
+          responseData.ideaCandidate &&
+          !ideaDismissedRef.current.has(responseData.ideaCandidate.fingerprint) &&
+          timeSinceLastIdea >= ideaCooldownMs
+        ) {
+          const candidate = responseData.ideaCandidate;
+          ideaDismissedRef.current.add(candidate.fingerprint); // Prevent re-suggestion regardless
+          ideaLastShownRef.current = Date.now();
+
+          toast(
+            (t: { id: string }) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '260px' }}>
+                <div style={{ fontSize: '13px', color: '#fbbf24', fontWeight: 500 }}>
+                  {candidate.title}
+                </div>
+                <div style={{ fontSize: '11px', color: '#a8a29e', lineHeight: '1.4' }}>
+                  {candidate.summary.slice(0, 120)}{candidate.summary.length > 120 ? '...' : ''}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  <button
+                    onClick={() => {
+                      fetch('/api/ideas/capture', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          title: candidate.title,
+                          description: candidate.summary,
+                          sourceText: candidate.sourceText,
+                          confidence: candidate.confidence,
+                          conversationId: sessionId,
+                        }),
+                      }).catch(() => {});
+                      toast.dismiss(t.id);
+                      toast('Idea saved', { icon: '💡', duration: 2000, style: { background: '#1c1917', color: '#fbbf24', fontSize: '12px' } });
+                    }}
+                    style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '6px', padding: '4px 12px', fontSize: '11px', cursor: 'pointer' }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    style={{ background: 'transparent', color: '#78716c', border: '1px solid rgba(120, 113, 108, 0.3)', borderRadius: '6px', padding: '4px 12px', fontSize: '11px', cursor: 'pointer' }}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ),
+            {
+              duration: 10000,
+              icon: '💡',
+              style: {
+                background: '#1c1917',
+                border: '1px solid rgba(251, 191, 36, 0.2)',
+                borderRadius: '12px',
+                padding: '12px',
+              },
+            }
+          );
+
+          console.log(`💡 [idea-field] Candidate surfaced: "${candidate.title}" (${candidate.confidence})`);
         }
       }
 
