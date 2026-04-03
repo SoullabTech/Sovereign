@@ -1453,7 +1453,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         pwaVoice.micConfirmed();
       }
     } else {
-      // Mic stopped - ensure muted state is synced
+      // Mic stopped - sync isMuted so holoflower tap will START (not stop)
+      // Without this, isMuted stays false after a silence timeout, and the
+      // next holoflower tap calls stopListening instead of startListening.
+      setIsMuted(true);
       if (isPwaVoice) {
         pwaVoice.micStopped();
       }
