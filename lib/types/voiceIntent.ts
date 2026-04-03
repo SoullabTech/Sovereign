@@ -20,4 +20,20 @@ export interface VoiceIntent {
   // Member-adjustable synthesis preferences
   speed?: number;
   timbre?: 'soft' | 'neutral' | 'bright' | 'warm' | 'deep';
+
+  // Route scoring observability (populated when scoring passes threshold or disagrees with cell)
+  routeDebug?: {
+    scores: Record<Element, number>;
+    reasons: string[];
+    cellAgreement: boolean;
+  };
+}
+
+/** Weighted route scoring result — internal to conductor */
+export interface RouteScore {
+  element: Element;
+  archetype: VoiceArchetype;
+  confidence: number;
+  reasons: string[];
+  elementScores: Record<Element, number>;
 }
