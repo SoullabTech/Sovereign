@@ -28,9 +28,15 @@ export default function RelationshipDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
+  interface UnresolvedThread {
+    type: string;
+    description: string;
+  }
+
   const [relationship, setRelationship] = useState<RelationshipDetail | null>(null);
   const [fieldState, setFieldState] = useState<FieldState | null>(null);
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
+  const [unresolvedThreads, setUnresolvedThreads] = useState<UnresolvedThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCheckin, setShowCheckin] = useState(false);
@@ -50,6 +56,7 @@ export default function RelationshipDetailPage() {
       setRelationship(data.relationship);
       setFieldState(data.fieldState);
       setEntries(data.entries || []);
+      setUnresolvedThreads(data.unresolvedThreads || []);
     } catch {
       setError('Could not load relationship.');
     } finally {
@@ -195,6 +202,20 @@ export default function RelationshipDetailPage() {
             </div>
           )}
         </section>
+
+        {/* Unresolved threads — subtle, between field and timeline */}
+        {unresolvedThreads.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-xs text-jade-copper uppercase tracking-wider mb-3">Something remains open</h2>
+            <div className="space-y-2">
+              {unresolvedThreads.map((thread, i) => (
+                <div key={i} className="px-4 py-3 rounded-lg border border-jade-copper/20 bg-jade-forest/5">
+                  <p className="text-sm text-jade-mineral font-light">{thread.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Section 2: Timeline */}
         <section className="mb-10">
