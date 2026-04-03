@@ -2340,21 +2340,26 @@ export function AccountSettings() {
           </ul>
         </div>
 
-        {/* Upgrade CTA */}
-        <motion.button
-          onClick={() => window.location.href = '/patrons'}
-          className="w-full py-3 bg-gradient-to-r from-amber-500/20 to-purple-500/20 hover:from-amber-500/30 hover:to-purple-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors"
-          whileTap={{ scale: 0.98 }}
-        >
-          <Sparkles className="inline w-4 h-4 mr-2" />
-          Join Sustaining Circle
-        </motion.button>
+        {/* Contribution CTA */}
+        <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
+          <p className="text-sm text-stone-400">
+            MAIA is sustained by its members. No ads, no data harvesting — just people who believe this work matters.
+          </p>
+          <motion.button
+            onClick={() => window.location.href = '/patrons'}
+            className="w-full py-3 bg-gradient-to-r from-amber-500/20 to-purple-500/20 hover:from-amber-500/30 hover:to-purple-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors"
+            whileTap={{ scale: 0.98 }}
+          >
+            <Sparkles className="inline w-4 h-4 mr-2" />
+            Choose your monthly offering
+          </motion.button>
+        </div>
 
         {/* Stewardship Link */}
-        <div className="mt-4 text-center">
+        <div className="text-center">
           <Link
             href="/maia/stewardship"
-            className="text-sm text-stone-400 hover:text-stone-400 transition-colors"
+            className="text-sm text-stone-400 hover:text-stone-300 transition-colors"
           >
             Why support matters →
           </Link>

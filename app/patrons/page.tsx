@@ -10,28 +10,33 @@ import { useSearchParams } from 'next/navigation';
 // Benefit thresholds - what you get at each level
 const benefitTiers = [
   {
-    minAmount: 5,
+    minAmount: 19,
     name: "Supporter",
+    tagline: "Keeps the field alive",
     benefits: ["Monthly build letters", "Name (optional) on Supporter Wall"],
   },
   {
-    minAmount: 25,
+    minAmount: 33,
     name: "Seedkeeper",
+    tagline: "Helps MAIA take root",
     benefits: ["Monthly build letters", "Early access notes + previews", "Name (optional) on Supporter Wall"],
   },
   {
-    minAmount: 75,
+    minAmount: 55,
     name: "Story Weaver",
+    tagline: "Shapes how wisdom is preserved",
     benefits: ["All Seedkeeper benefits", "Patron Q&A and circle updates", "Priority feedback channel"],
   },
   {
-    minAmount: 250,
+    minAmount: 77,
     name: "Sanctuary Builder",
+    tagline: "Stabilizes the foundation",
     benefits: ["All Story Weaver benefits", "Quarterly behind-the-scenes brief", "Direct input on roadmap priorities"],
   },
   {
-    minAmount: 500,
+    minAmount: 99,
     name: "Founding Patron",
+    tagline: "Holds the long arc",
     benefits: ["All Sanctuary Builder benefits", "Named dedication (if desired)", "Direct founder channel", "Quarterly vision session"],
   },
 ];
@@ -89,7 +94,7 @@ function PatronsContent() {
   const [customAmount, setCustomAmount] = useState<string>('');
   const [email, setEmail] = useState('');
   const [emailStatus, setEmailStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [sliderAmount, setSliderAmount] = useState(25);
+  const [sliderAmount, setSliderAmount] = useState(20);
   const currentTier = getCurrentTier(sliderAmount);
 
   const handleJoin = async (tierId: string, amount: number, isAnnual: boolean = false) => {
@@ -307,7 +312,9 @@ function PatronsContent() {
               <p>
                 We're building MAIA because something precious is disappearing:
                 the stories, insights, teachings, and inner life of real people
-                — especially elders — are slipping away without a place to land.
+                — especially elders — are disappearing quietly, lost in private
+                notebooks, forgotten drives, or buried in platforms that extract
+                but don't preserve.
               </p>
               <p>
                 MAIA is AI as a <strong>sanctuary</strong>: a private,
@@ -400,7 +407,10 @@ function PatronsContent() {
         <div className="mt-10 max-w-xl mx-auto">
           <div className="rounded-3xl border border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 via-white to-stone-50 dark:from-amber-950/40 dark:via-stone-900 dark:to-stone-950 p-8 shadow-lg">
 
-            {/* Amount Display */}
+            {/* Anchor + Amount Display */}
+            <p className="text-center text-xs text-stone-500 dark:text-stone-400 mb-4">
+              Most stewards choose between $20–$33/month. Choose what reflects your level of participation.
+            </p>
             <div className="text-center mb-6">
               <p className="text-sm text-stone-500 dark:text-stone-400 mb-2">
                 Monthly contribution
@@ -419,9 +429,9 @@ function PatronsContent() {
             <div className="mb-8">
               <input
                 type="range"
-                min="5"
-                max="500"
-                step="5"
+                min="19"
+                max="99"
+                step="1"
                 value={sliderAmount}
                 onChange={(e) => setSliderAmount(parseInt(e.target.value))}
                 className="w-full h-2 rounded-full cursor-pointer accent-amber-500
@@ -435,14 +445,14 @@ function PatronsContent() {
                 style={{ WebkitAppearance: 'none', appearance: 'none', background: 'transparent' }}
               />
               <div className="flex justify-between text-xs text-stone-400 dark:text-stone-500 mt-2">
-                <span>$5</span>
-                <span>$500+</span>
+                <span>$19</span>
+                <span>$99</span>
               </div>
             </div>
 
             {/* Current Tier Display */}
             <div className="bg-white dark:bg-stone-800 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 mb-6">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-1">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
                   <span className="text-white text-sm">✦</span>
                 </div>
@@ -450,6 +460,9 @@ function PatronsContent() {
                   {currentTier.name}
                 </h3>
               </div>
+              <p className="text-sm text-amber-600 dark:text-amber-400 italic mb-3 ml-11">
+                {currentTier.tagline}
+              </p>
               <ul className="space-y-2">
                 {currentTier.benefits.map((benefit, idx) => (
                   <li key={idx} className="flex gap-2 text-sm text-stone-600 dark:text-stone-400">
@@ -463,7 +476,7 @@ function PatronsContent() {
             {/* Transparency - The Real Numbers */}
             <div className="bg-stone-100 dark:bg-stone-800/50 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 mb-6">
               <p className="text-xs font-medium text-stone-700 dark:text-stone-300 mb-3 uppercase tracking-wide">
-                The real numbers
+                What it actually takes to keep MAIA alive
               </p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-stone-600 dark:text-stone-400">
@@ -476,12 +489,14 @@ function PatronsContent() {
                 </div>
                 <div className="border-t border-stone-200 dark:border-stone-700 pt-2 mt-2">
                   <div className="flex justify-between text-stone-700 dark:text-stone-300 font-medium">
-                    <span>What keeps this running</span>
-                    <span className="font-mono">$3,500/mo</span>
+                    <span>Monthly cost</span>
+                    <span className="font-mono">$3,500</span>
                   </div>
                 </div>
               </div>
               <p className="mt-4 text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                Every steward reduces the fragility of this system.
+                <br />
                 No venture capital. No ads. No data harvesting. For us by us.
               </p>
             </div>
@@ -785,8 +800,8 @@ function PatronsContent() {
       <section className="mx-auto max-w-5xl px-6 pb-20">
         <div className="rounded-3xl border border-stone-200 dark:border-stone-800 bg-gradient-to-br from-stone-100 to-stone-50 dark:from-stone-900 dark:to-stone-950 p-10 text-center shadow-sm">
           <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
-            If you've ever wished for a place where the soul can speak without
-            being exploited —
+            If you've ever wanted a place where the soul can speak
+            without being used —
           </h2>
           <p className="mt-2 text-xl text-stone-700 dark:text-stone-300">
             this is that.
