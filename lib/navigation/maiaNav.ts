@@ -20,6 +20,7 @@ import {
   HelpCircle,
   Mic,
   MessageCircle,
+  FlaskConical,
 } from 'lucide-react';
 
 import type {
@@ -109,6 +110,16 @@ export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
   route: '/commons/circles',
   classification: 'studio',
   tooltip: 'Enter shared field',
+  isBoundaryTransition: true,
+};
+
+export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
+  id: 'labtools',
+  label: 'Lab Tools',
+  icon: FlaskConical,
+  route: '/labtools',
+  classification: 'studio',
+  tooltip: 'Consciousness tools & experiments',
   isBoundaryTransition: true,
 };
 

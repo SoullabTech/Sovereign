@@ -37,7 +37,7 @@ export type MaiaWorldId =
   | 'relationships'
   | 'wisdom';
 
-export type MaiaRailItemId = MaiaWorldId | 'studio' | 'circles';
+export type MaiaRailItemId = MaiaWorldId | 'studio' | 'circles' | 'labtools';
 
 export interface MaiaRailItem {
   id: MaiaRailItemId;
