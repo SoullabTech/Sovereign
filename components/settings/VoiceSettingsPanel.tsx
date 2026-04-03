@@ -101,8 +101,14 @@ export default function VoiceSettingsPanel() {
           // Migrate legacy voice IDs on load
           const rawVoiceId = data.member?.voiceIdOverride ?? data.system?.voiceId ?? 'maia_core';
           const LEGACY_MAP: Record<string, string> = {
+            // OpenAI voice names
             maia: 'maia_core', alloy: 'maia_core', shimmer: 'maia_warm',
             nova: 'maia_clear', echo: 'atlas', onyx: 'atlas_deep', fable: 'maia_clear',
+            // Kokoro raw voice names
+            af_kore: 'maia_core', af_sarah: 'maia_warm', af_bella: 'maia_clear',
+            am_adam: 'atlas', am_michael: 'atlas_deep',
+            // Mangled/legacy names
+            kore_bella: 'maia_core', bella: 'maia_clear',
           };
           const migratedVoice = LEGACY_MAP[rawVoiceId] ?? rawVoiceId;
 
