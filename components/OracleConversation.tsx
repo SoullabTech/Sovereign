@@ -169,6 +169,7 @@ import RelationalDoorway from '@/components/maia/RelationalDoorway';
 import WorldDoorway from '@/components/maia/WorldDoorway';
 import { useFeatureFlags } from '@/lib/utils/feature-flags';
 import type { MaiaUiAction } from '@/lib/types/ai';
+import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectCaptureTrigger } from '@/lib/capsules/types';
 import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
@@ -5166,8 +5167,24 @@ I'm not sure what I'm feeling yet.`;
         uiAction: responseData.uiAction || undefined,
       };
 
+      // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
+      if (!oracleMessage.uiAction || oracleMessage.uiAction.type === 'none') {
+        const lastUserMsg = messages[messages.length - 1];
+        const userText = lastUserMsg?.role === 'user' ? (lastUserMsg.content || '') : '';
+        const detection = detectIntent({ userInput: userText, maiaResponse: oracleMessage.content });
+        if (detection.intent !== 'unknown' && detection.confidence > 0) {
+          const route = getIntentRoute(detection.intent);
+          const action = buildUiAction(route, detection.confidence);
+          if (action.type !== 'none') {
+            oracleMessage.intent = detection.intent;
+            oracleMessage.uiAction = action;
+          }
+        }
+      }
+
       // 🚪 RELATIONAL ROUTING: Reset doorway dismissal for new turn
-      if (responseData.uiAction && responseData.uiAction.type !== 'none') {
+      const effectiveUiAction = oracleMessage.uiAction;
+      if (effectiveUiAction && effectiveUiAction.type !== 'none') {
         setDoorwayDismissedAt(null);
       }
 
