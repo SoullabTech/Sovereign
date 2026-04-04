@@ -9,9 +9,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, Orbit, ChevronDown } from 'lucide-react';
+import { Sun, Moon, Orbit, Calendar, ChevronDown } from 'lucide-react';
 
-export type ZodiacSystem = 'tropical' | 'sidereal' | 'chinese';
+export type ZodiacSystem = 'tropical' | 'sidereal' | 'chinese' | 'mayan';
 export type AyanamsaType = 'lahiri' | 'true_chitra' | 'krishnamurti';
 
 const AYANAMSA_OPTIONS: Array<{
@@ -115,6 +115,20 @@ export default function ZodiacToggle({
           <Orbit className="w-3.5 h-3.5" />
           {!compact && <span>Chinese</span>}
         </button>
+        <button
+          onClick={() => onChange('mayan')}
+          className={`
+            flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium
+            transition-all duration-200
+            ${value === 'mayan'
+              ? 'bg-teal-600/80 text-white shadow-lg shadow-teal-900/30'
+              : 'text-teal-400/60 hover:text-teal-400/80'
+            }
+          `}
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          {!compact && <span>Mayan</span>}
+        </button>
       </div>
 
       {/* Ayanamsa Selector (only visible when sidereal is selected) */}
@@ -194,7 +208,7 @@ export default function ZodiacToggle({
       {/* Label hint */}
       {!compact && (
         <span className="text-xs text-stone-500">
-          {value === 'tropical' ? 'Western' : value === 'sidereal' ? 'Vedic/Jyotish' : 'Chinese/BaZi'}
+          {value === 'tropical' ? 'Western' : value === 'sidereal' ? 'Vedic/Jyotish' : value === 'chinese' ? 'Chinese/BaZi' : 'Tzolk\'in/Mayan'}
         </span>
       )}
     </div>

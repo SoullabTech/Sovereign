@@ -274,6 +274,7 @@ export default function AstrologyPage() {
     // Each system has its own authentic page
     if (mode === 'chinese') { router.push('/astrology/chinese'); return; }
     if (mode === 'sidereal') { router.push('/astrology/vedic'); return; }
+    if (mode === 'mayan') { router.push('/astrology/mayan'); return; }
     // Tropical stays on this page
     setZodiacMode(mode);
     localStorage.setItem('astro_zodiac_mode', mode);

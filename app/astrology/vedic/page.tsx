@@ -43,6 +43,7 @@ export default function VedicAstrologyPage() {
   const handleSystemChange = useCallback((mode: ZodiacSystem) => {
     if (mode === 'tropical') { router.push('/astrology'); }
     if (mode === 'chinese') { router.push('/astrology/chinese'); }
+    if (mode === 'mayan') { router.push('/astrology/mayan'); }
   }, [router]);
 
   // State
