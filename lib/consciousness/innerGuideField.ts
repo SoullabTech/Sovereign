@@ -79,7 +79,7 @@ const ELEMENT_RULES: KeywordRule[] = [
   },
   {
     element: 'Earth',
-    words: ['plan', 'do', 'action', 'build', 'routine', 'organize', 'structure', 'system', 'practical', 'step', 'concrete', 'real', 'simplify', 'consistency', 'mastery'],
+    words: ['plan', 'do', 'action', 'build', 'routine', 'organize', 'structure', 'system', 'practical', 'step', 'concrete', 'real', 'simplify', 'consistency', 'mastery', 'integrity', 'sustain', 'refine', 'maintain'],
     reason: 'Concrete action and structure language suggests Earth.',
   },
   {
@@ -120,7 +120,7 @@ const PHASE_RULES: Record<ElementName, PhaseRule[]> = {
   Aether: [
     { facetId: 'aether_1', words: ['observe', 'witness', 'notice', 'aware'], reason: 'Meta-observation suggests Aether 1.' },
     { facetId: 'aether_2', words: ['guide', 'direction', 'aligned', 'right movement', 'authority'], reason: 'Inner authority suggests Aether 2.' },
-    { facetId: 'aether_3', words: ['coherence', 'whole', 'integration', 'everything working'], reason: 'Whole-system alignment suggests Aether 3.' },
+    { facetId: 'aether_3', words: ['coherence', 'whole', 'integrated', 'everything working', 'everything aligned', 'all together', 'unified', 'complete cycle'], reason: 'Whole-system alignment suggests Aether 3.' },
   ],
 };
 
@@ -241,6 +241,10 @@ export function detectFacet(
   const total = Object.values(elementScores).reduce((s, v) => s + v, 0);
 
   if (total === 0) return null; // No signal at all
+
+  // Minimum signal strength: need at least 2 keyword hits to trigger
+  // (prevents false positives on neutral text with incidental word matches)
+  if (topScore < 2 && !continuityElement) return null;
 
   // ─── Layer 4: Phase routing within winning element ───
   const phaseRules = PHASE_RULES[winningElement];
