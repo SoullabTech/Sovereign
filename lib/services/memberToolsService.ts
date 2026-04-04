@@ -74,6 +74,24 @@ export async function getMemberEnabledTools(
     return getMemberEnabledTools(memberId); // Recurse once
   }
 
+  // Backfill: if new defaultEnabled tools were added to the registry
+  // after this member was seeded, auto-enable them
+  const existingIds = new Set(result.rows.map((r: { tool_id: string }) => r.tool_id));
+  const defaults = getDefaultEnabledTools();
+  const missing = defaults.filter((t) => !existingIds.has(t.id));
+  if (missing.length > 0) {
+    for (const tool of missing) {
+      await query(
+        `INSERT INTO member_enabled_tools (member_id, tool_id, category, display_order, enabled)
+         VALUES ($1, $2, $3, 99, true)
+         ON CONFLICT (member_id, tool_id) DO NOTHING`,
+        [memberId, tool.id, tool.category]
+      );
+    }
+    // Re-query to include the newly added tools
+    return getMemberEnabledTools(memberId);
+  }
+
   return result.rows.map((row) => {
     // Resolve category from tool definition (source of truth),
     // falling back to stored value for unknown tools
