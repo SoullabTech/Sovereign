@@ -37,6 +37,7 @@ export interface AlienPattern {
   mode?: string;
   label: string;         // e.g. "Plutonian Power"
   description: string;   // What this force does through you
+  livePrompt?: string;   // Encounter prompt for this force
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -128,6 +129,51 @@ const ADEPT_MODE_DESCRIPTIONS: Record<string, string> = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════
+// LIVE PROMPTS — encounter questions per force
+// ═══════════════════════════════════════════════════════════════════════
+
+const POWER_PROMPTS: Record<OuterPlanet, string> = {
+  saturn: 'What structure are you holding that the world didn\'t ask for?',
+  uranus: 'What are you disrupting — and do you know you\'re doing it?',
+  neptune: 'What are you dissolving in others by your presence alone?',
+  pluto: 'What has already died that you haven\'t acknowledged?',
+};
+
+const VESSEL_PROMPTS: Record<OuterPlanet, string> = {
+  saturn: 'Who is projecting authority onto you right now?',
+  uranus: 'What are you feeling right now that may not be yours?',
+  neptune: 'What are you feeling right now that may not be yours?',
+  pluto: 'Whose shadow are you carrying that doesn\'t belong to you?',
+};
+
+const INSTRUMENT_PROMPTS: Record<OuterPlanet, string> = {
+  saturn: 'Where is your body holding a limit that isn\'t personal?',
+  uranus: 'What wants to shift that you\'re still holding in place?',
+  neptune: 'Where are your boundaries thinner than you realize?',
+  pluto: 'What feels true but hasn\'t been spoken?',
+};
+
+const MUTUAL_RECEPTION_PROMPTS: Record<OuterPlanet, string> = {
+  saturn: 'What discipline is calling you that you keep postponing?',
+  uranus: 'What insight keeps arriving that you haven\'t acted on?',
+  neptune: 'What imaginal presence is trying to reach you?',
+  pluto: 'What power exchange are you in that you haven\'t named?',
+};
+
+const ADEPT_ELEMENT_PROMPTS: Record<string, string> = {
+  fire: 'What initiative are you helping others take that you won\'t take yourself?',
+  water: 'What feeling are you holding at a distance?',
+  earth: 'What needs to be built that you keep deferring?',
+  air: 'What do you know that you can\'t yet say?',
+};
+
+const ADEPT_MODE_PROMPTS: Record<string, string> = {
+  cardinal: 'What beginning are you avoiding?',
+  fixed: 'What are you refusing to sustain?',
+  mutable: 'What change are you resisting?',
+};
+
+// ═══════════════════════════════════════════════════════════════════════
 // DETECTION
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -179,6 +225,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
         orb: Math.round(orb * 10) / 10,
         label: `${PLANET_NAMES[planet]} Power`,
         description: POWER_DESCRIPTIONS[planet],
+        livePrompt: POWER_PROMPTS[planet],
       });
     }
   }
@@ -194,6 +241,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
         orb: Math.round(orb * 10) / 10,
         label: `${PLANET_NAMES[planet]} Vessel`,
         description: VESSEL_DESCRIPTIONS[planet],
+        livePrompt: VESSEL_PROMPTS[planet],
       });
     }
   }
@@ -220,6 +268,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
         orb: Math.round(orb * 10) / 10,
         label: `${PLANET_NAMES[planet]} Instrument`,
         description: INSTRUMENT_DESCRIPTIONS[planet],
+        livePrompt: INSTRUMENT_PROMPTS[planet],
       });
     } else if (pos.house === 12) {
       // Check if conjunct ASC from 12th side (within 10°)
@@ -232,6 +281,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
           orb: Math.round(orb * 10) / 10,
           label: `${PLANET_NAMES[planet]} Instrument`,
           description: INSTRUMENT_DESCRIPTIONS[planet],
+          livePrompt: INSTRUMENT_PROMPTS[planet],
         });
       }
     }
@@ -270,6 +320,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
             point,
             label: `${PLANET_NAMES[planet]} Mutual Reception (${point})`,
             description: MUTUAL_RECEPTION_DESCRIPTIONS[planet],
+            livePrompt: MUTUAL_RECEPTION_PROMPTS[planet],
           });
         }
       }
@@ -302,6 +353,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
         element,
         label: `${element.charAt(0).toUpperCase() + element.slice(1)} Adept`,
         description: ADEPT_ELEMENT_DESCRIPTIONS[element],
+        livePrompt: ADEPT_ELEMENT_PROMPTS[element],
       });
     }
   }
@@ -314,6 +366,7 @@ export function detectAlienPatterns(chart: BirthChart): AlienPattern[] {
         mode,
         label: `${mode.charAt(0).toUpperCase() + mode.slice(1)} Adept`,
         description: ADEPT_MODE_DESCRIPTIONS[mode],
+        livePrompt: ADEPT_MODE_PROMPTS[mode],
       });
     }
   }

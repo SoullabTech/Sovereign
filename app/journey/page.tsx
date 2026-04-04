@@ -1797,14 +1797,11 @@ export default function AstrologyPage() {
           >
             <div className="text-center mb-6">
               <p className={`text-xs tracking-widest uppercase mb-2 ${isDayMode ? 'text-stone-500' : 'text-amber-500/60'}`}>
-                Transpersonal Forces Present
+                After Steinbrecher
               </p>
               <h2 className={`text-2xl font-serif ${isDayMode ? 'text-stone-800' : 'text-amber-100/90'}`}>
-                Alien Patterns
+                Forces Active in Your Field
               </h2>
-              <p className={`text-xs mt-2 ${isDayMode ? 'text-stone-500' : 'text-stone-500'} italic`}>
-                After Steinbrecher — forces fused with your personal points
-              </p>
             </div>
 
             <div className="space-y-4">
@@ -1834,6 +1831,15 @@ export default function AstrologyPage() {
                   <p className={`text-sm leading-relaxed ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
                     {pattern.description}
                   </p>
+                  {pattern.livePrompt && (
+                    <p className={`text-sm italic mt-3 pt-3 border-t ${
+                      isDayMode
+                        ? 'text-amber-700/70 border-stone-200/30'
+                        : 'text-amber-300/60 border-amber-800/10'
+                    }`}>
+                      {pattern.livePrompt}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
