@@ -745,7 +745,8 @@ export const TOOL_REGISTRY: LabTool[] = [
     minTier: 'personal',
     tags: ['dreams', 'symbols', 'sleep', 'unconscious'],
     defaultEnabled: false,
-    comingSoon: true,
+    comingSoon: false,
+    isNew: true,
     popularityRank: 3,
   },
   {
