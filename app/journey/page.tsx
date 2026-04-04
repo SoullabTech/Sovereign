@@ -166,6 +166,15 @@ export default function AstrologyPage() {
       const raw = sessionStorage.getItem('astrologyEntryContext');
       if (raw) setMaiaFieldContext(JSON.parse(raw) as FieldContext);
     } catch { /* non-fatal */ }
+    // Inner Guide context — present when arriving from meditation
+    try {
+      const raw = sessionStorage.getItem('innerGuideContext');
+      if (raw) {
+        const ctx = JSON.parse(raw);
+        setInnerGuideContext(ctx);
+        sessionStorage.removeItem('innerGuideContext'); // consume once
+      }
+    } catch { /* non-fatal */ }
   }, []);
 
   // Spiralogic report - AI-generated elemental narrative
@@ -187,6 +196,22 @@ export default function AstrologyPage() {
 
   // Welcome modal for first-time users
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  // Entry mode — ontological threshold gate
+  type EntryMode = 'threshold' | 'fire' | 'earth';
+  const [entryMode, setEntryMode] = useState<EntryMode>(() => {
+    if (typeof window !== 'undefined') {
+      const pref = localStorage.getItem('journey_entry_pref');
+      if (pref === 'fire' || pref === 'earth') return pref;
+    }
+    return 'threshold';
+  });
+  const [mapRevealed, setMapRevealed] = useState(false);
+  const [innerGuideContext, setInnerGuideContext] = useState<{
+    element?: string;
+    phase?: number;
+    source?: string;
+  } | null>(null);
 
   // Hook fallback: if the page's own loadBirthData didn't find data but the hook did,
   // trigger chart calculation so all members with server-saved birth data see their chart
@@ -682,6 +707,137 @@ export default function AstrologyPage() {
     return planetsInHouse;
   };
 
+  // Entry mode handlers
+  const handleEntryChoice = (mode: 'fire' | 'earth') => {
+    setEntryMode(mode);
+    localStorage.setItem('journey_entry_pref', mode);
+    if (mode === 'earth') setMapRevealed(true);
+  };
+
+  const handleChangeEntryMode = () => {
+    setEntryMode('threshold');
+    setMapRevealed(false);
+    localStorage.removeItem('journey_entry_pref');
+  };
+
+  // ═══ ONTOLOGICAL THRESHOLD GATE ═══
+  if (entryMode === 'threshold') {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center"
+        style={{
+          background: 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
+        }}>
+
+        {/* Subtle starfield */}
+        <div className="absolute inset-0">
+          {[...Array(80)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.1, 0.4, 0.1] }}
+              transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3 }}
+              className="absolute rounded-full"
+              style={{
+                backgroundColor: '#E7E2CF',
+                width: Math.random() > 0.7 ? '2px' : '1px',
+                height: Math.random() > 0.7 ? '2px' : '1px',
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Back to MAIA */}
+        <Link
+          href="/maia"
+          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 text-amber-200 hover:bg-white/20 transition-all duration-300 hover:scale-105"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          className="relative z-10 max-w-lg px-6 text-center space-y-10"
+        >
+          {/* Ontological frame */}
+          <div className="space-y-6">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 1 }}
+              className="text-stone-400 text-lg font-serif leading-relaxed"
+            >
+              This is not a tool for analyzing your life.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="text-stone-300 text-lg font-serif leading-relaxed"
+            >
+              You are not outside this system.
+              <br />
+              You are within it.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4, duration: 1 }}
+              className="text-amber-200/80 text-xl font-serif italic"
+            >
+              Begin with what is alive.
+            </motion.p>
+          </div>
+
+          {/* Context from meditation */}
+          {innerGuideContext && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.8, duration: 0.8 }}
+              className="text-amber-400/60 text-sm font-serif"
+            >
+              Continue with what you just encountered
+            </motion.p>
+          )}
+
+          {/* Entry actions */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2.0, duration: 0.8 }}
+            className="space-y-4"
+          >
+            <button
+              onClick={() => handleEntryChoice('fire')}
+              className="w-full px-8 py-4 rounded-xl text-amber-200 text-lg font-serif transition-all hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(251, 146, 60, 0.1) 100%)',
+                border: '1px solid rgba(251, 191, 36, 0.2)',
+                boxShadow: '0 4px 20px rgba(251, 191, 36, 0.1)',
+              }}
+            >
+              Begin with what is alive
+            </button>
+            <button
+              onClick={() => handleEntryChoice('earth')}
+              className="w-full px-8 py-3 rounded-xl text-stone-400 text-base font-serif transition-all hover:text-stone-300 hover:bg-white/5"
+              style={{
+                border: '1px solid rgba(120, 113, 108, 0.2)',
+              }}
+            >
+              Enter the map
+            </button>
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
   // The living map - main blueprint interface
   return (
     <div className="min-h-screen relative overflow-hidden transition-all duration-1000"
@@ -833,6 +989,54 @@ export default function AstrologyPage() {
       {/* Content */}
       <div className="relative z-10 w-full mx-auto px-0 sm:px-2 md:px-4 pt-1 md:pt-8 pb-32">
 
+        {/* Change entry mode — always available */}
+        <div className="text-center mb-2">
+          <button
+            onClick={handleChangeEntryMode}
+            className="text-stone-500 hover:text-stone-400 text-xs font-serif transition-colors"
+          >
+            Change entry mode
+          </button>
+        </div>
+
+        {/* ═══ FIRE-FIRST OPENING ═══ */}
+        {entryMode === 'fire' && !mapRevealed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12 px-4"
+          >
+            <div className="max-w-lg mx-auto space-y-8">
+              <p className="text-amber-200/60 text-sm tracking-widest uppercase font-serif">
+                The Field
+              </p>
+              <h2 className="text-2xl md:text-3xl font-serif text-amber-100/90 font-light">
+                What is alive in you right now?
+              </h2>
+
+              <div className="space-y-4 pt-4">
+                <Link
+                  href="/labtools/inner-guide-meditation"
+                  className="block w-full max-w-sm mx-auto px-6 py-4 rounded-xl text-amber-200 font-serif transition-all hover:scale-[1.02]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(217, 119, 6, 0.15) 0%, rgba(251, 146, 60, 0.1) 100%)',
+                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                  }}
+                >
+                  Enter Inner Guide Meditation
+                </Link>
+                <button
+                  onClick={() => setMapRevealed(true)}
+                  className="text-stone-500 hover:text-stone-400 text-sm font-serif transition-colors"
+                >
+                  See where this lives in your field
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header - Spiralogic Evolutionary Report - HIDE ON MOBILE */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -859,7 +1063,7 @@ export default function AstrologyPage() {
         {/* Sacred House Wheel - The mandala of becoming - HERO POSITION! */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: entryMode === 'fire' && !mapRevealed ? 0.85 : 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 1 }}
           className={`rounded-none md:rounded-2xl p-0 pb-0 sm:p-4 md:p-6 mb-2 sm:mb-4 backdrop-blur-md transition-all duration-500
             ${isDayMode
@@ -875,7 +1079,7 @@ export default function AstrologyPage() {
               Consciousness Field Map
             </h2>
             <p className={`text-[10px] sm:text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'} font-serif italic mb-1`}>
-              Soul-centric field instrument · Hover to reveal neural pathways and archetypal insights
+              Where your experience finds its place in the field
             </p>
 
             {/* Start Your Missions CTA + Transit Toggle */}
@@ -2256,61 +2460,7 @@ export default function AstrologyPage() {
         </motion.div>
       </div>
 
-      {/* Welcome Modal - First-time chart viewers */}
-      {showWelcomeModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(8px)',
-          }}
-          onClick={() => setShowWelcomeModal(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            className="max-w-lg w-full rounded-2xl border border-amber-500/30 p-8 text-center"
-            style={{
-              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(251, 191, 36, 0.15)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Holoflower icon */}
-            <div className="mb-6 flex justify-center">
-              <MiniHoloflower size={80} />
-            </div>
-
-            <h2 className="text-2xl font-serif mb-4 text-amber-300">
-              🎉 Your Consciousness Field Map is Ready!
-            </h2>
-
-            <p className="text-stone-300 mb-6 leading-relaxed">
-              This is your personal consciousness field - a living map of archetypal energies woven through your birth chart.
-            </p>
-
-            <p className="text-stone-400 text-sm mb-8 leading-relaxed">
-              Click on any planet to reveal its archetypal insights - your sign expression, house activation, and aspects with other planets.
-            </p>
-
-            <button
-              onClick={() => setShowWelcomeModal(false)}
-              className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
-              style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
-                color: '#FFF5E0',
-                fontWeight: 600,
-                boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
-              }}
-            >
-              Explore My Chart
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
+      {/* Welcome modal replaced by ontological threshold gate (entry control) */}
 
       {/* Mission Manager Modal */}
       <AnimatePresence>

@@ -336,6 +336,25 @@ export default function InnerGuideMeditationPage() {
                 >
                   Complete
                 </motion.button>
+                <motion.button
+                  onClick={() => {
+                    // Store encounter context for /journey handoff
+                    try {
+                      sessionStorage.setItem('innerGuideContext', JSON.stringify({
+                        element: 'fire',
+                        phase: 1,
+                        journalEntries: journalEntries.filter(e => e.trim()),
+                        source: 'meditation',
+                        timestamp: Date.now(),
+                      }));
+                    } catch { /* non-fatal */ }
+                    router.push('/journey');
+                  }}
+                  className="px-8 py-3 border border-white/10 rounded-xl text-white/50 hover:text-white/70 hover:border-white/20 transition-colors"
+                  whileTap={{ scale: 0.96 }}
+                >
+                  Continue to Journey
+                </motion.button>
                 <button
                   onClick={handleRestart}
                   className="flex items-center gap-2 text-white/30 hover:text-white/50 transition-colors text-sm"
