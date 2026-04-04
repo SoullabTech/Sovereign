@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MaiaSuggestedAction, SpiralogicCell } from '@/lib/consciousness/spiralogic-core';
 
 interface SpiralogicSuggestedActionsProps {
@@ -27,6 +28,7 @@ export const SpiralogicSuggestedActions: React.FC<SpiralogicSuggestedActionsProp
   onActionActivate,
   onInterventionTrigger
 }) => {
+  const router = useRouter();
   const [visibleActions, setVisibleActions] = useState<MaiaSuggestedAction[]>([]);
   const [elementalPulse, setElementalPulse] = useState<boolean>(false);
 
@@ -119,7 +121,12 @@ export const SpiralogicSuggestedActions: React.FC<SpiralogicSuggestedActionsProp
   const colors = getElementalColors(spiralogicCell.element);
 
   const handleActionClick = (action: MaiaSuggestedAction) => {
-    // Check if this is an intervention action
+    // Tool surfacing actions — navigate to the tool
+    if (action.kind === 'tool' && action.route) {
+      router.push(action.route);
+      return;
+    }
+    // Intervention actions
     if (action.id.startsWith('launch_')) {
       const flowId = action.id.replace('launch_', '');
       onInterventionTrigger(flowId);
@@ -195,11 +202,29 @@ export const SpiralogicSuggestedActions: React.FC<SpiralogicSuggestedActionsProp
         </div>
       ))}
 
+      {/* Tool surfacing doorways — faint, felt, non-imperative */}
+      {visibleActions
+        .filter(action => action.kind === 'tool' && action.feltLanguage)
+        .map((action, index) => (
+        <div
+          key={action.id}
+          className="fixed bottom-24 left-6 right-6 z-40 text-center animate-slideUp"
+          style={{ animationDelay: `${2000 + index * 500}ms` }}
+        >
+          <button
+            onClick={() => handleActionClick(action)}
+            className="text-[12px] text-white/20 hover:text-white/40 transition-colors duration-500 cursor-pointer"
+          >
+            {action.feltLanguage}
+          </button>
+        </div>
+      ))}
+
       {/* Standard suggested actions (bottom overlay) */}
       <div className="fixed bottom-6 left-6 right-6 z-40">
         <div className="flex flex-wrap gap-3 justify-center">
           {visibleActions
-            .filter(action => !action.id.startsWith('launch_'))
+            .filter(action => !action.id.startsWith('launch_') && action.kind !== 'tool')
             .map((action, index) => (
             <button
               key={action.id}

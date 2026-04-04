@@ -28,6 +28,7 @@ import {
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
+import { detectToolSuggestions, type ToolSuggestedAction } from '@/lib/consciousness/toolSurfacing';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -566,6 +567,16 @@ export async function POST(request: NextRequest) {
 
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
+
+    // TOOL SURFACING: Contextual tool perception (runs alongside interventions)
+    const toolSuggestions = detectToolSuggestions({
+      message,
+      spiralogicCell,
+      conversationDepth: conversationHistory.length,
+    });
+    if (toolSuggestions.length > 0) {
+      console.log(`[Oracle] tool-surfacing { tools: [${toolSuggestions.map(t => t.toolId).join(', ')}], feltLanguage: ${JSON.stringify(toolSuggestions[0]?.feltLanguage)} }`);
+    }
 
     // Generate disposable pixel configuration with spiralogic enhancements
     const disposablePixels = PanconsciousFieldService.generateDisposablePixels(
@@ -1194,13 +1205,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Merge tool suggestions into suggestedActions (tool surfacing layer)
+    const mergedSuggestedActions = [
+      ...maiaResponse.suggestedActions,
+      ...toolSuggestions,
+    ];
+
     const response = {
       success: true,
       response: maiaResponse.coreMessage,
       spiralogic: {
         cell: spiralogicCell,
         activeFrameworks: activeFrameworks,
-        suggestedActions: maiaResponse.suggestedActions,
+        suggestedActions: mergedSuggestedActions,
         elementalGuidance: maiaResponse.elementalGuidance,
         availableInterventions: suggestedInterventions
       },

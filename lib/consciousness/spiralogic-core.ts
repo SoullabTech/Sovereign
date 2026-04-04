@@ -130,6 +130,13 @@ export interface MaiaSuggestedAction {
   priority: number;           // for ordering
   elementalResonance: Element; // which element this action serves
   frameworkHint?: string;     // "IPP", "CBT", etc.
+
+  // Tool surfacing (optional — only present for tool-type actions)
+  kind?: 'tool' | 'reflection' | 'practice';
+  toolId?: string;            // matches toolRegistry.core.ts id
+  route?: string;             // "/labtools/belief-lens"
+  feltLanguage?: string;      // server-chosen doorway language
+  silent?: boolean;           // true = felt language only, no explicit link
 }
 
 export interface MaiaCoreResponse {
