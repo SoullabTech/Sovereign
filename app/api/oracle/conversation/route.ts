@@ -45,6 +45,9 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
+import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
+import { upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -536,6 +539,17 @@ export async function POST(request: NextRequest) {
     let spiralogicCell = await inferSpiralogicCell(message, userId);
     spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
+    // INNER GUIDE FIELD: Detect facet from message (additive — no change if none detected)
+    const facetSignal = detectFacet(message, spiralogicCell?.element);
+    const facetRuntime = facetSignal ? getFacet(facetSignal.facetId) : null;
+    if (facetSignal) {
+      console.log('[Oracle] inner-guide-field', {
+        facetId: facetSignal.facetId,
+        confidence: facetSignal.confidence,
+        movement: facetSignal.movement,
+      });
+    }
+
     // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
 
@@ -625,7 +639,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Format unified member web for prompt injection
-    const memberWebPrompt = memberLiveContext ? formatMemberWebForPrompt(memberLiveContext) : '';
+    const memberWebBase = memberLiveContext ? formatMemberWebForPrompt(memberLiveContext) : '';
+
+    // INNER GUIDE FIELD: Append facet prompt when detected (experience first, meaning later)
+    const facetPrompt = facetRuntime && facetSignal
+      ? buildInnerGuideFieldPrompt(facetRuntime, facetSignal)
+      : null;
+    const memberWebPrompt = [memberWebBase, facetPrompt].filter(Boolean).join('\n\n');
 
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
@@ -1123,6 +1143,14 @@ export async function POST(request: NextRequest) {
       motion: voiceHint.motion,
       intensity: voiceHint.intensity,
     });
+
+    // INNER GUIDE FIELD: Persist facet state (fire-and-forget)
+    if (facetSignal) {
+      upsertFacetState(userId, {
+        facet_id: facetSignal.facetId,
+        facet_movement: facetSignal.movement,
+      });
+    }
 
     // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
     const relationalHint: RelationalHint = decideRelationalHint({
