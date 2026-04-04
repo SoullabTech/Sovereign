@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Search, X, Sparkles, Check, Lightbulb } from 'lucide-react';
 import { useMemberTools } from '@/hooks/useMemberTools';
 import { DiscoverCard } from '@/components/labtools/DiscoverCard';
+import { useSession } from '@/lib/hooks/useSession';
 import { CategoryChips } from '@/components/labtools/CategoryChips';
 import { ModeChips, resolveModeFilter, type ModeFilterValue } from '@/components/labtools/ModeChips';
 import {
@@ -52,8 +53,13 @@ export default function DiscoverPage() {
   const [loadingToolId, setLoadingToolId] = useState<string | null>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
 
-  // TODO: Get actual member tier from auth context
-  const memberTier: Tier = 'personal';
+  // Get tier and roles from auth session
+  const { tier, roles } = useSession();
+  const memberTier: Tier = (tier as Tier) || 'free';
+  const memberRole = roles?.includes('admin') ? 'admin'
+    : roles?.includes('practitioner') ? 'practitioner'
+    : roles?.includes('curator') ? 'curator'
+    : undefined;
 
   // When a domain is selected, auto-activate its default mode
   const handleCategorySelect = useCallback((cat: ToolCategory | 'all') => {
@@ -332,6 +338,7 @@ export default function DiscoverPage() {
                                 tool={tool}
                                 isEnabled={isToolEnabled(tool.id)}
                                 memberTier={memberTier}
+                                memberRole={memberRole}
                                 onToggle={handleToggle}
                                 isLoading={loadingToolId === tool.id}
                               />
@@ -392,6 +399,7 @@ export default function DiscoverPage() {
                               tool={tool}
                               isEnabled={isToolEnabled(tool.id)}
                               memberTier={memberTier}
+                              memberRole={memberRole}
                               onToggle={handleToggle}
                               isLoading={loadingToolId === tool.id}
                             />
@@ -413,6 +421,7 @@ export default function DiscoverPage() {
                     tool={tool}
                     isEnabled={isToolEnabled(tool.id)}
                     memberTier={memberTier}
+                    memberRole={memberRole}
                     onToggle={handleToggle}
                     isLoading={loadingToolId === tool.id}
                   />
