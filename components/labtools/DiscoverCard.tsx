@@ -8,8 +8,9 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, Check, Lock } from 'lucide-react';
+import { Plus, Check, Lock, ChevronRight } from 'lucide-react';
 import { type LabTool, type Tier, CATEGORY_META, MODE_META } from '@/config/toolRegistry';
 
 interface DiscoverCardProps {
@@ -27,12 +28,21 @@ export function DiscoverCard({
   onToggle,
   isLoading = false,
 }: DiscoverCardProps) {
+  const router = useRouter();
+
   // Check if member has access
   const tierRank: Record<Tier, number> = { free: 0, personal: 1, pro: 2 };
   const hasAccess = tierRank[memberTier] >= tierRank[tool.minTier];
   const isLocked = !hasAccess;
+  const canNavigate = !isLocked && !tool.comingSoon && !!tool.path;
 
-  const handleToggle = () => {
+  const handleNavigate = () => {
+    if (!canNavigate) return;
+    router.push(tool.path);
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isLocked || isLoading || tool.comingSoon) return;
     onToggle(tool.id, !isEnabled);
   };
@@ -43,11 +53,13 @@ export function DiscoverCard({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
+      onClick={handleNavigate}
       className={`
         relative rounded-2xl overflow-hidden
         bg-white/[0.02] border border-white/[0.06]
         ${isLocked ? 'opacity-60' : ''}
         ${tool.comingSoon ? 'opacity-50' : ''}
+        ${canNavigate ? 'group cursor-pointer hover:border-[#D4B896]/30 hover:bg-white/[0.04] transition-all duration-200' : ''}
       `}
     >
       {/* Gradient background based on domain/category */}
@@ -157,6 +169,15 @@ export function DiscoverCard({
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Navigation arrow for accessible tools */}
+        {canNavigate && (
+          <div className="flex items-center justify-end mt-3">
+            <span className="text-xs text-[#D4B896]/40 group-hover:text-[#D4B896]/70 flex items-center gap-1 transition-colors">
+              Open <ChevronRight className="w-3 h-3" />
+            </span>
           </div>
         )}
       </div>
