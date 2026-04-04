@@ -694,8 +694,7 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     modes: ['reflect', 'interpret'],
     minTier: 'personal',
     tags: ['beliefs', 'assumptions', 'inquiry', 'perspective', 'cognitive'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 10,
   },
   {
@@ -983,8 +982,7 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     modes: ['reflect', 'connect'],
     minTier: 'personal',
     tags: ['parts-work', 'shadow', 'projection', 'ifs', 'inner-system', 'dialogue', 'psychological'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 2,
   },
   {
