@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateBirthChart, type BirthData } from '@/lib/astrology/ephemerisCalculator';
+import { detectAlienPatterns } from '@/lib/astrology/alienPatterns';
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,10 +64,14 @@ export async function POST(request: NextRequest) {
     // Calculate the birth chart
     const chart = await calculateBirthChart(birthData);
 
+    // Detect Steinbrecher alien patterns
+    const alienPatterns = detectAlienPatterns(chart);
+
     return NextResponse.json({
       success: true,
       data: chart,  // 'data' key for consistency with journey page expectations
       chart,        // Also include 'chart' for backward compatibility
+      alienPatterns,
       calculatedAt: new Date().toISOString(),
       input: {
         date: birthData.date,
