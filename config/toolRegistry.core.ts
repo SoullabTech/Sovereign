@@ -957,8 +957,7 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     modes: ['reflect', 'act'],
     minTier: 'personal',
     tags: ['values', 'ethics', 'dilemma', 'decision', 'integrity'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 1,
   },
 

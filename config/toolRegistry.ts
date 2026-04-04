@@ -1018,8 +1018,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     modes: ['reflect', 'act'],
     minTier: 'personal',
     tags: ['values', 'ethics', 'dilemma', 'decision', 'integrity'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 1,
   },
 
