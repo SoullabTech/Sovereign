@@ -35,6 +35,7 @@ import { mapAudienceMode } from '@/lib/content/audienceMode';
 import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
 import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
 import { BirthChartCalculator } from '@/components/astrology/BirthChartCalculator';
+import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -177,6 +178,9 @@ export default function AstrologyPage() {
     earth: 0.18,
     air: 0.16,
   });
+
+  // Alien patterns (Steinbrecher) — detected from chart
+  const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
 
   // Circadian rhythm - detect time of day for color transitions
   const [isDayMode, setIsDayMode] = useState(true);
@@ -381,7 +385,8 @@ export default function AstrologyPage() {
 
                 console.log('[Astrology] Chart API response status:', chartRes.status);
                 if (chartRes.ok) {
-                  const { data } = await chartRes.json();
+                  const chartJson = await chartRes.json();
+                  const data = chartJson.data;
                   const fullChart = {
                     ...data,
                     date: dateStr,
@@ -394,6 +399,7 @@ export default function AstrologyPage() {
                   localStorage.setItem('birthChartData', JSON.stringify(fullChart));
 
                   setChartData(fullChart);
+                  if (chartJson.alienPatterns) setAlienPatterns(chartJson.alienPatterns);
                   setHasBirthData(true);
                   calculateElementalBalance(fullChart);
                   setLoading(false);
@@ -429,10 +435,11 @@ export default function AstrologyPage() {
               });
 
               if (chartRes.ok) {
-                const { data } = await chartRes.json();
-                const fullChart = { ...data, date: dateStr, time: timeStr, location, houseSystem: 'porphyry' };
+                const chartJson2 = await chartRes.json();
+                const fullChart = { ...chartJson2.data, date: dateStr, time: timeStr, location, houseSystem: 'porphyry' };
                 localStorage.setItem('birthChartData', JSON.stringify(fullChart));
                 setChartData(fullChart);
+                if (chartJson2.alienPatterns) setAlienPatterns(chartJson2.alienPatterns);
                 setHasBirthData(true);
                 calculateElementalBalance(fullChart);
                 setLoading(false);
@@ -475,10 +482,11 @@ export default function AstrologyPage() {
             });
 
             if (res.ok) {
-              const { data } = await res.json();
-              const fullChart = { ...savedChart, ...data };
+              const resJson = await res.json();
+              const fullChart = { ...savedChart, ...resJson.data };
               localStorage.setItem('birthChartData', JSON.stringify(fullChart));
               setChartData(fullChart);
+              if (resJson.alienPatterns) setAlienPatterns(resJson.alienPatterns);
               setHasBirthData(true);
               setLoading(false);
               return;
@@ -556,10 +564,11 @@ export default function AstrologyPage() {
       });
 
       if (res.ok) {
-        const { data } = await res.json();
-        const fullChart = { ...savedChart, ...data, houseSystem: newSystem };
+        const resJson4 = await res.json();
+        const fullChart = { ...savedChart, ...resJson4.data, houseSystem: newSystem };
         localStorage.setItem('birthChartData', JSON.stringify(fullChart));
         setChartData(fullChart);
+        if (resJson4.alienPatterns) setAlienPatterns(resJson4.alienPatterns);
         setHouseSystem(newSystem);
       }
     } catch (error) {
@@ -1394,6 +1403,63 @@ export default function AstrologyPage() {
               </div>
             </div>
           </div>
+
+          {/* Alien Patterns — Steinbrecher transpersonal forces */}
+          {alienPatterns.length > 0 && (
+          <div className="bg-black/40 backdrop-blur-md border border-amber-800/30 rounded-lg p-6 mb-12 shadow-xl">
+            <div className="text-center mb-6">
+              <p className="text-xs tracking-widest uppercase mb-2 text-amber-500/60">
+                After Steinbrecher
+              </p>
+              <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-3">
+                Forces Active in Your Field
+              </h2>
+              <div className="max-w-2xl mx-auto text-sm text-amber-200/70 leading-relaxed space-y-2">
+                <p>
+                  In the Inner Guide Meditation tradition, certain natal configurations create what Edward Steinbrecher called &ldquo;alien patterns&rdquo; — places where transpersonal forces (Saturn, Uranus, Neptune, Pluto) fuse with personal points (Sun, Moon, Ascendant).
+                </p>
+                <p>
+                  These are not personality labels. They describe archetypal forces that operate through you — whether you intend them to or not. Brought to consciousness through the guide work, they become precision instruments. Left unconscious, they manifest as compulsive patterns and intense reactions from others.
+                </p>
+                <p className="text-amber-200/50 text-xs italic">
+                  Power = Sun fused with outer planet (you radiate it) · Vessel = Moon fused (you magnetize it in others) · Instrument = outer planet in 1st house (it operates through your body) · Adept = missing element or mode (you instinctively understand what you cannot easily access)
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {alienPatterns.map((pattern, i) => (
+                <div
+                  key={i}
+                  className="bg-black/30 border border-amber-800/20 rounded-lg p-5"
+                >
+                  <div className="flex items-baseline justify-between mb-2">
+                    <h3 className="font-serif text-lg text-dune-amber">
+                      {pattern.type === 'adept'
+                        ? pattern.label
+                        : `${pattern.planet ? pattern.planet.charAt(0).toUpperCase() + pattern.planet.slice(1) : ''} force present`
+                      }
+                    </h3>
+                    <span className="text-xs text-amber-200/50">
+                      {pattern.type === 'adept'
+                        ? pattern.type
+                        : `${pattern.label}${pattern.orb !== undefined ? ` · ${pattern.orb}°` : ''}`
+                      }
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-amber-200/80">
+                    {pattern.description}
+                  </p>
+                  {pattern.livePrompt && (
+                    <p className="text-sm italic mt-3 pt-3 border-t border-amber-800/10 text-amber-300/60">
+                      {pattern.livePrompt}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
 
           {/* Spiralogic Pathways */}
           <div className="bg-black/40 backdrop-blur-md border border-spice-orange/30 rounded-lg p-6 shadow-xl">
