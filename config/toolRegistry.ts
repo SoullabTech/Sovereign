@@ -935,6 +935,28 @@ export const TOOL_REGISTRY: LabTool[] = [
   },
 
   // ---------------------------------------------------------------------------
+  // SPIRITUAL — Inner Guide
+  // ---------------------------------------------------------------------------
+  {
+    id: 'inner-guide-meditation',
+    label: 'Inner Guide Meditation',
+    shortDescription: 'Guided encounter with the Elemental Alchemy field',
+    longDescription:
+      'A structured meditation journey through the Inner Guide Field. Created by Kelly Nezat in honor of Edward Steinbrecher. Enter, encounter, and integrate — following the Elemental Alchemy cycle. Fire first.',
+    emoji: '🔥',
+    icon: Flame,
+    path: '/labtools/inner-guide-meditation',
+    category: 'spiritual',
+    domain: 'spiritual',
+    modes: ['reflect'],
+    minTier: 'free',
+    tags: ['meditation', 'inner-guide', 'elemental-alchemy', 'fire', 'encounter', 'steinbrecher'],
+    defaultEnabled: true,
+    isNew: true,
+    popularityRank: 1,
+  },
+
+  // ---------------------------------------------------------------------------
   // PSYCHOLOGICAL — Self
   // ---------------------------------------------------------------------------
   {
