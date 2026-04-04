@@ -19,7 +19,8 @@ import {
   getElementHolisticProfile
 } from '@/lib/astrology/chineseAstrology';
 import DaYunTimeline from '@/components/astrology/DaYunTimeline';
-import type { Gender } from '@/lib/astrology/types/daYun';
+import ChineseAstrologyDiscussion from '@/components/astrology/ChineseAstrologyDiscussion';
+import type { DaYunProfile, Gender } from '@/lib/astrology/types/daYun';
 
 type ViewMode = 'profile' | 'da-yun';
 
@@ -63,6 +64,7 @@ export default function ChineseAstrologyPage() {
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [daYunProfile, setDaYunProfile] = useState<DaYunProfile | null>(null);
   const didAutoLoad = useRef(false);
 
   const toggleSection = (section: string) => {
@@ -451,12 +453,45 @@ export default function ChineseAstrologyPage() {
 
         {/* Da Yun Timeline View */}
         {viewMode === 'da-yun' && (
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto space-y-8">
             <DaYunTimeline
               birthDate={birthDate}
               birthTime={birthTime || undefined}
               gender={gender || undefined}
+              onProfileLoaded={setDaYunProfile}
             />
+            {daYunProfile?.currentPeriod && (
+              <ChineseAstrologyDiscussion
+                mode="da-yun"
+                daYunContext={{
+                  currentPeriod: {
+                    element: daYunProfile.currentPeriod.element,
+                    stem: daYunProfile.currentPeriod.heavenlyStem,
+                    branch: daYunProfile.currentPeriod.earthlyBranch,
+                    ageRange: `${daYunProfile.currentPeriod.ageRange.start}-${daYunProfile.currentPeriod.ageRange.end}`,
+                    lifeTheme: daYunProfile.currentPeriod.lifeTheme,
+                    description: daYunProfile.currentPeriod.description,
+                    opportunities: daYunProfile.currentPeriod.opportunities,
+                    challenges: daYunProfile.currentPeriod.challenges,
+                    healthGuidance: daYunProfile.currentPeriod.healthGuidance,
+                    natalHarmony: daYunProfile.currentPeriod.natalHarmony,
+                    spiritFocus: daYunProfile.currentPeriod.spiritFocus,
+                  },
+                  previousPeriod: daYunProfile.previousPeriod ? {
+                    element: daYunProfile.previousPeriod.element,
+                    lifeTheme: daYunProfile.previousPeriod.lifeTheme,
+                    ageRange: `${daYunProfile.previousPeriod.ageRange.start}-${daYunProfile.previousPeriod.ageRange.end}`,
+                  } : undefined,
+                  nextPeriod: daYunProfile.nextPeriod ? {
+                    element: daYunProfile.nextPeriod.element,
+                    lifeTheme: daYunProfile.nextPeriod.lifeTheme,
+                    ageRange: `${daYunProfile.nextPeriod.ageRange.start}-${daYunProfile.nextPeriod.ageRange.end}`,
+                  } : undefined,
+                  currentAge: daYunProfile.currentAge,
+                  periodProgress: daYunProfile.periodProgress,
+                }}
+              />
+            )}
           </div>
         )}
 
@@ -1186,6 +1221,22 @@ export default function ChineseAstrologyPage() {
                 This unique position in the cosmic wheel shapes your energetic signature and life path.
               </p>
             </div>
+
+            {/* MAIA Discussion — Profile */}
+            <ChineseAstrologyDiscussion
+              mode="profile"
+              profileContext={{
+                animal: reading.zodiacAnimal.name,
+                element: reading.element.name,
+                yinYang: reading.yinYang,
+                cyclePosition: reading.cycleYear,
+                archetype: reading.zodiacAnimal.archetype,
+                compatibility: reading.compatibility.mostCompatible,
+                holisticHighlights: reading.holisticProfile
+                  ? `Physical: ${reading.holisticProfile.physical.yinOrgan}/${reading.holisticProfile.physical.yangOrgan}. Emotional: ${reading.holisticProfile.emotional.primaryEmotion} (shadow: ${reading.holisticProfile.emotional.shadowEmotion}). Spiritual: ${reading.holisticProfile.spiritual.soulLesson}. Ancestral: ${reading.holisticProfile.ancestral.lineageTheme}.`
+                  : undefined,
+              }}
+            />
           </div>
         )}
       </div>

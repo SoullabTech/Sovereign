@@ -10,6 +10,7 @@ interface Props {
   birthTime?: string;
   gender?: Gender;
   compact?: boolean;
+  onProfileLoaded?: (profile: DaYunProfile) => void;
 }
 
 /** Element colors for timeline dots */
@@ -21,7 +22,7 @@ const ELEMENT_COLORS: Record<Element, string> = {
   Water: '#3b82f6',  // blue-500
 };
 
-export default function DaYunTimeline({ birthDate, birthTime, gender, compact = false }: Props) {
+export default function DaYunTimeline({ birthDate, birthTime, gender, compact = false, onProfileLoaded }: Props) {
   const [profile, setProfile] = useState<DaYunProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export default function DaYunTimeline({ birthDate, birthTime, gender, compact = 
 
         setProfile(data);
         setError(null);
+        onProfileLoaded?.(data);
 
         // Auto-expand current period
         if (currentIndex !== -1) {
