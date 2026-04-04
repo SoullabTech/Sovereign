@@ -17,6 +17,7 @@ interface DiscoverCardProps {
   tool: LabTool;
   isEnabled: boolean;
   memberTier: Tier;
+  memberRole?: 'admin' | 'practitioner' | 'curator';
   onToggle: (toolId: string, add: boolean) => void;
   isLoading?: boolean;
 }
@@ -25,14 +26,17 @@ export function DiscoverCard({
   tool,
   isEnabled,
   memberTier,
+  memberRole,
   onToggle,
   isLoading = false,
 }: DiscoverCardProps) {
   const router = useRouter();
 
-  // Check if member has access
+  // Check if member has access (tier + role)
   const tierRank: Record<Tier, number> = { free: 0, personal: 1, pro: 2 };
-  const hasAccess = tierRank[memberTier] >= tierRank[tool.minTier];
+  const hasTierAccess = tierRank[memberTier] >= tierRank[tool.minTier];
+  const hasRoleAccess = !tool.requiresRole || tool.requiresRole === memberRole;
+  const hasAccess = hasTierAccess && hasRoleAccess;
   const isLocked = !hasAccess;
   const canNavigate = !isLocked && !tool.comingSoon && !!tool.path;
 
