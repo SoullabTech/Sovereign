@@ -47,7 +47,7 @@ import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace'
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
 import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
-import { upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
+import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
 import type { RelationalHint } from '@/lib/types/relationalHint';
 import { decideRelationalHint } from '@/lib/relational/relationalStance';
@@ -540,7 +540,9 @@ export async function POST(request: NextRequest) {
     spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
     // INNER GUIDE FIELD: Detect facet from message (additive — no change if none detected)
-    const facetSignal = detectFacet(message, spiralogicCell?.element);
+    // Load prior facet state for continuity (graceful null on error)
+    const priorFacetState = await loadFacetState(userId);
+    const facetSignal = detectFacet(message, spiralogicCell?.element, priorFacetState?.facet_id);
     const facetRuntime = facetSignal ? getFacet(facetSignal.facetId) : null;
     if (facetSignal) {
       console.log('[Oracle] inner-guide-field', {

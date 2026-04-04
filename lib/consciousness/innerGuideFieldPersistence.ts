@@ -23,6 +23,8 @@ export interface FacetState {
 export interface FacetStateUpdate {
   facet_id: string;
   facet_movement?: string;
+  // Extended metadata (stored in facet_id format: element_phase)
+  // Element and phase are derivable from facet_id, so no new columns needed
 }
 
 // ---------------------------------------------------------------------------
