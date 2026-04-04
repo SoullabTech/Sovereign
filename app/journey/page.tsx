@@ -22,6 +22,7 @@ import { SpiralogicEvolutionaryReport } from '@/components/astrology/SpiralogicE
 import { FieldOrientationHeader } from '@/components/astrology/FieldOrientationHeader';
 import type { SpiralogicEvolutionaryReportData } from '@/lib/astrology/spiralogicReportTypes';
 import type { FieldContext } from '@/lib/astrology/astrologyHandoff';
+import type { AlienPattern } from '@/lib/astrology/alienPatterns';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
@@ -155,6 +156,9 @@ export default function AstrologyPage() {
     earth: 0.18,
     air: 0.16,
   });
+
+  // Alien patterns (Steinbrecher) — detected from chart
+  const [alienPatterns, setAlienPatterns] = useState<AlienPattern[]>([]);
 
   // Arrakis aesthetic - always desert night (the twin moons never set)
   const [isDayMode, setIsDayMode] = useState(false);
@@ -500,6 +504,11 @@ export default function AstrologyPage() {
           earth: 0.20,
           air: 0.25,
         });
+
+        // Capture alien patterns from API
+        if (result.alienPatterns) {
+          setAlienPatterns(result.alienPatterns);
+        }
 
         // Check if this is first time seeing their chart
         const hasSeenWelcome = localStorage.getItem('hasSeenChartWelcome');
@@ -1770,6 +1779,66 @@ export default function AstrologyPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Alien Patterns — Steinbrecher transpersonal forces */}
+        {alienPatterns.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className={`rounded-2xl p-8 mb-12 backdrop-blur-md transition-all duration-500
+              ${isDayMode
+                ? 'bg-white/40 border border-stone-200/40'
+                : 'bg-black/20 border border-amber-900/20'
+              }`}
+            style={{
+              boxShadow: `0 8px 32px ${isDayMode ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.3)'}`,
+            }}
+          >
+            <div className="text-center mb-6">
+              <p className={`text-xs tracking-widest uppercase mb-2 ${isDayMode ? 'text-stone-500' : 'text-amber-500/60'}`}>
+                Transpersonal Forces Present
+              </p>
+              <h2 className={`text-2xl font-serif ${isDayMode ? 'text-stone-800' : 'text-amber-100/90'}`}>
+                Alien Patterns
+              </h2>
+              <p className={`text-xs mt-2 ${isDayMode ? 'text-stone-500' : 'text-stone-500'} italic`}>
+                After Steinbrecher — forces fused with your personal points
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {alienPatterns.map((pattern, i) => (
+                <div
+                  key={i}
+                  className={`rounded-xl p-5 ${
+                    isDayMode
+                      ? 'bg-stone-50/50 border border-stone-200/30'
+                      : 'bg-stone-900/30 border border-amber-800/15'
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between mb-2">
+                    <h3 className={`font-serif text-lg ${isDayMode ? 'text-stone-800' : 'text-amber-200/90'}`}>
+                      {pattern.type === 'adept'
+                        ? `${pattern.label}`
+                        : `${pattern.planet ? pattern.planet.charAt(0).toUpperCase() + pattern.planet.slice(1) : ''} force present`
+                      }
+                    </h3>
+                    <span className={`text-xs ${isDayMode ? 'text-stone-400' : 'text-stone-500'}`}>
+                      {pattern.type === 'adept'
+                        ? pattern.type
+                        : `${pattern.label}${pattern.orb !== undefined ? ` · ${pattern.orb}°` : ''}`
+                      }
+                    </span>
+                  </div>
+                  <p className={`text-sm leading-relaxed ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                    {pattern.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Elemental Balance - The living signature */}
         <motion.div
