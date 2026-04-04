@@ -147,6 +147,7 @@ export default function ChineseAstrologyPage() {
   const handleSystemChange = useCallback((mode: ZodiacSystem) => {
     if (mode === 'tropical') { router.push('/astrology'); }
     if (mode === 'sidereal') { router.push('/astrology/vedic'); }
+    if (mode === 'mayan') { router.push('/astrology/mayan'); }
   }, [router]);
 
   const generateReading = async () => {

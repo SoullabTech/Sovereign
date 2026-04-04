@@ -10,9 +10,11 @@
  * Dune/Blade Runner aesthetic: Desert mysticism meets ancient future
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Sparkles, Sun as SunIcon, Moon as MoonIcon } from 'lucide-react';
+import ZodiacToggle, { type ZodiacSystem } from '@/components/astrology/ZodiacToggle';
 import { motion } from 'framer-motion';
 import {
   calculateMayanBirthSign,
@@ -24,6 +26,14 @@ import {
 } from '@/lib/astrology/mayanAstrology';
 
 export default function MayanAstrologyPage() {
+  const router = useRouter();
+
+  const handleSystemChange = useCallback((mode: ZodiacSystem) => {
+    if (mode === 'tropical') { router.push('/astrology'); }
+    if (mode === 'sidereal') { router.push('/astrology/vedic'); }
+    if (mode === 'chinese') { router.push('/astrology/chinese'); }
+  }, [router]);
+
   const [birthDate, setBirthDate] = useState('');
   const [birthSign, setBirthSign] = useState<MayanBirthSign | null>(null);
   const [todaySign, setTodaySign] = useState<MayanBirthSign | null>(null);
@@ -396,14 +406,17 @@ export default function MayanAstrologyPage() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Back button */}
-        <Link
-          href="/astrology"
-          className="inline-flex items-center gap-2 text-amber-500/60 hover:text-amber-400 transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Astrology
-        </Link>
+        {/* System selector */}
+        <div className="flex items-center gap-4 mb-8">
+          <Link
+            href="/astrology"
+            className="inline-flex items-center text-amber-500/40 hover:text-amber-400 transition-colors"
+            aria-label="Back to Astrology"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <ZodiacToggle value="mayan" onChange={handleSystemChange} compact />
+        </div>
 
         {/* Header */}
         <motion.div
