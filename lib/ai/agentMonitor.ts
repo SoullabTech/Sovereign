@@ -44,7 +44,7 @@ export async function logAgentRunStart(input: {
   maxAttempts?: number
 }): Promise<string> {
   const result = await query(
-    `INSERT INTO agent_runs (
+    `INSERT INTO bounded_agent_runs (
       agent_name, source_type, source_id, source_title,
       status, attempt_count, max_attempts,
       model_used, orchestration_mode
@@ -71,7 +71,7 @@ export async function logAgentRunEvent(input: {
   payload?: Record<string, unknown>
 }): Promise<void> {
   await query(
-    `INSERT INTO agent_run_events (agent_run_id, event_type, payload)
+    `INSERT INTO bounded_agent_run_events (agent_run_id, event_type, payload)
      VALUES ($1, $2, $3::jsonb)`,
     [
       input.agentRunId,
@@ -94,7 +94,7 @@ export async function logAgentRunComplete(input: {
   const isFlagged = (input.flags?.length ?? 0) > 0
 
   await query(
-    `UPDATE agent_runs
+    `UPDATE bounded_agent_runs
      SET
        status = $2,
        attempt_count = $3,
@@ -127,7 +127,7 @@ export async function updateAgentRunHumanReview(input: {
   humanReviewNotes?: string
 }): Promise<void> {
   await query(
-    `UPDATE agent_runs
+    `UPDATE bounded_agent_runs
      SET
        human_review_status = $2,
        human_review_notes = $3,

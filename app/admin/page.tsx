@@ -182,6 +182,8 @@ export default function AdminPage() {
                 { label: 'Command Center', href: '/labtools/admin/command-center' },
                 { label: 'Platform Overview', href: '/admin/platform-overview' },
                 { label: 'Security', href: '/admin/security' },
+                { label: 'Content Pipeline', href: '/admin/content-pipeline' },
+                { label: 'Agent Monitor', href: '/admin/agent-monitor' },
               ].map(({ label, href }) => (
                 <button
                   key={href}
