@@ -1352,6 +1352,31 @@ async function corePathResponse(
   if (elementalResult) {
     console.log(`🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant}`);
     (meta as any).elementalResult = elementalResult;
+
+    // I CHING SYMBOLIC GUIDANCE LAYER: Phase 1 — silent mapping only
+    // Maps ElementalOracle dominant element to hexagram profile for observation.
+    // Phase defaults to 1 (this route does not track Spiralogic phase).
+    // No user-facing output.
+    try {
+      const { buildReflectionFromConductor } = await import('@/lib/oracle/iching');
+      const element = String(elementalResult.dominant || '').toLowerCase();
+      if (['fire', 'water', 'earth', 'air', 'aether'].includes(element)) {
+        const ichingReflection = buildReflectionFromConductor(element as any, 1);
+        console.info('[I Ching] silent mapping', {
+          conductorElement: element,
+          conductorPhase: 1,
+          phaseSource: 'default (stream-conversation has no phase)',
+          facet: ichingReflection.facet,
+          primary: ichingReflection.primaryHexagram,
+          primaryName: ichingReflection.primaryName,
+          support: ichingReflection.supportHexagram,
+          supportName: ichingReflection.supportName,
+          route: 'maiaService/CORE',
+        });
+      }
+    } catch {
+      // Non-critical — never block conversation for symbolic mapping
+    }
   }
 
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
@@ -1811,6 +1836,28 @@ The current user has not provided their name. Address them as "friend" or "there
 
     // Store in meta for corpus callosum logging
     (meta as any).elementalResult = elementalResult;
+
+    // I CHING SYMBOLIC GUIDANCE LAYER: Phase 1 — silent mapping (DEEP path)
+    try {
+      const { buildReflectionFromConductor } = await import('@/lib/oracle/iching');
+      const element = String(elementalResult.dominant || '').toLowerCase();
+      if (['fire', 'water', 'earth', 'air', 'aether'].includes(element)) {
+        const ichingReflection = buildReflectionFromConductor(element as any, 1);
+        console.info('[I Ching] silent mapping', {
+          conductorElement: element,
+          conductorPhase: 1,
+          phaseSource: 'default (DEEP path has no phase)',
+          facet: ichingReflection.facet,
+          primary: ichingReflection.primaryHexagram,
+          primaryName: ichingReflection.primaryName,
+          support: ichingReflection.supportHexagram,
+          supportName: ichingReflection.supportName,
+          route: 'maiaService/DEEP',
+        });
+      }
+    } catch {
+      // Non-critical
+    }
   } catch (err) {
     console.warn('🌋 [ElementalOracle] Skipped (non-fatal):', err);
     // Continue without elemental - this is instrumentation, not a hard dependency
