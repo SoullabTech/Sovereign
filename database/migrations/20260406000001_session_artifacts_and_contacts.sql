@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS session_artifacts (
 
   -- Type (only parent_update for v1)
   artifact_type TEXT NOT NULL DEFAULT 'parent_update'
-    CHECK (artifact_type IN ('parent_update')),
+    CHECK (artifact_type IN ('parent_update', 'client_summary', 'integration_note')),
 
   -- Content lifecycle
   draft_content JSONB NOT NULL,       -- structured blocks from AI generation

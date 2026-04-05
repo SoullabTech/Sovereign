@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
     const { systemPrompt, userPrompt } = buildFollowupPrompt({
       sessionData,
       tone: input.tone,
+      artifactType: input.artifactType,
       clientName: input.clientName,
       practitionerName: input.practitionerName,
       goals: input.goals,
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
       const { systemPrompt: retrySystem, userPrompt: retryUser } = buildFollowupPrompt({
         sessionData,
         tone: input.tone,
+        artifactType: input.artifactType,
         clientName: input.clientName,
         practitionerName: input.practitionerName,
         goals: input.goals,
@@ -125,9 +127,9 @@ export async function POST(req: NextRequest) {
     const artifactResult = await query(
       `INSERT INTO session_artifacts (
         session_id, client_id, practitioner_id, artifact_type, draft_content, created_by
-      ) VALUES ($1, $2, $3, 'parent_update', $4, $5)
+      ) VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING id, created_at`,
-      [input.sessionId, input.clientId ?? null, memberId, JSON.stringify(draft), memberId],
+      [input.sessionId, input.clientId ?? null, memberId, input.artifactType, JSON.stringify(draft), memberId],
     );
 
     const artifact = artifactResult.rows[0];

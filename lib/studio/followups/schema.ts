@@ -44,11 +44,11 @@ export const FollowupToneSchema = z.enum(['brief', 'standard', 'detailed']);
 export type FollowupTone = z.infer<typeof FollowupToneSchema>;
 
 // ---------------------------------------------------------------------------
-// Audience
+// Artifact type — determines prompt framing, not structure
 // ---------------------------------------------------------------------------
 
-export const FollowupAudienceSchema = z.enum(['parent', 'caregiver']);
-export type FollowupAudience = z.infer<typeof FollowupAudienceSchema>;
+export const ArtifactTypeSchema = z.enum(['parent_update', 'client_summary', 'integration_note']);
+export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
 
 // ---------------------------------------------------------------------------
 // Generate request
@@ -58,8 +58,8 @@ export const GenerateFollowupRequestSchema = z.object({
   sessionId: z.string().uuid(),
   clientName: z.string().min(1),
   clientId: z.string().uuid().nullable().optional(),
+  artifactType: ArtifactTypeSchema.optional().default('parent_update'),
   tone: FollowupToneSchema.optional().default('brief'),
-  audience: FollowupAudienceSchema.optional().default('parent'),
   practitionerName: z.string().optional(),
   goals: z.string().optional(),
 });

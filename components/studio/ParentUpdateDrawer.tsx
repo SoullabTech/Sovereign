@@ -36,7 +36,14 @@ interface ParentUpdateBlocks {
 }
 
 type Tone = 'brief' | 'standard' | 'detailed';
+type ArtifactType = 'parent_update' | 'client_summary' | 'integration_note';
 type DrawerPhase = 'generating' | 'editing' | 'sending' | 'sent' | 'error';
+
+const ARTIFACT_LABELS: Record<ArtifactType, string> = {
+  parent_update: 'Parent Update',
+  client_summary: 'Client Summary',
+  integration_note: 'Integration Note',
+};
 
 interface ParentUpdateDrawerProps {
   sessionId: string;
@@ -60,6 +67,7 @@ export function ParentUpdateDrawer({
   const [phase, setPhase] = useState<DrawerPhase>('generating');
   const [blocks, setBlocks] = useState<ParentUpdateBlocks | null>(null);
   const [artifactId, setArtifactId] = useState<string | null>(null);
+  const [artifactType, setArtifactType] = useState<ArtifactType>('parent_update');
   const [tone, setTone] = useState<Tone>('brief');
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +98,7 @@ export function ParentUpdateDrawer({
     }
   }, [isOpen]);
 
-  const generateDraft = useCallback(async (selectedTone: Tone) => {
+  const generateDraft = useCallback(async (selectedTone: Tone, selectedType?: ArtifactType) => {
     setPhase('generating');
     setError(null);
 
@@ -102,6 +110,7 @@ export function ParentUpdateDrawer({
           sessionId,
           clientName: clientName || 'Client',
           clientId: clientId || null,
+          artifactType: selectedType || artifactType,
           tone: selectedTone,
         }),
       });
@@ -124,7 +133,7 @@ export function ParentUpdateDrawer({
       setError('Connection error. Please try again.');
       setPhase('error');
     }
-  }, [sessionId, clientName, clientId]);
+  }, [sessionId, clientName, clientId, artifactType]);
 
   const handleBlockChange = (key: keyof ParentUpdateBlocks, value: string) => {
     if (!blocks) return;
@@ -139,6 +148,15 @@ export function ParentUpdateDrawer({
     }
     setTone(newTone);
     generateDraft(newTone);
+  };
+
+  const handleTypeChange = (newType: ArtifactType) => {
+    if (newType === artifactType) return;
+    if (humanEdited && !window.confirm('Changing update type will regenerate the draft. Your edits will be lost. Continue?')) {
+      return;
+    }
+    setArtifactType(newType);
+    generateDraft(tone, newType);
   };
 
   const handleSend = async () => {
@@ -206,7 +224,7 @@ export function ParentUpdateDrawer({
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800/50 sticky top-0 bg-[#12122a] z-10">
             <div>
-              <h2 className="text-sm font-medium text-white">Send Parent Update</h2>
+              <h2 className="text-sm font-medium text-white">Send {ARTIFACT_LABELS[artifactType]}</h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 {clientName || 'Client'} {meta?.durationMinutes ? `· ${meta.durationMinutes}m session` : ''}
               </p>
@@ -217,6 +235,23 @@ export function ParentUpdateDrawer({
           </div>
 
           <div className="p-5 space-y-5">
+            {/* Update type selector */}
+            <div className="flex gap-2">
+              {(['parent_update', 'client_summary', 'integration_note'] as ArtifactType[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => handleTypeChange(t)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    artifactType === t
+                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
+                      : 'bg-slate-800/50 text-slate-500 border border-slate-700/30 hover:text-slate-300'
+                  }`}
+                >
+                  {ARTIFACT_LABELS[t]}
+                </button>
+              ))}
+            </div>
+
             {/* Tone selector */}
             <div className="flex gap-2">
               {(['brief', 'standard', 'detailed'] as Tone[]).map((t) => (
