@@ -56,6 +56,12 @@ export function getReviewEligibility(session: ReviewableSession | null | undefin
     };
   }
 
+  // Assembled turns are the strongest signal — if they exist, session is reviewable
+  // regardless of transcript_enabled or segment_count (assembled turns = processed content)
+  if (session.has_assembled && session.assembled_turns && session.assembled_turns > 0) {
+    return { allowed: true };
+  }
+
   // If transcript wasn't enabled AND no segments exist, there's nothing to review
   if (!session.transcript_enabled && (!session.segment_count || session.segment_count < 1)) {
     return {
@@ -65,12 +71,8 @@ export function getReviewEligibility(session: ReviewableSession | null | undefin
     };
   }
 
-  // No segments captured at all
+  // No segments captured at all (and no assembled turns — already checked above)
   if (!session.segment_count || session.segment_count < 1) {
-    // But if there are assembled turns (legacy path), allow it
-    if (session.has_assembled && session.assembled_turns && session.assembled_turns > 0) {
-      return { allowed: true };
-    }
     return {
       allowed: false,
       reason: 'no_segments',
