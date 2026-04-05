@@ -26,6 +26,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { ParentUpdateDrawer } from '@/components/studio/ParentUpdateDrawer';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -269,6 +270,9 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
 
   const currentPrompts = LENS_PROMPTS[activeLens];
 
+  // Parent update drawer
+  const [parentUpdateOpen, setParentUpdateOpen] = useState(false);
+
   return (
     <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: '680px' }}>
       {/* Header + Lens tabs */}
@@ -280,7 +284,7 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
             <span className="ml-auto text-xs text-slate-500">with {clientName}</span>
           )}
         </div>
-        <div className="flex gap-1">
+        <div className="flex items-center gap-1">
           {(['core', 'spiralogic', 'mentor'] as ReviewLens[]).map(lens => (
             <button
               key={lens}
@@ -294,6 +298,15 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
               {lens}
             </button>
           ))}
+          {namePhase === 'done' && hasContent && (
+            <button
+              onClick={() => setParentUpdateOpen(true)}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 hover:bg-emerald-500/25 transition-colors"
+            >
+              <Send className="w-3 h-3" />
+              Parent Update
+            </button>
+          )}
         </div>
       </div>
 
@@ -439,6 +452,14 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
           </div>
         )}
       </div>
+
+      {/* Parent Update Drawer */}
+      <ParentUpdateDrawer
+        sessionId={reviewedSessionId}
+        clientName={clientName}
+        isOpen={parentUpdateOpen}
+        onClose={() => setParentUpdateOpen(false)}
+      />
     </div>
   );
 }
