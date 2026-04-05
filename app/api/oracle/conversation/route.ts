@@ -67,6 +67,7 @@ import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '
 import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
 import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
+import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 
 // Skip during static export (Capacitor builds)
 
@@ -1163,6 +1164,29 @@ export async function POST(request: NextRequest) {
         facet_id: facetSignal.facetId,
         facet_movement: facetSignal.movement,
       });
+    }
+
+    // I CHING SYMBOLIC GUIDANCE LAYER: Phase 1 — silent mapping only
+    // Reads conductor state, maps to hexagram profile, logs for observation.
+    // No user-facing output. Flag: ichingPatternLayer (default OFF).
+    try {
+      const ichingReflection = buildReflectionFromConductor(
+        voiceHint.element as any,
+        voiceHint.phase,
+      );
+      console.info('[I Ching] silent mapping', {
+        conductorElement: voiceHint.element,
+        conductorPhase: voiceHint.phase,
+        facet: ichingReflection.facet,
+        primary: ichingReflection.primaryHexagram,
+        primaryName: ichingReflection.primaryName,
+        support: ichingReflection.supportHexagram,
+        supportName: ichingReflection.supportName,
+        route: 'oracle/conversation',
+        realtimeMode: realtimeMode || 'talk',
+      });
+    } catch {
+      // Non-critical — never block conversation for symbolic mapping
     }
 
     // RELATIONAL STANCE: The dance algorithm — how to hold space this turn
