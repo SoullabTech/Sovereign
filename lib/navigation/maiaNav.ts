@@ -29,6 +29,7 @@ import type {
   MaiaUtilityItem,
   MaiaContextualPanel,
   MaiaWorldId,
+  BoundaryId,
 } from './types';
 
 // --- Left Rail: Worlds ---
@@ -181,7 +182,29 @@ export const MAIA_CONTEXTUAL_PANELS: MaiaContextualPanel[] = [
   { id: 'wisdom-view', world: 'wisdom', label: 'Wisdom' },
 ];
 
+// --- Boundary items array (config-driven) ---
+
+export const MAIA_BOUNDARIES: MaiaRailItem[] = [
+  STUDIO_RAIL_ITEM,
+  CIRCLES_RAIL_ITEM,
+  ASTROLOGY_RAIL_ITEM,
+  LABTOOLS_RAIL_ITEM,
+];
+
+/** Left rail width in pixels — used for content padding in boundary layouts */
+export const RAIL_WIDTH_PX = 56; // w-14 = 3.5rem = 56px at 16px base
+
 // --- Helpers ---
+
+/** Derive boundary ID from a pathname, or null if not in a boundary */
+export function getBoundaryFromPathname(pathname: string): BoundaryId | null {
+  for (const b of MAIA_BOUNDARIES) {
+    if (pathname === b.route || pathname.startsWith(b.route + '/')) {
+      return b.id as BoundaryId;
+    }
+  }
+  return null;
+}
 
 /** Get a world config by ID */
 export function getWorld(id: MaiaWorldId): MaiaRailItem | undefined {

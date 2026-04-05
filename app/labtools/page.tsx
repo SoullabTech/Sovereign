@@ -48,16 +48,7 @@ export default function MyLabPage() {
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl
-                     bg-white/[0.03] border border-white/[0.06]
-                     text-white/70 hover:text-white hover:bg-white/[0.06]
-                     transition-all"
-          >
-            <ArrowLeft className="w-4 h-4 text-amber-400" />
-            <span className="text-sm text-white">MAIA</span>
-          </button>
+          <div /> {/* Spacer — back navigation handled by left rail */}
 
           {/* Discover button */}
           <motion.button

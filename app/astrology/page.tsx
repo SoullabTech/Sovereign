@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, Settings2, ChevronDown, ChevronUp, Info, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiUrl } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
@@ -630,15 +630,6 @@ export default function AstrologyPage() {
   if (!chartData || !hasBirthData) {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
-        {/* Back to MAIA */}
-        <Link
-          href="/maia"
-          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-black/40 hover:bg-black/60 text-amber-200 hover:text-dune-amber transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">MAIA</span>
-        </Link>
-
         {/* Starfield background */}
         <div className="absolute inset-0 opacity-30">
           {[...Array(100)].map((_, i) => (
@@ -676,16 +667,6 @@ export default function AstrologyPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#0d1b2e' }}>
-      {/* Fixed Navigation Header */}
-      <div className="fixed top-4 left-4 z-50">
-        <Link
-          href="/maia"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-black/40 hover:bg-black/60 text-amber-200 hover:text-dune-amber transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">MAIA</span>
-        </Link>
-      </div>
 
       {/* Birth Chart Calculator - Upper Right Corner */}
       <BirthChartCalculator isDayMode={isDayMode} />

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, Plus, KeyRound, LogIn, ArrowLeft } from 'lucide-react';
+import { Users, Plus, KeyRound, LogIn } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import type { FieldPhase } from '@/lib/circles/types';
 
@@ -83,13 +83,6 @@ export default function CirclesPage() {
         >
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/maia')}
-                className="flex items-center gap-2 rounded-xl border border-maia-navy-700 bg-white/[0.03] px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
-              >
-                <ArrowLeft className="h-4 w-4 text-amber-400" />
-                <span className="text-white">MAIA</span>
-              </button>
               <div>
                 <h1 className="text-2xl font-semibold text-maia-ink-100">My Circles</h1>
                 <p className="mt-1 text-sm text-maia-ink-60">Shared spaces, sovereign boundaries.</p>
