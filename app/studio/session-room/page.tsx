@@ -55,6 +55,7 @@ import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
+import { getReviewEligibility, getSessionStatusBadge } from '@/lib/studio/reviewEligibility';
 import {
   useRecordingContext,
   type SessionContainer,
@@ -179,7 +180,7 @@ const getInsightColor = (type: string) => {
 export default function SessionRoomPage() {
   // ── Query params (case context) ───────────────────────────────────────
   const searchParams = useSearchParams();
-  const caseId = searchParams.get('caseId');
+  const caseId = searchParams?.get('caseId') ?? null;
 
   // ── Context (global recording state) ──────────────────────────────────
   const ctx = useRecordingContext();
@@ -196,7 +197,7 @@ export default function SessionRoomPage() {
   const [pastSessionsLoading, setPastSessionsLoading] = useState(false);
   const [pastSessionsOpen, setPastSessionsOpen] = useState(false);
   const [historyReviewId, setHistoryReviewId] = useState<string | null>(null);
-  const [historyReviewMeta, setHistoryReviewMeta] = useState<{ segmentCount: number; duration: number }>({ segmentCount: 0, duration: 0 });
+  const [historyReviewMeta, setHistoryReviewMeta] = useState<{ segmentCount: number; duration: number; assembledTurns: number; hasAssembled: boolean }>({ segmentCount: 0, duration: 0, assembledTurns: 0, hasAssembled: false });
 
   // Booking picker (practitioner only)
   const [bookings, setBookings] = useState<BookingOption[]>([]);
@@ -409,7 +410,12 @@ export default function SessionRoomPage() {
 
   const openHistoryReview = useCallback((session: PastSession) => {
     setHistoryReviewId(session.id);
-    setHistoryReviewMeta({ segmentCount: session.segment_count, duration: session.duration_seconds });
+    setHistoryReviewMeta({
+      segmentCount: session.segment_count,
+      duration: session.duration_seconds,
+      assembledTurns: session.assembled_turns,
+      hasAssembled: session.has_assembled,
+    });
   }, []);
 
   // ── Export helpers ──────────────────────────────────────────────────
@@ -793,6 +799,8 @@ ${insightsSection}
                           const durMin = Math.floor(s.duration_seconds / 60);
                           const durSec = s.duration_seconds % 60;
                           const label = s.title || `${s.container.charAt(0).toUpperCase() + s.container.slice(1)} session`;
+                          const eligibility = getReviewEligibility(s);
+                          const statusBadge = getSessionStatusBadge(s);
                           return (
                             <div
                               key={s.id}
@@ -800,7 +808,7 @@ ${insightsSection}
                             >
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm text-white truncate">{label}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                   <span className="text-xs text-slate-500">
                                     {startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                   </span>
@@ -820,20 +828,35 @@ ${insightsSection}
                                       <span className="text-xs text-amber-600">{s.marker_count} markers</span>
                                     </>
                                   )}
-                                  {s.has_assembled && (
-                                    <span className="text-xs px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 ml-1">assembled</span>
+                                  {statusBadge && (
+                                    <span className={`text-xs px-1.5 py-0.5 rounded ml-1 ${statusBadge.color}`}>
+                                      {statusBadge.text}
+                                    </span>
                                   )}
                                   {!s.transcript_enabled && (
-                                    <AlertCircle className="w-3 h-3 text-orange-500/60 ml-auto flex-shrink-0" title="Transcript not enabled" />
+                                    <span title="Transcript not enabled"><AlertCircle className="w-3 h-3 text-orange-500/60 ml-auto flex-shrink-0" /></span>
                                   )}
                                 </div>
                               </div>
-                              <button
-                                onClick={() => openHistoryReview(s)}
-                                className="flex-shrink-0 px-3 py-1.5 bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs rounded-lg hover:bg-teal-500/25 transition-colors"
-                              >
-                                Review
-                              </button>
+                              {eligibility.allowed ? (
+                                <button
+                                  onClick={() => openHistoryReview(s)}
+                                  className="flex-shrink-0 px-3 py-1.5 bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs rounded-lg hover:bg-teal-500/25 transition-colors"
+                                >
+                                  Review
+                                </button>
+                              ) : (
+                                <span
+                                  className="flex-shrink-0 px-3 py-1.5 bg-slate-800/50 border border-slate-700/30 text-slate-600 text-xs rounded-lg cursor-not-allowed"
+                                  title={eligibility.message || 'Cannot review this session'}
+                                >
+                                  {eligibility.reason === 'no_segments' || eligibility.reason === 'no_transcript'
+                                    ? 'Empty'
+                                    : eligibility.reason === 'session_too_short'
+                                    ? 'Too short'
+                                    : 'N/A'}
+                                </span>
+                              )}
                             </div>
                           );
                         })}
@@ -861,11 +884,31 @@ ${insightsSection}
               Back to session setup
             </button>
 
-            <SessionReviewChat
-              reviewedSessionId={historyReviewId}
-              segmentCount={historyReviewMeta.segmentCount}
-              duration={historyReviewMeta.duration}
-            />
+            {/* Guard: only show review chat if session has reviewable content (segments or assembled turns) */}
+            {(historyReviewMeta.segmentCount > 0 || (historyReviewMeta.hasAssembled && historyReviewMeta.assembledTurns > 0)) ? (
+              <SessionReviewChat
+                reviewedSessionId={historyReviewId}
+                segmentCount={historyReviewMeta.segmentCount || historyReviewMeta.assembledTurns}
+                duration={historyReviewMeta.duration}
+              />
+            ) : (
+              <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6 text-center">
+                <AlertCircle className="w-8 h-8 text-amber-500/60 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-white mb-2">Session cannot be reviewed</h3>
+                <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">
+                  This session has no transcript segments. The recording may not have captured audio,
+                  or transcription may have failed.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => setHistoryReviewId(null)}
+                    className="px-4 py-2 bg-slate-800 text-slate-400 text-xs rounded-lg hover:text-white transition-colors"
+                  >
+                    Return to sessions
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -1401,13 +1444,24 @@ ${insightsSection}
               </AnimatePresence>
             </div>
 
-            {/* MAIA Review Chat */}
-            <SessionReviewChat
-              reviewedSessionId={ctx.scribeSessionId || ctx.sessionId}
-              segmentCount={ctx.segments.length}
-              duration={ctx.duration}
-              caseId={caseId}
-            />
+            {/* MAIA Review Chat — only if segments exist */}
+            {ctx.segments.length > 0 ? (
+              <SessionReviewChat
+                reviewedSessionId={ctx.scribeSessionId || ctx.sessionId}
+                segmentCount={ctx.segments.length}
+                duration={ctx.duration}
+                caseId={caseId}
+              />
+            ) : (
+              <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6 text-center">
+                <AlertCircle className="w-8 h-8 text-amber-500/60 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-white mb-2">No transcript captured</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  This session recorded for {formatDuration(ctx.duration)} but no transcript segments were captured.
+                  This may happen if microphone access was blocked or audio was too quiet.
+                </p>
+              </div>
+            )}
 
             {/* New session button */}
             <motion.div

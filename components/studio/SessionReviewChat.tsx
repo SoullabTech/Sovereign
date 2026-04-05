@@ -44,6 +44,7 @@ interface SessionReviewChatProps {
   reviewedSessionId: string;
   segmentCount: number;
   duration: number;
+  caseId?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -91,11 +92,14 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
   const [namePhase, setNamePhase] = useState<'asking' | 'done'>('asking');
 
   // Chat state
+  const hasContent = segmentCount > 0;
   const [messages, setMessages] = useState<ReviewMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: `Session captured — ${segmentCount} segments across ${durationMin}m ${durationSec}s.\n\nWho was this session with? Enter a name, or press Enter to skip.`,
+      content: hasContent
+        ? `Session captured — ${segmentCount} turns across ${durationMin}m ${durationSec}s.\n\nWho was this session with? Enter a name, or press Enter to skip.`
+        : `Session recorded (${durationMin}m ${durationSec}s) but no transcript was captured. Review is not available for this session.`,
       timestamp: new Date(),
     },
   ]);
@@ -382,9 +386,13 @@ export function SessionReviewChat({ reviewedSessionId, segmentCount, duration }:
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input — disabled when no transcript content */}
       <div className="px-4 py-3 border-t border-slate-800/50">
-        {namePhase === 'asking' ? (
+        {!hasContent ? (
+          <div className="text-center py-1">
+            <p className="text-xs text-slate-600">Review unavailable — no transcript content.</p>
+          </div>
+        ) : namePhase === 'asking' ? (
           <div className="flex items-center gap-2">
             <input
               ref={nameInputRef}
