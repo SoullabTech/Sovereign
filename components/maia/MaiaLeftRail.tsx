@@ -11,29 +11,41 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Bookmark } from 'lucide-react';
-import { MAIA_WORLDS, STUDIO_RAIL_ITEM, CIRCLES_RAIL_ITEM, ASTROLOGY_RAIL_ITEM, LABTOOLS_RAIL_ITEM, MAIA_UTILITIES } from '@/lib/navigation/maiaNav';
+import { usePathname } from 'next/navigation';
+import { MAIA_WORLDS, MAIA_BOUNDARIES, MAIA_UTILITIES, getBoundaryFromPathname } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
-import type { MaiaWorldId, MaiaRailItemId } from '@/lib/navigation/types';
+import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
 
 interface MaiaLeftRailProps {
-  activeWorld: MaiaWorldId;
+  activeWorld: MaiaWorldId | null;
   calmMode: boolean;
   calmCeiling: boolean;
   worldHints?: Partial<Record<MaiaWorldId, boolean>>;
+  /** Active boundary ID — falls back to pathname detection if omitted */
+  activeBoundary?: BoundaryId | null;
   onWorldChange: (world: MaiaWorldId) => void;
   onOpenAccount?: () => void;
   onCaptureSpirit?: () => void;
 }
 
-export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, onWorldChange, onOpenAccount, onCaptureSpirit }: MaiaLeftRailProps) {
+export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit }: MaiaLeftRailProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { presenceState, amplitude } = useVoiceState();
+
+  // Derive active boundary from pathname if not explicitly provided
+  const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
     if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools') {
       router.push(route);
     } else {
-      onWorldChange(id as MaiaWorldId);
+      // If we're in a boundary, world clicks need router navigation
+      if (resolvedBoundary) {
+        router.push(route);
+      } else {
+        onWorldChange(id as MaiaWorldId);
+      }
     }
   };
 
@@ -100,76 +112,52 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, o
           );
         })}
 
-        {/* Divider before Studio */}
+        {/* Divider before boundaries */}
         <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />
 
-        {/* Studio — boundary transition */}
-        {(() => {
-          const Icon = STUDIO_RAIL_ITEM.icon;
-          return (
-            <button
-              onClick={() => handleItemClick(STUDIO_RAIL_ITEM.id, STUDIO_RAIL_ITEM.route)}
-              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-blue-400/70 hover:bg-blue-400/5 transition-all duration-200"
-              title={STUDIO_RAIL_ITEM.tooltip || STUDIO_RAIL_ITEM.label}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-blue-300/90 bg-[#1a1510]/95 border border-blue-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {STUDIO_RAIL_ITEM.label}
-              </span>
-            </button>
-          );
-        })()}
+        {/* Boundary transitions — config-driven */}
+        {MAIA_BOUNDARIES.map((boundary) => {
+          const Icon = boundary.icon;
+          const isActive = resolvedBoundary === boundary.id;
+          // Per-boundary accent colors
+          const accent = {
+            studio:    { text: 'text-blue-400',    hover: 'hover:text-blue-400/70 hover:bg-blue-400/5',    tooltip: 'text-blue-300/90 border-blue-500/30',    activeBg: 'bg-blue-400/15' },
+            circles:   { text: 'text-amber-400',   hover: 'hover:text-amber-400/70 hover:bg-amber-400/5',  tooltip: 'text-amber-300/90 border-amber-500/30',  activeBg: 'bg-amber-400/15' },
+            astrology: { text: 'text-violet-400',  hover: 'hover:text-violet-400/70 hover:bg-violet-400/5', tooltip: 'text-violet-300/90 border-violet-500/30', activeBg: 'bg-violet-400/15' },
+            labtools:  { text: 'text-orange-300',  hover: 'hover:text-orange-300/70 hover:bg-orange-400/5', tooltip: 'text-orange-300/90 border-orange-500/30', activeBg: 'bg-orange-400/15' },
+          }[boundary.id as string] ?? { text: 'text-stone-400', hover: 'hover:text-stone-400/70 hover:bg-stone-400/5', tooltip: 'text-stone-300/90 border-stone-500/30', activeBg: 'bg-stone-400/15' };
 
-        {/* Circles — shared field transition */}
-        {(() => {
-          const Icon = CIRCLES_RAIL_ITEM.icon;
           return (
             <button
-              onClick={() => handleItemClick(CIRCLES_RAIL_ITEM.id, CIRCLES_RAIL_ITEM.route)}
-              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-amber-400/70 hover:bg-amber-400/5 transition-all duration-200"
-              title={CIRCLES_RAIL_ITEM.tooltip || CIRCLES_RAIL_ITEM.label}
+              key={boundary.id}
+              onClick={() => handleItemClick(boundary.id, boundary.route)}
+              className={`
+                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${isActive
+                  ? `${accent.activeBg} ${accent.text}`
+                  : `text-stone-500 ${accent.hover}`
+                }
+              `}
+              title={boundary.tooltip || boundary.label}
             >
               <Icon className="w-5 h-5" />
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-amber-300/90 bg-[#1a1510]/95 border border-amber-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {CIRCLES_RAIL_ITEM.label}
-              </span>
-            </button>
-          );
-        })()}
 
-        {/* Astrology — cosmic spiral */}
-        {(() => {
-          const Icon = ASTROLOGY_RAIL_ITEM.icon;
-          return (
-            <button
-              onClick={() => handleItemClick(ASTROLOGY_RAIL_ITEM.id, ASTROLOGY_RAIL_ITEM.route)}
-              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-violet-400/70 hover:bg-violet-400/5 transition-all duration-200"
-              title={ASTROLOGY_RAIL_ITEM.tooltip || ASTROLOGY_RAIL_ITEM.label}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-violet-300/90 bg-[#1a1510]/95 border border-violet-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {ASTROLOGY_RAIL_ITEM.label}
-              </span>
-            </button>
-          );
-        })()}
+              {/* Active indicator dot */}
+              {isActive && (
+                <motion.div
+                  layoutId="rail-boundary-active"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${accent.text.replace('text-', 'bg-')}`}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
 
-        {/* Lab Tools — practice & experimentation (copper/ember tone) */}
-        {(() => {
-          const Icon = LABTOOLS_RAIL_ITEM.icon;
-          return (
-            <button
-              onClick={() => handleItemClick(LABTOOLS_RAIL_ITEM.id, LABTOOLS_RAIL_ITEM.route)}
-              className="group relative w-10 h-10 flex items-center justify-center rounded-xl text-stone-500 hover:text-orange-300/70 hover:bg-orange-400/5 transition-all duration-200"
-              title={LABTOOLS_RAIL_ITEM.tooltip || LABTOOLS_RAIL_ITEM.label}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-orange-300/90 bg-[#1a1510]/95 border border-orange-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {LABTOOLS_RAIL_ITEM.label}
+              {/* Tooltip */}
+              <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${accent.tooltip}`}>
+                {boundary.label}
               </span>
             </button>
           );
-        })()}
+        })}
 
         {/* Divider before Capture */}
         <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />

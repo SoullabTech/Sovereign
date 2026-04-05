@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   ChevronLeft,
   Loader2,
   Menu,
@@ -21,6 +20,8 @@ import { TeamSwitcher } from '@/components/studio/TeamSwitcher';
 import { RecordingContextProvider } from '@/lib/studio/RecordingContext';
 import { RecordingBanner } from '@/components/studio/RecordingBanner';
 import { NavigationGuard } from '@/components/studio/NavigationGuard';
+import { MaiaBoundaryLayout } from '@/components/maia/MaiaBoundaryLayout';
+import { RAIL_WIDTH_PX } from '@/lib/navigation/maiaNav';
 import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -168,21 +169,25 @@ export default function StudioLayout({
   // Show loading while checking practitioner status
   if (checkingPractitioner && !isCreatePage) {
     return (
+      <MaiaBoundaryLayout boundary="studio">
       <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
           <p className="text-slate-400">Loading Studio...</p>
         </div>
       </div>
+      </MaiaBoundaryLayout>
     );
   }
 
   // Create page gets minimal layout (no sidebar)
   if (isCreatePage) {
     return (
+      <MaiaBoundaryLayout boundary="studio">
       <div className="min-h-screen bg-[#1a1a2e]">
         {children}
       </div>
+      </MaiaBoundaryLayout>
     );
   }
 
@@ -212,6 +217,7 @@ export default function StudioLayout({
   // ─── MOBILE LAYOUT ────────────────────────────────────────
   if (isMobile) {
     return (
+      <MaiaBoundaryLayout boundary="studio">
       <TeamContextProvider initialStudioMode={initialStudioMode}>
       <StudioModeWatcher onModeChange={handleModeChange} />
       <RecordingContextProvider>
@@ -300,17 +306,6 @@ export default function StudioLayout({
                   {visibleModules.map((mod) => renderNavLink(mod, () => setDrawerOpen(false)))}
                 </nav>
 
-                {/* Back to MAIA */}
-                <div className="px-2 py-2 border-t border-slate-800/50">
-                  <Link
-                    href="/maia"
-                    onClick={() => setDrawerOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
-                  >
-                    <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-                    <span>Back to MAIA</span>
-                  </Link>
-                </div>
               </motion.div>
             </div>
           )}
@@ -348,21 +343,24 @@ export default function StudioLayout({
       </div>
       </RecordingContextProvider>
       </TeamContextProvider>
+      </MaiaBoundaryLayout>
     );
   }
 
-  // ─── DESKTOP LAYOUT (unchanged) ───────────────────────────
+  // ─── DESKTOP LAYOUT ───────────────────────────────────────
   return (
+    <MaiaBoundaryLayout boundary="studio">
     <TeamContextProvider initialStudioMode={initialStudioMode}>
     <StudioModeWatcher onModeChange={handleModeChange} />
     <RecordingContextProvider>
     <NavigationGuard />
     <div className="min-h-screen bg-[#1a1a2e] flex">
-      {/* Sidebar */}
+      {/* Studio sidebar — offset by MAIA rail width */}
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 64 : 200 }}
-        className="fixed left-0 top-0 h-full bg-[#16162a] border-r border-slate-800/50 flex flex-col z-50"
+        className="fixed top-0 h-full bg-[#16162a] border-r border-slate-800/50 flex flex-col z-50"
+        style={{ left: RAIL_WIDTH_PX }}
       >
         {/* Header with Logo and Time */}
         <div className="p-4">
@@ -423,16 +421,6 @@ export default function StudioLayout({
           })}
         </nav>
 
-        {/* Back to MAIA */}
-        <div className="px-2 py-2 border-t border-slate-800/50">
-          <Link
-            href="/maia"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm text-slate-400 hover:bg-slate-800/50 hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Back to MAIA</span>}
-          </Link>
-        </div>
 
         {/* Expand button when collapsed */}
         {collapsed && (
@@ -447,7 +435,7 @@ export default function StudioLayout({
         )}
       </motion.aside>
 
-      {/* Main Content */}
+      {/* Main Content — offset by Studio sidebar width (MAIA rail offset handled by boundary layout) */}
       <main
         className="flex-1 font-sans transition-all duration-300"
         style={{ marginLeft: collapsed ? 64 : 200 }}
@@ -458,5 +446,6 @@ export default function StudioLayout({
     </div>
     </RecordingContextProvider>
     </TeamContextProvider>
+    </MaiaBoundaryLayout>
   );
 }
