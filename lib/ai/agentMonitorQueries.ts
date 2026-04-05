@@ -81,7 +81,7 @@ export async function getAgentRuns(filters?: {
   const limit = filters?.limit ?? 50
 
   const result = await query(
-    `SELECT * FROM agent_runs ${where} ORDER BY created_at DESC LIMIT ${limit}`,
+    `SELECT * FROM bounded_agent_runs ${where} ORDER BY created_at DESC LIMIT ${limit}`,
     params
   )
 
@@ -90,7 +90,7 @@ export async function getAgentRuns(filters?: {
 
 export async function getAgentRunById(id: string): Promise<AgentRunRow | null> {
   const result = await query(
-    `SELECT * FROM agent_runs WHERE id = $1`,
+    `SELECT * FROM bounded_agent_runs WHERE id = $1`,
     [id]
   )
 
@@ -99,7 +99,7 @@ export async function getAgentRunById(id: string): Promise<AgentRunRow | null> {
 
 export async function getAgentRunEvents(agentRunId: string): Promise<AgentRunEventRow[]> {
   const result = await query(
-    `SELECT * FROM agent_run_events WHERE agent_run_id = $1 ORDER BY created_at ASC`,
+    `SELECT * FROM bounded_agent_run_events WHERE agent_run_id = $1 ORDER BY created_at ASC`,
     [agentRunId]
   )
 
@@ -113,7 +113,7 @@ export async function getAgentRunSummaryCounts(): Promise<AgentRunSummaryCounts>
       COUNT(*) FILTER (WHERE is_flagged = true)::int AS flagged,
       COUNT(*) FILTER (WHERE status = 'failed')::int AS failed,
       COUNT(*) FILTER (WHERE human_review_status = 'pending')::int AS pending_review
-    FROM agent_runs
+    FROM bounded_agent_runs
   `)
 
   const row = result.rows[0] as AgentRunSummaryCounts | undefined
