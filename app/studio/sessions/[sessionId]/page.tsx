@@ -26,6 +26,8 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
 import { SessionBriefingCard } from '@/components/studio/SessionBriefingCard';
+import { TrustBadge } from '@/components/studio/TrustBadge';
+import { DISCLOSURE_LABELS, SESSION_SUPPORT_LABELS } from '@/lib/trust/labels';
 
 interface SessionDetail {
   id: string;
@@ -44,6 +46,7 @@ interface SessionDetail {
   service_name: string | null;
   google_event_id: string | null;
   calendar_sync_status: string | null;
+  calendar_disclosure: 'busy_only' | 'generic' | 'full' | null;
   scribe_session_id: string | null;
   created_at: string;
   updated_at: string;
@@ -283,6 +286,29 @@ export default function SessionDetailPage({ params }: { params: Promise<{ sessio
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Trust & Privacy */}
+          <div className="bg-[#1e1e38] border border-slate-800/50 rounded-xl p-6">
+            <h2 className="text-xs text-slate-500 uppercase tracking-wider mb-1">Trust & Privacy</h2>
+            <p className="text-[10px] text-slate-600 mb-3">These settings determine what is shared and how MAIA participates.</p>
+            <div className="flex flex-wrap gap-2 mb-2">
+              <TrustBadge
+                category="Calendar"
+                label={DISCLOSURE_LABELS[session.calendar_disclosure ?? 'generic']?.label ?? 'Generic'}
+                color={DISCLOSURE_LABELS[session.calendar_disclosure ?? 'generic']?.color ?? 'teal'}
+                description={DISCLOSURE_LABELS[session.calendar_disclosure ?? 'generic']?.shortDescription}
+              />
+              <TrustBadge
+                category="Support"
+                label={SESSION_SUPPORT_LABELS.disabled.label}
+                color={SESSION_SUPPORT_LABELS.disabled.color}
+                description={SESSION_SUPPORT_LABELS.disabled.shortDescription}
+              />
+            </div>
+            <p className="text-xs text-slate-600">
+              {DISCLOSURE_LABELS[session.calendar_disclosure ?? 'generic']?.shortDescription}
+            </p>
           </div>
 
           {/* Notes Section */}

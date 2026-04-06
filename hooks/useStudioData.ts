@@ -388,6 +388,7 @@ export interface Booking {
   googleEventId: string | null;
   calendarSyncStatus: 'pending' | 'synced' | 'failed' | 'not_connected' | null;
   calendarSyncError: string | null;
+  calendarDisclosure: 'busy_only' | 'generic' | 'full' | null;
   createdAt: string;
   updatedAt: string;
 }

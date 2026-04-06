@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
         s.google_event_id,
         s.calendar_sync_status,
         s.calendar_sync_error,
+        s.calendar_disclosure,
         s.created_at,
         s.updated_at,
         sv.name as service_name,
@@ -102,6 +103,7 @@ export async function GET(request: NextRequest) {
       googleEventId: row.google_event_id,
       calendarSyncStatus: row.calendar_sync_status,
       calendarSyncError: row.calendar_sync_error,
+      calendarDisclosure: row.calendar_disclosure ?? 'generic',
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }));

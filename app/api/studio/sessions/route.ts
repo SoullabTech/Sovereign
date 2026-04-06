@@ -127,6 +127,8 @@ export async function GET(request: NextRequest) {
       clientName: row.client_name,
       clientEmail: row.client_email,
       serviceName: row.service_name,
+      // Trust layer
+      calendarDisclosure: row.calendar_disclosure ?? 'generic',
     }));
 
     return NextResponse.json({ success: true, sessions });
