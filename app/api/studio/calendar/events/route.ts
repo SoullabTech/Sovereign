@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Support ?slug= param for multi-practitioner future; default to stellium
-    const practitionerSlug = searchParams.get('slug') || 'stellium';
+    const practitionerSlug = searchParams.get('slug') || 'kelly';
 
     // Fetch all three sources in parallel
     const bookingsPromise = fetchMAIABookings(practitionerSlug, fromDate, toDate);
