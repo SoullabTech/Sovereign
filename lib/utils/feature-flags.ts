@@ -3,6 +3,8 @@
  * Prevents server/client hydration mismatches
  */
 
+import { useEffect, useState } from 'react';
+
 export interface FeatureFlags {
   enhancedOracle: boolean;
   voiceIntegration: boolean;
@@ -109,8 +111,6 @@ export const isFeatureEnabled = (feature: keyof FeatureFlags): boolean => {
  * Hook for React components to use feature flags
  * Prevents hydration issues by using client-side only state
  */
-import { useEffect, useState } from 'react';
-
 export const useFeatureFlags = () => {
   const [flags, setFlags] = useState<FeatureFlags>(DEFAULT_FLAGS);
   const [isClient, setIsClient] = useState(false);
