@@ -323,6 +323,8 @@ export const ACCESS_RULES: AccessRule[] = [
   // -------------------------------------------------------------------------
 
   { prefix: '/admin', minTier: 'pro', rolesAnyOf: ['admin'], notes: 'Admin panel - admin only' },
+  { prefix: '/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops console - admin only' },
+  { prefix: '/api/founder', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Founder ops API - admin only' },
   { prefix: '/steward', minTier: 'pro', rolesAnyOf: ['steward', 'admin'], notes: 'Steward tools' },
 
   // -------------------------------------------------------------------------
