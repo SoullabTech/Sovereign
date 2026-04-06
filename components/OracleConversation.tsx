@@ -167,7 +167,7 @@ import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
 import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
 import RelationalDoorway from '@/components/maia/RelationalDoorway';
 import WorldDoorway from '@/components/maia/WorldDoorway';
-import { useFeatureFlags } from '@/lib/utils/feature-flags';
+import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import type { MaiaUiAction } from '@/lib/types/ai';
 import { detectIntent, getIntentRoute, buildUiAction } from '@/lib/consciousness/intentRouter';
 import { detectCaptureTrigger } from '@/lib/capsules/types';

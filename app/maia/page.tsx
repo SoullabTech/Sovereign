@@ -33,7 +33,7 @@ import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
-import { useFeatureFlags } from '@/lib/utils/feature-flags';
+import { useFeatureFlags } from '@/lib/utils/feature-flags-client';
 import { MaiaShell } from '@/components/maia/MaiaShell';
 import { MaiaModalManager } from '@/components/maia/MaiaModalManager';
 import { AccountDropdown } from '@/components/maia/AccountDropdown';

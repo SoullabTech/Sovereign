@@ -1,9 +1,10 @@
 /**
  * Feature Flags with SSR Safety
  * Prevents server/client hydration mismatches
+ *
+ * NOTE: This file is imported by server routes — no React hooks here.
+ * For the useFeatureFlags hook, import from './feature-flags-client'.
  */
-
-import { useEffect, useState } from 'react';
 
 export interface FeatureFlags {
   enhancedOracle: boolean;
@@ -108,33 +109,6 @@ export const isFeatureEnabled = (feature: keyof FeatureFlags): boolean => {
 };
 
 /**
- * Hook for React components to use feature flags
- * Prevents hydration issues by using client-side only state
- */
-export const useFeatureFlags = () => {
-  const [flags, setFlags] = useState<FeatureFlags>(DEFAULT_FLAGS);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    setFlags(getFeatureFlags());
-  }, []);
-
-  const updateFlags = (newFlags: Partial<FeatureFlags>) => {
-    if (isClient) {
-      setFeatureFlags(newFlags);
-      setFlags(prev => ({ ...prev, ...newFlags }));
-    }
-  };
-
-  return {
-    flags: isClient ? flags : DEFAULT_FLAGS,
-    updateFlags,
-    isClient,
-  };
-};
-
-/**
  * Development utilities
  */
 export const enableAllFeatures = (): void => {
@@ -142,7 +116,7 @@ export const enableAllFeatures = (): void => {
     acc[key as keyof FeatureFlags] = true;
     return acc;
   }, {} as FeatureFlags);
-  
+
   setFeatureFlags(allEnabled);
 };
 
