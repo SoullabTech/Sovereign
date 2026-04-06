@@ -1,6 +1,9 @@
 export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
+// Allow up to 500MB uploads (Next.js default is 10MB)
+export const maxDuration = 300; // 5 minutes for large uploads
+
 /**
  * MEDIA UPLOAD API — Single File Upload
  *
