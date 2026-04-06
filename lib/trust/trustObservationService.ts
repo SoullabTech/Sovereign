@@ -10,6 +10,11 @@
 
 import { query } from '@/lib/db/postgres';
 
+// ── Server-safe feature flag (no React imports) ─────────────────────
+
+export const TRUST_OBSERVATION_ENABLED =
+  process.env.TRUST_OBSERVATION === 'true';
+
 // ── Types ───────────────────────────────────────────────────────────
 
 export type ResponseType = 'evocative' | 'interpretive' | 'care' | 'direct';
