@@ -54,6 +54,17 @@ export async function GET(request: NextRequest, context: RouteContext) {
         scheduledEndAt: session.scheduled_end_at,
         status: session.status,
         location: session.location,
+        // Trust Layer: meeting provider
+        meetingProvider: session.meeting_provider,
+        meetingUrl: session.meeting_url,
+        meetingId: session.meeting_id,
+        meetingMeta: session.meeting_meta,
+        // Trust Layer: privacy envelope
+        privacyMode: session.privacy_mode,
+        consentLevel: session.consent_level,
+        visibilityScope: session.visibility_scope,
+        allowAiDistillation: session.allow_ai_distillation,
+        allowExport: session.allow_export,
         createdAt: session.created_at,
         updatedAt: session.updated_at
       },
@@ -107,6 +118,49 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (body.status !== undefined) {
       updates.push(`status = $${paramIndex++}::rl_session_status`);
       values.push(body.status);
+    }
+    // Trust Layer: meeting provider fields
+    if (body.meetingProvider !== undefined) {
+      updates.push(`meeting_provider = $${paramIndex++}::meeting_provider`);
+      values.push(body.meetingProvider);
+    }
+    if (body.meetingUrl !== undefined) {
+      updates.push(`meeting_url = $${paramIndex++}`);
+      values.push(body.meetingUrl);
+    }
+    if (body.meetingId !== undefined) {
+      updates.push(`meeting_id = $${paramIndex++}`);
+      values.push(body.meetingId);
+    }
+    if (body.meetingMeta !== undefined) {
+      updates.push(`meeting_meta = $${paramIndex++}`);
+      values.push(body.meetingMeta ? JSON.stringify(body.meetingMeta) : null);
+    }
+    // Trust Layer: privacy envelope fields
+    if (body.privacyMode !== undefined) {
+      updates.push(`privacy_mode = $${paramIndex++}::privacy_mode`);
+      values.push(body.privacyMode);
+      // App-layer invariant: confidential forces AI distillation off
+      if (body.privacyMode === 'confidential') {
+        updates.push(`allow_ai_distillation = $${paramIndex++}`);
+        values.push(false);
+      }
+    }
+    if (body.consentLevel !== undefined) {
+      updates.push(`consent_level = $${paramIndex++}::consent_level`);
+      values.push(body.consentLevel);
+    }
+    if (body.visibilityScope !== undefined) {
+      updates.push(`visibility_scope = $${paramIndex++}::visibility_scope`);
+      values.push(body.visibilityScope);
+    }
+    if (body.allowAiDistillation !== undefined) {
+      updates.push(`allow_ai_distillation = $${paramIndex++}`);
+      values.push(body.allowAiDistillation);
+    }
+    if (body.allowExport !== undefined) {
+      updates.push(`allow_export = $${paramIndex++}`);
+      values.push(body.allowExport);
     }
 
     if (updates.length === 0) {

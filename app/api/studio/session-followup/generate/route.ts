@@ -20,6 +20,7 @@ import { buildFollowupPrompt, buildRepairPrompt } from '@/lib/studio/followups/p
 import { validateFollowupContent, hasMinimumFollowupContent } from '@/lib/studio/followups/contentGuards';
 import { parseDraftJsonWithRepair } from '@/lib/studio/followups/parseDraftJsonWithRepair';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { isAiPermitted } from '@/lib/trust/service';
 
 export const runtime = 'nodejs';
 
@@ -49,6 +50,12 @@ export async function POST(req: NextRequest) {
 
     if (!sessionData.reviewableContentExists) {
       return json(400, { error: 'No reviewable content available for follow-up generation' });
+    }
+
+    // Trust Layer: privacy gate — check session and memory contract permissions
+    const aiCheck = await isAiPermitted(input.sessionId);
+    if (!aiCheck.permitted) {
+      return json(403, { error: `AI generation blocked: ${aiCheck.reason}` });
     }
 
     // Build prompt
