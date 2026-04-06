@@ -84,6 +84,7 @@ import {
 } from '@/lib/consciousness/bridgedSnapshot';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectThemes, storeThemeSignal } from '@/lib/consciousness/participatoryRealityHelper';
+import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { logAINShapeTelemetry } from '@/lib/db/ainShapeTelemetry';
 import { assessAINResponseShape } from '@/lib/ai/quality/ainResponseShape';
@@ -1884,6 +1885,28 @@ This user is in guest mode (no authenticated identity).
       }
     } else {
       console.info('[participatory] skipped — anon=%s sanctuary=%s', !isRecognisedMember, isSanctuary);
+    }
+
+    // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
+    if (isTrustObservationEnabled() && isRecognisedMember && effectiveUserId) {
+      const responseType = classifyResponseType({
+        activeFrameworks: orchestratorResult.metadata?.frameworks as string[] | undefined,
+        careLensActive: mode === 'counsel',
+      });
+      storeTrustObservation({
+        memberId: effectiveUserId,
+        sessionId: safeSessionId,
+        responseType,
+        engagementProxy: inferEngagementProxy({
+          replyLength: message.length,
+          conversationDepth: conversationHistory?.length ?? 0,
+        }),
+        context: {
+          element: orchestratorResult.metadata?.stateVector?.primary?.element,
+          mode,
+          route: 'between/chat',
+        },
+      });
     }
 
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
