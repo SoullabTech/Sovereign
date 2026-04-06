@@ -1,210 +1,172 @@
 'use client';
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Video,
-  Upload,
-  Clock,
-  ExternalLink,
-  RefreshCw,
-  Pencil,
-  FileText,
-  Circle,
-} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Video, Upload, RefreshCw } from 'lucide-react';
+import { MediaProjectCard } from '@/components/media/MediaProjectCard';
+import { MediaFilters } from '@/components/media/MediaFilters';
+import { MediaUploadFlow } from '@/components/media/MediaUploadFlow';
+import type { MediaProjectRow, MediaType, ProjectStatus } from '@/lib/media/types';
 
-type FilterType = 'all' | 'descript' | 'local';
+export default function MediaStudioPage() {
+  const [projects, setProjects] = useState<MediaProjectRow[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [showUpload, setShowUpload] = useState(false);
 
-interface Project {
-  id: string;
-  name: string;
-  source: 'descript' | 'local';
-  status: 'editing' | 'draft' | 'recording' | 'complete';
-  duration?: string;
-  createdAt: string;
-}
+  // Filters
+  const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<MediaType | ''>('');
+  const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
 
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    name: 'MAIA Feature Demo',
-    source: 'descript',
-    status: 'editing',
-    duration: '12:34',
-    createdAt: '2 hours ago',
-  },
-  {
-    id: '2',
-    name: 'Client Testimonial - Jane',
-    source: 'descript',
-    status: 'draft',
-    duration: '3:45',
-    createdAt: 'Yesterday',
-  },
-  {
-    id: '3',
-    name: 'Session Recording 2026-02-02',
-    source: 'local',
-    status: 'recording',
-    createdAt: 'Today',
-  },
-];
+  const fetchProjects = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (query) params.set('q', query);
+      if (typeFilter) params.set('type', typeFilter);
+      if (statusFilter) params.set('status', statusFilter);
+      params.set('page', String(page));
+      params.set('limit', '20');
 
-const statusConfig = {
-  editing: { label: 'editing', color: 'amber', icon: Pencil },
-  draft: { label: 'draft', color: 'slate', icon: FileText },
-  recording: { label: 'recording', color: 'red', icon: Circle },
-  complete: { label: 'complete', color: 'emerald', icon: null },
-};
+      const res = await fetch(`/api/media/projects?${params}`);
+      if (!res.ok) throw new Error('Failed to fetch');
 
-export default function MediaPage() {
-  const [projects] = useState(mockProjects);
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [syncing, setSyncing] = useState(false);
+      const { data } = await res.json();
+      setProjects(data.projects);
+      setTotal(data.total);
+    } catch (err) {
+      console.error('[MediaStudio] Fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [query, typeFilter, statusFilter, page]);
 
-  const filteredProjects = projects.filter(project => {
-    if (filter === 'all') return true;
-    return project.source === filter;
-  });
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
-  const syncDescript = async () => {
-    setSyncing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setSyncing(false);
-  };
+  // Auto-poll if any project is processing
+  useEffect(() => {
+    const hasProcessing = projects.some(p => p.status === 'processing' || p.status === 'uploading');
+    if (!hasProcessing) return;
 
-  const openDescript = () => {
-    window.open('descript://', '_blank');
-    setTimeout(() => {
-      window.open('https://web.descript.com', '_blank');
-    }, 500);
-  };
+    const interval = setInterval(fetchProjects, 5000);
+    return () => clearInterval(interval);
+  }, [projects, fetchProjects]);
+
+  // Debounce search
+  const [searchDebounce, setSearchDebounce] = useState('');
+  useEffect(() => {
+    const timeout = setTimeout(() => setQuery(searchDebounce), 300);
+    return () => clearTimeout(timeout);
+  }, [searchDebounce]);
+
+  const totalPages = Math.ceil(total / 20);
 
   return (
-    <div className="min-h-screen bg-[#1a1a2e] p-6">
+    <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-            <Video className="w-5 h-5 text-slate-400" />
+            <Video className="w-5 h-5 text-amber-400/60" />
             Media Studio
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {projects.length} projects
+          <p className="text-sm text-white/30 mt-0.5">
+            {total} project{total !== 1 ? 's' : ''}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={syncDescript}
-            disabled={syncing}
-            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:text-white transition-colors"
+            onClick={fetchProjects}
+            className="p-2 text-white/30 hover:text-white transition-colors"
+            title="Refresh"
           >
-            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-            Sync Descript
+            <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={openDescript}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-400 transition-colors text-sm font-medium"
+            onClick={() => setShowUpload(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors"
           >
-            Open Descript
-            <ExternalLink className="w-4 h-4" />
+            <Upload className="w-4 h-4" />
+            Upload Recording
           </button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-6 mb-6 border-b border-slate-800/50">
-        {(['all', 'descript', 'local'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`
-              pb-3 text-sm font-medium transition-colors relative capitalize
-              ${filter === f ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}
-            `}
-          >
-            {f === 'all' ? 'All' : f === 'descript' ? 'Descript' : 'Local'}
-            {filter === f && (
-              <motion.div
-                layoutId="media-filter-underline"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400"
-              />
-            )}
-          </button>
-        ))}
+      <div className="mb-6">
+        <MediaFilters
+          query={searchDebounce}
+          onQueryChange={setSearchDebounce}
+          typeFilter={typeFilter}
+          onTypeChange={setTypeFilter}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+        />
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <AnimatePresence>
-          {filteredProjects.map((project) => {
-            const status = statusConfig[project.status];
-            const StatusIcon = status.icon;
-
-            return (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#1e1e38] border border-slate-800/50 rounded-xl overflow-hidden hover:border-slate-700/50 transition-colors cursor-pointer"
-              >
-                {/* Thumbnail */}
-                <div className="aspect-video bg-slate-900 flex items-center justify-center relative">
-                  <Video className="w-12 h-12 text-slate-700" />
-                  {project.duration && (
-                    <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/70 text-white text-xs rounded">
-                      {project.duration}
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm text-white font-medium truncate flex-1">
-                      {project.name}
-                    </h3>
-                    <span className={`
-                      px-2 py-0.5 text-xs rounded-full flex items-center gap-1 flex-shrink-0
-                      ${status.color === 'amber' ? 'bg-amber-500/20 text-amber-400' : ''}
-                      ${status.color === 'slate' ? 'bg-slate-700 text-slate-400' : ''}
-                      ${status.color === 'red' ? 'bg-red-500/20 text-red-400' : ''}
-                      ${status.color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' : ''}
-                    `}>
-                      {StatusIcon && <StatusIcon className={`w-3 h-3 ${status.color === 'red' ? 'animate-pulse' : ''}`} />}
-                      {status.label}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
-                    <span className="capitalize">{project.source}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {project.createdAt}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
-
-      {/* Upload */}
-      <div className="flex justify-center">
-        <button className="flex flex-col items-center gap-2 p-6 text-slate-500 hover:text-slate-400 transition-colors">
-          <Upload className="w-6 h-6" />
-          <span className="text-sm">Upload Recording</span>
-        </button>
-      </div>
-
-      {filteredProjects.length === 0 && (
-        <div className="text-center py-12 text-slate-500">
-          <Video className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <div className="text-lg">No projects found</div>
+      {/* Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-[#1a1a2e] rounded-lg animate-pulse">
+              <div className="aspect-video bg-white/5" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 bg-white/5 rounded w-2/3" />
+                <div className="h-3 bg-white/5 rounded w-1/3" />
+              </div>
+            </div>
+          ))}
         </div>
+      ) : projects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map(project => (
+            <MediaProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <Video className="w-12 h-12 text-white/10 mx-auto mb-3" />
+          <p className="text-white/30 text-sm">No projects found</p>
+          <button
+            onClick={() => setShowUpload(true)}
+            className="mt-4 text-amber-400 hover:text-amber-300 text-sm"
+          >
+            Upload your first recording
+          </button>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-3 py-1 text-sm rounded ${
+                p === page
+                  ? 'bg-amber-600 text-white'
+                  : 'text-white/30 hover:text-white'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Upload modal */}
+      {showUpload && (
+        <MediaUploadFlow
+          onProjectCreated={() => {
+            setShowUpload(false);
+            fetchProjects();
+          }}
+          onClose={() => setShowUpload(false)}
+        />
       )}
     </div>
   );
