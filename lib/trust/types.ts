@@ -166,3 +166,122 @@ export type UpdateSessionPrivacy = z.infer<typeof UpdateSessionPrivacySchema>;
 export type CreateMemoryContract = z.infer<typeof CreateMemoryContractSchema>;
 export type RevokeMemoryContract = z.infer<typeof RevokeMemoryContractSchema>;
 export type CreateArtifactShare = z.infer<typeof CreateArtifactShareSchema>;
+
+// ── Unified Trust Middleware (Phase 1) ─────────────────────
+
+export const TRUST_ACTIONS = ['read', 'write', 'share', 'generate', 'send'] as const;
+export type TrustAction = (typeof TRUST_ACTIONS)[number];
+
+export const TRUST_CHANNELS = ['oracle', 'studio', 'comms', 'session', 'memory'] as const;
+export type TrustChannel = (typeof TRUST_CHANNELS)[number];
+
+export const TRUST_RESOURCE_TYPES = ['session', 'artifact', 'message', 'thread', 'transcript', 'memory'] as const;
+export type TrustResourceType = (typeof TRUST_RESOURCE_TYPES)[number];
+
+/** Actions that expand meaning beyond original scope (transcript→summary, session→parent update, memory→comms) */
+export const MEANING_EXPANDING_ACTIONS: TrustAction[] = ['generate', 'send'];
+
+export interface CheckAccessInput {
+  actorId: string;
+  memberId?: string;
+  resourceType: TrustResourceType;
+  resourceId?: string;
+  action: TrustAction;
+  channel: TrustChannel;
+  useAI?: boolean;
+  purpose?: string;
+  relationshipContext?: {
+    sessionId?: string;
+    containerId?: string;
+    practiceId?: string;
+  };
+  requestedScope?: VisibilityScope;
+}
+
+export interface AiPermissionResult {
+  permitted: boolean;
+  reason?: string;
+}
+
+export interface DisclosureRequirement {
+  required: boolean;
+  text?: string;
+  reason?: string;
+}
+
+export interface CheckAccessResult {
+  allowed: boolean;
+  reasonCode: string;
+  humanMessage?: string;
+  aiPermitted?: boolean;
+  aiDenialReason?: string;
+  allowedScope?: VisibilityScope;
+  disclosureRequired?: boolean;
+  disclosureText?: string;
+  meaningExpansion?: boolean;
+  trustCheckedAt: string;
+  // Phase 3: Relational intelligence fields
+  inferenceType?: InferenceType;
+  meaningExpansionLevel?: MeaningExpansionLevel;
+  expressionProfile?: ExpressionProfile;
+}
+
+// ── Relational Intelligence (Phase 3) ───────────────────────
+
+export const INFERENCE_TYPES = [
+  'direct_restatement',
+  'structured_summary',
+  'relational_inference',
+  'sensitive_synthesis',
+  'outward_recommendation',
+] as const;
+export type InferenceType = (typeof INFERENCE_TYPES)[number];
+
+export const MEANING_EXPANSION_LEVELS = ['none', 'low', 'moderate', 'high'] as const;
+export type MeaningExpansionLevel = (typeof MEANING_EXPANSION_LEVELS)[number];
+
+export const EXPRESSION_PROFILES = [
+  'minimal',
+  'neutral_clinical',
+  'relationally_gentle',
+  'protective_external',
+  'reflective_internal',
+] as const;
+export type ExpressionProfile = (typeof EXPRESSION_PROFILES)[number];
+
+/** Relationship type for disclosure policy resolution */
+export const RELATIONSHIP_TYPES = [
+  'self',
+  'practitioner_to_client',
+  'care_team',
+  'parent_guardian',
+  'external',
+] as const;
+export type RelationshipType = (typeof RELATIONSHIP_TYPES)[number];
+
+// ── Communication Trust Controls (Phase 2) ─────────────────
+
+export const AI_ASSIST_MODES = ['none', 'structure_only', 'draft_allowed'] as const;
+export type AiAssistMode = (typeof AI_ASSIST_MODES)[number];
+
+export const DISCLOSURE_MODES = ['none', 'manual', 'automatic'] as const;
+export type DisclosureMode = (typeof DISCLOSURE_MODES)[number];
+
+export const TRUST_SCOPES = ['direct_only', 'session_context', 'relational_context'] as const;
+export type TrustScope = (typeof TRUST_SCOPES)[number];
+
+export const AiAssistModeSchema = z.enum(AI_ASSIST_MODES);
+export const DisclosureModeSchema = z.enum(DISCLOSURE_MODES);
+export const TrustScopeSchema = z.enum(TRUST_SCOPES);
+
+export interface MessageTrustFields {
+  aiAssistMode: AiAssistMode;
+  disclosureMode: DisclosureMode;
+  disclosureText?: string;
+  trustScope: TrustScope;
+  aiPermitted: boolean;
+  containsRelationalInference: boolean;
+  approvedForSendAt?: string;
+  approvedForSendBy?: string;
+  trustCheckedAt: string;
+}

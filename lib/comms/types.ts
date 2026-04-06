@@ -392,6 +392,14 @@ export interface SendMessageInput {
   quick_response_type?: CommsQuickResponseType;
   reply_to_id?: string;
   suggestion_id?: string; // Phase 4: if message came from a suggestion
+  // Trust Layer Phase 2: per-message trust metadata
+  ai_assist_mode?: 'none' | 'structure_only' | 'draft_allowed';
+  disclosure_mode?: 'none' | 'manual' | 'automatic';
+  disclosure_text?: string;
+  trust_scope?: 'direct_only' | 'session_context' | 'relational_context';
+  ai_permitted?: boolean;
+  contains_relational_inference?: boolean;
+  trust_checked_at?: string;
 }
 
 /** Safety flag response (for dashboard) */

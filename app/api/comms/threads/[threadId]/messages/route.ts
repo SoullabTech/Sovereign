@@ -20,6 +20,8 @@ import type {
   CommsUrgency,
   CommsQuickResponseType,
 } from '@/lib/comms/types';
+import { checkAccess } from '@/lib/trust/checkAccess';
+import type { AiAssistMode } from '@/lib/trust/types';
 
 interface RouteParams {
   params: Promise<{ threadId: string }>;
@@ -97,7 +99,35 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Build input
+    // ── Unified Trust Layer ──────────────────────────────────
+    // Gate: relationship, privacy, AI permission, disclosure
+    let aiAssistMode: AiAssistMode = (body.ai_assist_mode as AiAssistMode) || 'none';
+    const trustResult = await checkAccess({
+      actorId: practitionerId,
+      resourceType: 'message',
+      resourceId: threadId,
+      action: 'send',
+      channel: 'comms',
+      useAI: aiAssistMode !== 'none',
+    });
+
+    if (!trustResult.allowed) {
+      return NextResponse.json(
+        { error: trustResult.humanMessage || 'Access denied', reasonCode: trustResult.reasonCode },
+        { status: 403 }
+      );
+    }
+
+    // Deterministic downgrade: if AI requested but vetoed, force to none
+    if (aiAssistMode !== 'none' && !trustResult.aiPermitted) {
+      console.log('[Comms Trust] AI assist downgraded to none', {
+        threadId: threadId.substring(0, 8) + '...',
+        reason: trustResult.aiDenialReason,
+      });
+      aiAssistMode = 'none';
+    }
+
+    // Build input with trust metadata
     const input: SendMessageInput = {
       body: messageBody.trim(),
       channel_type: body.channel_type || 'in_app',
@@ -107,13 +137,31 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       quick_response_type: quickResponseType,
       reply_to_id: body.reply_to_id,
       suggestion_id: body.suggestion_id, // Phase 4: link to source suggestion
+      // Trust Layer Phase 2: persist trust metadata with message
+      ai_assist_mode: aiAssistMode,
+      disclosure_mode: body.disclosure_mode || 'none',
+      disclosure_text: trustResult.disclosureText || body.disclosure_text || null,
+      trust_scope: body.trust_scope || 'direct_only',
+      ai_permitted: trustResult.aiPermitted ?? true,
+      contains_relational_inference: !!trustResult.meaningExpansion,
+      trust_checked_at: trustResult.trustCheckedAt,
     };
 
     // Send message
     const message = await sendMessage(practitionerId, threadId, input);
 
     return NextResponse.json(
-      { message },
+      {
+        message,
+        // Phase 3: trust telemetry for client observability
+        trust: {
+          inferenceType: trustResult.inferenceType,
+          meaningExpansionLevel: trustResult.meaningExpansionLevel,
+          expressionProfile: trustResult.expressionProfile,
+          disclosureRequired: trustResult.disclosureRequired,
+          aiAssistMode: aiAssistMode,
+        },
+      },
       { status: 201 }
     );
   } catch (error) {
