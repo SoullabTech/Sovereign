@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (endDate <= startDate) {
+    if (!allDay && endDate <= startDate) {
       return NextResponse.json(
         { error: 'End time must be after start time.' },
         { status: 400 }
