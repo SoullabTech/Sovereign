@@ -18,6 +18,7 @@ import { registerBardicAgent, shouldRouteToBard, witnessWithBard } from './agent
 import { registerKairosAgent, shouldRouteToKairos, coordinateAnimaAnimus } from './agentOrchestrator-kairos-integration';
 import { registerShadowAgent, shouldRouteToShadow, coordinateTriad } from './agentOrchestrator-shadow-integration';
 import { registerArchetypalTypologyAgent, shouldRouteToTypology, calibrateCommunication } from './agentOrchestrator-typology-integration';
+import { isAiPermitted } from '@/lib/trust/service';
 import { logger } from '../utils/logger';
 
 interface OrchestratorConfig {
@@ -143,7 +144,35 @@ export class AgentOrchestrator extends EventEmitter {
         }
       }
 
-      // 2. Check for ArchetypalTypology (Enneagram, MBTI, etc.)
+      // 2. TRUST LAYER: Privacy gate — block symbolic/generative agents
+      // when the session's privacy envelope forbids AI distillation.
+      if (context.sessionId) {
+        try {
+          const aiCheck = await isAiPermitted(context.sessionId);
+          if (!aiCheck.permitted) {
+            logger.info('[Trust] Agent orchestrator blocked', {
+              sessionId: context.sessionId.substring(0, 8) + '...',
+              reason: aiCheck.reason,
+              agent: 'orchestrator',
+            });
+            return {
+              success: true,
+              response: 'This session is set to private, so I won\'t generate insights here. You can still use this space to reflect or note what feels important.',
+              agent: 'trust-gate',
+              metadata: {
+                privacyBlocked: true,
+                reason: aiCheck.reason,
+                mode: 'reflection_only',
+              },
+            };
+          }
+        } catch (gateErr) {
+          // Fail open — if gate check fails, allow processing to continue
+          logger.warn('[Trust] Privacy gate error (failing open):', gateErr);
+        }
+      }
+
+      // 3. Check for ArchetypalTypology (Enneagram, MBTI, etc.)
       // This enriches context with personality profile for all downstream agents
       if (shouldRouteToTypology(input, context)) {
         const typologyInsights = await this.processTypology(input, context);
