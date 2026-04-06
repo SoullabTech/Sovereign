@@ -377,6 +377,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      whisper:
+        condition: service_healthy
 
     env_file:
       - .env.production
@@ -384,7 +386,7 @@ services:
     environment:
       NODE_ENV: production
       MEDIA_STORAGE_PATH: "/app/data/media"
-      WHISPER_LOCAL_URL: "http://faster-whisper:8000"
+      WHISPER_LOCAL_URL: "http://whisper:8000"
       OLLAMA_BASE_URL: "http://host.docker.internal:11434"
 
     command: ["npx", "tsx", "scripts/run-media-worker.ts"]
