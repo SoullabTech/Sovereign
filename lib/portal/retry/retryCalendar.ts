@@ -9,6 +9,7 @@ import db from '@/lib/db/postgres';
 import { safeParseMeta, dispatchHash } from './safeMeta';
 import { CALENDAR_DISPATCH_VERSION } from './constants';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { applyDisclosure, type CalendarDisclosure } from '@/lib/calendar/syncSessionToGoogle';
 
 export interface CalendarRetryResult {
   success: boolean;
@@ -139,12 +140,25 @@ export async function retryCalendar(input: RetryCalendarInput): Promise<Calendar
   let syncError: string | null = null;
 
   try {
-    const summary = session.service_name || `Session - ${session.client_name || 'Client'}`;
-    const descriptionParts: string[] = [];
-    if (session.client_name) descriptionParts.push(`Client: ${session.client_name}`);
-    if (session.client_email) descriptionParts.push(`Email: ${session.client_email}`);
-    if (session.client_phone) descriptionParts.push(`Phone: ${session.client_phone}`);
-    const description = descriptionParts.join('\n');
+    // Load disclosure mode: per-session override → practitioner default → 'generic'
+    const disclosureResult = await db.query(
+      `SELECT s.calendar_disclosure, ss.value as default_disclosure
+       FROM sessions s
+       LEFT JOIN studio_settings ss ON ss.key = 'calendar_disclosure_default' AND ss.member_id = $2
+       WHERE s.id = $1`,
+      [session.session_id, memberId]
+    );
+    const disclosureRow = disclosureResult.rows[0];
+    const disclosure: CalendarDisclosure =
+      disclosureRow?.calendar_disclosure ?? disclosureRow?.default_disclosure ?? 'generic';
+
+    const { summary, description } = applyDisclosure({
+      id: session.session_id,
+      scheduledStart: session.scheduled_start,
+      scheduledEnd: session.scheduled_end,
+      clientName: session.client_name ?? undefined,
+      serviceName: session.service_name ?? undefined,
+    }, disclosure);
 
     const startTime = new Date(session.scheduled_start);
     const endTime = new Date(session.scheduled_end);
