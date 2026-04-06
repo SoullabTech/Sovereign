@@ -102,6 +102,8 @@ services:
       # Selflet Phase 2E: Disabled by default, enable via override file
       MAIA_SELFLET_WRITE_ENABLED: "0"
       MAIA_SELFLET_ALLOW_ANON: "0"
+      # Trust Observation: Phase 3 behavioral signal capture
+      TRUST_OBSERVATION: "true"
       # AIN Shape Telemetry: Enable quality monitoring in production
       AIN_SHAPE_TELEMETRY: "1"
       # AIN Phase 1: Knowledge Gate — awareness-modulated source well scoring
