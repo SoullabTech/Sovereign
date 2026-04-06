@@ -31,10 +31,7 @@ export async function getCalDAVClient(
   }
 
   const config = connector.config as unknown as CalDAVConnectorConfig;
-  // Password is in config_encrypted
-  const encrypted = (connector as any).configEncrypted ?? {};
-  // For now, read from the raw DB row — connectorDb maps config_encrypted
-  const rawConnector = connector as any;
+  const password = (connector.configEncrypted?.password as string) ?? '';
 
   const caldavConfig: CalDAVConfig = {
     serverUrl: config.serverUrl,
@@ -42,7 +39,7 @@ export async function getCalDAVClient(
     calendarHomeUrl: config.calendarHomeUrl,
     defaultCalendarUrl: config.defaultCalendarUrl,
     username: config.username,
-    password: rawConnector._password ?? '', // injected by API routes that read config_encrypted
+    password,
   };
 
   return new CalDAVService(caldavConfig);
