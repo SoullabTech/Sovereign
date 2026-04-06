@@ -11,9 +11,12 @@
 import { query } from '@/lib/db/postgres';
 
 // ── Server-safe feature flag (no React imports) ─────────────────────
+// Must be a function, not a const — Next.js evaluates module-level
+// constants at build time, before runtime env vars are available.
 
-export const TRUST_OBSERVATION_ENABLED =
-  process.env.TRUST_OBSERVATION === 'true';
+export function isTrustObservationEnabled(): boolean {
+  return process.env.TRUST_OBSERVATION === 'true';
+}
 
 // ── Types ───────────────────────────────────────────────────────────
 

@@ -71,7 +71,7 @@ import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
 import type { PrivacyGateResult, CheckAccessResult } from '@/lib/trust/types';
 import { checkAccess } from '@/lib/trust/checkAccess';
-import { storeTrustObservation, inferEngagementProxy, classifyResponseType, TRUST_OBSERVATION_ENABLED } from '@/lib/trust/trustObservationService';
+import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 
 // Skip during static export (Capacitor builds)
 
@@ -1250,7 +1250,7 @@ export async function POST(request: NextRequest) {
     // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
     // Captures response type + engagement proxy for future affinity weighting.
     // Flag: trustObservation (default OFF).
-    if (TRUST_OBSERVATION_ENABLED) {
+    if (isTrustObservationEnabled()) {
       const responseType = classifyResponseType({
         activeFrameworks,
         careLensActive: false, // will be true when care lens is wired
