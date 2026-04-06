@@ -143,6 +143,8 @@ services:
       - vault_data:/app/data/vault
       # Voice notes storage - persisted across container restarts
       - voice_notes_data:/app/storage/voice-notes
+      # Media Studio storage - sovereign local media pipeline
+      - media_data:/app/data/media
 
     security_opt:
       - no-new-privileges:true
@@ -345,6 +347,50 @@ services:
       NODE_ENV: production
 
     command: ["npx", "tsx", "scripts/run-session-summary-worker.ts"]
+
+    healthcheck:
+      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-internal
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Media Processing Worker - Sovereign Media Pipeline
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Processes media_jobs queue: validate, inspect, thumbnail, waveform,
+  # audio extraction, transcription (Whisper), classification, summarization.
+  # Same image as maia, different entrypoint.
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-media-worker
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-media-worker
+  maia-media-worker:
+    build: *maia_build
+    image: *maia_image
+    container_name: maia-media-worker
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      MEDIA_STORAGE_PATH: "/app/data/media"
+      WHISPER_LOCAL_URL: "http://faster-whisper:8000"
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+
+    command: ["npx", "tsx", "scripts/run-media-worker.ts"]
+
+    volumes:
+      - media_data:/app/data/media
 
     healthcheck:
       test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
@@ -742,6 +788,8 @@ volumes:
   vault_data:
     driver: local
   voice_notes_data:
+    driver: local
+  media_data:
     driver: local
   palisades_data:
     driver: local

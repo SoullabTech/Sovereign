@@ -58,8 +58,8 @@ ENV GIT_COMMIT=${GIT_COMMIT}
 ENV APP_VERSION=${APP_VERSION}
 ENV BUILD_DATE=${BUILD_DATE}
 
-# Install psql for migrations + curl for worker preflight health checks
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
+# Install psql for migrations + curl for worker preflight health checks + ffmpeg for media processing
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy standalone output + static assets

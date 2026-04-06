@@ -258,7 +258,6 @@ export interface CheckAccessResult {
   disclosureText?: string;
   meaningExpansion?: boolean;
   trustCheckedAt: string;
-  // Phase 3: Relational intelligence fields
   inferenceType?: InferenceType;
   meaningExpansionLevel?: MeaningExpansionLevel;
   expressionProfile?: ExpressionProfile;
@@ -275,6 +274,20 @@ export const INFERENCE_TYPES = [
 ] as const;
 export type InferenceType = (typeof INFERENCE_TYPES)[number];
 
+// ── Media Disclosure ──────────────────────────────────────
+
+export const MEDIA_DISCLOSURE_ACTIONS = ['export', 'descript_link', 'share', 'publish'] as const;
+export type MediaDisclosureAction = (typeof MEDIA_DISCLOSURE_ACTIONS)[number];
+
+export const MEDIA_INFERENCE_TYPES = [
+  'informational',
+  'relational_inference',
+  'sensitive_synthesis',
+  'outward_recommendation',
+  'personal_disclosure',
+] as const;
+export type MediaInferenceType = (typeof MEDIA_INFERENCE_TYPES)[number];
+
 export const MEANING_EXPANSION_LEVELS = ['none', 'low', 'moderate', 'high'] as const;
 export type MeaningExpansionLevel = (typeof MEANING_EXPANSION_LEVELS)[number];
 
@@ -287,7 +300,6 @@ export const EXPRESSION_PROFILES = [
 ] as const;
 export type ExpressionProfile = (typeof EXPRESSION_PROFILES)[number];
 
-/** Relationship type for disclosure policy resolution */
 export const RELATIONSHIP_TYPES = [
   'self',
   'practitioner_to_client',
@@ -322,4 +334,23 @@ export interface MessageTrustFields {
   approvedForSendAt?: string;
   approvedForSendBy?: string;
   trustCheckedAt: string;
+}
+
+// ── Media Disclosure Interfaces ───────────────────────────
+
+export interface MediaDisclosureInput {
+  projectId: string;
+  action: MediaDisclosureAction;
+  targetPlatform?: string;
+  inferenceType?: MediaInferenceType;
+  expansionLevel?: MeaningExpansionLevel;
+}
+
+export interface MediaDisclosureResult {
+  allowed: boolean;
+  reason?: string;
+  redactionRequired: boolean;
+  privacyLevel: string;
+  consentStatus: string;
+  expansionLevel?: MeaningExpansionLevel;
 }
