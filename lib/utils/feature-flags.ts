@@ -23,6 +23,7 @@ export interface FeatureFlags {
   ichingPatternLayer: boolean;          // Phase 1: silent facet→hexagram mapping + logging
   daoistVoiceLayer: boolean;            // Phase 2+: Daoist expression refinement on oracle output
   calendarConsciousness: boolean;       // Schedule awareness in MAIA responses (disclosure-filtered)
+  founderConsole: boolean;              // MAIA Ops: founder operational command center at /founder
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -45,6 +46,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   ichingPatternLayer: false,           // Off — Phase 1: silent observation first
   daoistVoiceLayer: false,             // Off — Phase 2+: voice shaping after observation
   calendarConsciousness: false,        // Off — wiring deferred until disclosure proven stable
+  founderConsole: false,               // Off — Phase 1 build in progress
 };
 
 /**
