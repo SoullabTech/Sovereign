@@ -14,6 +14,9 @@ import {
   ExternalLink,
   CloudUpload,
   Check,
+  Plus,
+  Trash2,
+  FileText,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import {
@@ -131,6 +134,9 @@ export default function CalendarPage() {
   const [view, setView] = useState<ViewType>('month');
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createDefaultDate, setCreateDefaultDate] = useState<Date | null>(null);
+  const [createDefaultHour, setCreateDefaultHour] = useState<number | null>(null);
 
   // Calculate date range based on view
   const { from, to } = useMemo(() => {
@@ -226,6 +232,29 @@ export default function CalendarPage() {
     setCurrentDate(new Date());
     setSelectedDay(new Date());
   }, []);
+
+  // Open create modal with optional pre-filled date/time
+  const openCreateModal = useCallback((date?: Date, hour?: number) => {
+    setCreateDefaultDate(date || selectedDay);
+    setCreateDefaultHour(hour ?? null);
+    setShowCreateModal(true);
+  }, [selectedDay]);
+
+  // Delete a studio event (soft delete)
+  const handleDeleteEvent = useCallback(async (eventId: string) => {
+    try {
+      const res = await apiFetch(`/api/studio/calendar/events?id=${encodeURIComponent(eventId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.deleted) {
+        setSelectedEvent(null);
+        refetch();
+      }
+    } catch {
+      // Silent — could add error toast later
+    }
+  }, [refetch]);
 
   // Click on day - select it for sidebar and optionally switch to day view
   const handleDayClick = useCallback((day: Date, switchView = false) => {
@@ -327,6 +356,15 @@ export default function CalendarPage() {
           )}
 
           <button
+            onClick={() => openCreateModal()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-amber-500/20 hover:bg-amber-500/30 rounded-lg transition-colors"
+            title="Create event"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Event
+          </button>
+
+          <button
             onClick={() => refetch()}
             className="p-2 text-slate-400 hover:text-white transition-colors"
             title="Refresh"
@@ -400,6 +438,10 @@ export default function CalendarPage() {
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded bg-amber-500/40" />
               <span>MAIA Sessions</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded bg-slate-400/40" />
+              <span>Studio Events</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded border border-teal-500/50" />
@@ -571,7 +613,14 @@ export default function CalendarPage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="p-3 border-t border-slate-800/50">
+            <div className="p-3 border-t border-slate-800/50 space-y-2">
+              <button
+                onClick={() => openCreateModal(selectedDay)}
+                className="w-full py-2 text-sm text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Event
+              </button>
               <button
                 onClick={goToToday}
                 className="w-full py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-colors"
@@ -589,6 +638,28 @@ export default function CalendarPage() {
           <EventDetailModal
             event={selectedEvent}
             onClose={() => setSelectedEvent(null)}
+            onDelete={selectedEvent.source === 'studio' ? handleDeleteEvent : undefined}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create Event Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateEventModal
+            defaultDate={createDefaultDate || new Date()}
+            defaultHour={createDefaultHour}
+            onClose={() => {
+              setShowCreateModal(false);
+              setCreateDefaultDate(null);
+              setCreateDefaultHour(null);
+            }}
+            onCreated={() => {
+              setShowCreateModal(false);
+              setCreateDefaultDate(null);
+              setCreateDefaultHour(null);
+              refetch();
+            }}
           />
         )}
       </AnimatePresence>
@@ -614,22 +685,36 @@ function SidebarEventCard({
         w-full p-3 rounded-lg text-left transition-all hover:scale-[1.02]
         ${event.source === 'maia'
           ? 'bg-amber-500/20 hover:bg-amber-500/30'
-          : 'bg-teal-500/10 hover:bg-teal-500/20'}
+          : event.source === 'studio'
+            ? 'bg-slate-700/50 hover:bg-slate-700/70'
+            : 'bg-teal-500/10 hover:bg-teal-500/20'}
       `}
     >
-      <div className={`font-medium ${event.source === 'maia' ? 'text-amber-300' : 'text-teal-300'}`}>
+      <div className={`font-medium ${
+        event.source === 'maia' ? 'text-amber-300'
+        : event.source === 'studio' ? 'text-slate-200'
+        : 'text-teal-300'
+      }`}>
         {event.clientName || event.title}
       </div>
       <div className="flex items-center gap-1.5 mt-1 text-sm text-stone-400">
         <Clock className="w-3 h-3" />
-        <span className={event.source === 'maia' ? 'text-amber-400' : 'text-teal-400'}>
+        <span className={
+          event.source === 'maia' ? 'text-amber-400'
+          : event.source === 'studio' ? 'text-slate-400'
+          : 'text-teal-400'
+        }>
           {startTime} - {endTime}
         </span>
       </div>
       {event.location && (
         <div className="flex items-center gap-1.5 mt-1 text-xs text-stone-500">
           <MapPin className="w-3 h-3" />
-          <span className={event.source === 'maia' ? 'text-amber-400' : 'text-teal-400'}>
+          <span className={
+            event.source === 'maia' ? 'text-amber-400'
+            : event.source === 'studio' ? 'text-slate-400'
+            : 'text-teal-400'
+          }>
             {event.location}
           </span>
         </div>
@@ -753,7 +838,9 @@ function WeekView({
                         hover:opacity-80 transition-opacity text-left
                         ${event.source === 'maia'
                           ? 'bg-amber-500/30 text-amber-300 border-l-2 border-amber-500'
-                          : 'bg-teal-500/20 text-teal-300 border-l-2 border-teal-500'}
+                          : event.source === 'studio'
+                            ? 'bg-slate-500/20 text-slate-200 border-l-2 border-slate-400'
+                            : 'bg-teal-500/20 text-teal-300 border-l-2 border-teal-500'}
                       `}
                     >
                       <div className="font-medium truncate">{event.title}</div>
@@ -863,7 +950,9 @@ function DayView({
                       hover:opacity-80 transition-opacity
                       ${event.source === 'maia'
                         ? 'bg-amber-500/30 text-amber-300 border-l-4 border-amber-500'
-                        : 'bg-teal-500/20 text-teal-300 border-l-4 border-teal-500'}
+                        : event.source === 'studio'
+                          ? 'bg-slate-500/20 text-slate-200 border-l-4 border-slate-400'
+                          : 'bg-teal-500/20 text-teal-300 border-l-4 border-teal-500'}
                     `}
                   >
                     <div className="font-medium truncate">{event.title}</div>
@@ -973,7 +1062,9 @@ function EventChip({
         hover:opacity-80
         ${event.source === 'maia'
           ? 'bg-amber-500/20 text-amber-400'
-          : 'border border-teal-500/30 text-teal-400'}
+          : event.source === 'studio'
+            ? 'bg-slate-500/20 text-slate-300'
+            : 'border border-teal-500/30 text-teal-400'}
       `}
     >
       {time && <span className="font-medium">{time} </span>}
@@ -986,10 +1077,13 @@ function EventChip({
 function EventDetailModal({
   event,
   onClose,
+  onDelete,
 }: {
   event: CalendarEvent;
   onClose: () => void;
+  onDelete?: (id: string) => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const startDate = new Date(event.start);
   const endDate = new Date(event.end);
   const isAllDay = event.start.length === 10;
@@ -1013,12 +1107,12 @@ function EventDetailModal({
           <div className="flex items-center gap-2">
             <div className={`
               w-3 h-3 rounded
-              ${event.source === 'maia' ? 'bg-amber-500' : 'bg-teal-500'}
+              ${event.source === 'maia' ? 'bg-amber-500' : event.source === 'studio' ? 'bg-slate-400' : 'bg-teal-500'}
             `} />
             <span className={`text-xs font-medium uppercase tracking-wider ${
-              event.source === 'maia' ? 'text-amber-400' : 'text-teal-400'
+              event.source === 'maia' ? 'text-amber-400' : event.source === 'studio' ? 'text-slate-300' : 'text-teal-400'
             }`}>
-              {event.source === 'maia' ? 'MAIA Session' : 'Google Calendar'}
+              {event.source === 'maia' ? 'MAIA Session' : event.source === 'studio' ? 'Studio Event' : 'Google Calendar'}
             </span>
           </div>
           <button
@@ -1084,6 +1178,13 @@ function EventDetailModal({
           )}
         </div>
 
+        {event.description && (
+          <div className="flex items-start gap-3 text-slate-300 mt-3">
+            <FileText className="w-4 h-4 mt-0.5 text-slate-500" />
+            <span className="text-sm whitespace-pre-wrap">{event.description}</span>
+          </div>
+        )}
+
         <div className="mt-6 pt-4 border-t border-slate-700/50 flex gap-3">
           {event.source === 'maia' ? (
             <a
@@ -1092,6 +1193,31 @@ function EventDetailModal({
             >
               View in Sessions
             </a>
+          ) : event.source === 'studio' && onDelete ? (
+            confirmDelete ? (
+              <div className="flex-1 flex gap-2">
+                <button
+                  onClick={() => onDelete(event.id)}
+                  className="flex-1 py-2 text-center text-sm font-medium bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="flex-1 py-2 text-center text-sm font-medium bg-slate-700/50 text-slate-300 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Event
+              </button>
+            )
           ) : (
             <a
               href={`https://calendar.google.com/calendar/r/eventedit/${event.googleEventId}`}
@@ -1110,6 +1236,227 @@ function EventDetailModal({
             Close
           </button>
         </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// Create Event Modal
+function CreateEventModal({
+  defaultDate,
+  defaultHour,
+  onClose,
+  onCreated,
+}: {
+  defaultDate: Date;
+  defaultHour: number | null;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const dateStr = format(defaultDate, 'yyyy-MM-dd');
+  const startHour = defaultHour ?? 9;
+
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState(dateStr);
+  const [startTime, setStartTime] = useState(
+    `${String(startHour).padStart(2, '0')}:00`
+  );
+  const [endTime, setEndTime] = useState(
+    `${String(Math.min(startHour + 1, 23)).padStart(2, '0')}:00`
+  );
+  const [allDay, setAllDay] = useState(false);
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
+  const [showMore, setShowMore] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    try {
+      let start: string;
+      let end: string;
+
+      if (allDay) {
+        start = `${date}T00:00:00`;
+        // All-day end is next day midnight
+        const nextDay = new Date(date);
+        nextDay.setDate(nextDay.getDate() + 1);
+        end = `${format(nextDay, 'yyyy-MM-dd')}T00:00:00`;
+      } else {
+        start = `${date}T${startTime}:00`;
+        end = `${date}T${endTime}:00`;
+      }
+
+      const res = await apiFetch('/api/studio/calendar/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          start,
+          end,
+          allDay,
+          description: description.trim() || undefined,
+          location: location.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+        setSaving(false);
+        return;
+      }
+
+      onCreated();
+    } catch {
+      setError('Failed to create event');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="bg-[#1e1e38] rounded-xl border border-slate-700/50 p-6 max-w-md w-full shadow-2xl"
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-white">New Event</h2>
+          <button
+            onClick={onClose}
+            className="p-1 text-slate-500 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Title */}
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Event title"
+            autoFocus
+            className="w-full px-3 py-2.5 bg-[#16162a] border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm"
+          />
+
+          {/* Date */}
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="w-full px-3 py-2.5 bg-[#16162a] border border-slate-700/50 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm [color-scheme:dark]"
+          />
+
+          {/* All-day toggle */}
+          <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allDay}
+              onChange={e => setAllDay(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-600 bg-[#16162a] text-amber-500 focus:ring-amber-500/50"
+            />
+            All day
+          </label>
+
+          {/* Time selectors (hidden when all-day) */}
+          {!allDay && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-xs text-slate-500 mb-1 block">Start</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#16162a] border border-slate-700/50 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm [color-scheme:dark]"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-slate-500 mb-1 block">End</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#16162a] border border-slate-700/50 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm [color-scheme:dark]"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* More fields toggle */}
+          {!showMore && (
+            <button
+              type="button"
+              onClick={() => setShowMore(true)}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              + Description, Location
+            </button>
+          )}
+
+          {showMore && (
+            <>
+              <input
+                type="text"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                placeholder="Location (optional)"
+                className="w-full px-3 py-2.5 bg-[#16162a] border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm"
+              />
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Description (optional)"
+                rows={3}
+                className="w-full px-3 py-2.5 bg-[#16162a] border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-sm resize-none"
+              />
+            </>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2.5 text-sm font-medium bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Creating...' : 'Create Event'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </motion.div>
     </motion.div>
   );

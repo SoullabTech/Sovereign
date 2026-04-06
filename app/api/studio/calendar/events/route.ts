@@ -4,8 +4,9 @@ export async function generateStaticParams() { return []; }
 /**
  * STUDIO CALENDAR EVENTS API
  *
- * Fetches events from both MAIA bookings and Google Calendar
- * Returns normalized events for the calendar view
+ * GET  — Fetches events from MAIA bookings, Google Calendar, and studio calendar_events
+ * POST — Creates a new studio calendar event
+ * DELETE — Soft-deletes a studio calendar event
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,17 +19,21 @@ export interface CalendarEvent {
   title: string;
   start: string;
   end: string;
-  source: 'maia' | 'google';
+  source: 'maia' | 'google' | 'studio';
+  allDay?: boolean;
+  description?: string;
+  location?: string;
   // MAIA-specific
   status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   clientName?: string;
   serviceName?: string;
   // Google-specific
   googleEventId?: string;
-  location?: string;
   calendarId?: string;
   calendarName?: string;
 }
+
+// ── GET — fetch all events ──────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,22 +69,27 @@ export async function GET(request: NextRequest) {
     // Support ?slug= param for multi-practitioner future; default to stellium
     const practitionerSlug = searchParams.get('slug') || 'stellium';
 
-    // Fetch MAIA bookings
+    // Fetch all three sources in parallel
     const bookingsPromise = fetchMAIABookings(practitionerSlug, fromDate, toDate);
-
-    // Fetch Google Calendar events (if connected)
     const googlePromise = memberId
       ? fetchGoogleEvents(memberId, fromDate, toDate)
       : Promise.resolve([]);
+    const studioPromise = memberId
+      ? fetchStudioEvents(memberId, fromDate, toDate)
+      : Promise.resolve([]);
 
-    const [bookings, googleEvents] = await Promise.all([bookingsPromise, googlePromise]);
+    const [bookings, googleEvents, studioEvents] = await Promise.all([
+      bookingsPromise,
+      googlePromise,
+      studioPromise,
+    ]);
 
     // Check if Google is connected
     const googleConnected = memberId
       ? await GoogleCalendarService.isConnected(memberId)
       : false;
 
-    const events: CalendarEvent[] = [...bookings, ...googleEvents];
+    const events: CalendarEvent[] = [...bookings, ...googleEvents, ...studioEvents];
 
     // Sort by start time
     events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
@@ -94,6 +104,148 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch calendar events' },
       { status: 500 }
     );
+  }
+}
+
+// ── POST — create a studio event ────────────────────────────────────────────
+
+export async function POST(request: NextRequest) {
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { title, start, end, allDay, description, location } = body;
+
+    if (!title || !start || !end) {
+      return NextResponse.json(
+        { error: 'title, start, and end are required' },
+        { status: 400 }
+      );
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date format. Use ISO 8601.' },
+        { status: 400 }
+      );
+    }
+
+    if (endDate <= startDate) {
+      return NextResponse.json(
+        { error: 'End time must be after start time.' },
+        { status: 400 }
+      );
+    }
+
+    const result = await db.query(
+      `INSERT INTO calendar_events (member_id, title, description, start_time, end_time, all_day, location)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, title, description, start_time, end_time, all_day, location, created_at`,
+      [memberId, title, description || null, startDate.toISOString(), endDate.toISOString(), allDay || false, location || null]
+    );
+
+    const row = result.rows[0];
+
+    const event: CalendarEvent = {
+      id: `studio-${row.id}`,
+      title: row.title,
+      start: row.start_time,
+      end: row.end_time,
+      source: 'studio',
+      allDay: row.all_day,
+      description: row.description,
+      location: row.location,
+    };
+
+    return NextResponse.json({ event }, { status: 201 });
+  } catch (error) {
+    console.error('[Studio Calendar Events] Create error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create event' },
+      { status: 500 }
+    );
+  }
+}
+
+// ── DELETE — soft-delete a studio event ─────────────────────────────────────
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const eventId = searchParams.get('id');
+
+    if (!eventId) {
+      return NextResponse.json({ error: 'Event id is required' }, { status: 400 });
+    }
+
+    // Strip 'studio-' prefix if present
+    const dbId = eventId.startsWith('studio-') ? eventId.slice(7) : eventId;
+
+    const result = await db.query(
+      `UPDATE calendar_events
+       SET deleted_at = NOW(), updated_at = NOW()
+       WHERE id = $1 AND member_id = $2 AND deleted_at IS NULL
+       RETURNING id`,
+      [dbId, memberId]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ deleted: true, id: eventId });
+  } catch (error) {
+    console.error('[Studio Calendar Events] Delete error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete event' },
+      { status: 500 }
+    );
+  }
+}
+
+// ── Data fetchers ───────────────────────────────────────────────────────────
+
+async function fetchStudioEvents(
+  memberId: string,
+  from: Date,
+  to: Date
+): Promise<CalendarEvent[]> {
+  try {
+    const result = await db.query(
+      `SELECT id, title, description, start_time, end_time, all_day, location
+       FROM calendar_events
+       WHERE member_id = $1
+         AND start_time >= $2
+         AND start_time <= $3
+         AND deleted_at IS NULL
+       ORDER BY start_time ASC`,
+      [memberId, from.toISOString(), to.toISOString()]
+    );
+
+    return result.rows.map(row => ({
+      id: `studio-${row.id}`,
+      title: row.title,
+      start: row.start_time,
+      end: row.end_time,
+      source: 'studio' as const,
+      allDay: row.all_day,
+      description: row.description,
+      location: row.location,
+    }));
+  } catch (error) {
+    console.error('[Studio Calendar Events] Studio fetch error:', error);
+    return [];
   }
 }
 
