@@ -68,6 +68,8 @@ import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLay
 import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
+import { isAiPermitted } from '@/lib/trust/service';
+import type { PrivacyGateResult } from '@/lib/trust/types';
 
 // Skip during static export (Capacitor builds)
 
@@ -380,6 +382,57 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // =========================================================================
+    // TRUST LAYER: Privacy gate — block symbolic/generative processing
+    // when the session's privacy envelope forbids AI distillation.
+    // Checked early so no symbolic agent, facet detection, or interpretive
+    // processing runs at all. Returns a presence-only reflection.
+    // =========================================================================
+    let privacyGate: PrivacyGateResult = { permitted: true };
+    try {
+      privacyGate = await isAiPermitted(sessionId);
+    } catch (gateErr) {
+      // Fail open for MAIA sessions (these are not practitioner rl_sessions
+      // by default — isAiPermitted returns session_not_found for regular
+      // MAIA chat sessions that don't have an rl_sessions row).
+      // In that case, we permit: the gate only blocks when a session
+      // explicitly opts out.
+      console.warn('[Trust] Privacy gate error (failing open):', gateErr);
+      privacyGate = { permitted: true };
+    }
+
+    if (!privacyGate.permitted) {
+      console.log('[Trust] Symbolic processing blocked for session', {
+        sessionId: sessionId.substring(0, 8) + '...',
+        reason: privacyGate.reason,
+        agent: 'oracle',
+      });
+
+      return NextResponse.json({
+        success: true,
+        response: 'This session is set to private, so I won\'t generate insights here. You can still use this space to reflect or note what feels important.',
+        privacyGate: {
+          blocked: true,
+          reason: privacyGate.reason,
+          mode: 'reflection_only',
+        },
+        spiralogic: null,
+        panconsciousField: null,
+        opusAxioms: null,
+        context: {
+          providerUsed: 'none',
+          modelUsed: 'none',
+          usedProviderFallback: false,
+          generationTimeMs: 0,
+          model: 'none',
+          architecture: 'MAIA-SOVEREIGN trust-layer-gate',
+          status: 'privacy_blocked',
+        },
+        responseId: `maia_privacy_gate_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     // =========================================================================

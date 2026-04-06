@@ -81,6 +81,7 @@ export interface MemoryContractRow {
   applies_to: MemoryAppliesTo;
   consent_method: ConsentLevel;
   consent_given_at: string;
+  never_use_for_ai: boolean;
   revoked_at: string | null;
   revoked_reason: string | null;
   expires_at: string | null;
@@ -143,6 +144,7 @@ export const CreateMemoryContractSchema = z.object({
   disposition: MemoryDispositionSchema.default('keep_private'),
   appliesTo: MemoryAppliesToSchema.default('session'),
   consentMethod: ConsentLevelSchema.default('digital'),
+  neverUseForAi: z.boolean().default(false),
   expiresAt: z.string().datetime().optional().nullable(),
 }).strict();
 
