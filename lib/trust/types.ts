@@ -53,33 +53,6 @@ export const PrivacyModeSchema = z.enum(PRIVACY_MODES);
 export const ConsentLevelSchema = z.enum(CONSENT_LEVELS);
 export const VisibilityScopeSchema = z.enum(VISIBILITY_SCOPES);
 
-// ── Scheduling Disclosure ──────────────────────────────────
-
-export const EXPOSURE_LEVELS = ['free_busy_only', 'session_type', 'full_details'] as const;
-export const DISPLAY_TITLE_MODES = ['hidden', 'generic', 'full'] as const;
-
-export type ExposureLevel = (typeof EXPOSURE_LEVELS)[number];
-export type DisplayTitleMode = (typeof DISPLAY_TITLE_MODES)[number];
-
-export const ExposureLevelSchema = z.enum(EXPOSURE_LEVELS);
-export const DisplayTitleModeSchema = z.enum(DISPLAY_TITLE_MODES);
-
-export interface CalendarDisclosureInput {
-  clientName?: string;
-  serviceName?: string;
-  locationType?: string;
-  locationDetails?: string;
-  notes?: string;
-}
-
-export interface CalendarDisclosure {
-  visible: boolean;
-  title: string | null;
-  description: string | null;
-  locationType: string | null;
-  locationDetails: string | null;
-}
-
 // ── Message Intelligence ──────────────────────────────────
 
 export const MESSAGE_INTENTS = ['care', 'instruction', 'reflection', 'logistics', 'safety_followup'] as const;

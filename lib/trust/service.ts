@@ -27,10 +27,6 @@ import type {
   UpdateSessionPrivacy,
   CreateMemoryContract,
   CreateArtifactShare,
-  ExposureLevel,
-  DisplayTitleMode,
-  CalendarDisclosureInput,
-  CalendarDisclosure,
 } from './types';
 import { SHAREABLE_ARTIFACT_TYPES } from './types';
 
@@ -148,118 +144,6 @@ export async function getSessionPrivacy(sessionId: string): Promise<{
     allowAiDistillation: row.allow_ai_distillation,
     allowExport: row.allow_export,
   };
-}
-
-// ── Calendar Disclosure ────────────────────────────────────
-
-/**
- * Resolves the display title for a calendar event based on mode.
- */
-function resolveDisplayTitle(
-  mode: DisplayTitleMode,
-  input: CalendarDisclosureInput
-): string | null {
-  switch (mode) {
-    case 'hidden':
-      return null;
-    case 'generic':
-      return 'Session';
-    case 'full':
-      return [input.serviceName, input.clientName]
-        .filter(Boolean)
-        .join(' — ') || 'Session';
-  }
-}
-
-/**
- * Calendar disclosure: determines what session details are visible
- * in external calendars and to different viewers.
- *
- * Precedence:
- * 1. confidential privacy_mode → always free_busy_only (override)
- * 2. exposure_level on the session → controls detail level
- * 3. display_title_mode → controls title visibility within the level
- *
- * Returns a filtered view of the session suitable for external output.
- */
-export async function getCalendarDisclosure(
-  sessionId: string,
-  input: CalendarDisclosureInput
-): Promise<CalendarDisclosure> {
-  const result = await query(
-    `SELECT privacy_mode, exposure_level, display_title_mode
-     FROM rl_sessions WHERE id = $1`,
-    [sessionId]
-  );
-
-  // No rl_session row — default to moderate disclosure
-  let exposureLevel: ExposureLevel = 'session_type';
-  let displayTitleMode: DisplayTitleMode = 'generic';
-
-  if (result.rows.length > 0) {
-    const row = result.rows[0];
-
-    // Confidential privacy_mode forces maximum restriction
-    if (row.privacy_mode === 'confidential') {
-      exposureLevel = 'free_busy_only';
-      displayTitleMode = 'hidden';
-    } else {
-      exposureLevel = (row.exposure_level as ExposureLevel) || 'session_type';
-      displayTitleMode = (row.display_title_mode as DisplayTitleMode) || 'generic';
-    }
-  }
-
-  switch (exposureLevel) {
-    case 'free_busy_only':
-      return {
-        visible: true,
-        title: 'Busy',
-        description: null,
-        locationType: null,
-        locationDetails: null,
-      };
-
-    case 'session_type':
-      return {
-        visible: true,
-        title: resolveDisplayTitle(displayTitleMode, input),
-        description: input.serviceName ? `Service: ${input.serviceName}` : null,
-        locationType: input.locationType ?? null,
-        locationDetails: null, // No specific location at this level
-      };
-
-    case 'full_details':
-      return {
-        visible: true,
-        title: resolveDisplayTitle(displayTitleMode, input),
-        description: buildDisclosedDescription(input),
-        locationType: input.locationType ?? null,
-        locationDetails: input.locationDetails ?? null,
-      };
-  }
-}
-
-/**
- * Builds a full description for calendar events (full_details mode only).
- */
-function buildDisclosedDescription(input: CalendarDisclosureInput): string | null {
-  const lines: string[] = [];
-  if (input.clientName) lines.push(`Client: ${input.clientName}`);
-  if (input.serviceName) lines.push(`Service: ${input.serviceName}`);
-  if (input.locationType) {
-    const label = {
-      video: 'Video Call', phone: 'Phone',
-      in_person: 'In Person', async: 'Async',
-    }[input.locationType] || input.locationType;
-    lines.push(`Location: ${label}`);
-  }
-  if (input.notes) {
-    lines.push('');
-    lines.push(input.notes);
-  }
-  lines.push('');
-  lines.push('Managed by Soullab Studio');
-  return lines.length > 1 ? lines.join('\n') : null;
 }
 
 /**
