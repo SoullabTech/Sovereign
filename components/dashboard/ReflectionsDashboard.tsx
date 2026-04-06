@@ -41,6 +41,11 @@ export default function ReflectionsDashboard() {
   const fetchReflectionData = async () => {
     try {
       const response = await fetch('/api/analytics/reflections')
+      if (response.status === 404) {
+        // Endpoint not yet built — show empty state, not error
+        setData({ total: 0, completionRate: 0, feelings: [], daily: [] })
+        return
+      }
       if (!response.ok) throw new Error('Failed to fetch reflection data')
       const result = await response.json()
       setData(result)
