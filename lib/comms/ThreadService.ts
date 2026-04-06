@@ -269,7 +269,7 @@ export async function sendMessage(
     }
   }
 
-  // Insert message with used_suggestion_id
+  // Insert message with used_suggestion_id + trust metadata
   const message = await queryOne<CommsMessage>(
     `INSERT INTO comms_messages (
       thread_id,
@@ -283,8 +283,15 @@ export async function sendMessage(
       is_quick_response,
       quick_response_type,
       reply_to_id,
-      used_suggestion_id
-    ) VALUES ($1, 'practitioner', $2, $3, $4, $5, $6, 'sent', $7, $8, $9, $10)
+      used_suggestion_id,
+      ai_assist_mode,
+      disclosure_mode,
+      disclosure_text,
+      trust_scope,
+      ai_permitted,
+      contains_relational_inference,
+      trust_checked_at
+    ) VALUES ($1, 'practitioner', $2, $3, $4, $5, $6, 'sent', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     RETURNING *`,
     [
       threadId,
@@ -297,6 +304,13 @@ export async function sendMessage(
       input.quick_response_type || null,
       input.reply_to_id || null,
       usedSuggestionId,
+      input.ai_assist_mode || 'none',
+      input.disclosure_mode || 'none',
+      input.disclosure_text || null,
+      input.trust_scope || 'direct_only',
+      input.ai_permitted ?? false,
+      input.contains_relational_inference ?? false,
+      input.trust_checked_at || new Date().toISOString(),
     ]
   );
 

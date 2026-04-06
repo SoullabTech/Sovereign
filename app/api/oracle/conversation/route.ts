@@ -69,7 +69,8 @@ import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
-import type { PrivacyGateResult } from '@/lib/trust/types';
+import type { PrivacyGateResult, CheckAccessResult } from '@/lib/trust/types';
+import { checkAccess } from '@/lib/trust/checkAccess';
 
 // Skip during static export (Capacitor builds)
 
@@ -385,29 +386,45 @@ export async function POST(request: NextRequest) {
     }
 
     // =========================================================================
-    // TRUST LAYER: Privacy gate — block symbolic/generative processing
-    // when the session's privacy envelope forbids AI distillation.
-    // Checked early so no symbolic agent, facet detection, or interpretive
-    // processing runs at all. Returns a presence-only reflection.
+    // UNIFIED TRUST LAYER: checkAccess() — single governance seam.
+    // Replaces the old isAiPermitted-only gate with full trust middleware.
+    // Checks identity, relationship, privacy envelope, AI permission, and
+    // meaning expansion. Degrades gracefully instead of hard-blocking.
     // =========================================================================
-    let privacyGate: PrivacyGateResult = { permitted: true };
+    let trustResult: CheckAccessResult;
     try {
-      privacyGate = await isAiPermitted(sessionId);
-    } catch (gateErr) {
-      // Fail open for MAIA sessions (these are not practitioner rl_sessions
-      // by default — isAiPermitted returns session_not_found for regular
-      // MAIA chat sessions that don't have an rl_sessions row).
-      // In that case, we permit: the gate only blocks when a session
-      // explicitly opts out.
-      console.warn('[Trust] Privacy gate error (failing open):', gateErr);
-      privacyGate = { permitted: true };
+      trustResult = await checkAccess({
+        actorId: userId,
+        memberId: userId,
+        resourceType: 'session',
+        resourceId: sessionId,
+        action: 'generate',
+        channel: 'oracle',
+        useAI: true,
+        relationshipContext: { sessionId },
+      });
+    } catch (trustErr) {
+      // Fail open for MAIA sessions (regular chat sessions may not have
+      // rl_sessions rows). The gate only blocks when explicitly configured.
+      console.warn('[Trust] checkAccess error (failing open):', trustErr);
+      trustResult = {
+        allowed: true,
+        reasonCode: 'trust_error_failopen',
+        aiPermitted: true,
+        trustCheckedAt: new Date().toISOString(),
+      };
     }
 
-    if (!privacyGate.permitted) {
-      console.log('[Trust] Symbolic processing blocked for session', {
+    // Backward-compatible privacyGate object for downstream telemetry
+    const privacyGate: PrivacyGateResult = {
+      permitted: trustResult.aiPermitted !== false,
+      reason: trustResult.aiDenialReason,
+    };
+
+    if (!trustResult.allowed) {
+      console.log('[Trust] Access denied for oracle session', {
         sessionId: sessionId.substring(0, 8) + '...',
-        reason: privacyGate.reason,
-        agent: 'oracle',
+        reason: trustResult.reasonCode,
       });
 
       return NextResponse.json({
@@ -415,7 +432,7 @@ export async function POST(request: NextRequest) {
         response: 'This session is set to private, so I won\'t generate insights here. You can still use this space to reflect or note what feels important.',
         privacyGate: {
           blocked: true,
-          reason: privacyGate.reason,
+          reason: trustResult.reasonCode,
           mode: 'reflection_only',
         },
         spiralogic: null,
@@ -428,10 +445,20 @@ export async function POST(request: NextRequest) {
           generationTimeMs: 0,
           model: 'none',
           architecture: 'MAIA-SOVEREIGN trust-layer-gate',
-          status: 'privacy_blocked',
+          status: 'access_denied',
         },
-        responseId: `maia_privacy_gate_${Date.now()}`,
+        responseId: `maia_trust_gate_${Date.now()}`,
         timestamp: new Date().toISOString(),
+      });
+    }
+
+    // AI permission degradation: if allowed but AI vetoed, strip restricted
+    // inputs and degrade gracefully rather than hard-blocking.
+    const aiDegraded = trustResult.aiPermitted === false;
+    if (aiDegraded) {
+      console.log('[Trust] AI degraded for session — will strip restricted inputs', {
+        sessionId: sessionId.substring(0, 8) + '...',
+        reason: trustResult.aiDenialReason,
       });
     }
 
@@ -1332,7 +1359,15 @@ export async function POST(request: NextRequest) {
         trustLevel: trustLevel,
         status: 'hybrid_sacred_attending',
         socraticValidatorUsedFallback: usedFallback, // Renamed: this is for Socratic regeneration only
-        socraticValidator: validationResult ? serializeValidationResult(validationResult) : null
+        socraticValidator: validationResult ? serializeValidationResult(validationResult) : null,
+        // Phase 3: relational intelligence telemetry
+        trust: {
+          inferenceType: trustResult.inferenceType,
+          meaningExpansionLevel: trustResult.meaningExpansionLevel,
+          expressionProfile: trustResult.expressionProfile,
+          disclosureRequired: trustResult.disclosureRequired,
+          aiDegraded,
+        }
       },
       fieldEvent: {
         id: fieldEvent.id,

@@ -20,7 +20,7 @@ import { buildFollowupPrompt, buildRepairPrompt } from '@/lib/studio/followups/p
 import { validateFollowupContent, hasMinimumFollowupContent } from '@/lib/studio/followups/contentGuards';
 import { parseDraftJsonWithRepair } from '@/lib/studio/followups/parseDraftJsonWithRepair';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import { isAiPermitted } from '@/lib/trust/service';
+import { checkAccess } from '@/lib/trust/checkAccess';
 
 export const runtime = 'nodejs';
 
@@ -52,10 +52,24 @@ export async function POST(req: NextRequest) {
       return json(400, { error: 'No reviewable content available for follow-up generation' });
     }
 
-    // Trust Layer: privacy gate — check session and memory contract permissions
-    const aiCheck = await isAiPermitted(input.sessionId);
-    if (!aiCheck.permitted) {
-      return json(403, { error: `AI generation blocked: ${aiCheck.reason}` });
+    // Unified Trust Layer: check session ownership, privacy, AI permission, meaning expansion
+    const trustResult = await checkAccess({
+      actorId: memberId,
+      memberId,
+      resourceType: 'artifact',
+      resourceId: input.sessionId,
+      action: 'generate',
+      channel: 'studio',
+      useAI: true,
+      relationshipContext: { sessionId: input.sessionId },
+    });
+
+    if (!trustResult.allowed) {
+      return json(403, { error: trustResult.humanMessage || 'Access denied' });
+    }
+
+    if (!trustResult.aiPermitted) {
+      return json(403, { error: `AI generation blocked: ${trustResult.aiDenialReason || 'privacy_gate'}` });
     }
 
     // Build prompt
@@ -152,6 +166,14 @@ export async function POST(req: NextRequest) {
           generatedAt: artifact.created_at,
           turnCount: sessionData.transcript.length,
           durationMinutes: sessionData.durationMinutes,
+          // Phase 3: relational intelligence
+          trust: {
+            inferenceType: trustResult.inferenceType,
+            meaningExpansionLevel: trustResult.meaningExpansionLevel,
+            expressionProfile: trustResult.expressionProfile,
+            disclosureRequired: trustResult.disclosureRequired,
+            disclosureText: trustResult.disclosureText,
+          },
         },
       },
     });

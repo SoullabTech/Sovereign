@@ -12,17 +12,47 @@
  */
 
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { Send, Zap, Clock, CheckCircle } from 'lucide-react';
+import { Send, Zap, Clock, CheckCircle, Shield, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+export type AiAssistMode = 'none' | 'structure_only' | 'draft_allowed';
+export type DisclosureMode = 'none' | 'manual' | 'automatic';
+
+const AI_ASSIST_OPTIONS: Array<{ value: AiAssistMode; label: string }> = [
+  { value: 'none', label: 'No AI' },
+  { value: 'structure_only', label: 'Structure only' },
+  { value: 'draft_allowed', label: 'Draft assist' },
+];
+
+const DISCLOSURE_OPTIONS: Array<{ value: DisclosureMode; label: string }> = [
+  { value: 'none', label: 'No disclosure' },
+  { value: 'manual', label: 'Manual' },
+  { value: 'automatic', label: 'Automatic' },
+];
+
+/** Auto-generated disclosure text for automatic mode */
+function getLocalDisclosurePreview(aiAssist: AiAssistMode): string {
+  if (aiAssist !== 'none') {
+    return 'This message was composed with AI assistance.';
+  }
+  return '';
+}
 
 export type QuickResponseType = 'noted' | 'discuss_next_session' | 'acknowledged';
 
+export interface MessageTrustContext {
+  aiAssistMode: AiAssistMode;
+  disclosureMode: DisclosureMode;
+  disclosureText?: string;
+}
+
 interface ComposeBoxProps {
-  onSend: (body: string) => Promise<void>;
+  onSend: (body: string, trust?: MessageTrustContext) => Promise<void>;
   onQuickResponse: (type: QuickResponseType) => Promise<void>;
   disabled?: boolean;
   placeholder?: string;
   maxLength?: number;
+  showTrustControls?: boolean;
 }
 
 const QUICK_RESPONSES: Array<{
@@ -64,10 +94,13 @@ export const ComposeBox = forwardRef<ComposeBoxRef, ComposeBoxProps>(function Co
   disabled = false,
   placeholder = "Write a reply...",
   maxLength = 10000,
+  showTrustControls = true,
 }, ref) {
   const [body, setBody] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showQuickResponses, setShowQuickResponses] = useState(false);
+  const [aiAssistMode, setAiAssistMode] = useState<AiAssistMode>('none');
+  const [disclosureMode, setDisclosureMode] = useState<DisclosureMode>('none');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Expose methods via ref
@@ -94,8 +127,18 @@ export const ComposeBox = forwardRef<ComposeBoxRef, ComposeBoxProps>(function Co
 
     setIsSending(true);
     try {
-      await onSend(body.trim());
+      const trust: MessageTrustContext = {
+        aiAssistMode,
+        disclosureMode,
+        ...(disclosureMode === 'automatic' && {
+          disclosureText: getLocalDisclosurePreview(aiAssistMode),
+        }),
+      };
+      await onSend(body.trim(), showTrustControls ? trust : undefined);
       setBody('');
+      // Reset trust controls after send
+      setAiAssistMode('none');
+      setDisclosureMode('none');
     } finally {
       setIsSending(false);
     }
@@ -167,6 +210,48 @@ export const ComposeBox = forwardRef<ComposeBoxRef, ComposeBoxProps>(function Co
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Trust controls */}
+      {showTrustControls && (
+        <div className="flex items-center space-x-3 mb-2">
+          {/* AI assist */}
+          <div className="flex items-center space-x-1.5">
+            <Bot className="w-3.5 h-3.5 text-gray-500" />
+            <select
+              value={aiAssistMode}
+              onChange={(e) => setAiAssistMode(e.target.value as AiAssistMode)}
+              disabled={disabled || isSending}
+              className="text-xs bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-gray-300 focus:border-sacred-gold/50 focus:outline-none disabled:opacity-50"
+            >
+              {AI_ASSIST_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Disclosure */}
+          <div className="flex items-center space-x-1.5">
+            <Shield className="w-3.5 h-3.5 text-gray-500" />
+            <select
+              value={disclosureMode}
+              onChange={(e) => setDisclosureMode(e.target.value as DisclosureMode)}
+              disabled={disabled || isSending}
+              className="text-xs bg-gray-900/50 border border-gray-700/50 rounded px-2 py-1 text-gray-300 focus:border-sacred-gold/50 focus:outline-none disabled:opacity-50"
+            >
+              {DISCLOSURE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Disclosure preview */}
+      {showTrustControls && disclosureMode === 'automatic' && (
+        <div className="mb-2 px-3 py-1.5 rounded bg-gray-700/20 border border-gray-700/30 text-xs text-gray-400 italic">
+          {getLocalDisclosurePreview(aiAssistMode) || 'No disclosure needed for current settings.'}
+        </div>
+      )}
 
       {/* Message input */}
       <div className="flex items-end space-x-3">
