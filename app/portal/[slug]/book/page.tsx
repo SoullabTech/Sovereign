@@ -137,7 +137,7 @@ function BookingContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
       </div>
     );
@@ -145,7 +145,7 @@ function BookingContent() {
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center px-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -174,7 +174,7 @@ function BookingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090F] text-white">
+    <div className="min-h-screen bg-[#0d1b2a] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
         {/* Back */}
@@ -195,13 +195,13 @@ function BookingContent() {
           {(['Service', 'Date & Time', 'Your info', 'Review'] as const).map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                ${i <= stepIndex ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>
+                ${i <= stepIndex ? 'bg-blue-600 text-white' : 'bg-[#1a2d44] text-zinc-500'}`}>
                 {i < stepIndex ? <Check size={12} /> : i + 1}
               </div>
               <span className={`text-xs hidden sm:block ${i <= stepIndex ? 'text-zinc-300' : 'text-zinc-600'}`}>
                 {label}
               </span>
-              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-blue-600' : 'bg-zinc-800'}`} />}
+              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-blue-600' : 'bg-[#1a2d44]'}`} />}
             </div>
           ))}
         </div>
@@ -215,8 +215,8 @@ function BookingContent() {
                 <button
                   key={svc.id}
                   onClick={() => { setSelectedService(svc); setStep('datetime'); }}
-                  className="w-full text-left p-5 rounded-xl bg-zinc-900 border border-zinc-800
-                             hover:border-zinc-500 transition-colors group"
+                  className="w-full text-left p-5 rounded-xl bg-[#162033] border border-[#1e3048]
+                             hover:border-blue-500/50 transition-colors group"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -246,7 +246,7 @@ function BookingContent() {
         {step === 'datetime' && selectedService && (
           <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
             {/* Service summary */}
-            <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-[#162033] border border-[#1e3048]">
               <div>
                 <p className="text-sm font-medium text-white">{selectedService.name}</p>
                 <p className="text-xs text-zinc-500">{selectedService.duration_minutes} min · ${(selectedService.price_cents / 100).toFixed(0)}</p>
@@ -261,7 +261,7 @@ function BookingContent() {
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#1a2d44] text-zinc-400 hover:text-white transition-colors"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -270,7 +270,7 @@ function BookingContent() {
                 </span>
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#1a2d44] text-zinc-400 hover:text-white transition-colors"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -295,7 +295,7 @@ function BookingContent() {
                         ${!date ? 'invisible' : ''}
                         ${date && !isSelectable ? 'text-zinc-700 cursor-not-allowed' : ''}
                         ${isSelected ? 'bg-blue-700 text-white' : ''}
-                        ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-zinc-800' : ''}
+                        ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-[#1a2d44]' : ''}
                       `}
                     >
                       {date?.getDate()}
@@ -311,7 +311,7 @@ function BookingContent() {
                 <p className="text-xs text-zinc-500 mb-3">{formatDate(selectedDate)}</p>
                 {loadingSlots ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="w-5 h-5 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-[#1e3048] border-t-zinc-400 rounded-full animate-spin" />
                   </div>
                 ) : timeSlots.length === 0 ? (
                   <p className="text-sm text-zinc-500 text-center py-6">No available times on this date.</p>
@@ -324,7 +324,7 @@ function BookingContent() {
                         className={`py-2.5 rounded-lg text-sm font-medium transition-colors
                           ${selectedTime === slot.start
                             ? 'bg-blue-700 text-white'
-                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
+                            : 'bg-[#1a2d44] text-zinc-300 hover:bg-[#1e3048] hover:text-white'
                           }`}
                       >
                         {formatTime(slot.start)}
@@ -359,8 +359,8 @@ function BookingContent() {
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-[#1e3048] text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             <div>
@@ -370,8 +370,8 @@ function BookingContent() {
                 value={clientEmail}
                 onChange={e => setClientEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-[#1e3048] text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             <div>
@@ -381,8 +381,8 @@ function BookingContent() {
                 onChange={e => setClientNotes(e.target.value)}
                 placeholder="Anything you'd like to share before the session"
                 rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-[#1e3048] text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
               />
             </div>
             <button
@@ -400,7 +400,7 @@ function BookingContent() {
         {step === 'confirm' && selectedService && selectedDate && selectedTime && (
           <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
             <h2 className="text-sm font-medium text-zinc-400 mb-6 uppercase tracking-wider">Review & confirm</h2>
-            <div className="rounded-xl border border-zinc-800 overflow-hidden mb-6">
+            <div className="rounded-xl border border-[#1e3048] overflow-hidden mb-6">
               {[
                 { label: 'Service', value: selectedService.name },
                 { label: 'Date', value: formatDate(selectedDate) },
@@ -412,7 +412,7 @@ function BookingContent() {
               ].map((row, i, arr) => (
                 <div
                   key={row.label}
-                  className={`flex items-center justify-between px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-zinc-800' : ''}`}
+                  className={`flex items-center justify-between px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-[#1e3048]' : ''}`}
                 >
                   <span className="text-xs text-zinc-500">{row.label}</span>
                   <span className={`text-sm font-medium ${row.label === 'Total' ? 'text-white' : 'text-zinc-300'}`}>
@@ -453,7 +453,7 @@ function BookingContent() {
 export default function PortalBookPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
       </div>
     }>
