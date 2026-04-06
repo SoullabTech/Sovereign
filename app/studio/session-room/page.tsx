@@ -188,6 +188,9 @@ export default function SessionRoomPage() {
   // ── Page-local state (idle phase setup) ───────────────────────────────
   const [localContainer, setLocalContainer] = useState<SessionContainer>('solo');
   const [localMemoryPolicy, setLocalMemoryPolicy] = useState<MemoryPolicy>('sealed');
+  // Session Support: defaults to off. When Phase 4 wires allow_ai_distillation to bookings,
+  // initialize from persisted state here instead of hardcoded false.
+  const [sessionSupport, setSessionSupport] = useState(false);
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
@@ -703,6 +706,42 @@ ${insightsSection}
                   </p>
                 </div>
               </label>
+            </div>
+
+            {/* Session Support (AI participation) */}
+            <div className="mb-6">
+              <label className="text-xs text-slate-500 uppercase tracking-wider block mb-2">
+                Session Support
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSessionSupport(false)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm transition-all ${
+                    !sessionSupport
+                      ? 'bg-teal-500/15 border-teal-500/40 text-teal-300'
+                      : 'bg-[#1e1e38] border-slate-800/50 text-slate-500 hover:border-slate-700'
+                  }`}
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  Off
+                </button>
+                <button
+                  onClick={() => setSessionSupport(true)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm transition-all ${
+                    sessionSupport
+                      ? 'bg-blue-500/15 border-blue-500/40 text-blue-300'
+                      : 'bg-[#1e1e38] border-slate-800/50 text-slate-500 hover:border-slate-700'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  On
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-600 mt-1.5">
+                {sessionSupport
+                  ? 'MAIA may assist with reflection and follow-up'
+                  : 'No AI support during this session'}
+              </p>
             </div>
 
             {/* Memory policy */}

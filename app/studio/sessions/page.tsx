@@ -21,6 +21,8 @@ import {
 import { useBookings, Booking } from '@/hooks/useStudioData';
 import { useRouter } from 'next/navigation';
 import { VoiceNotePanel } from '@/components/studio/VoiceNotePanel';
+import { TrustBadge } from '@/components/studio/TrustBadge';
+import { DISCLOSURE_LABELS } from '@/lib/trust/labels';
 
 type FilterType = 'upcoming' | 'today' | 'all';
 
@@ -305,6 +307,16 @@ export default function SessionsPage() {
                               )}
                             </div>
                           )}
+
+                          {/* Trust indicators */}
+                          <div className="mt-2 flex items-center gap-2">
+                            <TrustBadge
+                              category="Calendar"
+                              label={DISCLOSURE_LABELS[booking.calendarDisclosure ?? 'generic']?.label ?? 'Generic'}
+                              color={DISCLOSURE_LABELS[booking.calendarDisclosure ?? 'generic']?.color ?? 'teal'}
+                              description={DISCLOSURE_LABELS[booking.calendarDisclosure ?? 'generic']?.shortDescription}
+                            />
+                          </div>
 
                           {/* Notes */}
                           {booking.notes && (
