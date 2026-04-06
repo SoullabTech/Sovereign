@@ -17,9 +17,7 @@ import {
   analyzeVoicePatterns,
 } from '@/lib/stellium/personas';
 import { VoicePatterns } from '@/lib/stellium/types';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 /**
  * POST /api/stellium/maia/train
@@ -115,10 +113,9 @@ async function trainVoice(
   content: string,
   currentPatterns: VoicePatterns
 ): Promise<{ type: string; insights: string[]; updates: Record<string, unknown> }> {
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: `You are analyzing writing samples to extract voice patterns.
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: `You are analyzing writing samples to extract voice patterns.
 Return a JSON object with:
 {
   "tone": "overall tone description",
@@ -135,12 +132,10 @@ Return a JSON object with:
         content: `Analyze these writing samples to extract voice patterns:\n\n${content}`,
       },
     ],
+    maxTokens: 1024,
   });
 
-  const textContent = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-    .map(block => block.text)
-    .join('');
+  const textContent = llmResponse.text;
 
   try {
     // Extract JSON from response
@@ -194,10 +189,9 @@ async function trainFramework(
   content: string,
   currentFramework: Record<string, unknown>
 ): Promise<{ type: string; insights: string[]; updates: Record<string, unknown> }> {
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: `You are analyzing content to understand a practitioner's theoretical framework.
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: `You are analyzing content to understand a practitioner's theoretical framework.
 Return a JSON object with:
 {
   "primary": "primary approach or methodology",
@@ -213,12 +207,10 @@ Return a JSON object with:
         content: `Analyze this content to understand the practitioner's framework:\n\n${content}`,
       },
     ],
+    maxTokens: 1024,
   });
 
-  const textContent = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-    .map(block => block.text)
-    .join('');
+  const textContent = llmResponse.text;
 
   try {
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
@@ -275,10 +267,9 @@ async function trainBoundaries(
   content: string,
   currentBoundaries: Record<string, unknown>
 ): Promise<{ type: string; insights: string[]; updates: Record<string, unknown> }> {
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: `You are analyzing content to understand a practitioner's boundaries.
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: `You are analyzing content to understand a practitioner's boundaries.
 Return a JSON object with:
 {
   "custom_rules": ["specific boundary rules to add"],
@@ -296,12 +287,10 @@ Focus on:
         content: `Analyze this content to understand boundaries:\n\n${content}`,
       },
     ],
+    maxTokens: 1024,
   });
 
-  const textContent = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-    .map(block => block.text)
-    .join('');
+  const textContent = llmResponse.text;
 
   try {
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);
@@ -345,10 +334,9 @@ async function trainFromConversation(
   content: string,
   persona: Record<string, unknown>
 ): Promise<{ type: string; insights: string[]; updates: Record<string, unknown> }> {
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    system: `You are analyzing a conversation transcript to learn how a practitioner works.
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: `You are analyzing a conversation transcript to learn how a practitioner works.
 Return a JSON object with:
 {
   "voice_observations": {
@@ -373,12 +361,10 @@ Return a JSON object with:
         content: `Analyze this conversation to learn the practitioner's patterns:\n\n${content}`,
       },
     ],
+    maxTokens: 2048,
   });
 
-  const textContent = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-    .map(block => block.text)
-    .join('');
+  const textContent = llmResponse.text;
 
   try {
     const jsonMatch = textContent.match(/\{[\s\S]*\}/);

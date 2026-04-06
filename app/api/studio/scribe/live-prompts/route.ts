@@ -14,9 +14,7 @@ export const maxDuration = 30;
 import { NextRequest, NextResponse } from 'next/server';
 import { query, insertOne } from '@/lib/db/postgres';
 import { getMemberIdFromRequest, verifySessionOwnership } from '@/lib/scribe/scribeAuth';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,10 +122,9 @@ export async function POST(request: NextRequest) {
     ].join('\n');
 
     // Call Claude — use Haiku for speed
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      system: `You are MAIA in mid-session witness mode. A practitioner is asking you a question during a live session with a client. Be brief and useful:
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'fast',
+      systemPrompt: `You are MAIA in mid-session witness mode. A practitioner is asking you a question during a live session with a client. Be brief and useful:
 
 - 3 bullets maximum
 - Format: What I notice / What to ask next / What to watch
@@ -138,11 +135,10 @@ export async function POST(request: NextRequest) {
       messages: [
         { role: 'user', content: userContent },
       ],
+      maxTokens: 300,
     });
 
-    const responseText = message.content[0].type === 'text'
-      ? message.content[0].text
-      : 'Unable to generate response.';
+    const responseText = llmResponse.text || 'Unable to generate response.';
 
     // Store the exchange
     const stored = await insertOne('studio_session_live_prompts', {

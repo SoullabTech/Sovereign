@@ -7,12 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getFieldBySlug } from '@/lib/masters/registry';
 
 export const dynamic = 'force-dynamic';
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 interface Message {
   role: 'user' | 'assistant';
@@ -49,15 +47,14 @@ export async function POST(
       { role: 'user', content: message.trim() },
     ];
 
-    const response = await client.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 1024,
-      system: systemPrompt,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'deep',
+      systemPrompt,
       messages,
+      maxTokens: 1024,
     });
 
-    const reply =
-      response.content[0]?.type === 'text' ? response.content[0].text : '';
+    const reply = llmResponse.text;
 
     return NextResponse.json({ message: reply });
   } catch (err) {

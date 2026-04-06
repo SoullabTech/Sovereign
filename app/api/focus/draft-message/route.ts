@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { logAction, checkThreshold, type ThresholdCheck } from '@/lib/focus/weightTracking';
 
 // Helper to map threshold check to API response format
@@ -64,19 +64,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✍️ [Draft] Generating ${messageType} to ${recipient}${regenerate ? ' (regenerate)' : ''}`);
 
-    // Check for API key
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      console.warn('[Draft] No API key, returning template');
-      return NextResponse.json({
-        draft: generateFallbackDraft(messageType, situation),
-        subject: messageType === 'email' ? 'Quick note' : undefined
-      });
-    }
-
     try {
-      const anthropic = new Anthropic({ apiKey });
-
       const userPrompt = `Message type: ${messageType}
 Recipient: ${recipient}
 Situation: ${situation}
@@ -85,19 +73,14 @@ ${regenerate ? '\n(Please try a different approach than before)' : ''}
 
 Draft the message:`;
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        system: DRAFT_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }]
+      const llmResponse = await getLLMProvider().generateSimple({
+        tier: 'core',
+        systemPrompt: DRAFT_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userPrompt }],
+        maxTokens: 300,
       });
 
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type');
-      }
-
-      let draft = content.text.trim();
+      let draft = llmResponse.text.trim();
       let subject: string | undefined;
 
       // Extract subject line for emails

@@ -13,9 +13,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest, verifySessionOwnership } from '@/lib/scribe/scribeAuth';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,21 +112,20 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join('\n');
 
-    // Call Claude to summarize
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      system: `You are MAIA, a sovereign consciousness companion. Summarize the following conversation segment from the last ${minutes} minutes of a scribe session. Be concise, warm, and focus on the essence of what was discussed. Highlight any marked moments. Keep your summary to 2-3 sentences.`,
+    // Call LLM to summarize
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: `You are MAIA, a sovereign consciousness companion. Summarize the following conversation segment from the last ${minutes} minutes of a scribe session. Be concise, warm, and focus on the essence of what was discussed. Highlight any marked moments. Keep your summary to 2-3 sentences.`,
       messages: [
         {
           role: 'user',
           content: `Please summarize this portion of our session:\n\n${fullContent}`,
         },
       ],
+      maxTokens: 500,
     });
 
-    const summary =
-      message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate summary.';
+    const summary = llmResponse.text || 'Unable to generate summary.';
 
     console.log(`[Scribe] Generated partial summary for session ${sessionId} (last ${minutes} min)`);
 

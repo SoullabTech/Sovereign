@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getFieldBySlug } from '@/lib/masters/registry';
 import {
   MasterFieldProfile,
@@ -36,7 +36,6 @@ import {
   SynthesizedProfile,
 } from '@/lib/masters/profile';
 
-const anthropic = new Anthropic();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Storage
@@ -258,22 +257,19 @@ async function synthesizeModule(
 
   const systemPrompt = getSynthesisSystemPrompt(module, masterName);
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1500,
-    system: systemPrompt,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt,
     messages: [
       {
         role: 'user',
         content: `Here are ${masterName}'s answers from the ${module} module of their field interview:\n\n${masterAnswers}\n\nSynthesize this into the structured JSON format. Be accurate to their words. Do not add warmth they didn't express. Do not flatten nuance.`,
       },
     ],
+    maxTokens: 1500,
   });
 
-  const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    .map(b => b.text)
-    .join('');
+  const text = llmResponse.text;
 
   try {
     const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/) ||

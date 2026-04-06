@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
 import { query } from '@/lib/db/postgres';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 interface RouteParams {
   params: Promise<{ clientId: string }>;
@@ -91,13 +92,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Delegate to the member report generator via internal fetch
-    // so we don't duplicate the AI generation logic.
-    // We pass the practitionerId as x-member-id so the internal
-    // route trusts it, then override the stored practitioner_id.
-    const Anthropic = (await import('@anthropic-ai/sdk')).default;
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
     const month = new Date(birthData.date).getMonth();
     const seasonalElement =
       month >= 2 && month <= 4 ? 'fire' :
@@ -150,13 +144,14 @@ Return ONLY valid JSON matching this structure (no markdown):
   "generatedAt": "${new Date().toISOString()}"
 }`;
 
-    const message = await client.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 2048,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'deep',
+      systemPrompt: '',
       messages: [{ role: 'user', content: prompt }],
+      maxTokens: 2048,
     });
 
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const text = llmResponse.text;
     const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
     const reportData = JSON.parse(cleaned);
 

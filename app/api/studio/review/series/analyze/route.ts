@@ -27,9 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/scribe/scribeAuth';
 import { REVIEW_LENS_REGISTRY, isValidReviewLensId, type ReviewLensId } from '@/lib/studio/reviewLens';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 const MIN_SESSIONS = 2;
 const MAX_SESSIONS = 8;
@@ -156,15 +154,14 @@ Session ${sessionIndex} — ${sessionTitle ?? 'Untitled'} — ${startedAt.toLoca
 TRANSCRIPT:
 ${transcript}`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 512,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: '',
     messages: [{ role: 'user', content: digestPrompt }],
+    maxTokens: 512,
   });
 
-  const digest = message.content[0].type === 'text'
-    ? message.content[0].text.trim()
-    : 'Digest unavailable.';
+  const digest = llmResponse.text ? llmResponse.text.trim() : 'Digest unavailable.';
 
   return {
     sessionId,
@@ -251,14 +248,14 @@ Your task is NOT to review any single session — that has already been done. Yo
 
 ${SERIES_OUTPUT_SCHEMA}`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
-    system: `You are an experienced clinical supervisor skilled in ${lens.label}. You analyze patterns across a series of sessions, not individual sessions in isolation.`,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: `You are an experienced clinical supervisor skilled in ${lens.label}. You analyze patterns across a series of sessions, not individual sessions in isolation.`,
     messages: [{ role: 'user', content: userMessage }],
+    maxTokens: 3000,
   });
 
-  const rawText = message.content[0].type === 'text' ? message.content[0].text : null;
+  const rawText = llmResponse.text || null;
   if (!rawText) throw new Error(`Lens ${lensId}: no text response`);
 
   const jsonText = rawText.trim()

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
-import Anthropic from '@anthropic-ai/sdk'
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider'
 
 export const dynamic = 'force-dynamic'
-
-const anthropic = new Anthropic()
 
 export async function POST(request: NextRequest) {
   const memberId = request.headers.get('x-member-id')
@@ -70,14 +68,14 @@ ${modeInstruction}
 
 Respond with warmth, depth, and precision. Help them discover what this passage holds for them. Keep responses focused and meaningful (2-4 paragraphs).`
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: question }]
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt,
+      messages: [{ role: 'user', content: question }],
+      maxTokens: 1024,
     })
 
-    const maiaResponse = response.content[0].type === 'text' ? response.content[0].text : ''
+    const maiaResponse = llmResponse.text
 
     // Save as an insight moment
     await query(
