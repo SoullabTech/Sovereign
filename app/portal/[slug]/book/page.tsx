@@ -151,8 +151,8 @@ function BookingContent() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full text-center"
         >
-          <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
-            <Check size={24} className="text-emerald-400" />
+          <div className="w-14 h-14 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-6">
+            <Check size={24} className="text-blue-400" />
           </div>
           <h1 className="text-2xl font-semibold text-white mb-2">Booking confirmed</h1>
           <p className="text-sm text-zinc-400 mb-2">
@@ -195,13 +195,13 @@ function BookingContent() {
           {(['Service', 'Date & Time', 'Your info', 'Review'] as const).map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                ${i <= stepIndex ? 'bg-white text-zinc-900' : 'bg-zinc-800 text-zinc-500'}`}>
+                ${i <= stepIndex ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}>
                 {i < stepIndex ? <Check size={12} /> : i + 1}
               </div>
               <span className={`text-xs hidden sm:block ${i <= stepIndex ? 'text-zinc-300' : 'text-zinc-600'}`}>
                 {label}
               </span>
-              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-zinc-500' : 'bg-zinc-800'}`} />}
+              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-blue-600' : 'bg-zinc-800'}`} />}
             </div>
           ))}
         </div>
@@ -294,7 +294,7 @@ function BookingContent() {
                       className={`aspect-square rounded-lg text-sm font-medium transition-colors
                         ${!date ? 'invisible' : ''}
                         ${date && !isSelectable ? 'text-zinc-700 cursor-not-allowed' : ''}
-                        ${isSelected ? 'bg-white text-zinc-900' : ''}
+                        ${isSelected ? 'bg-blue-700 text-white' : ''}
                         ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-zinc-800' : ''}
                       `}
                     >
@@ -323,7 +323,7 @@ function BookingContent() {
                         onClick={() => setSelectedTime(slot.start)}
                         className={`py-2.5 rounded-lg text-sm font-medium transition-colors
                           ${selectedTime === slot.start
-                            ? 'bg-white text-zinc-900'
+                            ? 'bg-blue-700 text-white'
                             : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
                           }`}
                       >
@@ -339,7 +339,7 @@ function BookingContent() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6">
                 <button
                   onClick={() => setStep('info')}
-                  className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+                  className="w-full py-3 rounded-lg bg-blue-700 text-white text-sm font-medium hover:bg-blue-600 transition-colors"
                 >
                   Continue
                 </button>
@@ -388,7 +388,7 @@ function BookingContent() {
             <button
               onClick={() => setStep('confirm')}
               disabled={!clientName || !clientEmail}
-              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+              className="w-full py-3 rounded-lg bg-blue-700 text-white text-sm font-medium hover:bg-blue-600
                          transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2"
             >
               Review booking
@@ -396,7 +396,7 @@ function BookingContent() {
           </motion.div>
         )}
 
-        {/* Step 4: Confirm */}
+        {/* Step 4: Review & Confirm */}
         {step === 'confirm' && selectedService && selectedDate && selectedTime && (
           <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
             <h2 className="text-sm font-medium text-zinc-400 mb-6 uppercase tracking-wider">Review & confirm</h2>
@@ -431,7 +431,7 @@ function BookingContent() {
             <button
               onClick={handleConfirm}
               disabled={submitting}
-              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+              className="w-full py-3 rounded-lg bg-blue-700 text-white text-sm font-medium hover:bg-blue-600
                          transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? 'Booking…' : 'Confirm booking'}
