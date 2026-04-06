@@ -772,6 +772,45 @@ function WeekView({
         })}
       </div>
 
+      {/* All-day events row */}
+      {(() => {
+        const hasAllDay = days.some(day =>
+          getEventsForDay(events, day).some(e => e.allDay || e.start.length === 10)
+        );
+        if (!hasAllDay) return null;
+        return (
+          <div className="grid grid-cols-8 border-b border-slate-800/50">
+            <div className="p-2 text-xs text-slate-600 text-right pr-2">all-day</div>
+            {days.map(day => {
+              const allDayEvents = getEventsForDay(events, day).filter(
+                e => e.allDay || e.start.length === 10
+              );
+              return (
+                <div key={`allday-${day.toISOString()}`} className="p-1 border-r border-slate-800/30 last:border-r-0 min-h-[32px]">
+                  {allDayEvents.map(event => (
+                    <button
+                      key={event.id}
+                      onClick={() => onEventClick(event)}
+                      className={`
+                        w-full px-1.5 py-0.5 rounded text-xs truncate text-left mb-0.5
+                        hover:opacity-80 transition-opacity
+                        ${event.source === 'maia'
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : event.source === 'studio'
+                            ? 'bg-slate-500/20 text-slate-300'
+                            : 'border border-teal-500/30 text-teal-400'}
+                      `}
+                    >
+                      {event.title}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* Time grid */}
       <div className="max-h-[600px] overflow-y-auto">
         <div className="grid grid-cols-8">
@@ -789,7 +828,9 @@ function WeekView({
 
           {/* Day columns */}
           {days.map(day => {
-            const dayEvents = getEventsForDay(events, day);
+            const dayEvents = getEventsForDay(events, day).filter(
+              e => !e.allDay && e.start.length !== 10
+            );
             const overlapLayout = layoutOverlappingEvents(dayEvents);
 
             return (
@@ -887,6 +928,34 @@ function DayView({
         </div>
       </div>
 
+      {/* All-day events */}
+      {(() => {
+        const allDayEvents = events.filter(e => e.allDay || e.start.length === 10);
+        if (allDayEvents.length === 0) return null;
+        return (
+          <div className="px-4 py-2 border-b border-slate-800/50 space-y-1">
+            <div className="text-xs text-slate-600 mb-1">all-day</div>
+            {allDayEvents.map(event => (
+              <button
+                key={event.id}
+                onClick={() => onEventClick(event)}
+                className={`
+                  w-full px-3 py-1.5 rounded-lg text-sm text-left
+                  hover:opacity-80 transition-opacity
+                  ${event.source === 'maia'
+                    ? 'bg-amber-500/20 text-amber-300'
+                    : event.source === 'studio'
+                      ? 'bg-slate-500/20 text-slate-200'
+                      : 'bg-teal-500/10 text-teal-300'}
+                `}
+              >
+                {event.title}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Time grid */}
       <div className="max-h-[600px] overflow-y-auto">
         <div className="grid grid-cols-[60px_1fr]">
@@ -912,10 +981,11 @@ function DayView({
               />
             ))}
 
-            {/* Events */}
+            {/* Timed events only (skip all-day) */}
             {(() => {
-              const overlapLayout = layoutOverlappingEvents(events);
-              return events.map(event => {
+              const timedEvents = events.filter(e => !e.allDay && e.start.length !== 10);
+              const overlapLayout = layoutOverlappingEvents(timedEvents);
+              return timedEvents.map(event => {
                 const eventStart = new Date(event.start);
                 const eventEnd = new Date(event.end);
                 const startMinutes = getHours(eventStart) * 60 + getMinutes(eventStart);
