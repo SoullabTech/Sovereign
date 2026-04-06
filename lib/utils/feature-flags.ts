@@ -24,6 +24,7 @@ export interface FeatureFlags {
   daoistVoiceLayer: boolean;            // Phase 2+: Daoist expression refinement on oracle output
   calendarConsciousness: boolean;       // Schedule awareness in MAIA responses (disclosure-filtered)
   founderConsole: boolean;              // MAIA Ops: founder operational command center at /founder
+  trustObservation: boolean;            // Phase 3: behavioral signal capture for affinity weighting
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -47,6 +48,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   daoistVoiceLayer: false,             // Off — Phase 2+: voice shaping after observation
   calendarConsciousness: false,        // Off — wiring deferred until disclosure proven stable
   founderConsole: false,               // Off — Phase 1 build in progress
+  trustObservation: false,             // Off — Phase 3 observation, enable after migration applied
 };
 
 /**

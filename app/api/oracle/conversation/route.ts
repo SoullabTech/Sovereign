@@ -71,6 +71,8 @@ import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
 import type { PrivacyGateResult, CheckAccessResult } from '@/lib/trust/types';
 import { checkAccess } from '@/lib/trust/checkAccess';
+import { storeTrustObservation, inferEngagementProxy, classifyResponseType } from '@/lib/trust/trustObservationService';
+import { getFeatureFlags } from '@/lib/utils/feature-flags';
 
 // Skip during static export (Capacitor builds)
 
@@ -1243,6 +1245,31 @@ export async function POST(request: NextRequest) {
       upsertFacetState(userId, {
         facet_id: facetSignal.facetId,
         facet_movement: facetSignal.movement,
+      });
+    }
+
+    // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
+    // Captures response type + engagement proxy for future affinity weighting.
+    // Flag: trustObservation (default OFF).
+    if (getFeatureFlags().trustObservation) {
+      const responseType = classifyResponseType({
+        activeFrameworks,
+        careLensActive: false, // will be true when care lens is wired
+      });
+      storeTrustObservation({
+        memberId: userId,
+        sessionId,
+        responseType,
+        engagementProxy: inferEngagementProxy({
+          replyLength: message.length,
+          conversationDepth,
+        }),
+        context: {
+          element: spiralogicCell.element,
+          phase: spiralogicCell.phase,
+          frameworks: activeFrameworks,
+          isGold: axiomSummary.isGold,
+        },
       });
     }
 
