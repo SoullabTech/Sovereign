@@ -15,6 +15,7 @@ import db from '@/lib/db/postgres';
 import crypto from 'crypto';
 import { generateInviteCode, hashInviteCode } from '@/lib/portal/invites';
 import { sendPortalClaimEmail } from '@/lib/portal/notifications';
+import { getAvailableSlots } from '@/lib/scheduling/slotCalculator';
 
 // ============================================================================
 // Tool Definitions for Claude
@@ -197,130 +198,53 @@ export async function checkAvailability(
   try {
     const { date, service_id } = params;
 
-    // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return {
-        success: false,
-        error: 'Invalid date format. Please use YYYY-MM-DD format.',
-      };
+      return { success: false, error: 'Invalid date format. Please use YYYY-MM-DD format.' };
     }
 
-    // Check if date is in the past
     const requestedDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     if (requestedDate < today) {
+      return { success: false, error: 'Cannot check availability for past dates.' };
+    }
+
+    // Use consolidated slot calculator
+    const slots = await getAvailableSlots({
+      practitionerId: ctx.practitionerId,
+      date,
+      serviceId: service_id,
+    });
+
+    if (slots.length === 0) {
       return {
-        success: false,
-        error: 'Cannot check availability for past dates.',
+        success: true,
+        data: { date, slots: [], message: 'No availability for this day.' },
       };
     }
 
-    // Get service duration
+    // Get duration for response metadata
     let duration = 60;
     if (service_id) {
-      const serviceResult = await db.query(
+      const svc = await db.query(
         `SELECT duration_minutes FROM services WHERE id = $1 AND practitioner_id = $2`,
         [service_id, ctx.practitionerId]
       );
-      if (serviceResult.rows.length > 0) {
-        duration = serviceResult.rows[0].duration_minutes;
-      }
-    }
-
-    // Get day of week (0 = Sunday)
-    const dayOfWeek = requestedDate.getDay();
-
-    // Get availability windows
-    const availabilityResult = await db.query(
-      `SELECT start_time, end_time
-       FROM practitioner_availability
-       WHERE practitioner_id = $1 AND day_of_week = $2 AND is_available = true
-       ORDER BY start_time`,
-      [ctx.practitionerId, dayOfWeek]
-    );
-
-    if (availabilityResult.rows.length === 0) {
-      return {
-        success: true,
-        data: {
-          date,
-          slots: [],
-          message: 'No availability set for this day.',
-        },
-      };
-    }
-
-    // Get existing bookings
-    const bookingsResult = await db.query(
-      `SELECT scheduled_start, scheduled_end
-       FROM sessions
-       WHERE practitioner_id = $1
-       AND DATE(scheduled_start) = $2
-       AND status NOT IN ('cancelled', 'no_show')`,
-      [ctx.practitionerId, date]
-    );
-
-    const bookedSlots = bookingsResult.rows.map((b) => ({
-      start: new Date(b.scheduled_start),
-      end: new Date(b.scheduled_end),
-    }));
-
-    // Generate available slots
-    const slots: Array<{ start: string; end: string }> = [];
-    const slotInterval = 30;
-    const now = new Date();
-
-    for (const window of availabilityResult.rows) {
-      const [startHour, startMin] = window.start_time.split(':').map(Number);
-      const [endHour, endMin] = window.end_time.split(':').map(Number);
-
-      let currentTime = startHour * 60 + startMin;
-      const windowEnd = endHour * 60 + endMin;
-
-      while (currentTime + duration <= windowEnd) {
-        const slotStart = `${String(Math.floor(currentTime / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
-        const slotEndMinutes = currentTime + duration;
-        const slotEnd = `${String(Math.floor(slotEndMinutes / 60)).padStart(2, '0')}:${String(slotEndMinutes % 60).padStart(2, '0')}`;
-
-        const slotStartDate = new Date(`${date}T${slotStart}`);
-        const slotEndDate = new Date(`${date}T${slotEnd}`);
-
-        // Check for conflicts
-        const isBooked = bookedSlots.some(
-          (booking) =>
-            (slotStartDate >= booking.start && slotStartDate < booking.end) ||
-            (slotEndDate > booking.start && slotEndDate <= booking.end) ||
-            (slotStartDate <= booking.start && slotEndDate >= booking.end)
-        );
-
-        // Check if in the past
-        const isPast = slotStartDate < now;
-
-        if (!isBooked && !isPast) {
-          slots.push({ start: slotStart, end: slotEnd });
-        }
-
-        currentTime += slotInterval;
-      }
+      if (svc.rows.length > 0) duration = svc.rows[0].duration_minutes;
     }
 
     return {
       success: true,
       data: {
         date,
-        slots,
+        slots: slots.map((s) => ({ start: s.start, end: s.end })),
         count: slots.length,
         duration_minutes: duration,
       },
     };
   } catch (error) {
     console.error('[BookingTools] checkAvailability error:', error);
-    return {
-      success: false,
-      error: 'Failed to check availability',
-    };
+    return { success: false, error: 'Failed to check availability' };
   }
 }
 
@@ -435,6 +359,19 @@ export async function createBooking(
         service.price_cents,
       ]
     );
+
+    // Bridge to calendar_events + booking_metadata (fire-and-forget)
+    bridgeBookingToCalendar({
+      sessionId,
+      practitionerId: ctx.practitionerId,
+      serviceName: service.name,
+      clientName: name,
+      scheduledStart,
+      scheduledEnd,
+      source: 'chat',
+    }).catch((err) => {
+      console.error('[BookingTools] Calendar bridge failed (non-blocking):', err);
+    });
 
     // Update marketing contact
     const existingContact = await db.query(
@@ -697,6 +634,75 @@ export async function executeTool(
       };
   }
 }
+
+// ============================================================================
+// Calendar Bridge
+// ============================================================================
+
+/**
+ * Bridge a session into calendar_events + booking_metadata.
+ * Fire-and-forget — never blocks the booking confirmation.
+ */
+async function bridgeBookingToCalendar(opts: {
+  sessionId: string;
+  practitionerId: string;
+  serviceName: string;
+  clientName: string;
+  scheduledStart: Date;
+  scheduledEnd: Date;
+  source: 'chat' | 'portal' | 'studio';
+  bookerTimezone?: string;
+  intakeResponses?: Record<string, unknown>;
+}): Promise<void> {
+  // Get practitioner's member_id for calendar_events ownership
+  const practitionerResult = await db.query(
+    `SELECT member_id FROM practitioners WHERE id = $1`,
+    [opts.practitionerId]
+  );
+  const memberId = practitionerResult.rows[0]?.member_id;
+  if (!memberId) {
+    console.warn('[BookingTools] No member_id for practitioner, skipping calendar bridge');
+    return;
+  }
+
+  // Insert calendar_event with calendar_provider = 'booking'
+  const calendarEventId = crypto.randomUUID();
+  await db.query(
+    `INSERT INTO calendar_events
+     (id, member_id, title, description, start_time, end_time, calendar_provider, calendar_disclosure)
+     VALUES ($1, $2, $3, $4, $5, $6, 'booking', 'generic')`,
+    [
+      calendarEventId,
+      memberId,
+      `${opts.serviceName} — ${opts.clientName}`,
+      `Booked via ${opts.source}`,
+      opts.scheduledStart.toISOString(),
+      opts.scheduledEnd.toISOString(),
+    ]
+  );
+
+  // Insert booking_metadata linking session → calendar_event
+  await db.query(
+    `INSERT INTO booking_metadata
+     (session_id, calendar_event_id, booker_timezone, intake_responses, source)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [
+      opts.sessionId,
+      calendarEventId,
+      opts.bookerTimezone || null,
+      JSON.stringify(opts.intakeResponses || {}),
+      opts.source,
+    ]
+  );
+
+  console.log(`[BookingTools] Calendar bridge: session=${opts.sessionId} → calendar_event=${calendarEventId}`);
+}
+
+/**
+ * Bridge a booking to calendar_events from an external caller (e.g. public booking API).
+ * Re-exports the internal function for use outside bookingTools.
+ */
+export { bridgeBookingToCalendar };
 
 // ============================================================================
 // Utilities
