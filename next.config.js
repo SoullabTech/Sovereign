@@ -206,6 +206,9 @@ const nextConfig = {
     optimizeCss: true,
     // Ensure SacredLabDrawer is in the critical path
     largePageDataBytes: 128 * 1000, // 128KB
+    serverActions: {
+      bodySizeLimit: '500mb',
+    },
   },
 };
 
