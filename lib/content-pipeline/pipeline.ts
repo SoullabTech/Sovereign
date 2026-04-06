@@ -22,9 +22,11 @@ async function saveDrafts(
 
   for (const [format, items] of formatMap) {
     for (const content of items) {
+      // Dual-write: new columns (format, content, element) + legacy columns (post_type, text, source_element)
+      // Keeps both schema generations consistent until legacy columns are retired
       const result = await query(
-        `INSERT INTO content_posts (source_id, source_title, format, content, element, status)
-         VALUES ($1, $2, $3, $4, $5, 'draft')
+        `INSERT INTO content_posts (source_id, source_title, format, content, element, platform, status, post_type, text, source_element)
+         VALUES ($1, $2, $3, $4, $5, NULL, 'draft', $3, $4, $5)
          RETURNING *`,
         [source.id, source.title, format, content, source.element || null]
       );

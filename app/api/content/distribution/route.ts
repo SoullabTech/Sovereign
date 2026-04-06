@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const format = searchParams.get('format');
 
-  let sql = 'SELECT * FROM content_posts WHERE 1=1';
+  // Canonical columns with legacy fallback: content trumps text, format trumps post_type
+  let sql = `SELECT *, COALESCE(content, text) AS content, COALESCE(format, post_type) AS format, COALESCE(element, source_element) AS element FROM content_posts WHERE 1=1`;
   const params: string[] = [];
 
   if (status) {
