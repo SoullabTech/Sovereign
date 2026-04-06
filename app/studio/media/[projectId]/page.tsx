@@ -231,7 +231,12 @@ export default function MediaProjectDetailPage({ params }: { params: Promise<{ p
         <div>
           {/* Transcribe button */}
           {!project.transcript && project.ai_processing_allowed && (project.media_type === 'audio' || project.media_type === 'video') && (
-            <TranscribeButton projectId={projectId} onStarted={fetchProject} />
+            <TranscribeButton
+              projectId={projectId}
+              projectStatus={project.status}
+              assets={project.assets}
+              onStarted={fetchProject}
+            />
           )}
 
           {project.transcript ? (
@@ -316,9 +321,24 @@ export default function MediaProjectDetailPage({ params }: { params: Promise<{ p
   );
 }
 
-function TranscribeButton({ projectId, onStarted }: { projectId: string; onStarted: () => void }) {
+function TranscribeButton({
+  projectId,
+  projectStatus,
+  assets,
+  onStarted,
+}: {
+  projectId: string;
+  projectStatus: string;
+  assets: MediaAssetRow[];
+  onStarted: () => void;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isUploading = projectStatus === 'uploading';
+  const hasAudioAsset = assets.some(a => a.asset_type === 'original' || a.asset_type === 'audio_extract');
+  const isProcessing = !isUploading && !hasAudioAsset;
+  const canTranscribe = !isUploading && hasAudioAsset && !loading;
 
   const handleTranscribe = async () => {
     setLoading(true);
@@ -339,16 +359,34 @@ function TranscribeButton({ projectId, onStarted }: { projectId: string; onStart
     }
   };
 
+  const buttonLabel = loading
+    ? 'Transcribing...'
+    : isUploading
+    ? 'Uploading...'
+    : isProcessing
+    ? 'Preparing audio...'
+    : 'Transcribe';
+
+  const ButtonIcon = loading || isUploading || isProcessing
+    ? Loader2
+    : Mic;
+
   return (
     <div className="mb-4">
       <button
         onClick={handleTranscribe}
-        disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+        disabled={!canTranscribe}
+        className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
       >
-        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
-        Transcribe
+        <ButtonIcon className={`w-4 h-4 ${(loading || isUploading || isProcessing) ? 'animate-spin' : ''}`} />
+        {buttonLabel}
       </button>
+      {isUploading && (
+        <p className="text-xs text-white/40 mt-1">Wait for upload to finish before transcribing</p>
+      )}
+      {isProcessing && (
+        <p className="text-xs text-white/40 mt-1">Processing audio... this may take a moment</p>
+      )}
       {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   );
