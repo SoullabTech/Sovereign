@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
-import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users, Activity, Layers, Network, GitBranch, Database } from 'lucide-react';
+import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users, Activity, Layers, Network, GitBranch, Database, FileText } from 'lucide-react';
 import { SystemHealthDisplay } from '@/components/system-health/SystemHealthDisplay';
 
 interface User {
@@ -252,6 +252,27 @@ export default function AdminPage() {
                 </div>
                 <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Pipeline */}
+        <div className="mb-8">
+          <div
+            onClick={() => router.push('/admin/content-pipeline')}
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 border border-white/20 hover:border-amber-500/40 hover:bg-white/[0.12] cursor-pointer transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-white group-hover:text-amber-300 transition-colors">Content Pipeline</h3>
+                  <p className="text-white/50 text-sm mt-0.5">Manuscript → meaning → distribution. Extract, transform, and review authored content.</p>
+                </div>
+              </div>
+              <ArrowLeft className="w-5 h-5 rotate-180 text-white/30 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </div>

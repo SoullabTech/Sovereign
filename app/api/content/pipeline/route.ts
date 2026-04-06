@@ -1,33 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { runContentPipeline } from '@/lib/content/pipeline'
+/**
+ * Content Pipeline API
+ *
+ * POST: Run manuscript → extraction → transformation → filter → save pipeline
+ *
+ * Protected by LABTOOLS_SECRET (admin-only)
+ */
 
-export const dynamic = 'force-dynamic'
+import { NextRequest, NextResponse } from 'next/server';
+import { runContentPipeline } from '@/lib/content-pipeline/pipeline';
+import type { ContentSource } from '@/lib/content-pipeline/types';
+
+export const dynamic = 'force-dynamic';
+
+const ADMIN_SECRET = process.env.LABTOOLS_SECRET || process.env.LABTOOLS_ADMIN_PASSWORD;
 
 export async function POST(request: NextRequest) {
-  const memberId = request.headers.get('x-member-id')
-
-  if (!memberId) {
-    return NextResponse.json({ error: 'Member ID required' }, { status: 401 })
+  const secret = request.headers.get('x-admin-secret');
+  if (!ADMIN_SECRET || secret !== ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const body = await request.json()
-    const { title, body: text, element } = body
+    const body = await request.json();
 
-    if (!title || !text) {
-      return NextResponse.json({ error: 'title and body required' }, { status: 400 })
+    if (!body.body || typeof body.body !== 'string') {
+      return NextResponse.json({ error: 'body (manuscript text) is required' }, { status: 400 });
     }
 
-    const result = await runContentPipeline({
-      id: `pipeline-${Date.now()}`,
-      title,
-      body: text,
-      element,
-    })
+    const source: ContentSource = {
+      id: body.id || `draft-${Date.now()}`,
+      title: body.title || 'Untitled',
+      body: body.body,
+      element: body.element,
+    };
 
-    return NextResponse.json(result)
+    const result = await runContentPipeline(source);
+
+    return NextResponse.json({
+      summary: result.extracted.summary,
+      passageCount: result.extracted.passages.length,
+      quoteCount: result.extracted.quotes.length,
+      postsCreated: result.posts.length,
+      posts: result.posts,
+      transformed: result.transformed,
+    });
   } catch (error) {
-    console.error('[ContentPipeline] Error:', error)
-    return NextResponse.json({ error: 'Pipeline failed' }, { status: 500 })
+    console.error('[ContentPipeline] Pipeline error:', error);
+    return NextResponse.json(
+      { error: 'Pipeline failed', detail: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
