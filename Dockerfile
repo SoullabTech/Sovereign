@@ -89,6 +89,9 @@ COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/lib ./lib
 COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 
+# Create media storage directory owned by node (volume mounts inherit this)
+RUN mkdir -p /app/data/media && chown -R node:node /app/data/media
+
 USER node
 EXPOSE 3000
 
