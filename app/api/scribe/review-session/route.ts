@@ -4,7 +4,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 90;
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { buildSessionReviewPrompt, getCompletedSessionData, formatSessionForDisplay } from '@/lib/scribe/sessionReviewMode';
 
 export async function POST(req: NextRequest) {
@@ -40,16 +40,15 @@ export async function POST(req: NextRequest) {
 
     console.log(`[SessionReview] ${meta.segmentCount} segments, sampled=${meta.segmentsSampled}, phantom=${meta.phantomPrefixRemoved ? 'stripped' : 'none'}`);
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 3000,
-      temperature: 0.7,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: '', // prompt is self-contained
       messages: [{ role: 'user', content: prompt }],
+      maxTokens: 3000,
+      temperature: 0.7,
     });
 
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+    const responseText = llmResponse.text;
 
     return NextResponse.json({
       success: true,

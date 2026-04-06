@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { reviseChapter } from '@/lib/story/storyWeaver';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -205,16 +205,15 @@ export async function PATCH(req: NextRequest) {
         notesResult.rows.map(n => ({ text: n.note_text, section: n.related_section }))
       );
 
-      // Call Claude to revise
-      const anthropic = new Anthropic();
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
+      // Call LLM to revise
+      const llmResponse = await getLLMProvider().generateSimple({
+        tier: 'core',
+        systemPrompt: '',
         messages: [{ role: 'user', content: revisionPrompt }],
+        maxTokens: 3000,
       });
 
-      const textBlock = response.content.find((block) => block.type === 'text');
-      const revisedDraft = textBlock?.type === 'text' ? textBlock.text : chapter.current_draft;
+      const revisedDraft = llmResponse.text || chapter.current_draft;
 
       // Update chapter with revision
       await query(

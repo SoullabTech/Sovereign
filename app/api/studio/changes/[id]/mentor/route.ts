@@ -13,15 +13,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { getHexagram } from '@/lib/iching/lookup';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-  timeout: 30000,
-});
 
 const MENTOR_SYSTEM_PROMPT = `You are MAIA Mentor — a sovereignty-oriented companion for people navigating change.
 
@@ -154,24 +150,20 @@ export async function POST(
       contextParts.push(``, `This change is on iteration ${row.iteration_count}. The person keeps returning to it.`);
     }
 
-    const MENTOR_MODEL = 'claude-haiku-4-5-20251001';
-    const message = await anthropic.messages.create({
-      model: MENTOR_MODEL,
-      max_tokens: 900,
-      system: MENTOR_SYSTEM_PROMPT,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'fast',
+      systemPrompt: MENTOR_SYSTEM_PROMPT,
       messages: [
         {
           role: 'user',
           content: contextParts.join('\n'),
         },
       ],
+      maxTokens: 900,
     });
 
     // Parse response
-    const responseText = message.content
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('');
+    const responseText = llmResponse.text;
 
     let mentorReflection;
     try {
@@ -204,7 +196,7 @@ export async function POST(
       nextExperiment: mentorReflection.nextExperiment,
       hexagramWisdom: mentorReflection.hexagramWisdom,
       generatedAt: new Date().toISOString(),
-      model: MENTOR_MODEL,
+      model: 'claude-haiku-4-5-20251001',
       templateVersion: 1,
     };
 

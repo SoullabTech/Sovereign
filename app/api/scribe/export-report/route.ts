@@ -25,7 +25,7 @@ export const maxDuration = 90;
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getCompletedSessionData } from '@/lib/scribe/sessionReviewMode';
 import { cleanForSynthesis, buildQualityHeader } from '@/lib/scribe/transcriptCleaner';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
@@ -142,20 +142,18 @@ export async function POST(req: NextRequest) {
       lens
     );
 
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      temperature: 0.5,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: '', // prompt is self-contained
       messages: [{ role: 'user', content: prompt }],
+      maxTokens: 4000,
+      temperature: 0.5,
     });
 
-    const reportText = message.content[0].type === 'text' ? message.content[0].text : '';
-    const usage = message.usage;
+    const reportText = llmResponse.text;
     const elapsedMs = Date.now() - t0;
 
-    console.log(`✅ [ExportReport] Done | ${elapsedMs}ms | in=${usage.input_tokens} out=${usage.output_tokens}`);
+    console.log(`✅ [ExportReport] Done | ${elapsedMs}ms | tokens=${llmResponse.metadata.tokenCount ?? 'n/a'}`);
 
     if (format === 'json') {
       return NextResponse.json({

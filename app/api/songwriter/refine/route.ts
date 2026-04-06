@@ -2,10 +2,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import type { SongSeed, ChordSuggestion, LyricSection } from '@/lib/songwriter/types';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
 
 // ─── POST /api/songwriter/refine ──────────────────────────────────────────────
 //
@@ -85,14 +83,15 @@ Task: ${sectionInstructions[section]}
 
 Return ONLY the JSON object. No explanation, no markdown.`;
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 500,
-    temperature: 0.85,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: '',
     messages: [{ role: 'user', content: prompt }],
+    maxTokens: 500,
+    temperature: 0.85,
   });
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const text = llmResponse.text;
   const json = extractJSON(text);
   const data = JSON.parse(json);
 
@@ -153,14 +152,15 @@ Rules:
 
 Return ONLY JSON: { "text": "the refined section text" }`;
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 400,
-    temperature: 0.7,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: '',
     messages: [{ role: 'user', content: prompt }],
+    maxTokens: 400,
+    temperature: 0.7,
   });
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
+  const text = llmResponse.text;
   const json = extractJSON(text);
   const data = JSON.parse(json);
 

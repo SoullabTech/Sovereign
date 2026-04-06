@@ -1,11 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { searchCards } from '@/lib/askMaia/cardService';
 import type { AskMaiaCard } from '@/lib/askMaia/types';
-
-const anthropic = new Anthropic();
 
 const SYSTEM_PROMPT = `You are MAIA, a wise guide for consciousness exploration, psychology, and spiritual growth. You draw from a rich library of knowledge cards covering:
 - Jungian psychology (shadow work, archetypes, individuation)
@@ -81,16 +79,14 @@ User's question: ${question}`;
     messages.push({ role: 'user', content: userMessage });
 
     // Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: SYSTEM_PROMPT,
       messages,
+      maxTokens: 1024,
     });
 
-    // Extract the text response
-    const textContent = response.content.find((block) => block.type === 'text');
-    const answerText = textContent ? textContent.text : '';
+    const answerText = llmResponse.text;
 
     return NextResponse.json({
       success: true,
@@ -102,8 +98,8 @@ User's question: ${question}`;
         tags: card.tags,
       })),
       usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
+        inputTokens: 0, // not tracked in abstraction
+        outputTokens: llmResponse.metadata.tokenCount ?? 0,
       },
     });
   } catch (error: any) {

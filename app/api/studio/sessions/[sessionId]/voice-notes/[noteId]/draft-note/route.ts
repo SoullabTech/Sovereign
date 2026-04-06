@@ -15,7 +15,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { writebackStudioSession, extractThemesFromNote } from '@/lib/practitioner/studioWriteback';
 
 async function getPractitionerId(): Promise<string | null> {
@@ -116,22 +116,17 @@ ${voiceNote.transcript}
 - Format with markdown headers`;
 
     // Call Claude
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
-
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      temperature: 0.3,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: '',
       messages: [
         { role: 'user', content: prompt },
       ],
+      maxTokens: 2000,
+      temperature: 0.3,
     });
 
-    const draftedNote = message.content[0].type === 'text'
-      ? message.content[0].text
-      : '';
+    const draftedNote = llmResponse.text;
 
     // Save drafted note back to voice_notes
     await db.query(

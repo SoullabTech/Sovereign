@@ -13,9 +13,7 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { getMemberIdFromRequest, verifySessionOwnership } from '@/lib/scribe/scribeAuth';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 export async function POST(request: NextRequest) {
   try {
@@ -110,11 +108,10 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join('\n');
 
-    // Call Claude to extract action items
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: `You are MAIA, a sovereign consciousness companion. Analyze the following scribe session transcript and extract:
+    // Call LLM to extract action items
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: `You are MAIA, a sovereign consciousness companion. Analyze the following scribe session transcript and extract:
 1. Action items: Specific things to do that were mentioned or implied
 2. Decisions: Choices or determinations that were made during the conversation
 
@@ -131,27 +128,23 @@ If there are no action items or decisions, return empty arrays. Be concise and s
           content: `Please extract action items and decisions from this session:\n\n${fullContent}`,
         },
       ],
+      maxTokens: 1000,
     });
 
     let actionItems: string[] = [];
     let decisions: string[] = [];
 
-    if (message.content[0].type === 'text') {
-      try {
-        // Try to parse as JSON
-        const text = message.content[0].text;
-        // Extract JSON from the response (handle if wrapped in markdown code blocks)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          actionItems = parsed.actionItems || [];
-          decisions = parsed.decisions || [];
-        }
-      } catch (parseError) {
-        console.warn('[Scribe] Failed to parse action items JSON:', parseError);
-        // If parsing fails, return the raw text as a single item
-        actionItems = [message.content[0].text];
+    try {
+      const text = llmResponse.text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        actionItems = parsed.actionItems || [];
+        decisions = parsed.decisions || [];
       }
+    } catch (parseError) {
+      console.warn('[Scribe] Failed to parse action items JSON:', parseError);
+      actionItems = [llmResponse.text];
     }
 
     console.log(

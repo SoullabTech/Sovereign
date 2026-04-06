@@ -1,13 +1,31 @@
 /**
- * LLM PROVIDER - Hybrid Multi-Model Support for MAIA
+ * LLM PROVIDER - Unified Multi-Model Support for MAIA
  *
- * MAIA's hybrid approach: Claude (Anthropic) as primary for consciousness work,
- * with self-hosted models available as options for data sovereignty.
+ * All LLM calls route through this provider. Two routing modes:
  *
- * Architecture:
- * - Primary: Claude Opus 4.5 (sacred attending, depth psychology, consciousness)
- * - Fallback: Ollama DeepSeek-R1 (when Claude unavailable or for specific use cases)
- * - Future: Self-hosted options for members who need full data sovereignty
+ * 1. Consciousness-level routing (oracle conversation):
+ *    generate({ level: 1-5 }) — maps awareness depth to model selection
+ *
+ * 2. Tier-based routing (all other routes):
+ *    generateSimple({ tier: 'fast'|'core'|'deep' }) — mechanical model selection
+ *    generateStream({ tier }) — SSE streaming variant
+ *
+ * Provider chain: Claude (primary) → Ollama (fallback / sovereignty mode)
+ *
+ * Environment variables:
+ *   ANTHROPIC_API_KEY        — Claude API key (primary provider)
+ *   DISABLE_CLAUDE=true      — skip Claude, use Ollama only
+ *   LOCAL_TIER_ENABLED=true  — route fast/core tiers + levels 1-2 to Ollama
+ *   OLLAMA_BASE_URL          — Ollama endpoint (default: http://localhost:11434)
+ *   OLLAMA_MODEL_GENERAL     — Ollama model for core tier (default: qwen2.5:7b)
+ *   OLLAMA_MODEL_FAST        — Ollama model for fast tier (default: same as general)
+ *   OLLAMA_MODEL_DEEP        — Ollama model for deep tier (default: qwen3:32b)
+ *   MAIA_STRICT_503=true     — return 503 on Claude failure instead of Ollama fallback
+ *
+ * Routes NOT using this provider (intentionally direct Anthropic):
+ *   - app/api/anthropic/ping — tests Anthropic connectivity
+ *   - app/api/portal/[slug]/chat — requires Anthropic tool_use (booking tools)
+ *   - app/api/_backend/src/services/* — legacy backend (2 files)
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -15,6 +33,9 @@ import { ConsciousnessLevel } from './ConsciousnessLevelDetector';
 
 export type LLMProvider = 'ollama' | 'anthropic';
 export type OllamaModel = 'llama3.3:70b' | 'deepseek-r1:latest' | 'deepseek-v3' | 'llama3.1:70b';
+
+/** Route-level model selection — independent of consciousness levels */
+export type ModelTier = 'fast' | 'core' | 'deep';
 
 export interface LLMConfig {
   provider: LLMProvider;
@@ -37,6 +58,8 @@ export interface LLMResponse {
 
 // Local tier config — activated when LOCAL_TIER_ENABLED=true
 const OLLAMA_MODEL_GENERAL = process.env.OLLAMA_MODEL_GENERAL ?? 'qwen2.5:7b';
+const OLLAMA_MODEL_FAST = process.env.OLLAMA_MODEL_FAST ?? OLLAMA_MODEL_GENERAL;
+const OLLAMA_MODEL_DEEP = process.env.OLLAMA_MODEL_DEEP ?? 'qwen3:32b';
 const LOCAL_TIER_ENABLED = process.env.LOCAL_TIER_ENABLED === 'true';
 
 /**
@@ -71,6 +94,38 @@ const LEVEL_LLM_CONFIG: Record<ConsciousnessLevel, LLMConfig> = {
     maxTokens: 1200
   }
 };
+
+/**
+ * Tier-based LLM configuration — for routes that don't use consciousness levels.
+ * Maps fast/core/deep to appropriate models with LOCAL_TIER_ENABLED fallback.
+ */
+const TIER_LLM_CONFIG: Record<ModelTier, LLMConfig> = {
+  fast: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_FAST, temperature: 0.5, maxTokens: 500 }
+    : { provider: 'anthropic', model: 'claude-haiku-4-5-20251001', temperature: 0.5, maxTokens: 500 },
+  core: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_GENERAL, temperature: 0.7, maxTokens: 1024 }
+    : { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.7, maxTokens: 1024 },
+  deep: LOCAL_TIER_ENABLED
+    ? { provider: 'ollama', model: OLLAMA_MODEL_DEEP, temperature: 0.8, maxTokens: 2048 }
+    : { provider: 'anthropic', model: 'claude-opus-4-6', temperature: 0.8, maxTokens: 2048 },
+};
+
+/** Parameters for tier-based generation (routes without consciousness levels) */
+export interface SimpleGenerateParams {
+  tier: ModelTier;
+  systemPrompt: string;
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  temperature?: number;
+  maxTokens?: number;
+  forceClaude?: boolean;
+  forceOllama?: boolean;
+}
+
+/** Streaming event types */
+export type StreamEvent =
+  | { type: 'text_delta'; text: string }
+  | { type: 'done'; metadata: LLMResponse['metadata'] };
 
 export class MultiLLMProvider {
   private anthropic?: Anthropic;
@@ -343,4 +398,142 @@ export class MultiLLMProvider {
   getConfigForLevel(level: ConsciousnessLevel): LLMConfig {
     return LEVEL_LLM_CONFIG[level];
   }
+
+  /**
+   * Get configuration for a model tier
+   */
+  getConfigForTier(tier: ModelTier): LLMConfig {
+    return TIER_LLM_CONFIG[tier];
+  }
+
+  /**
+   * Generate response using model tier — for routes without consciousness levels.
+   * Same fallback chain as generate(), but driven by fast/core/deep instead of 1-5.
+   */
+  async generateSimple(params: SimpleGenerateParams): Promise<LLMResponse> {
+    const { tier, systemPrompt, messages, temperature, maxTokens, forceClaude, forceOllama } = params;
+    const baseConfig = TIER_LLM_CONFIG[tier];
+    const config: LLMConfig = {
+      ...baseConfig,
+      ...(temperature !== undefined ? { temperature } : {}),
+      ...(maxTokens !== undefined ? { maxTokens } : {}),
+    };
+    const startTime = Date.now();
+
+    console.info(`[LLMProvider] tier=${tier} provider=${config.provider} model=${config.model}`);
+
+    if (forceOllama) {
+      try {
+        return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
+      } catch (error) {
+        console.warn('Ollama generation failed, trying Claude fallback:', error);
+        if (this.anthropic) {
+          return await this.generateClaude(systemPrompt, '', config, startTime, messages);
+        }
+        throw error;
+      }
+    }
+
+    if (this.anthropic && !forceOllama) {
+      try {
+        return await this.generateClaude(systemPrompt, '', config, startTime, messages);
+      } catch (error) {
+        console.error('Claude generation failed:', error);
+
+        if (this.strict503) {
+          console.warn('[LLMProvider] STRICT_503 mode enabled - NOT falling back to Ollama');
+          const err = new Error('Primary provider (Claude) unavailable');
+          (err as any).code = 'SERVICE_UNAVAILABLE';
+          (err as any).provider = 'anthropic';
+          throw err;
+        }
+
+        console.log('[LLMProvider] Falling back to Ollama...');
+        try {
+          return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
+        } catch (ollamaError) {
+          console.error('Ollama fallback also failed:', ollamaError);
+          throw error;
+        }
+      }
+    }
+
+    console.log('Claude not configured, using Ollama...');
+    return await this.generateOllama(systemPrompt, messages[messages.length - 1]?.content ?? '', config, startTime);
+  }
+
+  /**
+   * Stream response using model tier — yields text deltas for SSE forwarding.
+   * Claude: wraps messages.stream(). Ollama: falls back to non-streaming.
+   */
+  async *generateStream(params: SimpleGenerateParams): AsyncGenerator<StreamEvent> {
+    const { tier, systemPrompt, messages, temperature, maxTokens } = params;
+    const baseConfig = TIER_LLM_CONFIG[tier];
+    const config: LLMConfig = {
+      ...baseConfig,
+      ...(temperature !== undefined ? { temperature } : {}),
+      ...(maxTokens !== undefined ? { maxTokens } : {}),
+    };
+    const startTime = Date.now();
+
+    console.info(`[LLMProvider] stream tier=${tier} provider=${config.provider} model=${config.model}`);
+
+    if (this.anthropic && config.provider === 'anthropic') {
+      try {
+        const stream = await this.anthropic.messages.stream({
+          model: config.model,
+          max_tokens: config.maxTokens,
+          temperature: config.temperature,
+          system: systemPrompt,
+          messages: messages.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+        });
+
+        let tokenCount = 0;
+        for await (const event of stream) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            yield { type: 'text_delta', text: event.delta.text };
+          }
+          if (event.type === 'message_delta' && 'usage' in event) {
+            tokenCount = (event as any).usage?.output_tokens ?? 0;
+          }
+        }
+
+        yield {
+          type: 'done',
+          metadata: {
+            generationTime: Date.now() - startTime,
+            tokenCount,
+          },
+        };
+        return;
+      } catch (error) {
+        console.error('[LLMProvider] Stream failed, falling back to non-streaming:', error);
+      }
+    }
+
+    // Fallback: non-streaming full response yielded as single delta
+    const response = await this.generateOllama(
+      systemPrompt,
+      messages[messages.length - 1]?.content ?? '',
+      config,
+      startTime
+    );
+    yield { type: 'text_delta', text: response.text };
+    yield { type: 'done', metadata: response.metadata };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Singleton — one instance per isolate, constructed from env vars
+// ---------------------------------------------------------------------------
+let _instance: MultiLLMProvider | null = null;
+
+export function getLLMProvider(): MultiLLMProvider {
+  if (!_instance) {
+    _instance = new MultiLLMProvider();
+  }
+  return _instance;
 }

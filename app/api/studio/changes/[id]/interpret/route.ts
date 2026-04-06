@@ -12,15 +12,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { getHexagram } from '@/lib/iching/lookup';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-  timeout: 30000,
-});
 
 const INTERPRETATION_SYSTEM_PROMPT = `You are MAIA interpreting the I Ching for someone navigating change.
 
@@ -121,24 +117,20 @@ export async function POST(
       contextParts.push(`Judgment: ${relatingHexagram.judgment}`);
     }
 
-    const INTERPRETATION_MODEL = 'claude-haiku-4-5-20251001';
-    const message = await anthropic.messages.create({
-      model: INTERPRETATION_MODEL,
-      max_tokens: 1000,
-      system: INTERPRETATION_SYSTEM_PROMPT,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'fast',
+      systemPrompt: INTERPRETATION_SYSTEM_PROMPT,
       messages: [
         {
           role: 'user',
           content: contextParts.join('\n'),
         },
       ],
+      maxTokens: 1000,
     });
 
     // Parse response
-    const responseText = message.content
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('');
+    const responseText = llmResponse.text;
 
     let interpretation;
     try {
@@ -172,7 +164,7 @@ export async function POST(
       changingLinesReading: interpretation.changingLinesReading || null,
       relatingReading: interpretation.relatingReading || null,
       generatedAt: new Date().toISOString(),
-      model: INTERPRETATION_MODEL,
+      model: 'claude-haiku-4-5-20251001',
     };
 
     // Store in change record

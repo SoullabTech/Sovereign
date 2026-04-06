@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { queryOne } from '@/lib/db/postgres';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { PractitionerPersona } from '@/lib/stellium/types';
 import {
   createEmailTemplate,
@@ -18,8 +18,6 @@ import {
   type ContentType,
   type ContentPillar,
 } from '@/lib/stellium/marketing';
-
-const anthropic = new Anthropic();
 
 type GenerationType = 'email' | 'social' | 'caption' | 'nurture_sequence' | 'transit_alert';
 
@@ -179,21 +177,19 @@ ${voiceContext}
     }
 
     // Generate with Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system: systemPrompt,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: systemPrompt,
       messages: [
         { role: 'user', content: userPrompt },
       ],
+      maxTokens: 4096,
     });
 
-    const textContent = response.content.find(c => c.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
+    const generatedText = llmResponse.text;
+    if (!generatedText) {
       throw new Error('No text content in response');
     }
-
-    const generatedText = textContent.text;
 
     // Parse the response based on type
     generatedContent = parseGeneratedContent(type, generatedText);

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 // ---------------------------------------------------------------------------
 // Rate limiting (in-memory, sovereign — no Redis dependency)
@@ -46,9 +46,8 @@ function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
 }
 
 // ---------------------------------------------------------------------------
-// Anthropic client
+// LLM client
 // ---------------------------------------------------------------------------
-const anthropic = new Anthropic();
 
 // ---------------------------------------------------------------------------
 // System prompt — landing-specific, hardened
@@ -151,16 +150,15 @@ export async function POST(req: NextRequest) {
     // Hard clamp input length
     const message = raw.slice(0, MAX_INPUT_LENGTH);
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 512,
-      temperature: 0.5,
-      system: LANDING_SYSTEM_PROMPT,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: LANDING_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: message }],
+      maxTokens: 512,
+      temperature: 0.5,
     });
 
-    const textBlock = response.content.find(block => block.type === 'text');
-    const answer = textBlock && 'text' in textBlock ? textBlock.text : 'I didn\'t catch that — could you rephrase?';
+    const answer = llmResponse.text || 'I didn\'t catch that — could you rephrase?';
 
     return jsonResponse({ answer });
   } catch (error: unknown) {

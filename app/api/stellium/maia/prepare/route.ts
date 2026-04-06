@@ -14,10 +14,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionContext, storeMaiaPrep } from '@/lib/stellium/sessions';
 import { getPersonaContext, generatePersonaPrompt } from '@/lib/stellium/personas';
 import { MaiaSessionPrep } from '@/lib/stellium/types';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { resolveClientDisplayName } from '@/lib/stellium/clients';
-
-const anthropic = new Anthropic();
 
 /**
  * POST /api/stellium/maia/prepare
@@ -101,23 +99,19 @@ ${sessionInfo.prep_notes}
 Keep the tone aligned with the practitioner's voice. Be concise but thorough.`;
 
     // Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: prepType === 'quick' ? 256 : 1024,
-      system: systemPrompt,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt: systemPrompt,
       messages: [
         {
           role: 'user',
           content: `${contextMessage}\n\n${prepRequest}`,
         },
       ],
+      maxTokens: prepType === 'quick' ? 256 : 1024,
     });
 
-    // Extract the text content
-    const prepContent = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-      .map(block => block.text)
-      .join('\n\n');
+    const prepContent = llmResponse.text;
 
     // Build the prep object
     const prep: MaiaSessionPrep = {

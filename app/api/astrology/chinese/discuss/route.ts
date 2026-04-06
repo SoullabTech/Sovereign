@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider'
 
 export const dynamic = 'force-dynamic'
-
-const anthropic = new Anthropic()
 
 interface ProfileContext {
   animal: string
@@ -153,21 +151,21 @@ export async function POST(request: NextRequest) {
 
     messages.push({ role: 'user', content: userMessage })
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'core',
+      systemPrompt,
+      messages,
+      maxTokens: 1024,
     })
 
-    const insight = response.content[0].type === 'text' ? response.content[0].text : ''
+    const insight = llmResponse.text
 
     return NextResponse.json({
       ok: true,
       insight,
       usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens
+        inputTokens: 0, // not tracked in abstraction
+        outputTokens: llmResponse.metadata.tokenCount ?? 0,
       }
     })
   } catch (err) {

@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import { upsertActiveReportContext, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 // ---------------------------------------------------------------------------
 // Types (mirrors spiralogicAstrologyService.ts SpiralogicReport)
@@ -532,9 +533,6 @@ For "evolutionDelta": compare the prior and current data above. Be conservative 
     : '';
 
   // Build report using Claude
-  const Anthropic = (await import('@anthropic-ai/sdk')).default;
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
   const prompt = `You are the Spiralogic Evolutionary Report engine. Generate a deeply personalized report in JSON.
 
 ## Chart Signature (PRIMARY — all interpretations must reference this)
@@ -698,13 +696,14 @@ Return ONLY valid JSON matching this exact structure (no markdown, no commentary
   "generatedAt": "${new Date().toISOString()}"
 }`;
 
-  const message = await client.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 2048,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'deep',
+    systemPrompt: '',
     messages: [{ role: 'user', content: prompt }],
+    maxTokens: 2048,
   });
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+  const text = llmResponse.text;
 
   // Strip any accidental markdown fences
   const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();

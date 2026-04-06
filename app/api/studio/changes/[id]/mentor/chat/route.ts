@@ -13,15 +13,10 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
 import db from '@/lib/db/postgres';
 import { getCurrentPractitioner } from '@/lib/auth/getCurrentPractitioner';
 import { getHexagram } from '@/lib/iching/lookup';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-  timeout: 30000,
-});
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 const MENTOR_CHAT_SYSTEM = `You are MAIA Mentor — a sovereignty-oriented companion for navigating change.
 
@@ -43,7 +38,7 @@ Style:
 
 The person's sovereignty always comes first. Your reflections should strengthen their agency, not create dependence on your guidance.`;
 
-const MENTOR_CHAT_MODEL = 'claude-haiku-4-5-20251001';
+// Model tier: 'fast' maps to haiku (or local equivalent when LOCAL_TIER_ENABLED)
 
 function buildChangeContext(row: any, hexagram: any, relatingHexagram: any, experiences: any[]): string {
   const parts: string[] = [
@@ -176,15 +171,15 @@ export async function POST(
     const changeContext = buildChangeContext(row, hexagram, relatingHexagram, experiencesResult.rows);
     const systemPrompt = `${MENTOR_CHAT_SYSTEM}\n\n---\n\nCHANGE CONTEXT:\n${changeContext}`;
 
-    // Stream response via Anthropic SDK
-    const stream = await anthropic.messages.stream({
-      model: MENTOR_CHAT_MODEL,
-      max_tokens: 800,
-      system: systemPrompt,
+    // Stream response via LLM provider
+    const llmStream = getLLMProvider().generateStream({
+      tier: 'fast',
+      systemPrompt,
       messages: trimmedMessages.map(m => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
+      maxTokens: 800,
     });
 
     // Convert to SSE stream
@@ -192,13 +187,10 @@ export async function POST(
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const event of stream) {
-            if (
-              event.type === 'content_block_delta' &&
-              event.delta.type === 'text_delta'
-            ) {
+          for await (const event of llmStream) {
+            if (event.type === 'text_delta') {
               controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+                encoder.encode(`data: ${JSON.stringify({ text: event.text })}\n\n`)
               );
             }
           }

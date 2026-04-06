@@ -18,7 +18,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { query } from '@/lib/db/postgres';
 import type { GuideInsightResponse, GuideWhisper, WhisperAction } from '@/lib/guidance/types';
@@ -194,25 +194,20 @@ async function generateWhisper(
   const contextData = buildWhisperPrompt(featureKey, ctx);
 
   try {
-    const client = new Anthropic({ apiKey, timeout: 6000 });
-
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      temperature: 0.7,
-      system: WHISPER_SYSTEM,
+    const llmResponse = await getLLMProvider().generateSimple({
+      tier: 'fast',
+      systemPrompt: WHISPER_SYSTEM,
       messages: [
         {
           role: 'user',
           content: `Feature: ${featureKey}\n${featureDesc}\n\nMember context:\n${contextData}\n\nGenerate a whisper.`,
         },
       ],
+      maxTokens: 200,
+      temperature: 0.7,
     });
 
-    let text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('');
+    let text = llmResponse.text;
 
     // Strip markdown code fences if Haiku wraps the JSON
     text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();

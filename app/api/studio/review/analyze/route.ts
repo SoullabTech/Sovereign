@@ -28,9 +28,7 @@ import {
   REVIEW_LENS_REGISTRY,
   isValidReviewLensId,
 } from '@/lib/studio/reviewLens';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic();
+import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -148,16 +146,14 @@ ${reviewContext}
 
 Provide your structured analysis now.`;
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    system: lens.systemPrompt,
+  const llmResponse = await getLLMProvider().generateSimple({
+    tier: 'core',
+    systemPrompt: lens.systemPrompt,
     messages: [{ role: 'user', content: userMessage }],
+    maxTokens: 4096,
   });
 
-  const rawText = message.content[0].type === 'text'
-    ? message.content[0].text
-    : null;
+  const rawText = llmResponse.text || null;
 
   if (!rawText) {
     throw new Error(`Lens ${lensId}: model returned no text content`);
