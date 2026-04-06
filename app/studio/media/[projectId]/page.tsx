@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Download, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Download, ExternalLink, Mic, Loader2 } from 'lucide-react';
 import { ProjectStatusBadge } from '@/components/media/ProjectStatusBadge';
 import { ConsentBadges } from '@/components/media/ConsentBadges';
 import { MediaJobStatus } from '@/components/media/MediaJobStatus';
@@ -229,6 +229,11 @@ export default function MediaProjectDetailPage({ params }: { params: Promise<{ p
 
       {tab === 'transcript' && (
         <div>
+          {/* Transcribe button */}
+          {!project.transcript && project.ai_processing_allowed && (project.media_type === 'audio' || project.media_type === 'video') && (
+            <TranscribeButton projectId={projectId} onStarted={fetchProject} />
+          )}
+
           {project.transcript ? (
             <TranscriptViewer transcript={project.transcript} onSeek={handleSeek} />
           ) : (
@@ -307,6 +312,44 @@ export default function MediaProjectDetailPage({ params }: { params: Promise<{ p
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function TranscribeButton({ projectId, onStarted }: { projectId: string; onStarted: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleTranscribe = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/media/projects/${projectId}/transcribe`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to start transcription');
+      }
+      onStarted();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={handleTranscribe}
+        disabled={loading}
+        className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+      >
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+        Transcribe
+      </button>
+      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   );
 }
