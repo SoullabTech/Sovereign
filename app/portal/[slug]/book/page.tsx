@@ -137,7 +137,7 @@ function BookingContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
       </div>
     );
@@ -145,14 +145,14 @@ function BookingContent() {
 
   if (confirmed) {
     return (
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center px-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full text-center"
         >
-          <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
-            <Check size={24} className="text-emerald-400" />
+          <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-6">
+            <Check size={24} className="text-amber-400" />
           </div>
           <h1 className="text-2xl font-semibold text-white mb-2">Booking confirmed</h1>
           <p className="text-sm text-zinc-400 mb-2">
@@ -174,7 +174,7 @@ function BookingContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090F] text-white">
+    <div className="min-h-screen bg-[#1a1a2e] text-white">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
         {/* Back */}
@@ -195,13 +195,13 @@ function BookingContent() {
           {(['Service', 'Date & Time', 'Your info', 'Review'] as const).map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                ${i <= stepIndex ? 'bg-white text-zinc-900' : 'bg-zinc-800 text-zinc-500'}`}>
+                ${i <= stepIndex ? 'bg-amber-500 text-zinc-900' : 'bg-[#1e1e38] text-zinc-500'}`}>
                 {i < stepIndex ? <Check size={12} /> : i + 1}
               </div>
               <span className={`text-xs hidden sm:block ${i <= stepIndex ? 'text-zinc-300' : 'text-zinc-600'}`}>
                 {label}
               </span>
-              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-zinc-500' : 'bg-zinc-800'}`} />}
+              {i < 3 && <div className={`flex-1 h-px w-8 ${i < stepIndex ? 'bg-amber-500/30' : 'bg-[#1e1e38]'}`} />}
             </div>
           ))}
         </div>
@@ -215,8 +215,8 @@ function BookingContent() {
                 <button
                   key={svc.id}
                   onClick={() => { setSelectedService(svc); setStep('datetime'); }}
-                  className="w-full text-left p-5 rounded-xl bg-zinc-900 border border-zinc-800
-                             hover:border-zinc-500 transition-colors group"
+                  className="w-full text-left p-5 rounded-xl bg-[#16162a] border border-slate-700/50
+                             hover:border-amber-500/50 transition-colors group"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -246,7 +246,7 @@ function BookingContent() {
         {step === 'datetime' && selectedService && (
           <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
             {/* Service summary */}
-            <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+            <div className="flex items-center justify-between mb-6 p-4 rounded-lg bg-[#16162a] border border-slate-700/50">
               <div>
                 <p className="text-sm font-medium text-white">{selectedService.name}</p>
                 <p className="text-xs text-zinc-500">{selectedService.duration_minutes} min · ${(selectedService.price_cents / 100).toFixed(0)}</p>
@@ -261,7 +261,7 @@ function BookingContent() {
               <div className="flex items-center justify-between mb-4">
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#1e1e38] text-zinc-400 hover:text-white transition-colors"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -270,7 +270,7 @@ function BookingContent() {
                 </span>
                 <button
                   onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                  className="p-2 rounded-lg hover:bg-[#1e1e38] text-zinc-400 hover:text-white transition-colors"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -294,8 +294,8 @@ function BookingContent() {
                       className={`aspect-square rounded-lg text-sm font-medium transition-colors
                         ${!date ? 'invisible' : ''}
                         ${date && !isSelectable ? 'text-zinc-700 cursor-not-allowed' : ''}
-                        ${isSelected ? 'bg-white text-zinc-900' : ''}
-                        ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-zinc-800' : ''}
+                        ${isSelected ? 'bg-amber-500 text-zinc-900' : ''}
+                        ${date && isSelectable && !isSelected ? 'text-zinc-300 hover:bg-[#1e1e38]' : ''}
                       `}
                     >
                       {date?.getDate()}
@@ -311,7 +311,7 @@ function BookingContent() {
                 <p className="text-xs text-zinc-500 mb-3">{formatDate(selectedDate)}</p>
                 {loadingSlots ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="w-5 h-5 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-slate-700/50 border-t-zinc-400 rounded-full animate-spin" />
                   </div>
                 ) : timeSlots.length === 0 ? (
                   <p className="text-sm text-zinc-500 text-center py-6">No available times on this date.</p>
@@ -323,8 +323,8 @@ function BookingContent() {
                         onClick={() => setSelectedTime(slot.start)}
                         className={`py-2.5 rounded-lg text-sm font-medium transition-colors
                           ${selectedTime === slot.start
-                            ? 'bg-white text-zinc-900'
-                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white'
+                            ? 'bg-amber-500 text-zinc-900'
+                            : 'bg-[#1e1e38] text-zinc-300 hover:bg-[#252545] hover:text-white'
                           }`}
                       >
                         {formatTime(slot.start)}
@@ -339,7 +339,7 @@ function BookingContent() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6">
                 <button
                   onClick={() => setStep('info')}
-                  className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100 transition-colors"
+                  className="w-full py-3 rounded-lg bg-amber-500 text-zinc-900 text-sm font-medium hover:bg-amber-500/30 transition-colors"
                 >
                   Continue
                 </button>
@@ -359,8 +359,8 @@ function BookingContent() {
                 value={clientName}
                 onChange={e => setClientName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-slate-700/50 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               />
             </div>
             <div>
@@ -370,8 +370,8 @@ function BookingContent() {
                 value={clientEmail}
                 onChange={e => setClientEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-slate-700/50 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
               />
             </div>
             <div>
@@ -381,14 +381,14 @@ function BookingContent() {
                 onChange={e => setClientNotes(e.target.value)}
                 placeholder="Anything you'd like to share before the session"
                 rows={3}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-sm
-                           placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
+                className="w-full px-4 py-3 rounded-lg bg-zinc-900 border border-slate-700/50 text-white text-sm
+                           placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors resize-none"
               />
             </div>
             <button
               onClick={() => setStep('confirm')}
               disabled={!clientName || !clientEmail}
-              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+              className="w-full py-3 rounded-lg bg-amber-500 text-zinc-900 text-sm font-medium hover:bg-amber-500/30
                          transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-2"
             >
               Review booking
@@ -396,11 +396,11 @@ function BookingContent() {
           </motion.div>
         )}
 
-        {/* Step 4: Confirm */}
+        {/* Step 4: Review & Confirm */}
         {step === 'confirm' && selectedService && selectedDate && selectedTime && (
           <motion.div initial={{ y: 8 }} animate={{ y: 0 }}>
             <h2 className="text-sm font-medium text-zinc-400 mb-6 uppercase tracking-wider">Review & confirm</h2>
-            <div className="rounded-xl border border-zinc-800 overflow-hidden mb-6">
+            <div className="rounded-xl border border-slate-700/50 overflow-hidden mb-6">
               {[
                 { label: 'Service', value: selectedService.name },
                 { label: 'Date', value: formatDate(selectedDate) },
@@ -412,7 +412,7 @@ function BookingContent() {
               ].map((row, i, arr) => (
                 <div
                   key={row.label}
-                  className={`flex items-center justify-between px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-zinc-800' : ''}`}
+                  className={`flex items-center justify-between px-5 py-3.5 ${i < arr.length - 1 ? 'border-b border-slate-700/50' : ''}`}
                 >
                   <span className="text-xs text-zinc-500">{row.label}</span>
                   <span className={`text-sm font-medium ${row.label === 'Total' ? 'text-white' : 'text-zinc-300'}`}>
@@ -431,7 +431,7 @@ function BookingContent() {
             <button
               onClick={handleConfirm}
               disabled={submitting}
-              className="w-full py-3 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-zinc-100
+              className="w-full py-3 rounded-lg bg-amber-500 text-zinc-900 text-sm font-medium hover:bg-amber-500/30
                          transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? 'Booking…' : 'Confirm booking'}
@@ -453,7 +453,7 @@ function BookingContent() {
 export default function PortalBookPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#09090F] flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-300 rounded-full animate-spin" />
       </div>
     }>
