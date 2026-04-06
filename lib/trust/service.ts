@@ -175,19 +175,29 @@ export async function isAiPermitted(sessionId: string): Promise<PrivacyGateResul
     return { permitted: false, reason: 'session_ai_disabled' };
   }
 
-  // Step 3: Check memory contracts
+  // Step 3: Check memory contracts (strongest veto first)
   const contractResult = await query(
-    `SELECT disposition FROM memory_contracts
+    `SELECT disposition, never_use_for_ai, expires_at FROM memory_contracts
      WHERE session_id = $1 AND status = 'active'
-       AND (expires_at IS NULL OR expires_at > NOW())
-     ORDER BY created_at DESC
-     LIMIT 1`,
+     ORDER BY created_at DESC`,
     [sessionId]
   );
 
-  if (contractResult.rows.length > 0) {
-    const disposition = contractResult.rows[0].disposition as MemoryDisposition;
-    if (disposition === 'keep_private') {
+  for (const contract of contractResult.rows) {
+    // 3a. Skip expired contracts — they no longer govern anything
+    if (contract.expires_at && new Date(contract.expires_at) < new Date()) {
+      continue;
+    }
+
+    // 3b. never_use_for_ai is the strongest active veto — overrides
+    // even permissive dispositions like allow_maia_summary
+    if (contract.never_use_for_ai) {
+      console.log(`[Trust] AI denied for session ${sessionId}: memory_contract_never_use_for_ai`);
+      return { permitted: false, reason: 'memory_contract_never_use_for_ai' };
+    }
+
+    // 3c. Active, non-expired contract with keep_private blocks summaries
+    if ((contract.disposition as MemoryDisposition) === 'keep_private') {
       console.log(`[Trust] AI denied for session ${sessionId}: memory_contract_blocks_summary`);
       return { permitted: false, reason: 'memory_contract_blocks_summary' };
     }
@@ -205,8 +215,8 @@ export async function createMemoryContract(
 ): Promise<MemoryContractRow> {
   const result = await query(
     `INSERT INTO memory_contracts
-       (member_id, session_id, container_id, disposition, applies_to, consent_method, expires_at)
-     VALUES ($1, $2, $3, $4::memory_disposition, $5, $6::consent_level, $7)
+       (member_id, session_id, container_id, disposition, applies_to, consent_method, never_use_for_ai, expires_at)
+     VALUES ($1, $2, $3, $4::memory_disposition, $5, $6::consent_level, $7, $8)
      RETURNING *`,
     [
       memberId,
@@ -215,6 +225,7 @@ export async function createMemoryContract(
       input.disposition,
       input.appliesTo,
       input.consentMethod,
+      input.neverUseForAi ?? false,
       input.expiresAt ?? null,
     ]
   );

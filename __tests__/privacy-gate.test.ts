@@ -53,38 +53,52 @@ function setNoSession() {
   mockQueryResult = { rows: [] };
 }
 
+const STANDARD_SESSION = {
+  privacy_mode: 'standard',
+  consent_level: 'digital',
+  visibility_scope: 'member_only',
+  allow_ai_distillation: true,
+  allow_export: true,
+};
+
 function setMemoryContractBlocking() {
-  // First call returns session (privacy check), second returns contract
   const { query } = require('../lib/db/postgres');
   query
+    .mockResolvedValueOnce({ rows: [STANDARD_SESSION] })
     .mockResolvedValueOnce({
-      rows: [{
-        privacy_mode: 'standard',
-        consent_level: 'digital',
-        visibility_scope: 'member_only',
-        allow_ai_distillation: true,
-        allow_export: true,
-      }],
-    })
-    .mockResolvedValueOnce({
-      rows: [{ disposition: 'keep_private' }],
+      rows: [{ disposition: 'keep_private', never_use_for_ai: false, expires_at: null }],
     });
 }
 
 function setMemoryContractPermitting() {
   const { query } = require('../lib/db/postgres');
   query
+    .mockResolvedValueOnce({ rows: [STANDARD_SESSION] })
+    .mockResolvedValueOnce({
+      rows: [{ disposition: 'allow_maia_summary', never_use_for_ai: false, expires_at: null }],
+    });
+}
+
+function setMemoryContractWithAiVeto() {
+  const { query } = require('../lib/db/postgres');
+  query
+    .mockResolvedValueOnce({ rows: [STANDARD_SESSION] })
+    .mockResolvedValueOnce({
+      rows: [{ disposition: 'allow_maia_summary', never_use_for_ai: true, expires_at: null }],
+    });
+}
+
+function setExpiredMemoryContract(overrides: { never_use_for_ai?: boolean; disposition?: string } = {}) {
+  const { query } = require('../lib/db/postgres');
+  const pastDate = new Date(Date.now() - 86400000).toISOString(); // yesterday
+  query
+    .mockResolvedValueOnce({ rows: [STANDARD_SESSION] })
     .mockResolvedValueOnce({
       rows: [{
-        privacy_mode: 'standard',
-        consent_level: 'digital',
-        visibility_scope: 'member_only',
-        allow_ai_distillation: true,
-        allow_export: true,
+        disposition: overrides.disposition ?? 'keep_private',
+        never_use_for_ai: overrides.never_use_for_ai ?? false,
+        expires_at: pastDate,
       }],
-    })
-    .mockResolvedValueOnce({
-      rows: [{ disposition: 'allow_maia_summary' }],
     });
 }
 
@@ -146,18 +160,12 @@ describe('Privacy Gate — Permitted Sessions', () => {
 
   it('permits when privacy_mode is private but AI distillation is on', async () => {
     // 'private' mode restricts visibility, not AI processing
-    setSessionRow({ privacy_mode: 'private', allow_ai_distillation: true });
-    // Need to also mock the memory contract query (second call)
     const { query } = require('../lib/db/postgres');
-    query.mockResolvedValueOnce({
-      rows: [{
-        privacy_mode: 'private',
-        consent_level: 'digital',
-        visibility_scope: 'member_only',
-        allow_ai_distillation: true,
-        allow_export: true,
-      }],
-    }).mockResolvedValueOnce({ rows: [] }); // no blocking contract
+    query
+      .mockResolvedValueOnce({
+        rows: [{ ...STANDARD_SESSION, privacy_mode: 'private' }],
+      })
+      .mockResolvedValueOnce({ rows: [] }); // no blocking contract
 
     const result = await isAiPermitted('session-private-ok');
     expect(result.permitted).toBe(true);
@@ -219,5 +227,60 @@ describe('Privacy Gate — Response Shape', () => {
     const result = await isAiPermitted('session-precedence');
     expect(result.permitted).toBe(false);
     expect(result.reason).toBe('privacy_mode_blocks_ai');
+  });
+});
+
+// ================================================================
+// Phase 2: Memory Governance — never_use_for_ai + expiry
+// ================================================================
+
+describe('Privacy Gate — never_use_for_ai (Phase 2)', () => {
+  it('blocks when active contract has never_use_for_ai = true', async () => {
+    setMemoryContractWithAiVeto();
+    const result = await isAiPermitted('session-ai-veto');
+    expect(result.permitted).toBe(false);
+    expect(result.reason).toBe('memory_contract_never_use_for_ai');
+  });
+
+  it('never_use_for_ai overrides permissive disposition', async () => {
+    // Contract says allow_maia_summary but never_use_for_ai = true
+    setMemoryContractWithAiVeto();
+    const result = await isAiPermitted('session-veto-override');
+    expect(result.permitted).toBe(false);
+    expect(result.reason).toBe('memory_contract_never_use_for_ai');
+  });
+
+  it('never_use_for_ai reason is stable and parseable', async () => {
+    setMemoryContractWithAiVeto();
+    const result = await isAiPermitted('session-veto-reason');
+    expect(result.reason).toMatch(/^[a-z_]+$/);
+    expect(result.reason).toBe('memory_contract_never_use_for_ai');
+  });
+});
+
+describe('Privacy Gate — Contract Expiry (Phase 2)', () => {
+  it('expired keep_private contract does not block', async () => {
+    setExpiredMemoryContract({ disposition: 'keep_private' });
+    const result = await isAiPermitted('session-expired-kp');
+    expect(result.permitted).toBe(true);
+  });
+
+  it('expired never_use_for_ai contract does not block', async () => {
+    setExpiredMemoryContract({ never_use_for_ai: true });
+    const result = await isAiPermitted('session-expired-veto');
+    expect(result.permitted).toBe(true);
+  });
+
+  it('unexpired contract still blocks normally', async () => {
+    const { query } = require('../lib/db/postgres');
+    const futureDate = new Date(Date.now() + 86400000 * 30).toISOString(); // 30 days
+    query
+      .mockResolvedValueOnce({ rows: [STANDARD_SESSION] })
+      .mockResolvedValueOnce({
+        rows: [{ disposition: 'keep_private', never_use_for_ai: false, expires_at: futureDate }],
+      });
+    const result = await isAiPermitted('session-unexpired');
+    expect(result.permitted).toBe(false);
+    expect(result.reason).toBe('memory_contract_blocks_summary');
   });
 });
