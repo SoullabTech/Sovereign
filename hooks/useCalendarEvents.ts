@@ -6,14 +6,16 @@ export interface CalendarEvent {
   title: string;
   start: string;
   end: string;
-  source: 'maia' | 'google';
+  source: 'maia' | 'google' | 'studio';
+  allDay?: boolean;
+  description?: string;
+  location?: string;
   // MAIA-specific
   status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   clientName?: string;
   serviceName?: string;
   // Google-specific
   googleEventId?: string;
-  location?: string;
   calendarId?: string;
   calendarName?: string;
 }
