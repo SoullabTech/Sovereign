@@ -10,9 +10,10 @@
 
 import { query } from '@/lib/db/postgres';
 import { GoogleCalendarService } from './GoogleCalendarService';
-import { getCalendarDisclosure } from '@/lib/trust/service';
 
 // ─── Types ─────────────────────────────────────────────────────────────
+
+export type CalendarDisclosure = 'busy_only' | 'generic' | 'full';
 
 interface SessionForSync {
   id: string;
@@ -24,6 +25,7 @@ interface SessionForSync {
   locationDetails?: string;
   notes?: string;
   practitionerName?: string;
+  disclosure?: CalendarDisclosure;
 }
 
 interface SyncResult {
@@ -54,24 +56,15 @@ export async function syncNewSessionToGoogle(
     const start = new Date(session.scheduledStart);
     const end = new Date(session.scheduledEnd);
 
-    // Apply scheduling disclosure — filters what gets written to external calendar
-    const disclosure = await getCalendarDisclosure(session.id, {
-      clientName: session.clientName,
-      serviceName: session.serviceName,
-      locationType: session.locationType,
-      locationDetails: session.locationDetails,
-      notes: session.notes,
-    });
-
-    const summary = disclosure.title ?? 'Busy';
-    const description = disclosure.description ?? '';
+    const disclosure = session.disclosure ?? 'generic';
+    const { summary, description } = applyDisclosure(session, disclosure);
 
     const googleEventId = await GoogleCalendarService.createEvent(memberId, {
       summary,
       description,
       start,
       end,
-      location: disclosure.locationDetails || undefined,
+      location: session.locationDetails || undefined,
     });
 
     if (googleEventId) {
@@ -182,6 +175,14 @@ export async function syncAllPendingSessions(memberId: string): Promise<{
     return { synced: 0, failed: 0, skipped: 0 };
   }
 
+  // Load practitioner's disclosure default
+  const settingsResult = await query(
+    `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default' AND member_id = $1`,
+    [memberId]
+  );
+  const practitionerDefault: CalendarDisclosure =
+    (settingsResult.rows[0]?.value as CalendarDisclosure) || 'generic';
+
   // Find sessions that haven't been synced yet
   const result = await query(`
     SELECT
@@ -191,6 +192,7 @@ export async function syncAllPendingSessions(memberId: string): Promise<{
       s.location_type,
       s.location_details,
       s.notes,
+      s.calendar_disclosure,
       c.name as client_name,
       svc.name as service_name,
       p.name as practitioner_name
@@ -221,6 +223,7 @@ export async function syncAllPendingSessions(memberId: string): Promise<{
       locationDetails: row.location_details,
       notes: row.notes,
       practitionerName: row.practitioner_name,
+      disclosure: row.calendar_disclosure ?? practitionerDefault,
     });
 
     if (syncResult.success && syncResult.googleEventId) {
@@ -234,6 +237,62 @@ export async function syncAllPendingSessions(memberId: string): Promise<{
 
   console.log(`[CalendarSync] Bulk sync complete: ${synced} synced, ${failed} failed, ${skipped} skipped`);
   return { synced, failed, skipped };
+}
+
+// ─── Disclosure Filter ────────────────────────────────────────────────
+
+/**
+ * Apply calendar disclosure mode to session data before writing to Google.
+ * Returns the full event payload (summary + description) — no partial filtering.
+ *
+ * - busy_only: "Busy" with no details
+ * - generic: session type visible, no client name or notes
+ * - full: current behavior (client name + service + notes)
+ */
+export function applyDisclosure(
+  session: SessionForSync,
+  mode: CalendarDisclosure
+): { summary: string; description: string } {
+  switch (mode) {
+    case 'busy_only':
+      return {
+        summary: 'Busy',
+        description: 'Managed by Soullab Studio',
+      };
+
+    case 'generic': {
+      const genericTitle = session.serviceName || 'Session';
+      const lines: string[] = [];
+      if (session.locationType) {
+        const typeLabel = locationLabel(session.locationType);
+        lines.push(`Location: ${typeLabel}`);
+      }
+      lines.push('');
+      lines.push('Managed by Soullab Studio');
+      return {
+        summary: genericTitle,
+        description: lines.join('\n'),
+      };
+    }
+
+    case 'full':
+    default:
+      return {
+        summary: [session.serviceName, session.clientName]
+          .filter(Boolean)
+          .join(' — ') || 'Session',
+        description: buildEventDescription(session),
+      };
+  }
+}
+
+function locationLabel(locationType: string): string {
+  return {
+    video: 'Video Call',
+    phone: 'Phone',
+    in_person: 'In Person',
+    async: 'Async',
+  }[locationType] || locationType;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────
@@ -277,13 +336,7 @@ function buildEventDescription(session: SessionForSync): string {
     lines.push(`Service: ${session.serviceName}`);
   }
   if (session.locationType) {
-    const typeLabel = {
-      video: 'Video Call',
-      phone: 'Phone',
-      in_person: 'In Person',
-      async: 'Async',
-    }[session.locationType] || session.locationType;
-    lines.push(`Location: ${typeLabel}`);
+    lines.push(`Location: ${locationLabel(session.locationType)}`);
   }
   if (session.notes) {
     lines.push('');

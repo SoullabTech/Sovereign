@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
       meeting_link,
       prep_notes,
       status = 'scheduled',
+      calendar_disclosure,
     } = body;
 
     // Validate required fields
@@ -193,10 +194,24 @@ export async function POST(request: NextRequest) {
       notes += prep_notes;
     }
 
+    // Resolve calendar disclosure: per-session → practitioner default → 'generic'
+    let effectiveDisclosure = calendar_disclosure;
+    if (!effectiveDisclosure) {
+      try {
+        const settingsResult = await db.query(
+          `SELECT value FROM studio_settings WHERE key = 'calendar_disclosure_default' AND member_id = $1`,
+          [memberId]
+        );
+        effectiveDisclosure = settingsResult.rows[0]?.value || 'generic';
+      } catch {
+        effectiveDisclosure = 'generic';
+      }
+    }
+
     const result = await db.query(
       `INSERT INTO sessions
-        (practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, location_type, location_details, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        (practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, location_type, location_details, notes, calendar_disclosure)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::calendar_disclosure)
        RETURNING *`,
       [
         practitionerId,
@@ -208,6 +223,7 @@ export async function POST(request: NextRequest) {
         location_type,
         meeting_link || null,
         notes.trim() || null,
+        effectiveDisclosure,
       ]
     );
 
@@ -272,6 +288,7 @@ export async function POST(request: NextRequest) {
         serviceName: session_type || undefined,
         locationType: location_type,
         locationDetails: meeting_link,
+        disclosure: effectiveDisclosure,
       }).then(syncResult => {
         if (syncResult.googleEventId) {
           console.log(`[Studio Sessions] Synced to Google Calendar: ${syncResult.googleEventId}`);

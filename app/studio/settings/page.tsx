@@ -1154,6 +1154,31 @@ function SettingsContent() {
               </p>
             </div>
 
+            {/* Calendar Disclosure Default */}
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-teal-500/20">
+                  <Shield className="w-5 h-5 text-teal-400" />
+                </div>
+                <div>
+                  <div className="text-white font-medium">Calendar Privacy</div>
+                  <div className="text-xs text-slate-400">What external calendars see for new sessions</div>
+                </div>
+              </div>
+              <select
+                value={settings.calendar_disclosure_default || 'generic'}
+                onChange={(e) => updateSetting('calendar_disclosure_default', e.target.value)}
+                className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+              >
+                <option value="busy_only">Busy only — no details visible</option>
+                <option value="generic">Generic — session type, no client name (recommended)</option>
+                <option value="full">Full details — client name and notes</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-2">
+                This default applies to all new sessions. You can override it per session.
+              </p>
+            </div>
+
             {/* Microsoft Calendar */}
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
               <div className="flex items-start justify-between">

@@ -19,6 +19,7 @@ import {
   Search,
   Link2,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 
 interface Client {
@@ -66,6 +67,7 @@ export default function NewSessionPage() {
   const [time, setTime] = useState('');
   const [meetingLink, setMeetingLink] = useState('');
   const [notes, setNotes] = useState('');
+  const [calendarDisclosure, setCalendarDisclosure] = useState<'busy_only' | 'generic' | 'full'>('generic');
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -157,6 +159,7 @@ export default function NewSessionPage() {
         location_type: locationType,
         meeting_link: locationType === 'video' ? meetingLink : undefined,
         prep_notes: notes || undefined,
+        calendar_disclosure: calendarDisclosure,
       };
 
       const response = await apiFetch('/api/studio/sessions', {
@@ -493,6 +496,26 @@ export default function NewSessionPage() {
               />
             </div>
           )}
+        </div>
+
+        {/* Calendar Privacy */}
+        <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-xl p-5">
+          <label className="block text-sm font-medium text-slate-300 mb-1">
+            <Shield className="w-4 h-4 inline mr-1.5 text-teal-400" />
+            Calendar Privacy
+          </label>
+          <p className="text-xs text-slate-500 mb-3">
+            Controls what appears on your synced calendar
+          </p>
+          <select
+            value={calendarDisclosure}
+            onChange={(e) => setCalendarDisclosure(e.target.value as 'busy_only' | 'generic' | 'full')}
+            className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-teal-500/50"
+          >
+            <option value="busy_only">Busy only — no details visible</option>
+            <option value="generic">Generic — session type, no client name</option>
+            <option value="full">Full details — client name and notes</option>
+          </select>
         </div>
 
         {/* Notes */}
