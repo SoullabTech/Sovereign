@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { syncEventToCalDAV, deleteEventFromCalDAV } from '@/lib/calendar/syncStudioEventToCalDAV';
 
 export interface CalendarEvent {
   id: string;
@@ -152,8 +153,9 @@ export async function POST(request: NextRequest) {
 
     const row = result.rows[0];
 
+    const dbId = row.id;
     const event: CalendarEvent = {
-      id: `studio-${row.id}`,
+      id: `studio-${dbId}`,
       title: row.title,
       start: row.start_time,
       end: row.end_time,
@@ -162,6 +164,11 @@ export async function POST(request: NextRequest) {
       description: row.description,
       location: row.location,
     };
+
+    // Fire-and-forget CalDAV sync — after DB commit, before response
+    syncEventToCalDAV(memberId, dbId).catch(err =>
+      console.error('[Calendar Sync] CalDAV sync failed:', err.message)
+    );
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {
@@ -203,6 +210,11 @@ export async function DELETE(request: NextRequest) {
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 });
     }
+
+    // Fire-and-forget CalDAV delete — after soft-delete commit
+    deleteEventFromCalDAV(memberId, dbId).catch(err =>
+      console.error('[Calendar Sync] CalDAV delete failed:', err.message)
+    );
 
     return NextResponse.json({ deleted: true, id: eventId });
   } catch (error) {

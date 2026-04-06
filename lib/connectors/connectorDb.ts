@@ -28,6 +28,7 @@ function rowToConnector(row: any): MemberConnector {
     displayName: row.display_name ?? null,
     capabilities: (row.capabilities ?? []) as ConnectorCapability[],
     config: row.config ?? {},
+    configEncrypted: row.config_encrypted ?? {},
     metadata: row.metadata ?? {},
     lastConnectedAt: row.last_connected_at?.toISOString?.() ?? row.last_connected_at ?? null,
     lastUsedAt: row.last_used_at?.toISOString?.() ?? row.last_used_at ?? null,

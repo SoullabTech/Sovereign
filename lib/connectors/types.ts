@@ -85,6 +85,7 @@ export interface MemberConnector {
   displayName: string | null;
   capabilities: ConnectorCapability[];
   config: Record<string, unknown>;
+  configEncrypted: Record<string, unknown>;
   metadata: Record<string, unknown>;
   lastConnectedAt: string | null;
   lastUsedAt: string | null;
