@@ -204,3 +204,44 @@ export type UpdateSessionPrivacy = z.infer<typeof UpdateSessionPrivacySchema>;
 export type CreateMemoryContract = z.infer<typeof CreateMemoryContractSchema>;
 export type RevokeMemoryContract = z.infer<typeof RevokeMemoryContractSchema>;
 export type CreateArtifactShare = z.infer<typeof CreateArtifactShareSchema>;
+
+// ── Media Disclosure ──────────────────────────────────────
+
+export const MEDIA_DISCLOSURE_ACTIONS = ['export', 'descript_link', 'share', 'publish'] as const;
+export type MediaDisclosureAction = (typeof MEDIA_DISCLOSURE_ACTIONS)[number];
+
+/**
+ * Meaning classification types for media content.
+ * Populated by the `classify` job after transcription.
+ * These will align with conversation trust layer inference types
+ * when that system lands.
+ */
+export const MEDIA_INFERENCE_TYPES = [
+  'informational',           // factual, educational content
+  'relational_inference',    // content about relationships, therapeutic work
+  'sensitive_synthesis',     // synthesized sensitive material
+  'outward_recommendation',  // actionable guidance being externalized
+  'personal_disclosure',     // personal/intimate content
+] as const;
+export type MediaInferenceType = (typeof MEDIA_INFERENCE_TYPES)[number];
+
+export const MEANING_EXPANSION_LEVELS = ['none', 'low', 'moderate', 'high'] as const;
+export type MeaningExpansionLevel = (typeof MEANING_EXPANSION_LEVELS)[number];
+
+export interface MediaDisclosureInput {
+  projectId: string;
+  action: MediaDisclosureAction;
+  targetPlatform?: string;
+  /** Loaded from project row if available */
+  inferenceType?: MediaInferenceType;
+  expansionLevel?: MeaningExpansionLevel;
+}
+
+export interface MediaDisclosureResult {
+  allowed: boolean;
+  reason?: string;
+  redactionRequired: boolean;
+  privacyLevel: string;
+  consentStatus: string;
+  expansionLevel?: MeaningExpansionLevel;
+}
