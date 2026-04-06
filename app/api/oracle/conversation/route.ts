@@ -1968,6 +1968,27 @@ async function generateSpiralogicResponseWithLLM(
     elementalResonance: spiralogicCell.element
   });
 
+  // Relational detection: heuristic bridge to relationships dashboard
+  const relationalSignals = [
+    'partner', 'relationship', 'friend', 'mother', 'father', 'parent',
+    'husband', 'wife', 'spouse', 'daughter', 'son', 'sibling', 'brother', 'sister',
+    'conflict', 'boundary', 'boundaries', 'arguing', 'fight', 'divorce',
+    'betrayal', 'trust', 'attachment', 'intimacy', 'codependent',
+  ];
+  const lowerMessage = message.toLowerCase();
+  const relationalHits = relationalSignals.filter(s => lowerMessage.includes(s));
+  if (relationalHits.length >= 1) {
+    const confidence = Math.min(0.5 + relationalHits.length * 0.12, 0.92);
+    suggestedActions.push({
+      id: 'open_relationship',
+      label: 'Map this relationship',
+      priority: confidence,
+      elementalResonance: spiralogicCell.element,
+      kind: 'relational' as any,
+      route: '/dashboard/relationships',
+    });
+  }
+
   // Generate elemental guidance
   const elementalGuidance = generateElementalGuidance(spiralogicCell);
 

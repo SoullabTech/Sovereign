@@ -489,6 +489,17 @@ interface ConversationMessage {
   // 🚪 RELATIONAL ROUTING: intent-driven doorway
   intent?: import('@/lib/types/ai').MaiaIntent;
   uiAction?: import('@/lib/types/ai').MaiaUiAction;
+  // 🌀 SUGGESTED ACTIONS: behavioral loop invitations from oracle
+  suggestedActions?: Array<{
+    id: string;
+    label: string;
+    priority: number;
+    elementalResonance?: string;
+    kind?: 'tool' | 'reflection' | 'practice' | 'relational';
+    route?: string;
+    feltLanguage?: string;
+    silent?: boolean;
+  }>;
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
@@ -5322,6 +5333,8 @@ I'm not sure what I'm feeling yet.`;
         // 🚪 RELATIONAL ROUTING: intent-driven doorway
         intent: responseData.intent || undefined,
         uiAction: responseData.uiAction || undefined,
+        // 🌀 SUGGESTED ACTIONS: behavioral loop invitations from oracle
+        suggestedActions: responseData.spiralogic?.suggestedActions || undefined,
       };
 
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)
@@ -8090,6 +8103,26 @@ I'm not sure what I'm feeling yet.`;
                             disclaimerText={message.sacredEncounter.disclaimer?.short}
                             compact={false}
                           />
+                        </div>
+                      )}
+
+                      {/* 🌀 SUGGESTED ACTIONS: Inline behavioral loop invitations */}
+                      {message.role === 'oracle' && message.suggestedActions && message.suggestedActions.filter(a => a.route && a.priority >= 0.6).length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {message.suggestedActions
+                            .filter(a => a.route && a.priority >= 0.6)
+                            .sort((a, b) => b.priority - a.priority)
+                            .slice(0, 2)
+                            .map(action => (
+                              <button
+                                key={action.id}
+                                onClick={() => router.push(action.route!)}
+                                className="text-xs px-3 py-1.5 rounded-lg border border-amber-700/30 bg-amber-900/15 text-amber-400/80 hover:text-amber-300 hover:border-amber-600/40 hover:bg-amber-900/25 transition-all"
+                              >
+                                {action.label}
+                              </button>
+                            ))
+                          }
                         </div>
                       )}
 

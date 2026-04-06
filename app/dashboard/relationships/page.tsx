@@ -77,6 +77,12 @@ export default function RelationshipFieldPage() {
         {/* Header */}
         <div className="flex items-start justify-between mb-10">
           <div>
+            <button
+              onClick={() => router.push('/maia')}
+              className="text-xs text-stone-500 hover:text-amber-400/80 transition-colors mb-3 flex items-center gap-1"
+            >
+              <span className="text-[10px]">&#8592;</span> Back to MAIA
+            </button>
             <h1 className="text-3xl font-extralight text-jade-jade tracking-wide mb-2">
               Relational Field
             </h1>
