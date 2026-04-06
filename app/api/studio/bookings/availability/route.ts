@@ -4,11 +4,13 @@ export async function generateStaticParams() { return []; }
 /**
  * STUDIO AVAILABILITY API
  *
- * Returns available time slots for booking
+ * Returns available time slots for booking.
+ * Uses the consolidated slot calculator.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import { getAvailableSlotsRange } from '@/lib/scheduling/slotCalculator';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +18,7 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from');
     const to = searchParams.get('to');
     const durationMinutes = parseInt(searchParams.get('duration') || '60');
+    const serviceId = searchParams.get('serviceId') || undefined;
 
     if (!from || !to) {
       return NextResponse.json(
@@ -24,9 +27,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const practitionerSlug = 'stellium';
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
+    const practitionerSlug = searchParams.get('slug') || 'stellium';
 
     // Get practitioner ID
     const practitionerResult = await db.query(
@@ -40,79 +41,22 @@ export async function GET(request: NextRequest) {
 
     const practitionerId = practitionerResult.rows[0].id;
 
-    // Get availability rules
-    const rulesResult = await db.query(
-      `SELECT day_of_week, start_time, end_time
-       FROM practitioner_availability
-       WHERE practitioner_id = $1 AND is_available = true
-       ORDER BY day_of_week, start_time`,
-      [practitionerId]
+    const slotsByDate = await getAvailableSlotsRange({
+      practitionerId,
+      from,
+      to,
+      serviceId,
+      durationMinutes: serviceId ? undefined : durationMinutes,
+    });
+
+    // Flatten to the format the studio calendar expects
+    const slots = Object.entries(slotsByDate).flatMap(([, daySlots]) =>
+      daySlots.map((s) => ({
+        startAt: s.startISO || s.start,
+        endAt: s.endISO || s.end,
+        available: true,
+      }))
     );
-
-    if (rulesResult.rows.length === 0) {
-      return NextResponse.json({ slots: [] });
-    }
-
-    // Get existing bookings in range
-    const bookingsResult = await db.query(
-      `SELECT scheduled_start, scheduled_end FROM sessions
-       WHERE practitioner_id = $1
-       AND status NOT IN ('cancelled', 'no_show')
-       AND scheduled_start >= $2 AND scheduled_start < $3`,
-      [practitionerId, fromDate.toISOString(), toDate.toISOString()]
-    );
-
-    const existingBookings = bookingsResult.rows;
-    const slots: { startAt: string; endAt: string; available: boolean }[] = [];
-    const slotDuration = durationMinutes * 60 * 1000;
-    const now = new Date();
-
-    // Iterate through each day
-    const current = new Date(fromDate);
-    while (current < toDate) {
-      const dayOfWeek = current.getDay();
-      const dayRules = rulesResult.rows.filter(r => r.day_of_week === dayOfWeek);
-
-      for (const rule of dayRules) {
-        // Parse time (HH:MM:SS format)
-        const [startHour, startMin] = rule.start_time.split(':').map(Number);
-        const [endHour, endMin] = rule.end_time.split(':').map(Number);
-
-        const windowStart = new Date(current);
-        windowStart.setHours(startHour, startMin, 0, 0);
-
-        const windowEnd = new Date(current);
-        windowEnd.setHours(endHour, endMin, 0, 0);
-
-        let slotStart = new Date(windowStart);
-        while (slotStart.getTime() + slotDuration <= windowEnd.getTime()) {
-          const slotEnd = new Date(slotStart.getTime() + slotDuration);
-
-          // Skip past times
-          if (slotStart <= now) {
-            slotStart = new Date(slotStart.getTime() + 30 * 60 * 1000);
-            continue;
-          }
-
-          // Check for conflicts
-          const hasConflict = existingBookings.some(booking => {
-            const bookingStart = new Date(booking.scheduled_start);
-            const bookingEnd = new Date(booking.scheduled_end);
-            return slotStart < bookingEnd && slotEnd > bookingStart;
-          });
-
-          slots.push({
-            startAt: slotStart.toISOString(),
-            endAt: slotEnd.toISOString(),
-            available: !hasConflict,
-          });
-
-          slotStart = new Date(slotStart.getTime() + 30 * 60 * 1000);
-        }
-      }
-
-      current.setDate(current.getDate() + 1);
-    }
 
     return NextResponse.json({ slots });
   } catch (error) {
