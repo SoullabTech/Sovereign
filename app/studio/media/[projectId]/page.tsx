@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Download, ExternalLink, Mic, Loader2 } from 'lucide-react';
+import { ArrowLeft, Download, ExternalLink, Mic, Loader2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ProjectStatusBadge } from '@/components/media/ProjectStatusBadge';
 import { ConsentBadges } from '@/components/media/ConsentBadges';
 import { MediaJobStatus } from '@/components/media/MediaJobStatus';
@@ -134,7 +135,10 @@ export default function MediaProjectDetailPage({ params }: { params: Promise<{ p
               <p className="text-sm text-white/40 mt-1">{project.description}</p>
             )}
           </div>
-          <ProjectStatusBadge status={project.status} />
+          <div className="flex items-center gap-2">
+            <ProjectStatusBadge status={project.status} />
+            <DeleteButton projectId={projectId} />
+          </div>
         </div>
 
         <ConsentBadges project={project} />
@@ -351,5 +355,54 @@ function TranscribeButton({ projectId, onStarted }: { projectId: string; onStart
       </button>
       {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
+  );
+}
+
+function DeleteButton({ projectId }: { projectId: string }) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/media/projects/${projectId}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.push('/studio/media');
+      }
+    } catch {
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
+
+  if (confirming) {
+    return (
+      <div className="flex items-center gap-1">
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="px-2 py-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs rounded"
+        >
+          {deleting ? 'Deleting...' : 'Confirm'}
+        </button>
+        <button
+          onClick={() => setConfirming(false)}
+          className="px-2 py-1 text-white/30 hover:text-white text-xs"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="p-1.5 text-white/20 hover:text-red-400 transition-colors"
+      title="Delete project"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
   );
 }
