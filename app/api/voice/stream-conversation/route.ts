@@ -70,6 +70,7 @@ import {
 import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { fireAndForgetFieldMonitor } from '@/lib/consciousness/fieldMonitorTelemetry';
+import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
 import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } from '@/lib/voice/voiceControlsService';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
@@ -1285,6 +1286,24 @@ export async function POST(req: NextRequest) {
                 voiceMode: voiceSession.relationalStack.currentMode,
                 relationalStance: guidance.posture,
                 processingPath: 'CORE',
+              });
+            }
+
+            // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
+            if (isTrustObservationEnabled() && userId && !sanctuary) {
+              storeTrustObservation({
+                memberId: userId,
+                sessionId: effectiveSessionId,
+                responseType: classifyResponseType({ careLensActive: false }),
+                engagementProxy: inferEngagementProxy({
+                  replyLength: message.length,
+                  conversationDepth: conversationHistory?.length ?? 0,
+                }),
+                context: {
+                  element: wisdomPayload?.element || element,
+                  mode: voiceSession.relationalStack.currentMode,
+                  route: 'voice/stream-conversation',
+                },
               });
             }
 
