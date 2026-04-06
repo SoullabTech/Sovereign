@@ -10,6 +10,7 @@
 
 import { query } from '@/lib/db/postgres';
 import { GoogleCalendarService } from './GoogleCalendarService';
+import { getCalendarDisclosure } from '@/lib/trust/service';
 
 // ─── Types ─────────────────────────────────────────────────────────────
 
@@ -53,18 +54,24 @@ export async function syncNewSessionToGoogle(
     const start = new Date(session.scheduledStart);
     const end = new Date(session.scheduledEnd);
 
-    const summary = [session.serviceName, session.clientName]
-      .filter(Boolean)
-      .join(' — ') || 'Session';
+    // Apply scheduling disclosure — filters what gets written to external calendar
+    const disclosure = await getCalendarDisclosure(session.id, {
+      clientName: session.clientName,
+      serviceName: session.serviceName,
+      locationType: session.locationType,
+      locationDetails: session.locationDetails,
+      notes: session.notes,
+    });
 
-    const description = buildEventDescription(session);
+    const summary = disclosure.title ?? 'Busy';
+    const description = disclosure.description ?? '';
 
     const googleEventId = await GoogleCalendarService.createEvent(memberId, {
       summary,
       description,
       start,
       end,
-      location: session.locationDetails || undefined,
+      location: disclosure.locationDetails || undefined,
     });
 
     if (googleEventId) {

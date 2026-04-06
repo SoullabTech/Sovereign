@@ -22,6 +22,7 @@ export interface FeatureFlags {
   spatialMaiaShell: boolean;            // Spatial restructuring: left rail + right panel + minimal top bar
   ichingPatternLayer: boolean;          // Phase 1: silent facet→hexagram mapping + logging
   daoistVoiceLayer: boolean;            // Phase 2+: Daoist expression refinement on oracle output
+  calendarConsciousness: boolean;       // Schedule awareness in MAIA responses (disclosure-filtered)
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -43,6 +44,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   spatialMaiaShell: true,             // On — spatial shell is the primary experience
   ichingPatternLayer: false,           // Off — Phase 1: silent observation first
   daoistVoiceLayer: false,             // Off — Phase 2+: voice shaping after observation
+  calendarConsciousness: false,        // Off — wiring deferred until disclosure proven stable
 };
 
 /**

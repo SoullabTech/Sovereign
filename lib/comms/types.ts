@@ -65,6 +65,12 @@ export type CommsMessageType =
 /** Message urgency levels */
 export type CommsUrgency = 'normal' | 'time_sensitive' | 'safety_concern';
 
+/** Message relational intent — classifies the purpose of the communication */
+export type CommsIntent = 'care' | 'instruction' | 'reflection' | 'logistics' | 'safety_followup';
+
+/** Message sensitivity — classifies the privacy weight of the content */
+export type CommsSensitivity = 'normal' | 'sensitive' | 'highly_sensitive';
+
 /** Message delivery status */
 export type CommsDeliveryStatus = 'queued' | 'sent' | 'delivered' | 'read' | 'failed' | 'bounced';
 
