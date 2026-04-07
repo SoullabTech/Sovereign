@@ -667,6 +667,7 @@ export async function POST(req: NextRequest) {
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
     wisdomTradition,   // Active wisdom tradition ID (from WisdomCouncilPicker)
+    contrastMode = false,  // When true, skip TTS — text-only response for contrast experience
   } = body;
 
   // ── PLATFORM DETECTION ──────────────────────────────────────────────────
@@ -1266,6 +1267,11 @@ export async function POST(req: NextRequest) {
             sentenceCount = chunk.index + 1;
 
             // TTS per-sentence render with fallback (PersonaPlex → OpenAI → Kokoro)
+            // Skip TTS entirely in contrastMode (text-only for contrast experience)
+            if (contrastMode) {
+              sentenceCount = chunk.index + 1;
+              // Text already emitted above — no audio needed
+            } else {
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
 
@@ -1326,6 +1332,7 @@ export async function POST(req: NextRequest) {
             });
 
             ttsPromises.push(ttsPromise);
+            } // end if (!contrastMode)
 
           } else if (chunk.type === 'done') {
             timer.mark('llm_done');

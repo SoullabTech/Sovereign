@@ -23,6 +23,7 @@ export interface FeatureFlags {
   relationalRouting: boolean;           // v1: intent-driven doorways after oracle responses
   cmPractitionerEnvironment: boolean;   // CM practitioner perceptual field (4-layer composition)
   sacredLearning: boolean;              // Sacred Study domain — daily encounter + corpus
+  contrastExperience: boolean;          // Post-response alternate tradition lens contrast (controlled cohort)
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -45,6 +46,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   relationalRouting: false,           // Off until v1 tested
   cmPractitionerEnvironment: false,   // Off until v1 tested
   sacredLearning: false,              // Off until seed corpus reviewed and approved
+  contrastExperience: false,           // Off — controlled cohort only, enable via localStorage override
 };
 
 /**

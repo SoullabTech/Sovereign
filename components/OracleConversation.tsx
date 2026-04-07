@@ -54,6 +54,9 @@ import { AstrologyHandoffCard } from '@/components/astrology/AstrologyHandoffCar
 import { SacredPassageBlock } from '@/components/wisdom/SacredPassageBlock';
 import type { EncounterResult } from '@/lib/wisdom/sacredTexts/SacredEncounterService';
 import type { SacredPassage } from '@/lib/wisdom/sacredTexts/types';
+import { ContrastInvitation } from '@/components/maia/ContrastInvitation';
+import { evaluateContrastGate, type ContrastGateResult, type TraditionLens } from '@/lib/contrast/contrastGate';
+import { logContrastEvent } from '@/lib/contrast/contrastTelemetry';
 import { formatMessageText } from '@/lib/text/formatMessageText';
 import { HighlightedText } from './vocabulary/VocabularyTooltip';
 import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
@@ -855,6 +858,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const { flags: featureFlags } = useFeatureFlags();
   const [doorwayDismissedAt, setDoorwayDismissedAt] = useState<number | null>(null);
   const [lastDoorwayTimestamp, setLastDoorwayTimestamp] = useState(0);
+
+  // Contrast experience state
+  const [contrastAccepted, setContrastAccepted] = useState<string | null>(null); // message ID
+  const [contrastText, setContrastText] = useState<string | null>(null);
+  const [contrastLoading, setContrastLoading] = useState(false);
+  const [contrastDismissedAt, setContrastDismissedAt] = useState<number | null>(null);
+  const [lastContrastTurnIndex, setLastContrastTurnIndex] = useState<number | null>(null);
+  const [lastContrastTradition, setLastContrastTradition] = useState<string | null>(null);
+  const [sessionContrastCount, setSessionContrastCount] = useState(0);
+  const [lastContrastGateResult, setLastContrastGateResult] = useState<ContrastGateResult | null>(null);
 
   // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
   const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
@@ -2282,6 +2295,111 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setMaiaResponseText('');
       // Mark that text stream is complete - mic will resume when audio finishes
       setStreamingResponseComplete(true);
+
+      // ── CONTRAST EXPERIENCE GATE ──────────────────────────────────
+      // Evaluate whether to offer a contrast moment for this response.
+      if (featureFlags.contrastExperience && fullResponse.trim()) {
+        const traditionId = activeTradition?.id;
+        const gateTradition = traditionId === 'integral-yoga' ? 'integral_yoga'
+          : traditionId === 'taoism' ? 'taoism'
+          : null;
+
+        const userTurnCount = messages.filter(m => m.role === 'user').length + 1;
+        const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+
+        const gateResult = evaluateContrastGate({
+          turnCount: userTurnCount,
+          turnIndex: messages.length,
+          sessionContrastCount,
+          turnsSinceLastContrast: lastContrastTurnIndex !== null
+            ? messages.length - lastContrastTurnIndex
+            : null,
+          currentTradition: gateTradition as TraditionLens | null,
+          lastContrastTradition: lastContrastTradition as TraditionLens | null,
+          userText: lastUserMsg?.text || lastUserMsg?.content || '',
+          assistantText: fullResponse.trim(),
+        });
+
+        setLastContrastGateResult(gateResult);
+
+        logContrastEvent({
+          sessionId,
+          turnIndex: messages.length,
+          eventType: gateResult.show ? 'gate_passed' : 'gate_rejected',
+          originalTradition: traditionId || null,
+          contrastTradition: gateResult.alternateTradition
+            ? (gateResult.alternateTradition === 'integral_yoga' ? 'integral-yoga' : gateResult.alternateTradition)
+            : null,
+          contrastMode: gateResult.contrastMode || null,
+          gateReason: gateResult.reason,
+          meta: gateResult.debug || {},
+        });
+      }
+
+      // 💡 IDEA FIELD: Surface idea candidates from voice streaming path
+      const voiceIdeaCandidate = relational?.ideaCandidate;
+      const ideaCooldownMs = 30_000;
+      const timeSinceLastIdea = Date.now() - ideaLastShownRef.current;
+      if (
+        voiceIdeaCandidate &&
+        !ideaDismissedRef.current.has(voiceIdeaCandidate.fingerprint) &&
+        timeSinceLastIdea >= ideaCooldownMs
+      ) {
+        ideaDismissedRef.current.add(voiceIdeaCandidate.fingerprint);
+        ideaLastShownRef.current = Date.now();
+
+        toast(
+          (t: { id: string }) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '260px' }}>
+              <div style={{ fontSize: '13px', color: '#fbbf24', fontWeight: 500 }}>
+                {voiceIdeaCandidate.title}
+              </div>
+              <div style={{ fontSize: '11px', color: '#a8a29e', lineHeight: '1.4' }}>
+                {voiceIdeaCandidate.summary.slice(0, 120)}{voiceIdeaCandidate.summary.length > 120 ? '...' : ''}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                <button
+                  onClick={() => {
+                    fetch('/api/ideas/capture', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        title: voiceIdeaCandidate.title,
+                        description: voiceIdeaCandidate.summary,
+                        sourceText: voiceIdeaCandidate.sourceText,
+                        confidence: voiceIdeaCandidate.confidence,
+                        conversationId: sessionId,
+                      }),
+                    }).catch(() => {});
+                    toast.dismiss(t.id);
+                    toast('Idea saved', { icon: '💡', duration: 2000, style: { background: '#1c1917', color: '#fbbf24', fontSize: '12px' } });
+                  }}
+                  style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '6px', padding: '4px 12px', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  style={{ background: 'transparent', color: '#78716c', border: '1px solid rgba(120, 113, 108, 0.3)', borderRadius: '6px', padding: '4px 12px', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            duration: 10000,
+            icon: '💡',
+            style: {
+              background: '#1c1917',
+              border: '1px solid rgba(251, 191, 36, 0.2)',
+              borderRadius: '12px',
+              padding: '12px',
+            },
+          }
+        );
+        console.log(`💡 [idea-field] Voice candidate surfaced: "${voiceIdeaCandidate.title}" (${voiceIdeaCandidate.confidence})`);
+      }
     },
     onError: (error) => {
       // 🔥 FORCE RECOVERY: Called by useStreamingVoice when audio pipeline fails
@@ -4024,6 +4142,113 @@ I'm not sure what I'm feeling yet.`;
     });
   }, [messages, userName]);
 
+  // ── CONTRAST ACCEPT HANDLER ──────────────────────────────────────
+  const handleContrastAccept = useCallback(async (messageId: string, userMessage: string) => {
+    if (!lastContrastGateResult?.show || !lastContrastGateResult.alternateTradition) return;
+
+    setContrastAccepted(messageId);
+    setContrastLoading(true);
+    setContrastText(null);
+
+    const alternateTradition = lastContrastGateResult.alternateTradition;
+    // Map gate tradition ID (underscore) to API tradition ID (hyphen)
+    const apiTradition = alternateTradition === 'integral_yoga' ? 'integral-yoga' : alternateTradition;
+
+    logContrastEvent({
+      sessionId,
+      turnIndex: messages.length,
+      eventType: 'accepted',
+      originalTradition: activeTradition?.id || null,
+      contrastTradition: apiTradition,
+      contrastMode: lastContrastGateResult.contrastMode || null,
+    });
+
+    // Perceptual crossing — brief breath before alternate response
+    await new Promise(resolve => setTimeout(resolve, 350));
+
+    try {
+      const response = await apiFetch('/api/voice/stream-conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          userId: getValidMemberId(),
+          wisdomTradition: apiTradition,
+          contrastMode: true,
+          conversationHistory: messages.slice(-6).map(m => ({
+            role: m.role === 'oracle' ? 'assistant' : 'user',
+            content: m.text || m.content || '',
+          })),
+          sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('[Contrast] Stream request failed:', response.status);
+        setContrastLoading(false);
+        setContrastAccepted(null);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        setContrastLoading(false);
+        setContrastAccepted(null);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: text')) {
+            // Next line is data
+            continue;
+          }
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.text) {
+                accumulated += data.text + ' ';
+                setContrastText(accumulated.trim());
+              }
+            } catch {
+              // Skip malformed data lines
+            }
+          }
+        }
+      }
+
+      setContrastLoading(false);
+      setLastContrastTurnIndex(messages.length);
+      setLastContrastTradition(alternateTradition);
+      setSessionContrastCount(prev => prev + 1);
+
+      logContrastEvent({
+        sessionId,
+        turnIndex: messages.length,
+        eventType: 'generated',
+        originalTradition: activeTradition?.id || null,
+        contrastTradition: apiTradition,
+        contrastMode: lastContrastGateResult.contrastMode || null,
+      });
+
+    } catch (err) {
+      console.warn('[Contrast] Generation failed:', err);
+      setContrastLoading(false);
+      setContrastAccepted(null);
+    }
+  }, [lastContrastGateResult, messages, activeTradition, sessionContrastCount, sessionId]);
+
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
@@ -4176,6 +4401,22 @@ I'm not sure what I'm feeling yet.`;
     };
     setMessages(prev => appendMessageCapped(prev, userMessage));
     onMessageAddedRef.current?.(userMessage);
+
+    // Detect post-contrast engagement
+    if (contrastAccepted) {
+      logContrastEvent({
+        sessionId,
+        turnIndex: messages.length,
+        eventType: 'engaged_after_contrast',
+        originalTradition: activeTradition?.id || null,
+        contrastTradition: null,
+        contrastMode: null,
+        meta: { replyLength: cleanedText.length },
+      });
+      setContrastAccepted(null);
+      setContrastText(null);
+      setLastContrastGateResult(null);
+    }
 
     // Process message for Field Protocol if recording
     if (isFieldRecording) {
@@ -7924,6 +8165,40 @@ I'm not sure what I'm feeling yet.`;
                       {/* 🌌 ASTROLOGY HANDOFF: Threshold card into the Cosmic Blueprint */}
                       {message.role === 'oracle' && message.astrologyHandoff && (
                         <AstrologyHandoffCard handoff={message.astrologyHandoff} />
+                      )}
+
+                      {/* Contrast experience invitation — before passages, closer to response */}
+                      {message.role === 'oracle'
+                        && index === messages.length - 1
+                        && lastContrastGateResult?.show
+                        && featureFlags.contrastExperience && (
+                        <ContrastInvitation
+                          visible={
+                            contrastAccepted !== message.id
+                            && !(contrastDismissedAt && Date.now() - contrastDismissedAt < 15000)
+                          }
+                          contrastText={contrastAccepted === message.id ? contrastText : null}
+                          isLoading={contrastAccepted === message.id && contrastLoading}
+                          accepted={contrastAccepted === message.id}
+                          integrationQuestion={lastContrastGateResult.integrationQuestion}
+                          onAccept={() => {
+                            const userMsg = messages.filter(m => m.role === 'user').pop();
+                            handleContrastAccept(message.id, userMsg?.text || userMsg?.content || '');
+                          }}
+                          onDismiss={() => {
+                            setContrastDismissedAt(Date.now());
+                            logContrastEvent({
+                              sessionId,
+                              turnIndex: messages.length,
+                              eventType: 'dismissed',
+                              originalTradition: activeTradition?.id || null,
+                              contrastTradition: lastContrastGateResult.alternateTradition
+                                ? (lastContrastGateResult.alternateTradition === 'integral_yoga' ? 'integral-yoga' : lastContrastGateResult.alternateTradition)
+                                : null,
+                              contrastMode: lastContrastGateResult.contrastMode || null,
+                            });
+                          }}
+                        />
                       )}
 
                       {/* 📖 SACRED ENCOUNTER: Passage rendered below MAIA's response, visually distinct */}
