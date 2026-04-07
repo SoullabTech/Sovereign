@@ -97,7 +97,7 @@ export default function BookPractitionerPage() {
   const initial = (practitioner?.name || '?')[0].toUpperCase();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950">
+    <div className="min-h-screen bg-[#FDF8F0] dark:bg-neutral-950">
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Practitioner header */}
         <div className="text-center mb-10">
