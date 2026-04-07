@@ -7,6 +7,7 @@ import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
 import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
+import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -248,6 +249,11 @@ export async function POST(req: NextRequest) {
         format: orchestratorResult.audio.format,
         synthesisTimeMs: orchestratorResult.audio.synthesisTimeMs
       };
+    }
+
+    // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
+    if (userId && message && orchestratorResult.text) {
+      observeRelationalContent(userId, message, orchestratorResult.text);
     }
 
     return NextResponse.json(responseData, { status: 200 });

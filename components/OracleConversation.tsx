@@ -8108,26 +8108,6 @@ I'm not sure what I'm feeling yet.`;
                         </div>
                       )}
 
-                      {/* 🌀 SUGGESTED ACTIONS: Inline behavioral loop invitations */}
-                      {message.role === 'oracle' && message.suggestedActions && message.suggestedActions.filter(a => a.route && a.priority >= 0.6).length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {message.suggestedActions
-                            .filter(a => a.route && a.priority >= 0.6)
-                            .sort((a, b) => b.priority - a.priority)
-                            .slice(0, 2)
-                            .map(action => (
-                              <button
-                                key={action.id}
-                                onClick={() => router.push(action.route!)}
-                                className="text-xs px-3 py-1.5 rounded-lg border border-amber-700/30 bg-amber-900/15 text-amber-400/80 hover:text-amber-300 hover:border-amber-600/40 hover:bg-amber-900/25 transition-all"
-                              >
-                                {action.label}
-                              </button>
-                            ))
-                          }
-                        </div>
-                      )}
-
                       {/* Pattern Chips - show detected patterns for MAIA responses */}
                       {message.role === 'oracle' && message.metadata?.patterns && message.metadata.patterns.length > 0 && (
                         <PatternChips
