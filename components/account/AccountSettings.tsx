@@ -95,7 +95,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals' | 'messaging';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
 
 interface PractitionerProject {
   id: string;
@@ -148,6 +148,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'account', label: 'Account', icon: Lock },
   { id: 'portals', label: 'Client Portals', icon: Globe, practitionerOnly: true },
+  { id: 'scheduling', label: 'Scheduling', icon: Clock, practitionerOnly: true },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
   { id: 'voice', label: 'Voice', icon: Mic },
   { id: 'astrology', label: 'Astrology', icon: Star },
@@ -2894,6 +2895,37 @@ export function AccountSettings() {
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
+            {activeSection === 'scheduling' && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Scheduling</h2>
+                  <p className="text-sm text-stone-400 mt-1">Manage your availability, services, and booking page.</p>
+                </div>
+                <div className="space-y-3">
+                  <a href="/studio/scheduling" className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-amber-500/30 transition-colors group">
+                    <div>
+                      <p className="text-sm font-medium text-white group-hover:text-amber-400">Availability</p>
+                      <p className="text-xs text-stone-400">Set your weekly hours and date overrides</p>
+                    </div>
+                    <ArrowLeft size={16} className="text-stone-500 rotate-180" />
+                  </a>
+                  <a href="/studio/services" className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-amber-500/30 transition-colors group">
+                    <div>
+                      <p className="text-sm font-medium text-white group-hover:text-amber-400">Services</p>
+                      <p className="text-xs text-stone-400">Add, edit, or remove your session offerings</p>
+                    </div>
+                    <ArrowLeft size={16} className="text-stone-500 rotate-180" />
+                  </a>
+                  <a href="/studio/scheduling" className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:border-amber-500/30 transition-colors group">
+                    <div>
+                      <p className="text-sm font-medium text-white group-hover:text-amber-400">Your Booking Page</p>
+                      <p className="text-xs text-stone-400">View your public booking link and share it</p>
+                    </div>
+                    <ArrowLeft size={16} className="text-stone-500 rotate-180" />
+                  </a>
+                </div>
+              </div>
+            )}
             {activeSection === 'portals' && renderPortals()}
             {activeSection === 'messaging' && userId && (
               <NostrMessagingSection memberId={userId} />
