@@ -66,9 +66,10 @@ export async function getAvailableSlots(params: SlotCalcParams): Promise<TimeSlo
   const dayOfWeek = requestedDate.getDay();
 
   // 2. Check for whole-day override block first
+  // DB column is `is_available` (true=open, false=blocked)
   const wholeDayBlock = await db.query(
     `SELECT id FROM availability_overrides
-     WHERE practitioner_id = $1 AND override_date = $2 AND is_blocked = true AND start_time IS NULL`,
+     WHERE practitioner_id = $1 AND override_date = $2 AND is_available = false AND start_time IS NULL`,
     [practitionerId, date]
   );
   if (wholeDayBlock.rows.length > 0) {
@@ -84,20 +85,20 @@ export async function getAvailableSlots(params: SlotCalcParams): Promise<TimeSlo
     [practitionerId, dayOfWeek]
   );
 
-  // 4. Load extra availability overrides (is_blocked = false)
+  // 4. Load extra availability overrides (available = extra open windows)
   const extraResult = await db.query(
     `SELECT start_time, end_time
      FROM availability_overrides
-     WHERE practitioner_id = $1 AND override_date = $2 AND is_blocked = false
+     WHERE practitioner_id = $1 AND override_date = $2 AND is_available = true
        AND start_time IS NOT NULL AND end_time IS NOT NULL`,
     [practitionerId, date]
   );
 
-  // 5. Load time-specific blocks
+  // 5. Load time-specific blocks (blocked = not available)
   const blocksResult = await db.query(
     `SELECT start_time, end_time
      FROM availability_overrides
-     WHERE practitioner_id = $1 AND override_date = $2 AND is_blocked = true
+     WHERE practitioner_id = $1 AND override_date = $2 AND is_available = false
        AND start_time IS NOT NULL AND end_time IS NOT NULL`,
     [practitionerId, date]
   );

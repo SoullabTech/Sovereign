@@ -10,7 +10,7 @@ export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
-import { getAvailableSlots } from '@/lib/scheduling/slotCalculator';
+import { getAvailableSlots, getAvailableSlotsRange } from '@/lib/scheduling/slotCalculator';
 
 export async function GET(
   request: NextRequest,
@@ -24,10 +24,12 @@ export async function GET(
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
     const dateStr = searchParams.get('date');
+    const from = searchParams.get('from');
+    const to = searchParams.get('to');
     const serviceId = searchParams.get('service') || undefined;
 
-    if (!dateStr) {
-      return NextResponse.json({ error: 'Date is required' }, { status: 400 });
+    if (!dateStr && (!from || !to)) {
+      return NextResponse.json({ error: 'date or from+to are required' }, { status: 400 });
     }
 
     // Get practitioner
@@ -42,9 +44,27 @@ export async function GET(
 
     const practitionerId = practitionerResult.rows[0].id;
 
+    // Date-range mode: return slots grouped by date
+    if (from && to) {
+      const slotsByDate = await getAvailableSlotsRange({
+        practitionerId,
+        from,
+        to,
+        serviceId,
+      });
+
+      const mapped: Record<string, { start: string; end: string; available: boolean }[]> = {};
+      for (const [date, daySlots] of Object.entries(slotsByDate)) {
+        mapped[date] = daySlots.map((s) => ({ start: s.start, end: s.end, available: true }));
+      }
+
+      return NextResponse.json({ slotsByDate: mapped });
+    }
+
+    // Single-date mode (backward-compatible)
     const slots = await getAvailableSlots({
       practitionerId,
-      date: dateStr,
+      date: dateStr!,
       serviceId,
     });
 
