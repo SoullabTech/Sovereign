@@ -4411,7 +4411,11 @@ I'm not sure what I'm feeling yet.`;
         originalTradition: activeTradition?.id || null,
         contrastTradition: null,
         contrastMode: null,
-        meta: { replyLength: cleanedText.length },
+        meta: {
+          replyLength: cleanedText.length,
+          nextUserMessage: cleanedText.slice(0, 500),
+          primaryResponse: messages.filter(m => m.role === 'oracle').pop()?.text?.slice(0, 500) || null,
+        },
       });
       setContrastAccepted(null);
       setContrastText(null);

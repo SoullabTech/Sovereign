@@ -30,12 +30,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false }, { status: 400 });
     }
 
+    // Extract review-relevant fields from meta when present
+    const nextUserMessage = meta?.nextUserMessage ?? null;
+    const primaryResponse = meta?.primaryResponse ?? null;
+
     await query(
       `INSERT INTO contrast_events
         (member_id, session_id, turn_index, event_type,
          original_tradition, contrast_tradition, contrast_mode,
-         gate_reason, meta)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+         gate_reason, next_user_message, primary_response, meta)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         memberId || null,
         sessionId,
@@ -45,6 +49,8 @@ export async function POST(req: NextRequest) {
         contrastTradition ?? null,
         contrastMode ?? null,
         gateReason ?? null,
+        nextUserMessage,
+        primaryResponse,
         JSON.stringify(meta ?? {}),
       ]
     );
