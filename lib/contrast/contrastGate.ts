@@ -61,7 +61,7 @@ export interface ContrastGateResult {
 
 export const CONTRAST_CONFIG = {
   minTurns: 2,
-  minTurnsBetweenContrasts: 4,
+  minTurnsBetweenContrasts: 5,
   maxContrastsPerSession: 2,
   minAssistantChars: 220,
 
@@ -88,6 +88,9 @@ const CRISIS_PATTERNS: RegExp[] = [
   /\b(hurt someone|kill someone)\b/i,
   /\b(psychosis|hearing voices|seeing things)\b/i,
 ];
+
+// User explicitly signals they don't want reframing / additional perspectives
+const PREFERENCE_REJECTION_PATTERNS = /\b(don't need another perspective|just tell me|stop analyzing|don't want to think about it more|enough reflecting|tired of reflecting|don't overthink|just answer)\b/i;
 
 export function getContrastIntegrationQuestion(turnIndex: number): string {
   return CONTRAST_INTEGRATION_QUESTIONS[
@@ -256,6 +259,11 @@ export function failFast(
 
   if (scores.directiveScore >= CONTRAST_CONFIG.directiveThreshold) {
     return 'response_too_directive';
+  }
+
+  // User explicitly signals they don't want another perspective
+  if (PREFERENCE_REJECTION_PATTERNS.test(input.userText)) {
+    return 'practical_or_analytical';
   }
 
   if (
