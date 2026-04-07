@@ -90,7 +90,7 @@ const CRISIS_PATTERNS: RegExp[] = [
 ];
 
 // User explicitly signals they don't want reframing / additional perspectives
-const PREFERENCE_REJECTION_PATTERNS = /\b(don't need another perspective|just tell me|stop analyzing|don't want to think about it more|enough reflecting|tired of reflecting|don't overthink|just answer)\b/i;
+const PREFERENCE_REJECTION_PATTERNS = /\b(don't need another perspective|just tell me what to do|stop analyzing|don't want to think about it more|enough reflecting|tired of reflecting|don't overthink|just answer|i've thought about this enough|i'm done reflecting|i don't want to analyze this more|stop making this complicated)\b/i;
 
 export function getContrastIntegrationQuestion(turnIndex: number): string {
   return CONTRAST_INTEGRATION_QUESTIONS[
