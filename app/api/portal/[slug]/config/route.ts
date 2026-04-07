@@ -35,8 +35,6 @@ export async function GET(
         p.social_links,
         p.settings,
         p.portal_status,
-        mp.name as persona_name,
-        mp.voice_style,
         mp.brand_colors
       FROM practitioners p
       LEFT JOIN maia_personas mp ON mp.practitioner_id = p.id
