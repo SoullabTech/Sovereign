@@ -252,8 +252,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
-    if (userId && message && orchestratorResult.text) {
-      observeRelationalContent(userId, message, orchestratorResult.text);
+    const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
+    if (observerMemberId && message && orchestratorResult.text) {
+      observeRelationalContent(observerMemberId, message, orchestratorResult.text);
     }
 
     return NextResponse.json(responseData, { status: 200 });
