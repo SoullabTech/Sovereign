@@ -1,17 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
-import { DatePicker } from '@/components/scheduling/DatePicker';
-import { TimeSlotGrid } from '@/components/scheduling/TimeSlotGrid';
-import { BookingForm, type BookingFormData } from '@/components/scheduling/BookingForm';
-
-interface TimeSlot {
-  start: string;
-  end: string;
-}
+import { ArrowLeft, Clock, Video } from 'lucide-react';
+import { WeekSlotGrid } from '@/components/scheduling/WeekSlotGrid';
+import { BookingModal, type BookingResult } from '@/components/scheduling/BookingModal';
+import { BookingConfirmation } from '@/components/scheduling/BookingConfirmation';
 
 interface ServiceInfo {
   name: string;
@@ -20,112 +14,99 @@ interface ServiceInfo {
   description?: string;
 }
 
+interface PractitionerInfo {
+  name: string;
+  slug: string;
+  businessName?: string;
+}
+
 export default function BookSlotPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
-  const serviceId = params.serviceId as string;
+  const slug = (params?.slug ?? '') as string;
+  const serviceId = (params?.serviceId ?? '') as string;
 
   const [service, setService] = useState<ServiceInfo | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [practitioner, setPractitioner] = useState<PractitionerInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load service info
+  // Modal state
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Load practitioner + service
   useEffect(() => {
-    async function loadService() {
+    async function load() {
       try {
-        const res = await fetch(`/api/portal/${slug}/services`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const svc = data.services?.find((s: { id: string }) => s.id === serviceId);
-        if (svc) setService(svc);
-        else setError('Service not found');
+        const [configRes, servicesRes] = await Promise.all([
+          fetch(`/api/portal/${slug}/config`),
+          fetch(`/api/portal/${slug}/services`),
+        ]);
+
+        if (!configRes.ok || !servicesRes.ok) {
+          setError(configRes.status === 404 ? 'Practitioner not found' : 'Failed to load');
+          return;
+        }
+
+        const configData = await configRes.json();
+        const servicesData = await servicesRes.json();
+
+        setPractitioner({
+          name: configData.practitioner_name || configData.name,
+          slug,
+          businessName: configData.business_name,
+        });
+
+        const svc = (servicesData.services || []).find(
+          (s: { id: string }) => s.id === serviceId
+        );
+        if (svc) {
+          setService(svc);
+        } else {
+          setError('Service not found');
+        }
       } catch {
-        setError('Failed to load service');
+        setError('Failed to load booking page');
+      } finally {
+        setLoading(false);
       }
     }
-    loadService();
+    load();
   }, [slug, serviceId]);
 
-  // Load slots when date changes
-  const loadSlots = useCallback(async (date: Date) => {
-    setLoadingSlots(true);
-    setSelectedTime(null);
-    try {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const res = await fetch(`/api/portal/${slug}/availability?date=${dateStr}&service=${serviceId}`);
-      if (!res.ok) {
-        setSlots([]);
-        return;
-      }
-      const data = await res.json();
-      setSlots(data.slots || []);
-    } catch {
-      setSlots([]);
-    } finally {
-      setLoadingSlots(false);
-    }
-  }, [slug, serviceId]);
-
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    loadSlots(date);
+  const handleSlotSelect = (date: string, time: string) => {
+    setSelectedSlot({ date, time });
   };
 
-  const handleSubmit = async (formData: BookingFormData) => {
-    if (!selectedDate || !selectedTime || !service) return;
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const res = await fetch(`/api/book/${slug}/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId,
-          date: dateStr,
-          time: selectedTime,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || undefined,
-          timezone: formData.timezone,
-          notes: formData.notes || undefined,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Failed to create booking');
-        return;
-      }
-
-      // Redirect to confirmation page
-      const token = data.booking?.confirmationToken;
-      if (token) {
-        router.push(`/book/${slug}/confirmation?token=${token}`);
-      } else {
-        router.push(`/book/${slug}/confirmation?session=${data.booking?.sessionId}`);
-      }
-    } catch {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleBooked = (result: BookingResult) => {
+    setSelectedSlot(null);
+    setBookingResult(result);
   };
 
-  if (error && !service) {
+  const handleCloseConfirmation = () => {
+    setBookingResult(null);
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="w-5 h-5 border-2 border-neutral-200 dark:border-neutral-700 border-t-amber-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
         <div className="text-center">
-          <p className="text-neutral-500">{error}</p>
-          <button onClick={() => router.back()} className="text-amber-500 hover:text-amber-600 mt-4 text-sm">
+          <p className="text-neutral-500 dark:text-neutral-400">{error}</p>
+          <button
+            onClick={() => router.back()}
+            className="text-amber-500 hover:text-amber-600 mt-4 text-sm"
+          >
             Go back
           </button>
         </div>
@@ -134,80 +115,86 @@ export default function BookSlotPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Back button */}
-        <button
-          onClick={() => router.push(`/book/${slug}`)}
-          className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to services
-        </button>
-
-        {/* Service header */}
-        {service && (
-          <div className="mb-8">
-            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {service.name}
-            </h1>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-              {service.duration_minutes} min
-              {service.price_cents > 0 && ` \u00b7 $${(service.price_cents / 100).toFixed(0)}`}
-            </p>
-            {service.description && (
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">{service.description}</p>
-            )}
-          </div>
-        )}
-
-        {/* Step 1: Pick a date */}
+    <div className="min-h-screen bg-white dark:bg-neutral-950">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-8">
-          <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-            Select a date
-          </h2>
-          <DatePicker selectedDate={selectedDate} onSelect={handleDateSelect} />
+          <button
+            onClick={() => router.push(`/book/${slug}`)}
+            className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to services
+          </button>
+
+          <div className="flex items-start gap-4">
+            {/* Avatar placeholder */}
+            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                {(practitioner?.name || '?')[0].toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                {practitioner?.businessName || practitioner?.name}
+              </p>
+              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {service?.name}
+              </h1>
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="mt-3 flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+            <span className="flex items-center gap-1.5">
+              <Clock size={14} />
+              {service?.duration_minutes} min
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Video size={14} />
+              Video conference info added after booking
+            </span>
+          </div>
         </div>
 
-        {/* Step 2: Pick a time */}
-        {selectedDate && (
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-              Select a time — {format(selectedDate, 'EEEE, MMMM d')}
-            </h2>
-            <TimeSlotGrid
-              slots={slots}
-              selectedSlot={selectedTime}
-              onSelect={setSelectedTime}
-              loading={loadingSlots}
+        <div className="border-t border-neutral-100 dark:border-neutral-800 pt-6">
+          {/* Week slot grid */}
+          {service && (
+            <WeekSlotGrid
+              slug={slug}
+              serviceId={serviceId}
+              serviceDuration={service.duration_minutes}
+              onSlotSelect={handleSlotSelect}
+              timezone={timezone}
             />
-          </div>
-        )}
-
-        {/* Step 3: Fill in details */}
-        {selectedTime && service && selectedDate && (
-          <div className="mb-8">
-            <h2 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-              Your details
-            </h2>
-            <BookingForm
-              onSubmit={handleSubmit}
-              loading={submitting}
-              serviceName={service.name}
-              date={format(selectedDate, 'yyyy-MM-dd')}
-              time={selectedTime}
-              durationMinutes={service.duration_minutes}
-            />
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
-            {error}
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Booking modal */}
+      {selectedSlot && service && (
+        <BookingModal
+          slug={slug}
+          serviceId={serviceId}
+          serviceName={service.name}
+          serviceDuration={service.duration_minutes}
+          date={selectedSlot.date}
+          time={selectedSlot.time}
+          timezone={timezone}
+          hasVideoConference
+          onClose={() => setSelectedSlot(null)}
+          onBooked={handleBooked}
+        />
+      )}
+
+      {/* Confirmation overlay */}
+      {bookingResult && (
+        <BookingConfirmation
+          booking={bookingResult}
+          slug={slug}
+          onClose={handleCloseConfirmation}
+        />
+      )}
     </div>
   );
 }
