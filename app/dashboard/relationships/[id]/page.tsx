@@ -44,6 +44,8 @@ export default function RelationshipDetailPage() {
   const [noteContent, setNoteContent] = useState('');
   const [noteKind, setNoteKind] = useState<'note' | 'reflection' | 'threshold'>('note');
   const [savingNote, setSavingNote] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -95,6 +97,27 @@ export default function RelationshipDetailPage() {
     }
   };
 
+  const saveName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === relationship?.name) {
+      setEditingName(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/relationships/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      if (res.ok) {
+        fetchDetail();
+      }
+    } catch {
+      // silent
+    }
+    setEditingName(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,9 +155,24 @@ export default function RelationshipDetailPage() {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-extralight text-jade-jade tracking-wide">
-              {relationship.name}
-            </h1>
+            {editingName ? (
+              <input
+                autoFocus
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                onBlur={saveName}
+                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
+                className="text-3xl font-extralight text-jade-jade tracking-wide bg-transparent border-b border-jade-sage/30 outline-none w-full"
+              />
+            ) : (
+              <h1
+                onClick={() => { setEditName(relationship.name); setEditingName(true); }}
+                className="text-3xl font-extralight text-jade-jade tracking-wide cursor-pointer hover:text-jade-sage transition-colors"
+                title="Click to rename"
+              >
+                {relationship.name}
+              </h1>
+            )}
             {relationship.realm !== 'outer' && (
               <span className="text-xs text-jade-copper capitalize">{relationship.realm}</span>
             )}
