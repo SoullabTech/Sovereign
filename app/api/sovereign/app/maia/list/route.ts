@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
  * Do not infer these deeper in the stack.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -920,6 +921,11 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
       validation: orchestratorResult.validation || null,
       repaired: orchestratorResult.regenerated || false,
     });
+
+    // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
+    if (userId && message && orchestratorResult.text) {
+      observeRelationalContent(userId, message, orchestratorResult.text);
+    }
 
     const response = jsonWithCors(req, responseData, 200, canonHeaders);
     return response;
