@@ -2205,6 +2205,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     archetype: voiceSettings.archetype,
     conversationMode: voiceSettings.conversationMode,
     memoryDepth: voiceSettings.memoryDepth,
+    wisdomTradition: activeTradition?.id, // Active wisdom tradition for interpretive lens
     element: undefined, // Will be set dynamically per message
     // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
     onPlaybackSignal: handlePlaybackSignal,

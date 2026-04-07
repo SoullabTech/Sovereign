@@ -76,6 +76,8 @@ interface StreamingVoiceOptions {
   sessionId?: string;
   /** Range of Effect (0-4): 0=Neutral, 1=Subtle, 2=Expressive, 3=Deep, 4=Ceremonial */
   prosodyRange?: 0 | 1 | 2 | 3 | 4;
+  /** Active wisdom tradition ID (e.g., 'taoism', 'integral-yoga'). Shapes interpretive lens. */
+  wisdomTradition?: string;
   /** Member's preferred name for MAIA (passed to system prompt) */
   assistantName?: string;
   /** MAIA's archetype/presence mode */
@@ -231,6 +233,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     element,
     sessionId: providedSessionId,
     prosodyRange = 1,  // Default: Subtle
+    wisdomTradition,
     assistantName,
     archetype,
     conversationMode,
@@ -626,6 +629,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           sessionId: sessionIdRef.current, // Stable session ID for relational stack
           conversationId, // 🧠 Stable conversation ID for memory continuity
           prosodyRange,  // MAIA's prosody policy range (0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial)
+          wisdomTradition, // Active wisdom tradition (shapes interpretive lens)
           assistantName, // Member's preferred name for MAIA
           archetype,     // MAIA's presence/archetype mode
           conversationMode, // Conversation style

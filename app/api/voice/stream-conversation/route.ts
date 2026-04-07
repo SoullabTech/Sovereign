@@ -153,6 +153,7 @@ import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/co
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
 import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 import { query } from '@/lib/db/postgres';
+import { getTraditionLensBlock, getTraditionLensMeta } from '@/lib/wisdom/traditionLens';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -665,6 +666,7 @@ export async function POST(req: NextRequest) {
     mode = 'talk',
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
+    wisdomTradition,   // Active wisdom tradition ID (from WisdomCouncilPicker)
   } = body;
 
   // ── PLATFORM DETECTION ──────────────────────────────────────────────────
@@ -1205,10 +1207,24 @@ export async function POST(req: NextRequest) {
         });
         const conversationDepth = conversationHistory?.length ?? 0;
         const councilPromptSection = buildCouncilPromptSection(councilResolution, conversationDepth);
-        const voiceSystemPrompt = councilPromptSection || undefined;
         if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
           console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
         }
+
+        // ── WISDOM TRADITION LENS ────────────────────────────────────────
+        // If member selected a wisdom tradition (Tao, Gita, etc.), inject
+        // its cognitive orientation into the prompt. Tradition shapes how
+        // MAIA interprets experience; care lens shapes therapeutic frame.
+        // They compose: tradition first (perception), then care lens (method).
+        const traditionLensBlock = getTraditionLensBlock(wisdomTradition);
+        const traditionMeta = getTraditionLensMeta(wisdomTradition);
+        if (traditionMeta.active) {
+          console.log(`📿 [Voice Tradition] ${traditionMeta.name} | depth=${traditionMeta.depth}`);
+        }
+
+        // Compose: tradition lens (perception) → care lens (method)
+        const promptParts = [traditionLensBlock, councilPromptSection].filter(Boolean);
+        const voiceSystemPrompt = promptParts.length > 0 ? promptParts.join('\n\n') : undefined;
         // ─────────────────────────────────────────────────────────────────
 
         // Stream sentences from Claude
@@ -1389,6 +1405,7 @@ export async function POST(req: NextRequest) {
                   latencyMs,
                   element: wisdomPayload?.element || element,
                   usedClaudeConsult: true,
+                  traditionLens: traditionMeta.active ? traditionMeta.name : undefined,
                 }
               ).catch(err => console.warn('⚠️ [TRAINING] Voice turn logging failed:', err));
             }
