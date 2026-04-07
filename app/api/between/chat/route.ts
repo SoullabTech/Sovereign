@@ -2408,8 +2408,23 @@ This user is in guest mode (no authenticated identity).
       });
     }
 
+    // 🌀 BEHAVIORAL LOOP: Relational detection for suggested actions (full-consciousness path)
+    const relationalSignals2 = [
+      'partner', 'relationship', 'friend', 'mother', 'father', 'parent',
+      'husband', 'wife', 'spouse', 'daughter', 'son', 'sibling', 'brother', 'sister',
+      'conflict', 'boundary', 'boundaries', 'arguing', 'fight', 'divorce',
+      'betrayal', 'trust', 'attachment', 'intimacy', 'codependent', 'client',
+    ];
+    const lowerMsg2 = message.toLowerCase();
+    const relHits2 = relationalSignals2.filter(s => lowerMsg2.includes(s));
+    const fullSuggestedActions = relHits2.length >= 1
+      ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits2.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+      : undefined;
+
     const response2 = NextResponse.json({
       message: cleanedText,
+      // 🌀 BEHAVIORAL LOOP: Suggested actions for inline rendering
+      suggestedActions: fullSuggestedActions,
       consciousness: orchestratorResult.consciousness,
       // 🌀 STATE VECTOR: Always present — from orchestrator or inferred (null in Sanctuary)
       stateVector: finalStateVector,
