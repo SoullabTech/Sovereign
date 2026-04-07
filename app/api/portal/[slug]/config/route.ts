@@ -56,6 +56,10 @@ export async function GET(
       practitioner_member_id: practitioner.practitioner_member_id,
       practitioner_name: practitioner.practitioner_name,
       slug: practitioner.slug,
+      tagline: practitioner.tagline || '',
+      bio: practitioner.bio || '',
+      photo_url: practitioner.photo_url || null,
+      business_name: practitioner.business_name || null,
       portal_status: practitioner.portal_status || 'draft',
       brand: {
         name: practitioner.business_name || practitioner.practitioner_name,
