@@ -51,13 +51,16 @@ export default function BookSlotPage() {
           return;
         }
 
-        const configData = await configRes.json();
+        const configRaw = await configRes.json();
         const servicesData = await servicesRes.json();
+
+        // Config may be nested under data.config or flat
+        const configData = configRaw?.data?.config || configRaw;
 
         setPractitioner({
           name: configData.practitioner_name || configData.name,
           slug,
-          businessName: configData.business_name,
+          businessName: configData.business_name || configData.brand?.name,
         });
 
         const svc = (servicesData.services || []).find(
