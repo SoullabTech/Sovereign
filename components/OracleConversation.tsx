@@ -2283,7 +2283,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           role: 'oracle',
           text: fullResponse,
           timestamp: new Date(),
-          source: 'stream'
+          source: 'stream',
+          suggestedActions: relational?.suggestedActions,
         };
         setMessages(prev => appendMessageCapped(prev, oracleMessage));
         setMaiaResponseText('');
@@ -2305,7 +2306,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         role: 'oracle',
         text: fullResponse,
         timestamp: new Date(),
-        source: 'stream'
+        source: 'stream',
+        suggestedActions: relational?.suggestedActions,
       };
       setMessages(prev => appendMessageCapped(prev, oracleMessage));
       setMaiaResponseText('');

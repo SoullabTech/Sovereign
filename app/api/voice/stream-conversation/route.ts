@@ -1214,6 +1214,19 @@ export async function POST(req: NextRequest) {
               });
             }
 
+            // 🌀 BEHAVIORAL LOOP: Relational detection for suggested actions
+            const relationalSignals = [
+              'partner', 'relationship', 'friend', 'mother', 'father', 'parent',
+              'husband', 'wife', 'spouse', 'daughter', 'son', 'sibling', 'brother', 'sister',
+              'conflict', 'boundary', 'boundaries', 'arguing', 'fight', 'divorce',
+              'betrayal', 'trust', 'attachment', 'intimacy', 'codependent',
+            ];
+            const lowerMsg = message.toLowerCase();
+            const relHits = relationalSignals.filter(s => lowerMsg.includes(s));
+            const voiceSuggestedActions = relHits.length >= 1
+              ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+              : [];
+
             emit('complete', {
               fullResponse: finalIdentityCheck.sanitized,
               sentenceCount,
@@ -1226,6 +1239,8 @@ export async function POST(req: NextRequest) {
               timing: timer.summary(),
               // 💡 Idea candidate for client-side toast (null if none detected)
               ideaCandidate: ideaCandidate ?? undefined,
+              // 🌀 BEHAVIORAL LOOP: Suggested actions for inline rendering
+              suggestedActions: voiceSuggestedActions.length > 0 ? voiceSuggestedActions : undefined,
               relational: {
                 maiaMode: voiceSession.relationalStack.currentMode,
                 activation: voiceSession.relationalStack.smoother.lastActivation,

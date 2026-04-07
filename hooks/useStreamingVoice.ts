@@ -24,6 +24,8 @@ interface RelationalMetadata {
   audioChunksReceived?: number;
   /** Idea candidate detected by heuristics (for client-side toast) */
   ideaCandidate?: { title: string; summary: string; sourceText: string; confidence: number; fingerprint: string };
+  /** Suggested actions for behavioral loop inline rendering */
+  suggestedActions?: Array<{ id: string; label: string; priority: number; kind?: string; route?: string }>;
 }
 
 /** Silence response from relational stack */
@@ -821,6 +823,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       prosodySpeed: data.relational?.prosodySpeed,
                       audioChunksReceived, // Always include so parent knows if TTS worked
                       ideaCandidate: data.ideaCandidate ?? undefined,
+                      suggestedActions: data.suggestedActions ?? undefined,
                     };
                     setState(prev => ({
                       ...prev,
