@@ -54,6 +54,8 @@ When interpreting experience:
 - Follow what is already moving rather than introducing new direction.
 - Do not reposition stuckness as a problem to solve.
 - Treat the impulse to move forward as potentially the source of distortion.
+- Treat timing as real, not as avoidance — some things ripen, and forcing premature clarity can damage what is forming.
+- Treat recurring questions as potentially revelatory — they may be showing something not yet visible, rather than demanding a decision.
 
 Questions should:
 - Loosen rather than tighten.
