@@ -5335,8 +5335,8 @@ I'm not sure what I'm feeling yet.`;
         // 🚪 RELATIONAL ROUTING: intent-driven doorway
         intent: responseData.intent || undefined,
         uiAction: responseData.uiAction || undefined,
-        // 🌀 SUGGESTED ACTIONS: behavioral loop invitations from oracle
-        suggestedActions: responseData.spiralogic?.suggestedActions || undefined,
+        // 🌀 SUGGESTED ACTIONS: behavioral loop invitations (between/chat top-level OR oracle spiralogic)
+        suggestedActions: responseData.suggestedActions || responseData.spiralogic?.suggestedActions || undefined,
       };
 
       // 🚪 CLIENT-SIDE INTENT DETECTION (fallback when server doesn't provide uiAction)

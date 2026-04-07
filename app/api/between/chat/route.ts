@@ -1515,8 +1515,23 @@ This user is in guest mode (no authenticated identity).
         repaired: false,
       });
 
+      // 🌀 BEHAVIORAL LOOP: Relational detection for suggested actions
+      const relationalSignals = [
+        'partner', 'relationship', 'friend', 'mother', 'father', 'parent',
+        'husband', 'wife', 'spouse', 'daughter', 'son', 'sibling', 'brother', 'sister',
+        'conflict', 'boundary', 'boundaries', 'arguing', 'fight', 'divorce',
+        'betrayal', 'trust', 'attachment', 'intimacy', 'codependent', 'client',
+      ];
+      const lowerMsg = message.toLowerCase();
+      const relHits = relationalSignals.filter(s => lowerMsg.includes(s));
+      const betweenSuggestedActions = relHits.length >= 1
+        ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+        : undefined;
+
       const response = NextResponse.json({
         message: outboundText,
+        // 🌀 BEHAVIORAL LOOP: Suggested actions for inline rendering
+        suggestedActions: betweenSuggestedActions,
         // 🌀 STATE VECTOR: Always present (inferred if not from orchestrator)
         stateVector: simpleStateVector,
         // 🌿 PRACTICE: Element-aware recommendation
