@@ -7,15 +7,39 @@
 
 import type { EventPhase } from './types';
 
+/**
+ * Normalize a date input to YYYY-MM-DD string.
+ * Handles:
+ *   - JS Date objects (from Postgres DATE columns)
+ *   - ISO strings like "2026-04-13T00:00:00.000Z"
+ *   - Plain YYYY-MM-DD strings
+ */
+function toDateKey(input: string | Date): string {
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    const d = String(input.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  // Already a string — strip any time portion
+  return input.slice(0, 10);
+}
+
 export function deriveEventPhase(
-  startDate: string,
-  endDate: string,
+  startDate: string | Date,
+  endDate: string | Date,
   now: Date = new Date()
 ): EventPhase {
-  const start = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${endDate}T23:59:59`);
+  const startKey = toDateKey(startDate);
+  const endKey = toDateKey(endDate);
 
-  if (now < start) return 'pre';
-  if (now > end) return 'post';
+  // Compare today's YYYY-MM-DD against the event's date keys — avoids TZ drift.
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const nowKey = `${y}-${m}-${d}`;
+
+  if (nowKey < startKey) return 'pre';
+  if (nowKey > endKey) return 'post';
   return 'during';
 }

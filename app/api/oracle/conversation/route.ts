@@ -822,7 +822,8 @@ export async function POST(request: NextRequest) {
       preferredAssistantName,
       activeReportContext,
       memberWebPrompt,
-      userId
+      userId,
+      activeEventContext
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1773,7 +1774,8 @@ async function generateSpiralogicResponseWithLLM(
   preferredAssistantName?: string,
   activeReportContext?: ActiveReportContext | null,
   memberWebPrompt?: string,
-  userId?: string
+  userId?: string,
+  activeEventContext?: ActiveEventContext | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1948,7 +1950,7 @@ async function generateSpiralogicResponseWithLLM(
     console.warn('[Oracle] Prompt library load failed (non-critical):', themeError);
   }
 
-  const eventArcBlock = buildEventArcContextBlock(activeEventContext);
+  const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
 
   const finalSystemPrompt = [
     systemPrompt,

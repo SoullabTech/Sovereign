@@ -136,12 +136,23 @@ export async function getMemberActiveEventContext(
   const winner = scored[0];
   if (!winner) return null;
 
+  // Normalize dates to YYYY-MM-DD strings (Postgres DATE returns as Date object)
+  const normalizeDate = (d: string | Date): string => {
+    if (d instanceof Date) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+    return d.slice(0, 10);
+  };
+
   return {
     eventId: winner.event.event_id,
     title: winner.event.title,
     phase: winner.phase,
-    startDate: winner.event.start_date,
-    endDate: winner.event.end_date,
+    startDate: normalizeDate(winner.event.start_date),
+    endDate: normalizeDate(winner.event.end_date),
     practitionerId: winner.event.practitioner_id,
   };
 }
