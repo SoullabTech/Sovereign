@@ -157,6 +157,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/interfaces', minTier: 'free', notes: 'Interface selection' },
   { exact: '/maia/membership', minTier: 'free', notes: 'Membership management' },
   { exact: '/maia/training', minTier: 'free', notes: 'Training interface' },
+  { exact: '/maia/ideas', minTier: 'free', notes: 'Ideas world — early-stage emergence' },
+  { exact: '/maia/relationships', minTier: 'free', notes: 'Relationships world — relational awareness' },
   { exact: '/ask-maia', minTier: 'free', notes: 'Ask MAIA — depth, capacity-governed' },
 
   // Community — contribution is participation, not a perk
