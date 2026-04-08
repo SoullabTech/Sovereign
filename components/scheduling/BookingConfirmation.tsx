@@ -2,6 +2,7 @@
 
 import { Check, Video, X } from 'lucide-react';
 import type { BookingResult } from './BookingModal';
+import { getBusinessTimezoneLabel } from '@/lib/scheduling/timezoneParsing';
 
 interface BookingConfirmationProps {
   booking: BookingResult;
@@ -86,10 +87,10 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
                 {booking.serviceName}
               </p>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {formatDayOfWeek(booking.date)} &middot; {formatTime12(booking.time)} &ndash; {formatTime12(endTime)}
+                {formatDayOfWeek(booking.date)} &middot; {formatTime12(booking.time)} &ndash; {formatTime12(endTime)} {getBusinessTimezoneLabel()}
               </p>
               <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                {booking.timezone}
+                Eastern Time (Connecticut)
               </p>
             </div>
           </div>

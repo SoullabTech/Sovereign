@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Video, Loader2 } from 'lucide-react';
+import { getBusinessTimezoneLabel } from '@/lib/scheduling/timezoneParsing';
 
 interface BookingModalProps {
   slug: string;
@@ -157,10 +158,10 @@ export function BookingModal({
             {serviceName}
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-            {formatDateDisplay(date)} &middot; {formatTime12(time)} &ndash; {formatTime12(endTime)}
+            {formatDateDisplay(date)} &middot; {formatTime12(time)} &ndash; {formatTime12(endTime)} {getBusinessTimezoneLabel()}
           </p>
           <p className="text-xs text-neutral-400 dark:text-neutral-500">
-            {timezone}
+            Eastern Time (Connecticut)
           </p>
 
           {/* Video conference note */}

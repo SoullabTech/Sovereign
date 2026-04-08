@@ -6,6 +6,7 @@ import { ArrowLeft, Clock, Video } from 'lucide-react';
 import { WeekSlotGrid } from '@/components/scheduling/WeekSlotGrid';
 import { BookingModal, type BookingResult } from '@/components/scheduling/BookingModal';
 import { BookingConfirmation } from '@/components/scheduling/BookingConfirmation';
+import { BUSINESS_TIMEZONE } from '@/lib/scheduling/timezoneParsing';
 
 interface ServiceInfo {
   name: string;
@@ -35,7 +36,10 @@ export default function BookSlotPage() {
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
 
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Soullab is based in Connecticut — all booking slots are in ET regardless
+  // of where the booker is sitting. Display this zone consistently so the
+  // booker isn't surprised when their confirmation arrives in Eastern time.
+  const timezone = BUSINESS_TIMEZONE;
 
   // Load practitioner + service
   useEffect(() => {

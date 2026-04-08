@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { CheckCircle, Calendar, Clock, User, XCircle } from 'lucide-react';
+import {
+  BUSINESS_TIMEZONE,
+  getBusinessTimezoneLabel,
+} from '@/lib/scheduling/timezoneParsing';
 
 interface BookingDetails {
   sessionId: string;
@@ -18,17 +22,23 @@ interface BookingDetails {
   bookerTimezone?: string;
 }
 
-function formatDateTime(iso: string, timezone?: string): string {
+/**
+ * Format a stored UTC instant in Soullab's operating zone (Connecticut / ET).
+ * The booker's browser zone is intentionally ignored — all sessions happen
+ * in Eastern Time, so the confirmation should always read in ET.
+ */
+function formatDateTime(iso: string): string {
   const date = new Date(iso);
-  return date.toLocaleString('en-US', {
+  const formatted = date.toLocaleString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
-    timeZone: timezone || undefined,
+    timeZone: BUSINESS_TIMEZONE,
   });
+  return `${formatted} ${getBusinessTimezoneLabel(date)}`;
 }
 
 export default function BookingConfirmationPage() {
@@ -145,7 +155,7 @@ export default function BookingConfirmationPage() {
                 {booking.serviceName}
               </p>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {formatDateTime(booking.scheduledStart, booking.bookerTimezone)}
+                {formatDateTime(booking.scheduledStart)}
               </p>
             </div>
           </div>

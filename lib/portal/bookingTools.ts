@@ -16,6 +16,10 @@ import crypto from 'crypto';
 import { generateInviteCode, hashInviteCode } from '@/lib/portal/invites';
 import { sendPortalClaimEmail } from '@/lib/portal/notifications';
 import { getAvailableSlots } from '@/lib/scheduling/slotCalculator';
+import {
+  parseLocalDateTimeInTimezone,
+  BUSINESS_TIMEZONE,
+} from '@/lib/scheduling/timezoneParsing';
 
 // ============================================================================
 // Tool Definitions for Claude
@@ -81,6 +85,11 @@ export const BOOKING_TOOLS = [
         phone: {
           type: 'string',
           description: "The client's phone number (optional)",
+        },
+        timezone: {
+          type: 'string',
+          description:
+            "Informational only — the client's IANA timezone for records. Soullab operates in America/New_York and all booking times are interpreted as ET regardless of this value.",
         },
         notes: {
           type: 'string',
@@ -260,11 +269,12 @@ export async function createBooking(
     name: string;
     email: string;
     phone?: string;
+    timezone?: string;
     notes?: string;
   }
 ): Promise<ToolResult> {
   try {
-    const { service_id, date, time, name, email, phone, notes } = params;
+    const { service_id, date, time, name, email, phone, timezone, notes } = params;
 
     // Validate required fields
     if (!service_id || !date || !time || !name || !email) {
@@ -291,8 +301,19 @@ export async function createBooking(
 
     const service = serviceResult.rows[0];
 
-    // Calculate session times
-    const scheduledStart = new Date(`${date}T${time}`);
+    // Calculate session times — Soullab operates in America/New_York.
+    // Slot times from the UI are the practitioner's ET wall-clock, so we
+    // always interpret them in BUSINESS_TIMEZONE (ignores the booker's
+    // browser timezone to avoid cross-zone drift).
+    let scheduledStart: Date;
+    try {
+      scheduledStart = parseLocalDateTimeInTimezone(date, time, BUSINESS_TIMEZONE);
+    } catch (err) {
+      return {
+        success: false,
+        error: `Invalid date or time: ${(err as Error).message}`,
+      };
+    }
     const scheduledEnd = new Date(
       scheduledStart.getTime() + service.duration_minutes * 60 * 1000
     );
@@ -369,6 +390,8 @@ export async function createBooking(
       scheduledStart,
       scheduledEnd,
       source: 'chat',
+      bookerTimezone: BUSINESS_TIMEZONE,
+      intakeResponses: timezone ? { booker_browser_timezone: timezone } : undefined,
     }).catch((err) => {
       console.error('[BookingTools] Calendar bridge failed (non-blocking):', err);
     });
@@ -612,6 +635,7 @@ export async function executeTool(
           name: string;
           email: string;
           phone?: string;
+          timezone?: string;
           notes?: string;
         }
       );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getBusinessTimezoneLabel } from '@/lib/scheduling/timezoneParsing';
 
 interface Slot {
   start: string;
@@ -154,7 +155,7 @@ export function WeekSlotGrid({
           Select an appointment time
         </h2>
         <span className="text-xs text-neutral-500 dark:text-neutral-400">
-          {timezone}
+          All times in {getBusinessTimezoneLabel()} (Eastern Time)
         </span>
       </div>
 

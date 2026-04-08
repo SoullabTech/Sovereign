@@ -12,6 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
 import { bridgeBookingToCalendar } from '@/lib/portal/bookingTools';
+import {
+  parseLocalDateTimeInTimezone,
+  BUSINESS_TIMEZONE,
+} from '@/lib/scheduling/timezoneParsing';
 
 interface BookingBody {
   serviceId: string;
@@ -71,8 +75,20 @@ export async function POST(
     }
     const service = svcResult.rows[0];
 
-    // Calculate times
-    const scheduledStart = new Date(`${date}T${time}`);
+    // Calculate times — Soullab operates in America/New_York (EST/EDT).
+    // Slots in the UI are the practitioner's wall-clock time, so "9:00 AM"
+    // always means 9am ET regardless of where the booker is sitting. We
+    // ignore the booker's browser timezone for parsing (it would cause
+    // cross-zone drift) and store the UTC instant corresponding to 9am ET.
+    let scheduledStart: Date;
+    try {
+      scheduledStart = parseLocalDateTimeInTimezone(date, time, BUSINESS_TIMEZONE);
+    } catch (err) {
+      return NextResponse.json(
+        { error: `Invalid date or time: ${(err as Error).message}` },
+        { status: 400 }
+      );
+    }
     const scheduledEnd = new Date(scheduledStart.getTime() + service.duration_minutes * 60 * 1000);
 
     // Conflict check
@@ -133,7 +149,9 @@ export async function POST(
       ]
     );
 
-    // Bridge to calendar_events + booking_metadata
+    // Bridge to calendar_events + booking_metadata.
+    // Store BUSINESS_TIMEZONE as the source of truth for display; record the
+    // booker's browser timezone as a note for future analytics only.
     let confirmationToken: string | null = null;
     try {
       await bridgeBookingToCalendar({
@@ -144,8 +162,11 @@ export async function POST(
         scheduledStart,
         scheduledEnd,
         source: 'portal',
-        bookerTimezone: timezone,
-        intakeResponses,
+        bookerTimezone: BUSINESS_TIMEZONE,
+        intakeResponses: {
+          ...(intakeResponses || {}),
+          booker_browser_timezone: timezone || null,
+        },
       });
 
       // Retrieve the confirmation token
