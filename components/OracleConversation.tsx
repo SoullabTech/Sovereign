@@ -1389,6 +1389,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
   const handleTextMessageRef = useRef<((text: string) => void) | null>(null); // Ref for seed prompt injection
   const pendingSeedRef = useRef<ConsumedSeed | null>(null); // Store full seed until handler is ready
+  // 🌉 RELATIONAL CONTEXT BRIDGE: Session-persistent (NOT one-shot).
+  // Set on /relationships/[id] handoff. Rides every oracle POST in this session
+  // until the user leaves /maia or a new explicit handoff arrives.
+  // Override rule: latest explicit handoff always wins.
+  // See: memory/project_relational_context_bridge.md
+  const sessionRelationshipContextId = useRef<string | null>(null);
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -1436,6 +1442,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         setReturnPath(seed.returnTo, seed.sourceLabel);
         setReturnPathState({ path: seed.returnTo, label: seed.sourceLabel });
         console.log('🔄 [SEED] Return path set:', seed.returnTo, seed.sourceLabel ? `(${seed.sourceLabel})` : '');
+      }
+
+      // 🌉 RELATIONAL BRIDGE: If this seed came from /relationships/[id],
+      // hold the contextId for the entire session. Latest explicit handoff
+      // always overrides prior session context (the override rule).
+      if (seed.source === 'relationships:thread' && seed.contextId) {
+        sessionRelationshipContextId.current = seed.contextId;
+        console.log('🌉 [RELATIONAL BRIDGE] Held for session:', seed.contextId);
       }
 
       // Store full seed in ref - will be processed by the effect below when handleTextMessage is ready
@@ -4629,6 +4643,11 @@ I'm not sure what I'm feeling yet.`;
 
           // 🎓 MENTOR STANCE: Practitioner supervision mode (Care only)
           mentorStance: realtimeMode === 'counsel' ? getMentorStance() : false,
+
+          // 🌉 RELATIONAL BRIDGE: Session-persistent contextId from /relationships/[id] handoff
+          ...(sessionRelationshipContextId.current && {
+            relationshipContextId: sessionRelationshipContextId.current,
+          }),
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
           lensConsent: pendingLensConsent?.consent || null,

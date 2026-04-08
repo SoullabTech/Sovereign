@@ -231,6 +231,7 @@ const SOURCE_LABELS: Record<string, { label: string; returnTo: string }> = {
   'academy:discernment': { label: 'Discernment Practice', returnTo: '/maia/academy' },
   'fields:encounter': { label: 'Field Encounter', returnTo: '/maia/fields' },
   'patterns:return': { label: 'Patterns', returnTo: '/worlds/patterns' },
+  'relationships:thread': { label: 'Relational Field', returnTo: '/relationships' },
 };
 
 /**

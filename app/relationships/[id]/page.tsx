@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import FieldToneIndicator from '@/components/relationships/FieldToneIndicator';
 import CheckInFlow from '@/components/relationships/CheckInFlow';
 import RelationshipTimeline, { type TimelineEntry } from '@/components/relationships/RelationshipTimeline';
+import { seedFromSource } from '@/lib/maia/seedPrompt';
 
 interface RelationshipDetail {
   id: string;
@@ -186,6 +187,21 @@ export default function RelationshipDetailPage() {
           {relationship.note && (
             <p className="text-sm text-jade-mineral/80 font-light mt-3 italic">{relationship.note}</p>
           )}
+
+          {/* Take this to MAIA — explicit handoff to relational context bridge */}
+          <button
+            onClick={() => {
+              seedFromSource(
+                'relationships:thread',
+                'I want to bring this into our conversation.',
+                { contextId: id, tone: 'supportive' }
+              );
+              router.push('/maia');
+            }}
+            className="mt-6 px-4 py-2 rounded-lg bg-jade-forest/30 border border-jade-sage/25 text-jade-jade text-sm font-light hover:bg-jade-forest/45 transition-all"
+          >
+            Take this to MAIA
+          </button>
         </div>
 
         {/* Section 1: Current Field */}

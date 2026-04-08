@@ -48,6 +48,9 @@ import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace'
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { getMemberActiveEventContext } from '@/lib/events/eventService';
 import type { ActiveEventContext } from '@/lib/events/types';
+import { getMemberActiveRelationalContext } from '@/lib/relationships/relationshipContextService';
+import { buildRelationalContextBlock } from '@/lib/relationships/buildRelationalContextBlock';
+import type { ActiveRelationalContext } from '@/lib/relationships/types';
 import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
 import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
 import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
@@ -357,6 +360,8 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  /** Explicit handoff from /relationships/[id] — session-persistent on client */
+  relationshipContextId?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -569,6 +574,30 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       console.warn('[Oracle] event-arc load failed (non-critical):', err);
+    }
+
+    // RELATIONAL BRIDGE: Load active relational context if the user has handed off
+    // from /relationships/[id]. Session-persistent on client; rides every POST in
+    // the session. Graceful fallback matches Event Arc — never blocks the oracle.
+    // See: memory/project_relational_context_bridge.md
+    let activeRelationalContext: ActiveRelationalContext | null = null;
+    try {
+      activeRelationalContext = await getMemberActiveRelationalContext(userId, {
+        relationshipId: body.relationshipContextId,
+      });
+      if (activeRelationalContext) {
+        console.log('[Oracle] relational-context', {
+          relationshipId: activeRelationalContext.relationshipId,
+          mode: activeRelationalContext.mode,
+          realm: activeRelationalContext.realm,
+          explicitHandoff: !!body.relationshipContextId,
+          continuityMode: true,
+          relationalMode: true,
+          included: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[Oracle] relational-context load failed (non-critical):', err);
     }
 
     // BRIDGE D extension: Extract active report context (if present)
@@ -823,7 +852,8 @@ export async function POST(request: NextRequest) {
       activeReportContext,
       memberWebPrompt,
       userId,
-      activeEventContext
+      activeEventContext,
+      activeRelationalContext
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1775,7 +1805,8 @@ async function generateSpiralogicResponseWithLLM(
   activeReportContext?: ActiveReportContext | null,
   memberWebPrompt?: string,
   userId?: string,
-  activeEventContext?: ActiveEventContext | null
+  activeEventContext?: ActiveEventContext | null,
+  activeRelationalContext?: ActiveRelationalContext | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1951,6 +1982,7 @@ async function generateSpiralogicResponseWithLLM(
   }
 
   const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
+  const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
 
   const finalSystemPrompt = [
     systemPrompt,
@@ -1960,6 +1992,7 @@ async function generateSpiralogicResponseWithLLM(
     councilInsights,
     collectiveWisdom,
     eventArcBlock,
+    relationalContextBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
