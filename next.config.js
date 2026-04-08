@@ -78,6 +78,33 @@ const nextConfig = {
           ]
         }
       ];
+    },
+    // Legacy /maia/* world URLs — the rail was remapped to the canonical
+    // homes of each world, but old bookmarks and external links should
+    // still resolve. Permanent (308) so clients cache the new location.
+    async redirects() {
+      return [
+        {
+          source: '/maia/patterns',
+          destination: '/worlds/patterns',
+          permanent: true,
+        },
+        {
+          source: '/maia/depth',
+          destination: '/worlds/depth',
+          permanent: true,
+        },
+        {
+          source: '/maia/journal',
+          destination: '/labtools/journal',
+          permanent: true,
+        },
+        {
+          source: '/maia/wisdom',
+          destination: '/wisdom-keepers/wisdom',
+          permanent: true,
+        },
+      ];
     }
   }),
 
