@@ -128,32 +128,30 @@ function getClientIp(req: NextRequest) {
 function buildEventArcContextBlock(activeEvent: ActiveEventContext | null): string {
   if (!activeEvent) return '';
 
-  const phaseGuidance: Record<typeof activeEvent.phase, string> = {
-    pre: `The member is in the PREPARATION phase — approaching the container but not yet inside it. Support orientation, intention-setting, emotional readiness, and arriving whole. Hold space for what they are bringing in. Do not discuss logistics unless they ask. Let them feel accompanied as they prepare.`,
-    during: `The member is IN THE FIELD — currently inside the container. Support reflection between sessions, emotional regulation, noticing what is arising, and integration of live material as it happens. Be a companion layer, not the facilitator. Do not teach the content. Help them stay present with their own process.`,
-    post: `The member is in INTEGRATION — the container has closed but the work continues. Help insight become practice. Track what remains unfinished. Stabilize change. Harvest meaning without rushing closure. The arc is still live for them even though the calendar event has ended.`,
-  };
-
-  return `\n\n## Active Event Arc Context
-
-The member is currently participating in an event arc — a held container with memory.
+  return `
+The user is currently inside an Event Arc.
 
 Event: ${activeEvent.title}
 Phase: ${activeEvent.phase}
-Dates: ${activeEvent.startDate} to ${activeEvent.endDate}
+
 continuity_mode: true
 
+Interpretive stance:
+- Treat this interaction as part of an unfolding process over time
+- Maintain continuity across turns, not isolated responses
+- Assume prior exchanges are active in the current moment
+
 Phase guidance:
-${phaseGuidance[activeEvent.phase]}
+- pre: orient attention, clarify intention, reduce pressure
+- during: stay with the unfolding, reflect patterns, support depth
+- post: integrate, consolidate, do not re-activate intensity
 
-Continuity instruction:
-Maintain continuity across turns within this container. Assume prior responses are part of an unfolding process, not isolated exchanges. Accumulate trajectory — track what has surfaced, what has deepened, what has shifted. Each turn extends the same thread.
+Constraints:
+- Do not behave like an event manager
+- Do not reference the event unless naturally relevant
+- Do not introduce structure unless it emerges from the user
 
-General stance:
-- Treat this as a transformational container unfolding over time, not a scheduled appointment.
-- Prioritize continuity, emotional orientation, and integrative reflection.
-- Do not behave like an event manager. Hold continuity around the person's process.
-- Do not announce the phase or event by name unless they ask. Let your tone carry the awareness.
+Hold the interaction as a continuous field, not a sequence of answers.
 `;
 }
 
@@ -565,6 +563,7 @@ export async function POST(request: NextRequest) {
         console.log('[Oracle] event-arc', {
           eventId: activeEventContext.eventId,
           phase: activeEventContext.phase,
+          continuityMode: true,
           included: true,
         });
       }
