@@ -37,7 +37,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools') {
+    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library') {
       router.push(route);
     } else {
       // If we're in a boundary, world clicks need router navigation
@@ -121,10 +121,11 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
           const isActive = resolvedBoundary === boundary.id;
           // Per-boundary accent colors
           const accent = {
-            studio:    { text: 'text-blue-400',    hover: 'hover:text-blue-400/70 hover:bg-blue-400/5',    tooltip: 'text-blue-300/90 border-blue-500/30',    activeBg: 'bg-blue-400/15' },
-            circles:   { text: 'text-amber-400',   hover: 'hover:text-amber-400/70 hover:bg-amber-400/5',  tooltip: 'text-amber-300/90 border-amber-500/30',  activeBg: 'bg-amber-400/15' },
-            astrology: { text: 'text-violet-400',  hover: 'hover:text-violet-400/70 hover:bg-violet-400/5', tooltip: 'text-violet-300/90 border-violet-500/30', activeBg: 'bg-violet-400/15' },
-            labtools:  { text: 'text-orange-300',  hover: 'hover:text-orange-300/70 hover:bg-orange-400/5', tooltip: 'text-orange-300/90 border-orange-500/30', activeBg: 'bg-orange-400/15' },
+            studio:              { text: 'text-blue-400',    hover: 'hover:text-blue-400/70 hover:bg-blue-400/5',     tooltip: 'text-blue-300/90 border-blue-500/30',     activeBg: 'bg-blue-400/15' },
+            circles:             { text: 'text-amber-400',   hover: 'hover:text-amber-400/70 hover:bg-amber-400/5',   tooltip: 'text-amber-300/90 border-amber-500/30',   activeBg: 'bg-amber-400/15' },
+            astrology:           { text: 'text-violet-400',  hover: 'hover:text-violet-400/70 hover:bg-violet-400/5', tooltip: 'text-violet-300/90 border-violet-500/30', activeBg: 'bg-violet-400/15' },
+            labtools:            { text: 'text-orange-300',  hover: 'hover:text-orange-300/70 hover:bg-orange-400/5', tooltip: 'text-orange-300/90 border-orange-500/30', activeBg: 'bg-orange-400/15' },
+            'community-library': { text: 'text-purple-400',  hover: 'hover:text-purple-400/70 hover:bg-purple-400/5', tooltip: 'text-purple-300/90 border-purple-500/30', activeBg: 'bg-purple-400/15' },
           }[boundary.id as string] ?? { text: 'text-stone-400', hover: 'hover:text-stone-400/70 hover:bg-stone-400/5', tooltip: 'text-stone-300/90 border-stone-500/30', activeBg: 'bg-stone-400/15' };
 
           return (

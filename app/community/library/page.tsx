@@ -1,15 +1,14 @@
 /**
- * Community Library Page
+ * Community Library — legacy path.
  *
- * Enhanced interface for exploring consciousness technologies,
- * practical insights, transformation stories, and daily integration guides
+ * Canonical URL is /maia/community/library, which lives inside the MAIA
+ * boundary shell (MaiaBoundaryLayout) so the left rail persists on direct
+ * load. This file exists only to forward any old links / bookmarks to the
+ * canonical route. Do not render content here.
  */
 
-export const dynamic = 'force-static';
-export const revalidate = false;
+import { permanentRedirect } from 'next/navigation';
 
-import { CommunityLibrary } from '@/components/community/CommunityLibrary';
-
-export default function CommunityLibraryPage() {
-  return <CommunityLibrary />;
+export default function CommunityLibraryLegacyRedirect() {
+  permanentRedirect('/maia/community/library');
 }
