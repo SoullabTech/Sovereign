@@ -769,7 +769,16 @@ export function CommunityLibrary() {
                   insightCollections.map(collection => (
                     <button
                       key={collection.id}
-                      onClick={() => setSelectedInsightCollection(collection)}
+                      onClick={() => {
+                        // Clear any open article when switching collections from
+                        // the sidebar — the render priority is
+                        //   selectedArticle ? <Article> : selectedInsightCollection ? <CollectionList> : <Grid>
+                        // so without clearing selectedArticle, sidebar clicks while
+                        // viewing an article would update the highlight but leave
+                        // the article view in place (visible after Pass 2 cull).
+                        setSelectedArticle(null);
+                        setSelectedInsightCollection(collection);
+                      }}
                       className={`w-full text-left p-4 rounded-lg transition-all ${
                         selectedInsightCollection?.id === collection.id
                           ? 'bg-teal-600 text-white'
