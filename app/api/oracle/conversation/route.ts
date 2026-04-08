@@ -141,9 +141,13 @@ The member is currently participating in an event arc — a held container with 
 Event: ${activeEvent.title}
 Phase: ${activeEvent.phase}
 Dates: ${activeEvent.startDate} to ${activeEvent.endDate}
+continuity_mode: true
 
 Phase guidance:
 ${phaseGuidance[activeEvent.phase]}
+
+Continuity instruction:
+Maintain continuity across turns within this container. Assume prior responses are part of an unfolding process, not isolated exchanges. Accumulate trajectory — track what has surfaced, what has deepened, what has shifted. Each turn extends the same thread.
 
 General stance:
 - Treat this as a transformational container unfolding over time, not a scheduled appointment.
