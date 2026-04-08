@@ -46,6 +46,8 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { getMemberActiveEventContext } from '@/lib/events/eventService';
+import type { ActiveEventContext } from '@/lib/events/types';
 import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
 import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
 import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
@@ -109,6 +111,46 @@ function getClientIp(req: NextRequest) {
   const xff = req.headers.get('x-forwarded-for');
   if (xff) return xff.split(',')[0].trim();
   return req.headers.get('x-real-ip') || 'unknown';
+}
+
+/**
+ * Event Arc context block.
+ *
+ * When a member is inside an Event Arc container, inject awareness into
+ * MAIA's system prompt. This is the interpretive bridge that makes MAIA
+ * shift from "responding to queries" to "participating in a human process
+ * over time."
+ *
+ * The goal is NOT for MAIA to mention the event or state the phase aloud.
+ * The goal is a subtle tone shift: longer continuity, less transactional,
+ * more orientation/integration framing.
+ */
+function buildEventArcContextBlock(activeEvent: ActiveEventContext | null): string {
+  if (!activeEvent) return '';
+
+  const phaseGuidance: Record<typeof activeEvent.phase, string> = {
+    pre: `The member is in the PREPARATION phase — approaching the container but not yet inside it. Support orientation, intention-setting, emotional readiness, and arriving whole. Hold space for what they are bringing in. Do not discuss logistics unless they ask. Let them feel accompanied as they prepare.`,
+    during: `The member is IN THE FIELD — currently inside the container. Support reflection between sessions, emotional regulation, noticing what is arising, and integration of live material as it happens. Be a companion layer, not the facilitator. Do not teach the content. Help them stay present with their own process.`,
+    post: `The member is in INTEGRATION — the container has closed but the work continues. Help insight become practice. Track what remains unfinished. Stabilize change. Harvest meaning without rushing closure. The arc is still live for them even though the calendar event has ended.`,
+  };
+
+  return `\n\n## Active Event Arc Context
+
+The member is currently participating in an event arc — a held container with memory.
+
+Event: ${activeEvent.title}
+Phase: ${activeEvent.phase}
+Dates: ${activeEvent.startDate} to ${activeEvent.endDate}
+
+Phase guidance:
+${phaseGuidance[activeEvent.phase]}
+
+General stance:
+- Treat this as a transformational container unfolding over time, not a scheduled appointment.
+- Prioritize continuity, emotional orientation, and integrative reflection.
+- Do not behave like an event manager. Hold continuity around the person's process.
+- Do not announce the phase or event by name unless they ask. Let your tone carry the awareness.
+`;
 }
 
 function rateLimitOrThrow(ip: string) {
@@ -509,6 +551,22 @@ export async function POST(request: NextRequest) {
 
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
+
+    // EVENT ARC: Load active event context if the member is inside a container.
+    // Graceful fallback — if the lookup fails, conversation continues normally.
+    let activeEventContext: ActiveEventContext | null = null;
+    try {
+      activeEventContext = await getMemberActiveEventContext(userId);
+      if (activeEventContext) {
+        console.log('[Oracle] event-arc', {
+          eventId: activeEventContext.eventId,
+          phase: activeEventContext.phase,
+          included: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[Oracle] event-arc load failed (non-critical):', err);
+    }
 
     // BRIDGE D extension: Extract active report context (if present)
     const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
@@ -1887,6 +1945,8 @@ async function generateSpiralogicResponseWithLLM(
     console.warn('[Oracle] Prompt library load failed (non-critical):', themeError);
   }
 
+  const eventArcBlock = buildEventArcContextBlock(activeEventContext);
+
   const finalSystemPrompt = [
     systemPrompt,
     cmEnvironmentBlock,
@@ -1894,6 +1954,7 @@ async function generateSpiralogicResponseWithLLM(
     activeThemeBlock,
     councilInsights,
     collectiveWisdom,
+    eventArcBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
