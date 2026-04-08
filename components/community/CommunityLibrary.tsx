@@ -6,6 +6,123 @@
 'use client';
 
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { COMMUNITY_LIBRARY_ARTICLES } from '@/lib/community-library/manifest.generated';
+
+/**
+ * Resolve the markdown body for an article.
+ *
+ * Articles fall into two shapes:
+ *  1. file-backed — `content` is a repo-relative `.md` path. The actual
+ *     markdown is baked into the build manifest at
+ *     `lib/community-library/manifest.generated.ts` and looked up by id.
+ *     Source markdown does NOT ship into the docker container, so the
+ *     manifest is the only path to it at runtime.
+ *  2. inline — `content` is the markdown itself (e.g. the dream guides).
+ *     We render it directly.
+ *
+ * Returns null when neither path resolves, so the view can render a
+ * clean "content not yet available" state instead of a broken preview.
+ */
+function resolveArticleMarkdown(article: InsightArticle): string | null {
+  // Manifest lookup wins. The manifest is the whitelist; if the id isn't
+  // there, the article is not file-served.
+  const fromManifest = COMMUNITY_LIBRARY_ARTICLES[article.id];
+  if (fromManifest) return fromManifest;
+
+  // If `content` does not look like a path (no .md suffix) treat it as
+  // inline markdown. This covers the dream-recording / archetypal-analysis
+  // / correlation-tracking articles whose content lives in the component
+  // source as a template literal.
+  const looksLikePath = /\.md$/i.test(article.content.trim());
+  if (!looksLikePath) return article.content;
+
+  // It's a path, but it's not in the allowlisted manifest. Surface the
+  // gap explicitly rather than dumping the path string into the page.
+  return null;
+}
+
+/**
+ * Tailwind component map for ReactMarkdown.
+ *
+ * We render markdown with explicit per-element styling instead of the
+ * `@tailwindcss/typography` prose classes — that plugin isn't installed
+ * and adding it for one feature exceeds the agreed scope. The styles
+ * below match the existing stone/teal/amber palette used elsewhere in
+ * the Community Library and are intentionally restrained: this is
+ * source material to read, not a styled marketing page.
+ */
+const MARKDOWN_COMPONENTS = {
+  h1: (props: any) => (
+    <h1 className="text-3xl font-semibold text-stone-900 dark:text-stone-100 mt-8 mb-4" {...props} />
+  ),
+  h2: (props: any) => (
+    <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100 mt-8 mb-3" {...props} />
+  ),
+  h3: (props: any) => (
+    <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mt-6 mb-2" {...props} />
+  ),
+  h4: (props: any) => (
+    <h4 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mt-5 mb-2" {...props} />
+  ),
+  p: (props: any) => (
+    <p className="text-stone-700 dark:text-stone-300 leading-relaxed mb-4" {...props} />
+  ),
+  a: (props: any) => (
+    <a
+      className="text-teal-700 dark:text-teal-300 underline underline-offset-2 hover:text-teal-800 dark:hover:text-teal-200"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  ul: (props: any) => (
+    <ul className="list-disc pl-6 mb-4 space-y-1 text-stone-700 dark:text-stone-300" {...props} />
+  ),
+  ol: (props: any) => (
+    <ol className="list-decimal pl-6 mb-4 space-y-1 text-stone-700 dark:text-stone-300" {...props} />
+  ),
+  li: (props: any) => <li className="leading-relaxed" {...props} />,
+  blockquote: (props: any) => (
+    <blockquote
+      className="border-l-4 border-teal-500/60 pl-4 italic my-4 text-stone-600 dark:text-stone-400"
+      {...props}
+    />
+  ),
+  code: ({ inline, ...props }: any) =>
+    inline ? (
+      <code
+        className="bg-stone-100 dark:bg-stone-800 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded text-sm"
+        {...props}
+      />
+    ) : (
+      <code className="block" {...props} />
+    ),
+  pre: (props: any) => (
+    <pre
+      className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg p-4 overflow-x-auto mb-4 text-sm"
+      {...props}
+    />
+  ),
+  hr: () => <hr className="border-stone-200 dark:border-stone-700 my-6" />,
+  strong: (props: any) => <strong className="text-stone-900 dark:text-stone-100 font-semibold" {...props} />,
+  em: (props: any) => <em className="italic" {...props} />,
+  table: (props: any) => (
+    <div className="overflow-x-auto mb-4">
+      <table className="min-w-full text-sm border border-stone-200 dark:border-stone-700" {...props} />
+    </div>
+  ),
+  th: (props: any) => (
+    <th
+      className="border border-stone-200 dark:border-stone-700 px-3 py-2 text-left font-semibold bg-stone-50 dark:bg-stone-800/60"
+      {...props}
+    />
+  ),
+  td: (props: any) => (
+    <td className="border border-stone-200 dark:border-stone-700 px-3 py-2 align-top" {...props} />
+  ),
+};
 
 interface TechnologyCategory {
   id: string;
@@ -1363,16 +1480,32 @@ function InsightArticleView({
         ))}
       </div>
 
-      {/* Content Preview */}
-      <div className="bg-stone-100 dark:bg-stone-800 rounded-lg p-6 mb-6 border border-stone-200 dark:border-stone-700">
-        <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4">Content Preview</h3>
-        <p className="text-stone-600 dark:text-stone-400 mb-4">
-          This article contains comprehensive insights and practical wisdom. The full content is available in the documentation files.
-        </p>
-        <div className="text-sm text-stone-500">
-          Location: {article.content}
-        </div>
-      </div>
+      {/* Article body — file-backed (manifest) or inline markdown */}
+      {(() => {
+        const md = resolveArticleMarkdown(article);
+        if (md == null) {
+          return (
+            <div className="bg-stone-50 dark:bg-stone-800/40 rounded-lg p-6 mb-6 border border-stone-200 dark:border-stone-700">
+              <h3 className="text-base font-medium text-stone-700 dark:text-stone-300 mb-2">
+                Content not yet available
+              </h3>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                This piece is referenced in the library but its body has not been wired in yet. Check back soon.
+              </p>
+            </div>
+          );
+        }
+        return (
+          <div className="mb-6 max-w-none text-stone-700 dark:text-stone-300 leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
+            >
+              {md}
+            </ReactMarkdown>
+          </div>
+        );
+      })()}
 
       {/* Related Technologies */}
       {article.relatedTechnologies.length > 0 && (

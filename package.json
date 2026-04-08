@@ -53,6 +53,7 @@
     "guard:phi": "bash scripts/guards/phi-no-plaintext-drift.sh",
     "guardrails": "node scripts/check-nocheck-allowlist.js && node scripts/check-private-routes.js && node scripts/check-backend-imports.js && npm run guard:ain-v2-integration && npm run guard:phi && npm run check:no-phi-enc",
     "db:migrate": "bash scripts/apply-migrations.sh",
+    "build:library-manifest": "node scripts/build-community-library-manifest.js",
     "library:index": "npx tsx scripts/build-library-index.ts",
     "library:ingest": "npx tsx scripts/ingest-library.ts",
     "library:ingest:dry": "npx tsx scripts/ingest-library.ts --dry-run",
