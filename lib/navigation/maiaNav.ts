@@ -22,6 +22,7 @@ import {
   Mic,
   MessageCircle,
   FlaskConical,
+  BookCopy,
 } from 'lucide-react';
 
 import type {
@@ -135,6 +136,16 @@ export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
   isBoundaryTransition: true,
 };
 
+export const COMMUNITY_LIBRARY_RAIL_ITEM: MaiaRailItem = {
+  id: 'community-library',
+  label: 'Community Library',
+  icon: BookCopy,
+  route: '/maia/community/library',
+  classification: 'studio',
+  tooltip: 'Shared knowledge & collective resources',
+  isBoundaryTransition: true,
+};
+
 // --- Utility Items (top bar + bottom of rail) ---
 
 export const MAIA_UTILITIES: MaiaUtilityItem[] = [
@@ -189,6 +200,7 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   CIRCLES_RAIL_ITEM,
   ASTROLOGY_RAIL_ITEM,
   LABTOOLS_RAIL_ITEM,
+  COMMUNITY_LIBRARY_RAIL_ITEM,
 ];
 
 /** Left rail width in pixels — used for content padding in boundary layouts */
