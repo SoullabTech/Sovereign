@@ -98,15 +98,20 @@ const ALLOWLIST = {
   'stick-with-image': 'Community-Commons/02-Thematic-Essays/_Published/Stick with the Image.md',
   'against-literalization': 'Community-Commons/02-Thematic-Essays/_Published/Against Literalization.md',
 
-  // --- start-here ---
+  // --- member-support (00-START-HERE) ---
+  // NOTE: keys must match the `id` field in components/community/CommunityLibrary.tsx
+  // exactly. Two ids were wrong in the first cut: `faq` should be `member-faq`
+  // and `wisdom-engine-learning` should be `how-wisdom-engine-learns`. With the
+  // wrong keys, those two articles silently fell through to the
+  // "content not yet available" placeholder on production.
   'welcome': 'Community-Commons/00-START-HERE/Welcome.md',
-  'faq': 'Community-Commons/00-START-HERE/FAQ.md',
+  'member-faq': 'Community-Commons/00-START-HERE/FAQ.md',
   'navigation-guide': 'Community-Commons/00-START-HERE/Navigation Guide.md',
   'community-guidelines': 'Community-Commons/00-START-HERE/Community Guidelines.md',
   'platform-vision': 'Community-Commons/00-START-HERE/Platform Vision - Consciousness Research Hub.md',
 
   // --- wisdom-engine ---
-  'wisdom-engine-learning': 'Community-Commons/HOW_THE_WISDOM_ENGINE_LEARNS.md',
+  'how-wisdom-engine-learns': 'Community-Commons/HOW_THE_WISDOM_ENGINE_LEARNS.md',
 };
 
 function main() {

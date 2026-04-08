@@ -11553,7 +11553,7 @@ Stanton Marlan and others continue this work, exploring the depths of alchemical
 
 [[Navigation Guide]] | [[How to Contribute]] | [[Community Guidelines]] | [[FAQ]]
 `,
-  "faq": `---
+  "member-faq": `---
 title: Frequently Asked Questions
 type: faq
 status: published
@@ -12743,7 +12743,7 @@ created: 2025-10-26
 **Full integration:** [[Integration Index - Holographic Consciousness and AIN Soph]]
 **Research framework:** [[QRI and Consciousness Research Integration]]
 `,
-  "wisdom-engine-learning": `# 📜 How the Wisdom Engine Learns
+  "how-wisdom-engine-learns": `# 📜 How the Wisdom Engine Learns
 
 *Complete transparency about consciousness computing and wisdom memory*
 
