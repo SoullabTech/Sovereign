@@ -53,64 +53,51 @@ const OUT_PATH = path.join(REPO_ROOT, 'lib', 'community-library', 'manifest.gene
  * Keep in sync with `components/community/CommunityLibrary.tsx` article
  * `id` and `content` fields.
  */
+// Pass 2 cull (2026-04-08): library reduced from 42 → 17 articles after a
+// field-coherence pass. The classification (F/A/P/I/X) is documented in
+// docs/curation/community-library-audit.md. Cuts made:
+//
+//   X (cut entirely): 14 — duplicates, stubs, marketing material, generic
+//     wisdom, vision indexes, tone-violating field-claims-as-fact.
+//   I (relocated off public shelf): 11 — product docs, training methods,
+//     Community Commons orientation files, dream how-tos. Move targets
+//     are noted in the audit worksheet but not actioned in this pass.
+//
+// What survives is the public reading shelf:
+//   F (foundations, 5)        — calibration-grade, authored, structural
+//   A (archetypal maps, 11)   — Hillman/Jungian lineage, framed as map
+//   P (principles, 1)         — system transparency
+//
+// Do not re-add anything cut here without re-running the field-coherence
+// pass. The shelf's job is to be small enough to actually mean something.
 const ALLOWLIST = {
-  // --- philosophical-foundations ---
+  // --- philosophical-foundations (F + A + F) ---
   'presence-continuity': 'docs/papers/presence-continuity.md',
-  'consciousness-evolution-framework': 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-  'post-mechanistic-paradigm': 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-  'consciousness-structures': 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-  'integral-emergence': 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
   'jungian-alchemy-framework': 'docs/community-library/JUNGIAN_ALCHEMY_FRAMEWORK.md',
   'disposable-pixel-philosophy': 'docs/community-library/DISPOSABLE_PIXEL_PHILOSOPHY.md',
 
-  // --- consciousness-insights ---
-  'alchemical-wisdom': 'Community-Commons/02-Thematic-Essays/Archetypal Patterns in Personal Transformation.md',
-  'elemental-mastery': 'Community-Commons/02-Thematic-Essays/Elemental Balance in Modern Life.md',
-  'shadow-work': 'Community-Commons/02-Thematic-Essays/Shadow Work and Conscious Development.md',
-  'oracle-integration': 'Community-Commons/MAIA_CONSCIOUSNESS_ADVANCEMENT_ENGINE.md',
-
-  // --- advanced-mastery ---
+  // --- advanced-mastery (F + F + A) ---
   'spiral-mastery': 'Community-Commons/02-Thematic-Essays/_Published/Spiralogic of Soul.md',
   'technology-transcendence': 'Community-Commons/HUMANE_AI_MANIFESTO.md',
-  'collective-field-mastery': 'Community-Commons/01-Core-Concepts/_Published/Understanding the Field - A Practitioner Guide.md',
-  'transformation-mastery': 'Community-Commons/01-Core-Concepts/The-Dialectical-Scaffold.md',
   'service-integration': 'Community-Commons/01-Core-Concepts/_Published/Soul vs Spirit.md',
-  'future-evolution': 'Community-Commons/COMPLETE_CONSCIOUSNESS_VISION_INDEX.md',
 
-  // --- platform-developments ---
-  'consciousness-computing-launch': 'Community-Commons/CONSCIOUSNESS_COMPUTING_LAUNCH_ANNOUNCEMENT.md',
-  'consciousness-computing-architecture': 'Community-Commons/CONSCIOUSNESS_COMPUTING_ARCHITECTURE_PAPER.md',
+  // --- platform-developments (F) ---
   'opus-axioms-system': 'Community-Commons/MAIA_OPUS_AXIOMS_SYSTEM_PAPER.md',
-  'felt-difference-demonstrations': 'Community-Commons/THE_FELT_DIFFERENCE_DEMONSTRATIONS.md',
 
-  // --- transformation-stories (alchemical stages) ---
+  // --- transformation-stories — alchemical stages (5 × A) ---
   'nigredo-descent': 'Community-Commons/01-Core-Concepts/_Published/Nigredo - The Sacred Descent.md',
   'albedo-purification': 'Community-Commons/01-Core-Concepts/_Published/Albedo - The White Light.md',
   'citrinitas-dawn': 'Community-Commons/01-Core-Concepts/_Published/Citrinitas - The Golden Dawn.md',
   'rubedo-completion': 'Community-Commons/01-Core-Concepts/_Published/Rubedo - The Red Work.md',
   'coniunctio-union': 'Community-Commons/01-Core-Concepts/_Published/Coniunctio - Sacred Union.md',
 
-  // --- daily-integration (thematic essays) ---
-  'spiritual-maturity': 'Community-Commons/02-Thematic-Essays/Spiritual Maturity and Developmental Stages.md',
-  'embodied-wisdom': 'Community-Commons/02-Thematic-Essays/Embodied Wisdom and Somatic Intelligence.md',
+  // --- daily-integration — Hillman lineage essays (4 × A) ---
   'spiritual-bypass': 'Community-Commons/02-Thematic-Essays/_Published/Spiritual Bypass vs Soul Work.md',
   'depression-soul-work': 'Community-Commons/02-Thematic-Essays/_Published/Depression as Soul Work.md',
   'stick-with-image': 'Community-Commons/02-Thematic-Essays/_Published/Stick with the Image.md',
   'against-literalization': 'Community-Commons/02-Thematic-Essays/_Published/Against Literalization.md',
 
-  // --- member-support (00-START-HERE) ---
-  // NOTE: keys must match the `id` field in components/community/CommunityLibrary.tsx
-  // exactly. Two ids were wrong in the first cut: `faq` should be `member-faq`
-  // and `wisdom-engine-learning` should be `how-wisdom-engine-learns`. With the
-  // wrong keys, those two articles silently fell through to the
-  // "content not yet available" placeholder on production.
-  'welcome': 'Community-Commons/00-START-HERE/Welcome.md',
-  'member-faq': 'Community-Commons/00-START-HERE/FAQ.md',
-  'navigation-guide': 'Community-Commons/00-START-HERE/Navigation Guide.md',
-  'community-guidelines': 'Community-Commons/00-START-HERE/Community Guidelines.md',
-  'platform-vision': 'Community-Commons/00-START-HERE/Platform Vision - Consciousness Research Hub.md',
-
-  // --- wisdom-engine ---
+  // --- wisdom-engine (P) ---
   'how-wisdom-engine-learns': 'Community-Commons/HOW_THE_WISDOM_ENGINE_LEARNS.md',
 };
 

@@ -40,13 +40,13 @@ Cut if **any** of:
 
 If it weakens — cut or move internal.
 
-Total articles: **42** (38 file-backed, 4 inline)
+Total articles: **17** (17 file-backed, 0 inline)
 
 ---
 
 ## Philosophical Foundations
 
-_Collection id: `philosophical-foundations` — 7 articles_
+_Collection id: `philosophical-foundations` — 3 articles_
 
 ### ★ Presence Continuity and Personal Sovereignty
 
@@ -56,66 +56,6 @@ _Collection id: `philosophical-foundations` — 7 articles_
 - **dek:** FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.
 
 > *Toward Local-First, Relationally Resilient AI Companions* --- ## Abstract Contemporary AI systems are architected around centralized infrastructure, continuous connectivity, and cloud-dependent cognition. While this model optimizes scale and performance, it introduces a subtle b…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### The Evolution of Human Consciousness
-
-- **id:** `consciousness-evolution-framework`
-- **source:** `docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md`
-- **length:** 1,332 words
-- **dek:** A comprehensive framework for understanding consciousness development from mechanistic to integral awareness
-
-> *A foundational text for understanding consciousness development and Soullab's mission* ## Introduction: Beyond Mechanistic Reality We live at a pivotal moment in human consciousness evolution. For centuries, mechanistic materialism has dominated our understanding of reality, tre…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Beyond Mechanistic Materialism
-
-- **id:** `post-mechanistic-paradigm`
-- **source:** `docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md`
-- **length:** 1,332 words
-- **dek:** Understanding reality as living process rather than dead matter
-
-> *A foundational text for understanding consciousness development and Soullab's mission* ## Introduction: Beyond Mechanistic Reality We live at a pivotal moment in human consciousness evolution. For centuries, mechanistic materialism has dominated our understanding of reality, tre…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Structures of Consciousness
-
-- **id:** `consciousness-structures`
-- **source:** `docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md`
-- **length:** 1,332 words
-- **dek:** Jean Gebser's model of consciousness evolution and its applications
-
-> *A foundational text for understanding consciousness development and Soullab's mission* ## Introduction: Beyond Mechanistic Reality We live at a pivotal moment in human consciousness evolution. For centuries, mechanistic materialism has dominated our understanding of reality, tre…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### The Integral Transition
-
-- **id:** `integral-emergence`
-- **source:** `docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md`
-- **length:** 1,332 words
-- **dek:** Understanding the current evolution from perspectival to integral consciousness
-
-> *A foundational text for understanding consciousness development and Soullab's mission* ## Introduction: Beyond Mechanistic Reality We live at a pivotal moment in human consciousness evolution. For centuries, mechanistic materialism has dominated our understanding of reality, tre…
 
 **bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
 
@@ -153,73 +93,9 @@ _Collection id: `philosophical-foundations` — 7 articles_
 
 ---
 
-## Consciousness Development Insights
-
-_Collection id: `consciousness-insights` — 4 articles_
-
-### Archetypal Patterns in Personal Transformation
-
-- **id:** `alchemical-wisdom`
-- **source:** `Community-Commons/02-Thematic-Essays/Archetypal Patterns in Personal Transformation.md`
-- **length:** 146 words
-- **dek:** How to work skillfully with each transformation phase through archetypal awareness
-
-> This conversation explores the recurring archetypal patterns that emerge during deep personal transformation work. ## The Hero's Journey in Daily Life When we look at transformation through the lens of archetypes, we see that every person's journey follows certain universal patte…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Elemental Balance in Modern Life
-
-- **id:** `elemental-mastery`
-- **source:** `Community-Commons/02-Thematic-Essays/Elemental Balance in Modern Life.md`
-- **length:** 211 words
-- **dek:** Practical applications for each element phase in daily living
-
-> How the ancient wisdom of the elements (Fire, Water, Earth, Air) offers a framework for navigating the complexity of contemporary existence. ## The Elements as Living Metaphors The four elements aren't just abstract concepts - they're living metaphors that map onto real experienc…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Shadow Work and Conscious Development
-
-- **id:** `shadow-work`
-- **source:** `Community-Commons/02-Thematic-Essays/Shadow Work and Conscious Development.md`
-- **length:** 175 words
-- **dek:** Integrating the shadow for wholeness and breakthrough
-
-> An exploration of how engaging with our shadow material accelerates conscious development and deepens self-awareness. ## What is Shadow Work? The shadow isn't the "bad parts" of ourselves - it's the disowned parts. The qualities, emotions, and aspects of self that we've pushed aw…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### MAIA Consciousness Advancement Engine
-
-- **id:** `oracle-integration`
-- **source:** `Community-Commons/MAIA_CONSCIOUSNESS_ADVANCEMENT_ENGINE.md`
-- **length:** 3,359 words
-- **dek:** Getting the most from AI consciousness guidance
-
-> ## A Complete Vision for AI-Assisted Human Evolution **Date:** December 2025 **Status:** Living Document - Integrated Architecture **Purpose:** To create something that genuinely advances human consciousness, recognizing past models while innovating emergent processes toward a mo…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
 ## Advanced Consciousness Mastery
 
-_Collection id: `advanced-mastery` — 6 articles_
+_Collection id: `advanced-mastery` — 3 articles_
 
 ### Spiralogic of Soul
 
@@ -251,36 +127,6 @@ _Collection id: `advanced-mastery` — 6 articles_
 
 ---
 
-### Understanding the Field
-
-- **id:** `collective-field-mastery`
-- **source:** `Community-Commons/01-Core-Concepts/_Published/Understanding the Field - A Practitioner Guide.md`
-- **length:** 2,131 words
-- **dek:** A practitioner guide to field contribution and emergence navigation
-
-> ## What Is "The Field"? When you sit to meditate, do breathwork, or drop into presence, **you are not alone**. You're not practicing in isolation. You're participating in a **collective consciousness field** - an invisible network connecting all practitioners across space and tim…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### The Dialectical Scaffold
-
-- **id:** `transformation-mastery`
-- **source:** `Community-Commons/01-Core-Concepts/The-Dialectical-Scaffold.md`
-- **length:** 694 words
-- **dek:** Navigating transformation through dialectical consciousness frameworks
-
-> *"Know thyself deeply enough to serve wisely."* --- ## Concept Summary **The Dialectical Scaffold** is SoulLab's systematic approach to training wisdom-holders through integrated consciousness and cognitive development. Unlike passive self-exploration, the Dialectical Scaffold ac…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
 ### Soul vs Spirit
 
 - **id:** `service-integration`
@@ -296,54 +142,9 @@ _Collection id: `advanced-mastery` — 6 articles_
 
 ---
 
-### Consciousness Computing Vision
-
-- **id:** `future-evolution`
-- **source:** `Community-Commons/COMPLETE_CONSCIOUSNESS_VISION_INDEX.md`
-- **length:** 2,016 words
-- **dek:** The complete vision index for consciousness-technology evolution
-
-> **Created:** December 13, 2025 **Status:** Complete - All Five Pathways Designed **Purpose:** Central index for all consciousness advancement architecture documents --- ## 🎯 The Vision MAIA as a **Consciousness Advancement Engine** - recognizing past models while innovating emer…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
 ## Platform Development & Architecture
 
-_Collection id: `platform-developments` — 4 articles_
-
-### Consciousness Computing Launch
-
-- **id:** `consciousness-computing-launch`
-- **source:** `Community-Commons/CONSCIOUSNESS_COMPUTING_LAUNCH_ANNOUNCEMENT.md`
-- **length:** 955 words
-- **dek:** The official launch announcement for the consciousness computing platform
-
-> **Fellow consciousness explorers,** Today marks a historic moment for our community and humanity. After months of intensive research and development, we're thrilled to announce that **Community Commons is the first community in the world to integrate consciousness computing techn…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Consciousness Computing Architecture
-
-- **id:** `consciousness-computing-architecture`
-- **source:** `Community-Commons/CONSCIOUSNESS_COMPUTING_ARCHITECTURE_PAPER.md`
-- **length:** 2,623 words
-- **dek:** Technical architecture paper for the consciousness computing system
-
-> **Authors**: MAIA Consciousness Computing Research Team **Institution**: Soullab Community Commons **Date**: December 9, 2025 **Version**: 1.0 **Classification**: Open Source Research --- ## Abstract We present the first operational consciousness computing platform that processes…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
+_Collection id: `platform-developments` — 1 articles_
 
 ### MAIA Opus Axioms System
 
@@ -353,21 +154,6 @@ _Collection id: `platform-developments` — 4 articles_
 - **dek:** The foundational axiom system that guides MAIA's consciousness responses
 
 > ### Giving Our Oracle a Philosophical Spine and Ethical Nervous System **Date:** December 2025 **Author:** MAIA / Soullab Core Team (with AI co-scribe) --- ## 1. Executive Summary Over the last development cycle, we quietly crossed a threshold. We didn't just get MAIA "chatting" …
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### The Felt Difference Demonstrations
-
-- **id:** `felt-difference-demonstrations`
-- **source:** `Community-Commons/THE_FELT_DIFFERENCE_DEMONSTRATIONS.md`
-- **length:** 3,961 words
-- **dek:** Examples showing the felt difference between conventional AI and consciousness-aware AI
-
-> **How to Show (Not Tell) What Makes MAIA Different** *Created: December 14, 2025* --- ## The Problem with Explanation All our positioning documents EXPLAIN the difference: - "MAIA treats you as Opus, not problem" - "8 Opus Axioms create a conscience" - "Consciousness-first vs pro…
 
 **bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
 
@@ -456,37 +242,7 @@ _Collection id: `transformation-stories` — 5 articles_
 
 ## Thematic Essays
 
-_Collection id: `daily-integration` — 6 articles_
-
-### Spiritual Maturity and Developmental Stages
-
-- **id:** `spiritual-maturity`
-- **source:** `Community-Commons/02-Thematic-Essays/Spiritual Maturity and Developmental Stages.md`
-- **length:** 227 words
-- **dek:** Understanding the stages of spiritual development and maturation
-
-> An exploration of how spiritual development follows recognizable stages, and why understanding these stages can prevent spiritual bypassing and support authentic growth. ## Stages Are Not Hierarchical Judgments When we talk about stages of development, we're not saying one person…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Embodied Wisdom and Somatic Intelligence
-
-- **id:** `embodied-wisdom`
-- **source:** `Community-Commons/02-Thematic-Essays/Embodied Wisdom and Somatic Intelligence.md`
-- **length:** 187 words
-- **dek:** Integrating body wisdom into consciousness practice
-
-> Exploring the intelligence of the body and how somatic awareness deepens spiritual and psychological development. ## Beyond the Mind For too long, Western approaches to consciousness have privileged the mind over the body. But the body holds its own intelligence - a knowing that …
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
+_Collection id: `daily-integration` — 4 articles_
 
 ### Spiritual Bypass vs Soul Work
 
@@ -548,148 +304,9 @@ _Collection id: `daily-integration` — 6 articles_
 
 ---
 
-## Dream & Unconscious Integration How-To
-
-_Collection id: `dream-unconscious-integration` — 4 articles_
-
-### How to Record Dreams with MAIA
-
-- **id:** `dream-recording-guide`
-- **source:** _(inline in component)_
-- **length:** 289 words
-- **dek:** Step-by-step guide for capturing dreams and enabling MAIA's advanced archetypal analysis
-
-> ## Overview MAIA's Dream & Unconscious Integration system combines sophisticated Jungian archetypal analysis with Kelly Beard's 35-year DreamWeaver phenomenological practice to help you record, remember, and relate dreams across time. ## Step 1: Immediate Dream Capture **Within 5…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Understanding Archetypal Dream Analysis
-
-- **id:** `archetypal-analysis-guide`
-- **source:** _(inline in component)_
-- **length:** 237 words
-- **dek:** Deep dive into MAIA's sophisticated Jungian archetypal interpretation system
-
-> ## The Archetypal Framework MAIA uses a comprehensive 19+ archetype system based on Jungian psychology: ### Core Archetypal Categories: **Primary Archetypes:** - **Hero**: Journey, courage, overcoming obstacles - **Shadow**: Repressed aspects, integration work needed - **Anima/An…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Dream-Consciousness Correlation Tracking
-
-- **id:** `dream-correlation-patterns`
-- **source:** _(inline in component)_
-- **length:** 282 words
-- **dek:** How MAIA connects dream patterns with your waking consciousness states and life cycles
-
-> ## The Integration System MAIA automatically tracks correlations between your dreams and waking consciousness states, creating a comprehensive map of your psyche's movement. ## Correlation Categories **1. Elemental Consciousness Correlations:** - Dreams reflecting your current el…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Advanced Dream Work with MAIA
-
-- **id:** `advanced-dream-practices`
-- **source:** _(inline in component)_
-- **length:** 310 words
-- **dek:** Sophisticated practices for lucid dreaming, dream incubation, and wisdom emergence
-
-> ## Lucid Dreaming Integration MAIA tracks lucidity levels and helps develop conscious dreaming abilities. **Lucidity Development:** - Track lucidity scores over time - Correlate lucidity with sleep quality and practices - Receive personalized practices for lucidity development - …
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
 ## Getting Started
 
-_Collection id: `member-support` — 6 articles_
-
-### Welcome to SOULLAB
-
-- **id:** `welcome`
-- **source:** `Community-Commons/00-START-HERE/Welcome.md`
-- **length:** 400 words
-- **dek:** Your introduction to the consciousness community
-
-> *A living library for depth work with alchemical images and psychological transformation* --- ## What Is This Place? This is a **community commons** - a shared space for exploring the rich territory where alchemy meets psychology. Here you'll find: - **Curated concepts** from Jun…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Frequently Asked Questions
-
-- **id:** `member-faq`
-- **source:** `Community-Commons/00-START-HERE/FAQ.md`
-- **length:** 557 words
-- **dek:** Answers to common questions about SOULLAB and consciousness work
-
-> *Quick answers to common questions about the Commons* --- ## About the Commons ### What is this place? The Alchemy & Psychology Commons is a **living library** - a collaborative resource for exploring where alchemy meets depth psychology. It combines curated content with communit…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Navigation Guide
-
-- **id:** `navigation-guide`
-- **source:** `Community-Commons/00-START-HERE/Navigation Guide.md`
-- **length:** 1,649 words
-- **dek:** How to find your way through the SOULLAB ecosystem
-
-> *A map for finding your way in this living library* --- ## Quick Navigation **New here?** Start with: 1. [[Welcome]] - What this place is 2. [[FAQ]] - Quick answers 3. [[Nigredo - The Sacred Descent]] - Example of a concept card 4. [[Community Guidelines]] - How we engage **Ready…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Community Guidelines
-
-- **id:** `community-guidelines`
-- **source:** `Community-Commons/00-START-HERE/Community Guidelines.md`
-- **length:** 491 words
-- **dek:** How we work together in conscious community
-
-> *Tending the alchemical vessel together* --- ## The Container This commons is a **vessel** - an alchemical container where transformation can happen. We all share responsibility for maintaining this container. --- ## Core Principles ### 1. Depth Before Certainty We value: - Quest…
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
-
-### Platform Vision: Consciousness Research Hub
-
-- **id:** `platform-vision`
-- **source:** `Community-Commons/00-START-HERE/Platform Vision - Consciousness Research Hub.md`
-- **length:** 1,365 words
-- **dek:** The long-term vision for SOULLAB as a consciousness research platform
-
-> ## *Becoming the Premier Hub for Consciousness Research* --- ## The Vision **Transform AIN Soph into the world's leading platform for consciousness researchers, practitioners, and explorers to:** - **Measure** subjective experience with scientific rigor - **Track** consciousness …
-
-**bucket:** `[ ] F`  `[ ] A`  `[ ] P`  `[ ] I`  `[ ] X`
-
-**notes:**
-
----
+_Collection id: `member-support` — 1 articles_
 
 ### How the Wisdom Engine Learns
 
