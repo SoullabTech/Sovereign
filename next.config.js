@@ -116,6 +116,25 @@ const nextConfig = {
           destination: '/maia/community/library',
           permanent: true,
         },
+        // Relational Field — moved out of the Jade Neural Command shell
+        // (app/dashboard/*) into its own top-level route so it no longer
+        // inherits a layout reserved for future Neural tech integration.
+        // Also catches the short-lived /maia/relationships whisper shell.
+        {
+          source: '/dashboard/relationships',
+          destination: '/relationships',
+          permanent: true,
+        },
+        {
+          source: '/dashboard/relationships/:id',
+          destination: '/relationships/:id',
+          permanent: true,
+        },
+        {
+          source: '/maia/relationships',
+          destination: '/relationships',
+          permanent: true,
+        },
       ];
     }
   }),

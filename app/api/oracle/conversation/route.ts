@@ -2051,7 +2051,7 @@ async function generateSpiralogicResponseWithLLM(
       priority: confidence,
       elementalResonance: spiralogicCell.element,
       kind: 'relational' as any,
-      route: '/dashboard/relationships',
+      route: '/relationships',
     });
   }
 

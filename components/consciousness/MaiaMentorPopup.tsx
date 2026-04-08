@@ -43,7 +43,7 @@ const mentorContexts: Record<string, MentorContext> = {
     ],
     reflection: 'What message is waiting in your dream life?'
   },
-  '/dashboard/relationships': {
+  '/relationships': {
     title: 'Connection Matrix',
     greeting: 'Your relationships are mirrors of your inner landscape.',
     offerings: [

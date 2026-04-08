@@ -80,7 +80,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'relationships',
     label: 'Relationships',
     icon: Heart,
-    route: '/maia/relationships',
+    route: '/relationships',
     classification: 'world',
     tooltip: 'Relational awareness',
   },

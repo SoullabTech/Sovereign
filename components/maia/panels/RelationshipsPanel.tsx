@@ -25,7 +25,7 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
 
       {/* Relational overview */}
       <button
-        onClick={() => router.push('/dashboard/relationships')}
+        onClick={() => router.push('/relationships')}
         className="w-full flex items-start gap-3 p-3 rounded-xl bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/30 transition-all text-left"
       >
         <Heart className="w-4 h-4 text-rose-400/70 mt-0.5 flex-shrink-0" />

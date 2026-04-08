@@ -131,7 +131,7 @@ export default function RelationshipDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-jade-mineral mb-4">{error || 'Not found'}</p>
-          <button onClick={() => router.push('/dashboard/relationships')} className="text-sm text-jade-sage hover:text-jade-jade transition-colors">
+          <button onClick={() => router.push('/relationships')} className="text-sm text-jade-sage hover:text-jade-jade transition-colors">
             Back to field
           </button>
         </div>
@@ -146,7 +146,7 @@ export default function RelationshipDetailPage() {
       <div className="max-w-3xl mx-auto px-6 py-10">
         {/* Back link */}
         <button
-          onClick={() => router.push('/dashboard/relationships')}
+          onClick={() => router.push('/relationships')}
           className="text-xs text-jade-mineral hover:text-jade-sage transition-colors mb-6 block"
         >
           &larr; Relational Field

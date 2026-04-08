@@ -42,7 +42,7 @@ export default function RelationshipFieldPage() {
   const handleCreated = (rel: { id: string; name: string; realm: Realm }) => {
     setShowCreate(false);
     setCreateRealm(undefined);
-    router.push(`/dashboard/relationships/${rel.id}`);
+    router.push(`/relationships/${rel.id}`);
   };
 
   const openCreateForRealm = (realm: Realm) => {
@@ -125,7 +125,7 @@ export default function RelationshipFieldPage() {
                       <RelationshipCard
                         key={r.id}
                         relationship={r}
-                        onClick={() => router.push(`/dashboard/relationships/${r.id}`)}
+                        onClick={() => router.push(`/relationships/${r.id}`)}
                       />
                     ))}
                   </div>
