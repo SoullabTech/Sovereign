@@ -46,7 +46,10 @@ CREATE INDEX IF NOT EXISTS idx_rel_entry_patterns_member
 CREATE INDEX IF NOT EXISTS idx_rel_entry_patterns_pattern
   ON relationship_entry_patterns(pattern_id);
 
--- Partial index for "still valid" patterns — supports decay reads without scanning expired rows
+-- Composite index for decay-aware reads. Postgres rejects partial indexes
+-- with NOW() predicates (functions in index predicate must be IMMUTABLE),
+-- so we keep a plain composite ordering. Queries that want "still-valid"
+-- rows should add `WHERE expires_at IS NULL OR expires_at > NOW()` to the
+-- SELECT; the planner can still use this index for the scan + range filter.
 CREATE INDEX IF NOT EXISTS idx_rel_entry_patterns_active
-  ON relationship_entry_patterns(relationship_id, pattern_id)
-  WHERE expires_at IS NULL OR expires_at > NOW();
+  ON relationship_entry_patterns(relationship_id, expires_at, pattern_id);
