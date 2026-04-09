@@ -9,14 +9,23 @@
  *   - change    → "Shift"       ("This evolved into...")
  *
  * Design constraints (from build approval):
- *   - No modals. Inline capture with no multi-step friction.
- *   - Decision strip at top: last 2–3 decision blocks immediately visible.
- *   - "Ask MAIA" seeds bounded context (title + framing + last 2–3 blocks +
- *     last decision), NOT the full history.
- *   - Internal block_type stays as-is. UI labels are softened.
+ *   - No modals. Inline capture, no multi-step friction.
+ *   - Decision strip at top: last 2–3 decisions immediately visible AND clickable.
+ *     Clicking scrolls to the block in the thread and briefly highlights it.
+ *   - Decisions carry a "Mark as tested" micro-action (metadata.tested).
+ *   - Shift blocks carry an optional outcome (metadata.outcome) captured inline.
+ *   - "Current direction" line near the top, derived from the last block.
+ *   - "Return to this" button: fires a touch ping, opens composer with smart
+ *     default (Shift after Decision; Reflection otherwise), scrolls to composer.
+ *   - "Ask MAIA" seeds bounded context — title + framing + last decision + last
+ *     2 blocks + "help me with what to do next here." Never the full history.
+ *   - Internal block_type is unchanged. UI labels are softened (Reflection / Shift).
+ *
+ * Guardrails held: no lifecycle states, no tagging UI, no cross-idea linking,
+ * no scoring, no frameworks. Everything inline and reversible.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -24,11 +33,11 @@ import {
   MessageCircle,
   CheckCircle2,
   Wind,
-  Plus,
   Trash2,
   Edit3,
   Check,
   X,
+  RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
@@ -37,11 +46,25 @@ import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 
 type BlockType = 'note' | 'decision' | 'change';
 
+type Outcome = 'worked' | 'partly' | 'didnt' | 'unsure';
+
+interface BlockMetadata {
+  outcome?: Outcome;
+  tested?: boolean;
+  // Capture metadata from the conversation toast flow — see /api/ideas/capture
+  source?: string;
+  capture_mode?: string;
+  conversationId?: string | null;
+  confidence?: number | null;
+  // Room for later symbolic attachments: hexagram, toolInvocation, councilSessionId
+  [key: string]: unknown;
+}
+
 interface Block {
   id: string;
   block_type: BlockType;
   content: string;
-  metadata: Record<string, unknown>;
+  metadata: BlockMetadata;
   created_at: string;
 }
 
@@ -64,6 +87,15 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   decision: 'Decision',
   change: 'Shift',
 };
+
+const OUTCOME_LABELS: Record<Outcome, string> = {
+  worked: 'Worked',
+  partly: 'Partly worked',
+  didnt: "Didn't work",
+  unsure: 'Not sure',
+};
+
+const OUTCOME_ORDER: Outcome[] = ['worked', 'partly', 'didnt', 'unsure'];
 
 const BLOCK_STYLES: Record<
   BlockType,
@@ -112,9 +144,17 @@ export default function IdeaWorkspacePage() {
   // Inline block composer
   const [composing, setComposing] = useState<BlockType | null>(null);
   const [draftContent, setDraftContent] = useState('');
+  const [composingOutcome, setComposingOutcome] = useState<Outcome | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load idea + blocks
+  // Transient highlight on a block (triggered by decision-strip click)
+  const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
+
+  // Composer scroll target — used by "Return to this" and decision strip
+  const composerScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // --- load ----------------------------------------------------------------
+
   const loadIdea = useCallback(async () => {
     if (!ideaId) return;
     try {
@@ -146,7 +186,7 @@ export default function IdeaWorkspacePage() {
     loadIdea();
   }, [loadIdea]);
 
-  // --- derived data ---------------------------------------------------------
+  // --- derived data --------------------------------------------------------
 
   // Decision strip — last 2–3 decision blocks, newest first
   const recentDecisions = useMemo(
@@ -158,7 +198,28 @@ export default function IdeaWorkspacePage() {
     [blocks]
   );
 
-  // Ask MAIA — bounded context. Title + framing + last 3 blocks + last decision.
+  // Current direction line — derived from the MOST RECENT block.
+  //   last = Decision → show the decision as the current direction
+  //   last = Shift    → show the shift content with its outcome (if set)
+  //   else            → don't show
+  const currentDirection = useMemo(() => {
+    if (blocks.length === 0) return null;
+    const last = blocks[blocks.length - 1];
+    if (last.block_type === 'decision') {
+      return { content: last.content, outcome: null as string | null };
+    }
+    if (last.block_type === 'change') {
+      const outcome = last.metadata?.outcome;
+      return {
+        content: last.content,
+        outcome: outcome ? OUTCOME_LABELS[outcome] : null,
+      };
+    }
+    return null;
+  }, [blocks]);
+
+  // Ask MAIA — sharper context. Title + framing + last decision + last 2 blocks.
+  // Appended with a next-step framing so MAIA stays oriented toward movement.
   const buildAskMaiaPrompt = useCallback((): string => {
     if (!idea) return '';
     const parts: string[] = [];
@@ -166,19 +227,26 @@ export default function IdeaWorkspacePage() {
     if (idea.framing) {
       parts.push(idea.framing);
     }
-    const lastBlocks = blocks.slice(-3);
+
+    const lastDecision = blocks
+      .filter((b) => b.block_type === 'decision')
+      .slice(-1)[0];
+    if (lastDecision) {
+      parts.push(`Most recent decision: ${lastDecision.content}`);
+    }
+
+    const lastBlocks = blocks.slice(-2);
     if (lastBlocks.length > 0) {
       parts.push('Recent entries:');
       for (const b of lastBlocks) {
-        parts.push(`- [${BLOCK_LABELS[b.block_type]}] ${b.content}`);
+        const label = BLOCK_LABELS[b.block_type];
+        const outcome = b.block_type === 'change' ? b.metadata?.outcome : undefined;
+        const suffix = outcome ? ` (${OUTCOME_LABELS[outcome]})` : '';
+        parts.push(`- [${label}${suffix}] ${b.content}`);
       }
     }
-    // If the most recent decision isn't already in lastBlocks, append it explicitly
-    const lastDecision = blocks.filter((b) => b.block_type === 'decision').slice(-1)[0];
-    if (lastDecision && !lastBlocks.some((b) => b.id === lastDecision.id)) {
-      parts.push(`Most recent decision: ${lastDecision.content}`);
-    }
-    parts.push("Help me stay with it — I don't need you to summarize, just think alongside me.");
+
+    parts.push('I want help with what to do next here.');
     return parts.join('\n\n');
   }, [idea, blocks]);
 
@@ -200,11 +268,13 @@ export default function IdeaWorkspacePage() {
   const openComposer = (type: BlockType) => {
     setComposing(type);
     setDraftContent('');
+    setComposingOutcome(null);
   };
 
   const cancelComposer = () => {
     setComposing(null);
     setDraftContent('');
+    setComposingOutcome(null);
   };
 
   const submitBlock = async (e?: React.FormEvent) => {
@@ -215,15 +285,18 @@ export default function IdeaWorkspacePage() {
 
     setSubmitting(true);
     try {
+      // Shift blocks carry an optional outcome in metadata
+      const metadata: BlockMetadata =
+        composing === 'change' && composingOutcome ? { outcome: composingOutcome } : {};
+
       const res = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
         method: 'POST',
-        body: JSON.stringify({ block_type: composing, content }),
+        body: JSON.stringify({ block_type: composing, content, metadata }),
       });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
-          // If it was a decision, update the idea's last_decision_at optimistically
           if (composing === 'decision') {
             setIdea((prev) =>
               prev ? { ...prev, last_decision_at: data.block.created_at } : prev
@@ -231,6 +304,7 @@ export default function IdeaWorkspacePage() {
           }
           setComposing(null);
           setDraftContent('');
+          setComposingOutcome(null);
         }
       }
     } catch (err) {
@@ -253,6 +327,65 @@ export default function IdeaWorkspacePage() {
       console.error('[ideas/workspace] delete block failed:', err);
     }
   };
+
+  // Mark a decision block as "tested" — PATCH metadata.tested = true
+  const markAsTested = async (blockId: string) => {
+    if (!idea) return;
+    try {
+      const res = await apiFetch(`/api/ideas/${idea.id}/blocks/${blockId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ metadata: { tested: true } }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.block) {
+          setBlocks((prev) =>
+            prev.map((b) => (b.id === blockId ? { ...b, metadata: data.block.metadata } : b))
+          );
+        }
+      }
+    } catch (err) {
+      console.error('[ideas/workspace] mark tested failed:', err);
+    }
+  };
+
+  // Click-to-scroll from decision strip → thread block
+  const scrollToBlock = useCallback((blockId: string) => {
+    const el = document.getElementById(`idea-block-${blockId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedBlockId(blockId);
+      window.setTimeout(() => {
+        setHighlightedBlockId((curr) => (curr === blockId ? null : curr));
+      }, 1600);
+    }
+  }, []);
+
+  // Return to this — smart composer default + touch ping + scroll-to-composer
+  const handleReturnToThis = useCallback(() => {
+    if (!idea) return;
+
+    // Fire-and-forget touch — updates last_entered_at even though we're
+    // already on the page. This is the engagement signal we care about.
+    apiFetch(`/api/ideas/${idea.id}/touch`, { method: 'POST' }).catch(() => {});
+
+    // Smart default based on last block
+    const nextType: BlockType = (() => {
+      if (blocks.length === 0) return 'note';
+      const last = blocks[blocks.length - 1];
+      if (last.block_type === 'decision') return 'change';
+      return 'note';
+    })();
+
+    setComposing(nextType);
+    setDraftContent('');
+    setComposingOutcome(null);
+
+    // Scroll composer into view after the next paint so the motion.form is mounted
+    window.setTimeout(() => {
+      composerScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 80);
+  }, [idea, blocks]);
 
   // --- header edit ----------------------------------------------------------
 
@@ -396,21 +529,70 @@ export default function IdeaWorkspacePage() {
           </div>
         )}
 
-        {/* Decision strip — top 2–3 recent decisions, immediately visible */}
+        {/* Current direction — derived from the last block, no persistence */}
+        {currentDirection && (
+          <div className="mb-6 flex items-baseline gap-2 text-xs">
+            <span className="uppercase tracking-wider text-stone-600 font-medium">
+              Current direction
+            </span>
+            <span className="text-stone-300 font-light line-clamp-2 flex-1">
+              {currentDirection.content}
+              {currentDirection.outcome && (
+                <span className="text-stone-500 ml-1.5 italic">
+                  ({currentDirection.outcome.toLowerCase()})
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
+        {/* Return to this — engagement signal + smart composer default */}
+        <div className="mb-6">
+          <button
+            onClick={handleReturnToThis}
+            className="text-xs text-stone-500 hover:text-amber-400/80 transition-colors flex items-center gap-1.5 font-light"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Return to this</span>
+          </button>
+        </div>
+
+        {/* Decision strip — last 2–3 decisions, clickable */}
         {recentDecisions.length > 0 && (
           <div className="mb-8 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
             <p className="text-[10px] uppercase tracking-wider text-emerald-500/60 font-medium mb-2">
               Recent decisions
             </p>
             <ul className="space-y-2">
-              {recentDecisions.map((d) => (
-                <li key={d.id} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/70 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-emerald-100/90 font-light leading-snug">
-                    {d.content}
-                  </span>
-                </li>
-              ))}
+              {recentDecisions.map((d) => {
+                const tested = d.metadata?.tested === true;
+                return (
+                  <li key={d.id} className="flex items-start gap-2 group/row">
+                    <button
+                      onClick={() => scrollToBlock(d.id)}
+                      className="flex items-start gap-2 text-left min-w-0 flex-1 hover:text-emerald-200 transition-colors"
+                      aria-label="Scroll to this decision"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/70 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-emerald-100/90 font-light leading-snug">
+                        {d.content}
+                      </span>
+                    </button>
+                    {tested ? (
+                      <span className="text-[10px] uppercase tracking-wider text-emerald-500/70 bg-emerald-500/10 border border-emerald-500/25 rounded px-1.5 py-0.5 flex-shrink-0 mt-0.5">
+                        Tested
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => markAsTested(d.id)}
+                        className="text-[10px] text-stone-500 hover:text-emerald-400/80 transition-colors flex-shrink-0 mt-0.5 opacity-0 group-hover/row:opacity-100"
+                      >
+                        Mark as tested
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -451,6 +633,7 @@ export default function IdeaWorkspacePage() {
         <AnimatePresence>
           {composing && (
             <motion.form
+              ref={composerScrollRef}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -463,7 +646,9 @@ export default function IdeaWorkspacePage() {
                   const Icon = BLOCK_STYLES[composing].icon;
                   return <Icon className={`w-4 h-4 ${BLOCK_STYLES[composing].iconColor}`} />;
                 })()}
-                <span className={`text-[10px] uppercase tracking-wider ${BLOCK_STYLES[composing].accent} font-medium`}>
+                <span
+                  className={`text-[10px] uppercase tracking-wider ${BLOCK_STYLES[composing].accent} font-medium`}
+                >
                   {BLOCK_LABELS[composing]}
                 </span>
               </div>
@@ -490,7 +675,32 @@ export default function IdeaWorkspacePage() {
                   }
                 }}
               />
-              <div className="flex items-center gap-4 mt-2">
+
+              {/* Outcome chips — only for Shift. Optional, single-select, click-to-toggle. */}
+              {composing === 'change' && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                  <span className="text-[10px] text-stone-600 mr-1">Outcome (optional)</span>
+                  {OUTCOME_ORDER.map((outcome) => {
+                    const active = composingOutcome === outcome;
+                    return (
+                      <button
+                        key={outcome}
+                        type="button"
+                        onClick={() => setComposingOutcome(active ? null : outcome)}
+                        className={`text-[11px] px-2 py-0.5 rounded-full border transition-all font-light ${
+                          active
+                            ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-200'
+                            : 'bg-stone-900/40 border-stone-700/50 text-stone-500 hover:border-cyan-500/30 hover:text-cyan-300/80'
+                        }`}
+                      >
+                        {OUTCOME_LABELS[outcome]}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex items-center gap-4 mt-3">
                 <button
                   type="submit"
                   disabled={!draftContent.trim() || submitting}
@@ -514,9 +724,7 @@ export default function IdeaWorkspacePage() {
         {/* Thread — newest first so return-visits see the latest first */}
         {blocks.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-sm text-stone-500 font-light">
-              This idea is waiting for you.
-            </p>
+            <p className="text-sm text-stone-500 font-light">This idea is waiting for you.</p>
             <p className="text-xs text-stone-600 mt-1">
               Add a reflection, a decision, or a shift to begin.
             </p>
@@ -526,18 +734,41 @@ export default function IdeaWorkspacePage() {
             {[...blocks].reverse().map((block) => {
               const style = BLOCK_STYLES[block.block_type];
               const Icon = style.icon;
+              const highlighted = highlightedBlockId === block.id;
+              const tested = block.block_type === 'decision' && block.metadata?.tested === true;
+              const outcome =
+                block.block_type === 'change' ? block.metadata?.outcome : undefined;
+
               return (
                 <li
                   key={block.id}
-                  className={`group p-4 rounded-xl ${style.bg} border ${style.border}`}
+                  id={`idea-block-${block.id}`}
+                  className={`group p-4 rounded-xl ${style.bg} border ${style.border} transition-shadow duration-500 ${
+                    highlighted ? 'ring-2 ring-amber-400/60 shadow-lg shadow-amber-500/10' : ''
+                  }`}
+                  style={{ scrollMarginTop: '6rem' }}
                 >
                   <div className="flex items-start gap-3">
                     <Icon className={`w-4 h-4 ${style.iconColor} mt-0.5 flex-shrink-0`} />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className={`text-[10px] uppercase tracking-wider ${style.accent} font-medium`}>
-                          {BLOCK_LABELS[block.block_type]}
-                        </span>
+                      <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] uppercase tracking-wider ${style.accent} font-medium`}
+                          >
+                            {BLOCK_LABELS[block.block_type]}
+                          </span>
+                          {tested && (
+                            <span className="text-[10px] uppercase tracking-wider text-emerald-500/70 bg-emerald-500/10 border border-emerald-500/25 rounded px-1.5 py-0.5">
+                              Tested
+                            </span>
+                          )}
+                          {outcome && (
+                            <span className="text-[10px] uppercase tracking-wider text-cyan-300/80 bg-cyan-500/10 border border-cyan-500/25 rounded px-1.5 py-0.5">
+                              {OUTCOME_LABELS[outcome]}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-3">
                           <span className="text-[10px] text-stone-600">
                             {formatTimeAgo(block.created_at)}

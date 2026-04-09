@@ -45,3 +45,60 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete block' }, { status: 500 });
   }
 }
+
+/**
+ * PATCH /api/ideas/[id]/blocks/[bid] — Shallow-merge metadata on a block.
+ *
+ * Body: { metadata: object }
+ *
+ * Used for:
+ *   - "Mark as tested" on decision blocks ({ metadata: { tested: true } })
+ *   - Setting outcome on shift blocks after the fact ({ metadata: { outcome: 'worked' } })
+ *
+ * Shallow merge: metadata = metadata || $new. Top-level keys in the new
+ * object overwrite; nothing at the old level is cleared unless you pass
+ * an explicit null. Content itself is NOT editable via this route — use a
+ * delete-and-recreate if rewriting is ever needed.
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; bid: string }> }
+) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: ideaId, bid: blockId } = await params;
+    if (!UUID_RE.test(ideaId) || !UUID_RE.test(blockId)) {
+      return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+    }
+
+    const body = (await request.json()) as { metadata?: unknown };
+    if (
+      !body.metadata ||
+      typeof body.metadata !== 'object' ||
+      Array.isArray(body.metadata)
+    ) {
+      return NextResponse.json({ error: 'metadata object required' }, { status: 400 });
+    }
+
+    const result = await query(
+      `UPDATE member_idea_blocks
+          SET metadata = metadata || $1::jsonb
+        WHERE id = $2 AND idea_id = $3 AND member_id = $4
+      RETURNING id, block_type, content, metadata, created_at`,
+      [JSON.stringify(body.metadata), blockId, ideaId, session.memberId]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Block not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, block: result.rows[0] });
+  } catch (error) {
+    console.error('[member-ideas] Patch block failed:', error);
+    return NextResponse.json({ error: 'Failed to update block' }, { status: 500 });
+  }
+}
