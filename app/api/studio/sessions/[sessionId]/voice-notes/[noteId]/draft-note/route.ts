@@ -15,16 +15,9 @@ export const maxDuration = 60;
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { getLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { writebackStudioSession, extractThemesFromNote } from '@/lib/practitioner/studioWriteback';
-
-async function getPractitionerId(): Promise<string | null> {
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
 
 export async function POST(
   request: NextRequest,
@@ -36,9 +29,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const { sessionId, noteId } = await params;

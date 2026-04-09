@@ -11,34 +11,18 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
-
-// For dev: default practitioner ID (Stellium)
-const DEV_PRACTITIONER_ID = '0a93962d-55a2-4deb-ad46-5268ee19be54';
-
-async function getPractitionerId(memberId: string): Promise<string | null> {
-  // In dev mode, use the default practitioner
-  if (process.env.NODE_ENV === 'development') {
-    return DEV_PRACTITIONER_ID;
-  }
-
-  // TODO: In production, look up practitioner by member_id
-  // For now, return the dev practitioner
-  return DEV_PRACTITIONER_ID;
-}
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 export async function GET(request: NextRequest) {
   try {
-    let memberId = await getMemberIdFromRequest(request);
-    if (!memberId && process.env.NODE_ENV === 'development') {
-      memberId = '00000000-0000-0000-0000-000000000001';
-    }
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ error: 'No practitioner found' }, { status: 404 });
+      return NextResponse.json({ error: 'No practitioner found for member' }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -91,17 +75,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    let memberId = await getMemberIdFromRequest(request);
-    if (!memberId && process.env.NODE_ENV === 'development') {
-      memberId = '00000000-0000-0000-0000-000000000001';
-    }
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ error: 'No practitioner found' }, { status: 404 });
+      return NextResponse.json({ error: 'No practitioner found for member' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -186,17 +167,14 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    let memberId = await getMemberIdFromRequest(request);
-    if (!memberId && process.env.NODE_ENV === 'development') {
-      memberId = '00000000-0000-0000-0000-000000000001';
-    }
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ error: 'No practitioner found' }, { status: 404 });
+      return NextResponse.json({ error: 'No practitioner found for member' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -322,17 +300,14 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    let memberId = await getMemberIdFromRequest(request);
-    if (!memberId && process.env.NODE_ENV === 'development') {
-      memberId = '00000000-0000-0000-0000-000000000001';
-    }
+    const memberId = await getMemberIdFromRequest(request);
     if (!memberId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId(memberId);
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ error: 'No practitioner found' }, { status: 404 });
+      return NextResponse.json({ error: 'No practitioner found for member' }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);

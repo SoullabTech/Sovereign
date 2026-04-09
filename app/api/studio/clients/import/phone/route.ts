@@ -9,6 +9,8 @@ export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import crypto from 'crypto';
 
 interface PhoneContact {
@@ -25,25 +27,22 @@ interface PhoneContact {
  */
 export async function POST(request: NextRequest) {
   try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const practitionerId = await getPractitionerIdForMember(memberId);
+    if (!practitionerId) {
+      return NextResponse.json({ error: 'Practitioner not found for member' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { contacts } = body as { contacts: PhoneContact[] };
 
     if (!contacts || !Array.isArray(contacts) || contacts.length === 0) {
       return NextResponse.json({ error: 'No contacts to import' }, { status: 400 });
     }
-
-    // Get practitioner ID (hardcoded for now)
-    const practitionerSlug = 'stellium';
-    const practResult = await db.query(
-      'SELECT id FROM practitioners WHERE slug = $1',
-      [practitionerSlug]
-    );
-
-    if (practResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
-    }
-
-    const practitionerId = practResult.rows[0].id;
 
     // Get existing emails and phones to skip duplicates
     const existingResult = await db.query(

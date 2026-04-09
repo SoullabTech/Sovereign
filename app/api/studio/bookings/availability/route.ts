@@ -9,11 +9,22 @@ export async function generateStaticParams() { return []; }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { getAvailableSlotsRange } from '@/lib/scheduling/slotCalculator';
 
 export async function GET(request: NextRequest) {
   try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const practitionerId = await getPractitionerIdForMember(memberId);
+    if (!practitionerId) {
+      return NextResponse.json({ error: 'Practitioner not found for member' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const from = searchParams.get('from');
     const to = searchParams.get('to');
@@ -26,20 +37,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const practitionerSlug = searchParams.get('slug') || 'stellium';
-
-    // Get practitioner ID
-    const practitionerResult = await db.query(
-      `SELECT id FROM practitioners WHERE slug = $1`,
-      [practitionerSlug]
-    );
-
-    if (practitionerResult.rows.length === 0) {
-      return NextResponse.json({ slots: [] });
-    }
-
-    const practitionerId = practitionerResult.rows[0].id;
 
     const slotsByDate = await getAvailableSlotsRange({
       practitionerId,

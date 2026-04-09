@@ -63,7 +63,7 @@ export async function POST(
          c.name as client_name, c.email as client_email, c.phone as client_phone,
          svc.name as service_name
        FROM sessions s
-       LEFT JOIN stellium_clients c ON s.client_id = c.id
+       LEFT JOIN practitioner_clients c ON s.client_id = c.id
        LEFT JOIN services svc ON s.service_id = svc.id
        WHERE s.id = $1 AND s.practitioner_id = $2`,
       [bookingRequest.session_id, practitionerId]
