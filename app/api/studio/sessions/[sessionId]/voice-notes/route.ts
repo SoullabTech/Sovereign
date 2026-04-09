@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -23,14 +24,6 @@ import { logAudioUsageEvent } from '@/lib/usage/audioUsage';
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
 const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-
-async function getPractitionerId(): Promise<string | null> {
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
 
 // GET — List voice notes for a session
 export async function GET(
@@ -43,9 +36,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const { sessionId } = await params;
@@ -95,9 +88,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const { sessionId } = await params;

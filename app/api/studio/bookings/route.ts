@@ -10,6 +10,8 @@ export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 
 // Valid session statuses (allowlist prevents silent empty results)
 const VALID_STATUSES = ['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'] as const;
@@ -21,6 +23,16 @@ function isValidStatus(s: string): s is SessionStatus {
 
 export async function GET(request: NextRequest) {
   try {
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const practitionerId = await getPractitionerIdForMember(memberId);
+    if (!practitionerId) {
+      return NextResponse.json({ error: 'Practitioner not found for member' }, { status: 404 });
+    }
+
     const { searchParams } = new URL(request.url);
     const rawStatus = searchParams.get('status') || 'all';
     const from = searchParams.get('from'); // ISO timestamp (UTC)
@@ -29,9 +41,6 @@ export async function GET(request: NextRequest) {
 
     // Status filter: only allow known values, else treat as 'all'
     const status = rawStatus === 'all' || isValidStatus(rawStatus) ? rawStatus : 'all';
-
-    // Support ?slug= param for multi-practitioner future; default to stellium
-    const practitionerSlug = searchParams.get('slug') || 'stellium';
 
     let sql = `
       SELECT
@@ -57,10 +66,9 @@ export async function GET(request: NextRequest) {
       FROM sessions s
       LEFT JOIN services sv ON s.service_id = sv.id
       LEFT JOIN practitioner_clients c ON s.client_id = c.id
-      JOIN practitioners p ON s.practitioner_id = p.id
-      WHERE p.slug = $1
+      WHERE s.practitioner_id = $1
     `;
-    const params: (string | number)[] = [practitionerSlug];
+    const params: (string | number)[] = [practitionerId];
 
     if (status && status !== 'all') {
       sql += ` AND s.status = $${params.length + 1}`;

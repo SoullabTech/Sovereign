@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
@@ -42,14 +43,6 @@ const MIME_TO_TYPE: Record<string, string> = {
   'application/x-rar-compressed': 'archive',
 };
 
-async function getPractitionerId(): Promise<string | null> {
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
-
 function sanitizeFilename(filename: string): string {
   return filename
     .replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -69,9 +62,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -190,9 +183,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const contentType = request.headers.get('content-type') || '';
@@ -329,9 +322,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);

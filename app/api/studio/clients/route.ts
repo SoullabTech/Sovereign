@@ -4,8 +4,8 @@ export async function generateStaticParams() { return []; }
 /**
  * STUDIO CLIENTS API
  *
- * CRUD operations for practitioner clients
- * Currently uses hardcoded 'stellium' practitioner (TODO: link members to practitioners)
+ * CRUD operations for practitioner clients.
+ * Resolves practitioner from the authenticated member via getCurrentPractitioner.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

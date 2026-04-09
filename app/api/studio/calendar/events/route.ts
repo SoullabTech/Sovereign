@@ -12,6 +12,7 @@ export async function generateStaticParams() { return []; }
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 import { syncEventToCalDAV, deleteEventFromCalDAV } from '@/lib/calendar/syncStudioEventToCalDAV';
 
@@ -60,24 +61,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Get member ID for Google Calendar auth
-    let memberId = await getMemberIdFromRequest(request);
-
-    // Fallback for local development - use default member if no cookie
-    if (!memberId && process.env.NODE_ENV === 'development') {
-      memberId = '00000000-0000-0000-0000-000000000001';
+    const memberId = await getMemberIdFromRequest(request);
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Support ?slug= param for multi-practitioner future; default to stellium
-    const practitionerSlug = searchParams.get('slug') || 'kelly';
+    // Resolve practitioner from the authenticated member (no hardcoded slug)
+    const practitionerId = await getPractitionerIdForMember(memberId);
 
-    // Fetch all three sources in parallel
-    const bookingsPromise = fetchMAIABookings(practitionerSlug, fromDate, toDate);
-    const googlePromise = memberId
-      ? fetchGoogleEvents(memberId, fromDate, toDate)
+    // Fetch all three sources in parallel.
+    // Booking fetch is skipped if the member is not a practitioner.
+    const bookingsPromise = practitionerId
+      ? fetchMAIABookings(practitionerId, fromDate, toDate)
       : Promise.resolve([]);
-    const studioPromise = memberId
-      ? fetchStudioEvents(memberId, fromDate, toDate)
-      : Promise.resolve([]);
+    const googlePromise = fetchGoogleEvents(memberId, fromDate, toDate);
+    const studioPromise = fetchStudioEvents(memberId, fromDate, toDate);
 
     const [bookings, googleEvents, studioEvents] = await Promise.all([
       bookingsPromise,
@@ -86,9 +84,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Check if Google is connected
-    const googleConnected = memberId
-      ? await GoogleCalendarService.isConnected(memberId)
-      : false;
+    const googleConnected = await GoogleCalendarService.isConnected(memberId);
 
     const events: CalendarEvent[] = [...bookings, ...googleEvents, ...studioEvents];
 
@@ -262,7 +258,7 @@ async function fetchStudioEvents(
 }
 
 async function fetchMAIABookings(
-  practitionerSlug: string,
+  practitionerId: string,
   from: Date,
   to: Date
 ): Promise<CalendarEvent[]> {
@@ -277,14 +273,13 @@ async function fetchMAIABookings(
     FROM sessions s
     LEFT JOIN services sv ON s.service_id = sv.id
     LEFT JOIN practitioner_clients c ON s.client_id = c.id
-    JOIN practitioners p ON s.practitioner_id = p.id
-    WHERE p.slug = $1
+    WHERE s.practitioner_id = $1
       AND s.scheduled_start >= $2
       AND s.scheduled_start <= $3
     ORDER BY s.scheduled_start ASC
   `;
 
-  const result = await db.query(sql, [practitionerSlug, from.toISOString(), to.toISOString()]);
+  const result = await db.query(sql, [practitionerId, from.toISOString(), to.toISOString()]);
 
   return result.rows.map(row => ({
     id: `maia-${row.id}`,

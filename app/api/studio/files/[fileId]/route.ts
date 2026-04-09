@@ -9,20 +9,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { getPractitionerIdForMember } from '@/lib/studio/getPractitionerIdForMember';
 import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { randomBytes } from 'crypto';
 
 const STORAGE_BASE = process.env.FILE_STORAGE_PATH || '/app/data/vault';
-
-async function getPractitionerId(): Promise<string | null> {
-  const result = await db.query(
-    'SELECT id FROM practitioners WHERE slug = $1',
-    ['stellium']
-  );
-  return result.rows[0]?.id || null;
-}
 
 // GET - Download file
 export async function GET(
@@ -36,9 +29,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     // Get file info
@@ -98,9 +91,9 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -186,9 +179,9 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const practitionerId = await getPractitionerId();
+    const practitionerId = await getPractitionerIdForMember(memberId);
     if (!practitionerId) {
-      return NextResponse.json({ success: false, error: 'Practitioner not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Practitioner not found for member' }, { status: 404 });
     }
 
     // Verify file exists
