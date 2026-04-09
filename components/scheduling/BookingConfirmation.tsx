@@ -45,50 +45,50 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+      <div className="relative bg-maia-navy-900 border border-maia-navy-700 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 rounded-full text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:text-slate-200 hover:bg-maia-navy-800 transition-colors"
         >
           <X size={18} />
         </button>
 
         <div className="p-6 text-center">
           {/* Checkmark */}
-          <div className="w-14 h-14 rounded-full border-2 border-amber-200 dark:border-amber-700 flex items-center justify-center mx-auto mb-4">
-            <Check size={28} className="text-amber-500 dark:text-amber-400" />
+          <div className="w-14 h-14 rounded-full border-2 border-maia-gold/40 bg-maia-navy-800 flex items-center justify-center mx-auto mb-4">
+            <Check size={28} className="text-maia-gold" />
           </div>
 
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-xl font-semibold text-white">
             Booking confirmed
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Email sent to {booking.email}
           </p>
 
-          <div className="border-t border-neutral-100 dark:border-neutral-800 my-5" />
+          <div className="border-t border-maia-navy-700/50 my-5" />
 
           {/* Appointment details */}
           <div className="flex items-start gap-4 text-left">
             {/* Date block */}
             <div className="flex-shrink-0 text-center">
-              <div className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <div className="text-2xl font-semibold text-white">
                 {day}
               </div>
-              <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase">
+              <div className="text-xs font-medium text-maia-gold uppercase">
                 {MONTH_ABBRS[monthIndex]}
               </div>
             </div>
 
             {/* Details */}
             <div>
-              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <p className="text-sm font-medium text-white">
                 {booking.serviceName}
               </p>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-slate-300">
                 {formatDayOfWeek(booking.date)} &middot; {formatTime12(booking.time)} &ndash; {formatTime12(endTime)}
               </p>
-              <p className="text-xs text-neutral-400 dark:text-neutral-500">
+              <p className="text-xs text-slate-500">
                 {booking.timezone}
               </p>
             </div>
@@ -97,15 +97,15 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
           {/* Meet link */}
           {booking.meetLink && (
             <>
-              <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
+              <div className="border-t border-maia-navy-700/50 my-4" />
               <div className="flex items-center gap-2 text-left">
-                <Video size={16} className="text-amber-500 flex-shrink-0" />
+                <Video size={16} className="text-maia-gold flex-shrink-0" />
                 <div>
                   <a
                     href={booking.meetLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-amber-500 dark:text-amber-400 hover:underline"
+                    className="text-sm font-medium text-maia-gold hover:text-maia-gold-hover hover:underline"
                   >
                     Join video call
                   </a>
@@ -114,16 +114,16 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
             </>
           )}
 
-          <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
+          <div className="border-t border-maia-navy-700/50 my-4" />
 
           {/* Cancel / manage */}
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">
+          <p className="text-xs text-slate-500">
             Need to change?
           </p>
           {confirmationUrl && (
             <a
               href={confirmationUrl}
-              className="text-sm text-amber-500 dark:text-amber-400 hover:underline"
+              className="text-sm text-maia-gold hover:text-maia-gold-hover hover:underline"
             >
               Manage your appointment
             </a>
@@ -132,7 +132,7 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
           <div className="mt-5">
             <button
               onClick={onClose}
-              className="text-sm font-medium text-amber-500 dark:text-amber-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              className="text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
             >
               Close
             </button>

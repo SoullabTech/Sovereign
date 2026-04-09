@@ -142,106 +142,106 @@ export function BookingModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+      <div className="relative bg-maia-navy-900 border border-maia-navy-700 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 rounded-full text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:text-slate-200 hover:bg-maia-navy-800 transition-colors"
         >
           <X size={18} />
         </button>
 
         <div className="p-6">
           {/* Header */}
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 pr-8">
+          <h2 className="text-lg font-semibold text-white pr-8">
             {serviceName}
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          <p className="text-sm text-slate-300 mt-1">
             {formatDateDisplay(date)} &middot; {formatTime12(time)} &ndash; {formatTime12(endTime)}
           </p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">
+          <p className="text-xs text-slate-500">
             {timezone}
           </p>
 
           {/* Video conference note */}
           {hasVideoConference && (
             <>
-              <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
-              <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                <Video size={16} className="text-amber-500 flex-shrink-0" />
+              <div className="border-t border-maia-navy-700/50 my-4" />
+              <div className="flex items-center gap-2 text-sm text-slate-300">
+                <Video size={16} className="text-maia-gold flex-shrink-0" />
                 <span>Video conference info added after booking</span>
               </div>
             </>
           )}
 
-          <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
+          <div className="border-t border-maia-navy-700/50 my-4" />
 
           {/* Contact form */}
-          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-3 uppercase tracking-wider">
+          <p className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">
             Your contact info
           </p>
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs text-slate-400 mb-1">
                   First name
                 </label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700
-                             bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100
-                             focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                             placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-maia-navy-700
+                             bg-maia-navy-850 text-sm text-white
+                             focus:outline-none focus:border-maia-navy-600 focus:ring-2 focus:ring-maia-gold/30
+                             placeholder:text-slate-500 transition-all"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                <label className="block text-xs text-slate-400 mb-1">
                   Last name
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700
-                             bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100
-                             focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                             placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                  className="w-full px-3 py-2 rounded-lg border border-maia-navy-700
+                             bg-maia-navy-850 text-sm text-white
+                             focus:outline-none focus:border-maia-navy-600 focus:ring-2 focus:ring-maia-gold/30
+                             placeholder:text-slate-500 transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+              <label className="block text-xs text-slate-400 mb-1">
                 Email address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700
-                           bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100
-                           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                           placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                className="w-full px-3 py-2 rounded-lg border border-maia-navy-700
+                           bg-maia-navy-850 text-sm text-white
+                           focus:outline-none focus:border-maia-navy-600 focus:ring-2 focus:ring-maia-gold/30
+                           placeholder:text-slate-500 transition-all"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">
-                Notes <span className="text-neutral-400 dark:text-neutral-500">(optional)</span>
+              <label className="block text-xs text-slate-400 mb-1">
+                Notes <span className="text-slate-500">(optional)</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full px-3 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700
-                           bg-white dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100
-                           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                           placeholder:text-neutral-400 dark:placeholder:text-neutral-500 resize-none"
+                className="w-full px-3 py-2 rounded-lg border border-maia-navy-700
+                           bg-maia-navy-850 text-sm text-white
+                           focus:outline-none focus:border-maia-navy-600 focus:ring-2 focus:ring-maia-gold/30
+                           placeholder:text-slate-500 resize-none transition-all"
                 placeholder="Anything you'd like to share before the session"
               />
             </div>
@@ -249,7 +249,7 @@ export function BookingModal({
 
           {/* Error */}
           {error && (
-            <div className="mt-3 p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-300">
+            <div className="mt-3 p-2.5 rounded-lg bg-red-900/30 border border-red-800/50 text-xs text-red-300">
               {error}
             </div>
           )}
@@ -258,17 +258,16 @@ export function BookingModal({
           <div className="flex items-center justify-end gap-3 mt-5">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-400
-                         hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting || !firstName.trim() || !email.trim()}
-              className="px-6 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
-                         hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-colors flex items-center gap-2"
+              className="px-6 py-2 rounded-lg bg-maia-gold text-white text-sm font-medium
+                         hover:bg-maia-gold-hover disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-colors flex items-center gap-2 shadow-lg"
             >
               {submitting && <Loader2 size={14} className="animate-spin" />}
               {submitting ? 'Booking...' : 'Book'}

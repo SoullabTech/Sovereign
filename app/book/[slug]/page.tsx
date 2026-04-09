@@ -74,18 +74,18 @@ export default function BookPractitionerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="w-5 h-5 border-2 border-neutral-200 dark:border-neutral-700 border-t-amber-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
+        <div className="w-5 h-5 border-2 border-maia-navy-700 border-t-maia-gold rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
         <div className="text-center">
-          <p className="text-neutral-500 dark:text-neutral-400">{error}</p>
-          <a href="/" className="text-amber-500 hover:text-amber-600 mt-4 inline-block text-sm">
+          <p className="text-slate-400">{error}</p>
+          <a href="/" className="text-maia-gold hover:text-maia-gold-hover mt-4 inline-block text-sm">
             Go home
           </a>
         </div>
@@ -97,7 +97,7 @@ export default function BookPractitionerPage() {
   const initial = (practitioner?.name || '?')[0].toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#FDF8F0] dark:bg-neutral-950">
+    <div className="min-h-screen bg-maia-navy-900">
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Practitioner header */}
         <div className="text-center mb-10">
@@ -106,41 +106,41 @@ export default function BookPractitionerPage() {
             <img
               src={practitioner.photoUrl}
               alt={practitioner.name}
-              className="w-20 h-20 rounded-full mx-auto mb-4 object-cover"
+              className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border border-maia-navy-600"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl font-semibold text-amber-700 dark:text-amber-300">
+            <div className="w-20 h-20 rounded-full bg-maia-navy-700/60 border border-maia-navy-600 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl font-semibold text-maia-gold">
                 {initial}
               </span>
             </div>
           )}
 
-          <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-2xl font-semibold text-white">
             {displayName}
           </h1>
 
           {practitioner?.tagline && (
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="mt-1 text-sm text-slate-400">
               {practitioner.tagline}
             </p>
           )}
 
           {practitioner?.bio && (
-            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400 max-w-md mx-auto leading-relaxed">
+            <p className="mt-3 text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
               {practitioner.bio}
             </p>
           )}
         </div>
 
         {/* Section label */}
-        <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400 mb-4 uppercase tracking-wider">
+        <p className="text-sm font-medium text-slate-400 mb-4 uppercase tracking-wider">
           Choose a session to book
         </p>
 
         {/* Services list */}
         {services.length === 0 ? (
-          <p className="text-center text-neutral-500 dark:text-neutral-400 py-8">
+          <p className="text-center text-slate-400 py-8">
             No sessions are currently available for booking.
           </p>
         ) : (

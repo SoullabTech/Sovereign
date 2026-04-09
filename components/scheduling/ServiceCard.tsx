@@ -24,19 +24,19 @@ export function ServiceCard({ service, onSelect }: ServiceCardProps) {
   return (
     <button
       onClick={() => onSelect(service.id)}
-      className="w-full text-left p-6 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:border-amber-400 dark:hover:border-amber-500 bg-white dark:bg-neutral-900 transition-colors group"
+      className="w-full text-left p-6 rounded-lg border border-maia-navy-700 hover:border-maia-gold bg-maia-navy-850 hover:bg-maia-navy-800 transition-colors group"
     >
-      <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 group-hover:text-amber-600 dark:group-hover:text-amber-400">
+      <h3 className="text-lg font-medium text-white group-hover:text-maia-gold transition-colors">
         {service.name}
       </h3>
 
       {service.description && (
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
+        <p className="mt-2 text-sm text-slate-300 line-clamp-2">
           {service.description}
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="mt-4 flex items-center gap-4 text-sm text-slate-400">
         <span className="flex items-center gap-1">
           <Clock className="w-4 h-4" />
           {service.duration_minutes} min

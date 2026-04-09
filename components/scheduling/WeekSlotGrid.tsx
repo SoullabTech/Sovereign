@@ -57,7 +57,7 @@ const MONTH_NAMES = [
 export function WeekSlotGrid({
   slug,
   serviceId,
-  serviceDuration,
+  serviceDuration: _serviceDuration,
   onSlotSelect,
   timezone,
 }: WeekSlotGridProps) {
@@ -151,34 +151,41 @@ export function WeekSlotGrid({
     return d.getTime() === today.getTime();
   };
 
+  // Explicit 7-equal-column template. We use an inline style instead of
+  // `grid-cols-7` because the Tailwind shorthand combined with overflow-x-auto
+  // parents was allowing the grid to stretch beyond the viewport on some
+  // desktop widths, clipping the last 2 columns.
+  const sevenCols = { gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' } as const;
+
   return (
     <div className="w-full">
       {/* Title + timezone */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-base font-medium text-neutral-700 dark:text-neutral-300">
+        <h2 className="text-base font-medium text-slate-200">
           Select an appointment time
         </h2>
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+        <span className="text-xs text-slate-400">
           {timezone}
         </span>
       </div>
 
-      <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8 flex flex-col gap-6">
+      {/* Flex layout: reliable shrink-to-fit for week grid beside fixed sidebar */}
+      <div className="flex flex-col gap-6 md:flex-row md:gap-8">
         {/* Mini month calendar */}
-        <div className="hidden md:block">
+        <div className="hidden md:block md:w-60 md:flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setCalMonth(new Date(calYear, calMonthIdx - 1, 1))}
-              className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
+              className="p-1 rounded hover:bg-maia-navy-800 text-slate-400"
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            <span className="text-sm font-medium text-slate-200">
               {MONTH_NAMES[calMonthIdx]} {calYear}
             </span>
             <button
               onClick={() => setCalMonth(new Date(calYear, calMonthIdx + 1, 1))}
-              className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
+              className="p-1 rounded hover:bg-maia-navy-800 text-slate-400"
             >
               <ChevronRight size={14} />
             </button>
@@ -186,7 +193,7 @@ export function WeekSlotGrid({
 
           <div className="grid grid-cols-7 gap-0">
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-              <div key={i} className="text-center text-[10px] font-medium text-neutral-400 dark:text-neutral-500 py-1">
+              <div key={i} className="text-center text-[10px] font-medium text-slate-500 py-1">
                 {d}
               </div>
             ))}
@@ -203,10 +210,10 @@ export function WeekSlotGrid({
                   onClick={() => handleCalDayClick(day)}
                   className={`
                     w-7 h-7 mx-auto rounded-full text-xs font-medium transition-colors
-                    ${isPast ? 'text-neutral-300 dark:text-neutral-600 cursor-default' : 'hover:bg-amber-50 dark:hover:bg-amber-900/20'}
-                    ${isTodayDay ? 'bg-amber-500 text-white hover:bg-amber-600' : ''}
-                    ${inWeek && !isTodayDay ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300' : ''}
-                    ${!isPast && !isTodayDay && !inWeek ? 'text-neutral-700 dark:text-neutral-300' : ''}
+                    ${isPast ? 'text-slate-600 cursor-default' : 'hover:bg-maia-navy-800'}
+                    ${isTodayDay ? 'bg-maia-gold text-white hover:bg-maia-gold-hover' : ''}
+                    ${inWeek && !isTodayDay ? 'bg-maia-navy-700/60 text-maia-gold' : ''}
+                    ${!isPast && !isTodayDay && !inWeek ? 'text-slate-300' : ''}
                   `}
                 >
                   {day}
@@ -216,28 +223,28 @@ export function WeekSlotGrid({
           </div>
         </div>
 
-        {/* Week slot grid */}
-        <div className="flex-1 min-w-0 overflow-x-auto">
+        {/* Week slot grid — flex-1 + min-w-0 reliably constrains to remaining width */}
+        <div className="flex-1 min-w-0">
           {/* Week navigation */}
           <div className="flex items-center gap-2 mb-4">
             <button
               onClick={goPrevWeek}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400
+              className="p-1.5 rounded-full hover:bg-maia-navy-800 text-slate-400
                          disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={goNextWeek}
-              className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors"
+              className="p-1.5 rounded-full hover:bg-maia-navy-800 text-slate-400 transition-colors"
             >
               <ChevronRight size={18} />
             </button>
           </div>
 
-          {/* Day columns */}
-          <div className="grid grid-cols-7 gap-2" style={{ minWidth: '480px' }}>
+          {/* Day columns — always 7 equal columns, no horizontal scroll */}
+          <div className="grid gap-1.5 sm:gap-2" style={sevenCols}>
             {weekDays.map((day) => {
               const key = formatDateKey(day);
               const daySlots = slotsByDate[key] || [];
@@ -245,38 +252,37 @@ export function WeekSlotGrid({
               const isTodayCol = day.getTime() === today.getTime();
 
               return (
-                <div key={key} className="text-center">
+                <div key={key} className="min-w-0 text-center">
                   {/* Day header */}
                   <div className="mb-3">
-                    <div className="text-[10px] font-medium text-neutral-400 dark:text-neutral-500 tracking-wider">
+                    <div className="text-[10px] font-medium text-slate-500 tracking-wider">
                       {DAY_ABBRS[day.getDay()]}
                     </div>
                     <div className={`
                       inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium mt-0.5
-                      ${isTodayCol ? 'bg-amber-500 text-white' : 'text-neutral-700 dark:text-neutral-300'}
+                      ${isTodayCol ? 'bg-maia-gold text-white' : 'text-slate-200'}
                     `}>
                       {day.getDate()}
                     </div>
                   </div>
 
                   {/* Slots */}
-                  <div className="space-y-2">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {loading ? (
-                      <div className="h-8 bg-neutral-100 dark:bg-neutral-800 rounded-full animate-pulse" />
+                      <div className="h-8 bg-maia-navy-800 rounded-full animate-pulse" />
                     ) : isPast ? (
-                      <span className="text-neutral-300 dark:text-neutral-600 text-sm">&mdash;</span>
+                      <span className="text-slate-600 text-sm">&mdash;</span>
                     ) : daySlots.length === 0 ? (
-                      <span className="text-neutral-300 dark:text-neutral-600 text-sm">&mdash;</span>
+                      <span className="text-slate-600 text-sm">&mdash;</span>
                     ) : (
                       daySlots.map((slot) => (
                         <button
                           key={slot.start}
                           onClick={() => onSlotSelect(key, slot.start)}
-                          className="w-full py-2 rounded-full text-xs font-medium
-                                     border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300
-                                     hover:bg-amber-500 hover:text-white hover:border-amber-500
-                                     dark:hover:bg-amber-500 dark:hover:text-white dark:hover:border-amber-500
-                                     transition-colors"
+                          className="w-full px-1 py-2 rounded-full text-[11px] sm:text-xs font-medium
+                                     border border-maia-navy-600 bg-maia-navy-850 text-slate-200
+                                     hover:bg-maia-gold hover:border-maia-gold hover:text-white
+                                     transition-colors whitespace-nowrap overflow-hidden"
                         >
                           {formatTime12(slot.start)}
                         </button>
