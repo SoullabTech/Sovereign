@@ -18,9 +18,12 @@ interface WeekSlotGridProps {
 }
 
 function startOfWeek(date: Date): Date {
+  // Week starts on Monday. getDay(): 0=Sun, 1=Mon, ..., 6=Sat
+  // Days to subtract to reach Monday: Sun→6, Mon→0, Tue→1, ...
   const d = new Date(date);
   const day = d.getDay();
-  d.setDate(d.getDate() - day);
+  const daysFromMonday = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - daysFromMonday);
   d.setHours(0, 0, 0, 0);
   return d;
 }
@@ -120,10 +123,12 @@ export function WeekSlotGrid({
   // Week days
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  // Mini calendar
+  // Mini calendar (Monday-first)
   const calYear = calMonth.getFullYear();
   const calMonthIdx = calMonth.getMonth();
-  const firstDayOfMonth = new Date(calYear, calMonthIdx, 1).getDay();
+  const firstDayRaw = new Date(calYear, calMonthIdx, 1).getDay(); // 0=Sun..6=Sat
+  // Convert to Monday-first index: Mon=0, Tue=1, ..., Sun=6
+  const firstDayOfMonth = firstDayRaw === 0 ? 6 : firstDayRaw - 1;
   const daysInMonth = new Date(calYear, calMonthIdx + 1, 0).getDate();
 
   const calDays: (number | null)[] = [];
@@ -180,7 +185,7 @@ export function WeekSlotGrid({
           </div>
 
           <div className="grid grid-cols-7 gap-0">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
               <div key={i} className="text-center text-[10px] font-medium text-neutral-400 dark:text-neutral-500 py-1">
                 {d}
               </div>
