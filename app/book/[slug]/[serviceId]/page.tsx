@@ -95,20 +95,20 @@ export default function BookSlotPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="w-5 h-5 border-2 border-neutral-200 dark:border-neutral-700 border-t-amber-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
+        <div className="w-5 h-5 border-2 border-maia-navy-700 border-t-maia-gold rounded-full animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-950">
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
         <div className="text-center">
-          <p className="text-neutral-500 dark:text-neutral-400">{error}</p>
+          <p className="text-slate-400">{error}</p>
           <button
             onClick={() => router.back()}
-            className="text-amber-500 hover:text-amber-600 mt-4 text-sm"
+            className="text-maia-gold hover:text-maia-gold-hover mt-4 text-sm"
           >
             Go back
           </button>
@@ -118,13 +118,13 @@ export default function BookSlotPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F0] dark:bg-neutral-950">
+    <div className="min-h-screen bg-maia-navy-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push(`/book/${slug}`)}
-            className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
+            className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-200 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to services
@@ -132,23 +132,23 @@ export default function BookSlotPage() {
 
           <div className="flex items-start gap-4">
             {/* Avatar placeholder */}
-            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+            <div className="w-10 h-10 rounded-full bg-maia-navy-700/60 border border-maia-navy-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-semibold text-maia-gold">
                 {(practitioner?.name || '?')[0].toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-slate-400">
                 {practitioner?.businessName || practitioner?.name}
               </p>
-              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <h1 className="text-xl font-semibold text-white">
                 {service?.name}
               </h1>
             </div>
           </div>
 
           {/* Meta */}
-          <div className="mt-3 flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="mt-3 flex items-center gap-4 text-sm text-slate-400">
             <span className="flex items-center gap-1.5">
               <Clock size={14} />
               {service?.duration_minutes} min
@@ -160,7 +160,7 @@ export default function BookSlotPage() {
           </div>
         </div>
 
-        <div className="border-t border-neutral-100 dark:border-neutral-800 pt-6">
+        <div className="border-t border-maia-navy-700/40 pt-6">
           {/* Week slot grid */}
           {service && (
             <WeekSlotGrid

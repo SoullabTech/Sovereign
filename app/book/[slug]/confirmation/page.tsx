@@ -92,16 +92,16 @@ export default function BookingConfirmationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
-        <div className="animate-pulse text-neutral-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
+        <div className="animate-pulse text-slate-400">Loading...</div>
       </div>
     );
   }
 
   if (error && !booking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
-        <p className="text-neutral-500">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-maia-navy-900">
+        <p className="text-slate-400">{error}</p>
       </div>
     );
   }
@@ -109,27 +109,27 @@ export default function BookingConfirmationPage() {
   if (!booking) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
+    <div className="min-h-screen bg-maia-navy-900">
       <div className="max-w-lg mx-auto px-4 py-12">
         {/* Status icon */}
         <div className="text-center mb-8">
           {cancelled ? (
             <>
-              <XCircle className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <XCircle className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-semibold text-white">
                 Booking Cancelled
               </h1>
-              <p className="text-neutral-500 dark:text-neutral-400 mt-2">
+              <p className="text-slate-400 mt-2">
                 This session has been cancelled.
               </p>
             </>
           ) : (
             <>
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+              <CheckCircle className="w-16 h-16 text-maia-gold mx-auto mb-4" />
+              <h1 className="text-2xl font-semibold text-white">
                 Booking Confirmed
               </h1>
-              <p className="text-neutral-500 dark:text-neutral-400 mt-2">
+              <p className="text-slate-400 mt-2">
                 Your session has been booked with {booking.practitionerName}.
               </p>
             </>
@@ -137,30 +137,30 @@ export default function BookingConfirmationPage() {
         </div>
 
         {/* Details card */}
-        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6 space-y-4">
+        <div className="bg-maia-navy-850 rounded-lg border border-maia-navy-700 p-6 space-y-4">
           <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+            <Calendar className="w-5 h-5 text-maia-gold mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+              <p className="text-sm font-medium text-white">
                 {booking.serviceName}
               </p>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="text-sm text-slate-300">
                 {formatDateTime(booking.scheduledStart, booking.bookerTimezone)}
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <Clock className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            <Clock className="w-5 h-5 text-maia-gold mt-0.5 shrink-0" />
+            <p className="text-sm text-slate-300">
               {booking.durationMinutes} minutes
             </p>
           </div>
 
           <div className="flex items-start gap-3">
-            <User className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+            <User className="w-5 h-5 text-maia-gold mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-sm text-slate-300">
                 {booking.clientName} ({booking.clientEmail})
               </p>
             </div>
@@ -173,7 +173,7 @@ export default function BookingConfirmationPage() {
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="text-sm text-red-500 hover:text-red-600 disabled:text-neutral-400"
+              className="text-sm text-red-400 hover:text-red-300 disabled:text-slate-500 transition-colors"
             >
               {cancelling ? 'Cancelling...' : 'Cancel this booking'}
             </button>
@@ -184,7 +184,7 @@ export default function BookingConfirmationPage() {
         <div className="mt-8 text-center">
           <a
             href={`/book/${slug}`}
-            className="text-sm text-amber-500 hover:text-amber-600"
+            className="text-sm text-maia-gold hover:text-maia-gold-hover transition-colors"
           >
             Book another session
           </a>
