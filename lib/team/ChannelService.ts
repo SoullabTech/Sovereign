@@ -1,9 +1,19 @@
 // SoulComms — Channel Service
 // All DB operations for team messaging. Uses local PostgreSQL only.
 
-import { query } from '@/lib/db/postgres';
+import { query, transaction } from '@/lib/db/postgres';
 import type { TeamChannel, TeamMessage, MessageReaction, PromptScaffoldField, ChannelMember, MessageKind } from './types';
 import { notifyChannelMentions, notifyThreadReply } from '@/lib/team/notifications';
+import { getActiveParticipants } from '@/lib/team/getActiveParticipants';
+
+// System channels that can never be made private (or made public).
+// Mirrors the delete-protection in app/api/team/admin/channels/route.ts.
+const SYSTEM_CHANNEL_SLUGS = new Set(['general', 'announcements']);
+
+export type SetVisibilityErrorCode =
+  | 'NOT_FOUND'
+  | 'SYSTEM_CHANNEL'
+  | 'ALREADY_IN_TARGET_STATE';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHANNELS
@@ -526,6 +536,130 @@ export async function removeChannelMember(channelId: string, memberId: string): 
     `DELETE FROM team_channel_members WHERE channel_id = $1 AND member_id = $2`,
     [channelId, memberId]
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISIBILITY (public ⇄ private)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SetVisibilityResult =
+  | {
+      ok: true;
+      isPrivate: boolean;
+      seededMemberCount: number;
+      slug: string;
+    }
+  | {
+      ok: false;
+      code: SetVisibilityErrorCode;
+      message?: string;
+    };
+
+/**
+ * Flip a channel between public and private.
+ *
+ * Public → private:
+ *   - Seeds team_channel_members with active participants (sender of ≥1
+ *     non-deleted message) + the channel creator + the requester.
+ *   - Requester is upgraded to 'owner' regardless of prior role.
+ *   - Uses lib/team/getActiveParticipants.ts as the single source of truth
+ *     for the participant set (also used by the preview endpoint).
+ *
+ * Private → public:
+ *   - Flips the flag only. team_channel_members rows are PRESERVED so role
+ *     state survives a round trip back to private.
+ *
+ * Refuses (returns { ok: false, code }):
+ *   - System channels (general, announcements)
+ *   - No-op flips (already in target state)
+ *   - Nonexistent channels
+ *
+ * Runs inside a transaction with FOR UPDATE on the channel row, so two
+ * simultaneous flips serialize cleanly. Validation failures are returned
+ * as result objects rather than thrown so the transaction commits cleanly
+ * (no rollback noise in logs for expected business errors).
+ */
+export async function setChannelVisibility(
+  channelId: string,
+  isPrivate: boolean,
+  requesterId: string
+): Promise<SetVisibilityResult> {
+  return transaction(async (client): Promise<SetVisibilityResult> => {
+    // Lock the channel row
+    const cur = await client.query<{ is_private: boolean; slug: string }>(
+      `SELECT is_private, slug
+         FROM team_channels
+        WHERE id = $1
+        FOR UPDATE`,
+      [channelId]
+    );
+    const row = cur.rows[0];
+    if (!row) {
+      return { ok: false, code: 'NOT_FOUND' };
+    }
+
+    if (SYSTEM_CHANNEL_SLUGS.has(row.slug)) {
+      return {
+        ok: false,
+        code: 'SYSTEM_CHANNEL',
+        message: `#${row.slug} is a system channel and cannot change visibility`,
+      };
+    }
+
+    if (row.is_private === isPrivate) {
+      return { ok: false, code: 'ALREADY_IN_TARGET_STATE' };
+    }
+
+    // Flip the flag
+    await client.query(
+      `UPDATE team_channels
+          SET is_private = $1, updated_at = NOW()
+        WHERE id = $2`,
+      [isPrivate, channelId]
+    );
+
+    let seededMemberCount = 0;
+
+    if (isPrivate) {
+      // Resolve the participant set via the shared helper.
+      // Pass the transaction client so it sees the locked row.
+      const participants = await getActiveParticipants(channelId, client);
+      const ids = Array.from(new Set([...participants, requesterId]));
+
+      // Seed any participant who isn't already a channel member.
+      const inserted = await client.query<{ member_id: string }>(
+        `INSERT INTO team_channel_members (channel_id, member_id, role, invited_by, joined_at)
+         SELECT $1, m.id, 'member', $2, NOW()
+           FROM members m
+          WHERE m.id = ANY($3::uuid[])
+            AND m.id NOT IN (
+              SELECT member_id FROM team_channel_members WHERE channel_id = $1
+            )
+         ON CONFLICT (channel_id, member_id) DO NOTHING
+         RETURNING member_id`,
+        [channelId, requesterId, ids]
+      );
+      seededMemberCount = inserted.rowCount ?? 0;
+
+      // Ensure requester is the owner (idempotent upgrade if they were
+      // already a 'member', or fresh insert if seed missed them).
+      await client.query(
+        `INSERT INTO team_channel_members (channel_id, member_id, role, invited_by, joined_at)
+         VALUES ($1, $2, 'owner', $2, NOW())
+         ON CONFLICT (channel_id, member_id)
+           DO UPDATE SET role = 'owner'`,
+        [channelId, requesterId]
+      );
+    }
+    // private → public: do not touch team_channel_members; preserve roles.
+
+    return {
+      ok: true,
+      isPrivate,
+      seededMemberCount,
+      slug: row.slug,
+    };
+  });
 }
 
 export async function heartbeat(memberId: string): Promise<void> {
