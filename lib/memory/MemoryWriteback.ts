@@ -374,7 +374,16 @@ export const MemoryWritebackService = {
       RETURNING id
     `, [
       userId,
-      'turn_capsule',
+      // NOTE (2026-04-09 Phase A.1): Changed from 'turn_capsule' to 'pattern' —
+      // developmental_memories.memory_type has a CHECK constraint that only allows:
+      // effective_practice, ineffective_practice, spiral_transition, breakthrough_emergence,
+      // ain_deliberation, correction, pattern, emergent_pattern.
+      // 'turn_capsule' was never a valid value and was causing writeback to fail loudly
+      // after the Phase A column-drift fix exposed the underlying check-constraint drift.
+      // 'pattern' is the closest semantic match for a generic significant-exchange memory.
+      // Future work: route specific cases to more precise types (correction when the user
+      // corrects MAIA, effective_practice when significance >= 0.8, etc.) — tracked in Phase B.
+      'pattern',
       JSON.stringify(triggerEvent),
       facetCode || null,
       significance,
@@ -389,7 +398,7 @@ export const MemoryWritebackService = {
     // Confirms writeback is actually landing. See MAIA_MEMORY_CANON_v1.0.md §VII.
     console.log('[MemoryWriteback] success', {
       userId,
-      memoryType: 'turn_capsule',
+      memoryType: 'pattern',
       memoryId: insertedId,
       facetCode: facetCode || null,
       significance,
