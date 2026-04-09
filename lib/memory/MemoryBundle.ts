@@ -207,6 +207,10 @@ export const MemoryBundleService = {
   ): Promise<MemoryCandidate[]> {
     try {
       // First try non-vector ranking with confidence decay (works even when tables are empty/no embeddings)
+      // NOTE (2026-04-09): scope/authority clauses removed — columns do not exist in the production schema.
+      // This was the root cause of silent memory retrieval failure. See MAIA_MEMORY_CANON_v1.0.md §VIII
+      // (schema drift = canon violation). Global canon memory is a future feature: when reintroduced,
+      // re-add a WHERE clause against columns that actually exist in developmental_memories.
       const nonVectorSql = `
         SELECT
           id,
@@ -229,10 +233,7 @@ export const MemoryBundleService = {
             0.10 * LEAST(recall_count / 10.0, 1.0)
           ) AS score
         FROM developmental_memories
-        WHERE (
-          (user_id = $1 AND scope = 'USER')
-          OR (scope = 'GLOBAL' AND authority = 'CANON')
-        )
+        WHERE user_id = $1
           AND content_text IS NOT NULL
           AND (valid_to IS NULL OR valid_to > NOW())
         ORDER BY score DESC
@@ -263,6 +264,7 @@ export const MemoryBundleService = {
         return [];
       }
 
+      // NOTE (2026-04-09): scope/authority removed from SELECT and WHERE — see non-vector query above.
       const vectorSql = `
         SELECT
           id,
@@ -272,7 +274,6 @@ export const MemoryBundleService = {
           formed_at,
           memory_type,
           entity_tags,
-          scope,
           1 - (vector_embedding <=> $1::vector) AS similarity,
           (
             0.50 * (1 - (vector_embedding <=> $1::vector)) +
@@ -280,10 +281,7 @@ export const MemoryBundleService = {
             0.20 * EXP(-EXTRACT(EPOCH FROM (NOW() - formed_at)) / 86400.0 / 30.0)
           ) AS composite_score
         FROM developmental_memories
-        WHERE (
-          (user_id = $2 AND scope = 'USER')
-          OR (scope = 'GLOBAL' AND authority = 'CANON')
-        )
+        WHERE user_id = $2
           AND vector_embedding IS NOT NULL
         ORDER BY composite_score DESC
         LIMIT 8

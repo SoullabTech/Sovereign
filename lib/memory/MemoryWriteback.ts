@@ -330,6 +330,11 @@ export const MemoryWritebackService = {
 
     const contentText = this.formatCapsuleText(capsule);
 
+    // NOTE (2026-04-09): Removed columns that do not exist in production schema:
+    // authority, scope, source, immutable, updated_at. These were the cause of silent
+    // writeback failure — developmental_memories was stuck at 0 rows platform-wide.
+    // See MAIA_MEMORY_CANON_v1.0.md §VIII. Column set below is verified against the
+    // actual developmental_memories table structure.
     const result = await query(`
       INSERT INTO developmental_memories (
         user_id,
@@ -344,15 +349,10 @@ export const MemoryWritebackService = {
         source_beads_task_id,
         source_ain_session_id,
         source_consciousness_entry_id,
-        authority,
-        scope,
-        source,
-        immutable,
         content_text,
         recall_count,
         last_recalled_at,
-        formed_at,
-        updated_at
+        formed_at
       ) VALUES (
         $1,
         $2,
@@ -366,14 +366,9 @@ export const MemoryWritebackService = {
         NULL,
         $7,
         NULL,
-        'MEMORY',
-        'USER',
-        'chat',
-        FALSE,
         $8,
         0,
         NULL,
-        NOW(),
         NOW()
       )
       RETURNING id
@@ -388,7 +383,19 @@ export const MemoryWritebackService = {
       contentText,
     ]);
 
-    return result.rows[0]?.id;
+    const insertedId = result.rows[0]?.id;
+
+    // TEMP DIAGNOSTIC (Phase A — remove in Phase B when memoryHealth dashboard lands):
+    // Confirms writeback is actually landing. See MAIA_MEMORY_CANON_v1.0.md §VII.
+    console.log('[MemoryWriteback] success', {
+      userId,
+      memoryType: 'turn_capsule',
+      memoryId: insertedId,
+      facetCode: facetCode || null,
+      significance,
+    });
+
+    return insertedId;
   },
 
   /**

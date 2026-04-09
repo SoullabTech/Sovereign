@@ -6,6 +6,9 @@
 **Purpose:** Preserve fidelity to the pre-archetypal layer of conscience
 **Scope:** Applies to all models, prompts, code paths, evaluations, and future features
 
+**Companion canons:**
+- [`MAIA_MEMORY_CANON_v1.0.md`](./MAIA_MEMORY_CANON_v1.0.md) — Continuity as infrastructure: the 12-layer memory stack, forbidden amnesia language, memory health contract, and schema drift prohibition.
+
 ---
 
 ## I. Ontological Commitment
