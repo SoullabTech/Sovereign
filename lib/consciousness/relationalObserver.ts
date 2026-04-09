@@ -13,6 +13,7 @@
  */
 
 import { query, queryOne, insertOne } from '@/lib/db/postgres';
+import { detectPatterns, DEFAULT_PATTERN_TTL_DAYS } from '@/lib/relationships/patternDetection';
 
 // Signal words that indicate relational content
 const RELATIONAL_SIGNALS = [
@@ -152,14 +153,44 @@ async function _observeAsync(
     console.log(`🔗 [RelationalObserver] Created catch-all relationship: ${relationshipId}`);
   }
 
-  // Insert the observation as a relationship entry
-  await insertOne('relationship_entries', {
+  // Pattern detection v2 — structural, multi-hit. Runs on the user message
+  // only (MAIA's response is deliberately excluded so the detector cannot
+  // chase its own output). See: lib/relationships/patternDetection.ts.
+  const patternHits = detectPatterns(userMessage);
+
+  // Insert the observation as a relationship entry. pattern_hint gets the
+  // top-confidence hit (if any) for continuity with the existing context
+  // bridge; the full multi-hit record lives in relationship_entry_patterns.
+  const topHit = patternHits[0] ?? null;
+  const entryRow = await insertOne('relationship_entries', {
     relationship_id: relationshipId,
     member_id: memberId,
     kind: detection.entryKind,
     content: detection.summary,
     confidence: detection.confidence,
+    pattern_hint: topHit?.patternId ?? null,
   });
+
+  // Fan out all concurrent pattern hits to the side table. Expires_at gives
+  // each hit a natural shelf life — relational dynamics are stateful, not
+  // fixed traits. See: database/migrations/20260409000001_relationship_entry_patterns.sql.
+  if (patternHits.length > 0) {
+    const expiresAt = new Date(Date.now() + DEFAULT_PATTERN_TTL_DAYS * 24 * 60 * 60 * 1000);
+    for (const hit of patternHits) {
+      await insertOne('relationship_entry_patterns', {
+        entry_id: entryRow.id,
+        relationship_id: relationshipId,
+        member_id: memberId,
+        pattern_id: hit.patternId,
+        confidence: hit.confidence,
+        evidence: hit.evidence,
+        expires_at: expiresAt.toISOString(),
+      });
+    }
+    console.log(
+      `🔗 [RelationalObserver] Pattern hits: ${patternHits.map(h => `${h.patternId}@${h.confidence.toFixed(2)}`).join(', ')}`
+    );
+  }
 
   // Update the relationship's timestamp
   await query(
