@@ -42,11 +42,6 @@ const LEAD_IN_POOLS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
     'There\u2019s a longer arc here\u2026 this didn\u2019t start today.',
     'Something has been unfolding\u2026 quietly, across time.',
   ],
-  depth_emergence: [
-    'There may be more beneath this\u2026 something that hasn\u2019t surfaced yet.',
-    'Something deeper is stirring here\u2026 not quite words yet.',
-    'This touches something beyond the surface\u2026 worth staying with.',
-  ],
 };
 
 // --- Keyword patterns per intent ---
@@ -59,7 +54,6 @@ const INTENT_KEYWORDS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
   change_process: ['change', 'shifting', 'transform', 'letting go', 'moving on', 'turning point', 'transition', 'evolving'],
   pattern_encounter: ['pattern', 'loop', 'again', 'stuck', 'keep doing', 'repeating', 'cycle', 'same thing', 'over and over', 'habit', 'recurring'],
   journey_recognition: ['been through', 'journey', 'growing', 'over time', 'looking back', 'how far', 'progress', 'evolution', 'where i was', 'different now', 'changed'],
-  depth_emergence: ['meaning', 'soul', 'sacred', 'beneath', 'deeper', 'spiritual', 'symbol', 'dream', 'mystery', 'why am i here', 'existential', 'divine', 'purpose'],
 };
 
 // --- Detection ---
@@ -131,8 +125,6 @@ export function getIntentRoute(intent: MaiaIntent): IntentRoute {
       return { intent, capability: 'patterns', openUi: 'panel' };
     case 'journey_recognition':
       return { intent, capability: 'journey', openUi: 'panel' };
-    case 'depth_emergence':
-      return { intent, capability: 'depth', openUi: 'panel' };
     default:
       return { intent, capability: 'conversation', openUi: 'none' };
   }
@@ -148,7 +140,6 @@ const ACTION_LABELS: Record<Exclude<MaiaIntent, 'unknown'>, string> = {
   change_process: 'Track this change',
   pattern_encounter: 'Step into this pattern',
   journey_recognition: 'See where you\u2019ve been',
-  depth_emergence: 'Go deeper',
 };
 
 function pickRandom<T>(arr: T[]): T {
@@ -173,11 +164,10 @@ export function buildUiAction(
     change_process: 'open_changes',
     pattern_encounter: 'enter_patterns',
     journey_recognition: 'enter_journey',
-    depth_emergence: 'enter_depth',
   };
 
   const WORLD_INTENTS: Set<string> = new Set([
-    'pattern_encounter', 'journey_recognition', 'depth_emergence',
+    'pattern_encounter', 'journey_recognition',
   ]);
 
   return {

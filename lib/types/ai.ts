@@ -46,7 +46,6 @@ export type MaiaIntent =
   | 'change_process'
   | 'pattern_encounter'
   | 'journey_recognition'
-  | 'depth_emergence'
   | 'unknown';
 
 export type RoutedCapability =
@@ -57,7 +56,6 @@ export type RoutedCapability =
   | 'changes'
   | 'patterns'
   | 'journey'
-  | 'depth'
   | 'conversation';
 
 export interface IntentRoute {
@@ -75,7 +73,6 @@ export interface MaiaUiAction {
     | 'open_changes'
     | 'enter_patterns'
     | 'enter_journey'
-    | 'enter_depth'
     | 'none';
   label?: string;
   leadIn?: string;

@@ -3,23 +3,28 @@
 /**
  * IdeasPanel — Right panel for the Ideas world
  *
- * Generative emergence. A place for thoughts that are forming but not yet structured.
- * Fetches saved ideas from /api/ideas and displays them as cards.
- * New ideas arrive via the toast confirmation flow in OracleConversation.
+ * Shows the member's active ideas (most recently returned-to first).
+ * Each row links into /maia/ideas/[id] — the single-idea workspace where
+ * reflections, decisions, and shifts accumulate over time.
+ *
+ * This panel is a shortcut into Ideas, not an editor. All creation and
+ * iteration happens in the workspace page.
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { Lightbulb, Sparkles, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Lightbulb, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
-interface Idea {
+interface IdeaListItem {
   id: string;
-  title: string | null;
-  description: string | null;
+  title: string;
+  framing: string | null;
   status: string;
-  confidence: number | null;
-  source: string;
-  capture_mode: string;
-  created_at: string;
+  last_entered_at: string;
+  last_decision_at: string | null;
+  block_count: number;
+  last_block_at: string | null;
 }
 
 interface IdeasPanelProps {
@@ -27,12 +32,13 @@ interface IdeasPanelProps {
 }
 
 export function IdeasPanel({ explorerId }: IdeasPanelProps) {
-  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const router = useRouter();
+  const [ideas, setIdeas] = useState<IdeaListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchIdeas = useCallback(async () => {
     try {
-      const res = await fetch('/api/ideas?limit=20');
+      const res = await apiFetch('/api/ideas?limit=20');
       if (!res.ok) return;
       const data = await res.json();
       if (data.success && Array.isArray(data.ideas)) {
@@ -49,9 +55,9 @@ export function IdeasPanel({ explorerId }: IdeasPanelProps) {
     fetchIdeas();
   }, [fetchIdeas]);
 
-  // Re-fetch when panel becomes visible (ideas may have been saved via toast)
+  // Re-fetch periodically — ideas may be captured via conversation toast
   useEffect(() => {
-    const interval = setInterval(fetchIdeas, 30000); // Refresh every 30s
+    const interval = setInterval(fetchIdeas, 30000);
     return () => clearInterval(interval);
   }, [fetchIdeas]);
 
@@ -61,7 +67,7 @@ export function IdeasPanel({ explorerId }: IdeasPanelProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-stone-500 font-light">
-          Thoughts that are forming. Not yet structured — just emerging.
+          A place to stay with an idea over time.
         </p>
         {hasIdeas && (
           <button
@@ -74,16 +80,21 @@ export function IdeasPanel({ explorerId }: IdeasPanelProps) {
         )}
       </div>
 
-      {/* Capture prompt */}
-      <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 text-center">
-        <Lightbulb className="w-5 h-5 text-amber-400/50 mx-auto mb-2" />
-        <p className="text-sm text-amber-300/70 font-light">
-          Speak your thoughts freely.
-        </p>
-        <p className="text-xs text-stone-500 mt-1">
-          MAIA can capture ideas as they surface during conversation.
-        </p>
-      </div>
+      {/* Entry CTA — always visible, routes to list page */}
+      <button
+        onClick={() => router.push('/maia/ideas')}
+        className="w-full flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all text-left group"
+      >
+        <Plus className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400/90 transition-colors flex-shrink-0" />
+        <div>
+          <p className="text-sm text-amber-300/80 group-hover:text-amber-300 font-light">
+            Open Ideas
+          </p>
+          <p className="text-[11px] text-stone-500 mt-0.5">
+            Reflections, decisions, shifts — held together.
+          </p>
+        </div>
+      </button>
 
       {/* Ideas list */}
       {loading ? (
@@ -92,15 +103,27 @@ export function IdeasPanel({ explorerId }: IdeasPanelProps) {
         </div>
       ) : hasIdeas ? (
         <div className="space-y-2 pt-2">
-          {ideas.map((idea) => (
-            <IdeaCard key={idea.id} idea={idea} />
+          {ideas.slice(0, 6).map((idea) => (
+            <IdeaRow
+              key={idea.id}
+              idea={idea}
+              onClick={() => router.push(`/maia/ideas/${idea.id}`)}
+            />
           ))}
+          {ideas.length > 6 && (
+            <button
+              onClick={() => router.push('/maia/ideas')}
+              className="w-full text-center text-[11px] text-stone-600 hover:text-amber-400/70 transition-colors pt-2"
+            >
+              View all {ideas.length} ideas
+            </button>
+          )}
         </div>
       ) : (
         <div className="pt-4 text-center">
-          <Sparkles className="w-4 h-4 text-stone-600 mx-auto mb-1" />
+          <Lightbulb className="w-4 h-4 text-stone-600 mx-auto mb-1" />
           <p className="text-[10px] text-stone-600 font-light">
-            Ideas will gather here as they emerge
+            No ideas yet
           </p>
         </div>
       )}
@@ -108,29 +131,41 @@ export function IdeasPanel({ explorerId }: IdeasPanelProps) {
   );
 }
 
-function IdeaCard({ idea }: { idea: Idea }) {
-  const displayTitle = idea.title || 'Untitled thought';
-  const timeAgo = formatTimeAgo(idea.created_at);
-
+function IdeaRow({ idea, onClick }: { idea: IdeaListItem; onClick: () => void }) {
+  const timeAgo = formatTimeAgo(idea.last_entered_at);
   return (
-    <div className="p-3 rounded-lg bg-stone-900/50 border border-stone-800/50 hover:border-amber-500/20 transition-colors">
-      <div className="flex items-start gap-2">
-        <Lightbulb className="w-3.5 h-3.5 text-amber-400/40 mt-0.5 flex-shrink-0" />
+    <button
+      onClick={onClick}
+      className="w-full p-3 rounded-lg bg-stone-900/40 hover:bg-stone-900/70 border border-stone-800/50 hover:border-amber-500/30 transition-all text-left group"
+    >
+      <div className="flex items-start gap-2 min-w-0">
+        <Lightbulb className="w-3.5 h-3.5 text-amber-400/40 group-hover:text-amber-400/70 mt-0.5 flex-shrink-0 transition-colors" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-amber-300/80 font-medium truncate">
-            {displayTitle}
+          <p className="text-xs text-amber-300/85 group-hover:text-amber-200 font-medium truncate transition-colors">
+            {idea.title}
           </p>
-          {idea.description && (
-            <p className="text-[11px] text-stone-500 mt-0.5 line-clamp-2 leading-relaxed">
-              {idea.description}
+          {idea.framing && (
+            <p className="text-[11px] text-stone-500 mt-0.5 line-clamp-1 leading-relaxed">
+              {idea.framing}
             </p>
           )}
-          <p className="text-[10px] text-stone-600 mt-1">
-            {timeAgo}
-          </p>
+          <div className="flex items-center gap-2 mt-1 text-[10px] text-stone-600">
+            <span>{timeAgo}</span>
+            {idea.block_count > 0 && (
+              <>
+                <span>·</span>
+                <span>{idea.block_count} {idea.block_count === 1 ? 'entry' : 'entries'}</span>
+              </>
+            )}
+            {idea.last_decision_at && (
+              <span className="flex items-center gap-0.5 text-emerald-500/60">
+                <CheckCircle2 className="w-2.5 h-2.5" />
+              </span>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 

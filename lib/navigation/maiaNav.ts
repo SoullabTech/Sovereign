@@ -53,14 +53,6 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     tooltip: 'Constellation & pattern field',
   },
   {
-    id: 'depth',
-    label: 'Depth',
-    icon: Layers,
-    route: '/worlds/depth',
-    classification: 'world',
-    tooltip: 'Meaning well & symbolic layer',
-  },
-  {
     id: 'journal',
     label: 'Journal',
     icon: BookOpen,
@@ -186,7 +178,6 @@ export const MAIA_UTILITIES: MaiaUtilityItem[] = [
 export const MAIA_CONTEXTUAL_PANELS: MaiaContextualPanel[] = [
   { id: 'session-tools', world: null, label: 'Session Tools' },
   { id: 'patterns-view', world: 'patterns', label: 'Patterns' },
-  { id: 'depth-tools', world: 'depth', label: 'Depth' },
   { id: 'journal-capture', world: 'journal', label: 'Journal' },
   { id: 'ideas-view', world: 'ideas', label: 'Ideas' },
   { id: 'relationships-view', world: 'relationships', label: 'Relationships' },

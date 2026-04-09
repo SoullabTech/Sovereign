@@ -4047,10 +4047,6 @@ I'm not sure what I'm feeling yet.`;
         sessionStorage.setItem('maia_nav_teardown', 'true');
         window.location.href = '/worlds/journey';
         break;
-      case 'enter_depth':
-        sessionStorage.setItem('maia_nav_teardown', 'true');
-        window.location.href = '/worlds/depth';
-        break;
     }
   }, []);
 

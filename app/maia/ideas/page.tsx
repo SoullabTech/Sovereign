@@ -1,154 +1,244 @@
 'use client';
 
 /**
- * Ideas World — Early-stage emergence.
+ * Ideas — list view
  *
- * Not a note-taking app. Not a product tracker.
- * A space for nascent ideas before they harden into form.
- * v1: minimal — an invitation to notice what wants to emerge,
- * plus a single capture affordance that seeds a MAIA conversation.
+ * Member's container for ideas they're staying with over time.
+ * Not a note dump. Not a prompt relay to MAIA. A memory-bearing field
+ * for iterative engagement with a specific thread.
+ *
+ * Shows ideas ordered by last_entered_at (most recently returned-to first).
+ * Single "New idea" affordance. Click through to /maia/ideas/[id] workspace.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { DepthBoundary } from '@/components/maia/DepthBoundary';
-import { emitWorldEvent } from '@/lib/telemetry/worldTelemetry';
-import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Plus, Lightbulb, MessageSquare, CheckCircle2, Wind, Clock } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
-const EMERGENCE_WHISPERS = [
-  {
-    whisper: 'What wants to emerge that you haven\u2019t quite said yet?',
-    context: 'The half-formed is often where the new thing lives.',
-  },
-  {
-    whisper: 'What idea keeps returning to you \u2014 the one you almost dismiss?',
-    context: 'Recurrence is a signal. Not all signals are loud.',
-  },
-  {
-    whisper: 'If you gave this idea one more day to be vague, what would it become?',
-    context: 'Premature clarity is how ideas die.',
-  },
-  {
-    whisper: 'What are you building without knowing you\u2019re building it?',
-    context: 'Some work is happening before the plan.',
-  },
-  {
-    whisper: 'What\u2019s the smallest version of this that would teach you something?',
-    context: 'A sketch can do what a specification cannot.',
-  },
-];
+interface IdeaListItem {
+  id: string;
+  title: string;
+  framing: string | null;
+  status: 'active' | 'parked' | 'integrated';
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  last_entered_at: string;
+  last_decision_at: string | null;
+  block_count: number;
+  last_block_at: string | null;
+}
 
-export default function IdeasWorld() {
+export default function IdeasListPage() {
   const router = useRouter();
-  const [offering, setOffering] = useState(EMERGENCE_WHISPERS[0]);
-  const [draft, setDraft] = useState('');
-  const enteredAt = useRef(Date.now());
+  const [ideas, setIdeas] = useState<IdeaListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
 
-  useEffect(() => {
-    const idx = Math.floor(Math.random() * EMERGENCE_WHISPERS.length);
-    setOffering(EMERGENCE_WHISPERS[idx]);
-    emitWorldEvent({ eventType: 'world_entered', world: 'ideas' });
-    return () => {
-      emitWorldEvent({
-        eventType: 'world_exited',
-        world: 'ideas',
-        timeInWorld: Math.round((Date.now() - enteredAt.current) / 1000),
-      });
-    };
+  const loadIdeas = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/ideas');
+      if (!res.ok) {
+        setIdeas([]);
+        return;
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.ideas)) {
+        setIdeas(data.ideas);
+      }
+    } catch (err) {
+      console.error('[ideas/list] load failed:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const takeToMaia = () => {
-    const prompt = draft.trim()
-      ? `I\u2019m sitting with an early idea: ${draft.trim()}`
-      : `I came to the Ideas space with this question: \u201C${offering.whisper}\u201D`;
-    seedMaiaPrompt({
-      prompt,
-      source: 'ideas:world',
-      sourceLabel: 'Ideas',
-      returnTo: '/maia/ideas',
-      tone: 'exploratory',
-    });
-    router.push('/maia');
+  useEffect(() => {
+    loadIdeas();
+  }, [loadIdeas]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = newTitle.trim();
+    if (!title) return;
+
+    try {
+      const res = await apiFetch('/api/ideas', {
+        method: 'POST',
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && data.idea) {
+        router.push(`/maia/ideas/${data.idea.id}`);
+      }
+    } catch (err) {
+      console.error('[ideas/list] create failed:', err);
+    }
   };
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
+      transition={{ duration: 0.4 }}
       className="min-h-screen bg-[#0b0f1c] text-white"
     >
       {/* Return threshold */}
       <div className="p-6">
         <button
           onClick={() => router.push('/maia')}
-          className="text-white/30 hover:text-white/50 transition-colors duration-300"
+          className="text-white/30 hover:text-white/60 transition-colors duration-200 flex items-center gap-2 text-sm"
           aria-label="Return to MAIA"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
+          <span>MAIA</span>
         </button>
       </div>
 
-      {/* Subtle orientation */}
-      <div className="max-w-2xl mx-auto px-6 mb-8">
-        <p className="text-amber-200/30 text-sm italic">
-          Something is trying to form.
+      {/* Header */}
+      <div className="max-w-2xl mx-auto px-6 pb-8">
+        <h1
+          className="text-2xl text-amber-200/90 font-light"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Ideas
+        </h1>
+        <p className="text-sm text-stone-400 mt-2 leading-relaxed">
+          A place to stay with an idea over time. Reflections, decisions, shifts —
+          all held together so you can return without losing context.
         </p>
       </div>
 
-      {/* Sacred space — centered, quiet, spacious */}
-      <div className="max-w-lg mx-auto px-6 py-12 text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="text-white/70 text-xl leading-relaxed italic"
-          style={{ fontFamily: 'Spectral, Georgia, serif' }}
-        >
-          {offering.whisper}
-        </motion.p>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-          className="text-white/25 text-sm mt-8 leading-relaxed"
-        >
-          {offering.context}
-        </motion.p>
-
-        {/* Capture — quiet, optional */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8, duration: 0.8 }}
-          className="mt-16"
-        >
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Say it badly. That's the point."
-            rows={3}
-            className="w-full bg-transparent border-b border-white/10 focus:border-amber-200/30 outline-none text-white/60 placeholder-white/20 text-sm leading-relaxed resize-none transition-colors duration-300 text-left"
-            style={{ fontFamily: 'Spectral, Georgia, serif' }}
-          />
-
+      {/* New idea affordance */}
+      <div className="max-w-2xl mx-auto px-6 mb-8">
+        {!creating ? (
           <button
-            onClick={takeToMaia}
-            className="mt-6 inline-flex items-center gap-2 text-amber-200/40 hover:text-amber-200/70 text-sm italic transition-colors duration-300"
+            onClick={() => setCreating(true)}
+            className="w-full p-4 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all text-left flex items-center gap-3 group"
           >
-            <Sparkles size={14} />
-            {draft.trim() ? 'Take this to MAIA' : 'Sit with this in MAIA'}
+            <Plus className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400/90 transition-colors" />
+            <span className="text-sm text-amber-300/70 group-hover:text-amber-300/90 font-light">
+              Start a new idea
+            </span>
           </button>
-        </motion.div>
+        ) : (
+          <form
+            onSubmit={handleCreate}
+            className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/30"
+          >
+            <input
+              autoFocus
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Name this idea..."
+              className="w-full bg-transparent text-amber-200 placeholder-stone-500 outline-none text-base font-light border-b border-amber-500/20 pb-2 focus:border-amber-500/50 transition-colors"
+              style={{ fontFamily: 'Spectral, Georgia, serif' }}
+              maxLength={200}
+            />
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                type="submit"
+                disabled={!newTitle.trim()}
+                className="text-xs text-amber-300/90 hover:text-amber-300 disabled:text-stone-600 disabled:cursor-not-allowed transition-colors"
+              >
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreating(false);
+                  setNewTitle('');
+                }}
+                className="text-xs text-stone-500 hover:text-stone-400 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
-      {/* Perceptual horizon */}
-      <div className="max-w-2xl mx-auto px-6">
-        <DepthBoundary message="Early ideas don’t need to be finished to matter…" />
+      {/* Ideas list */}
+      <div className="max-w-2xl mx-auto px-6 pb-20">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="w-5 h-5 border border-amber-500/30 border-t-amber-400/70 rounded-full animate-spin mx-auto" />
+          </div>
+        ) : ideas.length === 0 ? (
+          <div className="text-center py-12">
+            <Lightbulb className="w-6 h-6 text-stone-600 mx-auto mb-3" />
+            <p className="text-sm text-stone-500 font-light">
+              No ideas yet.
+            </p>
+            <p className="text-xs text-stone-600 mt-1">
+              When something wants to stay with you, bring it here.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {ideas.map((idea) => (
+              <li key={idea.id}>
+                <button
+                  onClick={() => router.push(`/maia/ideas/${idea.id}`)}
+                  className="w-full p-4 rounded-xl bg-stone-900/40 hover:bg-stone-900/70 border border-stone-800/50 hover:border-amber-500/30 transition-all text-left group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        className="text-base text-amber-200/90 group-hover:text-amber-100 font-light truncate"
+                        style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                      >
+                        {idea.title}
+                      </h3>
+                      {idea.framing && (
+                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                          {idea.framing}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-3 mt-3 text-[11px] text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatTimeAgo(idea.last_entered_at)}
+                        </span>
+                        {idea.block_count > 0 && (
+                          <span className="flex items-center gap-1">
+                            <MessageSquare className="w-3 h-3" />
+                            {idea.block_count} {idea.block_count === 1 ? 'entry' : 'entries'}
+                          </span>
+                        )}
+                        {idea.last_decision_at && (
+                          <span className="flex items-center gap-1 text-emerald-500/60">
+                            <CheckCircle2 className="w-3 h-3" />
+                            decision {formatTimeAgo(idea.last_decision_at)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </motion.div>
   );
+}
+
+function formatTimeAgo(iso: string | null): string {
+  if (!iso) return '';
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffMin = Math.floor((now - then) / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return new Date(iso).toLocaleDateString();
 }

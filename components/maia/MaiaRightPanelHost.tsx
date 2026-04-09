@@ -15,7 +15,6 @@ import type { MaiaWorldId } from '@/lib/navigation/types';
 import { PatternsPanel } from './panels/PatternsPanel';
 import { JournalPanel } from './panels/JournalPanel';
 import { WisdomPanel } from './panels/WisdomPanel';
-import { DepthPanel } from './panels/DepthPanel';
 import { IdeasPanel } from './panels/IdeasPanel';
 import { RelationshipsPanel } from './panels/RelationshipsPanel';
 import { ConversationInsightPanel } from './panels/ConversationInsightPanel';
@@ -72,15 +71,6 @@ export function MaiaRightPanelHost({
             onOpenAcademy={onOpenAcademy}
             onChooseGuide={onChooseGuide}
             onShowCurrentElder={onShowCurrentElder}
-          />
-        );
-      case 'depth':
-        return (
-          <DepthPanel
-            explorerId={explorerId}
-            onOpenShadowWork={onOpenShadowWork}
-            onOpenChanges={onOpenChanges}
-            onOpenDecisions={onOpenDecisions}
           />
         );
       case 'ideas':
