@@ -8,6 +8,8 @@ import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 import { isMaintenanceEnabled } from '@/lib/system/systemSettings';
 import { isKnownActiveSession, touchActiveSession } from '@/lib/system/activeSessions';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
+import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
+import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -255,6 +257,19 @@ export async function POST(req: NextRequest) {
     const observerMemberId = userId || req.headers.get('x-member-id') || session?.id;
     if (observerMemberId && message && orchestratorResult.text) {
       observeRelationalContent(observerMemberId, message, orchestratorResult.text);
+
+      // 🌊 RELATIONAL FIELD CARD: lightweight detection for /maia field card.
+      // Fire-and-forget. Silent below the confidence threshold. Never blocks.
+      try {
+        const detected = detectRelationalSignal(message, orchestratorResult.text);
+        if (detected.detected) {
+          persistDetectedSignal(observerMemberId, detected).catch((err) => {
+            console.warn('[relationalSignals] persist error (non-blocking):', err?.message || err);
+          });
+        }
+      } catch (sigErr) {
+        console.warn('[relationalSignals] detect error (non-blocking):', sigErr);
+      }
     }
 
     return NextResponse.json(responseData, { status: 200 });

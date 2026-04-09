@@ -9,6 +9,7 @@
 
 import { useRouter } from 'next/navigation';
 import { Activity, Heart, Users, Waves, Wind } from 'lucide-react';
+import { RelationshipFieldCard } from '@/components/maia/RelationshipFieldCard';
 
 interface RelationshipsPanelProps {
   explorerId: string;
@@ -22,6 +23,9 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
       <p className="text-xs text-stone-500 font-light mb-4">
         Relational threads and patterns from your conversations.
       </p>
+
+      {/* Live field card — silent when nothing is active */}
+      <RelationshipFieldCard />
 
       {/* Relational overview */}
       <button
