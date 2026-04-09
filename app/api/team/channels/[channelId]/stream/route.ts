@@ -5,6 +5,7 @@
 import { NextRequest } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getMessagesSince } from '@/lib/team/ChannelService';
+import { requireChannelAccess } from '@/lib/team/permissions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,12 @@ export async function GET(
   if (!memberId) return new Response('Unauthorized', { status: 401 });
 
   const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return new Response(access.reason ?? 'Forbidden', { status });
+  }
 
   const lastEventId = req.headers.get('last-event-id');
   let afterTs = Number(url.searchParams.get('afterTs') ?? 0);

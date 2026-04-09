@@ -1,32 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getChannelMembers, addChannelMember, removeChannelMember } from '@/lib/team/ChannelService';
+import { isChannelAdminOrTeamAdmin } from '@/lib/team/permissions';
 import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
-
-async function isChannelAdminOrTeamAdmin(
-  requesterId: string,
-  channelId: string
-): Promise<boolean> {
-  // Check team_admin role
-  const teamAdminResult = await query<{ roles: string[] | null }>(
-    `SELECT roles FROM members WHERE id = $1`,
-    [requesterId]
-  );
-  const roles = teamAdminResult.rows[0]?.roles ?? [];
-  if (Array.isArray(roles) && (roles.includes('team_admin') || roles.includes('admin'))) {
-    return true;
-  }
-
-  // Check channel owner/admin
-  const channelRoleResult = await query<{ role: string }>(
-    `SELECT role FROM team_channel_members WHERE channel_id = $1 AND member_id = $2`,
-    [channelId, requesterId]
-  );
-  const role = channelRoleResult.rows[0]?.role;
-  return role === 'owner' || role === 'admin';
-}
 
 export async function GET(
   request: NextRequest,

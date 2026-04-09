@@ -1,5 +1,6 @@
 'use client';
 import type { TeamChannel } from '@/lib/team/types';
+import { ChannelVisibilityToggle } from './ChannelVisibilityToggle';
 
 const ARCHETYPE_CONFIG = {
   checkin:    { label: 'Check-In',   color: 'bg-amber-500/15 text-amber-400/80',     hint: 'This is a witnessing space — hold what is shared without rushing to fix or advise.' },
@@ -22,6 +23,7 @@ interface ChannelPurposeHeaderProps {
   currentMemberId?: string;
   memberCount?: number;
   onOpenMembers?: () => void;
+  onVisibilityChanged?: (newIsPrivate: boolean) => void;
 }
 
 export function ChannelPurposeHeader({
@@ -29,6 +31,7 @@ export function ChannelPurposeHeader({
   currentMemberId: _currentMemberId,
   memberCount,
   onOpenMembers,
+  onVisibilityChanged,
 }: ChannelPurposeHeaderProps) {
   const archetype = channel.archetype ?? 'general';
   const config = ARCHETYPE_CONFIG[archetype] ?? ARCHETYPE_CONFIG.general;
@@ -64,6 +67,12 @@ export function ChannelPurposeHeader({
                 Members{memberCount !== undefined ? ` (${memberCount})` : ''}
               </button>
             )}
+            <ChannelVisibilityToggle
+              channelId={channel.id}
+              channelName={channel.slug}
+              currentIsPrivate={channel.isPrivate}
+              onChanged={(newIsPrivate) => onVisibilityChanged?.(newIsPrivate)}
+            />
           </div>
           {channel.purposeBlock ? (
             <p className="text-xs text-white/45 mt-0.5 leading-relaxed">{channel.purposeBlock}</p>

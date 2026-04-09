@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import type { TeamChannel, TeamMessage, MessageKind } from '@/lib/team/types';
 import { MessageBubble, DateDivider } from './MessageBubble';
 import { MessageInput } from './MessageInput';
@@ -19,15 +20,45 @@ function sameDay(a: string, b: string): boolean {
 }
 
 export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
+  const router = useRouter();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [threadMessage, setThreadMessage] = useState<TeamMessage | null>(null);
   const [showMembersPanel, setShowMembersPanel] = useState(false);
   const [memberCount, setMemberCount] = useState<number | undefined>(undefined);
+  const [accessRevoked, setAccessRevoked] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Pick up redirect toast (e.g. set when access was revoked from another channel)
+  useEffect(() => {
+    try {
+      const t = sessionStorage.getItem('team:toast');
+      if (t) {
+        sessionStorage.removeItem('team:toast');
+        setToast(t);
+        setTimeout(() => setToast(null), 5000);
+      }
+    } catch { /* ignore */ }
+  }, [channel.id]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const atBottomRef = useRef(true);
+
+  // Bounce out when the channel goes private and the user isn't a member.
+  // Triggered by 403 from /messages GET or POST.
+  const handleAccessRevoked = useCallback(() => {
+    setAccessRevoked(true);
+    setTimeout(() => {
+      try {
+        sessionStorage.setItem(
+          'team:toast',
+          `You no longer have access to #${channel.slug}.`
+        );
+      } catch { /* ignore */ }
+      router.push('/team');
+    }, 1200);
+  }, [router, channel.slug]);
 
   // Latest message timestamp for SSE cursor
   const latestTs = messages.length > 0
@@ -47,12 +78,23 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   useEffect(() => {
     setLoading(true);
     setMessages([]);
+    setAccessRevoked(false);
     fetch(`/api/team/channels/${channel.id}/messages?limit=50`)
-      .then(r => r.json())
-      .then(data => setMessages(data.messages ?? []))
+      .then(async r => {
+        if (r.status === 403) {
+          handleAccessRevoked();
+          return null;
+        }
+        if (!r.ok) {
+          setError('Failed to load messages');
+          return null;
+        }
+        return r.json();
+      })
+      .then(data => { if (data) setMessages(data.messages ?? []); })
       .catch(() => setError('Failed to load messages'))
       .finally(() => setLoading(false));
-  }, [channel.id]);
+  }, [channel.id, handleAccessRevoked]);
 
   // Scroll to bottom on channel switch or initial load
   useEffect(() => {
@@ -96,6 +138,10 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ body, messageKind }),
     });
+    if (res.status === 403) {
+      handleAccessRevoked();
+      throw new Error('Access revoked');
+    }
     if (!res.ok) throw new Error('Failed to send');
     const { message } = await res.json();
     setMessages(prev => {
@@ -152,21 +198,53 @@ export function ChannelView({ channel, currentMemberId }: ChannelViewProps) {
   const handleReflect = async (messageId: string, mode: string) => {
     const msg = messages.find(m => m.id === messageId);
     if (!msg) return;
-    await fetch(`/api/team/channels/${channel.id}/maia-reflect`, {
+    const res = await fetch(`/api/team/channels/${channel.id}/maia-reflect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messageId, messageBody: msg.body, reflectMode: mode }),
     });
+    if (res.status === 403) {
+      handleAccessRevoked();
+      return;
+    }
     // The response will arrive via SSE — no need to manually add it
   };
 
+  if (accessRevoked) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
+        <svg className="w-8 h-8 text-amber-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <p className="text-white/60 text-sm">
+          #{channel.slug} is now private and you're not a member.
+        </p>
+        <p className="text-white/30 text-xs">Returning to your channels…</p>
+      </div>
+    );
+  }
+
   const mainCol = (
     <div className="flex flex-col flex-1 min-w-0">
+      {toast && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-5 py-2 text-xs text-amber-300 flex items-center justify-between">
+          <span>{toast}</span>
+          <button onClick={() => setToast(null)} className="text-amber-300/60 hover:text-amber-300" aria-label="Dismiss">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       <ChannelPurposeHeader
         channel={channel}
         currentMemberId={currentMemberId}
         memberCount={memberCount}
         onOpenMembers={channel.isPrivate ? () => setShowMembersPanel(p => !p) : undefined}
+        onVisibilityChanged={() => {
+          // Re-fetch the page to get fresh channel data + sidebar refresh
+          if (typeof window !== 'undefined') window.location.reload();
+        }}
       />
 
       <div

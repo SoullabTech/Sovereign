@@ -21,6 +21,7 @@ interface Channel {
   name: string;
   description: string | null;
   channel_type: string;
+  is_private: boolean;
   archived_at: string | null;
   created_by_name: string | null;
   message_count: number;
@@ -105,6 +106,47 @@ export function AdminPanel() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ channelId: ch.id, archive: !ch.archived_at }),
     });
+    await load();
+    setSaving(null);
+  };
+
+  const flipVisibility = async (ch: Channel) => {
+    const target = !ch.is_private;
+    let confirmText: string;
+    if (target) {
+      // Public → private. Fetch participant count for confirmation.
+      let count = 0;
+      try {
+        const r = await fetch(`/api/team/channels/${ch.id}/visibility/preview`);
+        if (r.ok) {
+          const d = await r.json();
+          count = d.participantCount ?? 0;
+        }
+      } catch { /* ignore */ }
+      confirmText =
+        `Make #${ch.slug} private?\n\n` +
+        `${count} active participant${count === 1 ? '' : 's'} will keep access ` +
+        `(people who have posted here).\n\n` +
+        `People who are not members will lose access immediately. ` +
+        `Message history stays.`;
+    } else {
+      confirmText =
+        `Make #${ch.slug} public?\n\n` +
+        `The channel becomes visible to everyone on the team. ` +
+        `Current member roles are preserved but no longer enforced.`;
+    }
+    if (!confirm(confirmText)) return;
+
+    setSaving(ch.id);
+    const res = await fetch(`/api/team/channels/${ch.id}/visibility`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPrivate: target }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      alert(d.message ?? d.error ?? 'Failed to change visibility');
+    }
     await load();
     setSaving(null);
   };
@@ -284,7 +326,13 @@ export function AdminPanel() {
                 {activeChannels.map(ch => (
                   <div key={ch.id} className="bg-[#16162a]/60 border border-white/6 rounded-lg hover:border-white/12 transition-colors overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3">
-                    <span className="text-white/25 text-xs">#</span>
+                    {ch.is_private ? (
+                      <svg className="w-3 h-3 text-amber-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="private">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    ) : (
+                      <span className="text-white/25 text-xs">#</span>
+                    )}
                     <div className="flex-1 min-w-0">
                       {editChannel?.id === ch.id ? (
                         <div className="flex flex-col gap-2">
@@ -385,6 +433,16 @@ export function AdminPanel() {
                         >
                           Edit
                         </button>
+                        {ch.slug !== 'general' && ch.slug !== 'announcements' && (
+                          <button
+                            onClick={() => flipVisibility(ch)}
+                            disabled={saving === ch.id}
+                            className="text-xs text-white/25 hover:text-white/70 transition-colors px-1.5 py-1 rounded hover:bg-white/5"
+                            title={ch.is_private ? 'Make public' : 'Make private'}
+                          >
+                            {ch.is_private ? 'Make public' : 'Make private'}
+                          </button>
+                        )}
                         <button
                           onClick={() => archiveChannel(ch)}
                           disabled={saving === ch.id}

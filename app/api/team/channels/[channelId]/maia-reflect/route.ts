@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { generateReflection, MAIA_BOT_ID_EXPORT } from '@/lib/team/maiaReflectService';
+import { requireChannelAccess } from '@/lib/team/permissions';
 import { query } from '@/lib/db/postgres';
 import crypto from 'crypto';
 
@@ -14,6 +15,13 @@ export async function POST(
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
+  }
+
   const { messageId, messageBody, reflectMode = 'reflect' } = await request.json();
 
   if (!messageBody) return NextResponse.json({ error: 'messageBody required' }, { status: 400 });
