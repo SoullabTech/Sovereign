@@ -71,7 +71,8 @@ const OUT_PATH = path.join(REPO_ROOT, 'lib', 'community-library', 'manifest.gene
 // Do not re-add anything cut here without re-running the field-coherence
 // pass. The shelf's job is to be small enough to actually mean something.
 const ALLOWLIST = {
-  // --- philosophical-foundations (F + A + F) ---
+  // --- philosophical-foundations (F + F + A + F) ---
+  'the-relational-field': 'Community-Commons/library/the-relational-field.md',
   'presence-continuity': 'docs/papers/presence-continuity.md',
   'jungian-alchemy-framework': 'docs/community-library/JUNGIAN_ALCHEMY_FRAMEWORK.md',
   'disposable-pixel-philosophy': 'docs/community-library/DISPOSABLE_PIXEL_PHILOSOPHY.md',

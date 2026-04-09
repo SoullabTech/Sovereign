@@ -173,6 +173,14 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
+        id: 'the-relational-field',
+        title: '★ The Relational Field',
+        description: 'Most systems collapse experience by explaining it. This one is built not to.',
+        content: 'Community-Commons/library/the-relational-field.md',
+        tags: ['relational intelligence', 'ai ethics', 'consciousness design', 'field theory', 'inhibition', 'soullab'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field']
+      },
+      {
         id: 'presence-continuity',
         title: '★ Presence Continuity and Personal Sovereignty',
         description: 'FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.',
