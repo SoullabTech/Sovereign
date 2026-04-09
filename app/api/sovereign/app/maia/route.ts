@@ -260,10 +260,18 @@ export async function POST(req: NextRequest) {
 
       // 🌊 RELATIONAL FIELD CARD: lightweight detection for /maia field card.
       // Fire-and-forget. Silent below the confidence threshold. Never blocks.
+      // Captures the maia_turns.id (if present in the response metadata) so
+      // the founder review page can join to the originating turn at render
+      // time — the signal table itself never stores conversation content.
       try {
         const detected = detectRelationalSignal(message, orchestratorResult.text);
         if (detected.detected) {
-          persistDetectedSignal(observerMemberId, detected).catch((err) => {
+          const turnIdRaw = orchestratorResult.metadata?.turnId;
+          const sourceTurnId =
+            typeof turnIdRaw === 'number' && Number.isFinite(turnIdRaw) && turnIdRaw > 0
+              ? turnIdRaw
+              : null;
+          persistDetectedSignal(observerMemberId, detected, null, sourceTurnId).catch((err) => {
             console.warn('[relationalSignals] persist error (non-blocking):', err?.message || err);
           });
         }

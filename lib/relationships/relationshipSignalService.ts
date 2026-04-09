@@ -83,6 +83,16 @@ interface InsertInput {
   frameworksApplied?: string[];
   source: SignalSource;
   confidence?: number | null;
+  /** Optional join key into maia_turns.id (bigint). */
+  sourceTurnId?: number | null;
+}
+
+function safeTurnId(v: unknown): number | null {
+  if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) return null;
+  // maia_turns.id is bigint but we never expect ids outside safe int range
+  // during v1. Reject anything above Number.MAX_SAFE_INTEGER defensively.
+  if (v > Number.MAX_SAFE_INTEGER) return null;
+  return Math.trunc(v);
 }
 
 /** Persist one relational signal. Returns the inserted row id. */
@@ -104,6 +114,7 @@ export async function insertRelationalSignal(input: InsertInput): Promise<string
         typeof input.confidence === 'number' && input.confidence >= 0 && input.confidence <= 1
           ? input.confidence
           : null,
+      source_turn_id: safeTurnId(input.sourceTurnId),
     });
     return row?.id ?? null;
   } catch (err) {
@@ -123,11 +134,14 @@ export async function insertRelationalSignal(input: InsertInput): Promise<string
 /**
  * Convenience: take a DetectedSignal + memberId and persist as
  * `maia_conversation`. Returns null when below threshold.
+ *
+ * @param sourceTurnId Optional maia_turns.id for founder review-time join.
  */
 export async function persistDetectedSignal(
   memberId: string,
   detected: DetectedSignal,
   relationshipId?: string | null,
+  sourceTurnId?: number | null,
 ): Promise<string | null> {
   if (!detected.detected) return null;
   return insertRelationalSignal({
@@ -140,6 +154,7 @@ export async function persistDetectedSignal(
     frameworksApplied: detected.frameworksApplied,
     source: 'maia_conversation',
     confidence: detected.confidence,
+    sourceTurnId: sourceTurnId ?? null,
   });
 }
 
@@ -158,10 +173,18 @@ interface SignalRow {
   frameworks_applied: string[] | null;
   source: string;
   confidence: number | null;
+  source_turn_id: string | number | null;
   created_at: Date;
 }
 
 function rowToSignal(row: SignalRow): RelationshipSignal {
+  // pg returns bigint as string to avoid precision loss. Normalize.
+  const turnId =
+    row.source_turn_id == null
+      ? null
+      : typeof row.source_turn_id === 'number'
+        ? row.source_turn_id
+        : Number(row.source_turn_id);
   return {
     id: row.id,
     memberId: row.member_id,
@@ -173,6 +196,7 @@ function rowToSignal(row: SignalRow): RelationshipSignal {
     frameworksApplied: row.frameworks_applied ?? [],
     source: (row.source as SignalSource) ?? 'maia_conversation',
     confidence: row.confidence,
+    sourceTurnId: Number.isFinite(turnId) ? turnId : null,
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
   };
 }
@@ -183,7 +207,7 @@ export async function getLatestSignal(memberId: string): Promise<RelationshipSig
     const row = await queryOne<SignalRow>(
       `SELECT id, member_id, relationship_id, counterpart_label, tone,
               rupture_state, dynamic_tags, frameworks_applied, source,
-              confidence, created_at
+              confidence, source_turn_id, created_at
        FROM member_relational_signals
        WHERE member_id = $1
        ORDER BY created_at DESC
@@ -210,7 +234,7 @@ export async function getRecentSignals(
     const result = await query<SignalRow>(
       `SELECT id, member_id, relationship_id, counterpart_label, tone,
               rupture_state, dynamic_tags, frameworks_applied, source,
-              confidence, created_at
+              confidence, source_turn_id, created_at
        FROM member_relational_signals
        WHERE member_id = $1
        ORDER BY created_at DESC

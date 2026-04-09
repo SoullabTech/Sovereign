@@ -135,6 +135,13 @@ export interface RelationshipSignal {
   frameworksApplied?: string[];
   source: SignalSource;
   confidence?: number | null;
+  /**
+   * Optional join key into `maia_turns.id`. Only populated for
+   * `maia_conversation` signals where the route was able to capture
+   * the turn id. NEVER stores conversation text itself — the founder
+   * review page joins to `maia_turns` at render time.
+   */
+  sourceTurnId?: number | null;
   createdAt?: string;
 }
 
