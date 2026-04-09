@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getMessages, getReplies, sendMessage, markChannelRead } from '@/lib/team/ChannelService';
+import { requireChannelAccess } from '@/lib/team/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,13 @@ export async function GET(
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
+  }
+
   const url = new URL(request.url);
   const parentId = url.searchParams.get('parentId') ?? undefined;
 
@@ -51,6 +59,13 @@ export async function POST(
   if (!memberId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { channelId } = await params;
+
+  const access = await requireChannelAccess(channelId, memberId);
+  if (!access.allowed) {
+    const status = access.reason === 'not_found' ? 404 : 403;
+    return NextResponse.json({ error: access.reason ?? 'Forbidden' }, { status });
+  }
+
   const body = await request.json();
   const { body: msgBody, parentId, messageKind } = body;
 
