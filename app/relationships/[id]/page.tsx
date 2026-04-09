@@ -335,6 +335,46 @@ export default function RelationshipDetailPage() {
             </div>
           )}
         </section>
+
+        {/* Section 4: Open with a tool */}
+        <section className="mb-10">
+          <h2 className="text-xs text-jade-sage uppercase tracking-wider mb-4">
+            Open with a tool
+          </h2>
+          <p className="text-xs text-jade-mineral/70 font-light mb-3">
+            Each tool draws from a different lineage — polyvagal, Bowen, IFS, Gottman, NVC, EFT — and
+            is a scaffold you control, not a script.
+          </p>
+          <div className="grid gap-2 md:grid-cols-3">
+            <button
+              onClick={() => router.push(`/labtools/relational-field?relationshipId=${id}`)}
+              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
+            >
+              <div className="text-sm text-jade-jade font-light mb-1">Relational Field</div>
+              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
+                Sense the tone and movement right now.
+              </p>
+            </button>
+            <button
+              onClick={() => router.push(`/labtools/dynamics-map?relationshipId=${id}`)}
+              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
+            >
+              <div className="text-sm text-jade-jade font-light mb-1">Dynamics Map</div>
+              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
+                Notice the recurring pattern between you.
+              </p>
+            </button>
+            <button
+              onClick={() => router.push(`/labtools/repair-path?relationshipId=${id}`)}
+              className="rounded-lg border border-jade-sage/20 bg-jade-forest/10 hover:bg-jade-forest/20 hover:border-jade-sage/30 transition-all text-left p-4"
+            >
+              <div className="text-sm text-jade-jade font-light mb-1">Repair Path</div>
+              <p className="text-[11px] text-jade-mineral/70 font-light leading-relaxed">
+                Possible moves when something has broken.
+              </p>
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

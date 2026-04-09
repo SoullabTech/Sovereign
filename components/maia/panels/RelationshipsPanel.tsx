@@ -8,7 +8,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { Heart, Users } from 'lucide-react';
+import { Activity, Heart, Users, Waves, Wind } from 'lucide-react';
 
 interface RelationshipsPanelProps {
   explorerId: string;
@@ -35,6 +35,47 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
         </div>
       </button>
 
+      {/* Relational tools — scaffolds drawn from attested traditions */}
+      <div className="pt-2 pb-1">
+        <p className="text-[10px] text-stone-600 uppercase tracking-wider font-light mb-2 px-1">
+          Relational Tools
+        </p>
+        <div className="space-y-1.5">
+          <button
+            onClick={() => router.push('/labtools/relational-field')}
+            className="w-full flex items-start gap-2.5 p-2.5 rounded-lg bg-rose-500/[0.03] hover:bg-rose-500/[0.08] border border-rose-500/10 hover:border-rose-500/20 transition-all text-left"
+          >
+            <Waves className="w-3.5 h-3.5 text-rose-300/60 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-rose-200/80 font-light">Sense the field</p>
+              <p className="text-[10px] text-stone-600 truncate">Tone in a bond, right now</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/labtools/dynamics-map')}
+            className="w-full flex items-start gap-2.5 p-2.5 rounded-lg bg-rose-500/[0.03] hover:bg-rose-500/[0.08] border border-rose-500/10 hover:border-rose-500/20 transition-all text-left"
+          >
+            <Activity className="w-3.5 h-3.5 text-rose-300/60 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-rose-200/80 font-light">Map the dynamic</p>
+              <p className="text-[10px] text-stone-600 truncate">Patterns, not identities</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => router.push('/labtools/repair-path')}
+            className="w-full flex items-start gap-2.5 p-2.5 rounded-lg bg-rose-500/[0.03] hover:bg-rose-500/[0.08] border border-rose-500/10 hover:border-rose-500/20 transition-all text-left"
+          >
+            <Wind className="w-3.5 h-3.5 text-rose-300/60 mt-0.5 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-rose-200/80 font-light">Repair path</p>
+              <p className="text-[10px] text-stone-600 truncate">Possible moves after rupture</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Community */}
       <button
         onClick={() => router.push('/commons/circles')}
@@ -50,7 +91,7 @@ export function RelationshipsPanel({ explorerId }: RelationshipsPanelProps) {
       {/* Guidance */}
       <div className="pt-4 text-center">
         <p className="text-[10px] text-stone-600 font-light">
-          Track outer relationships, inner figures, and the field between.
+          Tools draw from IFS, Bowen, polyvagal, Gottman, NVC, EFT.
         </p>
       </div>
     </div>

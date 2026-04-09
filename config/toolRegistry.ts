@@ -1140,8 +1140,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     modes: ['reflect', 'track'],
     minTier: 'personal',
     tags: ['relationship', 'field', 'tone', 'boundaries', 'unresolved', 'perception', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 2,
   },
   {
@@ -1158,8 +1157,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     modes: ['track', 'interpret'],
     minTier: 'personal',
     tags: ['dynamics', 'patterns', 'projection', 'power', 'attachment', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 3,
   },
   {
@@ -1176,8 +1174,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     modes: ['act', 'reflect'],
     minTier: 'personal',
     tags: ['repair', 'rupture', 'resolution', 'moves', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 4,
   },
 
