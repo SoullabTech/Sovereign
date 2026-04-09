@@ -166,8 +166,6 @@ function buildIdeaTitle(signal: RelationshipSignal): string {
 interface CardResponse {
   success: boolean;
   signal: RelationshipSignal | null;
-  /** Phase 4: prior matches for (member + counterpart + tone), excluding this row */
-  priorMatches?: number;
 }
 
 export function RelationshipFieldCard() {
@@ -181,12 +179,30 @@ export function RelationshipFieldCard() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiFetch('/api/maia/relational-signal?includeCount=1');
+        // 1. Fetch the latest signal
+        const res = await apiFetch('/api/maia/relational-signal');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as CardResponse;
-        if (!cancelled && data.success) {
-          setSignal(data.signal);
-          setPriorMatches(data.priorMatches ?? 0);
+        if (cancelled || !data.success || !data.signal) return;
+        setSignal(data.signal);
+
+        // 2. If the signal has a tone + counterpart, query the dedicated
+        // count endpoint for prior matches (excludes the current row).
+        // Uses /api/maia/relational-signal/count — the same endpoint the
+        // labtool uses, keeping continuity hint logic unified.
+        const { tone, counterpartLabel } = data.signal;
+        if (tone && counterpartLabel) {
+          const params = new URLSearchParams();
+          params.set('tone', tone);
+          params.set('counterpart', counterpartLabel);
+          const countRes = await apiFetch(
+            `/api/maia/relational-signal/count?${params.toString()}`,
+          );
+          if (cancelled) return;
+          if (countRes.ok) {
+            const countData = (await countRes.json()) as { count?: number };
+            setPriorMatches(countData.count ?? 0);
+          }
         }
       } catch {
         // silent — the absence is honest

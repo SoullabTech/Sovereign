@@ -15,7 +15,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import {
-  countMatchingSignals,
   getLatestSignal,
   insertRelationalSignal,
 } from '@/lib/relationships/relationshipSignalService';
@@ -37,16 +36,14 @@ import {
 export const dynamic = 'force-dynamic';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET — latest signal (+ optional prior-match count for the continuity hint)
+// GET — latest signal
 //
-// [Relational Layer — Phase 4]
-// Accepts ?includeCount=1 to ask for the number of prior signals that
-// match the latest signal's (tone + counterpart_label) pair, excluding
-// the latest row itself. Powers the field card's "This has surfaced
-// before." hint at N ≥ 1.
+// For the continuity hint ("This has surfaced before."), clients should
+// call the dedicated sub-route `/api/maia/relational-signal/count` which
+// accepts tone + counterpart filters and returns a { count } shape.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getCurrentSession();
     if (!session?.memberId) {
@@ -54,18 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     const signal = await getLatestSignal(session.memberId);
-
-    const includeCount = request.nextUrl.searchParams.get('includeCount') === '1';
-    let priorMatches = 0;
-    if (includeCount && signal && signal.tone && signal.counterpartLabel) {
-      priorMatches = await countMatchingSignals(session.memberId, {
-        tone: signal.tone,
-        counterpart: signal.counterpartLabel,
-        excludeSignalId: signal.id ?? null,
-      });
-    }
-
-    return NextResponse.json({ success: true, signal, priorMatches });
+    return NextResponse.json({ success: true, signal });
   } catch (err) {
     console.error('[api/maia/relational-signal] GET error:', err);
     return NextResponse.json(
