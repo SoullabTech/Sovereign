@@ -8,6 +8,9 @@
  * not the underlying data.
  *
  * See: memory/project_relational_context_bridge.md
+ *
+ * Also defines the shared `RelationshipSignal` type used by /maia's
+ * RelationshipFieldCard and the labtools. See sections below.
  */
 
 export type RelationshipRealm = 'outer' | 'inner' | 'transpersonal';
@@ -51,3 +54,271 @@ export interface ActiveRelationalContext {
   /** Recent entry kinds in time order, most recent first. Max 5. */
   continuitySignals: string[];
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// RELATIONSHIP SIGNAL (Phase 2 — live field card)
+//
+// Used by:
+//   - `lib/relationships/detectRelationalSignal.ts` (auto-detection)
+//   - `app/api/maia/relational-signal/route.ts`
+//   - `components/maia/RelationshipFieldCard.tsx`
+//   - the three relational labtools (manual signals on save)
+//
+// v1 scope is deliberately narrow: we describe *what is noticed*, not *who
+// the person is*. We never store inferred attachment style, pathology, or
+// personality verdicts. See CLAUDE.md §Sovereignty Invariants.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// [Relational Layer — Phase 2 + Phase 4]
+/**
+ * Canonical tones used across the field card, detector, check-ins, and the
+ * Relational Field entry flow.
+ *
+ * Phase 2 canonical set: `open | warm | active | quiet | fragile | distant |
+ * contracted | tense | unresolved | unclear` (used by the background
+ * detector and CheckInFlow).
+ *
+ * Phase 4 entry-flow additions: `tender | strained | conflicted | heavy |
+ * shut_down` — drawn from the Relational Field spec. Append-only union
+ * so the substrate stays stable and readers handle the full range.
+ */
+export type RelationshipTone =
+  // Phase 2 canonical set (detector + CheckInFlow)
+  | 'open'
+  | 'warm'
+  | 'active'
+  | 'quiet'
+  | 'fragile'
+  | 'distant'
+  | 'contracted'
+  | 'tense'
+  | 'unresolved'
+  | 'unclear'
+  // Phase 4 Relational Field entry additions (append-only)
+  | 'tender'
+  | 'strained'
+  | 'conflicted'
+  | 'heavy'
+  | 'shut_down';
+
+/** Rupture state — broad, honest, never diagnostic. */
+export type RuptureState = 'none' | 'strained' | 'ruptured' | 'unclear';
+
+// [Relational Layer — Phase 2 + Phase 4]
+/**
+ * Counterpart label — a generic category, never a name. If the member has
+ * an explicit relationship record, `relationshipId` is used instead.
+ *
+ * Phase 2 set: specific person-type labels used by the detector when it
+ * can infer from pronoun/kinship language.
+ *
+ * Phase 4 additions: neutral "what kind of field" labels used by the
+ * Relational Field entry flow so the system supports any relational
+ * atmosphere, not just named people. `self` and `unnamed_field` are
+ * first-class so the labtool works even when there is no other to name.
+ */
+export type CounterpartLabel =
+  // Phase 2: person-type inference labels (background detector)
+  | 'partner'
+  | 'family'
+  | 'mother'
+  | 'father'
+  | 'child'
+  | 'sibling'
+  | 'friend'
+  | 'professional'
+  | 'ex'
+  | 'inner'
+  | 'unspecified'
+  // Phase 4: neutral entry-flow labels (Relational Field labtool)
+  | 'person'
+  | 'group'
+  | 'situation'
+  | 'self'
+  | 'unnamed_field';
+
+/** Source of the signal — was it detected or explicitly offered? */
+export type SignalSource = 'maia_conversation' | 'labtool_manual';
+
+/**
+ * Dynamic tag — a named pattern the member has recognized (via Dynamics Map)
+ * or that the light detector heuristically surfaced. Matches the ids in
+ * RELATIONSHIP_PATTERNS in `relationshipResources.ts`.
+ */
+export type DynamicTag =
+  | 'pursue-withdraw'
+  | 'over-under-function'
+  | 'projection-loop'
+  | 'triangulation'
+  | 'parts-polarization'
+  | 'protest-withdrawal'
+  | 'differentiation-crisis'
+  | 'nervous-system-mismatch';
+
+// [Relational Layer — Phase 4]
+/**
+ * Movement cue — "what feels most active in the field right now."
+ * Surfaced only in the Relational Field entry flow. Descriptive, not
+ * diagnostic. Persisted in `member_relational_signals.movement_cue` via
+ * migration 20260409000012_relational_signal_movement_cue.sql.
+ *
+ * The six values match the DB CHECK constraint exactly and map 1:1 to
+ * the six options in the labtool's movement picker.
+ */
+export type MovementCue =
+  | 'moving_toward'
+  | 'pulling_away'
+  | 'trying_to_fix'
+  | 'feeling_blamed'
+  | 'repeating_something'
+  | 'not_sure';
+
+/**
+ * A row persisted to `member_relational_signals`. Powers the field card.
+ * Intentionally lightweight: never a clinical record, never a verdict.
+ */
+export interface RelationshipSignal {
+  id?: string;
+  memberId: string;
+  relationshipId?: string | null;
+  counterpartLabel?: CounterpartLabel | null;
+  tone?: RelationshipTone | null;
+  ruptureState?: RuptureState | null;
+  dynamicTags?: DynamicTag[];
+  frameworksApplied?: string[];
+  source: SignalSource;
+  confidence?: number | null;
+  /**
+   * Phase 4: member-selected "what feels most active" from the Relational
+   * Field entry flow. Null for Phase 2 detector signals and any labtool
+   * path that didn't surface a movement choice.
+   */
+  movementCue?: MovementCue | null;
+  /**
+   * Optional join key into `maia_turns.id`. Only populated for
+   * `maia_conversation` signals where the route was able to capture
+   * the turn id. NEVER stores conversation text itself — the founder
+   * review page joins to `maia_turns` at render time.
+   */
+  sourceTurnId?: number | null;
+  createdAt?: string;
+}
+
+/**
+ * The return of `detectRelationalSignal`. When `detected` is false, consumers
+ * skip persistence. Everything is nullable so the detector can partially fill.
+ */
+export interface DetectedSignal {
+  detected: boolean;
+  confidence: number;
+  counterpartLabel: CounterpartLabel | null;
+  tone: RelationshipTone | null;
+  ruptureState: RuptureState | null;
+  dynamicTags: DynamicTag[];
+  frameworksApplied: string[];
+  /** Phase 4: detector does not surface movement cues in v1. Always null. */
+  movementCue?: MovementCue | null;
+}
+
+/** Below this confidence we do not persist — too noisy to be useful. */
+export const SIGNAL_CONFIDENCE_THRESHOLD = 0.4;
+
+/**
+ * Canonical tones — full union (Phase 2 detector set + Phase 4 entry-flow
+ * additions). Downstream consumers should be tolerant to all 15.
+ */
+export const CANONICAL_TONES: readonly RelationshipTone[] = [
+  // Phase 2 detector set
+  'open',
+  'warm',
+  'active',
+  'quiet',
+  'fragile',
+  'distant',
+  'contracted',
+  'tense',
+  'unresolved',
+  'unclear',
+  // Phase 4 entry-flow additions
+  'tender',
+  'strained',
+  'conflicted',
+  'heavy',
+  'shut_down',
+] as const;
+
+/**
+ * Tones surfaced in the Relational Field entry flow (Phase 4 labtool).
+ * A strict subset of CANONICAL_TONES. Used by the labtool to render the
+ * 10-option picker without exposing the full canonical union.
+ */
+export const RELATIONAL_FIELD_ENTRY_TONES: readonly RelationshipTone[] = [
+  'open',
+  'tense',
+  'distant',
+  'unclear',
+  'tender',
+  'strained',
+  'conflicted',
+  'heavy',
+  'warm',
+  'shut_down',
+] as const;
+
+/** Canonical rupture states. */
+export const RUPTURE_STATES: readonly RuptureState[] = [
+  'none',
+  'strained',
+  'ruptured',
+  'unclear',
+] as const;
+
+/** Canonical dynamic tags (matches RELATIONSHIP_PATTERNS ids). */
+export const CANONICAL_DYNAMIC_TAGS: readonly DynamicTag[] = [
+  'pursue-withdraw',
+  'over-under-function',
+  'projection-loop',
+  'triangulation',
+  'parts-polarization',
+  'protest-withdrawal',
+  'differentiation-crisis',
+  'nervous-system-mismatch',
+] as const;
+
+/**
+ * Canonical counterpart labels — full union (Phase 2 detector set + Phase 4
+ * entry-flow neutral labels).
+ */
+export const CANONICAL_COUNTERPART_LABELS: readonly CounterpartLabel[] = [
+  // Phase 2 detector labels
+  'partner',
+  'family',
+  'mother',
+  'father',
+  'child',
+  'sibling',
+  'friend',
+  'professional',
+  'ex',
+  'inner',
+  'unspecified',
+  // Phase 4 entry-flow neutral labels
+  'person',
+  'group',
+  'situation',
+  'self',
+  'unnamed_field',
+] as const;
+
+/**
+ * Canonical movement cues (Phase 4). Matches the CHECK constraint in
+ * migration 20260409000012_relational_signal_movement_cue.sql exactly.
+ */
+export const CANONICAL_MOVEMENT_CUES: readonly MovementCue[] = [
+  'moving_toward',
+  'pulling_away',
+  'trying_to_fix',
+  'feeling_blamed',
+  'repeating_something',
+  'not_sure',
+] as const;

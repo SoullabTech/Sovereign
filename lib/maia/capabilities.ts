@@ -23,7 +23,6 @@ export type MaiaCapability =
   | 'wisdom.surface'
   | 'wisdom.text'
   | 'relationship.reflect'
-  | 'depth.explore'
   | 'depth.shadow'
   | 'studio.transition'
   | 'schedule.create';
@@ -118,17 +117,10 @@ export const CAPABILITY_REGISTRY: CapabilityDefinition[] = [
     voicePhrases: ['reflect on this relationship', 'relationship pattern'],
   },
 
-  // Depth
-  {
-    id: 'depth.explore',
-    label: 'Go deeper',
-    worldId: 'depth',
-    voicePhrases: ['go deeper', 'take this deeper', 'explore this'],
-  },
+  // Shadow work (previously under Depth — surface via modal, no world)
   {
     id: 'depth.shadow',
     label: 'Shadow work',
-    worldId: 'depth',
     modalId: 'shadow-work',
     voicePhrases: ['shadow work', 'explore my shadow'],
   },

@@ -31,7 +31,6 @@ export type NavItemClass =
 export type MaiaWorldId =
   | 'maia'
   | 'patterns'
-  | 'depth'
   | 'journal'
   | 'ideas'
   | 'relationships'
@@ -72,7 +71,6 @@ export interface MaiaUtilityItem {
 export type MaiaContextualPanelId =
   | 'session-tools'   // Prompts, arc, synthesis, recap
   | 'patterns-view'   // Pattern threads, weaving
-  | 'depth-tools'     // Shadow work, oracle, consciousness map
   | 'journal-capture' // Quick capture, reflections
   | 'ideas-view'      // Idea cards, emergence
   | 'relationships-view'

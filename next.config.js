@@ -97,11 +97,6 @@ const nextConfig = {
           permanent: true,
         },
         {
-          source: '/maia/depth',
-          destination: '/worlds/depth',
-          permanent: true,
-        },
-        {
           source: '/maia/journal',
           destination: '/labtools/journal',
           permanent: true,

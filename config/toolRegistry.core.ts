@@ -1068,10 +1068,10 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     category: 'relational',
     domain: 'relational',
     modes: ['reflect', 'track'],
-    minTier: 'personal',
+    // [Relational Layer — Phase 4 activation] scaffold, zero AI cost, free by design
+    minTier: 'free',
     tags: ['relationship', 'field', 'tone', 'boundaries', 'unresolved', 'perception', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 2,
   },
   {
@@ -1085,10 +1085,10 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     category: 'relational',
     domain: 'relational',
     modes: ['track', 'interpret'],
-    minTier: 'personal',
+    // [Relational Layer — Phase 4 activation] scaffold, zero AI cost, free by design
+    minTier: 'free',
     tags: ['dynamics', 'patterns', 'projection', 'power', 'attachment', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 3,
   },
   {
@@ -1102,10 +1102,10 @@ export const TOOL_REGISTRY_CORE: LabToolCore[] = [
     category: 'relational',
     domain: 'relational',
     modes: ['act', 'reflect'],
-    minTier: 'personal',
+    // [Relational Layer — Phase 4 activation] scaffold, zero AI cost, free by design
+    minTier: 'free',
     tags: ['repair', 'rupture', 'resolution', 'moves', 'relational'],
-    defaultEnabled: false,
-    comingSoon: true,
+    defaultEnabled: true,
     popularityRank: 4,
   },
 
