@@ -157,6 +157,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/interfaces', minTier: 'free', notes: 'Interface selection' },
   { exact: '/maia/membership', minTier: 'free', notes: 'Membership management' },
   { exact: '/maia/training', minTier: 'free', notes: 'Training interface' },
+  { exact: '/maia/ideas', minTier: 'free', notes: 'Ideas world — early-stage emergence' },
+  { prefix: '/relationships', minTier: 'free', notes: 'Relational Field — outer/inner/transpersonal, CRUD. Moved out of /dashboard/* 2026-04-08 so it no longer inherits the Jade Neural Command shell.' },
   { exact: '/ask-maia', minTier: 'free', notes: 'Ask MAIA — depth, capacity-governed' },
 
   // Community — contribution is participation, not a perk

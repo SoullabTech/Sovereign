@@ -1224,7 +1224,7 @@ export async function POST(req: NextRequest) {
             const lowerMsg = message.toLowerCase();
             const relHits = relationalSignals.filter(s => lowerMsg.includes(s));
             const voiceSuggestedActions = relHits.length >= 1
-              ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+              ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/relationships' }]
               : [];
 
             emit('complete', {

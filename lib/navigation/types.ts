@@ -37,7 +37,7 @@ export type MaiaWorldId =
   | 'relationships'
   | 'wisdom';
 
-export type BoundaryId = 'studio' | 'circles' | 'astrology' | 'labtools';
+export type BoundaryId = 'studio' | 'circles' | 'astrology' | 'labtools' | 'community-library';
 
 export type MaiaRailItemId = MaiaWorldId | BoundaryId;
 

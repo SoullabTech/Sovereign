@@ -1525,7 +1525,7 @@ This user is in guest mode (no authenticated identity).
       const lowerMsg = message.toLowerCase();
       const relHits = relationalSignals.filter(s => lowerMsg.includes(s));
       const betweenSuggestedActions = relHits.length >= 1
-        ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+        ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits.length * 0.12, 0.92), kind: 'relational', route: '/relationships' }]
         : undefined;
 
       const response = NextResponse.json({
@@ -2418,7 +2418,7 @@ This user is in guest mode (no authenticated identity).
     const lowerMsg2 = message.toLowerCase();
     const relHits2 = relationalSignals2.filter(s => lowerMsg2.includes(s));
     const fullSuggestedActions = relHits2.length >= 1
-      ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits2.length * 0.12, 0.92), kind: 'relational', route: '/dashboard/relationships' }]
+      ? [{ id: 'open_relationship', label: 'Map this relationship', priority: Math.min(0.5 + relHits2.length * 0.12, 0.92), kind: 'relational', route: '/relationships' }]
       : undefined;
 
     const response2 = NextResponse.json({

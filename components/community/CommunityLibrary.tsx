@@ -6,6 +6,123 @@
 'use client';
 
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { COMMUNITY_LIBRARY_ARTICLES } from '@/lib/community-library/manifest.generated';
+
+/**
+ * Resolve the markdown body for an article.
+ *
+ * Articles fall into two shapes:
+ *  1. file-backed — `content` is a repo-relative `.md` path. The actual
+ *     markdown is baked into the build manifest at
+ *     `lib/community-library/manifest.generated.ts` and looked up by id.
+ *     Source markdown does NOT ship into the docker container, so the
+ *     manifest is the only path to it at runtime.
+ *  2. inline — `content` is the markdown itself (e.g. the dream guides).
+ *     We render it directly.
+ *
+ * Returns null when neither path resolves, so the view can render a
+ * clean "content not yet available" state instead of a broken preview.
+ */
+function resolveArticleMarkdown(article: InsightArticle): string | null {
+  // Manifest lookup wins. The manifest is the whitelist; if the id isn't
+  // there, the article is not file-served.
+  const fromManifest = COMMUNITY_LIBRARY_ARTICLES[article.id];
+  if (fromManifest) return fromManifest;
+
+  // If `content` does not look like a path (no .md suffix) treat it as
+  // inline markdown. This covers the dream-recording / archetypal-analysis
+  // / correlation-tracking articles whose content lives in the component
+  // source as a template literal.
+  const looksLikePath = /\.md$/i.test(article.content.trim());
+  if (!looksLikePath) return article.content;
+
+  // It's a path, but it's not in the allowlisted manifest. Surface the
+  // gap explicitly rather than dumping the path string into the page.
+  return null;
+}
+
+/**
+ * Tailwind component map for ReactMarkdown.
+ *
+ * We render markdown with explicit per-element styling instead of the
+ * `@tailwindcss/typography` prose classes — that plugin isn't installed
+ * and adding it for one feature exceeds the agreed scope. The styles
+ * below match the existing stone/teal/amber palette used elsewhere in
+ * the Community Library and are intentionally restrained: this is
+ * source material to read, not a styled marketing page.
+ */
+const MARKDOWN_COMPONENTS = {
+  h1: (props: any) => (
+    <h1 className="text-3xl font-semibold text-stone-900 dark:text-stone-100 mt-8 mb-4" {...props} />
+  ),
+  h2: (props: any) => (
+    <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100 mt-8 mb-3" {...props} />
+  ),
+  h3: (props: any) => (
+    <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mt-6 mb-2" {...props} />
+  ),
+  h4: (props: any) => (
+    <h4 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mt-5 mb-2" {...props} />
+  ),
+  p: (props: any) => (
+    <p className="text-stone-700 dark:text-stone-300 leading-relaxed mb-4" {...props} />
+  ),
+  a: (props: any) => (
+    <a
+      className="text-teal-700 dark:text-teal-300 underline underline-offset-2 hover:text-teal-800 dark:hover:text-teal-200"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  ul: (props: any) => (
+    <ul className="list-disc pl-6 mb-4 space-y-1 text-stone-700 dark:text-stone-300" {...props} />
+  ),
+  ol: (props: any) => (
+    <ol className="list-decimal pl-6 mb-4 space-y-1 text-stone-700 dark:text-stone-300" {...props} />
+  ),
+  li: (props: any) => <li className="leading-relaxed" {...props} />,
+  blockquote: (props: any) => (
+    <blockquote
+      className="border-l-4 border-teal-500/60 pl-4 italic my-4 text-stone-600 dark:text-stone-400"
+      {...props}
+    />
+  ),
+  code: ({ inline, ...props }: any) =>
+    inline ? (
+      <code
+        className="bg-stone-100 dark:bg-stone-800 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded text-sm"
+        {...props}
+      />
+    ) : (
+      <code className="block" {...props} />
+    ),
+  pre: (props: any) => (
+    <pre
+      className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-lg p-4 overflow-x-auto mb-4 text-sm"
+      {...props}
+    />
+  ),
+  hr: () => <hr className="border-stone-200 dark:border-stone-700 my-6" />,
+  strong: (props: any) => <strong className="text-stone-900 dark:text-stone-100 font-semibold" {...props} />,
+  em: (props: any) => <em className="italic" {...props} />,
+  table: (props: any) => (
+    <div className="overflow-x-auto mb-4">
+      <table className="min-w-full text-sm border border-stone-200 dark:border-stone-700" {...props} />
+    </div>
+  ),
+  th: (props: any) => (
+    <th
+      className="border border-stone-200 dark:border-stone-700 px-3 py-2 text-left font-semibold bg-stone-50 dark:bg-stone-800/60"
+      {...props}
+    />
+  ),
+  td: (props: any) => (
+    <td className="border border-stone-200 dark:border-stone-700 px-3 py-2 align-top" {...props} />
+  ),
+};
 
 interface TechnologyCategory {
   id: string;
@@ -56,44 +173,20 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
+        id: 'the-relational-field',
+        title: '★ The Relational Field',
+        description: 'Most systems collapse experience by explaining it. This one is built not to.',
+        content: 'Community-Commons/library/the-relational-field.md',
+        tags: ['relational intelligence', 'ai ethics', 'consciousness design', 'field theory', 'inhibition', 'soullab'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field']
+      },
+      {
         id: 'presence-continuity',
         title: '★ Presence Continuity and Personal Sovereignty',
         description: 'FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.',
         content: 'docs/papers/presence-continuity.md',
         tags: ['sovereignty', 'presence', 'local-first', 'ethics', 'offline', 'trust', 'attachment-theory'],
         relatedTechnologies: ['maia-oracle', 'consciousness-field']
-      },
-      {
-        id: 'consciousness-evolution-framework',
-        title: 'The Evolution of Human Consciousness',
-        description: 'A comprehensive framework for understanding consciousness development from mechanistic to integral awareness',
-        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-        tags: ['consciousness', 'evolution', 'philosophy', 'integral', 'process-philosophy'],
-        relatedTechnologies: ['maia-oracle', 'consciousness-field', 'collective-orchestrator']
-      },
-      {
-        id: 'post-mechanistic-paradigm',
-        title: 'Beyond Mechanistic Materialism',
-        description: 'Understanding reality as living process rather than dead matter',
-        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-        tags: ['philosophy', 'mechanistic', 'organic', 'process'],
-        relatedTechnologies: ['consciousness-field', 'elemental-circulation']
-      },
-      {
-        id: 'consciousness-structures',
-        title: 'Structures of Consciousness',
-        description: 'Jean Gebser\'s model of consciousness evolution and its applications',
-        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-        tags: ['gebser', 'consciousness-structures', 'development', 'evolution'],
-        relatedTechnologies: ['collective-orchestrator', 'breakthrough-prediction']
-      },
-      {
-        id: 'integral-emergence',
-        title: 'The Integral Transition',
-        description: 'Understanding the current evolution from perspectival to integral consciousness',
-        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
-        tags: ['integral', 'transition', 'perspectival', 'evolution'],
-        relatedTechnologies: ['consciousness-field', 'maia-oracle', 'collective-orchestrator']
       },
       {
         id: 'jungian-alchemy-framework',
@@ -110,46 +203,6 @@ const insightCollections: InsightCollection[] = [
         content: 'docs/community-library/DISPOSABLE_PIXEL_PHILOSOPHY.md',
         tags: ['interface-design', 'sacred-technology', 'alchemy', 'transformation', 'ui-philosophy'],
         relatedTechnologies: ['maia-oracle', 'adaptive-interface', 'consciousness-field', 'alchemical-detection']
-      }
-    ]
-  },
-  {
-    id: 'consciousness-insights',
-    title: 'Consciousness Development Insights',
-    description: 'Practical wisdom for using consciousness technologies in daily life',
-    icon: '',
-    articles: [
-      {
-        id: 'alchemical-wisdom',
-        title: 'Archetypal Patterns in Personal Transformation',
-        description: 'How to work skillfully with each transformation phase through archetypal awareness',
-        content: 'Community-Commons/02-Thematic-Essays/Archetypal Patterns in Personal Transformation.md',
-        tags: ['alchemy', 'transformation', 'archetypes', 'cycles'],
-        relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction']
-      },
-      {
-        id: 'elemental-mastery',
-        title: 'Elemental Balance in Modern Life',
-        description: 'Practical applications for each element phase in daily living',
-        content: 'Community-Commons/02-Thematic-Essays/Elemental Balance in Modern Life.md',
-        tags: ['elements', 'circulation', 'energy', 'balance'],
-        relatedTechnologies: ['elemental-circulation', 'elemental-coherence']
-      },
-      {
-        id: 'shadow-work',
-        title: 'Shadow Work and Conscious Development',
-        description: 'Integrating the shadow for wholeness and breakthrough',
-        content: 'Community-Commons/02-Thematic-Essays/Shadow Work and Conscious Development.md',
-        tags: ['shadow', 'integration', 'jung', 'development'],
-        relatedTechnologies: ['breakthrough-prediction', 'maia-oracle']
-      },
-      {
-        id: 'oracle-integration',
-        title: 'MAIA Consciousness Advancement Engine',
-        description: 'Getting the most from AI consciousness guidance',
-        content: 'Community-Commons/MAIA_CONSCIOUSNESS_ADVANCEMENT_ENGINE.md',
-        tags: ['oracle', 'AI', 'guidance', 'maia'],
-        relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration']
       }
     ]
   },
@@ -176,36 +229,12 @@ const insightCollections: InsightCollection[] = [
         relatedTechnologies: ['breakthrough-prediction', 'maia-oracle', 'spiralogic-orchestration']
       },
       {
-        id: 'collective-field-mastery',
-        title: 'Understanding the Field',
-        description: 'A practitioner guide to field contribution and emergence navigation',
-        content: 'Community-Commons/01-Core-Concepts/_Published/Understanding the Field - A Practitioner Guide.md',
-        tags: ['collective', 'field', 'emergence', 'community'],
-        relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'field-coherence-engine']
-      },
-      {
-        id: 'transformation-mastery',
-        title: 'The Dialectical Scaffold',
-        description: 'Navigating transformation through dialectical consciousness frameworks',
-        content: 'Community-Commons/01-Core-Concepts/The-Dialectical-Scaffold.md',
-        tags: ['transformation', 'crisis', 'dialectical', 'evolution'],
-        relatedTechnologies: ['breakthrough-prediction', 'maia-oracle', 'fascia-field-lab', 'collective-orchestrator']
-      },
-      {
         id: 'service-integration',
         title: 'Soul vs Spirit',
         description: 'Understanding the distinction between soul work and spiritual bypassing',
         content: 'Community-Commons/01-Core-Concepts/_Published/Soul vs Spirit.md',
         tags: ['service', 'integration', 'soul', 'spirit'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'maia-oracle']
-      },
-      {
-        id: 'future-evolution',
-        title: 'Consciousness Computing Vision',
-        description: 'The complete vision index for consciousness-technology evolution',
-        content: 'Community-Commons/COMPLETE_CONSCIOUSNESS_VISION_INDEX.md',
-        tags: ['future', 'evolution', 'global', 'consciousness-technology'],
-        relatedTechnologies: ['spiralogic-orchestration', 'collective-orchestrator', 'field-coherence-engine']
       }
     ]
   },
@@ -216,36 +245,12 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
-        id: 'consciousness-computing-launch',
-        title: 'Consciousness Computing Launch',
-        description: 'The official launch announcement for the consciousness computing platform',
-        content: 'Community-Commons/CONSCIOUSNESS_COMPUTING_LAUNCH_ANNOUNCEMENT.md',
-        tags: ['platform-update', 'launch', 'architecture', 'breakthrough'],
-        relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration', 'collective-orchestrator']
-      },
-      {
-        id: 'consciousness-computing-architecture',
-        title: 'Consciousness Computing Architecture',
-        description: 'Technical architecture paper for the consciousness computing system',
-        content: 'Community-Commons/CONSCIOUSNESS_COMPUTING_ARCHITECTURE_PAPER.md',
-        tags: ['architecture', 'technical', 'design'],
-        relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration', 'collective-orchestrator']
-      },
-      {
         id: 'opus-axioms-system',
         title: 'MAIA Opus Axioms System',
         description: 'The foundational axiom system that guides MAIA\'s consciousness responses',
         content: 'Community-Commons/MAIA_OPUS_AXIOMS_SYSTEM_PAPER.md',
         tags: ['axioms', 'philosophy', 'guidance'],
         relatedTechnologies: ['maia-oracle', 'breakthrough-prediction']
-      },
-      {
-        id: 'felt-difference-demonstrations',
-        title: 'The Felt Difference Demonstrations',
-        description: 'Examples showing the felt difference between conventional AI and consciousness-aware AI',
-        content: 'Community-Commons/THE_FELT_DIFFERENCE_DEMONSTRATIONS.md',
-        tags: ['demonstrations', 'comparison', 'experience'],
-        relatedTechnologies: ['maia-oracle']
       }
     ]
   },
@@ -304,22 +309,6 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
-        id: 'spiritual-maturity',
-        title: 'Spiritual Maturity and Developmental Stages',
-        description: 'Understanding the stages of spiritual development and maturation',
-        content: 'Community-Commons/02-Thematic-Essays/Spiritual Maturity and Developmental Stages.md',
-        tags: ['development', 'maturity', 'stages'],
-        relatedTechnologies: ['alchemical-detection', 'elemental-circulation', 'breakthrough-prediction', 'maia-oracle']
-      },
-      {
-        id: 'embodied-wisdom',
-        title: 'Embodied Wisdom and Somatic Intelligence',
-        description: 'Integrating body wisdom into consciousness practice',
-        content: 'Community-Commons/02-Thematic-Essays/Embodied Wisdom and Somatic Intelligence.md',
-        tags: ['embodiment', 'somatic', 'wisdom'],
-        relatedTechnologies: ['fascia-field-lab', 'alchemical-detection', 'breakthrough-prediction']
-      },
-      {
         id: 'spiritual-bypass',
         title: 'Spiritual Bypass vs Soul Work',
         description: 'Understanding the difference between true soul work and spiritual bypassing',
@@ -354,325 +343,11 @@ const insightCollections: InsightCollection[] = [
     ]
   },
   {
-    id: 'dream-unconscious-integration',
-    title: 'Dream & Unconscious Integration How-To',
-    description: 'Complete guide for working with MAIA to record, remember, and relate dreams across time',
-    icon: '',
-    articles: [
-      {
-        id: 'dream-recording-guide',
-        title: 'How to Record Dreams with MAIA',
-        description: 'Step-by-step guide for capturing dreams and enabling MAIA\'s advanced archetypal analysis',
-        content: `
-# How to Record Dreams with MAIA
-
-## Overview
-MAIA's Dream & Unconscious Integration system combines sophisticated Jungian archetypal analysis with Kelly Beard's 35-year DreamWeaver phenomenological practice to help you record, remember, and relate dreams across time.
-
-## Step 1: Immediate Dream Capture
-**Within 5 minutes of waking:**
-1. Open MAIA on your mobile device (optimal for bedside recording)
-2. Navigate to LabTools → Dreams & Unconscious
-3. Tap "Record New Dream"
-4. Use voice-to-text or type your dream immediately
-
-## Step 2: Core Dream Elements
-**Essential information to capture:**
-- **Dream Content**: Raw dream narrative (don't edit or analyze)
-- **Emotional Tone**: Primary emotions experienced
-- **Vividness**: Scale 1-10 how clear/vivid the dream was
-- **Lucidity Level**: Scale 0-10 how aware you were of dreaming
-- **Sleep Quality**: How well you slept (affects dream processing)
-- **Time Context**: Approximate time you woke, time in bed
-
-## Step 3: Let MAIA's AI Analyze
-**DreamWeaver Engine automatically detects:**
-- **Jungian Archetypes**: 19+ archetypal patterns (hero, shadow, anima, etc.)
-- **Wisdom Emergence**: Body activation, language shifts, energy markers
-- **Elemental Patterns**: Fire, Water, Earth, Air, Aether consciousness flows
-- **Transformation Markers**: Crisis navigation, breakthrough indicators
-- **Shadow Work**: Integration opportunities and resistance patterns
-
-## Step 4: Review Analysis Results
-**MAIA provides sophisticated insights:**
-- Primary and secondary archetypes present
-- Wisdom emergence signals detected
-- Elemental consciousness patterns
-- Cross-correlation with waking consciousness states
-- Integration recommendations and follow-up questions
-
-## Step 5: Ongoing Integration
-**Daily and weekly practices:**
-- Review dream patterns in your personal dashboard
-- Explore archetypal progression over time
-- Notice correlations between dreams and daily consciousness states
-- Use MAIA's recommendations for shadow work and integration
-- Ask MAIA follow-up questions about dream meanings and patterns
-`,
-        tags: ['dream-recording', 'archetypal-analysis', 'voice-to-text', 'dream-capture'],
-        relatedTechnologies: ['maia-oracle', 'alchemical-detection', 'elemental-circulation']
-      },
-      {
-        id: 'archetypal-analysis-guide',
-        title: 'Understanding Archetypal Dream Analysis',
-        description: 'Deep dive into MAIA\'s sophisticated Jungian archetypal interpretation system',
-        content: `
-# Understanding MAIA's Archetypal Dream Analysis
-
-## The Archetypal Framework
-MAIA uses a comprehensive 19+ archetype system based on Jungian psychology:
-
-### Core Archetypal Categories:
-
-**Primary Archetypes:**
-- **Hero**: Journey, courage, overcoming obstacles
-- **Shadow**: Repressed aspects, integration work needed
-- **Anima/Animus**: Inner feminine/masculine, soul connection
-- **Wise Old Man/Woman**: Guidance, wisdom, mentorship
-- **Mother/Father**: Nurturing, authority, protection
-
-**Transformation Archetypes:**
-- **Magician**: Transformation, manifestation, power
-- **Ruler**: Authority, responsibility, leadership
-- **Rebel**: Revolution, breaking patterns, authentic change
-- **Creator**: Innovation, artistic expression, bringing forth
-
-**Relational Archetypes:**
-- **Lover**: Connection, passion, union
-- **Caregiver**: Service, compassion, healing
-- **Child**: Innocence, wonder, new beginnings
-- **Maiden**: Fresh starts, potential, receptivity
-
-**Wisdom Archetypes:**
-- **Sage**: Knowledge, understanding, teaching
-- **Seeker**: Quest, exploration, spiritual journey
-- **Trickster**: Paradox, humor, breaking conventions
-- **Destroyer**: Necessary endings, clearing, death/rebirth
-
-## How MAIA Analyzes Your Dreams
-
-**1. Archetypal Detection:**
-- Characters in dreams mapped to archetypal energies
-- Actions and scenarios analyzed for archetypal themes
-- Emotional resonances matched to archetypal patterns
-
-**2. Archetypal Interactions:**
-- How different archetypes interact in your dream
-- Dominant vs. supporting archetypal energies
-- Shadow projections and integration opportunities
-
-**3. Progression Tracking:**
-- Evolution of archetypal themes over time
-- Recurring archetypal patterns in your dream series
-- Seasonal and cyclical archetypal rhythms
-
-**4. Integration Guidance:**
-- Specific practices for working with active archetypes
-- Shadow work recommendations for repressed aspects
-- Timing guidance for archetypal integration work
-`,
-        tags: ['jungian-psychology', 'archetypes', 'dream-interpretation', 'shadow-work'],
-        relatedTechnologies: ['maia-oracle', 'breakthrough-prediction', 'alchemical-detection']
-      },
-      {
-        id: 'dream-correlation-patterns',
-        title: 'Dream-Consciousness Correlation Tracking',
-        description: 'How MAIA connects dream patterns with your waking consciousness states and life cycles',
-        content: `
-# Dream-Consciousness Correlation Tracking
-
-## The Integration System
-MAIA automatically tracks correlations between your dreams and waking consciousness states, creating a comprehensive map of your psyche's movement.
-
-## Correlation Categories
-
-**1. Elemental Consciousness Correlations:**
-- Dreams reflecting your current elemental pathway (Fire, Water, Earth, Air, Aether)
-- Elemental imbalances showing up in dream symbolism
-- Elemental circulation patterns affecting dream content
-
-**2. Alchemical Operation Correlations:**
-- Dreams during specific alchemical phases (dissolution, calcination, etc.)
-- Transformation themes matching your current alchemical process
-- Integration work appearing in dream content
-
-**3. Breakthrough Trajectory Correlations:**
-- Dreams predicting or processing breakthroughs
-- Dream content shifting before major life transitions
-- Wisdom emergence signals appearing in dreams
-
-**4. Sleep-Consciousness Integration:**
-- Sleep quality affecting dream depth and recall
-- Circadian rhythm patterns influencing dream types
-- Moon phase correlations with dream intensity
-
-## Automatic Pattern Recognition
-
-**Temporal Patterns:**
-- Seasonal dream cycles and themes
-- Weekly patterns in dream archetypes
-- Moon phase correlations with dream types
-
-**Biometric Correlations:**
-- HRV patterns affecting dream recall
-- Stress levels influencing dream content
-- Physical health correlations with dream symbols
-
-**Consciousness Development Patterns:**
-- Dreams supporting current growth edges
-- Shadow material surfacing during transformation
-- Guidance dreams during decision-making periods
-
-## Using Correlation Insights
-
-**1. Timing Optimization:**
-- Schedule intensive work based on dream guidance
-- Use dream insights for decision-making timing
-- Align practices with dream-revealed cycles
-
-**2. Integration Practices:**
-- Targeted shadow work based on dream content
-- Elemental balancing practices from dream analysis
-- Breakthrough preparation informed by dream patterns
-
-**3. Life Navigation:**
-- Career decisions supported by dream wisdom
-- Relationship insights from dream interactions
-- Creative projects inspired by dream symbolism
-`,
-        tags: ['consciousness-correlation', 'pattern-recognition', 'life-cycles', 'integration'],
-        relatedTechnologies: ['collective-orchestrator', 'elemental-circulation', 'breakthrough-prediction']
-      },
-      {
-        id: 'advanced-dream-practices',
-        title: 'Advanced Dream Work with MAIA',
-        description: 'Sophisticated practices for lucid dreaming, dream incubation, and wisdom emergence',
-        content: `
-# Advanced Dream Work with MAIA
-
-## Lucid Dreaming Integration
-MAIA tracks lucidity levels and helps develop conscious dreaming abilities.
-
-**Lucidity Development:**
-- Track lucidity scores over time
-- Correlate lucidity with sleep quality and practices
-- Receive personalized practices for lucidity development
-- Use dream signs and patterns for lucidity triggers
-
-**Conscious Dreaming Applications:**
-- Shadow work in lucid states
-- Creative problem-solving through dream consciousness
-- Healing work with dream archetypes
-- Spiritual practice and guidance reception
-
-## Dream Incubation Practices
-Use MAIA's correlation insights for targeted dream work.
-
-**Incubation Process:**
-1. **Intention Setting**: Clear questions for dream guidance
-2. **Optimal Timing**: Use MAIA's correlation data for timing
-3. **Environmental Setup**: Optimize sleep conditions for dream recall
-4. **Recording Protocol**: Immediate capture and analysis
-5. **Integration Work**: Follow MAIA's recommendations
-
-**Common Incubation Themes:**
-- Creative project guidance
-- Relationship healing and insight
-- Career direction and timing
-- Health and healing guidance
-- Spiritual development support
-
-## Wisdom Emergence Recognition
-MAIA's DreamWeaver Engine detects wisdom emergence signals.
-
-**Body Activation Patterns:**
-- Throat activation (Air element, communication)
-- Heart opening (Water element, emotional wisdom)
-- Crown activation (spiritual insight)
-- Solar plexus engagement (personal power wisdom)
-
-**Language Shift Indicators:**
-- Movement from analytical to poetic language
-- Metaphor-rich expression
-- Embodied knowing statements
-- Paradox and mystery acknowledgment
-
-**Energy Markers:**
-- Increased vitality and presence
-- Energetic field expansion
-- Heightened intuition and sensitivity
-- Synchronicity acceleration
-
-## Integration Protocols
-
-**Daily Integration:**
-- Morning dream review and correlation check
-- Afternoon archetypal practice based on dream guidance
-- Evening integration journaling and tomorrow's intention
-
-**Weekly Integration:**
-- Pattern analysis across the week's dreams
-- Archetypal progression review
-- Correlation insights for upcoming week
-- Adjustment of practices based on dream feedback
-
-**Monthly Cycles:**
-- Seasonal archetypal shifts
-- Long-term pattern recognition
-- Integration milestone assessment
-- Advanced practice adjustments
-`,
-        tags: ['lucid-dreaming', 'dream-incubation', 'wisdom-emergence', 'advanced-practices'],
-        relatedTechnologies: ['maia-oracle', 'breakthrough-prediction', 'fascia-field-lab']
-      }
-    ]
-  },
-  {
     id: 'member-support',
     title: 'Getting Started',
     description: 'Welcome guides, FAQ, and community orientation',
     icon: '',
     articles: [
-      {
-        id: 'welcome',
-        title: 'Welcome to SOULLAB',
-        description: 'Your introduction to the consciousness community',
-        content: 'Community-Commons/00-START-HERE/Welcome.md',
-        tags: ['welcome', 'introduction', 'getting-started'],
-        relatedTechnologies: ['maia-oracle']
-      },
-      {
-        id: 'member-faq',
-        title: 'Frequently Asked Questions',
-        description: 'Answers to common questions about SOULLAB and consciousness work',
-        content: 'Community-Commons/00-START-HERE/FAQ.md',
-        tags: ['FAQ', 'help', 'questions'],
-        relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction', 'maia-oracle', 'collective-orchestrator']
-      },
-      {
-        id: 'navigation-guide',
-        title: 'Navigation Guide',
-        description: 'How to find your way through the SOULLAB ecosystem',
-        content: 'Community-Commons/00-START-HERE/Navigation Guide.md',
-        tags: ['navigation', 'guide', 'orientation'],
-        relatedTechnologies: ['all']
-      },
-      {
-        id: 'community-guidelines',
-        title: 'Community Guidelines',
-        description: 'How we work together in conscious community',
-        content: 'Community-Commons/00-START-HERE/Community Guidelines.md',
-        tags: ['community', 'guidelines', 'culture'],
-        relatedTechnologies: ['collective-orchestrator', 'resonance-mapper']
-      },
-      {
-        id: 'platform-vision',
-        title: 'Platform Vision: Consciousness Research Hub',
-        description: 'The long-term vision for SOULLAB as a consciousness research platform',
-        content: 'Community-Commons/00-START-HERE/Platform Vision - Consciousness Research Hub.md',
-        tags: ['vision', 'platform', 'research'],
-        relatedTechnologies: ['collective-orchestrator', 'maia-oracle']
-      },
       {
         id: 'how-wisdom-engine-learns',
         title: 'How the Wisdom Engine Learns',
@@ -1102,7 +777,16 @@ export function CommunityLibrary() {
                   insightCollections.map(collection => (
                     <button
                       key={collection.id}
-                      onClick={() => setSelectedInsightCollection(collection)}
+                      onClick={() => {
+                        // Clear any open article when switching collections from
+                        // the sidebar — the render priority is
+                        //   selectedArticle ? <Article> : selectedInsightCollection ? <CollectionList> : <Grid>
+                        // so without clearing selectedArticle, sidebar clicks while
+                        // viewing an article would update the highlight but leave
+                        // the article view in place (visible after Pass 2 cull).
+                        setSelectedArticle(null);
+                        setSelectedInsightCollection(collection);
+                      }}
                       className={`w-full text-left p-4 rounded-lg transition-all ${
                         selectedInsightCollection?.id === collection.id
                           ? 'bg-teal-600 text-white'
@@ -1363,16 +1047,32 @@ function InsightArticleView({
         ))}
       </div>
 
-      {/* Content Preview */}
-      <div className="bg-stone-100 dark:bg-stone-800 rounded-lg p-6 mb-6 border border-stone-200 dark:border-stone-700">
-        <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4">Content Preview</h3>
-        <p className="text-stone-600 dark:text-stone-400 mb-4">
-          This article contains comprehensive insights and practical wisdom. The full content is available in the documentation files.
-        </p>
-        <div className="text-sm text-stone-500">
-          Location: {article.content}
-        </div>
-      </div>
+      {/* Article body — file-backed (manifest) or inline markdown */}
+      {(() => {
+        const md = resolveArticleMarkdown(article);
+        if (md == null) {
+          return (
+            <div className="bg-stone-50 dark:bg-stone-800/40 rounded-lg p-6 mb-6 border border-stone-200 dark:border-stone-700">
+              <h3 className="text-base font-medium text-stone-700 dark:text-stone-300 mb-2">
+                Content not yet available
+              </h3>
+              <p className="text-sm text-stone-500 dark:text-stone-400">
+                This piece is referenced in the library but its body has not been wired in yet. Check back soon.
+              </p>
+            </div>
+          );
+        }
+        return (
+          <div className="mb-6 max-w-none text-stone-700 dark:text-stone-300 leading-relaxed">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={MARKDOWN_COMPONENTS}
+            >
+              {md}
+            </ReactMarkdown>
+          </div>
+        );
+      })()}
 
       {/* Related Technologies */}
       {article.relatedTechnologies.length > 0 && (

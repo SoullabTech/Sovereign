@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navItems = [
     { href: '/dashboard', label: 'Jade Command Center', shape: 'circle' },
     { href: '/dashboard/dreams', label: 'Lunar Dream Portal', shape: 'crescent' },
-    { href: '/dashboard/relationships', label: 'Sacred Connection Matrix', shape: 'heart' },
+    { href: '/relationships', label: 'Sacred Connection Matrix', shape: 'heart' },
     { href: '/dashboard/shadow', label: 'Shadow Integration Portal', shape: 'diamond' },
     { href: '/dashboard/audio', label: 'Sonic Resonance Matrix', shape: 'wave' },
     { href: '/dashboard/reflections', label: 'Memory Crystalline Archive', shape: 'hexagon' },

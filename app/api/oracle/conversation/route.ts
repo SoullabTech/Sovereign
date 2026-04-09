@@ -46,6 +46,11 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
+import { getMemberActiveEventContext } from '@/lib/events/eventService';
+import type { ActiveEventContext } from '@/lib/events/types';
+import { getMemberActiveRelationalContext } from '@/lib/relationships/relationshipContextService';
+import { buildRelationalContextBlock } from '@/lib/relationships/buildRelationalContextBlock';
+import type { ActiveRelationalContext } from '@/lib/relationships/types';
 import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
 import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
 import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
@@ -109,6 +114,48 @@ function getClientIp(req: NextRequest) {
   const xff = req.headers.get('x-forwarded-for');
   if (xff) return xff.split(',')[0].trim();
   return req.headers.get('x-real-ip') || 'unknown';
+}
+
+/**
+ * Event Arc context block.
+ *
+ * When a member is inside an Event Arc container, inject awareness into
+ * MAIA's system prompt. This is the interpretive bridge that makes MAIA
+ * shift from "responding to queries" to "participating in a human process
+ * over time."
+ *
+ * The goal is NOT for MAIA to mention the event or state the phase aloud.
+ * The goal is a subtle tone shift: longer continuity, less transactional,
+ * more orientation/integration framing.
+ */
+function buildEventArcContextBlock(activeEvent: ActiveEventContext | null): string {
+  if (!activeEvent) return '';
+
+  return `
+The user is currently inside an Event Arc.
+
+Event: ${activeEvent.title}
+Phase: ${activeEvent.phase}
+
+continuity_mode: true
+
+Interpretive stance:
+- Treat this interaction as part of an unfolding process over time
+- Maintain continuity across turns, not isolated responses
+- Assume prior exchanges are active in the current moment
+
+Phase guidance:
+- pre: orient attention, clarify intention, reduce pressure
+- during: stay with the unfolding, reflect patterns, support depth
+- post: integrate, consolidate, do not re-activate intensity
+
+Constraints:
+- Do not behave like an event manager
+- Do not reference the event unless naturally relevant
+- Do not introduce structure unless it emerges from the user
+
+Hold the interaction as a continuous field, not a sequence of answers.
+`;
 }
 
 function rateLimitOrThrow(ip: string) {
@@ -313,6 +360,8 @@ type ConversationBody = {
   conversationHistory?: any[];
   element?: string;
   userName?: string;
+  /** Explicit handoff from /relationships/[id] — session-persistent on client */
+  relationshipContextId?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -509,6 +558,47 @@ export async function POST(request: NextRequest) {
 
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
+
+    // EVENT ARC: Load active event context if the member is inside a container.
+    // Graceful fallback — if the lookup fails, conversation continues normally.
+    let activeEventContext: ActiveEventContext | null = null;
+    try {
+      activeEventContext = await getMemberActiveEventContext(userId);
+      if (activeEventContext) {
+        console.log('[Oracle] event-arc', {
+          eventId: activeEventContext.eventId,
+          phase: activeEventContext.phase,
+          continuityMode: true,
+          included: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[Oracle] event-arc load failed (non-critical):', err);
+    }
+
+    // RELATIONAL BRIDGE: Load active relational context if the user has handed off
+    // from /relationships/[id]. Session-persistent on client; rides every POST in
+    // the session. Graceful fallback matches Event Arc — never blocks the oracle.
+    // See: memory/project_relational_context_bridge.md
+    let activeRelationalContext: ActiveRelationalContext | null = null;
+    try {
+      activeRelationalContext = await getMemberActiveRelationalContext(userId, {
+        relationshipId: body.relationshipContextId,
+      });
+      if (activeRelationalContext) {
+        console.log('[Oracle] relational-context', {
+          relationshipId: activeRelationalContext.relationshipId,
+          mode: activeRelationalContext.mode,
+          realm: activeRelationalContext.realm,
+          explicitHandoff: !!body.relationshipContextId,
+          continuityMode: true,
+          relationalMode: true,
+          included: true,
+        });
+      }
+    } catch (err) {
+      console.warn('[Oracle] relational-context load failed (non-critical):', err);
+    }
 
     // BRIDGE D extension: Extract active report context (if present)
     const activeReportContext: ActiveReportContext | null = spiralState?.activeReportContext ?? null;
@@ -761,7 +851,9 @@ export async function POST(request: NextRequest) {
       preferredAssistantName,
       activeReportContext,
       memberWebPrompt,
-      userId
+      userId,
+      activeEventContext,
+      activeRelationalContext
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1712,7 +1804,9 @@ async function generateSpiralogicResponseWithLLM(
   preferredAssistantName?: string,
   activeReportContext?: ActiveReportContext | null,
   memberWebPrompt?: string,
-  userId?: string
+  userId?: string,
+  activeEventContext?: ActiveEventContext | null,
+  activeRelationalContext?: ActiveRelationalContext | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1887,6 +1981,9 @@ async function generateSpiralogicResponseWithLLM(
     console.warn('[Oracle] Prompt library load failed (non-critical):', themeError);
   }
 
+  const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
+  const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
+
   const finalSystemPrompt = [
     systemPrompt,
     cmEnvironmentBlock,
@@ -1894,6 +1991,8 @@ async function generateSpiralogicResponseWithLLM(
     activeThemeBlock,
     councilInsights,
     collectiveWisdom,
+    eventArcBlock,
+    relationalContextBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
@@ -1985,7 +2084,7 @@ async function generateSpiralogicResponseWithLLM(
       priority: confidence,
       elementalResonance: spiralogicCell.element,
       kind: 'relational' as any,
-      route: '/dashboard/relationships',
+      route: '/relationships',
     });
   }
 

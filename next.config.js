@@ -78,6 +78,64 @@ const nextConfig = {
           ]
         }
       ];
+    },
+    // Legacy /maia/* world URLs — the rail was remapped to the canonical
+    // homes of each world, but old bookmarks and external links should
+    // still resolve. Permanent (308) so clients cache the new location.
+    //
+    // NOTE: redirects defined here run at the Next.js edge layer, BEFORE
+    // any route prerendering. This is the only reliable way to emit a
+    // true 308 for paths whose "page" would otherwise be collapsed into a
+    // cached HTML response by the static optimizer. Do not try to express
+    // these as page-level permanentRedirect() — the optimizer will cache
+    // the HTML and the browser will receive 200 instead of 308.
+    async redirects() {
+      return [
+        {
+          source: '/maia/patterns',
+          destination: '/worlds/patterns',
+          permanent: true,
+        },
+        {
+          source: '/maia/depth',
+          destination: '/worlds/depth',
+          permanent: true,
+        },
+        {
+          source: '/maia/journal',
+          destination: '/labtools/journal',
+          permanent: true,
+        },
+        {
+          source: '/maia/wisdom',
+          destination: '/wisdom-keepers/wisdom',
+          permanent: true,
+        },
+        {
+          source: '/community/library',
+          destination: '/maia/community/library',
+          permanent: true,
+        },
+        // Relational Field — moved out of the Jade Neural Command shell
+        // (app/dashboard/*) into its own top-level route so it no longer
+        // inherits a layout reserved for future Neural tech integration.
+        // Also catches the short-lived /maia/relationships whisper shell.
+        {
+          source: '/dashboard/relationships',
+          destination: '/relationships',
+          permanent: true,
+        },
+        {
+          source: '/dashboard/relationships/:id',
+          destination: '/relationships/:id',
+          permanent: true,
+        },
+        {
+          source: '/maia/relationships',
+          destination: '/relationships',
+          permanent: true,
+        },
+      ];
     }
   }),
 

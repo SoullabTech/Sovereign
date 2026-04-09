@@ -22,6 +22,7 @@ import {
   Mic,
   MessageCircle,
   FlaskConical,
+  BookCopy,
 } from 'lucide-react';
 
 import type {
@@ -47,7 +48,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'patterns',
     label: 'Patterns',
     icon: Sparkles,
-    route: '/maia/patterns',
+    route: '/worlds/patterns',
     classification: 'world',
     tooltip: 'Constellation & pattern field',
   },
@@ -55,7 +56,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'depth',
     label: 'Depth',
     icon: Layers,
-    route: '/maia/depth',
+    route: '/worlds/depth',
     classification: 'world',
     tooltip: 'Meaning well & symbolic layer',
   },
@@ -63,7 +64,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'journal',
     label: 'Journal',
     icon: BookOpen,
-    route: '/maia/journal',
+    route: '/labtools/journal',
     classification: 'world',
     tooltip: 'Expressive writing & captures',
   },
@@ -79,7 +80,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'relationships',
     label: 'Relationships',
     icon: Heart,
-    route: '/maia/relationships',
+    route: '/relationships',
     classification: 'world',
     tooltip: 'Relational awareness',
   },
@@ -87,7 +88,7 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     id: 'wisdom',
     label: 'Wisdom',
     icon: Library,
-    route: '/maia/wisdom',
+    route: '/wisdom-keepers/wisdom',
     classification: 'world',
     tooltip: 'Sacred texts & learning',
   },
@@ -132,6 +133,16 @@ export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
   route: '/labtools',
   classification: 'studio',
   tooltip: 'Consciousness tools & experiments',
+  isBoundaryTransition: true,
+};
+
+export const COMMUNITY_LIBRARY_RAIL_ITEM: MaiaRailItem = {
+  id: 'community-library',
+  label: 'Community Library',
+  icon: BookCopy,
+  route: '/maia/community/library',
+  classification: 'studio',
+  tooltip: 'Shared knowledge & collective resources',
   isBoundaryTransition: true,
 };
 
@@ -189,6 +200,7 @@ export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   CIRCLES_RAIL_ITEM,
   ASTROLOGY_RAIL_ITEM,
   LABTOOLS_RAIL_ITEM,
+  COMMUNITY_LIBRARY_RAIL_ITEM,
 ];
 
 /** Left rail width in pixels — used for content padding in boundary layouts */
