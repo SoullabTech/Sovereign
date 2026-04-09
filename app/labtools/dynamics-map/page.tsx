@@ -80,6 +80,15 @@ function DynamicsMapContent() {
   const searchParams = useSearchParams();
   const initialId = searchParams?.get('relationshipId') ?? null;
 
+  // [Relational Layer — Phase 4]
+  // Accept seed params from Relational Field "Work with it" handoff.
+  // The seed is visually secondary, non-locking, and dismissible. It never
+  // preselects user choices or auto-advances the flow.
+  const seedTone = searchParams?.get('tone') ?? null;
+  const seedMovement = searchParams?.get('movement') ?? null;
+  const hasSeed = !!(seedTone || seedMovement);
+  const [seedDismissed, setSeedDismissed] = useState(false);
+
   const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [picked, setPicked] = useState<PickedRelationship | null>(null);
   const [recurrence, setRecurrence] = useState('');
@@ -238,6 +247,35 @@ function DynamicsMapContent() {
                 exit={{ opacity: 0, y: -12 }}
                 className="space-y-6"
               >
+                {/*
+                  [Relational Layer — Phase 4]
+                  Seed banner — only renders when arriving from Relational Field
+                  "Work with it" handoff with ?tone= / ?movement= params.
+                  Visually secondary, non-locking, dismissible. Never preselects
+                  user choices. Disappears on step advance (Step 0 only).
+                */}
+                {hasSeed && !seedDismissed && (
+                  <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+                    <p className="flex-1 text-[11px] text-white/40">
+                      Starting from:{' '}
+                      <span className="text-white/60">
+                        {[seedTone, seedMovement]
+                          .filter(Boolean)
+                          .map((v) => (v as string).replace(/_/g, ' '))
+                          .join(' · ')}
+                      </span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setSeedDismissed(true)}
+                      className="text-[11px] text-white/30 hover:text-white/60 transition"
+                      aria-label="Dismiss seed"
+                    >
+                      clear
+                    </button>
+                  </div>
+                )}
+
                 <RelationshipPicker
                   value={picked}
                   onChange={setPicked}

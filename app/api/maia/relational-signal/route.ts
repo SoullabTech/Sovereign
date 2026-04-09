@@ -15,18 +15,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import {
+  countMatchingSignals,
   getLatestSignal,
   insertRelationalSignal,
 } from '@/lib/relationships/relationshipSignalService';
 import type {
   CounterpartLabel,
   DynamicTag,
+  MovementCue,
   RelationshipTone,
   RuptureState,
 } from '@/lib/relationships/types';
 import {
   CANONICAL_COUNTERPART_LABELS,
   CANONICAL_DYNAMIC_TAGS,
+  CANONICAL_MOVEMENT_CUES,
   CANONICAL_TONES,
   RUPTURE_STATES,
 } from '@/lib/relationships/types';
@@ -34,10 +37,16 @@ import {
 export const dynamic = 'force-dynamic';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET — latest signal
+// GET — latest signal (+ optional prior-match count for the continuity hint)
+//
+// [Relational Layer — Phase 4]
+// Accepts ?includeCount=1 to ask for the number of prior signals that
+// match the latest signal's (tone + counterpart_label) pair, excluding
+// the latest row itself. Powers the field card's "This has surfaced
+// before." hint at N ≥ 1.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getCurrentSession();
     if (!session?.memberId) {
@@ -45,7 +54,18 @@ export async function GET() {
     }
 
     const signal = await getLatestSignal(session.memberId);
-    return NextResponse.json({ success: true, signal });
+
+    const includeCount = request.nextUrl.searchParams.get('includeCount') === '1';
+    let priorMatches = 0;
+    if (includeCount && signal && signal.tone && signal.counterpartLabel) {
+      priorMatches = await countMatchingSignals(session.memberId, {
+        tone: signal.tone,
+        counterpart: signal.counterpartLabel,
+        excludeSignalId: signal.id ?? null,
+      });
+    }
+
+    return NextResponse.json({ success: true, signal, priorMatches });
   } catch (err) {
     console.error('[api/maia/relational-signal] GET error:', err);
     return NextResponse.json(
@@ -66,6 +86,7 @@ interface PostBody {
   ruptureState?: string | null;
   dynamicTags?: string[];
   frameworksApplied?: string[];
+  movementCue?: string | null;
 }
 
 function coerceTone(v: unknown): RelationshipTone | null {
@@ -83,6 +104,12 @@ function coerceRupture(v: unknown): RuptureState | null {
 function coerceCounterpart(v: unknown): CounterpartLabel | null {
   return typeof v === 'string' && (CANONICAL_COUNTERPART_LABELS as readonly string[]).includes(v)
     ? (v as CounterpartLabel)
+    : null;
+}
+
+function coerceMovementCue(v: unknown): MovementCue | null {
+  return typeof v === 'string' && (CANONICAL_MOVEMENT_CUES as readonly string[]).includes(v)
+    ? (v as MovementCue)
     : null;
 }
 
@@ -126,6 +153,7 @@ export async function POST(request: NextRequest) {
       frameworksApplied: coerceFrameworks(body.frameworksApplied),
       source: 'labtool_manual',
       confidence: null,
+      movementCue: coerceMovementCue(body.movementCue),
     });
 
     if (!id) {

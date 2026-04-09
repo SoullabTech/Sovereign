@@ -13,6 +13,7 @@ import type {
   CounterpartLabel,
   DetectedSignal,
   DynamicTag,
+  MovementCue,
   RelationshipSignal,
   RelationshipTone,
   RuptureState,
@@ -21,6 +22,7 @@ import type {
 import {
   CANONICAL_COUNTERPART_LABELS,
   CANONICAL_DYNAMIC_TAGS,
+  CANONICAL_MOVEMENT_CUES,
   CANONICAL_TONES,
   RUPTURE_STATES,
 } from './types';
@@ -69,6 +71,14 @@ function safeSource(v: unknown): SignalSource | null {
   return v === 'maia_conversation' || v === 'labtool_manual' ? v : null;
 }
 
+// [Relational Layer — Phase 4]
+function safeMovementCue(v: unknown): MovementCue | null {
+  return typeof v === 'string' &&
+    (CANONICAL_MOVEMENT_CUES as readonly string[]).includes(v)
+    ? (v as MovementCue)
+    : null;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // INSERT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +95,8 @@ interface InsertInput {
   confidence?: number | null;
   /** Optional join key into maia_turns.id (bigint). */
   sourceTurnId?: number | null;
+  /** Phase 4: member-selected "what feels most active". */
+  movementCue?: MovementCue | null;
 }
 
 function safeTurnId(v: unknown): number | null {
@@ -115,6 +127,7 @@ export async function insertRelationalSignal(input: InsertInput): Promise<string
           ? input.confidence
           : null,
       source_turn_id: safeTurnId(input.sourceTurnId),
+      movement_cue: safeMovementCue(input.movementCue),
     });
     return row?.id ?? null;
   } catch (err) {
@@ -155,6 +168,7 @@ export async function persistDetectedSignal(
     source: 'maia_conversation',
     confidence: detected.confidence,
     sourceTurnId: sourceTurnId ?? null,
+    movementCue: detected.movementCue ?? null,
   });
 }
 
@@ -174,6 +188,7 @@ interface SignalRow {
   source: string;
   confidence: number | null;
   source_turn_id: string | number | null;
+  movement_cue: string | null;
   created_at: Date;
 }
 
@@ -197,6 +212,7 @@ function rowToSignal(row: SignalRow): RelationshipSignal {
     source: (row.source as SignalSource) ?? 'maia_conversation',
     confidence: row.confidence,
     sourceTurnId: Number.isFinite(turnId) ? turnId : null,
+    movementCue: safeMovementCue(row.movement_cue),
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
   };
 }
@@ -207,7 +223,7 @@ export async function getLatestSignal(memberId: string): Promise<RelationshipSig
     const row = await queryOne<SignalRow>(
       `SELECT id, member_id, relationship_id, counterpart_label, tone,
               rupture_state, dynamic_tags, frameworks_applied, source,
-              confidence, source_turn_id, created_at
+              confidence, source_turn_id, movement_cue, created_at
        FROM member_relational_signals
        WHERE member_id = $1
        ORDER BY created_at DESC
@@ -234,7 +250,7 @@ export async function getRecentSignals(
     const result = await query<SignalRow>(
       `SELECT id, member_id, relationship_id, counterpart_label, tone,
               rupture_state, dynamic_tags, frameworks_applied, source,
-              confidence, source_turn_id, created_at
+              confidence, source_turn_id, movement_cue, created_at
        FROM member_relational_signals
        WHERE member_id = $1
        ORDER BY created_at DESC
@@ -244,5 +260,57 @@ export async function getRecentSignals(
     return result.rows.map(rowToSignal);
   } catch {
     return [];
+  }
+}
+
+// [Relational Layer — Phase 4]
+/**
+ * Count prior signals that match a given tone + counterpart. Powers the
+ * Relational Field continuity hint ("This has surfaced before.") at N ≥ 1.
+ *
+ * CRITICAL: excludes the "current" signal row when `excludeSignalId` is
+ * provided. Without this, the count always includes the latest row and
+ * the threshold becomes unreliable immediately after a labtool save.
+ *
+ * Intentionally narrow: we filter on tone and counterpart_label only.
+ * Anything fancier belongs in the founder review surface, not the client.
+ */
+export async function countMatchingSignals(
+  memberId: string,
+  opts: {
+    tone?: string | null;
+    counterpart?: string | null;
+    excludeSignalId?: string | null;
+  },
+): Promise<number> {
+  if (!memberId) return 0;
+
+  const where: string[] = ['member_id = $1'];
+  const values: unknown[] = [memberId];
+
+  if (opts.tone) {
+    values.push(opts.tone);
+    where.push(`tone = $${values.length}`);
+  }
+  if (opts.counterpart) {
+    values.push(opts.counterpart);
+    where.push(`counterpart_label = $${values.length}`);
+  }
+  if (opts.excludeSignalId) {
+    values.push(opts.excludeSignalId);
+    where.push(`id <> $${values.length}`);
+  }
+
+  try {
+    const result = await query<{ n: string }>(
+      `SELECT COUNT(*)::text AS n
+         FROM member_relational_signals
+        WHERE ${where.join(' AND ')}`,
+      values,
+    );
+    const n = Number(result.rows[0]?.n ?? 0);
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
   }
 }

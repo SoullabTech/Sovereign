@@ -270,6 +270,17 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/labtools/voice', minTier: 'free', notes: 'Voice settings — depth (voice minutes capacity-governed)' },
   { exact: '/labtools/field-analytics', minTier: 'free', notes: 'Field analytics — depth' },
 
+  // [Relational Layer — Phase 4 activation]
+  // Relational labtools — scaffolds, zero AI cost, free by design.
+  // See: lib/relationships/relationshipResources.ts (lineage grounding).
+  // These exact entries are required because without them, the prefix
+  // catch-all at the bottom (`{ prefix: '/labtools', minTier: 'pro' }`)
+  // gates them to Pro — which is wrong for scaffold tools.
+  { exact: '/labtools/repair-script', minTier: 'free', notes: 'Repair Script — scaffold, no AI' },
+  { exact: '/labtools/relational-field', minTier: 'free', notes: 'Relational Field — scaffold, no AI' },
+  { exact: '/labtools/dynamics-map', minTier: 'free', notes: 'Dynamics Map — scaffold, no AI' },
+  { exact: '/labtools/repair-path', minTier: 'free', notes: 'Repair Path — scaffold, no AI' },
+
   // Lab Tools - Admin only (before Pro fallback)
   { prefix: '/labtools/admin', minTier: 'free', rolesAnyOf: ['admin'], notes: 'Admin tools - role-gated' },
 
