@@ -32,6 +32,21 @@ const LEAD_IN_POOLS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
     'There\'s movement happening.',
     'This feels like a turning point.',
   ],
+  pattern_encounter: [
+    'Something keeps returning here\u2026 almost the same shape each time.',
+    'There\u2019s a pattern in this\u2026 it\u2019s not the first time.',
+    'This has a shape to it\u2026 something you\u2019ve circled before.',
+  ],
+  journey_recognition: [
+    'You\u2019ve been moving through this for longer than this conversation\u2026',
+    'There\u2019s a longer arc here\u2026 this didn\u2019t start today.',
+    'Something has been unfolding\u2026 quietly, across time.',
+  ],
+  depth_threshold: [
+    'There\u2019s something underneath this\u2026',
+    'This wants to go deeper.',
+    'Something is asking to be met here.',
+  ],
 };
 
 // --- Hard triggers: phrases that ALWAYS produce a doorway (bypass scoring) ---
@@ -42,6 +57,9 @@ const HARD_TRIGGERS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
   idea_emergence: ['i have an idea', 'idea forming', 'an idea is forming', 'develop this idea', 'there\'s something forming'],
   decision_point: ['i need to decide', 'i need to make a decision', 'make a decision', 'help me decide'],
   change_process: ['something is shifting', 'going through a change', 'i feel a shift', 'something is changing'],
+  pattern_encounter: [],
+  journey_recognition: [],
+  depth_threshold: [],
 };
 
 // --- Keyword patterns per intent (softer signals, scored) ---
@@ -52,13 +70,58 @@ const INTENT_KEYWORDS: Record<Exclude<MaiaIntent, 'unknown'>, string[]> = {
   idea_emergence: ['idea', 'forming', 'emerging', 'what if', 'imagine', 'could we', 'thinking about'],
   decision_point: ['decide', 'decision', 'choose', 'which way', "don't know what to do", 'torn between', 'should i', 'weigh', 'options'],
   change_process: ['change', 'shifting', 'transform', 'letting go', 'moving on', 'turning point', 'transition', 'evolving'],
+  pattern_encounter: ['pattern', 'loop', 'again', 'stuck', 'keep doing', 'repeating', 'cycle', 'same thing', 'over and over', 'habit', 'recurring'],
+  journey_recognition: ['been through', 'journey', 'growing', 'over time', 'looking back', 'how far', 'progress', 'evolution', 'where i was', 'different now', 'changed'],
+  // Keywords are fallback only — threshold detection uses richer signal patterns below
+  depth_threshold: ['go deeper', 'underneath', 'what\'s really', 'the real', 'beneath this', 'core of', 'root of'],
 };
+
+// --- Threshold signal patterns (tension, ambivalence, contradiction) ---
+// Primary detection for depth_threshold — richer than keyword matching.
+
+const THRESHOLD_TENSION_MARKERS = [
+  'afraid of', 'scared to', 'hard to say', 'hard to admit',
+  'can\'t say', 'don\'t want to', 'ashamed', 'embarrassed',
+];
+
+const THRESHOLD_AMBIVALENCE_MARKERS = [
+  'part of me', 'but also', 'i want to but', 'torn',
+  'conflicted', 'both', 'and yet', 'at the same time',
+];
+
+const THRESHOLD_CONTRADICTION_MARKERS = [
+  'i know but', 'not just', 'something more', 'there\'s more',
+  'that\'s not it', 'not what i mean', 'what i really',
+  'i keep saying but', 'sounds right but',
+];
 
 // --- Detection ---
 
 export interface IntentDetectionResult {
   intent: MaiaIntent;
   confidence: number;
+}
+
+/**
+ * Detect threshold state from tension/ambivalence/contradiction signals.
+ * Returns a score (0 = no threshold, 1+ = threshold detected).
+ * This is richer than keyword matching — it reads the shape of the language.
+ */
+function detectThresholdSignals(userText: string): number {
+  const text = userText.toLowerCase();
+  let score = 0;
+
+  for (const marker of THRESHOLD_TENSION_MARKERS) {
+    if (text.includes(marker)) score += 1.5; // Tension is a strong signal
+  }
+  for (const marker of THRESHOLD_AMBIVALENCE_MARKERS) {
+    if (text.includes(marker)) score += 1;
+  }
+  for (const marker of THRESHOLD_CONTRADICTION_MARKERS) {
+    if (text.includes(marker)) score += 1;
+  }
+
+  return score;
 }
 
 /**
@@ -86,6 +149,8 @@ export function detectIntent(field: {
     return { intent: 'unknown', confidence: 0 };
   }
 
+  // --- Threshold detection (primary: signal patterns, fallback: keywords) ---
+  const thresholdScore = detectThresholdSignals(field.userInput);
 
   let bestIntent: MaiaIntent = 'unknown';
   let bestScore = 0;
@@ -102,6 +167,10 @@ export function detectIntent(field: {
         score += 1;
       }
     }
+    // For depth_threshold: combine keyword fallback with signal detection
+    if (intent === 'depth_threshold') {
+      score += thresholdScore;
+    }
     if (score > bestScore) {
       bestScore = score;
       bestIntent = intent as MaiaIntent;
@@ -114,7 +183,8 @@ export function detectIntent(field: {
   }
 
   // Suppress during active questioning (low confidence + user asking a question)
-  if (bestScore <= 2 && field.userInput.trim().endsWith('?')) {
+  // Exception: depth_threshold — questions at the edge ARE threshold signals
+  if (bestScore <= 2 && field.userInput.trim().endsWith('?') && bestIntent !== 'depth_threshold') {
     return { intent: 'unknown', confidence: 0 };
   }
 
@@ -135,6 +205,12 @@ export function getIntentRoute(intent: MaiaIntent): IntentRoute {
       return { intent, capability: 'decisions', openUi: 'panel' };
     case 'change_process':
       return { intent, capability: 'changes', openUi: 'panel' };
+    case 'pattern_encounter':
+      return { intent, capability: 'patterns', openUi: 'panel' };
+    case 'journey_recognition':
+      return { intent, capability: 'journey', openUi: 'panel' };
+    case 'depth_threshold':
+      return { intent, capability: 'depth', openUi: 'panel' };
     default:
       return { intent, capability: 'conversation', openUi: 'none' };
   }
@@ -148,6 +224,9 @@ const ACTION_LABELS: Record<Exclude<MaiaIntent, 'unknown'>, string> = {
   idea_emergence: 'Develop this idea',
   decision_point: 'Enter Decision Space',
   change_process: 'Track this change',
+  pattern_encounter: 'Step into this pattern',
+  journey_recognition: 'See where you\u2019ve been',
+  depth_threshold: 'Go deeper',
 };
 
 function pickRandom<T>(arr: T[]): T {
@@ -170,12 +249,26 @@ export function buildUiAction(
     idea_emergence: 'open_ideas',
     decision_point: 'open_decisions',
     change_process: 'open_changes',
+    pattern_encounter: 'enter_patterns',
+    journey_recognition: 'enter_journey',
+    depth_threshold: 'enter_depth',
   };
+
+  const WORLD_INTENTS: Set<string> = new Set([
+    'pattern_encounter', 'journey_recognition',
+  ]);
+
+  // Field shifts stay in the conversation thread — no navigation
+  const FIELD_SHIFT_INTENTS: Set<string> = new Set([
+    'depth_threshold',
+  ]);
 
   return {
     type: typeMap[intent],
     label: ACTION_LABELS[intent],
     leadIn: pickRandom(LEAD_IN_POOLS[intent]),
     confidence,
+    isWorldDoorway: WORLD_INTENTS.has(intent),
+    isFieldShift: FIELD_SHIFT_INTENTS.has(intent),
   };
 }

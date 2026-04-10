@@ -44,6 +44,9 @@ export type MaiaIntent =
   | 'idea_emergence'
   | 'decision_point'
   | 'change_process'
+  | 'pattern_encounter'
+  | 'journey_recognition'
+  | 'depth_threshold'
   | 'unknown';
 
 export type RoutedCapability =
@@ -52,6 +55,9 @@ export type RoutedCapability =
   | 'ideas'
   | 'decisions'
   | 'changes'
+  | 'patterns'
+  | 'journey'
+  | 'depth'
   | 'conversation';
 
 export interface IntentRoute {
@@ -67,8 +73,24 @@ export interface MaiaUiAction {
     | 'open_ideas'
     | 'open_decisions'
     | 'open_changes'
+    | 'enter_patterns'
+    | 'enter_journey'
+    // Field shift doorways (in-thread, no navigation)
+    | 'enter_depth'
+    | 'stay_here'
+    | 'soften'
+    | 'ground_this'
+    | 'make_this_real'
+    | 'name_it_clearly'
+    | 'turn_toward'
+    | 'zoom_out'
+    | 'follow_the_thread'
     | 'none';
   label?: string;
   leadIn?: string;
   confidence?: number;
+  /** True for world-entry doorways (distinct from process doorways) */
+  isWorldDoorway?: boolean;
+  /** True for in-place field shifts (no navigation, mode change only) */
+  isFieldShift?: boolean;
 }

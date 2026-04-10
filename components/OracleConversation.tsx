@@ -869,6 +869,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [sessionContrastCount, setSessionContrastCount] = useState(0);
   const [lastContrastGateResult, setLastContrastGateResult] = useState<ContrastGateResult | null>(null);
 
+  // 🌊 DEPTH MODE: in-thread field shift (no navigation, mode change only)
+  const [depthModeActive, setDepthModeActive] = useState(false);
+  const depthTurnsRemaining = useRef(0);
+
   // 🛑 LIMITS FEEDBACK: Tier-based usage boundaries (dignity, not punishment)
   const [limitsBanner, setLimitsBanner] = useState<null | { message: string; nudgeType?: string; tier?: string }>(null);
   const [limitsBlock, setLimitsBlock] = useState<null | { message: string; tier?: string }>(null);
@@ -4045,6 +4049,21 @@ I'm not sure what I'm feeling yet.`;
       case 'open_changes':
         window.location.href = '/dashboard/changes';
         break;
+      // 🌐 WORLD DOORWAYS: Experiential spaces
+      case 'enter_patterns':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
+        window.location.href = '/worlds/patterns';
+        break;
+      case 'enter_journey':
+        sessionStorage.setItem('maia_nav_teardown', 'true');
+        window.location.href = '/worlds/journey';
+        break;
+      // 🌊 FIELD SHIFT: depth mode activates in-thread, no navigation
+      case 'enter_depth':
+        setDepthModeActive(true);
+        depthTurnsRemaining.current = 3;
+        console.log('[Depth] Threshold entered — 3 turns');
+        break;
     }
   }, []);
 
@@ -4764,6 +4783,14 @@ I'm not sure what I'm feeling yet.`;
 
           // 🎓 MENTOR STANCE: Practitioner supervision mode (Care only)
           mentorStance: realtimeMode === 'counsel' ? getMentorStance() : false,
+
+          // 🌊 DEPTH MODE: In-thread field shift (threshold attending)
+          depthMode: depthModeActive,
+
+          // 🌉 RELATIONAL BRIDGE: Session-persistent contextId from /relationships/[id] handoff
+          ...(sessionRelationshipContextId.current && {
+            relationshipContextId: sessionRelationshipContextId.current,
+          }),
 
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
           lensConsent: pendingLensConsent?.consent || null,
@@ -5651,6 +5678,17 @@ I'm not sure what I'm feeling yet.`;
           hasMaiaSpeak: !!maiaSpeak,
           showChatInterface
         });
+      }
+
+      // 🌊 DEPTH MODE: Decrement turns remaining after each oracle response
+      if (depthModeActive && depthTurnsRemaining.current > 0) {
+        depthTurnsRemaining.current -= 1;
+        if (depthTurnsRemaining.current <= 0) {
+          setDepthModeActive(false);
+          console.log('[Depth] Threshold released — returning to normal attending');
+        } else {
+          console.log(`[Depth] ${depthTurnsRemaining.current} turns remaining`);
+        }
       }
 
       // Update context
@@ -8287,8 +8325,57 @@ I'm not sure what I'm feeling yet.`;
                       && lastMsg.uiAction.type !== 'none'
                       && !dismissedRecently
                       && (Date.now() - lastDoorwayTimestamp > 15000);
+                    // Process doorways (journal, ideas, decisions, changes) — not worlds, not field shifts
+                    if (shouldShow && !lastMsg.uiAction!.isWorldDoorway && !lastMsg.uiAction!.isFieldShift) {
+                      return (
+                        <RelationalDoorway
+                          action={lastMsg.uiAction!}
+                          onSelect={handleDoorwayAction}
+                          onDismiss={() => {
+                            setDoorwayDismissedAt(Date.now());
+                            setLastDoorwayTimestamp(Date.now());
+                          }}
+                          visible={true}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                  {/* 🌐 WORLD DOORWAYS: Experiential spaces (patterns, journey) */}
+                  {(() => {
+                    const lastMsg = messages[messages.length - 1];
+                    const dismissedRecently = doorwayDismissedAt && (Date.now() - doorwayDismissedAt < 15000);
+                    const shouldShow = featureFlags.worldDoorways
+                      && lastMsg?.role === 'oracle'
+                      && lastMsg?.uiAction
+                      && lastMsg.uiAction.isWorldDoorway
+                      && !dismissedRecently
+                      && (Date.now() - lastDoorwayTimestamp > 15000);
                     return shouldShow ? (
-                      <RelationalDoorway
+                      <WorldDoorway
+                        action={lastMsg.uiAction!}
+                        onSelect={handleDoorwayAction}
+                        onDismiss={() => {
+                          setDoorwayDismissedAt(Date.now());
+                          setLastDoorwayTimestamp(Date.now());
+                        }}
+                        visible={true}
+                      />
+                    ) : null;
+                  })()}
+                  {/* 🌊 FIELD SHIFTS: In-thread mode changes (depth, stay, ground) */}
+                  {(() => {
+                    const lastMsg = messages[messages.length - 1];
+                    const dismissedRecently = doorwayDismissedAt && (Date.now() - doorwayDismissedAt < 15000);
+                    const shouldShow = featureFlags.worldDoorways
+                      && lastMsg?.role === 'oracle'
+                      && lastMsg?.uiAction
+                      && lastMsg.uiAction.isFieldShift
+                      && !depthModeActive // Don't offer while already in depth
+                      && !dismissedRecently
+                      && (Date.now() - lastDoorwayTimestamp > 15000);
+                    return shouldShow ? (
+                      <WorldDoorway
                         action={lastMsg.uiAction!}
                         onSelect={handleDoorwayAction}
                         onDismiss={() => {

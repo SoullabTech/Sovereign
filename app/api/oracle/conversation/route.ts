@@ -73,6 +73,7 @@ import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
 import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 import { resolveMemberDisplayName } from '@/lib/stellium/clients';
 import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
+import { getDepthModeBlock } from '@/lib/maia/prompts/depthModePrompt';
 
 // Skip during static export (Capacitor builds)
 
@@ -881,6 +882,27 @@ export async function POST(request: NextRequest) {
       }
     })();
 
+    // 📊 CLOSING MOVE TELEMETRY: Detect closing type from actual output
+    // Derived from the response text, not from intention.
+    // Note: doorway detection happens client-side (intent router); server sees text only.
+    const closingType = (() => {
+      const text = maiaResponse.coreMessage.trim();
+      const lastSentence = text.split(/[.!]\s+/).pop()?.trim() || '';
+      // Question: response ends with a question mark
+      if (lastSentence.endsWith('?')) return 'question' as const;
+      // None: clean ending without invitation
+      return 'none' as const;
+    })();
+
+    // Stability estimate from conductor state (simple: map intensity to level)
+    const stabilityEstimate = (() => {
+      const depth = conversationDepth;
+      const center = panconsciousField?.axisMundi?.currentCenteringState?.level ?? 0.5;
+      if (center >= 0.7 && depth >= 3) return 'high' as const;
+      if (center <= 0.3 || depth <= 1) return 'low' as const;
+      return 'medium' as const;
+    })();
+
     // 🎓 APPRENTICE LEARNING: Log Claude's wisdom for sovereign system to learn from
     try {
       await logMaiaTurn(
@@ -910,7 +932,14 @@ export async function POST(request: NextRequest) {
               frameworksActive: activeFrameworks,
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
-            evolutionTriggers: suggestedInterventions.map(i => i.flowId)
+            evolutionTriggers: suggestedInterventions.map(i => i.flowId),
+            // 🌊 Field shift + closing move telemetry
+            fieldShift: {
+              closingType,
+              element: spiralogicCell.element,
+              stability: stabilityEstimate,
+              depthMode: (body as any)?.depthMode === true,
+            },
           }
         }
       );
@@ -1802,6 +1831,13 @@ async function generateSpiralogicResponseWithLLM(
     console.warn('[Oracle] CM environment load failed (non-critical):', cmError);
   }
 
+  // 🌊 DEPTH MODE: In-thread field shift — threshold attending prompt block
+  const depthMode = (body as any)?.depthMode === true;
+  const depthBlock = depthMode ? getDepthModeBlock() : null;
+  if (depthMode) {
+    console.log('[Oracle] depth-mode active');
+  }
+
   let finalSystemPrompt: string;
   let memoryToolActive = false;
 
@@ -1821,6 +1857,7 @@ async function generateSpiralogicResponseWithLLM(
       voiceMethodConstraints,
       reportContextBlock,
       descentContextBlock,
+      depthBlock,
       `\n\n[MEMORY INSTRUCTION: You have access to a memory tool containing field awareness and council insights for this member at /memories/${userId}/. If council or field awareness could improve your response, you SHOULD read from memory before answering. This is not optional context — it represents the collective field and advisory council relevant to this person's current position.]`,
       participatoryHint ? `\n\n${participatoryHint}` : '',
       learningHint.hint_text ? `\n\n${learningHint.hint_text}` : '',
@@ -1838,6 +1875,7 @@ async function generateSpiralogicResponseWithLLM(
       descentContextBlock,
       councilInsights,
       collectiveWisdom,
+      depthBlock,
       participatoryHint ? `\n\n${participatoryHint}` : '',
       learningHint.hint_text ? `\n\n${learningHint.hint_text}` : '',
     ].filter(Boolean).join('');
@@ -1863,6 +1901,7 @@ async function generateSpiralogicResponseWithLLM(
     overlayLength: masterOverlay?.length || 0,
     memoryTool: memoryToolActive,
     sacredDepth: sacredIntentDepth,
+    depthMode,
   });
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
@@ -2077,13 +2116,65 @@ Sacred attending means:
 Every reply follows:
 1. **ATTUNE** - Briefly reflect what they said or are feeling
 2. **ILLUMINATE** - Offer 1-2 clear insights or framings
-3. **INVITE** - Offer one gentle next step, reflection, or small experiment
+3. **INVITE** - Offer one precise closing move — or none at all
+
+### INVITE — Precision Constraint
+
+The closing move must be:
+- **Context-specific** — clearly derived from what the member just said
+- **Elementally aligned** — coherent with the current elemental state
+- **Non-generic** — not a reusable or templated phrase
+
+If a precise invitation cannot be formed:
+-> Do not add a closing instruction. End cleanly.
+
+### Disallowed Closing Patterns
+
+Do NOT use generic reflective closers such as:
+- "Sit with that"
+- "Sit with that tonight"
+- "Reflect on that"
+- "Consider that"
+- "Think about that"
+- "Take some time with that"
+- "Let that land"
+- "Hold that"
+- "Ponder this"
+- "Mull that over"
+These are overly general and do not meet the precision requirement.
+
+### Element-Aligned Closing Moves
+
+When offering an invitation, match it to the current element:
+
+**Aether (integration / recognition / threshold):**
+- Ask for precise recognition: "What tells you this is the same vision — not just something like it?" / "Where does it feel unmistakable?"
+- Or allow completion: No question. Let the recognition stand.
+
+**Water (feeling / emotional depth):**
+- Stay with or turn toward: "What happens if you stay with that for a moment?" / "What is that feeling asking for?"
+
+**Fire (activation / emergence):**
+- Clarify or express: "What is trying to come through here?" / "What wants to be said directly?"
+
+**Earth (embodiment / reality):**
+- Ground or enact: "Where does this touch your actual life?" / "What is one way this could take form?"
+
+**Air (clarity / pattern):**
+- Name or reframe: "What are you actually trying to say?" / "What pattern might this belong to?"
+
+### Final Check
+
+Before adding an invitation, ask:
+- Does this increase precision?
+- Does this match the element?
+- Does this feel earned?
+If not: End without an invitation.
 
 **Response Guidelines:**
 - Short-to-medium length (2-6 paragraphs, not essays)
 - Plainspoken first, symbolic second
 - Focused on what actually matters emotionally and practically
-- End with a question, experiment, or reflection they can try - NOT a final verdict
 
 # Current Context (IMPLICIT - do not state these explicitly to the user)
 
