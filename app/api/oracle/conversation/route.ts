@@ -1345,7 +1345,7 @@ export async function POST(request: NextRequest) {
     // (pursue-withdraw, overfunctioning, withdrawal, escalation, projection).
     // Writes to relationship_entries + relationship_entry_patterns side table.
     // Does NOT read back into the context block — observation only.
-    observeRelationalContent(userId, userMessage, fullResponse);
+    observeRelationalContent(userId, message, maiaResponse.coreMessage);
 
     // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
     // Captures response type + engagement proxy for future affinity weighting.
