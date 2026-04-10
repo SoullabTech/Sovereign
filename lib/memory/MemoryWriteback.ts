@@ -37,10 +37,197 @@ export interface WritebackInput {
 }
 
 export interface MemoryCapsule {
+  // Distilled directional signal — PRIMARY CONTENT for developmental memory.
+  // Format: `[core movement]; [direction of shift]; [tone/quality]`
+  // See MAIA_MEMORY_CANON_v1.0.md §III and buildDistilledSignal() below.
+  // This replaces the prior noisy entity-extraction output as the canonical content_text.
+  distilledSignal: string;
+  // Whether distillation succeeded or fell through to safe default.
+  // `false` = degraded signal, visible in data for observability (not silent).
+  signalQuality: 'distilled' | 'degraded';
+
+  // Secondary extracted fields — preserved for future use, not primary content anymore.
   facts: string[];      // Max 6
   preferences: string[];// Max 4
   openLoops: string[];  // Max 3
-  entities: string[];   // Max 8
+  entities: string[];   // Max 8 — RETAINED in type but NOT written to content_text
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRAJECTORY DISTILLATION — Storage X4 (2026-04-09)
+// ═══════════════════════════════════════════════════════════════
+//
+// Replaces noisy entity extraction with compressed directional signal.
+// Format: `[core movement]; [direction of shift]; [tone/quality]`
+// Feeds: developmental_memories.content_text (Path A: MemoryBundle → maiaService → LLM)
+//
+// Design principles (from MAIA_MEMORY_CANON v1.0 §III):
+//   - Distill TRAJECTORY, not content.
+//   - Do not encode identity. Encode movement.
+//   - Do not write archetypal or elemental labels.
+//   - Reject noisy outputs rather than ship them degraded.
+//
+// Guardrail: "Do not train the system to trust noise as signal."
+
+// Core-movement markers: what is happening structurally in this exchange.
+// Detected by scanning both user message and assistant response for verb-phrases.
+const MOVEMENT_MARKERS: Array<{ regex: RegExp; movement: string }> = [
+  // Decision / landing
+  { regex: /\bdecid(?:ed|ing|e)\b|\b(?:made|making) (?:a|the) (?:decision|call|choice)\b|\bgoing to\b.*\b(?:end|stop|finish|leave)\b/i, movement: 'decision landing' },
+  { regex: /\b(?:time to|ready to|need to) (?:end|close|stop|let go|move on|step back)\b/i, movement: 'closure approaching' },
+  { regex: /\b(?:ended|closed|completed|finished|walked away)\b/i, movement: 'closure taken' },
+  // Ambivalence / narrowing
+  { regex: /\b(?:torn|conflicted|not sure|uncertain|part of me)\b/i, movement: 'ambivalence present' },
+  { regex: /\b(?:clearer|clarity|starting to see|becoming clear)\b/i, movement: 'clarity emerging' },
+  // Recognition / realization
+  { regex: /\b(?:realize|realized|realizing|understand now|see now|get it now|dawning)\b/i, movement: 'recognition forming' },
+  { regex: /\b(?:i see that|i see what|now i see|looking back)\b/i, movement: 'recognition forming' },
+  // Grief / heaviness / release
+  { regex: /\b(?:grief|grieving|mourning|loss|heartbroken)\b/i, movement: 'grief present' },
+  { regex: /\b(?:letting go|released|release|surrender)\b/i, movement: 'release moving' },
+  // Fear / activation
+  { regex: /\b(?:afraid|scared|terrified|anxious|overwhelm(?:ed)?)\b/i, movement: 'activation present' },
+  { regex: /\b(?:settl(?:ed|ing)|calming|grounded|steadier)\b/i, movement: 'settling underway' },
+  // Boundary / naming
+  { regex: /\b(?:boundary|boundaries|said no|held my ground|spoke up)\b/i, movement: 'boundary forming' },
+  { regex: /\b(?:transference|projection|dynamic|pattern)\b/i, movement: 'pattern recognized' },
+  // Repetition
+  { regex: /\b(?:again|keeps happening|same thing|back here|every time|this always)\b/i, movement: 'pattern recurring' },
+  // Openness / curiosity
+  { regex: /\b(?:wonder|curious|exploring|what if|could i)\b/i, movement: 'inquiry opening' },
+  // Integration
+  { regex: /\b(?:makes sense|coming together|fitting|integrating|synth(?:esis|esizing))\b/i, movement: 'integration landing' },
+];
+
+// Direction-of-shift markers: FROM → TOWARD polarity.
+// Each entry encodes a transition the system can detect.
+const DIRECTION_MARKERS: Array<{ regex: RegExp; direction: string }> = [
+  // Reflection → action
+  { regex: /\b(?:time to|ready to|going to|will)\b.*\b(?:do|act|move|start|stop|end)\b/i, direction: 'moving from reflection toward action' },
+  { regex: /\b(?:decided|decision|made up my mind|ending it|closing it)\b/i, direction: 'moving from deliberation toward commitment' },
+  // Overwhelm → orientation
+  { regex: /\b(?:starting to see|clearer|makes sense now|i can name)\b/i, direction: 'moving from overwhelm toward orientation' },
+  // Immersion → witness
+  { regex: /\b(?:stepping back|seeing it|from the outside|noticing that i)\b/i, direction: 'moving from immersion toward witness' },
+  // Abstraction → concrete
+  { regex: /\b(?:practical|concrete|specific|actually|in reality|on the ground)\b/i, direction: 'moving from abstraction toward concrete choice' },
+  // Contraction → opening
+  { regex: /\b(?:opening|softening|relaxing|easing|breathing)\b/i, direction: 'moving from contraction toward opening' },
+  // Holding → release
+  { regex: /\b(?:letting go|releasing|surrendering|loosening grip)\b/i, direction: 'moving from holding toward release' },
+  // Confusion → clarity
+  { regex: /\b(?:clear|clarity|i see|now i understand)\b/i, direction: 'moving from confusion toward clarity' },
+  // Repetition → recognition
+  { regex: /\b(?:i see the pattern|i keep doing|here i am again)\b/i, direction: 'moving from repetition toward recognition' },
+];
+
+// Tone/quality markers: adjectives that describe the EMOTIONAL QUALITY of the exchange.
+// Detected by scanning both messages for descriptive adjectives, constrained to whitelist.
+const TONE_VOCABULARY = [
+  'grounded', 'tender', 'careful', 'clear', 'soft', 'resilient', 'strained',
+  'anchored', 'sincere', 'settled', 'open', 'wary', 'raw', 'steady',
+  'uncertain', 'resolved', 'held', 'fragile', 'quiet', 'direct', 'measured',
+  'forward-moving', 'still', 'alert', 'warmed',
+];
+const TONE_TRIGGER_PATTERNS: Array<{ regex: RegExp; tones: string[] }> = [
+  { regex: /\b(?:settled|landed|grounded|stable)\b/i, tones: ['grounded', 'settled'] },
+  { regex: /\b(?:decision|decided|clear)\b/i, tones: ['resolved', 'clear'] },
+  { regex: /\b(?:afraid|scared|anxious|overwhelmed)\b/i, tones: ['raw', 'strained'] },
+  { regex: /\b(?:grief|grieving|loss|heartbroken)\b/i, tones: ['tender', 'soft'] },
+  { regex: /\b(?:careful|slow|measured|gentle)\b/i, tones: ['careful', 'measured'] },
+  { regex: /\b(?:honest|direct|real|true)\b/i, tones: ['direct', 'sincere'] },
+  { regex: /\b(?:tired|exhausted|drained|depleted)\b/i, tones: ['fragile', 'quiet'] },
+  { regex: /\b(?:forward|moving on|next|ready)\b/i, tones: ['forward-moving', 'resolved'] },
+];
+
+// Rejection rules: Kelly's constraints. If distilled output contains any of these,
+// fall through to the safe degraded default rather than ship noise as signal.
+const NOISY_OUTPUT_PATTERNS = [
+  /\[/,                                          // brackets
+  /\]/,
+  /"/,                                           // direct quotes
+  /'[a-z]/i,                                     // ragged apostrophe fragments ('ve been, 's)
+  /\b[A-Z][a-z]+\b.*\b[A-Z][a-z]+\b.*\b[A-Z][a-z]+\b/, // 3+ proper nouns (likely names)
+  /(?:, ){3,}/,                                  // comma-stuffed lists (4+ comma-sep items)
+];
+function isNoisyOutput(phrase: string): boolean {
+  if (NOISY_OUTPUT_PATTERNS.some(p => p.test(phrase))) return true;
+  // Clause length check: each of the 3 clauses must be <=16 words
+  const clauses = phrase.split(';').map(c => c.trim());
+  if (clauses.length !== 3) return true;
+  if (clauses.some(c => c.split(/\s+/).length > 16)) return true;
+  if (clauses.some(c => c.length === 0)) return true;
+  return false;
+}
+
+/**
+ * Build a trajectory-distilled signal from a single exchange.
+ *
+ * Produces a phrase in the canonical format:
+ *   `[core movement]; [direction of shift]; [tone/quality]`
+ *
+ * Examples (from MAIA_MEMORY_CANON §III):
+ *   - "decision landing; moving from reflection toward action; tone grounded"
+ *   - "ambivalence present; moving from deliberation toward commitment; tone careful"
+ *
+ * Returns `{ signal: string, quality: 'distilled' | 'degraded' }`.
+ * On any ambiguity or rejection, returns the safe degraded default.
+ * Degraded signals are VISIBLE in the data — not silent — so quality can be observed.
+ */
+function buildDistilledSignal(
+  userMessage: string,
+  assistantResponse: string,
+  significance: number
+): { signal: string; quality: 'distilled' | 'degraded' } {
+  const DEGRADED_DEFAULT = 'exchange recorded; direction unclear; tone neutral';
+  const combined = `${userMessage} ${assistantResponse}`.toLowerCase();
+
+  // 1. Core movement — first matching marker wins (ordered by priority)
+  let movement = '';
+  for (const m of MOVEMENT_MARKERS) {
+    if (m.regex.test(combined)) {
+      movement = m.movement;
+      break;
+    }
+  }
+
+  // 2. Direction of shift — first matching marker wins
+  let direction = '';
+  for (const d of DIRECTION_MARKERS) {
+    if (d.regex.test(combined)) {
+      direction = d.direction;
+      break;
+    }
+  }
+
+  // 3. Tone/quality — aggregate hits, take up to 2 distinct tones
+  const toneHits = new Set<string>();
+  for (const t of TONE_TRIGGER_PATTERNS) {
+    if (t.regex.test(combined)) {
+      t.tones.forEach(tn => toneHits.add(tn));
+    }
+  }
+  const tones = Array.from(toneHits).slice(0, 2);
+  const tone = tones.length === 0
+    ? ''
+    : tones.length === 1
+      ? `tone ${tones[0]}`
+      : `tone ${tones[0]} and ${tones[1]}`;
+
+  // If all three components found, assemble.
+  // If any is missing, this turn doesn't carry enough signal — return degraded.
+  if (!movement || !direction || !tone) {
+    return { signal: DEGRADED_DEFAULT, quality: 'degraded' };
+  }
+
+  const candidate = `${movement}; ${direction}; ${tone}`;
+
+  // Noisy-output rejection per canon §III
+  if (isNoisyOutput(candidate)) {
+    return { signal: DEGRADED_DEFAULT, quality: 'degraded' };
+  }
+
+  return { signal: candidate, quality: 'distilled' };
 }
 
 // Patterns that indicate "stable facts" worth storing
@@ -115,8 +302,8 @@ export const MemoryWritebackService = {
       return { wrote: false, reason: 'below_threshold' };
     }
 
-    // Build memory capsule
-    const capsule = this.buildCapsule(userMessage, assistantResponse, extractedFacts);
+    // Build memory capsule (includes Storage X4 distilled trajectory signal)
+    const capsule = this.buildCapsule(userMessage, assistantResponse, extractedFacts, significance);
 
     // Write to developmental_memories
     try {
@@ -243,23 +430,34 @@ export const MemoryWritebackService = {
   // ═══════════════════════════════════════════════════════════════
 
   /**
-   * Build a compressed memory capsule
+   * Build a compressed memory capsule.
+   *
+   * As of Storage X4 (2026-04-09), the primary output is `distilledSignal` —
+   * a trajectory phrase in the format `[core movement]; [direction of shift]; [tone/quality]`.
+   * See buildDistilledSignal() above.
+   *
+   * `entities`, `facts`, `preferences`, `openLoops` are still computed but
+   * are NO LONGER written to content_text. They may be used for future
+   * observability or secondary indexing.
    */
   buildCapsule(
     userMessage: string,
     assistantResponse: string,
-    extractedFacts: string[]
+    extractedFacts: string[],
+    significance: number = 0.5
   ): MemoryCapsule {
+    // PRIMARY: distilled trajectory signal
+    const { signal, quality } = buildDistilledSignal(userMessage, assistantResponse, significance);
+
+    // SECONDARY: legacy extracted fields (not written to content_text)
     const entities = this.extractEntities(userMessage + ' ' + assistantResponse);
 
-    // Detect preferences
     const preferences: string[] = [];
     const prefMatch = userMessage.match(/i (?:prefer|like|love|want|need) (.+?)(?:\.|$)/gi);
     if (prefMatch) {
       preferences.push(...prefMatch.slice(0, 4));
     }
 
-    // Detect open loops (questions, future commitments)
     const openLoops: string[] = [];
     if (/\?$/.test(userMessage.trim())) {
       openLoops.push(`Question: ${userMessage.substring(0, 80)}`);
@@ -270,6 +468,8 @@ export const MemoryWritebackService = {
     }
 
     return {
+      distilledSignal: signal,
+      signalQuality: quality,
       facts: extractedFacts,
       preferences: preferences.slice(0, 4),
       openLoops: openLoops.slice(0, 3),
@@ -278,25 +478,15 @@ export const MemoryWritebackService = {
   },
 
   /**
-   * Format capsule as text for storage
+   * Format capsule as text for storage.
+   *
+   * Storage X4 (2026-04-09): content_text is now the distilled trajectory signal
+   * in the canonical format `[core movement]; [direction of shift]; [tone/quality]`.
+   * The prior noisy entity-extraction output has been removed from content_text
+   * entirely. See MAIA_MEMORY_CANON_v1.0.md §III and buildDistilledSignal() above.
    */
   formatCapsuleText(capsule: MemoryCapsule): string {
-    const parts: string[] = [];
-
-    if (capsule.facts.length > 0) {
-      parts.push(`Facts:\n${capsule.facts.map(f => `- ${f}`).join('\n')}`);
-    }
-    if (capsule.preferences.length > 0) {
-      parts.push(`Preferences:\n${capsule.preferences.map(p => `- ${p}`).join('\n')}`);
-    }
-    if (capsule.openLoops.length > 0) {
-      parts.push(`Open loops:\n${capsule.openLoops.map(o => `- ${o}`).join('\n')}`);
-    }
-    if (capsule.entities.length > 0) {
-      parts.push(`Entities: [${capsule.entities.join(', ')}]`);
-    }
-
-    return parts.join('\n');
+    return capsule.distilledSignal;
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -320,15 +510,30 @@ export const MemoryWritebackService = {
   }): Promise<string> {
     const { userId, sessionId, userMessage, assistantResponse, significance, capsule, facetCode, route } = input;
 
+    // Storage X4 (2026-04-09):
+    // Raw exchange is preserved under `trigger_event.raw` so the original substrate
+    // remains recoverable for re-distillation, audit, or entity-extraction revisits
+    // without polluting content_text. Only the distilled trajectory signal is canonical.
+    // See MAIA_MEMORY_CANON_v1.0.md §III.
     const triggerEvent = {
       sessionId,
       route: route || 'unknown',
-      userMessage: userMessage.substring(0, 500),
-      assistantResponse: assistantResponse.substring(0, 500),
       ts: new Date().toISOString(),
+      raw: {
+        userMessage: userMessage.substring(0, 500),
+        assistantResponse: assistantResponse.substring(0, 500),
+      },
+      signalQuality: capsule.signalQuality,
     };
 
     const contentText = this.formatCapsuleText(capsule);
+
+    // SCOPE BOUNDARY (per Kelly 2026-04-09):
+    // This distilled signal feeds MemoryBundle → maiaService → LLM (Path A /between/chat).
+    // It does NOT affect MemoryPalaceOrchestrator (Path B /oracle/conversation).
+    // Any cross-path alignment between Path A and Path B must be handled separately
+    // as a deliberate phase boundary. Do not unify memory systems without an explicit
+    // architectural decision. See MAIA_WIRING_AUDIT_v1.0.md Q1 and §3 finding #3.
 
     // NOTE (2026-04-09): Removed columns that do not exist in production schema:
     // authority, scope, source, immutable, updated_at. These were the cause of silent
@@ -395,13 +600,16 @@ export const MemoryWritebackService = {
     const insertedId = result.rows[0]?.id;
 
     // TEMP DIAGNOSTIC (Phase A — remove in Phase B when memoryHealth dashboard lands):
-    // Confirms writeback is actually landing. See MAIA_MEMORY_CANON_v1.0.md §VII.
+    // Confirms writeback is actually landing AND reports signal quality so we can
+    // observe degraded-vs-distilled rate. See MAIA_MEMORY_CANON_v1.0.md §VII.
     console.log('[MemoryWriteback] success', {
       userId,
       memoryType: 'pattern',
       memoryId: insertedId,
       facetCode: facetCode || null,
       significance,
+      signalQuality: capsule.signalQuality,
+      signalPreview: contentText.substring(0, 120),
     });
 
     return insertedId;
