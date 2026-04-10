@@ -20,9 +20,9 @@ import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/t
 export type MaiaMode = 'normal' | 'patient' | 'session';
 
 const MODE_CONFIG: Record<MaiaMode, { label: string; icon: typeof MessageCircle; activeColor: string; activeBg: string; activeBorder: string }> = {
-  normal:  { label: 'Talk', icon: MessageCircle, activeColor: 'text-[#D4A574]',  activeBg: 'bg-[#D4A574]/15',  activeBorder: 'border-[#D4A574]/50'  },
-  patient: { label: 'Care', icon: Heart,         activeColor: 'text-[#8BA888]',  activeBg: 'bg-[#8BA888]/15',  activeBorder: 'border-[#8BA888]/50'  },
-  session: { label: 'Note', icon: PenLine,       activeColor: 'text-[#A0B4C8]',  activeBg: 'bg-[#A0B4C8]/15',  activeBorder: 'border-[#A0B4C8]/50'  },
+  normal:  { label: 'Talk', icon: MessageCircle, activeColor: 'text-[#D4A574]',  activeBg: 'bg-[#D4A574]/25',  activeBorder: 'border-[#D4A574]/70'  },
+  patient: { label: 'Care', icon: Heart,         activeColor: 'text-[#8BA888]',  activeBg: 'bg-[#8BA888]/25',  activeBorder: 'border-[#8BA888]/70'  },
+  session: { label: 'Note', icon: PenLine,       activeColor: 'text-[#A0B4C8]',  activeBg: 'bg-[#A0B4C8]/25',  activeBorder: 'border-[#A0B4C8]/70'  },
 };
 
 interface MaiaLeftRailProps {
@@ -95,27 +95,25 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
               key={mode}
               onClick={() => onModeChange?.(mode)}
               className={`
-                group relative w-10 h-9 flex items-center justify-center rounded-lg transition-all duration-200
+                group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
                 ${isActive
                   ? `${config.activeBg} ${config.activeColor} border ${config.activeBorder}`
                   : 'text-stone-500 hover:text-stone-400 hover:bg-white/5 border border-transparent'
                 }
               `}
-              title={config.label}
             >
               <Icon className="w-4 h-4" />
+              <span className={`text-[9px] leading-none ${isActive ? config.activeColor : 'text-stone-600'}`}>
+                {config.label}
+              </span>
               {/* Active indicator */}
               {isActive && (
                 <motion.div
                   layoutId="rail-mode-active"
-                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full ${config.activeColor.replace('text-', 'bg-')}`}
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${config.activeColor.replace('text-', 'bg-')}`}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
-              {/* Tooltip */}
-              <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${isActive ? config.activeColor : 'text-[#D4B896]/90'}`}>
-                {config.label}
-              </span>
             </button>
           );
         })}
