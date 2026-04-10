@@ -243,7 +243,7 @@ const RELATIONAL_PRESENCE_WORDS = [
   'mother', 'father', 'mom', 'dad',
   'friend', 'sister', 'brother',
   'son', 'daughter',
-  'ex ', 'ex-',
+  'my ex', ' ex ', 'ex-',
   'between us', 'we ', 'relationship',
   'him', 'her', 'they ',
 ];
@@ -287,6 +287,7 @@ export function detectRelationalSignal(
   };
 
   if (!userLower.trim() || !hasRelationalPresence(userLower)) {
+    console.debug('[detectRelationalSignal] gate: no relational presence');
     return empty;
   }
 
@@ -325,6 +326,14 @@ export function detectRelationalSignal(
   confidence = Math.min(confidence, 0.95);
 
   if (confidence < SIGNAL_CONFIDENCE_THRESHOLD) {
+    console.debug('[detectRelationalSignal] below threshold', {
+      confidence,
+      counterpart: counterpartLabel,
+      tone,
+      rupture: ruptureState,
+      dynamics: dynamicTags.length,
+      frameworks: frameworksApplied.length,
+    });
     return empty;
   }
 
