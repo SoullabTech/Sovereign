@@ -123,6 +123,12 @@ const MOVEMENT_MARKERS: Array<{ regex: RegExp; movement: string }> = [
   { regex: /\b(?:vulnerable|vulnerability)\b.*\b(?:sharing|bringing|showing|exposing|telling)\b/i, movement: 'vulnerability surfacing' },
   { regex: /\b(?:most vulnerable|hardest part|scariest (?:part|thing))\b/i, movement: 'vulnerability surfacing' },
   { regex: /\b(?:taking (?:it|this) (?:public|out|forward)|letting (?:it|the world|others) (?:see|in))\b/i, movement: 'exposure threshold' },
+
+  // Expression gap — internal clarity exists but external articulation feels uncertain
+  { regex: /\b(?:insecurit(?:y|ies)|concern(?:s|ed)?)\b.*\b(?:how (?:i|to)|communicat|shar|express|represent|articulat)\b/i, movement: 'expression gap emerging' },
+  { regex: /\b(?:(?:don'?t|not) (?:always )?know (?:how|the best way) to)\b/i, movement: 'expression gap emerging' },
+  { regex: /\b(?:hard(?:est)? to (?:explain|share|articulate|express|describe|put into words))\b/i, movement: 'expression gap emerging' },
+  { regex: /\b(?:struggle(?:s)? to (?:explain|communicate|express|convey|describe))\b/i, movement: 'expression gap emerging' },
 ];
 
 // Direction-of-shift markers: FROM → TOWARD polarity.
@@ -157,6 +163,9 @@ const DIRECTION_MARKERS: Array<{ regex: RegExp; direction: string }> = [
   // Trust → deepening (devotional arc)
   { regex: /\b(?:more (?:devoted|aligned|committed)|deeper (?:trust|alignment|devotion))\b/i, direction: 'direction stabilizing' },
   { regex: /\b(?:followed|trusted) (?:the|my|a) (?:path|process|guidance)\b.*\b(?:and|now|so)\b/i, direction: 'moving from trust toward fruition' },
+  // Knowing → articulation (expression gap)
+  { regex: /\b(?:know (?:it|this) deeply|know (?:it|this) (?:well|inside)|understand (?:it|this))\b.*\b(?:(?:don'?t|not|hard|struggle) (?:know|always|to))\b/i, direction: 'moving from internal knowing toward articulation' },
+  { regex: /\b(?:insecurit|concern|uncertain)\b.*\b(?:communicat|shar|express|represent|articulat)\b/i, direction: 'moving from internal knowing toward articulation' },
 ];
 
 // Tone/quality markers: adjectives that describe the EMOTIONAL QUALITY of the exchange.
@@ -185,6 +194,8 @@ const TONE_TRIGGER_PATTERNS: Array<{ regex: RegExp; tones: string[] }> = [
   { regex: /\b(?:vulnerable|exposed|naked|bare|out there)\b/i, tones: ['exposed', 'tender'] },
   { regex: /\b(?:encouraging|exciting|alive|emerging|becoming)\b/i, tones: ['emergent', 'forward-moving'] },
   { regex: /\b(?:processing|sitting with|mulling|digesting|integrating)\b/i, tones: ['reflective', 'settled'] },
+  // X4.2: expression-gap tone
+  { regex: /\b(?:insecur(?:e|ity|ities)|uncertain(?:ty)?|not sure how|don'?t (?:always )?know how)\b/i, tones: ['uncertain', 'careful'] },
 ];
 
 // Rejection rules: Kelly's constraints. If distilled output contains any of these,
