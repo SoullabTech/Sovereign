@@ -34,6 +34,10 @@ import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { ChangesSheet } from '@/components/maia/changes/ChangesSheet';
 import { DecisionsSheet } from '@/components/maia/decisions/DecisionsSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
+import { MaiaShell } from '@/components/maia/MaiaShell';
+import { MaiaCenterField } from '@/components/maia/MaiaCenterField';
+import { VoiceStateProvider } from '@/lib/maia/voiceStateContext';
+import type { MaiaBehavior, VoicePresenceState } from '@/lib/navigation/types';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
 import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap, Briefcase, Wind, GitFork, Scroll, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -383,6 +387,12 @@ function MAIAPageContent() {
   const [showChangesSheet, setShowChangesSheet] = useState(false);
   const [showDecisionsSheet, setShowDecisionsSheet] = useState(false);
 
+  // Voice state for spatial shell
+  const [voicePresenceState, setVoicePresenceState] = useState<VoicePresenceState>('idle');
+  const [voiceAmplitude, setVoiceAmplitude] = useState(0);
+  const [isSanctuary, setIsSanctuary] = useState(false);
+  const currentBehavior: MaiaBehavior = maiaMode === 'normal' ? 'talk' : maiaMode === 'patient' ? 'care' : 'talk';
+
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
   const [frameworkSelectorMode, setFrameworkSelectorMode] = useState<'counsel' | 'scribe'>('counsel');
@@ -673,7 +683,257 @@ function MAIAPageContent() {
     // Do NOT duplicate that logic here - it causes race conditions with stale localStorage
   }, []);
 
-  // Onboarding removed - direct access only
+  // Listen for sanctuary toggle changes from VoiceHUD
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.sanctuary !== undefined) setIsSanctuary(detail.sanctuary);
+    };
+    window.addEventListener('maia-settings-changed', handler);
+    return () => window.removeEventListener('maia-settings-changed', handler);
+  }, []);
+
+  const handleLabAction = useCallback((action: string) => {
+    if (action === 'open-academy') {
+      setShowAcademySheet(true);
+      return;
+    }
+    setShowLabDrawer(true);
+  }, []);
+
+  // --- Spatial Shell: left rail + right panel + minimal top bar ---
+  return (
+    <ErrorBoundary>
+      <VoiceStateProvider presenceState={voicePresenceState} amplitude={voiceAmplitude} isSanctuary={isSanctuary}>
+        <MaiaShell
+          explorerName={explorerName}
+          explorerId={explorerId}
+          voiceEnabled={voiceEnabled}
+          behavior={currentBehavior}
+          onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
+          onOpenHelp={() => setShowHelpHub(true)}
+          onOpenAccount={() => setShowAccountMenu(true)}
+          onOpenJournalSheet={() => setShowJournalSheet(true)}
+          onOpenShadowWork={() => setShowShadowWork(true)}
+          onOpenAcademy={() => setShowAcademySheet(true)}
+          onLabAction={handleLabAction}
+        >
+          <SwipeNavigation currentPage="maia">
+            <MaiaCenterField>
+              <OracleConversation
+                userId={explorerId}
+                userName={explorerName}
+                userBirthDate={userBirthDate}
+                sessionId={sessionId}
+                voiceEnabled={voiceEnabled}
+                voice={selectedVoice}
+                voiceSpeed={voiceSpeed}
+                voiceModel={voiceModel}
+                voiceVolume={voiceVolume}
+                initialMode={maiaMode}
+                onModeChange={setMaiaMode}
+                apiEndpoint="/api/sovereign/app/maia/list"
+                consciousnessType="maia"
+                initialShowChatInterface={showChatInterface}
+                onShowChatInterfaceChange={setShowChatInterface}
+                showSessionSelector={showSessionSelector}
+                onCloseSessionSelector={() => setShowSessionSelector(false)}
+                onSessionActiveChange={setHasActiveSession}
+                initialAction={searchParams?.get('action') || undefined}
+              />
+            </MaiaCenterField>
+          </SwipeNavigation>
+        </MaiaShell>
+      </VoiceStateProvider>
+
+      {/* Week Zero Onboarding */}
+      {isMounted && showWeekZeroOnboarding && (
+        <WeekZeroOnboarding
+          userId={explorerId}
+          userName={explorerName}
+          onComplete={handleWeekZeroComplete}
+          onSkip={handleWeekZeroSkip}
+        />
+      )}
+
+      {/* Sacred Lab Drawer */}
+      <SacredLabDrawer
+        isOpen={showLabDrawer}
+        onClose={() => setShowLabDrawer(false)}
+        onNavigate={(path) => {
+          router.push(path);
+          setShowLabDrawer(false);
+        }}
+        onAction={(action) => {
+          setShowLabDrawer(false);
+          if (action === 'open-academy') {
+            setShowAcademySheet(true);
+            return;
+          }
+          window.dispatchEvent(new CustomEvent('labAction', { detail: { action } }));
+        }}
+      />
+
+      {/* Quick Journal Sheet */}
+      <QuickJournalSheet
+        isOpen={showJournalSheet}
+        onClose={() => setShowJournalSheet(false)}
+        userId={explorerId}
+        onSaved={(entryId) => {
+          console.log('Journal entry saved:', entryId);
+        }}
+        onAskMaia={(content, type) => {
+          setShowJournalSheet(false);
+          window.dispatchEvent(new CustomEvent('journalAskMaia', {
+            detail: {
+              content,
+              type,
+              prompt: type === 'dream'
+                ? `Here's a dream I just captured:\n\n${content}`
+                : `Something I'm sitting with:\n\n${content}`
+            }
+          }));
+        }}
+      />
+
+      <ShadowWorkSheet
+        isOpen={showShadowWork}
+        onClose={() => setShowShadowWork(false)}
+        userId={explorerId}
+        onComplete={(responses) => {
+          console.log('Shadow work completed:', Object.keys(responses).length, 'responses');
+        }}
+      />
+
+      <AcademySheet
+        isOpen={showAcademySheet}
+        onClose={() => setShowAcademySheet(false)}
+        userId={explorerId}
+        onSelectPrompt={(promptId, domain) => {
+          console.log('Academy prompt selected:', promptId, 'in', domain);
+        }}
+      />
+
+      <HelpHubSheet
+        isOpen={showHelpHub}
+        onClose={() => setShowHelpHub(false)}
+        onOpenVoiceHelp={() => setShowVoiceHelp(true)}
+        onOpenTestFlightHelp={() => setShowTestFlightHelp(true)}
+      />
+
+      <VoiceHelpSheet isOpen={showVoiceHelp} onClose={() => setShowVoiceHelp(false)} />
+      <TestFlightHelpSheet isOpen={showTestFlightHelp} onClose={() => setShowTestFlightHelp(false)} />
+
+      <FeedbackSheet
+        isOpen={showFeedbackSheet}
+        onClose={() => setShowFeedbackSheet(false)}
+        userName={explorerName}
+        userId={explorerId}
+      />
+
+      <ChangesSheet
+        isOpen={showChangesSheet}
+        onClose={() => setShowChangesSheet(false)}
+        memberId={explorerId}
+        memberName={explorerName}
+      />
+
+      <DecisionsSheet
+        isOpen={showDecisionsSheet}
+        onClose={() => setShowDecisionsSheet(false)}
+        memberId={explorerId}
+        memberName={explorerName}
+      />
+
+      <PasswordChangeSheet
+        isOpen={showPasswordChangeModal}
+        onClose={() => setShowPasswordChangeModal(false)}
+        memberId={explorerId}
+        memberName={explorerName}
+      />
+
+      <QuickCapture source="manual" primaryContext="personal" />
+
+      {/* Framework Selector */}
+      <FrameworkSelector
+        mode={frameworkSelectorMode}
+        isOpen={showFrameworkSelector}
+        onClose={() => setShowFrameworkSelector(false)}
+      />
+
+      {/* Account Bottom Sheet */}
+      <AnimatePresence>
+        {showAccountMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+              onClick={() => setShowAccountMenu(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-[#1a1a2e] to-black border-t border-amber-500/30 rounded-t-2xl z-[9999] p-4 pb-8 max-h-[85vh] overflow-y-auto"
+            >
+              <div className="w-12 h-1 bg-amber-500/40 rounded-full mx-auto mb-4" />
+              <div className="space-y-2 max-w-md mx-auto">
+                {[
+                  { label: 'Commons', icon: <Users className="w-5 h-5" />, path: '/commons/circles' },
+                  { label: 'Library', icon: <BookOpen className="w-5 h-5" />, path: '/maia/community' },
+                  { label: 'Wisdom Keepers', icon: <Scroll className="w-5 h-5" />, path: '/wisdom-keepers/wisdom' },
+                  { label: 'Labtools', icon: <FlaskConical className="w-5 h-5" />, path: '/labtools' },
+                  { label: 'Songwriter', icon: <PenLine className="w-5 h-5" />, path: '/maia/songwriter' },
+                  { label: 'Soullab Studios', icon: <Briefcase className="w-5 h-5" />, path: '/studio' },
+                  { label: 'Settings', icon: <Settings className="w-5 h-5" />, path: '/account/settings' },
+                ].map(item => (
+                  <button
+                    key={item.path}
+                    onClick={() => { setShowAccountMenu(false); router.push(item.path); }}
+                    className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                  >
+                    {item.icon}
+                    <span className="text-base">{item.label}</span>
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => { setShowAccountMenu(false); requestAnimationFrame(() => setShowFeedbackSheet(true)); }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-[#D4B896]/10 text-[#D4B896]"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span className="text-base">Send Feedback</span>
+                </button>
+
+                <div className="border-t border-[#D4B896]/20 my-2" />
+
+                <button
+                  onClick={() => { setShowAccountMenu(false); handleSignOut(); }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-red-500/10 text-red-400"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-base">Sign Out</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowAccountMenu(false)}
+                className="mt-4 w-full max-w-md mx-auto block py-3 rounded-xl bg-amber-500/10 text-amber-400 text-center font-medium hover:bg-amber-500/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </ErrorBoundary>
+  );
+
+  /* ===== OLD INLINE LAYOUT (preserved below — dead code after shell return) ===== */
+  // eslint-disable-next-line no-unreachable
   return (
     <ErrorBoundary>
       <SwipeNavigation currentPage="maia">
