@@ -71,6 +71,10 @@ import { detectAstrologyHandoff } from '@/lib/astrology/astrologyHandoff';
 import { getCMEnvironmentBlock, defaultCMState, type CMEnvironmentState } from '@/lib/consciousness/cmPractitionerEnvironment';
 import { detectLayerIntent, storeCMLayerSignal } from '@/lib/consciousness/cmLayerDetector';
 import { buildActiveThemeBlock } from '@/lib/maia/prompts/activeThemeBlock';
+import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
+import type { MemoryOrchestratorInput } from '@/lib/maia/types/memoryOrchestrator';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { detectIdeaCandidate, type IdeaCandidate } from '@/lib/consciousness/ideaDetection';
 import { buildReflectionFromConductor } from '@/lib/oracle/iching';
 import { isAiPermitted } from '@/lib/trust/service';
@@ -559,6 +563,13 @@ export async function POST(request: NextRequest) {
     // BRIDGE D: Load persisted spiral state (for conductor hysteresis seeding)
     const spiralState = await loadSpiralState(userId);
 
+    // MEMORY ORCHESTRATOR INPUTS: Load lightweight memory snapshots for the
+    // orchestrator to coordinate with. Both loaders are graceful (return [])
+    // on error, so the route never blocks on memory access. Compact field
+    // selection only — no raw transcripts or large payloads.
+    const recentDevelopmentalMemories = await loadRecentDevelopmentalMemories(userId, 3);
+    const recentThemeSignals = await loadRecentThemeSignals(userId, 10);
+
     // EVENT ARC: Load active event context if the member is inside a container.
     // Graceful fallback — if the lookup fails, conversation continues normally.
     let activeEventContext: ActiveEventContext | null = null;
@@ -832,6 +843,42 @@ export async function POST(request: NextRequest) {
       : null;
     const memberWebPrompt = [memberWebBase, facetPrompt].filter(Boolean).join('\n\n');
 
+    // Memory Orchestrator: decide how loaded memory inputs should bias this turn.
+    // Pure + synchronous — no DB reads; consumes already-loaded route-level state.
+    // The resulting promptBlock is appended to finalSystemPrompt inside the LLM
+    // call. Phase 2 readiness flags (semantic/somatic/morphic) are returned for
+    // future retrieval layers but not acted on yet.
+    const memoryPlan = buildMemoryInfluencePlan({
+      message,
+      userId,
+      conversationHistory,
+      recentDevelopmentalMemories,
+      recentThemeSignals,
+      spiralState: spiralState
+        ? {
+            dominant_element: spiralState.dominant_element ?? null,
+            phase: spiralState.phase ?? null,
+            motion: (spiralState as any).motion ?? null,
+            intensity: (spiralState as any).intensity ?? null,
+            relational_phase: (spiralState as any).relational_phase ?? null,
+          }
+        : null,
+      hasRelationshipAnamnesis: !!anamnesisPrompt,
+      hasMemberLiveContext: !!memberWebPrompt,
+      hasActiveEventContext: !!activeEventContext,
+      hasActiveRelationalContext: !!activeRelationalContext,
+    } satisfies MemoryOrchestratorInput);
+    if (
+      memoryPlan.shouldUseMemory ||
+      memoryPlan.contradictionDetected ||
+      memoryPlan.reinforcementCandidate ||
+      memoryPlan.semanticCandidate ||
+      memoryPlan.somaticCandidate ||
+      memoryPlan.morphicCandidate
+    ) {
+      console.log('[Oracle] memory-plan', summarizePlanForLog(memoryPlan));
+    }
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -853,7 +900,8 @@ export async function POST(request: NextRequest) {
       memberWebPrompt,
       userId,
       activeEventContext,
-      activeRelationalContext
+      activeRelationalContext,
+      memoryPlan.promptBlock
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -888,6 +936,24 @@ export async function POST(request: NextRequest) {
 
         try {
           const llmProvider = new MultiLLMProvider();
+
+          // Forward-readiness guard for repair path: if the user's message has
+          // already signaled forward-readiness, the Socratic repair prompt must
+          // not reintroduce the depth-first bias we're removing. We both (a)
+          // append the forward-readiness block to the system prompt, and (b)
+          // prepend a short instruction to the repair prompt itself so that
+          // validator-suggested corrections respect the practical request.
+          const repairReadiness = detectForwardReadiness(message);
+          const repairForwardBlock = repairReadiness.ready ? buildForwardReadinessBlock() : '';
+          const guardedRepairPrompt = repairReadiness.ready
+            ? `Prioritize delivering the practical request before additional reflection.\n${validationResult.repairPrompt}`
+            : validationResult.repairPrompt;
+
+          // Memory orchestration for repair path: reuse the same plan computed
+          // earlier in this request so the repair pass has the same runtime
+          // memory guidance as the original attempt.
+          const repairMemoryBlock = memoryPlan.promptBlock ?? '';
+
           const repairSystemPrompt = buildSacredAttendingPrompt(
             spiralogicCell,
             getPhaseName(spiralogicCell.element, spiralogicCell.phase),
@@ -904,7 +970,7 @@ export async function POST(request: NextRequest) {
             astrologyContext,
             preferredAssistantName,
             memberWebPrompt
-          ) + `\n\n${validationResult.repairPrompt}`;
+          ) + repairMemoryBlock + repairForwardBlock + `\n\n${guardedRepairPrompt}`;
 
           const conversationContext = conversationHistory
             .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
@@ -1806,7 +1872,9 @@ async function generateSpiralogicResponseWithLLM(
   memberWebPrompt?: string,
   userId?: string,
   activeEventContext?: ActiveEventContext | null,
-  activeRelationalContext?: ActiveRelationalContext | null
+  activeRelationalContext?: ActiveRelationalContext | null,
+  /** Pre-computed memory influence block from memoryOrchestrator (runtime plan). */
+  memoryInfluenceBlock?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1984,6 +2052,19 @@ async function generateSpiralogicResponseWithLLM(
   const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
   const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
 
+  // Forward-readiness detection: when the user has completed deliberation and
+  // is asking for practical movement (language/framing/execution), append a
+  // block that counters the Sacred Attending depth-first reflex. The block is
+  // placed LAST so it has priority over earlier context blocks.
+  const forwardReadiness = detectForwardReadiness(message);
+  if (forwardReadiness.ready) {
+    console.log('[Oracle] forward-readiness', {
+      signals: forwardReadiness.signals,
+      preview: message.slice(0, 120),
+    });
+  }
+  const forwardReadinessBlock = forwardReadiness.ready ? buildForwardReadinessBlock() : '';
+
   const finalSystemPrompt = [
     systemPrompt,
     cmEnvironmentBlock,
@@ -1993,6 +2074,12 @@ async function generateSpiralogicResponseWithLLM(
     collectiveWisdom,
     eventArcBlock,
     relationalContextBlock,
+    // Memory orchestration block (runtime coordination layer).
+    // Placed AFTER all data/context blocks so it can reference them
+    // directionally, and BEFORE forward-readiness so an explicit user
+    // forward-readiness signal still takes final priority.
+    memoryInfluenceBlock ?? '',
+    forwardReadinessBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
