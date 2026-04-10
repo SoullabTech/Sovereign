@@ -5,6 +5,7 @@ import {
   FileText,
   Rocket,
   Activity,
+  Eye,
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
@@ -45,5 +46,11 @@ export const FOUNDER_NAV: FounderNavItem[] = [
     href: '/founder/signals',
     icon: Activity,
     description: 'Health, momentum, risks',
+  },
+  {
+    label: 'Relational Patterns',
+    href: '/founder/relational-patterns',
+    icon: Eye,
+    description: 'Pattern detection review',
   },
 ];
