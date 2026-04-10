@@ -391,7 +391,7 @@ function MAIAPageContent() {
   const [voicePresenceState, setVoicePresenceState] = useState<VoicePresenceState>('idle');
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [isSanctuary, setIsSanctuary] = useState(false);
-  const currentBehavior: MaiaBehavior = maiaMode === 'normal' ? 'talk' : maiaMode === 'patient' ? 'care' : 'talk';
+  const currentBehavior: MaiaBehavior = maiaMode === 'normal' ? 'default' : maiaMode === 'patient' ? 'care' : 'default';
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);

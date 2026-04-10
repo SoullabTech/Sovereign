@@ -101,7 +101,7 @@ export function MaiaCenterField({ children }: MaiaCenterFieldProps) {
                 style={{ left: `${seededX}%`, top: `${seededY}%` }}
                 animate={{
                   y: [particleConfig.yRange[0], particleConfig.yRange[1], particleConfig.yRange[0]],
-                  x: particleConfig.xDrift ? [0, particleConfig.xDrift, -particleConfig.xDrift, 0] : undefined,
+                  ...(particleConfig.xDrift ? { x: [0, particleConfig.xDrift, -particleConfig.xDrift, 0] } : {}),
                   opacity: particleConfig.opacity,
                   scale: particleConfig.scale,
                 }}
