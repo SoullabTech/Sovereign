@@ -1,7 +1,9 @@
 # Crystal Field Principle
 
-**Status:** Canon
+**Status:** Superseded by [MAIA Crystal Field Architecture](MAIA_CRYSTAL_FIELD_ARCHITECTURE.md)
 **Date:** 2026-04-10
+
+> See [MAIA_CRYSTAL_FIELD_ARCHITECTURE.md](MAIA_CRYSTAL_FIELD_ARCHITECTURE.md) for the full foundational doctrine.
 
 ---
 
