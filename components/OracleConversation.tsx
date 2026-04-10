@@ -8204,7 +8204,8 @@ I'm not sure what I'm feeling yet.`;
                     }
                     return null;
                   })()}
-                  {/* 🌐 WORLD DOORWAYS: Experiential spaces (patterns, journey, depth) */}
+                  {/* 🌐 WORLD DOORWAYS: Experiential spaces (patterns, journey) */}
+                  {/* NOTE: "depth" was removed 2026-04-09. Invalid world paths redirect to /maia via app/worlds/[...slug]/page.tsx */}
                   {(() => {
                     const lastMsg = messages[messages.length - 1];
                     const dismissedRecently = doorwayDismissedAt && (Date.now() - doorwayDismissedAt < 15000);
