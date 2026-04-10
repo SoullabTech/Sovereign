@@ -238,18 +238,55 @@ function allMatches<K extends string>(
 }
 
 /** Fast relational-content gate. If nothing here matches, we skip everything. */
-const RELATIONAL_PRESENCE_WORDS = [
-  'partner', 'husband', 'wife', 'spouse',
-  'mother', 'father', 'mom', 'dad',
-  'friend', 'sister', 'brother',
-  'son', 'daughter',
-  'my ex', ' ex ', 'ex-',
-  'between us', 'we ', 'relationship',
-  'him', 'her', 'they ',
+
+// Patch A: word-boundary patterns for short tokens that collide as substrings
+// (e.g. "person" → "son", "context" → "ex", "expertise" → "ex").
+// Longer multi-word phrases keep includes() — they don't collide.
+const PRESENCE_BOUNDARY_PATTERNS: RegExp[] = [
+  /\bson\b/i,
+  /\bdaughter\b/i,
+  /\bfriend\b/i,
+  /\bhim\b/i,
+  /\bher\b/i,
+  /\bthey\b/i,
+  /\bmy ex\b/i,
+  /\bex[-\s]/i,           // "ex-wife", "ex partner"
 ];
 
-function hasRelationalPresence(text: string): boolean {
-  return RELATIONAL_PRESENCE_WORDS.some((w) => text.includes(w));
+const PRESENCE_SUBSTRING_WORDS = [
+  'partner', 'husband', 'wife', 'spouse',
+  'mother', 'father', 'mom', 'dad',
+  'sister', 'brother',
+  'between us', 'we ', 'relationship',
+];
+
+// Patch B: named entity + interaction context pathway.
+// Detects proper names (capitalized, 3+ chars, not sentence-start)
+// combined with interaction verbs → relational presence.
+const PROPER_NAME_PATTERN = /(?:^|\.\s+|!\s+|\?\s+|,\s+)\s*[A-Z][a-z]{2,}/;
+const MIDSENTENCE_NAME_PATTERN = /\s[A-Z][a-z]{2,}\b/;
+
+const INTERACTION_VERBS = [
+  'talk', 'meet', 'ask', 'explore', 'help',
+  'work with', 'discuss', 'support', 'collaborate',
+  'review', 'share', 'conversation with',
+  'next talk', 'next meeting', 'wants to',
+];
+
+function hasNamedEntityPresence(originalText: string, lowerText: string): boolean {
+  const hasName = MIDSENTENCE_NAME_PATTERN.test(originalText);
+  if (!hasName) return false;
+  return INTERACTION_VERBS.some((v) => lowerText.includes(v));
+}
+
+function hasRelationalPresence(text: string, originalText?: string): boolean {
+  // Canonical: boundary-aware short tokens
+  if (PRESENCE_BOUNDARY_PATTERNS.some((re) => re.test(text))) return true;
+  // Canonical: safe substring matches (multi-word, no collision risk)
+  if (PRESENCE_SUBSTRING_WORDS.some((w) => text.includes(w))) return true;
+  // Patch B: named entity + interaction context
+  if (originalText && hasNamedEntityPresence(originalText, text)) return true;
+  return false;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -286,13 +323,21 @@ export function detectRelationalSignal(
     frameworksApplied: [],
   };
 
-  if (!userLower.trim() || !hasRelationalPresence(userLower)) {
-    console.debug('[detectRelationalSignal] gate: no relational presence');
+  if (!userLower.trim() || !hasRelationalPresence(userLower, userMessage)) {
+    console.log('[detectRelationalSignal] gate: no relational presence');
     return empty;
   }
 
-  // COUNTERPART
-  const counterpartLabel = firstMatch(userLower, COUNTERPART_KEYWORDS);
+  // COUNTERPART — canonical keyword match first, then named-entity fallback
+  let counterpartLabel = firstMatch(userLower, COUNTERPART_KEYWORDS);
+
+  // Patch B: if no canonical counterpart but named entity + interaction present,
+  // assign neutral 'person' label so the signal isn't structurally empty.
+  const namedEntityDetected =
+    !counterpartLabel && hasNamedEntityPresence(userMessage, userLower);
+  if (namedEntityDetected) {
+    counterpartLabel = 'person';
+  }
 
   // TONE
   const tone = firstMatch(combined, TONE_LANGUAGE);
@@ -315,7 +360,7 @@ export function detectRelationalSignal(
 
   // CONFIDENCE
   let confidence = 0;
-  if (counterpartLabel) confidence += 0.25;
+  if (counterpartLabel) confidence += namedEntityDetected ? 0.3 : 0.25;
   if (tone) confidence += 0.2;
   if (ruptureState) confidence += 0.25;
   if (dynamicTags.length > 0) confidence += 0.15;
@@ -326,13 +371,14 @@ export function detectRelationalSignal(
   confidence = Math.min(confidence, 0.95);
 
   if (confidence < SIGNAL_CONFIDENCE_THRESHOLD) {
-    console.debug('[detectRelationalSignal] below threshold', {
+    console.log('[detectRelationalSignal] below threshold', {
       confidence,
       counterpart: counterpartLabel,
       tone,
       rupture: ruptureState,
       dynamics: dynamicTags.length,
       frameworks: frameworksApplied.length,
+      namedEntity: namedEntityDetected,
     });
     return empty;
   }
