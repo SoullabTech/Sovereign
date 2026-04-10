@@ -97,6 +97,32 @@ const MOVEMENT_MARKERS: Array<{ regex: RegExp; movement: string }> = [
   { regex: /\b(?:wonder|curious|exploring|what if|could i)\b/i, movement: 'inquiry opening' },
   // Integration
   { regex: /\b(?:makes sense|coming together|fitting|integrating|synth(?:esis|esizing))\b/i, movement: 'integration landing' },
+
+  // ── X4.1 (2026-04-10): Recognition / Alignment / Threshold layers ──
+  // Added to catch meaning-rich reflective language that the behavioral/clinical
+  // patterns above miss. These fire on spiritual, devotional, and emergence-oriented
+  // phrasing that is natural to this platform's users.
+
+  // Recognition deepening — vision becoming real, truth landing
+  { regex: /\b(?:feels? like (?:magic|a (?:blessing|miracle|dream))|(?:actually|really) (?:happening|becoming|working))\b/i, movement: 'recognition deepening' },
+  { regex: /\b(?:achieving|manifesting|bearing fruit|coming (?:true|to life|through))\b/i, movement: 'vision becoming real' },
+  { regex: /\b(?:proud|relieved|grateful|blessed|humbled)\b.*\b(?:that|because|for)\b/i, movement: 'recognition deepening' },
+  { regex: /\b(?:once (?:only )?dreamed|what (?:was|i) (?:once|always) (?:hoped|imagined|envisioned))\b/i, movement: 'vision becoming real' },
+  { regex: /\b(?:i (?:can )?see (?:it|now|what)|it(?:'s| is) (?:actually|really|finally) (?:here|real|happening))\b/i, movement: 'recognition deepening' },
+
+  // Alignment / Devotion — trust stabilizing, following guidance
+  { regex: /\b(?:followed (?:the|my|a) (?:path|guidance|guide|calling)|trusted (?:the|my|this) (?:process|path|guidance))\b/i, movement: 'alignment strengthening' },
+  { regex: /\b(?:more (?:aligned|devoted|committed) than|deeper (?:alignment|devotion|trust))\b/i, movement: 'devotion deepening' },
+  { regex: /\b(?:devoted|devotion|devotional)\b/i, movement: 'devotion deepening' },
+  { regex: /\b(?:encouraging|affirming|confirming|validating)\b.*\b(?:path|direction|work|process)\b/i, movement: 'alignment strengthening' },
+  { regex: /\b(?:i (?:simply|just) (?:followed|trusted|kept)|stayed (?:the|on) (?:course|path))\b/i, movement: 'alignment strengthening' },
+
+  // Threshold / Exposure — moving from internal to external
+  { regex: /\b(?:sharing (?:this|it) with|bringing (?:others|people|someone) (?:in|on board))\b/i, movement: 'exposure threshold' },
+  { regex: /\b(?:don'?t want to (?:oversell|overstate|do (?:this|it) wrong)|afraid (?:of|to) (?:misrepresent|get it wrong))\b/i, movement: 'exposure threshold' },
+  { regex: /\b(?:vulnerable|vulnerability)\b.*\b(?:sharing|bringing|showing|exposing|telling)\b/i, movement: 'vulnerability surfacing' },
+  { regex: /\b(?:most vulnerable|hardest part|scariest (?:part|thing))\b/i, movement: 'vulnerability surfacing' },
+  { regex: /\b(?:taking (?:it|this) (?:public|out|forward)|letting (?:it|the world|others) (?:see|in))\b/i, movement: 'exposure threshold' },
 ];
 
 // Direction-of-shift markers: FROM → TOWARD polarity.
@@ -119,6 +145,18 @@ const DIRECTION_MARKERS: Array<{ regex: RegExp; direction: string }> = [
   { regex: /\b(?:clear|clarity|i see|now i understand)\b/i, direction: 'moving from confusion toward clarity' },
   // Repetition → recognition
   { regex: /\b(?:i see the pattern|i keep doing|here i am again)\b/i, direction: 'moving from repetition toward recognition' },
+
+  // ── X4.1 (2026-04-10): Reflective / meaning-oriented direction layers ──
+
+  // Internal → external (threshold crossing)
+  { regex: /\b(?:shar(?:e|ing) (?:this|it)|bring(?:ing)? (?:others|people|someone)|taking (?:it|this) (?:out|public|forward))\b/i, direction: 'moving from internal toward expression' },
+  { regex: /\b(?:need (?:support|help) (?:from|with)|ask(?:ing)? (?:for|others))\b/i, direction: 'moving from self-reliance toward receiving' },
+  // Vision → reality (emergence)
+  { regex: /\b(?:(?:actually|really|finally) (?:happening|working|becoming)|bearing (?:visible )?fruit|dream(?:ed)? (?:of|about).*(?:now|real|here))\b/i, direction: 'moving from vision toward reality' },
+  { regex: /\b(?:once (?:only )?dreamed|was (?:only )?imagined|hoped for)\b/i, direction: 'moving from vision toward reality' },
+  // Trust → deepening (devotional arc)
+  { regex: /\b(?:more (?:devoted|aligned|committed)|deeper (?:trust|alignment|devotion))\b/i, direction: 'direction stabilizing' },
+  { regex: /\b(?:followed|trusted) (?:the|my|a) (?:path|process|guidance)\b.*\b(?:and|now|so)\b/i, direction: 'moving from trust toward fruition' },
 ];
 
 // Tone/quality markers: adjectives that describe the EMOTIONAL QUALITY of the exchange.
@@ -128,6 +166,8 @@ const TONE_VOCABULARY = [
   'anchored', 'sincere', 'settled', 'open', 'wary', 'raw', 'steady',
   'uncertain', 'resolved', 'held', 'fragile', 'quiet', 'direct', 'measured',
   'forward-moving', 'still', 'alert', 'warmed',
+  // X4.1 (2026-04-10): reflective/devotional register
+  'devoted', 'reflective', 'reverent', 'exposed', 'emergent',
 ];
 const TONE_TRIGGER_PATTERNS: Array<{ regex: RegExp; tones: string[] }> = [
   { regex: /\b(?:settled|landed|grounded|stable)\b/i, tones: ['grounded', 'settled'] },
@@ -138,6 +178,13 @@ const TONE_TRIGGER_PATTERNS: Array<{ regex: RegExp; tones: string[] }> = [
   { regex: /\b(?:honest|direct|real|true)\b/i, tones: ['direct', 'sincere'] },
   { regex: /\b(?:tired|exhausted|drained|depleted)\b/i, tones: ['fragile', 'quiet'] },
   { regex: /\b(?:forward|moving on|next|ready)\b/i, tones: ['forward-moving', 'resolved'] },
+  // X4.1 (2026-04-10): reflective/devotional tones
+  { regex: /\b(?:magic|blessing|miracle|sacred|holy)\b/i, tones: ['reverent', 'warmed'] },
+  { regex: /\b(?:proud|relieved|grateful|blessed|humbled)\b/i, tones: ['warmed', 'grounded'] },
+  { regex: /\b(?:devoted|devotion|devotional|aligned|alignment)\b/i, tones: ['devoted', 'steady'] },
+  { regex: /\b(?:vulnerable|exposed|naked|bare|out there)\b/i, tones: ['exposed', 'tender'] },
+  { regex: /\b(?:encouraging|exciting|alive|emerging|becoming)\b/i, tones: ['emergent', 'forward-moving'] },
+  { regex: /\b(?:processing|sitting with|mulling|digesting|integrating)\b/i, tones: ['reflective', 'settled'] },
 ];
 
 // Rejection rules: Kelly's constraints. If distilled output contains any of these,
