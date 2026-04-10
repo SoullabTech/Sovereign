@@ -115,6 +115,7 @@ export interface ConsultationGates {
   riskGate: boolean;        // Is this high-stakes or fragile?
   complexityGate: boolean;  // Is this multi-domain?
   invitationGate: boolean;  // Did member ask for depth/analysis?
+  coherenceGate: boolean;   // Would consultation help the member come into coherence?
 }
 
 /**

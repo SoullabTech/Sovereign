@@ -70,6 +70,14 @@ export function assessGates(context: GateContext): ConsultationGates {
       context.memberAskedForAnalysis ||
       context.memberAskedForOptions ||
       context.memberExpressingUncertainty,
+
+    // CRYSTAL FIELD: Would consultation help the member come into coherence?
+    // The council exists to increase the resolution of seeing — not to multiply advice.
+    // Each framing is a facet of the same field. None replace the member's own knowing.
+    coherenceGate:
+      context.domainCount > 1 &&
+      context.emotionalIntensity > 0.3 &&
+      !context.memberAskedForAnalysis, // Analysis request = practical, not coherence
   };
 }
 
