@@ -710,21 +710,9 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     const _conversationMode = (meta as any)?.mode ?? (meta as any)?.maiaMode?.mode ?? null;
     const _convHistory = (meta as any)?.conversationHistory;
     const _historyLen = Array.isArray(_convHistory) ? _convHistory.length : 0;
-    const ANCHOR_ALREADY_PRESENT = /sit with (this|that|it)|you might (try|notice|sit)|one small thing|how does that land|notice what (happens|surfaces)|would you like to stay|let it rest/i;
-    const isCareAnchorEligible =
-      _conversationMode === 'counsel' &&
-      _historyLen >= 2 &&
-      sovereignText.length > 120 &&
-      !isSanctuary &&
-      !ANCHOR_ALREADY_PRESENT.test(sovereignText);
-    if (isCareAnchorEligible) {
-      const anchor = sovereignText.trimEnd().endsWith('?')
-        ? '\n\nSit with that for a moment.'
-        : '\n\nYou might sit with that tonight and see what arrives.';
-      sovereignText = sovereignText + anchor;
-      console.info('[closing-anchor] appended — mode=counsel turn=%d responseLen=%d',
-        _historyLen + 1, sovereignText.length);
-    }
+    // NOTE (2026-04-10): Hardcoded "sit with that tonight" closing-anchor REMOVED.
+    // See app/api/between/chat/route.ts for rationale. Closing quality is now
+    // governed by the system prompt CLOSING ANCHOR section only.
 
     // 📐 AIN SHAPE TELEMETRY: Continuity-stack metrics (fire-and-forget, never blocks)
     // Written from the sovereign route so continuity fields are populated for production traffic.
