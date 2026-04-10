@@ -52,6 +52,7 @@ import { getMemberActiveRelationalContext } from '@/lib/relationships/relationsh
 import { buildRelationalContextBlock } from '@/lib/relationships/buildRelationalContextBlock';
 import type { ActiveRelationalContext } from '@/lib/relationships/types';
 import { detectFacet, getFacet } from '@/lib/consciousness/innerGuideField';
+import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
 import { buildInnerGuideFieldPrompt } from '@/lib/consciousness/innerGuideFieldPrompt';
 import { loadFacetState, upsertFacetState } from '@/lib/consciousness/innerGuideFieldPersistence';
 import { buildMemberLiveContext, formatMemberWebForPrompt, describeLiveContext, type MemberLiveContext as MemberLiveContextType } from '@/lib/memory/MemberLiveContext';
@@ -1338,6 +1339,13 @@ export async function POST(request: NextRequest) {
         facet_movement: facetSignal.movement,
       });
     }
+
+    // RELATIONAL OBSERVER: Pattern detection v2 — fire-and-forget.
+    // Scans user message for relational content + structural dynamics
+    // (pursue-withdraw, overfunctioning, withdrawal, escalation, projection).
+    // Writes to relationship_entries + relationship_entry_patterns side table.
+    // Does NOT read back into the context block — observation only.
+    observeRelationalContent(userId, userMessage, fullResponse);
 
     // TRUST OBSERVATION: Phase 3 behavioral signal capture (fire-and-forget)
     // Captures response type + engagement proxy for future affinity weighting.
