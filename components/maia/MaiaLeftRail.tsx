@@ -86,7 +86,8 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
       {/* Placed above Worlds because mode is HOW you enter, worlds are WHERE you go.
           This is a navigation correction per Kelly 2026-04-10: "first how I am entering,
           then where I am going." */}
-      <div className="flex flex-col items-center gap-0.5 pt-2 pb-1">
+      {/* ─── GROUP 1: MODE (how I am entering) ─── */}
+      <div className="flex flex-col items-center gap-0.5 pt-2 pb-1.5">
         {(Object.entries(MODE_CONFIG) as [MaiaMode, typeof MODE_CONFIG[MaiaMode]][]).map(([mode, config]) => {
           const Icon = config.icon;
           const isActive = activeMode === mode;
@@ -119,26 +120,28 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
         })}
       </div>
 
-      {/* Voice / Text toggle */}
+      {/* ─── divider: mode / input ─── */}
+      <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
+
+      {/* ─── GROUP 2: INPUT (voice or text) ─── */}
       {onToggleInputMode && (
-        <div className="flex flex-col items-center pb-1">
+        <div className="flex flex-col items-center py-1">
           <button
             onClick={onToggleInputMode}
-            className="group relative w-10 h-9 flex items-center justify-center rounded-lg text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200 border border-transparent"
-            title={isVoiceInput ? 'Switch to text' : 'Switch to voice'}
+            className="group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200 border border-transparent gap-0.5"
           >
             {isVoiceInput ? <Mic className="w-4 h-4" /> : <Keyboard className="w-4 h-4" />}
-            <span className="absolute left-full ml-2 px-2 py-1 text-xs text-[#D4B896]/90 bg-[#1a1510]/95 border border-[#3a2a1f]/60 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+            <span className="text-[9px] leading-none text-stone-600">
               {isVoiceInput ? 'Voice' : 'Text'}
             </span>
           </button>
         </div>
       )}
 
-      {/* Divider before worlds */}
-      <div className="w-6 h-px bg-[#3a2a1f]/40 mb-1" />
+      {/* ─── divider: input / navigation ─── */}
+      <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
 
-      {/* World icons */}
+      {/* ─── GROUP 3: NAVIGATION (worlds + boundaries + capture) ─── */}
       <div className="flex-1 flex flex-col items-center gap-1">
         {MAIA_WORLDS.map((world) => {
           const Icon = world.icon;
