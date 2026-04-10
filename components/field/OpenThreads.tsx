@@ -83,22 +83,8 @@ export function OpenThreads({ memberId }: OpenThreadsProps) {
   // Don't render until loaded
   if (!loaded) return null;
 
-  // No threads = no field history yet — show a gentle first-time message
+  // Only render when there are specific, real threads — no placeholders
   if (!fieldState || fieldState.threads.length === 0) {
-    if (!fieldState?.hasHistory) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="text-center px-8 mt-6"
-        >
-          <p className="text-sm text-white/30 font-light italic">
-            This space will reflect what unfolds over time.
-          </p>
-        </motion.div>
-      );
-    }
     return null;
   }
 
@@ -113,12 +99,7 @@ export function OpenThreads({ memberId }: OpenThreadsProps) {
       transition={{ delay: 0.5, duration: 0.8 }}
       className="w-full max-w-md mx-auto px-6 mt-8"
     >
-      {/* Section title */}
-      <p className="text-xs text-white/25 font-light tracking-widest uppercase mb-4 text-center">
-        Still unfolding
-      </p>
-
-      {/* Threads */}
+      {/* Threads — no header, they speak for themselves */}
       <div className="space-y-3">
         <AnimatePresence>
           {fieldState.threads.map((thread, i) => (

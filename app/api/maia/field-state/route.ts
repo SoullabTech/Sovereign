@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
       detail?: string;
     }> = [];
 
-    // Thread from spiral state
-    if (spiralState) {
+    // Thread from spiral state — only when motion is a known specific value
+    if (spiralState && spiralState.motion) {
       const motionText: Record<string, string> = {
         ascending: 'Something is opening',
         stuck: 'Something is asking for patience',
@@ -65,37 +65,40 @@ export async function GET(request: NextRequest) {
         aether: 'meaning and integration',
       };
 
-      const motion = spiralState.motion
-        ? motionText[spiralState.motion] || 'Something is in motion'
-        : 'Something is in motion';
-      const element = spiralState.dominant_element
-        ? elementText[spiralState.dominant_element] || ''
-        : '';
+      const motion = motionText[spiralState.motion];
+      // Only include when we have a recognized motion — no vague fallbacks
+      if (motion) {
+        const element = spiralState.dominant_element
+          ? elementText[spiralState.dominant_element] || ''
+          : '';
 
-      threads.push({
-        type: 'spiral',
-        text: motion,
-        detail: element ? `in the area of ${element}` : undefined,
-      });
+        threads.push({
+          type: 'spiral',
+          text: motion,
+          detail: element ? `in the area of ${element}` : undefined,
+        });
+      }
     }
 
-    // Thread from recurring themes (highest recurrence first)
+    // Thread from recurring themes — use the theme itself as the primary text
     if (recurringThemes.length > 0) {
       const top = recurringThemes[0];
-      const themeLabels: Record<string, string> = {
-        field_awareness: 'awareness of the larger field',
-        pattern_recurrence: 'a pattern that keeps returning',
-        embodied_coherence: 'something the body is holding',
-        adaptive_unfolding: 'a process of finding its own shape',
-        wise_acceptance: 'an edge of acceptance',
-        ripeness: 'something reaching its moment',
+      const themeTexts: Record<string, { text: string; detail: string }> = {
+        field_awareness: { text: 'You keep noticing the larger field', detail: 'awareness beyond the immediate' },
+        pattern_recurrence: { text: 'A pattern keeps returning', detail: 'something familiar showing up again' },
+        embodied_coherence: { text: 'The body has been holding something', detail: 'a felt sense that keeps appearing' },
+        adaptive_unfolding: { text: 'Something is finding its own shape', detail: 'a process that doesn\'t want forcing' },
+        wise_acceptance: { text: 'An edge of acceptance is present', detail: 'the territory between resistance and release' },
+        ripeness: { text: 'Something is close to its moment', detail: 'a readiness that keeps surfacing' },
       };
-      const label = themeLabels[top.theme] || top.theme;
-      threads.push({
-        type: 'theme',
-        text: `This has been recurring`,
-        detail: label,
-      });
+      const entry = themeTexts[top.theme];
+      if (entry) {
+        threads.push({
+          type: 'theme',
+          text: entry.text,
+          detail: entry.detail,
+        });
+      }
     }
 
     // Thread from recent session
