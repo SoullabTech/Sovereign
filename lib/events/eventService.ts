@@ -147,6 +147,21 @@ export async function getMemberActiveEventContext(
     return d.slice(0, 10);
   };
 
+  // Compute totalDays and dayIndex for day-aware retreat framing.
+  const startMs = new Date(normalizeDate(winner.event.start_date)).getTime();
+  const endMs = new Date(normalizeDate(winner.event.end_date)).getTime();
+  const totalDays = Number.isFinite(startMs) && Number.isFinite(endMs)
+    ? Math.round((endMs - startMs) / 86_400_000) + 1
+    : null;
+
+  let dayIndex: number | null = null;
+  if (winner.phase === 'during' && totalDays !== null) {
+    const nowMs = new Date(
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    ).getTime();
+    dayIndex = Math.round((nowMs - startMs) / 86_400_000) + 1;
+  }
+
   return {
     eventId: winner.event.event_id,
     title: winner.event.title,
@@ -154,5 +169,7 @@ export async function getMemberActiveEventContext(
     startDate: normalizeDate(winner.event.start_date),
     endDate: normalizeDate(winner.event.end_date),
     practitionerId: winner.event.practitioner_id,
+    totalDays,
+    dayIndex,
   };
 }
