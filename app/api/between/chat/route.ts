@@ -1445,7 +1445,10 @@ This user is in guest mode (no authenticated identity).
       if (!showMetaSafe) {
         outboundText = outboundText
           .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-          .replace(/---SOUL_METADATA---[\s\S]*/g, '');
+          .replace(/---SOUL_METADATA---[\s\S]*/g, '')
+          // Strip STATE_VECTOR fenced code blocks (safe mode path, same as full path)
+          .replace(/```STATE_VECTOR[\s\S]*?```/g, '')
+          .replace(/```STATE_VECTOR[\s\S]*/g, '');
       }
       if (!showMarkdownSafe) {
         outboundText = outboundText
@@ -2271,7 +2274,13 @@ This user is in guest mode (no authenticated identity).
     if (!showMetadata) {
       cleanedText = cleanedText
         .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-        .replace(/---SOUL_METADATA---[\s\S]*/g, ''); // partial block at end
+        .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
+        // Strip STATE_VECTOR code blocks — model sometimes emits these as
+        // fenced code (```STATE_VECTOR {...} ```) which bypasses the
+        // SOUL_METADATA stripper. This is internal processing output that
+        // must never reach the member's conversation surface.
+        .replace(/```STATE_VECTOR[\s\S]*?```/g, '')
+        .replace(/```STATE_VECTOR[\s\S]*/g, ''); // partial block at end
     }
 
     // Strip markdown artifacts that look messy in plain text UI
