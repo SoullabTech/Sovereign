@@ -36,6 +36,9 @@ interface MaiaShellProps {
   /** MAIA mode — primary state of entry (Talk / Care / Note) */
   activeMode?: 'normal' | 'patient' | 'session';
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void;
+  /** Ask MAIA — orientation + Knowledge Field stance */
+  askMode?: boolean;
+  onAskModeChange?: (active: boolean) => void;
   children: React.ReactNode;
 }
 
@@ -55,6 +58,8 @@ export function MaiaShell({
   onLabAction,
   activeMode,
   onModeChange,
+  askMode,
+  onAskModeChange,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
@@ -240,6 +245,8 @@ export function MaiaShell({
         onModeChange={onModeChange}
         isVoiceInput={isVoiceMode}
         onToggleInputMode={onToggleInputMode}
+        askMode={askMode}
+        onAskModeChange={onAskModeChange}
       />
 
       {/* Center field — offset for rail and top bar */}

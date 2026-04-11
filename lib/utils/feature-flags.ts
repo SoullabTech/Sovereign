@@ -28,6 +28,7 @@ export interface FeatureFlags {
   calendarConsciousness: boolean;       // Schedule awareness in MAIA responses (disclosure-filtered)
   founderConsole: boolean;              // MAIA Ops: founder operational command center at /founder
   trustObservation: boolean;            // Phase 3: behavioral signal capture for affinity weighting
+  knowledgeFieldLayer: boolean;         // Phase 1: 12-domain knowledge field prompt injection on domain detection
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -52,6 +53,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   calendarConsciousness: false,        // Off — wiring deferred until disclosure proven stable
   founderConsole: false,               // Off — Phase 1 build in progress
   trustObservation: false,             // Off — Phase 3 observation, enable after migration applied
+  knowledgeFieldLayer: false,          // Off — Phase 1: enable after oracle route wired + tested
 };
 
 /**
