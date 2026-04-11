@@ -952,6 +952,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This controls MAIA's relational stance, not just conversation style
   const [maiaMode, setMaiaMode] = useState<ModeState>(DEFAULT_MODE_STATE);
 
+  // 📚 ASK MAIA: Orientation + Knowledge Field stance (single-turn, resets after response)
+  const [askMode, setAskMode] = useState(false);
+
   // Track last voice command result for acknowledgment handling
   const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);
 
@@ -4648,6 +4651,9 @@ I'm not sure what I'm feeling yet.`;
           // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
           lensConsent: pendingLensConsent?.consent || null,
 
+          // 📚 ASK MAIA: Orientation + Knowledge Field stance
+          askMode: askMode || undefined,
+
           // Canon Wrap (care-mode only)
           allowCanonWrap,
           allowRemoteRendering: false,
@@ -5401,6 +5407,12 @@ I'm not sure what I'm feeling yet.`;
         // Chat mode - show text immediately
         setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
+
+        // 📚 ASK MAIA: Single-turn reset — return to relational default after response
+        if (askMode) {
+          setAskMode(false);
+          console.log('[Ask MAIA] Single-turn reset — returning to relational stance');
+        }
 
         // Process Oracle message for Field Protocol if recording
         if (isFieldRecording) {
@@ -8320,6 +8332,27 @@ I'm not sure what I'm feeling yet.`;
               <div className="fixed inset-x-0 z-below-nav" style={{ bottom: '2.5rem' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
+                  {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
+                  <div className="flex items-center gap-2 px-2 pb-2">
+                    <button
+                      onClick={() => {
+                        setAskMode(!askMode);
+                        console.log('[Ask MAIA]', !askMode ? 'activated' : 'deactivated');
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                        askMode
+                          ? 'bg-blue-500/20 text-blue-300 border border-blue-400/40'
+                          : 'bg-black/20 text-white/30 border border-white/8 hover:text-white/50 hover:border-white/15'
+                      } backdrop-blur-md`}
+                      title={askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — switch to orientation mode'}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      <span>Ask MAIA</span>
+                    </button>
+                  </div>
                   <ModernTextInput
                     ref={textInputRef}
                     value={draftMessage}

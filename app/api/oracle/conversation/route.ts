@@ -371,6 +371,8 @@ type ConversationBody = {
   userName?: string;
   /** Explicit handoff from /relationships/[id] — session-persistent on client */
   relationshipContextId?: string;
+  /** Ask MAIA: orientation + Knowledge Field stance (single-turn) */
+  askMode?: boolean;
 };
 
 export async function POST(request: NextRequest) {
@@ -431,7 +433,7 @@ export async function POST(request: NextRequest) {
 
     const parsed = (await request.json()) as ConversationBody;
     body = parsed;
-    const { message, userId, sessionId } = parsed;
+    const { message, userId, sessionId, askMode } = parsed;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -2003,10 +2005,18 @@ async function generateSpiralogicResponseWithLLM(
   const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
   const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
 
-  // Knowledge Field: 12-domain consciousness registry (non-ambient — only fires when domain language detected)
+  // Knowledge Field: 12-domain consciousness registry
+  // askMode = always inject (user explicitly chose Ask MAIA)
+  // otherwise = non-ambient, only fires when domain language detected
   let knowledgeFieldBlock = '';
+  let orientationBlock = '';
   try {
-    if (message && hasKnowledgeDomainSignal(message)) {
+    if (askMode) {
+      // Ask MAIA: force knowledge field injection + orientation stance
+      knowledgeFieldBlock = buildKnowledgeFieldBlock(message || '');
+      orientationBlock = `\n\n[ORIENTATION STANCE — Ask MAIA]\nThe member has explicitly requested orientation mode. Respond with:\n1. Direct answer first — no reflective preamble\n2. Anchor in relevant domains and name traditions\n3. Map relationships across systems when relevant\n4. Preserve meaningful distinctions\n5. Integrate — help the member see how systems relate\n6. Close with one grounded question or implication\nBe precise, structured, and grounded. You are still MAIA — do not become encyclopedic or detached.\n`;
+      console.log(`[Oracle] ask-maia { askMode: true, knowledgeFieldLength: ${knowledgeFieldBlock.length} }`);
+    } else if (message && hasKnowledgeDomainSignal(message)) {
       knowledgeFieldBlock = buildKnowledgeFieldBlock(message);
       console.log(`[Oracle] knowledge-field { detected: true, blockLength: ${knowledgeFieldBlock.length} }`);
     }
@@ -2016,6 +2026,7 @@ async function generateSpiralogicResponseWithLLM(
 
   const finalSystemPrompt = [
     systemPrompt,
+    orientationBlock,
     cmEnvironmentBlock,
     knowledgeFieldBlock,
     reportContextBlock,
