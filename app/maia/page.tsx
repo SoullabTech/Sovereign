@@ -719,6 +719,8 @@ function MAIAPageContent() {
             onOpenChanges={() => setShowChangesSheet(true)}
             onOpenDecisions={() => setShowDecisionsSheet(true)}
             onLabAction={handleLabAction}
+            activeMode={maiaMode}
+            onModeChange={setMaiaMode}
           >
             {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}
             <SwipeNavigation currentPage="maia">

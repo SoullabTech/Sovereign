@@ -33,6 +33,9 @@ interface MaiaShellProps {
   onOpenChanges: () => void;
   onOpenDecisions: () => void;
   onLabAction: (action: string) => void;
+  /** MAIA mode — primary state of entry (Talk / Care / Note) */
+  activeMode?: 'normal' | 'patient' | 'session';
+  onModeChange?: (mode: 'normal' | 'patient' | 'session') => void;
   children: React.ReactNode;
 }
 
@@ -50,6 +53,8 @@ export function MaiaShell({
   onOpenChanges,
   onOpenDecisions,
   onLabAction,
+  activeMode,
+  onModeChange,
   children,
 }: MaiaShellProps) {
   const router = useRouter();
@@ -231,6 +236,10 @@ export function MaiaShell({
         onWorldChange={handleWorldChange}
         onOpenAccount={onOpenAccount}
         onCaptureSpirit={() => onLabAction('capture-spirit')}
+        activeMode={activeMode}
+        onModeChange={onModeChange}
+        isVoiceInput={isVoiceMode}
+        onToggleInputMode={onToggleInputMode}
       />
 
       {/* Center field — offset for rail and top bar */}

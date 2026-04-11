@@ -10,11 +10,20 @@
 
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, MessageCircle, Heart, PenLine, Mic, Keyboard } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { MAIA_WORLDS, MAIA_BOUNDARIES, MAIA_UTILITIES, getBoundaryFromPathname } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
 import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
+
+/** MAIA communication mode — how the member enters the conversation */
+export type MaiaMode = 'normal' | 'patient' | 'session';
+
+const MODE_CONFIG: Record<MaiaMode, { label: string; icon: typeof MessageCircle; activeColor: string; activeBg: string; activeBorder: string }> = {
+  normal:  { label: 'Talk', icon: MessageCircle, activeColor: 'text-[#D4A574]',  activeBg: 'bg-[#D4A574]/25',  activeBorder: 'border-[#D4A574]/70'  },
+  patient: { label: 'Care', icon: Heart,         activeColor: 'text-[#8BA888]',  activeBg: 'bg-[#8BA888]/25',  activeBorder: 'border-[#8BA888]/70'  },
+  session: { label: 'Note', icon: PenLine,       activeColor: 'text-[#A0B4C8]',  activeBg: 'bg-[#A0B4C8]/25',  activeBorder: 'border-[#A0B4C8]/70'  },
+};
 
 interface MaiaLeftRailProps {
   activeWorld: MaiaWorldId | null;
@@ -26,9 +35,15 @@ interface MaiaLeftRailProps {
   onWorldChange: (world: MaiaWorldId) => void;
   onOpenAccount?: () => void;
   onCaptureSpirit?: () => void;
+  /** MAIA mode — primary state of entry (Talk / Care / Note) */
+  activeMode?: MaiaMode;
+  onModeChange?: (mode: MaiaMode) => void;
+  /** Voice vs text input toggle */
+  isVoiceInput?: boolean;
+  onToggleInputMode?: () => void;
 }
 
-export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit }: MaiaLeftRailProps) {
+export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit, activeMode = 'normal', onModeChange, isVoiceInput = true, onToggleInputMode }: MaiaLeftRailProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { presenceState, amplitude } = useVoiceState();
@@ -67,8 +82,63 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
       `}
       style={{ paddingTop: 'max(env(safe-area-inset-top), 1rem)' }}
     >
-      {/* World icons */}
-      <div className="flex-1 flex flex-col items-center gap-1 pt-2">
+      {/* ─── GROUP 1: MODE (how I am entering) ─── */}
+      <div className="flex flex-col items-center gap-0.5 pt-2 pb-1.5">
+        {(Object.entries(MODE_CONFIG) as [MaiaMode, typeof MODE_CONFIG[MaiaMode]][]).map(([mode, config]) => {
+          const Icon = config.icon;
+          const isActive = activeMode === mode;
+          return (
+            <button
+              key={mode}
+              onClick={() => onModeChange?.(mode)}
+              className={`
+                group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
+                ${isActive
+                  ? `${config.activeBg} ${config.activeColor} border ${config.activeBorder}`
+                  : 'text-stone-500 hover:text-stone-400 hover:bg-white/5 border border-transparent'
+                }
+              `}
+            >
+              <Icon className="w-4 h-4" />
+              <span className={`text-[9px] leading-none ${isActive ? config.activeColor : 'text-stone-600'}`}>
+                {config.label}
+              </span>
+              {/* Active indicator */}
+              {isActive && (
+                <motion.div
+                  layoutId="rail-mode-active"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${config.activeColor.replace('text-', 'bg-')}`}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ─── divider: mode / input ─── */}
+      <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
+
+      {/* ─── GROUP 2: INPUT (voice or text) ─── */}
+      {onToggleInputMode && (
+        <div className="flex flex-col items-center py-1">
+          <button
+            onClick={onToggleInputMode}
+            className="group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg text-stone-500 hover:text-[#D4B896]/70 hover:bg-[#D4B896]/5 transition-all duration-200 border border-transparent gap-0.5"
+          >
+            {isVoiceInput ? <Mic className="w-4 h-4" /> : <Keyboard className="w-4 h-4" />}
+            <span className="text-[9px] leading-none text-stone-600">
+              {isVoiceInput ? 'Voice' : 'Text'}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* ─── divider: input / navigation ─── */}
+      <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
+
+      {/* ─── GROUP 3: NAVIGATION (worlds + boundaries + capture) ─── */}
+      <div className="flex-1 flex flex-col items-center gap-1">
         {MAIA_WORLDS.map((world) => {
           const Icon = world.icon;
           const isActive = activeWorld === world.id;
