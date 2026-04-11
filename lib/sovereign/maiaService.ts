@@ -1977,10 +1977,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       console.log(`✅ Claude consultation integrated | Type: ${consultationType} | Enhancement: ${consultation.integrationGuidance.useEnhanced ? 'Used' : 'Declined'}`);
     } catch (consultationError) {
       console.warn('⚠️ Claude consultation failed, using MAIA original response:', consultationError);
-      // Gracefully continue with MAIA's original response + scaffolding
-      if (cognitiveScaffoldingNote) {
-        finalResponse = maiaInitialResponse + '\n\n' + cognitiveScaffoldingNote;
-      }
+      // Gracefully continue with MAIA's original response (scaffolding stays in prompt layer, never in response)
     }
   } else {
     if (!enableClaudeConsultation) {
@@ -1988,10 +1985,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     } else {
       console.log(`⚠️ Claude consultation unavailable (no API key) - using MAIA original response`);
     }
-    // If no Claude, inject scaffolding directly into response
+    // Scaffolding stays in prompt layer only — never appended to visible response
     if (cognitiveScaffoldingNote) {
-      finalResponse = maiaInitialResponse + '\n\n' + cognitiveScaffoldingNote;
-      console.log(`🧠 [Dialectical Scaffold] DEEP path scaffolding injected directly (no Claude)`);
+      console.log(`🧠 [Dialectical Scaffold] DEEP path scaffolding available but kept in prompt layer (not leaked to response)`);
     }
   }
 
