@@ -9,6 +9,8 @@ export const dynamic = 'force-dynamic';
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { observeRelationalContent } from '@/lib/consciousness/relationalObserver';
+import { detectRelationalSignal } from '@/lib/relationships/detectRelationalSignal';
+import { persistDetectedSignal } from '@/lib/relationships/relationshipSignalService';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -913,6 +915,24 @@ ${studioCtx?.clientId ? `Client context ID: ${studioCtx.clientId}` : 'No specifi
     // 🔗 RELATIONAL OBSERVER: Silent background attunement (fire-and-forget)
     if (userId && message && orchestratorResult.text) {
       observeRelationalContent(userId, message, orchestratorResult.text);
+
+      // 🌊 RELATIONAL FIELD CARD: Phase 4 detection (fire-and-forget).
+      try {
+        const detected = detectRelationalSignal(message, orchestratorResult.text);
+        console.warn('[Phase4] detection:', { detected: detected.detected, confidence: detected.confidence, counterpart: detected.counterpartLabel, tone: detected.tone });
+        if (detected.detected) {
+          const turnIdRaw = orchestratorResult.metadata?.turnId;
+          const sourceTurnId =
+            typeof turnIdRaw === 'number' && Number.isFinite(turnIdRaw) && turnIdRaw > 0
+              ? turnIdRaw
+              : null;
+          persistDetectedSignal(userId, detected, null, sourceTurnId).catch((err) => {
+            console.warn('[relationalSignals] persist error (non-blocking):', err?.message || err);
+          });
+        }
+      } catch (sigErr) {
+        console.warn('[relationalSignals] detect error (non-blocking):', sigErr);
+      }
     }
 
     const response = jsonWithCors(req, responseData, 200, canonHeaders);
