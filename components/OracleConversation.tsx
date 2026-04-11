@@ -413,6 +413,9 @@ interface OracleConversationProps {
   fieldMode?: boolean;
   // Field energy state — client-tracked, passed to oracle for constraint enforcement
   fieldEnergyState?: 'arrival' | 'settling' | 'presence';
+  // Ask MAIA — orientation + Knowledge Field stance (controlled from parent)
+  askMode?: boolean;
+  onAskModeChange?: (active: boolean) => void;
 }
 
 interface ConversationMessage {
@@ -547,6 +550,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   studioContext,
   fieldMode,
   fieldEnergyState,
+  askMode: askModeProp,
+  onAskModeChange: onAskModeChangeProp,
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
@@ -953,7 +958,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [maiaMode, setMaiaMode] = useState<ModeState>(DEFAULT_MODE_STATE);
 
   // 📚 ASK MAIA: Orientation + Knowledge Field stance (single-turn, resets after response)
-  const [askMode, setAskMode] = useState(false);
+  // Controlled from parent (MaiaShell rail) or local state (composer chip)
+  const [askModeLocal, setAskModeLocal] = useState(false);
+  const askMode = askModeProp ?? askModeLocal;
+  const setAskMode = onAskModeChangeProp ?? setAskModeLocal;
 
   // Track last voice command result for acknowledgment handling
   const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);

@@ -368,6 +368,7 @@ function MAIAPageContent() {
     return 1.0;
   });  // Voice playback volume (0.0 - 1.0)
   const [showChatInterface, setShowChatInterface] = useState(false);
+  const [askMode, setAskMode] = useState(false); // Ask MAIA — orientation + Knowledge Field stance
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
@@ -721,6 +722,8 @@ function MAIAPageContent() {
             onLabAction={handleLabAction}
             activeMode={maiaMode}
             onModeChange={setMaiaMode}
+            askMode={askMode}
+            onAskModeChange={setAskMode}
           >
             {/* Center field — voice-reactive atmosphere wrapping OracleConversation */}
             <SwipeNavigation currentPage="maia">
@@ -745,6 +748,8 @@ function MAIAPageContent() {
                   onCloseSessionSelector={() => setShowSessionSelector(false)}
                   onSessionActiveChange={setHasActiveSession}
                   initialAction={searchParams?.get('action') || undefined}
+                  askMode={askMode}
+                  onAskModeChange={setAskMode}
                 />
               </MaiaCenterField>
             </SwipeNavigation>
