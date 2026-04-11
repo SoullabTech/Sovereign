@@ -79,6 +79,7 @@ import { isAiPermitted } from '@/lib/trust/service';
 import type { PrivacyGateResult, CheckAccessResult } from '@/lib/trust/types';
 import { checkAccess } from '@/lib/trust/checkAccess';
 import { storeTrustObservation, inferEngagementProxy, classifyResponseType, isTrustObservationEnabled } from '@/lib/trust/trustObservationService';
+import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '@/lib/maia/prompts/knowledgeFieldBlock';
 
 // Skip during static export (Capacitor builds)
 
@@ -2002,9 +2003,21 @@ async function generateSpiralogicResponseWithLLM(
   const eventArcBlock = buildEventArcContextBlock(activeEventContext ?? null);
   const relationalContextBlock = buildRelationalContextBlock(activeRelationalContext ?? null);
 
+  // Knowledge Field: 12-domain consciousness registry (non-ambient — only fires when domain language detected)
+  let knowledgeFieldBlock = '';
+  try {
+    if (message && hasKnowledgeDomainSignal(message)) {
+      knowledgeFieldBlock = buildKnowledgeFieldBlock(message);
+      console.log(`[Oracle] knowledge-field { detected: true, blockLength: ${knowledgeFieldBlock.length} }`);
+    }
+  } catch (kfError) {
+    console.warn('[Oracle] Knowledge field load failed (non-critical):', kfError);
+  }
+
   const finalSystemPrompt = [
     systemPrompt,
     cmEnvironmentBlock,
+    knowledgeFieldBlock,
     reportContextBlock,
     activeThemeBlock,
     councilInsights,
