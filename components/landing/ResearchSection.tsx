@@ -6,11 +6,11 @@ import { SectionReveal } from './SectionReveal';
 
 const categoryLabels: Record<string, string> = {
   'all': 'All',
-  'core-ai': 'Core AI',
-  'memory': 'Memory & Consent',
-  'ethics': 'Ethics & Governance',
+  'core-intelligence': 'Core Intelligence',
+  'relational-safety': 'Relational Safety',
+  'developmental-continuity': 'Developmental Continuity',
+  'knowledge-modality': 'Knowledge & Modality',
   'infrastructure': 'Infrastructure',
-  'interface': 'Interface',
 };
 
 export function ResearchSection() {
@@ -67,12 +67,9 @@ export function ResearchSection() {
                     {categoryLabels[innovation.category]}
                   </span>
                 </div>
-                <h3 className="text-base font-semibold text-white mb-2 leading-tight">
+                <h3 className="text-base font-semibold text-white mb-3 leading-tight">
                   {innovation.title}
                 </h3>
-                <p className="text-maia-spice-400/70 text-sm mb-3 font-medium">
-                  {innovation.hook}
-                </p>
                 <p className="text-white/40 text-sm leading-relaxed flex-1" style={{ fontFamily: "'Source Sans Pro', sans-serif" }}>
                   {innovation.description}
                 </p>

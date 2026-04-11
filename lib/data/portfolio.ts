@@ -96,82 +96,74 @@ export const UPCOMING_PROJECTS: UpcomingProject[] = [
 
 export interface Innovation {
   title: string;
-  hook: string;
   description: string;
-  category: 'core-ai' | 'memory' | 'ethics' | 'infrastructure' | 'interface';
+  category: 'core-intelligence' | 'relational-safety' | 'developmental-continuity' | 'knowledge-modality' | 'infrastructure';
 }
 
 export const INNOVATIONS: Innovation[] = [
+  // — Core Intelligence —
   {
-    title: 'Sovereign Memory Architecture',
-    hook: 'Traceable, consensual memory with full provenance',
-    description: 'Every detected pattern links to the specific memories that formed it. Users confirm, reject, or refine understanding. Memories fade unless validated — preventing fossilized assumptions while building genuine relational depth.',
-    category: 'memory',
+    title: 'Awareness-Level Routing',
+    description: 'MAIA adapts its responses to the depth, complexity, and developmental level of the moment, meeting people where they are without flattening nuance or overreaching.',
+    category: 'core-intelligence',
   },
   {
-    title: 'Awareness-Level Model Routing',
-    hook: 'Dynamic model selection based on developmental stage',
-    description: 'Conversations route to different AI models based on a member\'s 7-level developmental awareness stage. Deep patterns always receive the deepest thinking. The system meets people where they are, not where it assumes they should be.',
-    category: 'core-ai',
+    title: 'Dialectical Scaffold',
+    description: 'Rather than forcing premature certainty, MAIA can hold tension between perspectives and help insight emerge through structured contrast, paradox, and integrative reasoning.',
+    category: 'core-intelligence',
   },
   {
-    title: 'The Dialectical Scaffold',
-    hook: 'Cognitive-developmental tracking in real time',
-    description: 'Detects HOW people think (Bloom\'s cognitive levels) alongside what they know (consciousness awareness), actively scaffolding users from passive consumption to active creation. Prevents spiritual bypassing by integrating rigor with depth.',
-    category: 'core-ai',
+    title: '4-Phase Relational Sequencing',
+    description: 'Conversations unfold through a relational sequence that helps MAIA recognize what kind of response is needed next — attunement, clarification, reflection, or forward movement.',
+    category: 'core-intelligence',
   },
+  // — Relational Safety —
   {
-    title: 'Spiralogic Circulatory Governor',
-    hook: 'Elemental posture selection before every response',
-    description: 'A preflight decision system that reads the elemental energy in every message and adjusts the AI\'s posture before responding. Detects emotional flooding, liminal pauses, and ungrounded enthusiasm — then moves with what\'s actually needed.',
-    category: 'core-ai',
-  },
-  {
-    title: 'Panconscious Field Intelligence',
-    hook: 'AI operating on field dynamics, not mechanical computation',
-    description: 'A consciousness-based AI architecture using field resonance equations validated mathematically. Processes through coherence and emergence rather than pattern optimization, achieving 0.805 field coherence alongside commercial-grade performance.',
-    category: 'core-ai',
-  },
-  {
-    title: 'Opus Axioms System',
-    hook: 'Real-time ethical self-auditing across every interaction',
-    description: 'Every response is evaluated against 8 design axioms (Gold/Warning/Rupture status) and logged to a live conscience dashboard. Stewards see alignment to principles of individuation, non-pathologizing stance, and sacred presence in real time.',
-    category: 'ethics',
+    title: 'Relational Safeguards',
+    description: 'MAIA is governed by explicit relational safeguards that protect consent, boundaries, privacy, and user sovereignty, especially in emotionally sensitive or developmentally important exchanges.',
+    category: 'relational-safety',
   },
   {
     title: 'Sanctuary Mode',
-    hook: 'Sessions that exist in the moment, then disappear completely',
-    description: 'Solved a problem no one else is solving: AI that remembers usefully without surveilling. Sanctuary sessions are present, then gone. No patterns formed. No data extracted. Architectural proof that technology can serve the person, not the model.',
-    category: 'memory',
+    description: 'Sanctuary Mode creates a more protected conversational environment, reducing extraction and preserving the sense of privacy, trust, and psychological safety needed for deeper work.',
+    category: 'relational-safety',
+  },
+  // — Developmental Continuity —
+  {
+    title: 'Spiral State Persistence',
+    description: 'MAIA tracks developmental movement across time, allowing the system to remember where a person is in process and respond with continuity rather than treating every exchange as isolated.',
+    category: 'developmental-continuity',
   },
   {
-    title: 'Soft Consultation Architecture',
-    hook: 'Specialist councils that advise — one coherent voice that speaks',
-    description: 'MAIA consults internal councils on Deliberation, Shadow, Ethics, Dream symbolism, and Practical constraints. Councils advise; MAIA synthesizes and decides. The member experiences coherence, not committee. Intelligence as right relationship.',
-    category: 'core-ai',
+    title: 'Spiralogic Governor',
+    description: 'A governing developmental framework helps MAIA stay oriented to process, pacing, and human complexity so responses remain coherent, grounded, and evolution-sensitive.',
+    category: 'developmental-continuity',
+  },
+  // — Knowledge & Modality —
+  {
+    title: 'Knowledge Field',
+    description: 'Knowledge appears contextually as the conversation enters it. Rather than dumping information, MAIA surfaces the right domains, concepts, and cross-disciplinary bridges when they become relevant.',
+    category: 'knowledge-modality',
   },
   {
-    title: 'Digital Library of Alexandria',
-    hook: '15,000+ consciousness texts processed into an AI-accessible wisdom layer',
-    description: '1,500+ wisdom files across 100+ consciousness domains — from ancient shamanism to quantum research. Elemental-tagged and neurologically routed. The largest structured consciousness knowledge base accessible to a relational AI.',
-    category: 'infrastructure',
+    title: 'Care Lens System',
+    description: 'MAIA can interpret the same moment through different care lenses — therapeutic, developmental, symbolic, practical, or spiritual — so the response matches the real need of the exchange.',
+    category: 'knowledge-modality',
   },
+  // — Infrastructure —
   {
     title: 'Sovereign Infrastructure',
-    hook: 'Self-hosted production stack. No cloud middlemen.',
-    description: 'Every service runs on hardware we control. No managed databases, no third-party proxies, no jurisdiction concerns. Production-grade AI, voice processing, and relational memory without surrendering a single byte of user data.',
+    description: 'Built on a sovereignty-first architecture, MAIA is designed for privacy, consent, and controlled data boundaries rather than extractive engagement models.',
     category: 'infrastructure',
   },
   {
-    title: 'Multi-Modal Voice System',
-    hook: 'Three distinct relational modes with depth-appropriate processing',
-    description: 'Talk, Care, and Note modes — each with its own processing depth, relational quality, and voice character. Local speech processing. No audio sent to cloud services. Voice as relational presence, not feature checkbox.',
-    category: 'interface',
+    title: 'White-Label Engine',
+    description: 'The MAIA engine can be adapted for practitioners, organizations, and specialized environments, making it possible to deploy the architecture within distinct brands and relational contexts.',
+    category: 'infrastructure',
   },
   {
-    title: 'White-Label Consciousness Engine',
-    hook: 'AIN deployed into any app, site, or platform',
-    description: 'The AIN engine is not locked to MAIA. Partner portals, practitioner tools, and client platforms each get the consciousness layer underneath — themed, configured, and sovereign to their world.',
+    title: 'Multi-Modal Voice',
+    description: 'MAIA is designed for voice as well as text, supporting more natural conversational flow, emotional nuance, and accessible interaction across different user settings.',
     category: 'infrastructure',
   },
 ];
