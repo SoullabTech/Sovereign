@@ -33,6 +33,14 @@ ENV NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS=${NEXT_PUBLIC_ENABLE_EXPLAINER_SCRIPTS}
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
 
 COPY --from=deps /app/node_modules ./node_modules
+
+# Cache-bust the source COPY when GIT_COMMIT changes.
+# Without this, BuildKit treats `COPY . .` as cacheable across commits,
+# so a `git pull` followed by `docker compose build` silently reuses the
+# old source layer. Embedding $GIT_COMMIT in a RUN forces the layer hash
+# to change with every commit, invalidating the source copy below.
+# Pass with: GIT_COMMIT=$(git rev-parse HEAD) docker compose ... build
+RUN echo "source-rev=$GIT_COMMIT" > /app/.build-info
 COPY . .
 
 # Prisma client + engines for THIS build platform (no arch pinning)
