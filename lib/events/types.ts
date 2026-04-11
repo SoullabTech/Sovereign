@@ -78,4 +78,8 @@ export interface ActiveEventContext {
   startDate: string;
   endDate: string;
   practitionerId: string;
+  /** Total calendar days of the event (end − start + 1). Null if dates are invalid. */
+  totalDays: number | null;
+  /** 1-based day index within the event. Only set when phase === 'during'. */
+  dayIndex: number | null;
 }

@@ -47,6 +47,7 @@ import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 import { loadSpiralState, upsertSpiralState, type ActiveReportContext } from '@/lib/consciousness/spiralStatePersistence';
 import { getMemberActiveEventContext } from '@/lib/events/eventService';
+import { getDayLanguage } from '@/lib/events/eventArcBehaviorMap';
 import type { ActiveEventContext } from '@/lib/events/types';
 import { getMemberActiveRelationalContext } from '@/lib/relationships/relationshipContextService';
 import { buildRelationalContextBlock } from '@/lib/relationships/buildRelationalContextBlock';
@@ -132,12 +133,18 @@ function getClientIp(req: NextRequest) {
 function buildEventArcContextBlock(activeEvent: ActiveEventContext | null): string {
   if (!activeEvent) return '';
 
+  const dayLine = activeEvent.dayIndex !== null && activeEvent.totalDays !== null
+    ? `Day: ${activeEvent.dayIndex} of ${activeEvent.totalDays}\n`
+    : '';
+
+  const dayStance = getDayLanguage(activeEvent.totalDays, activeEvent.dayIndex) ?? '';
+
   return `
 The user is currently inside an Event Arc.
 
 Event: ${activeEvent.title}
 Phase: ${activeEvent.phase}
-
+${dayLine}
 continuity_mode: true
 
 Interpretive stance:
@@ -156,7 +163,7 @@ Constraints:
 - Do not introduce structure unless it emerges from the user
 
 Hold the interaction as a continuous field, not a sequence of answers.
-`;
+${dayStance}`;
 }
 
 function rateLimitOrThrow(ip: string) {
@@ -569,6 +576,9 @@ export async function POST(request: NextRequest) {
         console.log('[Oracle] event-arc', {
           eventId: activeEventContext.eventId,
           phase: activeEventContext.phase,
+          totalDays: activeEventContext.totalDays,
+          dayIndex: activeEventContext.dayIndex,
+          dayLanguageIncluded: getDayLanguage(activeEventContext.totalDays, activeEventContext.dayIndex) !== null,
           continuityMode: true,
           included: true,
         });
