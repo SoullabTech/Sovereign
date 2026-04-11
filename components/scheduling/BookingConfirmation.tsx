@@ -1,8 +1,14 @@
 'use client';
 
-import { Check, Video, X } from 'lucide-react';
+import { Check, Video, X, Calendar, Download } from 'lucide-react';
 import type { BookingResult } from './BookingModal';
 import { getBusinessTimezoneLabel } from '@/lib/scheduling/timezoneParsing';
+import {
+  buildGoogleCalendarUrl,
+  buildIcsString,
+  downloadIcsFile,
+  buildExportOptionsFromBooking,
+} from '@/lib/scheduling/calendarExport';
 
 interface BookingConfirmationProps {
   booking: BookingResult;
@@ -114,6 +120,52 @@ export function BookingConfirmation({ booking, slug, onClose }: BookingConfirmat
               </div>
             </>
           )}
+
+          {/* Add to calendar */}
+          <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
+          <div className="flex flex-col gap-2 text-left">
+            {(() => {
+              const manageFullUrl = confirmationUrl
+                ? `https://soullab.life${confirmationUrl}`
+                : undefined;
+              const exportOpts = buildExportOptionsFromBooking({
+                serviceName: booking.serviceName,
+                date: booking.date,
+                time: booking.time,
+                durationMinutes: booking.duration,
+                manageUrl: manageFullUrl,
+              });
+              const googleUrl = buildGoogleCalendarUrl(exportOpts);
+              const ics = buildIcsString(exportOpts);
+              return (
+                <>
+                  <a
+                    href={googleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 hover:underline"
+                  >
+                    <Calendar size={16} className="flex-shrink-0" />
+                    Add to Google Calendar
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const slug = booking.serviceName.replace(/\s+/g, '-').toLowerCase();
+                      const [h, m] = booking.time.split(':');
+                      const ampm = Number(h) >= 12 ? 'pm' : 'am';
+                      const h12 = Number(h) % 12 || 12;
+                      downloadIcsFile(ics, `${slug}-${booking.date}-${h12}${m}${ampm}.ics`);
+                    }}
+                    className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 hover:underline text-left"
+                  >
+                    <Download size={16} className="flex-shrink-0" />
+                    Download for Proton, Apple, Outlook (.ics)
+                  </button>
+                </>
+              );
+            })()}
+          </div>
 
           <div className="border-t border-neutral-100 dark:border-neutral-800 my-4" />
 

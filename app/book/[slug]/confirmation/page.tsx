@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { CheckCircle, Calendar, Clock, User, XCircle } from 'lucide-react';
+import { CheckCircle, Calendar, Clock, User, XCircle, Download } from 'lucide-react';
 import {
   BUSINESS_TIMEZONE,
   getBusinessTimezoneLabel,
 } from '@/lib/scheduling/timezoneParsing';
+import {
+  buildGoogleCalendarUrl,
+  buildIcsString,
+  downloadIcsFile,
+} from '@/lib/scheduling/calendarExport';
 
 interface BookingDetails {
   sessionId: string;
@@ -176,6 +181,55 @@ export default function BookingConfirmationPage() {
             </div>
           </div>
         </div>
+
+        {/* Add to calendar */}
+        {!cancelled && (() => {
+          const descParts = [
+            `With ${booking.practitionerName}`,
+            `${booking.serviceName} (${booking.durationMinutes} min)`,
+          ];
+          if (token) {
+            descParts.push(`Manage: https://soullab.life/book/${slug}/confirmation?token=${token}`);
+          }
+          const exportOpts = {
+            title: booking.serviceName,
+            startUtcIso: new Date(booking.scheduledStart).toISOString(),
+            endUtcIso: new Date(booking.scheduledEnd).toISOString(),
+            description: descParts.join('\n'),
+          };
+          const googleUrl = buildGoogleCalendarUrl(exportOpts);
+          const ics = buildIcsString(exportOpts);
+          return (
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href={googleUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 hover:underline"
+              >
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                Add to Google Calendar
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  const s = new Date(booking.scheduledStart);
+                  const h = s.getHours();
+                  const ampm = h >= 12 ? 'pm' : 'am';
+                  const h12 = h % 12 || 12;
+                  const mm = String(s.getMinutes()).padStart(2, '0');
+                  const dateStr = s.toISOString().split('T')[0];
+                  const slug2 = booking.serviceName.replace(/\s+/g, '-').toLowerCase();
+                  downloadIcsFile(ics, `${slug2}-${dateStr}-${h12}${mm}${ampm}.ics`);
+                }}
+                className="flex items-center gap-2 text-sm text-amber-500 dark:text-amber-400 hover:underline text-left"
+              >
+                <Download className="w-4 h-4 flex-shrink-0" />
+                Download for Proton, Apple, Outlook (.ics)
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Actions */}
         {!cancelled && (
