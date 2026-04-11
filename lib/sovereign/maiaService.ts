@@ -17,6 +17,7 @@ import {
   detectBloomLevel,
   type BloomDetection
 } from '../consciousness/bloomCognition';
+import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '../maia/prompts/knowledgeFieldBlock';
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
@@ -1044,6 +1045,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.log(`🧠 [Dialectical Scaffold] FAST path scaffolding injected: Level ${bloomDetection.numericLevel} → ${nextLevel}`);
   }
 
+  // 📚 KNOWLEDGE FIELD: 12-domain consciousness registry (non-ambient — detection-gated)
+  let knowledgeFieldAddendum = '';
+  try {
+    if (input && hasKnowledgeDomainSignal(input)) {
+      knowledgeFieldAddendum = buildKnowledgeFieldBlock(input);
+      console.log(`[MAIA SERVICE] knowledge-field { detected: true, blockLength: ${knowledgeFieldAddendum.length}, path: 'FAST' }`);
+    }
+  } catch (kfError) {
+    console.warn('[MAIA SERVICE] Knowledge field load failed (non-critical):', kfError);
+  }
+
   // 🌊 FORMAT RELATIONSHIP MEMORY for prompt
   const relationshipContext = relationshipMemory
     ? formatRelationshipMemoryForPrompt(relationshipMemory)
@@ -1183,7 +1195,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${knowledgeFieldAddendum}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}${astrologyAddendum ? '\n\n' + astrologyAddendum : ''}${studioAddendum ? '\n\n' + studioAddendum : ''}${knowledgeGateAddendum ? '\n\n' + knowledgeGateAddendum : ''}${memberWebAddendum ? '\n\n' + memberWebAddendum : ''}${fieldWisdomAddendum ? '\n\n' + fieldWisdomAddendum : ''}${stateVectorContract}${youthPromptAddendum}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1886,6 +1898,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.log(`🧠 [Dialectical Scaffold] DEEP path scaffolding prepared: Level ${bloomDetection.numericLevel} → ${nextLevel}`);
   }
 
+  // 📚 KNOWLEDGE FIELD: 12-domain consciousness registry (DEEP path)
+  let knowledgeFieldNote = '';
+  try {
+    if (input && hasKnowledgeDomainSignal(input)) {
+      knowledgeFieldNote = buildKnowledgeFieldBlock(input);
+      console.log(`[MAIA SERVICE] knowledge-field { detected: true, blockLength: ${knowledgeFieldNote.length}, path: 'DEEP' }`);
+    }
+  } catch (kfError) {
+    console.warn('[MAIA SERVICE] Knowledge field load failed (non-critical):', kfError);
+  }
+
   // Build enhanced consciousness context
   const consciousnessContext: ConsciousnessContext = {
     sessionId,
@@ -1944,7 +1967,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
 
       const consultation = await consultClaudeForConsciousness({
         userInput: input,
-        maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote, // 🧠 Inject scaffolding into MAIA's initial response for Claude to integrate
+        maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote + knowledgeFieldNote, // 🧠 Inject scaffolding + knowledge field into context for Claude
         conversationContext: effectiveHistory.slice(-5).map(ex => ({
           userMessage: ex.userMessage || '',
           maiaResponse: ex.maiaResponse || ''
