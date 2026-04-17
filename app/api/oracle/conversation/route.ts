@@ -1671,14 +1671,19 @@ async function generateSpiralogicResponseWithLLM(
     ? `${conversationContext}\n\nUser: ${message}`
     : message;
 
-  // Determine max tokens based on conversation depth (MAIA-PAI pattern)
+  // Determine max tokens based on BOTH session depth AND relationship depth
+  // A returning member with 200+ encounters should never get a 150-token cap
+  const encounterCount = relationshipEssence?.encounterCount ?? 0;
+  const isDeepRelationship = encounterCount >= 20;
+  const isMatureRelationship = encounterCount >= 100;
+
   const maxTokens = conversationDepth === 0
-    ? 100  // ~15 words for first greeting
+    ? (isMatureRelationship ? 250 : isDeepRelationship ? 200 : 100)
     : conversationDepth <= 3
-    ? 150  // ~40-60 words for early conversation
+    ? (isMatureRelationship ? 500 : isDeepRelationship ? 350 : 150)
     : conversationDepth <= 10
-    ? 250  // ~60-100 words for building trust
-    : 400; // ~80-150 words for deep relationship
+    ? (isMatureRelationship ? 600 : isDeepRelationship ? 400 : 250)
+    : (isMatureRelationship ? 800 : isDeepRelationship ? 600 : 400);
 
   // ------------------------------------------------------------
   // AIN v2: Soft consultation (capability, not choreography)

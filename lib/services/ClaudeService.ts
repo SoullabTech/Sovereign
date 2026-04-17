@@ -116,8 +116,10 @@ export class ClaudeService {
       const messages: Anthropic.MessageParam[] = [];
 
       if (context.conversationHistory) {
-        // Take last 6 messages (3 turns) for context without overwhelming
-        const recentHistory = context.conversationHistory.slice(-6);
+        // Keep up to 40 messages (20 turns) — enough for real thread coherence
+        // The model needs conversational memory to hold referents, carry themes,
+        // and avoid non-sequiturs. 3 turns was causing amnesia.
+        const recentHistory = context.conversationHistory.slice(-40);
 
         recentHistory.forEach(msg => {
           const content = msg.content?.trim() || '';
@@ -213,8 +215,8 @@ export class ClaudeService {
     const messages: Anthropic.MessageParam[] = [];
 
     if (context.conversationHistory) {
-      // Take last 6 messages (3 turns) for context without overwhelming
-      const recentHistory = context.conversationHistory.slice(-6);
+      // Keep up to 40 messages (20 turns) — match non-streaming path
+      const recentHistory = context.conversationHistory.slice(-40);
 
       recentHistory.forEach(msg => {
         const content = msg.content?.trim() || '';
