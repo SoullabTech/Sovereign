@@ -7956,12 +7956,12 @@ I'm not sure what I'm feeling yet.`;
         }`}
              style={{
                height: showChatInterface
-                 ? 'calc(100vh - 240px)'
-                 : 'calc(100vh - 280px)',
+                 ? 'calc(100vh - 300px)'
+                 : 'calc(100vh - 320px)',
                maxHeight: showChatInterface
-                 ? 'calc(100vh - 240px)'
-                 : 'calc(100vh - 280px)',
-               bottom: showChatInterface ? '220px' : '180px',
+                 ? 'calc(100vh - 300px)'
+                 : 'calc(100vh - 320px)',
+               bottom: showChatInterface ? '260px' : '220px',
                overflow: 'hidden'
              }}>
           {/* 🌀 AIN: Collective field indicator */}
