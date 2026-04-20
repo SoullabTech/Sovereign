@@ -42,15 +42,63 @@ export default function MayanAstrologyPage() {
   const [activeView, setActiveView] = useState<'signature' | 'pillars' | 'today'>('pillars');
 
   useEffect(() => {
-    // Load saved birth date
-    const saved = localStorage.getItem('birthDate');
-    if (saved) {
-      setBirthDate(saved);
-      calculateSign(new Date(saved));
-    }
-
     // Always show today's sign
     setTodaySign(getTodaysMayanSign());
+
+    // Helper: normalize any stored birth date to YYYY-MM-DD (for <input type="date">)
+    const toDateInputValue = (raw: unknown): string | null => {
+      if (!raw) return null;
+      try {
+        if (typeof raw === 'string') {
+          // Already YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+          return new Date(raw).toISOString().split('T')[0];
+        }
+        return new Date(raw as string | number | Date).toISOString().split('T')[0];
+      } catch {
+        return null;
+      }
+    };
+
+    const applyDate = (dateStr: string) => {
+      setBirthDate(dateStr);
+      calculateSign(new Date(dateStr));
+    };
+
+    // 1) Try member profile API (server-of-truth, cross-device)
+    const loadFromProfile = async () => {
+      try {
+        const storedUser = localStorage.getItem('beta_user');
+        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
+
+        if (memberId) {
+          const res = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+          if (res.ok) {
+            const profile = await res.json();
+            const d = toDateInputValue(profile?.birthData?.date);
+            if (d) { applyDate(d); return true; }
+          }
+        }
+
+        // 2) beta_user.birthData.date in localStorage
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          const d = toDateInputValue(user?.birthData?.date);
+          if (d) { applyDate(d); return true; }
+        }
+
+        // 3) Legacy keys used only by this page
+        const legacy = localStorage.getItem('birthDate');
+        const d = toDateInputValue(legacy);
+        if (d) { applyDate(d); return true; }
+
+        return false;
+      } catch {
+        return false;
+      }
+    };
+
+    loadFromProfile();
   }, []);
 
   const calculateSign = (date: Date) => {
@@ -438,30 +486,31 @@ export default function MayanAstrologyPage() {
           </p>
         </motion.div>
 
-        {/* Date Input */}
-        {!birthSign && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-md mx-auto mb-12"
-          >
-            <div className="bg-gradient-to-br from-stone-900/80 via-amber-950/40 to-stone-900/80 backdrop-blur-xl border border-amber-900/30 rounded-2xl p-8">
-              <h3 className="text-xl font-bold text-amber-100 mb-4">
-                Discover Your Galactic Signature
-              </h3>
-              <p className="text-amber-400/70 text-sm mb-6">
-                Enter your birth date to reveal your Mayan solar seal and galactic tone
-              </p>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                className="w-full px-4 py-3 bg-black/40 border border-amber-800/50 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
-                max={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-          </motion.div>
-        )}
+        {/* Date Input — always visible so user can edit and try other birthdays */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md mx-auto mb-12"
+        >
+          <div className="bg-gradient-to-br from-stone-900/80 via-amber-950/40 to-stone-900/80 backdrop-blur-xl border border-amber-900/30 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-amber-100 mb-2">
+              {birthSign ? 'Birth Date' : 'Discover Your Galactic Signature'}
+            </h3>
+            <p className="text-amber-400/70 text-xs mb-4">
+              {birthSign
+                ? 'Change the date to read another signature.'
+                : 'Enter your birth date to reveal your Mayan solar seal and galactic tone.'}
+            </p>
+            <input
+              type="date"
+              value={birthDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="w-full px-4 py-3 bg-black/40 border border-amber-800/50 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
+              min="1900-01-01"
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+        </motion.div>
 
         {/* View Toggle */}
         {birthSign && todaySign && completeProfile && (
