@@ -915,7 +915,9 @@ export function getMoonPhaseData(date: Date = new Date()): {
 } {
   const time = Astronomy.MakeTime(date);
   const moonLon = Astronomy.EclipticLongitude(Astronomy.Body.Moon, time);
-  const sunLon = Astronomy.EclipticLongitude(Astronomy.Body.Sun, time);
+  // EclipticLongitude does not work for the Sun (no heliocentric reference for itself).
+  // Use SunPosition() which returns geocentric ecliptic coordinates.
+  const sunLon = Astronomy.SunPosition(time).elon;
   const degrees = ((moonLon - sunLon) % 360 + 360) % 360;
   return { degrees, percentage: Math.round((degrees / 360) * 100) };
 }
