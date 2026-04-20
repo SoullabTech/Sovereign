@@ -18,6 +18,7 @@ import {
   type BloomDetection
 } from '../consciousness/bloomCognition';
 import { buildKnowledgeFieldBlock, hasKnowledgeDomainSignal } from '../maia/prompts/knowledgeFieldBlock';
+import { buildMaiaContext } from '../maia/context/buildMaiaContext';
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
@@ -2195,6 +2196,40 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       (meta as any)?.memberId ??
       (meta as any)?.user?.id ??
       null;
+
+    // 🌟 IDENTITY-LAYER CONTEXT (always-on continuity)
+    // Natal chart and display name are identity-layer continuity — not
+    // feature-layer invocations. If the caller did not already supply them,
+    // fill them in so every generation path (FAST/CORE/DEEP) has baseline
+    // identity context regardless of which route we came in on.
+    // This prevents the context-fragmentation bug where newer routes silently
+    // lose natal chart data that older routes used to load inline.
+    // (Member web / memory continuity is loaded by callers that need it —
+    // folding it here is blocked on MemberLiveContext type-drift cleanup.)
+    if (effectiveUserId) {
+      try {
+        const needsAstrology = !(meta as any).astrologyAddendum;
+        const needsUserName = !(meta as any).userName;
+        if (needsAstrology || needsUserName) {
+          const identity = await buildMaiaContext(effectiveUserId);
+          if (needsAstrology && identity.astrologyAddendum) {
+            (meta as any).astrologyAddendum = identity.astrologyAddendum;
+          }
+          if (needsUserName && identity.userName) {
+            (meta as any).userName = identity.userName;
+          }
+          if (identity.hasBirthData || identity.userName) {
+            console.log(
+              `🌟 [MaiaService] Identity layer filled for ${String(effectiveUserId).substring(0, 8)}... ` +
+                `(natal=${needsAstrology && !!identity.astrologyAddendum}, ` +
+                `name=${needsUserName && !!identity.userName})`,
+            );
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️  [MaiaService] Identity backfill failed (non-critical):', err);
+      }
+    }
 
     // ⚡ LATENCY: Reuse cognitiveProfile from route if already fetched (avoid duplicate DB call)
     let cognitiveProfile: CognitiveProfile | null = (meta as any).cognitiveProfile ?? null;
