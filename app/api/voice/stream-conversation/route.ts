@@ -75,6 +75,7 @@ import { getSystemVoiceProfile, getMemberVoicePreferences, mergeVoiceIntent } fr
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { classifyConversationDepth, tierToBrevity } from '@/lib/consciousness/conversationDepthClassifier';
 import { resolveCouncil, buildCouncilPromptSection, normalizeGuideId } from '@/lib/consciousness/interpretiveCouncil';
+import { buildMaiaContext } from '@/lib/maia/context/buildMaiaContext';
 import { enforceMaiaIdentity } from '@/lib/maia/identityGuard';
 import { query } from '@/lib/db/postgres';
 import { detectIdeaCandidate } from '@/lib/consciousness/ideaDetection';
@@ -779,6 +780,25 @@ export async function POST(req: NextRequest) {
             ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
             : undefined;
 
+        // ============ IDENTITY-LAYER CONTEXT (always-on continuity) ============
+        // Natal chart + display name are identity-layer continuity — must reach
+        // the voice path the same way they reach oracle text. Sanctuary mode
+        // still excludes retrieval (hard wall).
+        let identityContext: Awaited<ReturnType<typeof buildMaiaContext>> | null = null;
+        if (userId && !sanctuary) {
+          try {
+            identityContext = await buildMaiaContext(userId);
+            if (identityContext.hasBirthData || identityContext.userName) {
+              console.log(
+                `🌟 [StreamConversation] Identity layer loaded for ${userId.substring(0, 8)}... ` +
+                  `(natal=${!!identityContext.astrologyAddendum}, name=${!!identityContext.userName})`,
+              );
+            }
+          } catch (identityErr) {
+            console.warn('[StreamConversation] Identity context load failed (continuing):', identityErr);
+          }
+        }
+
         // ============ CONVERSATION DEPTH CLASSIFICATION ============
         // MAIA meets the member at their present level of awareness.
         // She only invokes deeper processing when the conversation asks for it.
@@ -1005,7 +1025,9 @@ export async function POST(req: NextRequest) {
         const context = {
           element,
           conversationHistory,
-          userName: undefined,
+          // Identity-layer display name — resolved from member row when available;
+          // undefined falls through to the caller's default handling.
+          userName: identityContext?.userName,
           // Voice-specific context from wisdom field
           voiceMode: mode,
           sanctuary,
@@ -1075,7 +1097,13 @@ export async function POST(req: NextRequest) {
         });
         const conversationDepth = conversationHistory?.length ?? 0;
         const councilPromptSection = buildCouncilPromptSection(councilResolution, conversationDepth);
-        const voiceSystemPrompt = councilPromptSection || undefined;
+        // Compose voice system prompt: council lens first (interpretive framing),
+        // then identity-layer context (natal chart + transits). Either may be undefined
+        // independently; joined only when at least one is present.
+        const voiceSystemPrompt =
+          [councilPromptSection, identityContext?.astrologyAddendum]
+            .filter((s): s is string => !!s && s.length > 0)
+            .join('\n\n') || undefined;
         if (councilResolution.guide.id !== 'auto' || councilResolution.source === 'auto_integrator') {
           console.log(`🏛️ [Voice Council] ${councilResolution.guide.archetypeName} | ${councilResolution.source}`);
         }
