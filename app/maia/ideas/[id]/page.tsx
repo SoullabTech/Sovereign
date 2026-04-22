@@ -27,7 +27,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   MessageCircle,
@@ -99,8 +99,6 @@ const OUTCOME_LABELS: Record<Outcome, string> = {
   unsure: 'Not sure',
 };
 
-const OUTCOME_ORDER: Outcome[] = ['worked', 'partly', 'didnt', 'unsure'];
-
 const BLOCK_STYLES: Record<
   BlockType,
   { icon: typeof MessageCircle; accent: string; border: string; bg: string; iconColor: string }
@@ -154,17 +152,23 @@ export default function IdeaWorkspacePage() {
   const [draftTitle, setDraftTitle] = useState('');
   const [draftFraming, setDraftFraming] = useState('');
 
-  // Inline block composer
-  const [composing, setComposing] = useState<BlockType | null>(null);
-  const [draftContent, setDraftContent] = useState('');
-  const [composingOutcome, setComposingOutcome] = useState<Outcome | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  // Persistent composer — always visible at the bottom of the thread.
+  // Default save type is 'note'; conversion to decision/shift happens
+  // post-hoc via the Convert actions on the just-saved block.
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // Transient highlight on a block (triggered by decision-strip click)
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
 
-  // Composer scroll target — used by "Return to this" and decision strip
-  const composerScrollRef = useRef<HTMLDivElement | null>(null);
+  // Tracks the most recent user-authored note so Convert actions render on it.
+  // Not updated when MAIA reflections arrive — MAIA blocks don't carry conversion.
+  // The `block_type === 'note'` render guard cleans up implicitly after conversion.
+  const [lastCreatedBlockId, setLastCreatedBlockId] = useState<string | null>(null);
+
+  // Composer focus target. Ask MAIA and Save both refocus after success so
+  // the page reads as 'thought continues here', not 'choose your next operation'.
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   // --- load ----------------------------------------------------------------
 
@@ -250,65 +254,88 @@ export default function IdeaWorkspacePage() {
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
+          // lastCreatedBlockId is intentionally NOT updated — MAIA blocks
+          // don't carry Convert actions, and the prior note's Convert
+          // actions should remain visible so the thought can still be
+          // structured after MAIA responds.
         }
       }
     } catch (err) {
       console.error('[ideas/workspace] ask-maia failed:', err);
     } finally {
       setAskingMaia(false);
+      // Refocus the composer so the user continues naturally after MAIA.
+      window.setTimeout(() => composerRef.current?.focus(), 0);
     }
   }, [idea, askingMaia]);
 
   // --- block composer -------------------------------------------------------
 
-  const openComposer = (type: BlockType) => {
-    setComposing(type);
-    setDraftContent('');
-    setComposingOutcome(null);
-  };
-
-  const cancelComposer = () => {
-    setComposing(null);
-    setDraftContent('');
-    setComposingOutcome(null);
-  };
-
-  const submitBlock = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!composing || !idea) return;
-    const content = draftContent.trim();
+  // Save the current draft as a default 'note' block. Structuring
+  // (decision/shift) happens post-hoc via Convert actions on the
+  // just-saved block, so the user never classifies before thinking.
+  const handleSaveNote = useCallback(async () => {
+    if (!idea || saving) return;
+    const content = draft.trim();
     if (!content) return;
 
-    setSubmitting(true);
+    setSaving(true);
     try {
-      // Shift blocks carry an optional outcome in metadata
-      const metadata: BlockMetadata =
-        composing === 'change' && composingOutcome ? { outcome: composingOutcome } : {};
-
       const res = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
         method: 'POST',
-        body: JSON.stringify({ block_type: composing, content, metadata }),
+        body: JSON.stringify({ block_type: 'note', content, metadata: {} }),
       });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
-          if (composing === 'decision') {
-            setIdea((prev) =>
-              prev ? { ...prev, last_decision_at: data.block.created_at } : prev
-            );
-          }
-          setComposing(null);
-          setDraftContent('');
-          setComposingOutcome(null);
+          setLastCreatedBlockId(data.block.id);
+          setDraft('');
+          // Refocus so the cursor stays in the flow
+          window.setTimeout(() => composerRef.current?.focus(), 0);
         }
       }
     } catch (err) {
-      console.error('[ideas/workspace] block submit failed:', err);
+      console.error('[ideas/workspace] save note failed:', err);
     } finally {
-      setSubmitting(false);
+      setSaving(false);
     }
-  };
+  }, [idea, saving, draft]);
+
+  // Convert a note block in place → decision or shift. The PATCH endpoint
+  // enforces that only 'note' blocks may be converted, and only to
+  // 'decision' or 'change'. MAIA reflections are never convertible.
+  const convertBlock = useCallback(
+    async (blockId: string, toType: 'decision' | 'change') => {
+      if (!idea) return;
+      try {
+        const res = await apiFetch(`/api/ideas/${idea.id}/blocks/${blockId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ block_type: toType }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.block) {
+            setBlocks((prev) =>
+              prev.map((b) =>
+                b.id === blockId
+                  ? { ...b, block_type: data.block.block_type, metadata: data.block.metadata }
+                  : b
+              )
+            );
+            if (toType === 'decision') {
+              setIdea((prev) =>
+                prev ? { ...prev, last_decision_at: data.block.created_at } : prev
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[ideas/workspace] convert block failed:', err);
+      }
+    },
+    [idea]
+  );
 
   const deleteBlock = async (blockId: string) => {
     if (!idea) return;
@@ -357,7 +384,9 @@ export default function IdeaWorkspacePage() {
     }
   }, []);
 
-  // Return to this — smart composer default + touch ping + scroll-to-composer
+  // Return to this — touch ping + focus the persistent composer. No type
+  // selection: the composer is always a freeform note; structuring happens
+  // post-hoc via Convert actions on the saved block.
   const handleReturnToThis = useCallback(() => {
     if (!idea) return;
 
@@ -365,26 +394,12 @@ export default function IdeaWorkspacePage() {
     // already on the page. This is the engagement signal we care about.
     apiFetch(`/api/ideas/${idea.id}/touch`, { method: 'POST' }).catch(() => {});
 
-    // Smart default based on the last member-authored block.
-    // MAIA reflections don't shape the next-block default — they're
-    // reflective, not directional.
-    const nextType: BlockType = (() => {
-      const memberBlocks = blocks.filter((b) => b.block_type !== 'maia_reflection');
-      if (memberBlocks.length === 0) return 'note';
-      const last = memberBlocks[memberBlocks.length - 1];
-      if (last.block_type === 'decision') return 'change';
-      return 'note';
-    })();
-
-    setComposing(nextType);
-    setDraftContent('');
-    setComposingOutcome(null);
-
-    // Scroll composer into view after the next paint so the motion.form is mounted
+    // Scroll composer into view, then focus it.
     window.setTimeout(() => {
-      composerScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      composerRef.current?.focus();
     }, 80);
-  }, [idea, blocks]);
+  }, [idea]);
 
   // --- header edit ----------------------------------------------------------
 
@@ -596,145 +611,12 @@ export default function IdeaWorkspacePage() {
           </div>
         )}
 
-        {/* Quick actions */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <QuickAction
-            icon={MessageCircle}
-            label="Reflection"
-            active={composing === 'note'}
-            onClick={() => openComposer('note')}
-            accent="amber"
-          />
-          <QuickAction
-            icon={CheckCircle2}
-            label="Decision"
-            active={composing === 'decision'}
-            onClick={() => openComposer('decision')}
-            accent="emerald"
-          />
-          <QuickAction
-            icon={Wind}
-            label="Shift"
-            active={composing === 'change'}
-            onClick={() => openComposer('change')}
-            accent="cyan"
-          />
-          <div className="flex-1" />
-          <button
-            onClick={handleAskMaia}
-            disabled={askingMaia}
-            className="px-4 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-all text-xs text-amber-300/90 hover:text-amber-200 font-light flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Ask MAIA for a reflection on this thread"
-          >
-            {askingMaia ? (
-              <>
-                <span className="w-3 h-3 border border-amber-400/40 border-t-amber-300 rounded-full animate-spin" />
-                <span>Listening...</span>
-              </>
-            ) : (
-              'Ask MAIA'
-            )}
-          </button>
-        </div>
-
-        {/* Inline composer */}
-        <AnimatePresence>
-          {composing && (
-            <motion.form
-              ref={composerScrollRef}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              onSubmit={submitBlock}
-              className={`mb-4 p-4 rounded-xl ${BLOCK_STYLES[composing].bg} border ${BLOCK_STYLES[composing].border}`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                {(() => {
-                  const Icon = BLOCK_STYLES[composing].icon;
-                  return <Icon className={`w-4 h-4 ${BLOCK_STYLES[composing].iconColor}`} />;
-                })()}
-                <span
-                  className={`text-[10px] uppercase tracking-wider ${BLOCK_STYLES[composing].accent} font-medium`}
-                >
-                  {BLOCK_LABELS[composing]}
-                </span>
-              </div>
-              <textarea
-                autoFocus
-                value={draftContent}
-                onChange={(e) => setDraftContent(e.target.value)}
-                placeholder={
-                  composing === 'note'
-                    ? 'A note, an insight, something you want to return to...'
-                    : composing === 'decision'
-                    ? "I'm choosing... / I'm not doing... / I will try..."
-                    : 'This changed... / This evolved into... / This didn\u2019t work...'
-                }
-                rows={3}
-                maxLength={4000}
-                className="w-full bg-transparent text-sm text-stone-200 placeholder-stone-600 outline-none font-light resize-none leading-relaxed"
-                onKeyDown={(e) => {
-                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                    submitBlock();
-                  }
-                  if (e.key === 'Escape') {
-                    cancelComposer();
-                  }
-                }}
-              />
-
-              {/* Outcome chips — only for Shift. Optional, single-select, click-to-toggle. */}
-              {composing === 'change' && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  <span className="text-[10px] text-stone-600 mr-1">Outcome (optional)</span>
-                  {OUTCOME_ORDER.map((outcome) => {
-                    const active = composingOutcome === outcome;
-                    return (
-                      <button
-                        key={outcome}
-                        type="button"
-                        onClick={() => setComposingOutcome(active ? null : outcome)}
-                        className={`text-[11px] px-2 py-0.5 rounded-full border transition-all font-light ${
-                          active
-                            ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-200'
-                            : 'bg-stone-900/40 border-stone-700/50 text-stone-500 hover:border-cyan-500/30 hover:text-cyan-300/80'
-                        }`}
-                      >
-                        {OUTCOME_LABELS[outcome]}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div className="flex items-center gap-4 mt-3">
-                <button
-                  type="submit"
-                  disabled={!draftContent.trim() || submitting}
-                  className={`text-xs ${BLOCK_STYLES[composing].accent} hover:opacity-100 disabled:text-stone-600 disabled:cursor-not-allowed transition-colors`}
-                >
-                  {submitting ? 'Saving...' : 'Add'}
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelComposer}
-                  className="text-xs text-stone-500 hover:text-stone-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <span className="text-[10px] text-stone-600 ml-auto">⌘↵ to save</span>
-              </div>
-            </motion.form>
-          )}
-        </AnimatePresence>
-
         {/* Thread — newest first so return-visits see the latest first */}
         {blocks.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-sm text-stone-500 font-light">This idea is waiting for you.</p>
             <p className="text-xs text-stone-600 mt-1">
-              Add a reflection, a decision, or a shift to begin.
+              Use the composer below to continue thinking.
             </p>
           </div>
         ) : (
@@ -793,6 +675,24 @@ export default function IdeaWorkspacePage() {
                       <p className="text-sm text-stone-200 font-light leading-relaxed whitespace-pre-wrap">
                         {block.content}
                       </p>
+
+                      {/* Post-hoc structuring — only on the most recent note. */}
+                      {block.id === lastCreatedBlockId && block.block_type === 'note' && (
+                        <div className="mt-3 flex gap-3 text-xs">
+                          <button
+                            onClick={() => convertBlock(block.id, 'decision')}
+                            className="text-stone-400 hover:text-emerald-300/90 transition-colors"
+                          >
+                            Convert to Decision
+                          </button>
+                          <button
+                            onClick={() => convertBlock(block.id, 'change')}
+                            className="text-stone-400 hover:text-cyan-300/90 transition-colors"
+                          >
+                            Convert to Shift
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -800,46 +700,55 @@ export default function IdeaWorkspacePage() {
             })}
           </ul>
         )}
+
+        {/* Persistent composer — always visible, below the thread.
+            This is the live place where thought continues. Ask MAIA is
+            a secondary action inside the composer, not a separate button. */}
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          <textarea
+            ref={composerRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Continue thinking..."
+            maxLength={4000}
+            className="min-h-[88px] w-full resize-none bg-transparent text-stone-100 placeholder-stone-500 outline-none font-light leading-relaxed"
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                handleSaveNote();
+              }
+            }}
+          />
+
+          <div className="mt-3 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleAskMaia}
+              disabled={askingMaia}
+              className="text-sm text-stone-400 hover:text-stone-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              aria-label="Ask MAIA for a reflection on this thread"
+            >
+              {askingMaia ? (
+                <>
+                  <span className="w-3 h-3 border border-stone-400/40 border-t-stone-200 rounded-full animate-spin" />
+                  <span>Listening...</span>
+                </>
+              ) : (
+                'Ask MAIA'
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSaveNote}
+              disabled={!draft.trim() || saving}
+              className="rounded-full px-4 py-2 text-sm text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
       </div>
     </motion.div>
-  );
-}
-
-// --- quick action button ----------------------------------------------------
-
-function QuickAction({
-  icon: Icon,
-  label,
-  active,
-  onClick,
-  accent,
-}: {
-  icon: typeof MessageCircle;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-  accent: 'amber' | 'emerald' | 'cyan';
-}) {
-  const colors = {
-    amber: active
-      ? 'bg-amber-500/15 border-amber-500/50 text-amber-200'
-      : 'bg-stone-900/40 border-stone-800/60 text-stone-400 hover:border-amber-500/30 hover:text-amber-300/80',
-    emerald: active
-      ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-200'
-      : 'bg-stone-900/40 border-stone-800/60 text-stone-400 hover:border-emerald-500/30 hover:text-emerald-300/80',
-    cyan: active
-      ? 'bg-cyan-500/15 border-cyan-500/50 text-cyan-200'
-      : 'bg-stone-900/40 border-stone-800/60 text-stone-400 hover:border-cyan-500/30 hover:text-cyan-300/80',
-  }[accent];
-
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-2 rounded-lg border transition-all text-xs font-light flex items-center gap-1.5 ${colors}`}
-    >
-      <Icon className="w-3.5 h-3.5" />
-      <span>{label}</span>
-    </button>
   );
 }
 
