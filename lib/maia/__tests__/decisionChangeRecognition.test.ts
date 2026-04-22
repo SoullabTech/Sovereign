@@ -86,6 +86,82 @@ describe('detectDecisionSignal', () => {
     expect(detectDecisionSignal('').strength).toBe('weak');
     expect(detectDecisionSignal('   ').strength).toBe('weak');
   });
+
+  // ─── Widened commitment patterns (tuning 2026-04-22) ────────────────────
+
+  it('returns strong for "I will X" on bare commitment', () => {
+    expect(
+      detectDecisionSignal('I will focus on the integration phase first.').strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for "I\'ll X" on bare commitment', () => {
+    expect(
+      detectDecisionSignal("I'll start with the integration phase.").strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for "I am going to X"', () => {
+    expect(
+      detectDecisionSignal('I am going to build the prep phase first.').strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for "I have decided to X"', () => {
+    expect(
+      detectDecisionSignal('I have decided to focus on the integration phase.').strength
+    ).toBe('strong');
+  });
+
+  // ─── Exploratory qualifier exclusions (must NOT be strong) ──────────────
+
+  it('does NOT treat "I\'m going to think about" as strong', () => {
+    expect(
+      detectDecisionSignal("I'm going to think about it more carefully.").strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I\'m going to explore" as strong', () => {
+    expect(
+      detectDecisionSignal("I'm going to explore different approaches.").strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I\'m going to consider" as strong', () => {
+    expect(
+      detectDecisionSignal("I'm going to consider all the options first.").strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I might" as strong', () => {
+    expect(detectDecisionSignal('I might focus on integration.').strength).not.toBe(
+      'strong'
+    );
+  });
+
+  it('does NOT treat "Maybe I\'ll" as strong', () => {
+    expect(
+      detectDecisionSignal("Maybe I'll start with integration.").strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I could" as strong', () => {
+    expect(detectDecisionSignal('I could try building integration first.').strength).not.toBe(
+      'strong'
+    );
+  });
+
+  it('does NOT treat "I\'ll think" as strong', () => {
+    expect(
+      detectDecisionSignal("I'll think about what makes sense here.").strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I\'ll probably" as strong', () => {
+    expect(
+      detectDecisionSignal("I'll probably focus on integration later.").strength
+    ).not.toBe('strong');
+  });
 });
 
 // ─── detectChangeSignal ─────────────────────────────────────────────────────
