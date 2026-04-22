@@ -7,6 +7,40 @@ import {
   generateThreadReflection,
   type ThreadBlockSummary,
 } from '@/lib/team/maiaThreadReflection';
+import {
+  runRecognition,
+  getRecentRecognitionEvents,
+  storeRecognitionEvent,
+  type RecognitionOutcome,
+} from '@/lib/maia/decisionChangeRecognition';
+
+// Server-side enablement gate for MAIA Decision/Change recognition.
+//
+// The feature requires BOTH:
+//   1. FEATURE_MAIA_IDEAS_DECISION_RECOGNITION === 'true' (global toggle)
+//   2. member_id present in FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS
+//      (comma-separated UUID allowlist)
+//
+// Default-safe: if the allowlist env is missing, empty, or whitespace-only,
+// the feature is OFF for everyone. This prevents accidental global rollout
+// when the global toggle is flipped in production.
+function isRecognitionEnabled(memberId: string): boolean {
+  if (process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION !== 'true') return false;
+  const raw = process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION_MEMBER_IDS ?? '';
+  const allowlist = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (allowlist.length === 0) return false;
+  return allowlist.includes(memberId);
+}
+
+// Sanctuary mode is not yet wired to Ideas threads. When it is, update this
+// helper to check the member's current session state. For v1 this is a
+// placeholder that keeps the absolute-gate invariant honored-by-default.
+function isSanctuaryModeActive(_memberId: string, _ideaId: string): boolean {
+  return false;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -125,15 +159,94 @@ export async function POST(
       recentBlocks: summaries,
     });
 
+    // ── Decision/Change recognition (flag-gated, post-response) ──────────────
+    // Invariant: this runs AFTER the reflection is generated. It does not
+    // touch the prompt or steer MAIA's voice. It only names a moment and
+    // attaches an invitation affordance when the spec allows.
+    let recognition: RecognitionOutcome | null = null;
+    if (isRecognitionEnabled(session.memberId) && recentBlocks.length > 0) {
+      const latestUserBlock = recentBlocks[recentBlocks.length - 1];
+      const userText = latestUserBlock.content ?? '';
+      const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
+      const recentEvents = await getRecentRecognitionEvents(ideaId);
+      recognition = runRecognition({
+        userText,
+        priorTurnCount: Math.max(0, recentBlocks.length - 1),
+        sanctuaryMode,
+        recentEvents,
+      });
+    }
+
+    // Reflection body stays pure. The naming line, when recognition fires,
+    // lives only in metadata.recognition.naming_line and is rendered by the
+    // UI as a visually distinct element above the body (Option B — keeps
+    // layers separate: body = MAIA's content response, metadata = recognition
+    // state observed by the system).
+    const reflectionContent = reflection;
+
     // Persist atomically as a maia_reflection block. The trust boundary
     // lives here: only this endpoint writes this block_type.
-    const metadata = { source: 'maia', invoked_from: 'idea_thread' } as const;
+    const metadata: Record<string, unknown> = {
+      source: 'maia',
+      invoked_from: 'idea_thread',
+    };
+    if (recognition && recognition.namingLine) {
+      metadata.recognition = {
+        kind: recognition.signal.kind,
+        strength: recognition.signal.strength,
+        naming_line: recognition.namingLine,
+        offer_invitation: recognition.offerInvitation,
+        ...(recognition.signal.kind === 'change' && recognition.signal.xy
+          ? { xy: recognition.signal.xy }
+          : {}),
+      };
+    }
     const insertResult = await query<BlockRow>(
       `INSERT INTO member_idea_blocks (idea_id, member_id, block_type, content, metadata)
        VALUES ($1, $2, 'maia_reflection', $3, $4)
        RETURNING id, block_type, content, metadata, created_at`,
-      [ideaId, session.memberId, reflection, JSON.stringify(metadata)]
+      [ideaId, session.memberId, reflectionContent, JSON.stringify(metadata)]
     );
+
+    // Fire-and-forget event logging. Recorded after the reflection is
+    // successfully persisted so block_id can be referenced in future analysis.
+    // Narrowing: namingLine is only set for medium/strong signals (see
+    // runRecognition() — weak returns null early).
+    if (
+      recognition &&
+      recognition.namingLine &&
+      (recognition.signal.strength === 'medium' || recognition.signal.strength === 'strong')
+    ) {
+      const reflectionBlockId = insertResult.rows[0]?.id;
+      const signalStrength = recognition.signal.strength;
+      storeRecognitionEvent({
+        threadId: ideaId,
+        memberId: session.memberId,
+        eventType: 'naming_fired',
+        signalKind: recognition.signal.kind,
+        signalStrength,
+        meta: {
+          source: 'ask_maia_route',
+          reflection_block_id: reflectionBlockId,
+          ...(recognition.signal.kind === 'change' && recognition.signal.xy
+            ? { x_text: recognition.signal.xy.x, y_text: recognition.signal.xy.y }
+            : {}),
+        },
+      });
+      if (recognition.offerInvitation) {
+        storeRecognitionEvent({
+          threadId: ideaId,
+          memberId: session.memberId,
+          eventType: 'invitation_offered',
+          signalKind: recognition.signal.kind,
+          signalStrength,
+          meta: {
+            source: 'ask_maia_route',
+            reflection_block_id: reflectionBlockId,
+          },
+        });
+      }
+    }
 
     // Touch last_entered_at so the idea bubbles up
     await query(

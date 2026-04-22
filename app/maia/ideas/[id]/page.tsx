@@ -51,6 +51,18 @@ type BlockType = 'note' | 'decision' | 'change' | 'maia_reflection';
 
 type Outcome = 'worked' | 'partly' | 'didnt' | 'unsure';
 
+// MAIA Decision/Change recognition metadata, attached to maia_reflection blocks
+// when the ask-maia route detects a commitment or shift signal. Server sets
+// this via process.env.FEATURE_MAIA_IDEAS_DECISION_RECOGNITION; client simply
+// renders what the metadata contains. Presence = feature is active for this row.
+interface RecognitionMetadata {
+  kind: 'decision' | 'change';
+  strength: 'medium' | 'strong';
+  naming_line: string;
+  offer_invitation: boolean;
+  xy?: { x: string; y: string };
+}
+
 interface BlockMetadata {
   outcome?: Outcome;
   tested?: boolean;
@@ -59,6 +71,8 @@ interface BlockMetadata {
   capture_mode?: string;
   conversationId?: string | null;
   confidence?: number | null;
+  // MAIA-mediated recognition (present on maia_reflection blocks only)
+  recognition?: RecognitionMetadata;
   // Room for later symbolic attachments: hexagram, toolInvocation, councilSessionId
   [key: string]: unknown;
 }
@@ -335,6 +349,97 @@ export default function IdeaWorkspacePage() {
       }
     },
     [idea]
+  );
+
+  // Tracks which maia_reflection block's accept is in-flight (for button
+  // disabled state + preventing double-click duplicates).
+  const [acceptingRecognitionFor, setAcceptingRecognitionFor] = useState<string | null>(null);
+
+  // MAIA recognition acceptance — member clicked "Save as Decision" or
+  // "Mark as Change" on a MAIA reflection.
+  //
+  // Extraction rule (v1, locked): use the full most-recent member block
+  // (before the triggering maia_reflection) as the created object's body.
+  // No trimming, no rewriting, no sentence extraction. The member's text
+  // passes through unchanged. For Change, xy stays in metadata only.
+  //
+  // Authorship: the member's click is the closure. No MAIA text enters
+  // the created object's content.
+  const handleAcceptRecognition = useCallback(
+    async (maiaBlock: Block) => {
+      if (!idea || acceptingRecognitionFor) return;
+      const recognition = maiaBlock.metadata?.recognition;
+      if (!recognition || !recognition.offer_invitation) return;
+
+      // Find the most recent member-authored block before this maia_reflection.
+      // blocks is chronological; walk back from maiaBlock's position.
+      const maiaIdx = blocks.findIndex((b) => b.id === maiaBlock.id);
+      if (maiaIdx === -1) return;
+      const sourceBlock = [...blocks.slice(0, maiaIdx)]
+        .reverse()
+        .find((b) => b.block_type !== 'maia_reflection');
+      if (!sourceBlock) return;
+
+      const newBlockType: 'decision' | 'change' =
+        recognition.kind === 'change' ? 'change' : 'decision';
+
+      const createMetadata: Record<string, unknown> = {
+        source: 'maia_recognition',
+        source_block_id: sourceBlock.id,
+        maia_reflection_block_id: maiaBlock.id,
+        recognition_kind: recognition.kind,
+        recognition_strength: recognition.strength,
+      };
+      if (recognition.kind === 'change' && recognition.xy) {
+        createMetadata.xy = recognition.xy;
+      }
+
+      setAcceptingRecognitionFor(maiaBlock.id);
+      try {
+        const res = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
+          method: 'POST',
+          body: JSON.stringify({
+            block_type: newBlockType,
+            content: sourceBlock.content, // full block body, unchanged
+            metadata: createMetadata,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.block) {
+            setBlocks((prev) => {
+              const withNewBlock = [...prev, data.block];
+              // Clear offer_invitation on the source maia_reflection so the
+              // button doesn't re-render; the object has been created.
+              return withNewBlock.map((b) =>
+                b.id === maiaBlock.id && b.metadata?.recognition
+                  ? {
+                      ...b,
+                      metadata: {
+                        ...b.metadata,
+                        recognition: {
+                          ...b.metadata.recognition,
+                          offer_invitation: false,
+                        },
+                      },
+                    }
+                  : b
+              );
+            });
+            if (newBlockType === 'decision') {
+              setIdea((prev) =>
+                prev ? { ...prev, last_decision_at: data.block.created_at } : prev
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[recognition] accept failed:', err);
+      } finally {
+        setAcceptingRecognitionFor(null);
+      }
+    },
+    [idea, blocks, acceptingRecognitionFor]
   );
 
   const deleteBlock = async (blockId: string) => {
@@ -672,9 +777,46 @@ export default function IdeaWorkspacePage() {
                           </button>
                         </div>
                       </div>
+                      {/* MAIA recognition naming line — structurally distinct
+                          from the reflection body. Reads as "MAIA recognized
+                          something here" rather than as part of the prose.
+                          Only renders when recognition metadata is present
+                          (server-gated by FEATURE_MAIA_IDEAS_DECISION_RECOGNITION). */}
+                      {block.block_type === 'maia_reflection' &&
+                        block.metadata?.recognition?.naming_line && (
+                          <p className="mb-3 pb-3 border-b border-amber-500/10 text-sm italic font-light leading-relaxed text-amber-200/70">
+                            {block.metadata.recognition.naming_line}
+                          </p>
+                        )}
+
                       <p className="text-sm text-stone-200 font-light leading-relaxed whitespace-pre-wrap">
                         {block.content}
                       </p>
+
+                      {/* MAIA-mediated invitation affordance — appears only
+                          when detection offered invitation AND the member has
+                          not yet accepted (server clears offer_invitation on
+                          accept; local state mirrors this immediately). */}
+                      {block.block_type === 'maia_reflection' &&
+                        block.metadata?.recognition?.offer_invitation === true && (
+                          <div className="mt-3 pt-3 border-t border-amber-500/10">
+                            <button
+                              onClick={() => handleAcceptRecognition(block)}
+                              disabled={acceptingRecognitionFor === block.id}
+                              className={`text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                block.metadata.recognition.kind === 'decision'
+                                  ? 'text-emerald-300/90 hover:text-emerald-300'
+                                  : 'text-cyan-300/90 hover:text-cyan-300'
+                              }`}
+                            >
+                              {acceptingRecognitionFor === block.id
+                                ? 'Saving...'
+                                : block.metadata.recognition.kind === 'decision'
+                                ? 'Save as Decision'
+                                : 'Mark as Change'}
+                            </button>
+                          </div>
+                        )}
 
                       {/* Post-hoc structuring — only on the most recent note. */}
                       {block.id === lastCreatedBlockId && block.block_type === 'note' && (
