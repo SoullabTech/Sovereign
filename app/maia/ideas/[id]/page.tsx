@@ -818,23 +818,14 @@ export default function IdeaWorkspacePage() {
                           </div>
                         )}
 
-                      {/* Post-hoc structuring — only on the most recent note. */}
-                      {block.id === lastCreatedBlockId && block.block_type === 'note' && (
-                        <div className="mt-3 flex gap-3 text-xs">
-                          <button
-                            onClick={() => convertBlock(block.id, 'decision')}
-                            className="text-stone-400 hover:text-emerald-300/90 transition-colors"
-                          >
-                            Convert to Decision
-                          </button>
-                          <button
-                            onClick={() => convertBlock(block.id, 'change')}
-                            className="text-stone-400 hover:text-cyan-300/90 transition-colors"
-                          >
-                            Convert to Shift
-                          </button>
-                        </div>
-                      )}
+                      {/* Convert-to-Decision / Convert-to-Shift buttons
+                          removed 2026-04-22 — MAIA-mediated recognition is
+                          now the intended creation path (naming line +
+                          inline affordance on the MAIA response). The
+                          underlying convertBlock() handler and
+                          lastCreatedBlockId state are preserved so this
+                          can be restored with a single JSX reinsert if
+                          needed. */}
                     </div>
                   </div>
                 </li>

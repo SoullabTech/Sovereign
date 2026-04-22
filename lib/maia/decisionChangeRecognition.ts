@@ -80,14 +80,42 @@ export interface RecognitionOutcome {
 // naming at all. Err toward specificity, not recall.
 // ═══════════════════════════════════════════════════════════════
 
-// Decision patterns (case-insensitive against lowercased user text)
-const DECISION_STRONG_PATTERNS: RegExp[] = [
-  /\bi(?:'| a)m going to\b/i,
-  /\bi(?:'| ha)ve decided\b/i,
-  /\bi(?:'| wi)ll (?:start|build|focus|do|make|try|go)\b/i,
+// Decision patterns (case-insensitive against lowercased user text).
+//
+// Rule (locked): strong = first person + committed future + concrete action.
+// The architecture has two strong-signal groups:
+//   - COMMITMENT: broad future-commitment phrases, overridable by exploratory
+//     qualifiers (e.g. "I'll" alone is strong, but "I'll think about" is not).
+//   - ACTION: specific phrases that are unconditionally strong (no exclusion
+//     can downgrade them because the phrase itself contains the action).
+
+const DECISION_STRONG_COMMITMENT: RegExp[] = [
+  /\bi(?:'m| am) going to\b/i,
+  /\bi(?:'ll| will)\b/i,
+  /\bi(?:'ve| have) decided\b/i,
+];
+
+const DECISION_STRONG_ACTION: RegExp[] = [
   /\bthis is what i want to (?:build|do|start|make|try)\b/i,
   /\bi want to (?:start|build|focus|do|make|try) .{0,40}? first\b/i,
   /\bi(?:'m| am) committing to\b/i,
+];
+
+// Exploratory qualifiers — if any of these match, commitment patterns DO
+// NOT promote to strong. These capture soft / non-committal future phrasing
+// that uses the same surface grammar as commitment.
+//
+// Example: "I'm going to focus on X" → strong
+//          "I'm going to think about X" → NOT strong (falls through)
+//
+// Note: this does not affect DECISION_STRONG_ACTION patterns, which contain
+// their own concrete action and are unconditionally strong.
+const DECISION_EXPLORATORY_QUALIFIERS: RegExp[] = [
+  /\bi(?:'m| am) going to (?:think|explore|consider|see|wait|figure|look|check|ponder|mull|weigh|try|maybe)\b/i,
+  /\bi(?:'ll| will) (?:think|explore|consider|see|wait|figure|look|check|ponder|mull|weigh|try|maybe|possibly|probably)\b/i,
+  /\bmaybe i(?:'ll| will)\b/i,
+  /\bi might\b/i,
+  /\bi could\b/i,
 ];
 
 const DECISION_MEDIUM_PATTERNS: RegExp[] = [
@@ -163,12 +191,18 @@ const MEDIUM_INVITATION_MIN_HISTORY = 2;
 /**
  * Score a user message against Decision patterns.
  * Returns strongest match found, or 'weak' if no patterns match.
+ *
+ * Strong-classification rule: first person + committed future + concrete
+ * action. Commitment phrases alone (e.g. "I'll", "I'm going to") promote
+ * to strong ONLY when no exploratory qualifier is present in the text.
  */
 export function detectDecisionSignal(text: string): DecisionSignal {
   const trimmed = text.trim();
   if (!trimmed) return { kind: 'decision', strength: 'weak' };
 
-  for (const pattern of DECISION_STRONG_PATTERNS) {
+  // Unconditional strong: action phrases contain the concrete action in the
+  // pattern itself, so no exclusion applies.
+  for (const pattern of DECISION_STRONG_ACTION) {
     const match = trimmed.match(pattern);
     if (match) {
       return {
@@ -176,6 +210,24 @@ export function detectDecisionSignal(text: string): DecisionSignal {
         strength: 'strong',
         matchedPhrase: match[0],
       };
+    }
+  }
+
+  // Conditional strong: commitment phrases promote only if no exploratory
+  // qualifier overrides them.
+  const hasExploratoryQualifier = DECISION_EXPLORATORY_QUALIFIERS.some((p) =>
+    p.test(trimmed)
+  );
+  if (!hasExploratoryQualifier) {
+    for (const pattern of DECISION_STRONG_COMMITMENT) {
+      const match = trimmed.match(pattern);
+      if (match) {
+        return {
+          kind: 'decision',
+          strength: 'strong',
+          matchedPhrase: match[0],
+        };
+      }
     }
   }
 
