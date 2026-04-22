@@ -1,0 +1,85 @@
+{
+  "name": "gold_standard_support_network_synthesis",
+  "domain": "council_changes_decisions",
+  "fixture_md": "tests/fixtures/council/gold-standard-support-network-synthesis.md",
+  "schema_version": 2,
+  "note": "required_concepts uses regex alternatives, not literal strings. This avoids snapshot-style false-fails against probabilistic LLM wording. Each concept must be matched by at least one any_of pattern (case-insensitive, matched against a flattened stringified result).",
+  "required_concepts": [
+    {
+      "name": "names_uncertainty_or_limitation",
+      "description": "Synthesis must acknowledge limited/absent evidence when the bundle is sparse.",
+      "any_of": [
+        "limited (field )?(data|evidence|signal)",
+        "missing (evidence|data|signal)",
+        "(no|without) (recorded|field) (observations?|signals?|responses?)",
+        "(not yet|insufficient|incomplete) (tested|evidence|data)",
+        "absent[: ]",
+        "(low|limited) (external )?legibility",
+        "(have not|haven't|no) (yet )?(observed|recorded|heard|seen)"
+      ]
+    },
+    {
+      "name": "preserves_plurality",
+      "description": "Multiple live interpretations must remain available — no single diagnosis.",
+      "any_of": [
+        "(multiple|several|two or more) (plausible|possible|live) (readings|interpretations|hypotheses)",
+        "(may|could) be (articulation|field|governance|structural|relational)",
+        "(not yet clear|remains open|still open)",
+        "(either|or both|whether)[\\s\\S]{0,40}(bottleneck|primary|driver)",
+        "(alternatively|on the other hand|and also)"
+      ]
+    },
+    {
+      "name": "recommendation_experimental_or_robust",
+      "description": "Recommendation must be framed as experiment, discovery, or robust-across-interpretations — not an overfit diagnosis.",
+      "any_of": [
+        "(small|a few|2.{0,3}3|two to three)[\\s\\S]{0,30}(high[- ]quality|carefully chosen|hand[- ]selected)",
+        "(contact points?|discovery mechanism|test of (articulation|resonance))",
+        "(robust|works (whether|across)|regardless of which)",
+        "(experiment|pilot|low[- ]stakes encounters?)",
+        "(begin|start) (small|with a few|with one|with two)"
+      ]
+    },
+    {
+      "name": "discovery_through_engagement",
+      "description": "The synthesis must recognize that clarity may emerge through engagement, not only before it.",
+      "any_of": [
+        "understanding and building (happen|emerge) together",
+        "(clarity|understanding) (through|via|by) (engagement|contact|interaction)",
+        "(discover|learn) what (this|the platform) becomes (in|through) contact",
+        "(as you engage|by engaging|through contact)",
+        "(not whether to move|less whether to move).{0,80}how to move"
+      ]
+    },
+    {
+      "name": "decision_relevant_question",
+      "description": "Must ask the practitioner at least one question whose answer would materially change the recommendation.",
+      "any_of": [
+        "what has (actually )?happened",
+        "(grasp|misinterpret|reshape) it",
+        "testing clarity through interaction",
+        "(internal coherence|external confirmation)",
+        "smallest (real )?interaction",
+        "\\?"
+      ]
+    }
+  ],
+  "should_not_include": [
+    "all lenses converge",
+    "all lenses agree",
+    "the deepest insight",
+    "the real issue is",
+    "remarkably convergent",
+    "strikingly convergent",
+    "you are moving ahead of readiness",
+    "anxiety is driving",
+    "avoidance pattern"
+  ],
+  "behavioral_rules": [
+    "preserve ambiguity where warranted",
+    "name missing evidence",
+    "ask at least one orienting question",
+    "offer robust rather than overfit recommendation",
+    "recommendation must still make sense if the dominant interpretation is wrong"
+  ]
+}
