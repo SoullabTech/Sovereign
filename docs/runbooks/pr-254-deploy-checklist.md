@@ -1,145 +1,255 @@
 # PR #254 — Deploy Checklist
 
-> This checklist is specific to PR #254 and should not be reused as a general deployment checklist.
+> This checklist is specific to PR #254 and should not be reused as a general deploy checklist.
+
+---
+
+## Context
+
+This PR is **additive to #252**.
+
+- #252 = canonical synthesis scaffold (already deployed)
+- #254 adds:
+  - absent-bundle signaling in builders
+  - observability + evaluator (dev-only)
+  - Next Signal Loop spec (docs-only)
+  - runbooks (this file)
+
+**No schema changes. No migrations required.**
+
+---
 
 ## Preconditions
 
-- [ ] PR #254 is merged into `clean-main-no-secrets` via the normal review path (not admin-merge)
-- [ ] No DB migration is required by this PR — do not run migrations
-- [ ] No frontend rebuild beyond the standard `maia` service is required
+Before deploying:
 
-## Deploy target
+- [ ] PR #254 is **approved and merged** into `clean-main-no-secrets`
+- [ ] No merge conflicts with #252 scaffold
+- [ ] CI / checks (if any) have passed
+- [ ] You are deploying to **minisForum**, not Mac Studio
 
-- **Host**: minisForum (192.168.0.103) — production
-- **Not**: Mac Studio (192.168.0.101) — dev/build only as of 2026-03-30
-- **Compose file**: `docker-compose.production.yml`
-- **Service to rebuild**: `maia` (compose service name)
-- **Container spawned**: `maia-sovereign`
+---
 
-Note: running `docker compose ... --build maia-sovereign` fails with "no such service". The argument to `--build` is the compose service name (`maia`), not the container name.
+## Deploy Target
 
-## Deploy sequence
+Production host (canonical):
 
-### 1. SSH to minisForum
+```bash
+192.168.0.103 (minisForum)
+```
+
+Do **not** deploy from local Mac Studio.
+Mac Studio is dev/build only.
+
+---
+
+## Deploy Steps
+
+### 1. SSH into minisForum
 
 ```bash
 ssh <your-user>@192.168.0.103
 ```
 
-### 2. Pull latest main
+---
+
+### 2. Navigate to project
 
 ```bash
 cd ~/MAIA-SOVEREIGN
+```
+
+---
+
+### 3. Pull latest code
+
+```bash
 git pull
 ```
 
-- [ ] `git pull` reports the merge commit for PR #254 on top of `clean-main-no-secrets`
-- [ ] Working tree is clean
+Confirm:
 
-### 3. Rebuild only the maia service
+* PR #254 commits are present
+* branch is up to date with `clean-main-no-secrets`
+
+---
+
+### 4. Rebuild only the maia service
 
 ```bash
 docker compose -f docker-compose.production.yml up -d --build maia
 ```
 
-- [ ] Build completes without errors
-- [ ] Container `maia-sovereign` transitions to `Up` / healthy
+⚠️ Important:
 
-### 4. Confirm container state
+* Use `--build maia` (service name)
+* Do **NOT** use `maia-sovereign` (container name)
+
+---
+
+### 5. Verify container is running
 
 ```bash
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+docker ps
 ```
 
-- [ ] `maia-sovereign` is healthy
-- [ ] `maia-caddy`, `maia-postgres`, and other supporting containers are undisturbed
+Confirm:
 
-### 5. Confirm app is serving
+* `maia-sovereign` container is up
+* no restart loop
+* status = healthy or running
+
+---
+
+### 6. Verify external health
+
+Use the real serving path (Caddy / HTTP):
 
 ```bash
-curl -I http://localhost/api/health
+curl -I http://localhost
 ```
 
-or through Caddy externally:
+or your known health endpoint.
+
+Expect:
+
+* HTTP 200
+
+---
+
+## Post-Deploy Behavioral Verification
+
+⚠️ Do NOT rely on old UI results.
+
+Old `council_result` rows are cached and will still show pre-fix outputs.
+
+---
+
+### Run fresh consultations
+
+Do at least:
+
+* [ ] 1 new **Changes** consultation
+* [ ] 1 new **Decisions** consultation
+
+---
+
+### Verify expected behavior
+
+#### Evidence limits
+
+* [ ] Output includes explicit evidence-limit language:
+
+  * "no evidence bundle"
+  * "no field signals"
+  * "no observations"
+  * OR `### Evidence Limits` section
+
+---
+
+#### No silent inference
+
+* [ ] System does **not** behave as if missing data is normal
+* [ ] It acknowledges absence instead of filling gaps
+
+---
+
+#### Recommendation quality
+
+* [ ] Recommendations are still coherent
+* [ ] No collapse into overconfident guidance
+
+---
+
+#### Banned phrases
+
+* [ ] No:
+
+  * "remarkably convergent diagnosis"
+  * "the real issue is"
+  * similar rhetorical authority inflation
+
+---
+
+#### Questions
+
+* [ ] At least one **decision-relevant question** present
+* [ ] Not purely reflective filler
+
+---
+
+## Observation Window
+
+After deploy:
+
+* Monitor for **24–72 hours**
+* Collect:
+
+  * 2–3 Changes outputs
+  * 2–3 Decisions outputs
+
+---
+
+### During observation:
+
+* [ ] Do NOT hotfix based on a single run
+* [ ] Watch for patterns, not variance
+* [ ] Expect stochastic variation at temp 0.9
+
+---
+
+## Known Non-Issues
+
+Do NOT treat these as bugs:
+
+* Old sessions showing old outputs → expected (cached)
+* Variability in:
+
+  * plurality
+  * discovery language
+  * experimental phrasing
+    → stochastic, not structural
+
+---
+
+## Rollback (if needed)
+
+Safe rollback because:
+
+* no schema changes
+* no migrations
+
+### Steps:
 
 ```bash
-curl -I https://soullab.life/api/health
+git log --oneline
 ```
 
-- [ ] Returns 200 OK (or 204, per the health endpoint contract)
-
-## Post-deploy behavioral verification
-
-**Important:** Cached `council_result` rows in `studio_changes` and `studio_decisions` from pre-fix consultations will continue to display old output. Only trust **fresh consultations** for verification.
-
-### Run one fresh Changes consultation
-
-- [ ] Open a new change in Session Room
-- [ ] Leave the evidence bundle empty (no client inquiry, no field signals, no practitioner observations)
-- [ ] Run council consultation
-
-**Must see in output:**
-- [ ] An `Evidence Limits` / missing-data acknowledgment section (or equivalent section header per #252's scaffold — Notice, Differentiate, Orienting Questions, etc.)
-- [ ] Explicit mention that no field signals / no client inquiry / no practitioner observations are available
-- [ ] No convergence rhetoric (none of: "remarkably convergent", "the deepest insight", "the real issue is", "all lenses agree")
-- [ ] A recommendation that is conditional or experimental, not a single prescriptive move
-
-### Run one fresh Decisions consultation
-
-Same checks as Changes.
-
-- [ ] Same required output properties as above
-- [ ] Synthesis reliably names evidence absence
-- [ ] Plurality language present ("remains open", "not yet clear", "may be X or Y")
-- [ ] Recommendation is robust or conditional
-
-### Mentor Dialogue (optional but recommended)
-
-- [ ] Open Changes Mentor Dialogue, Changes Mentor, or Decisions Mentor
-- [ ] Verify the mentor surface applies the shared `MENTOR_EPISTEMIC_DISCIPLINE` from #252 — no pathologizing of urgency or readiness
-
-### Pass criteria
-
-Must hold:
-- [ ] Missing-evidence acknowledgment is present in fresh output on both surfaces
-- [ ] No banned phrases
-- [ ] No regression in recommendation quality
-
-Nice to have (do not block on these — stochastic at temp 0.9):
-- [ ] Plurality language
-- [ ] Robust-move language
-- [ ] Discovery-through-engagement language
-
-## Do not
-
-- [ ] Do not run the harness in production. The harness (`tests/council/run-*.ts`) is a dev-only tool and is not wired to production DB or auth.
-- [ ] Do not modify stored `council_result` rows to force-refresh. Old rows are historical record; new consultations produce new rows.
-- [ ] Do not chase single-run stochastic variance on plurality/discovery. Hold an observation window first.
-
-## Observation window (24–72 hours post-deploy)
-
-Collect:
-- [ ] 2 fresh Changes consultations
-- [ ] 2 fresh Decisions consultations
-- [ ] 1–2 fresh Mentor Dialogue turns
-
-Watch for:
-- [ ] Missing-evidence acknowledgment holding reliably across runs
-- [ ] No return of convergence rhetoric
-- [ ] No silent inference from absent context
-- [ ] No regression in recommendation quality
-
-If any of those fail repeatedly (not just once), open a new issue — do not hotfix in-place without PR review.
-
-## Rollback
-
-If production verification fails:
+Find previous commit (pre-PR #254), then:
 
 ```bash
-cd ~/MAIA-SOVEREIGN
-git log --oneline -3   # identify the pre-merge commit
-git checkout <pre-merge-sha>
+git checkout <previous-commit>
 docker compose -f docker-compose.production.yml up -d --build maia
 ```
 
-Then investigate before re-deploying. Rollback for this PR is safe because there is no schema change.
+---
+
+## Success Criteria
+
+Deployment is successful if:
+
+* [ ] container is healthy
+* [ ] fresh consultations show **evidence limits**
+* [ ] no banned phrases appear
+* [ ] recommendations remain usable
+* [ ] no runtime errors
+
+---
+
+## Notes
+
+This PR improves **epistemic discipline**, not feature surface.
+
+Expected user-visible change:
+
+> The system now explicitly names when it lacks evidence, instead of inferring from silence.
