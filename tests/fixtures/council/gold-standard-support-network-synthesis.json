@@ -7,15 +7,21 @@
   "required_concepts": [
     {
       "name": "names_uncertainty_or_limitation",
-      "description": "Synthesis must acknowledge limited/absent evidence when the bundle is sparse.",
+      "description": "Synthesis must acknowledge limited/absent evidence when the bundle is sparse or undefined.",
       "any_of": [
         "limited (field )?(data|evidence|signal)",
+        "limited data",
         "missing (evidence|data|signal)",
-        "(no|without) (recorded|field) (observations?|signals?|responses?)",
+        "(no|without) (evidence|signals?|observations?|inquiry|inquiries|client (inquiry|signals?))",
+        "(no|without) (recorded|field) (observations?|signals?|responses?|data)",
         "(not yet|insufficient|incomplete) (tested|evidence|data)",
+        "evidence (is|was|seems|appears) (sparse|absent|limited|thin)",
         "absent[: ]",
         "(low|limited) (external )?legibility",
-        "(have not|haven't|no) (yet )?(observed|recorded|heard|seen)"
+        "(have not|haven't|no) (yet )?(observed|recorded|heard|seen)",
+        "evidence (limits?|status|bundle)",
+        "what is missing",
+        "what (we|i) (do not|don't|cannot) (yet )?(know|conclude)"
       ]
     },
     {

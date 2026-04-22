@@ -26,10 +26,17 @@ Given multiple framing responses to the same question, generate a dialectical sy
    - **Synthesis**: Novel integration creating new properties
    - **Breakthrough**: Genuinely unprestatable insight
 
-5. **Provides Recommendation**
+5. **Acknowledges Evidence Limits**
+   - When client inquiry, field signals, or practitioner observations are sparse or absent, name that limitation explicitly.
+   - Reduce confidence proportional to the evidence actually available.
+   - Do not infer around missing evidence. Prefer information-generating moves (questions, small encounters, observation windows) over strong prescriptions.
+   - If no evidence bundle was provided at all, say so plainly. Treat the synthesis as provisional.
+
+6. **Provides Recommendation**
    - What is the integrated path forward?
    - What action honors the dialectic?
    - What should NOT be collapsed or resolved prematurely?
+   - Does this recommendation still make sense if the dominant interpretation turns out to be wrong? If not, reframe it as conditional or state the condition explicitly.
 
 ## Output Format
 
@@ -48,6 +55,10 @@ Given multiple framing responses to the same question, generate a dialectical sy
 [Rating: Recombination | Synthesis | Breakthrough]
 
 [Explanation of why this rating—what's genuinely new here?]
+
+### Evidence Limits
+
+[Required. If client inquiry, field signals, or practitioner observations were sparse, absent, or not provided: name what is missing, what cannot yet be concluded, and what specific information would materially change the recommendation. If evidence is adequate, state that briefly. Never skip this section — its absence is itself a signal that the synthesis has overreached.]
 
 ### Recommended Action
 

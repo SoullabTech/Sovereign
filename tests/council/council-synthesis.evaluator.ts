@@ -89,20 +89,11 @@ export function checkStructuralRules(text: string): EvaluationReport['structural
     detail: 'expected at least one of: ' + plural.join(', '),
   });
 
-  // 2. Names missing data explicitly
-  const missing = [
-    'limited field data',
-    'missing',
-    'not yet recorded',
-    'no recorded',
-    'absent',
-    'not yet tested',
-  ];
-  out.push({
-    rule: 'explicitly names missing data',
-    pass: missing.some((p) => text.includes(p)),
-    detail: 'expected at least one of: ' + missing.join(', '),
-  });
+  // (Evidence-limits naming is a fixture-specific semantic requirement and is
+  // owned by the `names_uncertainty_or_limitation` concept. Keeping a separate
+  // loose substring check here caused the two layers to disagree — structural
+  // accepted any use of "missing" while the concept required evidence-specific
+  // phrasing. They are now unified in the concept layer.)
 
   // 3. Asks at least one decision-relevant question — count '?' in recommendation/question blocks
   const questionCount = (text.match(/\?/g) || []).length;
