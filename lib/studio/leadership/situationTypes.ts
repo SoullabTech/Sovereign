@@ -263,6 +263,20 @@ export function buildSituationQuestion(
     }
 
     parts.push('', '--- END EVIDENCE BUNDLE ---');
+  } else {
+    // Absent-bundle signal: the synthesis must see that no evidence was provided.
+    // Without this, the model cannot distinguish "no bundle" from "bundle not rendered"
+    // and will silently proceed as if the evidence base were adequate.
+    parts.push(
+      '',
+      '--- EVIDENCE BUNDLE ---',
+      'NO EVIDENCE BUNDLE PROVIDED.',
+      '  - No client inquiry on record.',
+      '  - No field signals captured.',
+      '  - No practitioner observations recorded.',
+      'The synthesis must name this limitation explicitly in the Evidence Limits section, reduce confidence, and prefer information-generating moves over strong prescriptions.',
+      '--- END EVIDENCE BUNDLE ---',
+    );
   }
 
   // ─── Iteration Arc ──────────────────────────────────────────────────
