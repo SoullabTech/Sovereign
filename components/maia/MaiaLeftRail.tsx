@@ -12,9 +12,9 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Bookmark, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { MAIA_WORLDS, MAIA_BOUNDARIES, MAIA_UTILITIES, getBoundaryFromPathname } from '@/lib/navigation/maiaNav';
+import { MAIA_WORLDS, MAIA_BOUNDARIES, MAIA_PROCESSES, MAIA_UTILITIES, getBoundaryFromPathname, getProcessFromPathname } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
-import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
+import type { MaiaWorldId, MaiaProcessId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
 
 /** MAIA communication mode — how the member enters the conversation */
 export type MaiaMode = 'normal' | 'patient' | 'session';
@@ -51,15 +51,22 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const pathname = usePathname();
   const { presenceState, amplitude } = useVoiceState();
 
-  // Derive active boundary from pathname if not explicitly provided
+  // Derive active boundary / process from pathname if not explicitly provided
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
+  const resolvedProcess = pathname ? getProcessFromPathname(pathname) : null;
+
+  const isBoundaryId = (id: MaiaRailItemId): boolean =>
+    id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library';
+  const isProcessId = (id: MaiaRailItemId): id is MaiaProcessId =>
+    id === 'ideas' || id === 'decisions' || id === 'changes';
 
   const handleItemClick = (id: MaiaRailItemId, route: string) => {
-    if (id === 'studio' || id === 'circles' || id === 'astrology' || id === 'labtools' || id === 'community-library') {
+    if (isBoundaryId(id) || isProcessId(id)) {
+      // Boundaries and Processes are always full-page — always router.push
       router.push(route);
     } else {
-      // If we're in a boundary, world clicks need router navigation
-      if (resolvedBoundary) {
+      // World clicks: if we're off-shell (in a boundary or process), route back to /maia
+      if (resolvedBoundary || resolvedProcess) {
         router.push(route);
       } else {
         onWorldChange(id as MaiaWorldId);
@@ -262,6 +269,52 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
               {/* Tooltip */}
               <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${accent.tooltip}`}>
                 {boundary.label}
+              </span>
+            </button>
+          );
+        })}
+
+        {/* Divider before Process */}
+        <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />
+
+        {/* ─── PROCESS: Ideas → Decisions → Changes (developmental spine) ─── */}
+        {MAIA_PROCESSES.map((process) => {
+          const Icon = process.icon;
+          const isActive = resolvedProcess === process.id;
+          // Per-process accent colors — warm spine (amber → teal → green)
+          const accent = {
+            ideas:     { text: 'text-amber-300',  hover: 'hover:text-amber-300/70 hover:bg-amber-400/5', tooltip: 'text-amber-200/90 border-amber-500/30', activeBg: 'bg-amber-400/15' },
+            decisions: { text: 'text-teal-300',   hover: 'hover:text-teal-300/70 hover:bg-teal-400/5',   tooltip: 'text-teal-200/90 border-teal-500/30',   activeBg: 'bg-teal-400/15' },
+            changes:   { text: 'text-emerald-300',hover: 'hover:text-emerald-300/70 hover:bg-emerald-400/5', tooltip: 'text-emerald-200/90 border-emerald-500/30', activeBg: 'bg-emerald-400/15' },
+          }[process.id as MaiaProcessId];
+
+          return (
+            <button
+              key={process.id}
+              onClick={() => handleItemClick(process.id, process.route)}
+              className={`
+                group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${isActive
+                  ? `${accent.activeBg} ${accent.text}`
+                  : `text-stone-500 ${accent.hover}`
+                }
+              `}
+              title={process.tooltip || process.label}
+            >
+              <Icon className="w-5 h-5" />
+
+              {/* Active indicator dot */}
+              {isActive && (
+                <motion.div
+                  layoutId="rail-process-active"
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full ${accent.text.replace('text-', 'bg-')}`}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+
+              {/* Tooltip */}
+              <span className={`absolute left-full ml-2 px-2 py-1 text-xs bg-[#1a1510]/95 border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90] ${accent.tooltip}`}>
+                {process.label}
               </span>
             </button>
           );
