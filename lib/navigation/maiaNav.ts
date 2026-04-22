@@ -11,6 +11,8 @@ import {
   Layers,
   BookOpen,
   Lightbulb,
+  Scale,
+  GitBranch,
   Heart,
   Library,
   Briefcase,
@@ -30,6 +32,7 @@ import type {
   MaiaUtilityItem,
   MaiaContextualPanel,
   MaiaWorldId,
+  MaiaProcessId,
   BoundaryId,
 } from './types';
 
@@ -59,14 +62,6 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     route: '/labtools/journal',
     classification: 'world',
     tooltip: 'Expressive writing & captures',
-  },
-  {
-    id: 'ideas',
-    label: 'Ideas',
-    icon: Lightbulb,
-    route: '/maia/ideas',
-    classification: 'world',
-    tooltip: 'Generative emergence',
   },
   {
     id: 'relationships',
@@ -179,9 +174,45 @@ export const MAIA_CONTEXTUAL_PANELS: MaiaContextualPanel[] = [
   { id: 'session-tools', world: null, label: 'Session Tools' },
   { id: 'patterns-view', world: 'patterns', label: 'Patterns' },
   { id: 'journal-capture', world: 'journal', label: 'Journal' },
-  { id: 'ideas-view', world: 'ideas', label: 'Ideas' },
   { id: 'relationships-view', world: 'relationships', label: 'Relationships' },
   { id: 'wisdom-view', world: 'wisdom', label: 'Wisdom' },
+];
+
+// --- Left Rail: Processes (developmental spine) ---
+
+/**
+ * Ideas → Decisions → Changes.
+ * Emergence, selection, enactment.
+ *
+ * These are not worlds (no right-panel) and not boundaries (no shell change).
+ * They are longitudinal surfaces inside MAIA — places the member returns to
+ * over time as something forms, is chosen, and shifts.
+ */
+export const MAIA_PROCESSES: MaiaRailItem[] = [
+  {
+    id: 'ideas',
+    label: 'Ideas',
+    icon: Lightbulb,
+    route: '/maia/ideas',
+    classification: 'process',
+    tooltip: 'What is forming',
+  },
+  {
+    id: 'decisions',
+    label: 'Decisions',
+    icon: Scale,
+    route: '/maia/decisions',
+    classification: 'process',
+    tooltip: 'What is being chosen',
+  },
+  {
+    id: 'changes',
+    label: 'Changes',
+    icon: GitBranch,
+    route: '/maia/changes',
+    classification: 'process',
+    tooltip: 'What is actually shifting',
+  },
 ];
 
 // --- Boundary items array (config-driven) ---
@@ -204,6 +235,16 @@ export function getBoundaryFromPathname(pathname: string): BoundaryId | null {
   for (const b of MAIA_BOUNDARIES) {
     if (pathname === b.route || pathname.startsWith(b.route + '/')) {
       return b.id as BoundaryId;
+    }
+  }
+  return null;
+}
+
+/** Derive process ID from a pathname, or null if not in a process surface */
+export function getProcessFromPathname(pathname: string): MaiaProcessId | null {
+  for (const p of MAIA_PROCESSES) {
+    if (pathname === p.route || pathname.startsWith(p.route + '/')) {
+      return p.id as MaiaProcessId;
     }
   }
   return null;

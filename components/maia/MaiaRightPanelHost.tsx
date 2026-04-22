@@ -15,7 +15,7 @@ import type { MaiaWorldId } from '@/lib/navigation/types';
 import { PatternsPanel } from './panels/PatternsPanel';
 import { JournalPanel } from './panels/JournalPanel';
 import { WisdomPanel } from './panels/WisdomPanel';
-import { IdeasPanel } from './panels/IdeasPanel';
+// IdeasPanel intentionally not imported — Ideas is now a Process (full page at /maia/ideas), not a World.
 import { RelationshipsPanel } from './panels/RelationshipsPanel';
 import { ConversationInsightPanel } from './panels/ConversationInsightPanel';
 import type { ConversationInsight } from '@/lib/maia/cognitionEvents';
@@ -73,8 +73,6 @@ export function MaiaRightPanelHost({
             onShowCurrentElder={onShowCurrentElder}
           />
         );
-      case 'ideas':
-        return <IdeasPanel explorerId={explorerId} />;
       case 'relationships':
         return <RelationshipsPanel explorerId={explorerId} />;
       default:

@@ -6,6 +6,7 @@
  *
  * Spatial grammar:
  *   - World: a stable destination in the left rail (presence environment)
+ *   - Process: longitudinal, time-based developmental surface (full page inside MAIA shell, no right-panel)
  *   - Utility: top bar or bottom-of-rail controls
  *   - Contextual: right panel content (appears on interaction)
  *   - Behavior: adaptive mode (Talk, Care, Scribe, Mark) — not a destination
@@ -18,7 +19,8 @@ import type { LucideIcon } from 'lucide-react';
 // --- Classification ---
 
 export type NavItemClass =
-  | 'world'        // Left rail destination
+  | 'world'        // Left rail destination (lateral, discoverable, right-panel capable)
+  | 'process'      // Longitudinal developmental surface (Ideas, Decisions, Changes)
   | 'utility'      // Top bar or bottom-of-rail
   | 'contextual'   // Right panel content
   | 'behavior'     // Adaptive mode, not a place
@@ -32,13 +34,21 @@ export type MaiaWorldId =
   | 'maia'
   | 'patterns'
   | 'journal'
-  | 'ideas'
   | 'relationships'
   | 'wisdom';
 
+/**
+ * MAIA Processes — the developmental spine.
+ * Emergence → Selection → Enactment.
+ *   Ideas     = what is forming
+ *   Decisions = what is being chosen
+ *   Changes   = what is actually shifting
+ */
+export type MaiaProcessId = 'ideas' | 'decisions' | 'changes';
+
 export type BoundaryId = 'studio' | 'circles' | 'astrology' | 'labtools' | 'community-library';
 
-export type MaiaRailItemId = MaiaWorldId | BoundaryId;
+export type MaiaRailItemId = MaiaWorldId | MaiaProcessId | BoundaryId;
 
 export interface MaiaRailItem {
   id: MaiaRailItemId;
@@ -72,7 +82,6 @@ export type MaiaContextualPanelId =
   | 'session-tools'   // Prompts, arc, synthesis, recap
   | 'patterns-view'   // Pattern threads, weaving
   | 'journal-capture' // Quick capture, reflections
-  | 'ideas-view'      // Idea cards, emergence
   | 'relationships-view'
   | 'wisdom-view'     // Sacred texts, academy, library, guides
   | 'identity-view';  // Compass, astrology, cosmos
