@@ -114,8 +114,26 @@ Failures: pseudo-convergence ("remarkably convergent", "every lens agrees"), rhe
 
 This canon is enforced by:
 
-- `lib/ain/synthesis/dialectical.md` — the synthesis prompt template read by `synthesize()` in `lib/ain/consultation.ts`
+- **Council synthesis layer** — `lib/ain/synthesis/dialectical.md` — the synthesis prompt template read by `synthesize()` in `lib/ain/consultation.ts`. Covers BOTH Changes council (via `consultChangeCouncil`) and Decisions council (via `consultDecisionCouncil`) — they share the same scaffold.
+- **Mentor surface layer** — `lib/studio/mentorDiscipline.ts` exports `MENTOR_EPISTEMIC_DISCIPLINE`, a shared prompt block imported by every Mentor route:
+  - `app/api/studio/changes/[id]/mentor/route.ts` (Changes Mentor reflection, JSON)
+  - `app/api/studio/changes/[id]/mentor/chat/route.ts` (Changes Mentor streaming dialogue)
+  - `app/api/studio/decisions/[id]/mentor/route.ts` (Decisions Mentor reflection, JSON)
 - downstream surfaces that reuse this pattern should either reference this file or reimplement the required reasoning sequence and question-before-assert rule
+
+## Mentor Surface Coverage (2026-04-21)
+
+The council-synthesis fix (`cb64961ec`) did not cover Mentor surfaces, which used three separate inline system prompts. Each prompt baked in urgency-as-pathology directives:
+
+- Changes Mentor one-shot: `"sovereigntyCheck: One sentence identifying where the person's agency might be leaking or where urgency is driving instead of clarity"`
+- Changes Mentor Dialogue: `"If you sense urgency driving instead of clarity, name it gently"` (directly observed in production output)
+- Decisions Mentor one-shot: `"where pressure is driving instead of clarity"`
+
+All three also hardcoded a pathology triad (`"agency might be leaking (spiritual bypassing, grasping for control, avoiding discomfort)"` / `"(outsourcing decisions, avoiding discomfort, performing certainty)"`) as a *default frame* rather than an observation earned from the person's own words.
+
+These have been replaced with a neutral reflection posture (`"where their own agency may not be fully theirs — only when their words or actions show it"`) plus the shared `MENTOR_EPISTEMIC_DISCIPLINE` block, which codifies the same discipline as the synthesis layer — no default pathologizing, charged vocabulary stays in the person's mouth, provisional language for inferences, robust experiments under uncertainty, and opening vs. steering questions.
+
+Canary tests in `__tests__/studio/mentorDiscipline.test.ts` verify each Mentor route imports and composes the shared block, and that the specific observed bake-ins have been removed.
 
 ## The Rule in One Line
 
