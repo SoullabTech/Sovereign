@@ -42,22 +42,23 @@ export async function generateThreadReflection(
   const threadSpecificAddendum = `
 You are entering a specific thread inside an active process surface.
 
-Make exactly one move:
-- articulate a distinction
-- or name a tension
-- or ask a question
+Your response must be exactly one sentence, and it must be a question.
 
-Never combine them.
+Do not make declarative statements before or after the question.
+Do not assert what the user is thinking, feeling, sensing, wanting, or really asking.
+Do not reinterpret their intention.
+Do not use phrases like:
+- "you're holding..."
+- "what you're really sensing..."
+- "this is actually about..."
 
-If you ask a question, that is the entire response.
+Work only with what is explicitly present in the thread.
+Ask a question that helps the user think further without replacing their frame.
 
-Response constraints:
-- one sentence only
-- second person
-- no advice
-- no directives
-- no summary
-- no aphorisms
+No advice.
+No directives.
+No summary.
+No aphorisms.
 `.trim();
 
   const systemPrompt = `
