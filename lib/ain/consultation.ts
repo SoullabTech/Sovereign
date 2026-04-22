@@ -294,6 +294,11 @@ Generate your synthesis. Follow the output format exactly.`;
       systemPrompt: 'You are a dialectical synthesis engine. Generate structured insight from multiple perspectives.',
       userInput: prompt,
       level: 5, // Use highest tier for synthesis quality
+      // Scoped override: the L5 default (1200) truncates multi-section synthesis
+      // output for council consultation. Raised to 3000 to preserve the full
+      // scaffold (tensions / insights / missing-data / recommendation). See
+      // tests/council/ for the gold-standard evaluator that surfaced this.
+      maxTokensOverride: 3000,
     });
 
     // Parse synthesis response
