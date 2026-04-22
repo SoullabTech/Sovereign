@@ -33,6 +33,7 @@ import {
   MessageCircle,
   CheckCircle2,
   Wind,
+  Sparkles,
   Trash2,
   Edit3,
   Check,
@@ -40,11 +41,13 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
-import { seedMaiaPrompt } from '@/lib/maia/seedPrompt';
 
 // --- types -------------------------------------------------------------------
 
-type BlockType = 'note' | 'decision' | 'change';
+// Member-authored block types + the server-written 'maia_reflection'.
+// Only the three member types are writable via /api/ideas/[id]/blocks.
+// 'maia_reflection' is written exclusively by /api/ideas/[id]/ask-maia.
+type BlockType = 'note' | 'decision' | 'change' | 'maia_reflection';
 
 type Outcome = 'worked' | 'partly' | 'didnt' | 'unsure';
 
@@ -86,6 +89,7 @@ const BLOCK_LABELS: Record<BlockType, string> = {
   note: 'Reflection',
   decision: 'Decision',
   change: 'Shift',
+  maia_reflection: 'MAIA',
 };
 
 const OUTCOME_LABELS: Record<Outcome, string> = {
@@ -121,6 +125,15 @@ const BLOCK_STYLES: Record<
     border: 'border-cyan-500/25',
     bg: 'bg-cyan-500/5',
     iconColor: 'text-cyan-400/70',
+  },
+  // MAIA reflections: muted amber, lighter weight than member blocks.
+  // The label renders as a small uppercase "MAIA" badge via BLOCK_LABELS.
+  maia_reflection: {
+    icon: Sparkles,
+    accent: 'text-amber-300/70',
+    border: 'border-amber-500/15',
+    bg: 'bg-amber-500/[0.03]',
+    iconColor: 'text-amber-400/50',
   },
 };
 
@@ -198,13 +211,15 @@ export default function IdeaWorkspacePage() {
     [blocks]
   );
 
-  // Current direction line — derived from the MOST RECENT block.
+  // Current direction line — derived from the MOST RECENT member-authored
+  // block. MAIA reflections are skipped (a reflection is not a direction).
   //   last = Decision → show the decision as the current direction
   //   last = Shift    → show the shift content with its outcome (if set)
   //   else            → don't show
   const currentDirection = useMemo(() => {
-    if (blocks.length === 0) return null;
-    const last = blocks[blocks.length - 1];
+    const memberBlocks = blocks.filter((b) => b.block_type !== 'maia_reflection');
+    if (memberBlocks.length === 0) return null;
+    const last = memberBlocks[memberBlocks.length - 1];
     if (last.block_type === 'decision') {
       return { content: last.content, outcome: null as string | null };
     }
@@ -218,50 +233,31 @@ export default function IdeaWorkspacePage() {
     return null;
   }, [blocks]);
 
-  // Ask MAIA — sharper context. Title + framing + last decision + last 2 blocks.
-  // Appended with a next-step framing so MAIA stays oriented toward movement.
-  const buildAskMaiaPrompt = useCallback((): string => {
-    if (!idea) return '';
-    const parts: string[] = [];
-    parts.push(`I'm developing an idea called "${idea.title}".`);
-    if (idea.framing) {
-      parts.push(idea.framing);
-    }
+  // Ask MAIA — in-thread, single-shot. The server composes the context
+  // (title + framing + last decision + last 3–4 blocks), calls the
+  // Haiku-backed primitive, and persists a `maia_reflection` block.
+  // The member does not author the prompt.
+  const [askingMaia, setAskingMaia] = useState(false);
 
-    const lastDecision = blocks
-      .filter((b) => b.block_type === 'decision')
-      .slice(-1)[0];
-    if (lastDecision) {
-      parts.push(`Most recent decision: ${lastDecision.content}`);
-    }
-
-    const lastBlocks = blocks.slice(-2);
-    if (lastBlocks.length > 0) {
-      parts.push('Recent entries:');
-      for (const b of lastBlocks) {
-        const label = BLOCK_LABELS[b.block_type];
-        const outcome = b.block_type === 'change' ? b.metadata?.outcome : undefined;
-        const suffix = outcome ? ` (${OUTCOME_LABELS[outcome]})` : '';
-        parts.push(`- [${label}${suffix}] ${b.content}`);
+  const handleAskMaia = useCallback(async () => {
+    if (!idea || askingMaia) return;
+    setAskingMaia(true);
+    try {
+      const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.block) {
+          setBlocks((prev) => [...prev, data.block]);
+        }
       }
+    } catch (err) {
+      console.error('[ideas/workspace] ask-maia failed:', err);
+    } finally {
+      setAskingMaia(false);
     }
-
-    parts.push('I want help with what to do next here.');
-    return parts.join('\n\n');
-  }, [idea, blocks]);
-
-  const handleAskMaia = () => {
-    if (!idea) return;
-    const prompt = buildAskMaiaPrompt();
-    seedMaiaPrompt({
-      prompt,
-      source: `ideas:workspace:${idea.id}`,
-      sourceLabel: idea.title,
-      returnTo: `/maia/ideas/${idea.id}`,
-      tone: 'exploratory',
-    });
-    router.push('/maia');
-  };
+  }, [idea, askingMaia]);
 
   // --- block composer -------------------------------------------------------
 
@@ -369,10 +365,13 @@ export default function IdeaWorkspacePage() {
     // already on the page. This is the engagement signal we care about.
     apiFetch(`/api/ideas/${idea.id}/touch`, { method: 'POST' }).catch(() => {});
 
-    // Smart default based on last block
+    // Smart default based on the last member-authored block.
+    // MAIA reflections don't shape the next-block default — they're
+    // reflective, not directional.
     const nextType: BlockType = (() => {
-      if (blocks.length === 0) return 'note';
-      const last = blocks[blocks.length - 1];
+      const memberBlocks = blocks.filter((b) => b.block_type !== 'maia_reflection');
+      if (memberBlocks.length === 0) return 'note';
+      const last = memberBlocks[memberBlocks.length - 1];
       if (last.block_type === 'decision') return 'change';
       return 'note';
     })();
@@ -623,9 +622,18 @@ export default function IdeaWorkspacePage() {
           <div className="flex-1" />
           <button
             onClick={handleAskMaia}
-            className="px-4 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-all text-xs text-amber-300/90 hover:text-amber-200 font-light flex items-center gap-2"
+            disabled={askingMaia}
+            className="px-4 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 transition-all text-xs text-amber-300/90 hover:text-amber-200 font-light flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Ask MAIA for a reflection on this thread"
           >
-            Ask MAIA
+            {askingMaia ? (
+              <>
+                <span className="w-3 h-3 border border-amber-400/40 border-t-amber-300 rounded-full animate-spin" />
+                <span>Listening...</span>
+              </>
+            ) : (
+              'Ask MAIA'
+            )}
           </button>
         </div>
 
