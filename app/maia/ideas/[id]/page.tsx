@@ -161,11 +161,6 @@ export default function IdeaWorkspacePage() {
   // Transient highlight on a block (triggered by decision-strip click)
   const [highlightedBlockId, setHighlightedBlockId] = useState<string | null>(null);
 
-  // Tracks the most recent user-authored note so Convert actions render on it.
-  // Not updated when MAIA reflections arrive — MAIA blocks don't carry conversion.
-  // The `block_type === 'note'` render guard cleans up implicitly after conversion.
-  const [lastCreatedBlockId, setLastCreatedBlockId] = useState<string | null>(null);
-
   // Composer focus target. Ask MAIA and Save both refocus after success so
   // the page reads as 'thought continues here', not 'choose your next operation'.
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
@@ -271,9 +266,9 @@ export default function IdeaWorkspacePage() {
 
   // --- block composer -------------------------------------------------------
 
-  // Save the current draft as a default 'note' block. Structuring
-  // (decision/shift) happens post-hoc via Convert actions on the
-  // just-saved block, so the user never classifies before thinking.
+  // Save the current draft as a 'note' block. Ideas is a pure exploratory
+  // surface — phase transitions (Decision/Shift) don't belong here.
+  // Existing Decision/Change blocks from prior flows render as legacy markers.
   const handleSaveNote = useCallback(async () => {
     if (!idea || saving) return;
     const content = draft.trim();
@@ -289,7 +284,6 @@ export default function IdeaWorkspacePage() {
         const data = await res.json();
         if (data.success && data.block) {
           setBlocks((prev) => [...prev, data.block]);
-          setLastCreatedBlockId(data.block.id);
           setDraft('');
           // Refocus so the cursor stays in the flow
           window.setTimeout(() => composerRef.current?.focus(), 0);
@@ -301,41 +295,6 @@ export default function IdeaWorkspacePage() {
       setSaving(false);
     }
   }, [idea, saving, draft]);
-
-  // Convert a note block in place → decision or shift. The PATCH endpoint
-  // enforces that only 'note' blocks may be converted, and only to
-  // 'decision' or 'change'. MAIA reflections are never convertible.
-  const convertBlock = useCallback(
-    async (blockId: string, toType: 'decision' | 'change') => {
-      if (!idea) return;
-      try {
-        const res = await apiFetch(`/api/ideas/${idea.id}/blocks/${blockId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ block_type: toType }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.block) {
-            setBlocks((prev) =>
-              prev.map((b) =>
-                b.id === blockId
-                  ? { ...b, block_type: data.block.block_type, metadata: data.block.metadata }
-                  : b
-              )
-            );
-            if (toType === 'decision') {
-              setIdea((prev) =>
-                prev ? { ...prev, last_decision_at: data.block.created_at } : prev
-              );
-            }
-          }
-        }
-      } catch (err) {
-        console.error('[ideas/workspace] convert block failed:', err);
-      }
-    },
-    [idea]
-  );
 
   const deleteBlock = async (blockId: string) => {
     if (!idea) return;
@@ -675,24 +634,6 @@ export default function IdeaWorkspacePage() {
                       <p className="text-sm text-stone-200 font-light leading-relaxed whitespace-pre-wrap">
                         {block.content}
                       </p>
-
-                      {/* Post-hoc structuring — only on the most recent note. */}
-                      {block.id === lastCreatedBlockId && block.block_type === 'note' && (
-                        <div className="mt-3 flex gap-3 text-xs">
-                          <button
-                            onClick={() => convertBlock(block.id, 'decision')}
-                            className="text-stone-400 hover:text-emerald-300/90 transition-colors"
-                          >
-                            Convert to Decision
-                          </button>
-                          <button
-                            onClick={() => convertBlock(block.id, 'change')}
-                            className="text-stone-400 hover:text-cyan-300/90 transition-colors"
-                          >
-                            Convert to Shift
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </li>
@@ -733,7 +674,7 @@ export default function IdeaWorkspacePage() {
                   <span>Listening...</span>
                 </>
               ) : (
-                'Ask MAIA'
+                'Get MAIA Reflection'
               )}
             </button>
 
@@ -743,9 +684,13 @@ export default function IdeaWorkspacePage() {
               disabled={!draft.trim() || saving}
               className="rounded-full px-4 py-2 text-sm text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-400/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? 'Saving...' : 'Save Reflection'}
             </button>
           </div>
+
+          <p className="mt-3 text-[11px] text-stone-500 font-light leading-relaxed">
+            Reflections build the idea. Ask MAIA to reflect on the thread.
+          </p>
         </div>
       </div>
     </motion.div>
