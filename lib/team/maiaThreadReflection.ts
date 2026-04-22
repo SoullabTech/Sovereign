@@ -39,22 +39,31 @@ export async function generateThreadReflection(
 ): Promise<string> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const agentSpecificInstructions = `
+  const threadSpecificAddendum = `
 You are entering a specific thread inside an active process surface.
 
-Offer 2–4 sentences.
-Use second person.
-No bullet points.
-No advice, directives, or prescriptions.
-No summary or recap.
+Make exactly one move:
+- articulate a distinction
+- or name a tension
+- or ask a question
 
-Focus on articulating 1–2 tensions, distinctions, or possible framings that help the thread move without closing it.
+Never combine them.
+
+If you ask a question, that is the entire response.
+
+Response constraints:
+- one sentence only
+- second person
+- no advice
+- no directives
+- no summary
+- no aphorisms
 `.trim();
 
   const systemPrompt = `
 ${PROCESS_STANCE_BLOCK}
 
-${agentSpecificInstructions}
+${threadSpecificAddendum}
 `.trim();
 
   const userMessage = composeUserMessage(ctx);
