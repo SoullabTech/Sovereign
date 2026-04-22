@@ -74,6 +74,21 @@ export interface RecognitionOutcome {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Text normalization
+//
+// macOS "Smart Quotes" (enabled by default in many text inputs) auto-
+// converts straight ASCII apostrophes (U+0027 `'`) to curly right single
+// quotation marks (U+2019 `'`). This breaks naive regex patterns that
+// expect only ASCII apostrophes. All detection functions normalize input
+// before matching. Original member text is preserved in storage and UI;
+// normalization applies only to matching.
+// ═══════════════════════════════════════════════════════════════
+
+function normalizeApostrophes(text: string): string {
+  return text.replace(/[\u2018\u2019\u02BC]/g, "'");
+}
+
+// ═══════════════════════════════════════════════════════════════
 // Signal markers
 //
 // High-precision patterns — the spec mandates that most threads have no
@@ -197,7 +212,7 @@ const MEDIUM_INVITATION_MIN_HISTORY = 2;
  * to strong ONLY when no exploratory qualifier is present in the text.
  */
 export function detectDecisionSignal(text: string): DecisionSignal {
-  const trimmed = text.trim();
+  const trimmed = normalizeApostrophes(text).trim();
   if (!trimmed) return { kind: 'decision', strength: 'weak' };
 
   // Unconditional strong: action phrases contain the concrete action in the
@@ -250,7 +265,7 @@ export function detectDecisionSignal(text: string): DecisionSignal {
  * Attempts X → Y extraction when signal is strong.
  */
 export function detectChangeSignal(text: string): ChangeSignal {
-  const trimmed = text.trim();
+  const trimmed = normalizeApostrophes(text).trim();
   if (!trimmed) return { kind: 'change', strength: 'weak' };
 
   for (const pattern of CHANGE_STRONG_PATTERNS) {
@@ -292,8 +307,9 @@ export function detectChangeSignal(text: string): ChangeSignal {
  * or if the extracted snippets are suspiciously short/generic.
  */
 export function extractXY(text: string): { x: string; y: string } | null {
+  const normalized = normalizeApostrophes(text);
   for (const pattern of XY_EXTRACTION_PATTERNS) {
-    const match = text.match(pattern);
+    const match = normalized.match(pattern);
     if (!match) continue;
 
     const x = (match[1] || '').trim();

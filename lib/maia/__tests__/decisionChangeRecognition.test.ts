@@ -162,6 +162,63 @@ describe('detectDecisionSignal', () => {
       detectDecisionSignal("I'll probably focus on integration later.").strength
     ).not.toBe('strong');
   });
+
+  // ─── Curly-apostrophe normalization (smart-quotes fix 2026-04-22) ──────
+  //
+  // macOS "Smart Quotes" auto-converts ' (U+0027) to ' (U+2019) in many
+  // text inputs. Detection must treat both forms identically. These tests
+  // assert the canonical live-thread failure — "I'm going to focus on the
+  // integration phase first." with a curly apostrophe — now fires strong.
+
+  it('returns strong for STRAIGHT-apostrophe "I\'m going to focus on..."', () => {
+    expect(
+      detectDecisionSignal("I'm going to focus on the integration phase first.").strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for CURLY-apostrophe "I\u2019m going to focus on..."', () => {
+    expect(
+      detectDecisionSignal(
+        'I\u2019m going to focus on the integration phase first.'
+      ).strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for CURLY-apostrophe "I\u2019ll start with..."', () => {
+    expect(
+      detectDecisionSignal('I\u2019ll start with the integration phase.').strength
+    ).toBe('strong');
+  });
+
+  it('returns strong for CURLY-apostrophe "I\u2019ve decided to..."', () => {
+    expect(
+      detectDecisionSignal(
+        'I\u2019ve decided to focus on the integration phase.'
+      ).strength
+    ).toBe('strong');
+  });
+
+  it('does NOT treat CURLY "I\u2019m going to think about" as strong', () => {
+    expect(
+      detectDecisionSignal('I\u2019m going to think about this more.').strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat CURLY "I\u2019m going to explore" as strong', () => {
+    expect(
+      detectDecisionSignal('I\u2019m going to explore a few options.').strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat CURLY "Maybe I\u2019ll start with..." as strong', () => {
+    expect(
+      detectDecisionSignal('Maybe I\u2019ll start with integration.').strength
+    ).not.toBe('strong');
+  });
+
+  it('does NOT treat "I could begin there" as strong', () => {
+    expect(detectDecisionSignal('I could begin there.').strength).not.toBe('strong');
+  });
 });
 
 // ─── detectChangeSignal ─────────────────────────────────────────────────────
