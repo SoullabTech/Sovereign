@@ -3,8 +3,20 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import { storeRecognitionEvent } from '@/lib/maia/decisionChangeRecognition';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Does this block's metadata indicate it originated from a MAIA recognition
+// invitation acceptance (client posts with source: 'maia_recognition')?
+function isMaiaRecognitionOrigin(metadata: unknown): boolean {
+  return (
+    typeof metadata === 'object' &&
+    metadata !== null &&
+    !Array.isArray(metadata) &&
+    (metadata as { source?: unknown }).source === 'maia_recognition'
+  );
+}
 
 /**
  * POST /api/ideas/[id]/blocks — Append a block to an idea.
@@ -73,6 +85,36 @@ export async function POST(
       `UPDATE member_ideas SET last_entered_at = NOW() WHERE id = $1`,
       [ideaId]
     );
+
+    // Fire-and-forget: if this block was created by accepting a MAIA
+    // recognition invitation, log the invitation_accepted event. The event
+    // log drives cooldown, quiet-zone, and dedup for future detection.
+    // Non-blocking — the block creation succeeds regardless.
+    if (
+      (blockType === 'decision' || blockType === 'change') &&
+      isMaiaRecognitionOrigin(metadata)
+    ) {
+      const recognitionStrength =
+        (metadata as { recognition_strength?: unknown }).recognition_strength === 'medium'
+          ? 'medium'
+          : 'strong';
+      storeRecognitionEvent({
+        threadId: ideaId,
+        memberId: session.memberId,
+        eventType: 'invitation_accepted',
+        signalKind: blockType,
+        signalStrength: recognitionStrength,
+        meta: {
+          source: 'blocks_post',
+          source_block_id:
+            (metadata as { source_block_id?: string }).source_block_id ?? null,
+          maia_reflection_block_id:
+            (metadata as { maia_reflection_block_id?: string })
+              .maia_reflection_block_id ?? null,
+          created_block_id: result.rows[0].id,
+        },
+      });
+    }
 
     return NextResponse.json({ success: true, block: result.rows[0] }, { status: 201 });
   } catch (error) {
