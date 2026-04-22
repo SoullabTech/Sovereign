@@ -7,7 +7,6 @@
 
 import {
   Flame,
-  Sparkles,
   Layers,
   BookOpen,
   Lightbulb,
@@ -43,14 +42,6 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
     route: '/maia',
     classification: 'world',
     tooltip: 'Return to center field',
-  },
-  {
-    id: 'patterns',
-    label: 'Patterns',
-    icon: Sparkles,
-    route: '/worlds/patterns',
-    classification: 'world',
-    tooltip: 'Constellation & pattern field',
   },
   {
     id: 'journal',
@@ -177,7 +168,6 @@ export const MAIA_UTILITIES: MaiaUtilityItem[] = [
 
 export const MAIA_CONTEXTUAL_PANELS: MaiaContextualPanel[] = [
   { id: 'session-tools', world: null, label: 'Session Tools' },
-  { id: 'patterns-view', world: 'patterns', label: 'Patterns' },
   { id: 'journal-capture', world: 'journal', label: 'Journal' },
   { id: 'ideas-view', world: 'ideas', label: 'Ideas' },
   { id: 'relationships-view', world: 'relationships', label: 'Relationships' },

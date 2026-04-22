@@ -583,7 +583,7 @@ export const TOOL_REGISTRY: LabTool[] = [
     modes: ['interpret'],
     minTier: 'personal',
     tags: ['patterns', 'cycles', 'symbols', 'time'],
-    defaultEnabled: false,
+    defaultEnabled: true,
     popularityRank: 6,
   },
 
