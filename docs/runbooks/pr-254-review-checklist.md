@@ -2,76 +2,153 @@
 
 > This checklist is specific to PR #254 and should not be reused as a general review checklist.
 
-PR #254 is **intentionally additive** to the scaffold rewrite that landed in #252. Review it against that frame — not as a standalone behavior change.
+---
 
-## Scope reminders
+## Context
 
-- #252 landed the canonical `lib/ain/synthesis/dialectical.md` rewrite with epistemic discipline
-- This PR adds the complementary runtime signal + observability layer
-- No DB migration, no frontend change, no temperature/model/framing change in this PR
+This PR is **additive to #252**, not a competing scaffold rewrite.
 
-## Code review checks
+- #252 established the canonical `dialectical.md` synthesis scaffold
+- This PR adds:
+  - observability (fixture + evaluator + runners)
+  - explicit absent-bundle signaling in both council builders
+  - evaluator alignment to real emitted phrasing
+  - Next Signal Loop spec (docs only)
+  - PR-specific runbooks (review + deploy)
 
-### A. No duplicate scaffold changes
+---
 
-- [ ] `lib/ain/synthesis/dialectical.md` is **not** modified by this PR
-- [ ] Diff confirms this file is untouched vs `clean-main-no-secrets`
-- [ ] If any commit in this PR touches that file, reject — #252 is canonical
+## A. No `dialectical.md` override
 
-### B. Absent-bundle signaling exists in both builders
+- [ ] Confirm **no conflicting rewrite** of `lib/ain/synthesis/dialectical.md`
+- [ ] Ensure the canonical scaffold from #252 remains intact
+- [ ] Any references to evidence limits should rely on #252 behavior, not redefinition here
 
-Both question builders must explicitly emit a `NO EVIDENCE BUNDLE PROVIDED` block when `inputBundle` is undefined.
+---
 
-- [ ] `lib/studio/leadership/situationTypes.ts` — has an `else` branch after the `if (inputBundle)` block that emits the absent-bundle block
-- [ ] `lib/studio/changes/changeTypes.ts` — same pattern, parallel to Decisions
-- [ ] The absent-bundle text names three concrete absences: no client inquiry, no field signals, no practitioner observations
-- [ ] The absent-bundle text instructs synthesis to name this limitation in the Evidence Limits section (or equivalent per #252's scaffold) and prefer information-generating moves
+## B. Absent-bundle signaling present (both builders)
 
-### C. Changes intervention contract is untouched
+### Files to check:
+- `lib/studio/leadership/situationTypes.ts`
+- `lib/studio/changes/changeTypes.ts`
 
-- [ ] `changeTypes.ts` INTERVENTION DESIGN synthesis-instructions block (next smallest useful intervention, witness vs technique, success signals, risk/caution, observation window) is preserved
-- [ ] No weakening of singular-action clinical framing
+- [ ] When `inputBundle` is **undefined**, builder emits explicit signal:
+  - "NO EVIDENCE BUNDLE PROVIDED"
+  - no client inquiry
+  - no field signals
+  - no practitioner observations
+- [ ] Instruction clearly tells synthesis to **name this limitation rather than infer around it**
+- [ ] Pattern mirrors the already-shipped absent-bundle logic
 
-### D. L5 override is scoped, not global
+---
 
-- [ ] `lib/ain/consultation.ts` — `maxTokensOverride: 3000` is passed **only** at the council synthesis call site (around line 293-297)
-- [ ] `lib/consciousness/LLMProvider.ts` L5 default (1200) is **not** changed — other L5 callers continue to use the default
-- [ ] The override has a comment explaining why (truncation of multi-section synthesis output)
+## C. Changes intervention contract untouched
 
-### E. Observability files are dev-only
+- [ ] No weakening of intervention-design language:
+  - "next smallest useful intervention"
+  - "witness-first vs technique"
+  - "success signal"
+  - "risk/caution"
+- [ ] No attempt to force strategic/plural framing into Changes surface
+- [ ] Changes remains **clinical / practitioner shaped by design**
 
-These files must have zero runtime effect on the serving path:
+---
 
-- [ ] `tests/fixtures/council/*.{md,json}` — fixtures only, not imported by production code
-- [ ] `tests/council/council-synthesis.evaluator.ts` — not imported by production code
-- [ ] `tests/council/run-council-gold-standard.ts` — not imported by production code
-- [ ] `tests/council/run-decision-gold-standard.ts` — not imported by production code
-- [ ] `docs/examples/council-synthesis-gold-standard.md` — pointer doc only
+## D. L5 token override is scoped
 
-### F. No schema or migration risk
+### File to check:
+- `lib/ain/consultation.ts`
 
-- [ ] No SQL migration files added in this PR
-- [ ] No changes to `database/migrations/`
-- [ ] No DB client changes in `lib/db/`
-- [ ] No new columns, indexes, or tables implied by the code changes
+- [ ] `maxTokensOverride: 3000` applies **only to council synthesis call**
+- [ ] No global change to all L5 usage
+- [ ] No unintended increase in token usage outside this path
 
-### G. Evaluator alignment is additive
+---
 
-- [ ] `tests/fixtures/council/gold-standard-support-network-synthesis.json` — `names_uncertainty_or_limitation` regex is broadened (not narrowed); no required concepts removed
-- [ ] `tests/council/council-synthesis.evaluator.ts` — the duplicate structural "names missing data" rule is removed (evidence-limits naming now owned by the concept layer); no other structural rules removed
+## E. Observability files are dev-only
 
-### H. Spec is docs-only
+- [ ] `tests/fixtures/`, `tests/council/`, evaluator, and runners:
+  - do not alter runtime behavior
+  - are not imported into production paths
+- [ ] No accidental coupling between evaluator and live synthesis
 
-- [ ] `docs/canon/NEXT_SIGNAL_LOOP_SPEC.md` — no code references, no imports, no runtime effect
-- [ ] Spec explicitly notes "Not implemented" and lays out insertion points for a future commit
+---
 
-## Governance
+## F. No schema or migration required
 
-- [ ] Confirm this is **additive** (not a scaffold rewrite) so Class C / normal review path applies, not Class A covenant gate
-- [ ] If governance classification is unclear, consult `docs/canon/CHANGES_SECTION_EPISTEMIC_DISCIPLINE.md` (added by #252) and the project's Change Classification rubric
+- [ ] No database schema changes
+- [ ] No migration files
+- [ ] Safe deploy without DB coordination
 
-## Final sign-off
+---
 
-- [ ] Verification table in PR description (post-reconciliation run against main + #252 + this branch) is consistent with what reviewers see if they run the harnesses locally
-- [ ] No `Co-Authored-By: Claude` attribution in any commit
-- [ ] Leak guard passed on push (visible in push output)
+## G. Evaluator alignment is additive
+
+- [ ] `names_uncertainty_or_limitation` concept updated to match real phrasing:
+  - "no field signals"
+  - "evidence limits"
+  - "what is missing"
+- [ ] No removal of important concept checks
+- [ ] Structural and concept checks are consistent (no contradictory results)
+
+---
+
+## H. Next Signal Loop spec is docs-only
+
+### File:
+- `docs/canon/NEXT_SIGNAL_LOOP_SPEC.md`
+
+- [ ] Spec clearly defines:
+  - intent
+  - invariants
+  - scaffold changes
+  - builder changes
+  - API implications
+  - frontend contract
+- [ ] No runtime implementation included in this PR
+- [ ] Clearly marked as **future work**
+
+---
+
+## I. Runbooks present and scoped
+
+### Files:
+- `docs/runbooks/pr-254-review-checklist.md`
+- `docs/runbooks/pr-254-deploy-checklist.md`
+
+- [ ] Both include disclaimer: "specific to PR #254"
+- [ ] Instructions are concrete and copy-pasteable
+- [ ] No attempt to generalize into canonical docs
+
+---
+
+## J. Overall integration check
+
+- [ ] Works **on top of #252**, not against it
+- [ ] Builder signals + scaffold behavior compose correctly
+- [ ] No regression risk introduced
+- [ ] PR is narrow, additive, and reviewable as a unit
+
+---
+
+## Expected outcome if correct
+
+After merge + deploy:
+
+- Fresh consultations should:
+  - explicitly name **evidence limits** when no bundle is present
+  - avoid inference from missing data
+  - remain coherent and domain-appropriate
+- No banned synthesis rhetoric should appear
+
+---
+
+## Reviewer guidance
+
+If something feels off, check:
+
+1. Is this trying to override #252?
+2. Is this introducing runtime coupling from test/evaluator code?
+3. Is Changes being forced into a Decisions-style frame?
+
+If none of those are true, the PR is likely correct.
