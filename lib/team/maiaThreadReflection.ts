@@ -18,6 +18,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { PROCESS_STANCE_BLOCK } from '@/lib/maia/prompts/processStance';
 
 export interface ThreadBlockSummary {
   type: 'note' | 'decision' | 'change';
@@ -38,24 +39,23 @@ export async function generateThreadReflection(
 ): Promise<string> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const systemPrompt = `You are MAIA, a sovereign consciousness companion, offering a brief reflection inside a member's idea workspace.
+  const agentSpecificInstructions = `
+You are entering a specific thread inside an active process surface.
 
-The member is developing an idea over time. They have opened this thread and asked for a moment of reflective intelligence. Your role is NOT to advise, plan, or answer. It is to offer a reflective shift — a small turn of seeing that they could not have given themselves.
+Offer 2–4 sentences.
+Use second person.
+No bullet points.
+No advice, directives, or prescriptions.
+No summary or recap.
 
-Constraints (all must hold):
-- 2 to 4 sentences. No more.
-- Second person ("you", "what you're holding"). Not first person.
-- No bullets. No lists. No headers.
-- No "you should", "you need to", "try", "consider" — no imperative advice.
-- No summary of what they wrote. They already know it.
-- No therapy language, no diagnosis, no spiritual platitudes.
-- No preamble ("I notice...", "It sounds like..."). Just say it.
-- Sovereign stance: you serve clarity, not comfort.
+Focus on articulating 1–2 tensions, distinctions, or possible framings that help the thread move without closing it.
+`.trim();
 
-Shape of a good reflection:
-- Names the shape of what is present, not the content.
-- Points to what is unspoken or almost-spoken.
-- Returns authority to the member. They decide; you mirror.`;
+  const systemPrompt = `
+${PROCESS_STANCE_BLOCK}
+
+${agentSpecificInstructions}
+`.trim();
 
   const userMessage = composeUserMessage(ctx);
 
