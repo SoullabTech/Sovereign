@@ -258,9 +258,44 @@ export default function IdeaWorkspacePage() {
   const [askingMaia, setAskingMaia] = useState(false);
 
   const handleAskMaia = useCallback(async () => {
-    if (!idea || askingMaia) return;
+    if (!idea || askingMaia || saving) return;
     setAskingMaia(true);
     try {
+      // Autosave-on-Ask-MAIA (2026-04-22):
+      // If the composer has pending draft text, save it as a note first so
+      // MAIA reflects on the just-written thought. This matches user
+      // expectation ("Ask MAIA = respond to what I just wrote") while
+      // preserving the block model — MAIA still reads saved notes only,
+      // never raw draft state. If the save fails, abort Ask MAIA so the
+      // user's thought stays in the composer and they can retry.
+      const pendingDraft = draft.trim();
+      if (pendingDraft) {
+        const saveRes = await apiFetch(`/api/ideas/${idea.id}/blocks`, {
+          method: 'POST',
+          body: JSON.stringify({
+            block_type: 'note',
+            content: pendingDraft,
+            metadata: {},
+          }),
+        });
+        if (!saveRes.ok) {
+          console.error(
+            '[ideas/workspace] autosave before ask-maia failed:',
+            saveRes.status
+          );
+          return;
+        }
+        const saveData = await saveRes.json();
+        if (saveData.success && saveData.block) {
+          setBlocks((prev) => [...prev, saveData.block]);
+          setLastCreatedBlockId(saveData.block.id);
+          setDraft('');
+        } else {
+          // Unexpected success=false; abort rather than proceeding on stale state
+          return;
+        }
+      }
+
       const res = await apiFetch(`/api/ideas/${idea.id}/ask-maia`, {
         method: 'POST',
       });
@@ -281,7 +316,7 @@ export default function IdeaWorkspacePage() {
       // Refocus the composer so the user continues naturally after MAIA.
       window.setTimeout(() => composerRef.current?.focus(), 0);
     }
-  }, [idea, askingMaia]);
+  }, [idea, askingMaia, saving, draft]);
 
   // --- block composer -------------------------------------------------------
 
