@@ -14,7 +14,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Lightbulb, MessageSquare, CheckCircle2, Wind, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Lightbulb, MessageSquare, CheckCircle2, Wind, Clock, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 
 interface IdeaListItem {
@@ -37,6 +37,7 @@ export default function IdeasListPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadIdeas = useCallback(async () => {
     try {
@@ -59,6 +60,34 @@ export default function IdeasListPage() {
   useEffect(() => {
     loadIdeas();
   }, [loadIdeas]);
+
+  // Delete an idea (and all its blocks — cascade happens server-side via DB
+  // foreign key). Uses a browser confirm() for the destructive step; list
+  // state is optimistically updated after the 204/200 response.
+  const handleDelete = useCallback(
+    async (id: string, title: string) => {
+      if (deletingId) return;
+      const confirmed = window.confirm(
+        `Delete "${title}" and all of its entries? This cannot be undone.`
+      );
+      if (!confirmed) return;
+
+      setDeletingId(id);
+      try {
+        const res = await apiFetch(`/api/ideas/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setIdeas((prev) => prev.filter((i) => i.id !== id));
+        } else {
+          console.error('[ideas/list] delete failed:', res.status);
+        }
+      } catch (err) {
+        console.error('[ideas/list] delete failed:', err);
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deletingId]
+  );
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,13 +210,13 @@ export default function IdeasListPage() {
         ) : (
           <ul className="space-y-2">
             {ideas.map((idea) => (
-              <li key={idea.id}>
+              <li key={idea.id} className="relative group">
                 <button
                   onClick={() => router.push(`/maia/ideas/${idea.id}`)}
-                  className="w-full p-4 rounded-xl bg-stone-900/40 hover:bg-stone-900/70 border border-stone-800/50 hover:border-amber-500/30 transition-all text-left group"
+                  className="w-full p-4 rounded-xl bg-stone-900/40 hover:bg-stone-900/70 border border-stone-800/50 hover:border-amber-500/30 transition-all text-left"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 pr-8">
                       <h3
                         className="text-base text-amber-200/90 group-hover:text-amber-100 font-light truncate"
                         style={{ fontFamily: 'Spectral, Georgia, serif' }}
@@ -219,6 +248,15 @@ export default function IdeasListPage() {
                       </div>
                     </div>
                   </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(idea.id, idea.title)}
+                  disabled={deletingId === idea.id}
+                  className="absolute top-3 right-3 p-2 rounded-md opacity-0 group-hover:opacity-100 text-stone-600 hover:text-red-400/90 hover:bg-red-500/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label={`Delete idea: ${idea.title}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </li>
             ))}
