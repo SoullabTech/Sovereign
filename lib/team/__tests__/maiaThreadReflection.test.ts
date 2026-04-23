@@ -202,3 +202,73 @@ describe('latestBlockHasCorrection', () => {
     expect(latestBlockHasCorrection(blocks)).toBe(false);
   });
 });
+
+// ─── progression + closure + directional offerings (2026-04-22 part 2) ─
+
+describe('IDEAS_REFLECTION_SYSTEM_PROMPT — progression guardrails', () => {
+  it('names the "name → question → close → offer" pattern explicitly', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /name\s*→\s*question\s*→\s*close\s*→\s*offer/i
+    );
+  });
+
+  it('describes progression tiers based on prior reflection count', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/no prior reflections/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/one prior reflection/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/two or more prior reflections/i);
+  });
+
+  it('includes closure move phrases', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/you've already identified/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/that's enough to work from/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/from that/i);
+  });
+
+  it('includes synthesis/sequencing/framing offerings', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /a simple way to structure this would be/i
+    );
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/an initial version might look like/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/the question becomes whether/i);
+  });
+
+  it('preserves non-directive boundary (no "you should", etc.)', () => {
+    // The ban on imperative verbs must remain from the projection-fix pass.
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/no imperative advice/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /"you should".*"you need to".*"try".*"consider"/is
+    );
+  });
+
+  it('explicitly marks offerings as non-commands', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /offerings the member can take, leave, or modify/i
+    );
+  });
+
+  it('has anti-repetition rule for structural distinctions', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/anti-repetition/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /do NOT restate or re-slice/i
+    );
+  });
+
+  it('has a balance rule capping clarifying questions and requiring offerings', () => {
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/balance rule/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /at most one clarifying question/i
+    );
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /at least one closure \+ offering/i
+    );
+  });
+
+  it('preserves projection guardrails (no regression)', () => {
+    // Regression guard — the projection fixes from part 1 must still be present.
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/stay at the level of the idea/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(/what's underneath/i);
+    expect(IDEAS_REFLECTION_SYSTEM_PROMPT).toMatch(
+      /drop the prior interpretive frame/i
+    );
+  });
+});
