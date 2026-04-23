@@ -400,7 +400,8 @@ export function selectNamingLine(
 export function checkRestraint(
   signal: RecognitionSignal,
   recentEvents: RecognitionEventRow[],
-  priorTurnCount: number
+  priorTurnCount: number,
+  memberBlocksSinceLastNaming?: number
 ): RestraintCheck {
   if (signal.strength === 'weak') {
     return { allowNaming: false, allowInvitation: false, reason: 'weak_signal' };
@@ -410,7 +411,7 @@ export function checkRestraint(
     return { allowNaming: false, allowInvitation: false, reason: 'quiet_zone' };
   }
 
-  if (isInNamingCooldown(recentEvents)) {
+  if (isInNamingCooldown(recentEvents, memberBlocksSinceLastNaming)) {
     return { allowNaming: false, allowInvitation: false, reason: 'naming_cooldown' };
   }
 
@@ -451,10 +452,29 @@ function isInQuietZone(recentEvents: RecognitionEventRow[]): boolean {
   return acceptedIdx < QUIET_ZONE_TURNS;
 }
 
-function isInNamingCooldown(recentEvents: RecognitionEventRow[]): boolean {
-  const namingIdx = recentEvents.findIndex((e) => e.event_type === 'naming_fired');
-  if (namingIdx === -1) return false;
-  return namingIdx < NAMING_COOLDOWN_TURNS;
+/**
+ * Naming cooldown (v2 — block-count-based).
+ *
+ * Bug fix 2026-04-22: the original event-index-based logic was circular —
+ * when cooldown blocked naming, no new events fired, so the event index
+ * of the last naming_fired never advanced, and cooldown was permanent.
+ *
+ * New rule: cooldown is released once N new member blocks (non-maia
+ * blocks) have been created AFTER the last naming_fired event. The caller
+ * (oracle route) computes this count from blocks.created_at vs the event's
+ * fired_at and passes it in. If no naming has ever fired, no cooldown.
+ *
+ * Undefined count (tests that don't pass it) → treat as "no cooldown" —
+ * safer than the old circular behavior.
+ */
+function isInNamingCooldown(
+  recentEvents: RecognitionEventRow[],
+  memberBlocksSinceLastNaming?: number
+): boolean {
+  const lastNaming = recentEvents.find((e) => e.event_type === 'naming_fired');
+  if (!lastNaming) return false;
+  if (memberBlocksSinceLastNaming === undefined) return false;
+  return memberBlocksSinceLastNaming < NAMING_COOLDOWN_TURNS;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -478,6 +498,7 @@ export function runRecognition(input: {
   priorTurnCount: number;
   sanctuaryMode: boolean;
   recentEvents: RecognitionEventRow[];
+  memberBlocksSinceLastNaming?: number;
 }): RecognitionOutcome | null {
   if (input.sanctuaryMode) return null;
 
@@ -490,7 +511,12 @@ export function runRecognition(input: {
 
   if (chosen.strength === 'weak') return null;
 
-  const restraint = checkRestraint(chosen, input.recentEvents, input.priorTurnCount);
+  const restraint = checkRestraint(
+    chosen,
+    input.recentEvents,
+    input.priorTurnCount,
+    input.memberBlocksSinceLastNaming
+  );
   if (!restraint.allowNaming) {
     return {
       signal: chosen,

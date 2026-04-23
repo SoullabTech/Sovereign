@@ -399,15 +399,39 @@ describe('checkRestraint', () => {
     expect(r.allowInvitation).toBe(true);
   });
 
-  it('blocks naming within naming cooldown', () => {
-    const recent = [
-      event({ event_type: 'naming_fired', signal_kind: 'decision' }),
-      event({ event_type: 'naming_fired', signal_kind: 'decision' }),
-    ];
-    const r = checkRestraint({ kind: 'decision', strength: 'strong' }, recent, 5);
-    // Most recent event (index 0) is naming_fired — within 2-turn cooldown
-    expect(r.allowNaming).toBe(false);
-    expect(r.reason).toBe('naming_cooldown');
+  it('blocks naming when fewer than NAMING_COOLDOWN_TURNS member blocks have been created since last naming', () => {
+    const recent = [event({ event_type: 'naming_fired', signal_kind: 'decision' })];
+    // 0 new member blocks since naming → cooldown active
+    const r0 = checkRestraint({ kind: 'decision', strength: 'strong' }, recent, 5, 0);
+    expect(r0.allowNaming).toBe(false);
+    expect(r0.reason).toBe('naming_cooldown');
+
+    // 1 new member block since naming → still within cooldown (1 < 2)
+    const r1 = checkRestraint({ kind: 'decision', strength: 'strong' }, recent, 5, 1);
+    expect(r1.allowNaming).toBe(false);
+    expect(r1.reason).toBe('naming_cooldown');
+  });
+
+  it('RELEASES cooldown once NAMING_COOLDOWN_TURNS member blocks have been created since last naming', () => {
+    const recent = [event({ event_type: 'naming_fired', signal_kind: 'decision' })];
+    const r = checkRestraint({ kind: 'decision', strength: 'strong' }, recent, 5, 2);
+    // 2 new member blocks since naming → cooldown released
+    expect(r.allowNaming).toBe(true);
+  });
+
+  it('does not apply cooldown when no naming has ever fired (empty history)', () => {
+    const r = checkRestraint({ kind: 'decision', strength: 'strong' }, [], 5, 0);
+    expect(r.allowNaming).toBe(true);
+  });
+
+  it('cooldown does not infinitely suppress: 3+ new member blocks → released', () => {
+    // Regression test for the circular cooldown bug (2026-04-22). Old logic
+    // stayed permanently blocked because blocked naming produced no new events.
+    // New logic counts member blocks, which the caller always knows, so no
+    // circular dependency.
+    const recent = [event({ event_type: 'naming_fired', signal_kind: 'decision' })];
+    const r = checkRestraint({ kind: 'decision', strength: 'strong' }, recent, 5, 3);
+    expect(r.allowNaming).toBe(true);
   });
 
   it('blocks naming and invitation inside quiet zone after acceptance', () => {
@@ -497,18 +521,36 @@ describe('runRecognition', () => {
     expect(result!.namingLine).toContain('to');
   });
 
-  it('suppresses naming and invitation when restraint blocks (cooldown)', () => {
+  it('suppresses naming and invitation when cooldown blocks (block-count-based)', () => {
     const recent = [event({ event_type: 'naming_fired', signal_kind: 'decision' })];
     const result = runRecognition({
       userText: "I've decided to focus on prep first.",
       priorTurnCount: 5,
       sanctuaryMode: false,
       recentEvents: recent,
+      memberBlocksSinceLastNaming: 1, // only 1 block since last naming → cooldown active
     });
     expect(result).not.toBeNull();
     expect(result!.namingLine).toBeNull();
     expect(result!.offerInvitation).toBe(false);
     expect(result!.restraintReason).toBe('naming_cooldown');
+  });
+
+  it('releases cooldown once NAMING_COOLDOWN_TURNS member blocks exist since last naming', () => {
+    const recent = [event({ event_type: 'naming_fired', signal_kind: 'decision' })];
+    const result = runRecognition({
+      userText: "I've decided to focus on prep first.",
+      priorTurnCount: 5,
+      sanctuaryMode: false,
+      recentEvents: recent,
+      memberBlocksSinceLastNaming: 2, // cooldown released
+    });
+    expect(result).not.toBeNull();
+    // Naming line selected via repeat-variant grammar because a prior
+    // naming_fired event exists — this is correct behavior after the
+    // original moment was already named.
+    expect(result!.namingLine).toBe('Something here is becoming a decision.');
+    expect(result!.offerInvitation).toBe(true);
   });
 
   it('names medium signal without offering invitation when history insufficient', () => {
