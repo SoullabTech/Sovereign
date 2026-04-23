@@ -169,11 +169,28 @@ export async function POST(
       const userText = latestUserBlock.content ?? '';
       const sanctuaryMode = isSanctuaryModeActive(session.memberId, ideaId);
       const recentEvents = await getRecentRecognitionEvents(ideaId);
+
+      // Count member blocks created AFTER the most recent naming_fired event.
+      // This drives the cooldown rule (released once N new member blocks exist
+      // since the last naming) and replaces the old event-index logic that
+      // created a circular permanent-cooldown bug.
+      const lastNamingFired = recentEvents.find(
+        (e) => e.event_type === 'naming_fired'
+      );
+      const memberBlocksSinceLastNaming = lastNamingFired
+        ? recentBlocks.filter(
+            (b) =>
+              new Date(b.created_at).getTime() >
+              new Date(lastNamingFired.fired_at).getTime()
+          ).length
+        : undefined;
+
       recognition = runRecognition({
         userText,
         priorTurnCount: Math.max(0, recentBlocks.length - 1),
         sanctuaryMode,
         recentEvents,
+        memberBlocksSinceLastNaming,
       });
     }
 
