@@ -8,7 +8,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { PenLine, BookOpen, Sparkles, Moon } from 'lucide-react';
+import { PenLine, BookOpen, Sparkles, Moon, Compass, Waves } from 'lucide-react';
 
 interface JournalPanelProps {
   explorerId: string;
@@ -70,6 +70,30 @@ export function JournalPanel({ explorerId, onOpenJournalSheet, onOpenShadowWork 
         <div>
           <p className="text-sm text-[#D4B896]/90 font-light">Shadow Work</p>
           <p className="text-xs text-stone-500 mt-0.5">Guided depth exploration</p>
+        </div>
+      </button>
+
+      {/* Decisions */}
+      <button
+        onClick={() => router.push('/studio/decisions')}
+        className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
+      >
+        <Compass className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-[#D4B896]/90 font-light">Decisions</p>
+          <p className="text-xs text-stone-500 mt-0.5">Choices you are weighing</p>
+        </div>
+      </button>
+
+      {/* Changes */}
+      <button
+        onClick={() => router.push('/studio/changes')}
+        className="w-full flex items-start gap-3 p-3 rounded-xl bg-[#D4B896]/5 hover:bg-[#D4B896]/10 border border-[#3a2a1f]/30 hover:border-[#D4B896]/20 transition-all text-left"
+      >
+        <Waves className="w-4 h-4 text-[#D4B896]/60 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-[#D4B896]/90 font-light">Changes</p>
+          <p className="text-xs text-stone-500 mt-0.5">Shifts you are tracking</p>
         </div>
       </button>
     </div>
