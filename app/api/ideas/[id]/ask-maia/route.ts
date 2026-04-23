@@ -137,6 +137,20 @@ export async function POST(
     const lastDecision =
       decisionResult.rows.length > 0 ? decisionResult.rows[0].content : null;
 
+    // Last 2 prior MAIA reflections — for progression heuristic + anti-
+    // repetition. Fetched DESC, reversed to oldest-first for prompt shape.
+    const priorReflectionsResult = await query<{ content: string }>(
+      `SELECT content
+         FROM member_idea_blocks
+        WHERE idea_id = $1 AND block_type = 'maia_reflection'
+        ORDER BY created_at DESC
+        LIMIT 2`,
+      [ideaId]
+    );
+    const priorMaiaReflections = [...priorReflectionsResult.rows]
+      .reverse()
+      .map((r) => r.content);
+
     // Shape the context for the primitive
     const summaries: ThreadBlockSummary[] = recentBlocks.map((b) => {
       const rawOutcome =
@@ -157,6 +171,7 @@ export async function POST(
       ideaFraming: idea.framing,
       lastDecision,
       recentBlocks: summaries,
+      priorMaiaReflections,
     });
 
     // ── Decision/Change recognition (flag-gated, post-response) ──────────────
