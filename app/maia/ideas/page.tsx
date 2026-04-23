@@ -253,7 +253,7 @@ export default function IdeasListPage() {
                   type="button"
                   onClick={() => handleDelete(idea.id, idea.title)}
                   disabled={deletingId === idea.id}
-                  className="absolute top-3 right-3 p-2 rounded-md opacity-0 group-hover:opacity-100 text-stone-600 hover:text-red-400/90 hover:bg-red-500/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="absolute top-3 right-3 p-2 rounded-md opacity-50 group-hover:opacity-100 text-stone-500 hover:text-red-400/90 hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                   aria-label={`Delete idea: ${idea.title}`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
