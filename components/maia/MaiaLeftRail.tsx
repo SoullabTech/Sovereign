@@ -44,11 +44,9 @@ interface MaiaLeftRailProps {
   /** Ask MAIA — orientation + Knowledge Field stance */
   askMode?: boolean;
   onAskModeChange?: (active: boolean) => void;
-  /** Entry framing — 'ask' for thinking surfaces, 'guide' for process/orientation surfaces. Shares underlying flow. */
-  mode?: 'ask' | 'guide';
 }
 
-export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit, activeMode = 'normal', onModeChange, isVoiceInput = true, onToggleInputMode, askMode = false, onAskModeChange, mode = 'ask' }: MaiaLeftRailProps) {
+export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, activeBoundary, onWorldChange, onOpenAccount, onCaptureSpirit, activeMode = 'normal', onModeChange, isVoiceInput = true, onToggleInputMode, askMode = false, onAskModeChange }: MaiaLeftRailProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { presenceState, amplitude } = useVoiceState();
@@ -119,48 +117,70 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
             </button>
           );
         })}
-      </div>
 
-      {/* ─── ENTRY: Ask (thinking surfaces) or Guide (process surfaces) — shares underlying flow ─── */}
-      {onAskModeChange && (() => {
-        const isGuide = mode === 'guide';
-        const EntryIcon = isGuide ? Compass : BookOpen;
-        const entryLabel = isGuide ? 'Guide' : 'Ask';
-        const entryTitle = isGuide
-          ? 'Guide — orient this process'
-          : (askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — orientation + knowledge field');
-        const entryTooltip = isGuide ? 'Guide — orient this process' : 'Ask MAIA';
-        return (
-          <div className="flex flex-col items-center py-0.5">
+        {/* Guide — orientation / process destination (routes to /maia/guide) */}
+        {(() => {
+          const isActive = pathname === '/maia/guide';
+          return (
             <button
-              onClick={() => onAskModeChange(!askMode)}
+              key="guide"
+              onClick={() => router.push('/maia/guide')}
               className={`
                 group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
-                ${askMode
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-400/50'
-                  : 'text-stone-500 hover:text-blue-300/70 hover:bg-blue-400/5 border border-transparent'
+                ${isActive
+                  ? 'bg-[#C8A060]/25 text-[#C8A060] border border-[#C8A060]/70'
+                  : 'text-stone-500 hover:text-stone-400 hover:bg-white/5 border border-transparent'
                 }
               `}
-              title={entryTitle}
+              title="Guide — orient this process"
             >
-              <EntryIcon className="w-4 h-4" />
-              <span className={`text-[9px] leading-none ${askMode ? 'text-blue-300' : 'text-stone-600'}`}>
-                {entryLabel}
+              <Compass className="w-4 h-4" />
+              <span className={`text-[9px] leading-none ${isActive ? 'text-[#C8A060]' : 'text-stone-600'}`}>
+                Guide
               </span>
-              {askMode && (
+              {isActive && (
                 <motion.div
-                  layoutId="rail-ask-active"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-blue-400"
+                  layoutId="rail-guide-active"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-[#C8A060]"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 />
               )}
-              <span className="absolute left-full ml-2 px-2 py-1 text-xs text-blue-300/90 bg-[#1a1510]/95 border border-blue-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
-                {entryTooltip}
-              </span>
             </button>
-          </div>
-        );
-      })()}
+          );
+        })()}
+      </div>
+
+      {/* ─── ASK MAIA: orientation + Knowledge Field stance (thinking surfaces) ─── */}
+      {onAskModeChange && (
+        <div className="flex flex-col items-center py-0.5">
+          <button
+            onClick={() => onAskModeChange(!askMode)}
+            className={`
+              group relative w-10 h-10 flex flex-col items-center justify-center rounded-lg transition-all duration-200 gap-0.5
+              ${askMode
+                ? 'bg-blue-500/20 text-blue-300 border border-blue-400/50'
+                : 'text-stone-500 hover:text-blue-300/70 hover:bg-blue-400/5 border border-transparent'
+              }
+            `}
+            title={askMode ? 'Ask MAIA active — clarity + knowledge mode' : 'Ask MAIA — orientation + knowledge field'}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className={`text-[9px] leading-none ${askMode ? 'text-blue-300' : 'text-stone-600'}`}>
+              Ask
+            </span>
+            {askMode && (
+              <motion.div
+                layoutId="rail-ask-active"
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-blue-400"
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span className="absolute left-full ml-2 px-2 py-1 text-xs text-blue-300/90 bg-[#1a1510]/95 border border-blue-500/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-[90]">
+              Ask MAIA
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* ─── divider: mode / input ─── */}
       <div className="w-6 h-px bg-[#3a2a1f]/40 my-1" />
