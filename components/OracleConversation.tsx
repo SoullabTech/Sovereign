@@ -8538,7 +8538,7 @@ I'm not sure what I'm feeling yet.`;
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-maia-navy-850/98 to-maia-navy-900/98 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+            className="modal-content fixed bottom-24 left-16 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[90%] max-w-md z-[85] bg-gradient-to-b from-maia-navy-850/98 to-maia-navy-900/98 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
           >
             <div className="p-5">
               <h3 className="text-base font-semibold text-maia-spice-500 mb-2">MAIA&apos;s Voice</h3>
@@ -9112,7 +9112,7 @@ I'm not sure what I'm feeling yet.`;
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="fixed bottom-24 left-4 z-50 flex items-center gap-1 px-3 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-100 text-[13px] font-medium backdrop-blur-sm shadow-lg"
+          className="fixed bottom-24 left-16 z-[85] flex items-center gap-1 px-3 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-100 text-[13px] font-medium backdrop-blur-sm shadow-lg"
         >
           <button
             onClick={() => {
