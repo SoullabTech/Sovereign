@@ -41,6 +41,23 @@ The full frame — including the discernment boundary, vocabulary mapping
 (Spanish ↔ English Peers translation), source checksums, evaluation
 prompts, and wiring notes — is in the canon doc linked above.
 
+## Related Modern Resonance
+
+T. S. Eliot, especially in *Four Quartets*, can be named as a modern
+poetic resonance with John of the Cross: **purification, spiritual
+darkness, detachment, time, surrender, and the costly simplicity of
+union**. Eliot offers a bridge-language for modern consciousness when
+sixteenth-century Spanish prose feels far away.
+
+Eliot is **not** part of the John of the Cross primary corpus and is
+**not** an authority over John. Use *resonates with* / *echoes* / *offers
+a modern poetic analogue* — not *derives from*.
+
+A future cross-corpus bridge (John ↔ Eliot / *Four Quartets*) is sketched
+in the canon doc for retrieval expansion around: dark night, purgation,
+fire, still point, costly simplicity, union, time and eternity. **Not yet
+built; Eliot's corpus is not yet ingested.**
+
 ## Companion notes in this folder
 
 - [[_index]] — folder overview + use boundary

@@ -161,6 +161,53 @@ Three texts in the library:
 
 ---
 
+## Related Modern Resonance
+
+T. S. Eliot, especially in *Four Quartets*, can be named as a modern poetic
+resonance with John of the Cross — purification, spiritual darkness,
+detachment, time, surrender, and the costly simplicity of union. Eliot may
+serve as a **bridge-language for modern consciousness** when a member's
+ear is closer to twentieth-century English verse than to sixteenth-century
+Spanish prose.
+
+Eliot is **not** part of the John of the Cross primary corpus and **not**
+an authority over John. He is named here only as a related modern voice
+whose vocabulary may help carry similar movements into present-day
+language.
+
+Allowed phrasing when invoking Eliot alongside John:
+- "Eliot's *Four Quartets* resonates with this movement…"
+- "A modern poetic analogue is Eliot's…"
+- "This echoes what Eliot called…"
+
+Disallowed phrasing:
+- "Eliot derives this from John of the Cross…" (unless explicitly sourced)
+- "Eliot says the same thing as John…" (they are different voices in
+  different centuries)
+- Any framing that flattens one into the other
+
+### Future cross-corpus bridge (deferred)
+
+When the activation layer is built (see `USE_FRAME_ACTIVATION.md`), a
+**John of the Cross ↔ T. S. Eliot / Four Quartets** bridge can be
+considered for retrieval expansion around the following themes:
+
+- dark night
+- purgation
+- fire
+- still point
+- costly simplicity
+- union
+- time and eternity
+
+This would be an additive bridge — Eliot retrieved alongside John when
+relevant — not a substitution. Implementation is **not now**: it requires
+(a) Eliot's corpus to be staged and ingested with copyright
+considerations addressed, and (b) the cross-corpus bridge pattern to be
+specified separately. Both are out of scope of this doc.
+
+---
+
 ## Test signals (for evaluation)
 
 The frame is working if MAIA can hold each of the following without
