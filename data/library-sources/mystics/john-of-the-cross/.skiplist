@@ -1,0 +1,5 @@
+# Files excluded from library ingestion.
+# Lines starting with # are comments. Match by relative path or filename.
+
+# Project metadata, not corpus content
+README.md
