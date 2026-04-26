@@ -30,6 +30,7 @@ export interface FeatureFlags {
   trustObservation: boolean;            // Phase 3: behavioral signal capture for affinity weighting
   knowledgeFieldLayer: boolean;         // Phase 1: 12-domain knowledge field prompt injection on domain detection
   maiaIdeasDecisionRecognition: boolean; // MAIA-mediated Decision/Change recognition in Ideas threads
+  astrologerPresenceLayer: boolean;     // Astrologer field-presence brief + state model (lib/symbolic/presence/astrologicalMaia.ts); module-level only until route wiring
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
@@ -56,6 +57,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   trustObservation: false,             // Off — Phase 3 observation, enable after migration applied
   knowledgeFieldLayer: false,          // Off — Phase 1: enable after oracle route wired + tested
   maiaIdeasDecisionRecognition: false, // Off — MAIA-mediated Decision/Change recognition; enable after real-thread test
+  astrologerPresenceLayer: false,      // Off — module-level only; enable after route wiring + birth-data lookup + state persistence
 };
 
 /**

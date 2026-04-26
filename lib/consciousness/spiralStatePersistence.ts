@@ -49,6 +49,13 @@ export interface ActiveReportContext {
   } | null;
 }
 
+/**
+ * Astrologer field-presence state — values that may be persisted to the column.
+ * REQUESTED is ephemeral and never written; the schema CHECK enforces this.
+ * See lib/symbolic/presence/astrologicalMaia.ts shouldPersistTransition.
+ */
+export type PersistedAstrologerFieldState = 'inactive' | 'active';
+
 export interface SpiralState {
   dominant_element: Element;
   phase: number;
@@ -58,6 +65,10 @@ export interface SpiralState {
   autonomy_streak: number;
   return_count: number;
   activeReportContext?: ActiveReportContext | null;
+  /** Astrologer field state. Null when the column has never been written. */
+  astrologer_field_state?: PersistedAstrologerFieldState | null;
+  /** Last timestamp the astrologer field state was updated. */
+  astrologer_field_updated_at?: Date | null;
   updated_at: Date;
   created_at: Date;
 }
@@ -94,6 +105,8 @@ export async function loadSpiralState(memberId: string): Promise<SpiralState | n
         autonomy_streak,
         return_count,
         active_report_context,
+        astrologer_field_state,
+        astrologer_field_updated_at,
         updated_at,
         created_at
       FROM member_spiral_state
@@ -253,6 +266,52 @@ export async function upsertActiveReportContext(
      SET active_report_context = $2`,
     [memberId, JSON.stringify(context)],
   );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3b. Astrologer Field State (fire-and-forget, separate write path)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Upsert the astrologer field state for a member (fire-and-forget).
+ *
+ * Separate write path from the main `upsertSpiralState` because astrologer
+ * state is set EARLY in the route (before voiceHint / element+phase exist),
+ * which means we can't reuse the spiral-state upsert (it requires
+ * dominant_element + phase). We use the same INSERT-with-defaults pattern as
+ * `upsertActiveReportContext` to handle first-time members cleanly.
+ *
+ * Persistence rule (Kelly approved 2026-04-26): only `'inactive'` and
+ * `'active'` are accepted. `'requested'` is ephemeral — caller must filter
+ * via `shouldPersistTransition` from the presence module before invoking
+ * this function. The schema CHECK enforces it as well.
+ *
+ * Returns void (not Promise) to prevent accidental await — same convention
+ * as `upsertSpiralState`.
+ */
+export function upsertAstrologerFieldState(
+  memberId: string,
+  state: PersistedAstrologerFieldState,
+  updatedAt: Date = new Date(),
+): void {
+  query(
+    `INSERT INTO member_spiral_state (
+       member_id, dominant_element, phase,
+       astrologer_field_state, astrologer_field_updated_at
+     )
+     VALUES ($1, 'aether', 1, $2, $3)
+     ON CONFLICT (member_id) DO UPDATE
+     SET astrologer_field_state = $2,
+         astrologer_field_updated_at = $3`,
+    [memberId, state, updatedAt],
+  ).catch((error) => {
+    // Swallow — astrologer state persistence must never break oracle response.
+    console.warn('[spiral-state] Failed to upsert astrologer field state:', {
+      memberId,
+      state,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
