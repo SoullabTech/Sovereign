@@ -31,6 +31,13 @@ import { evaluateEncounter } from '@/lib/wisdom/sacredTexts/SacredEncounterServi
 import { detectToolSuggestions, type ToolSuggestedAction } from '@/lib/consciousness/toolSurfacing';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { LibraryService } from '@/lib/library/LibraryService';
+import {
+  activateFrameFromRetrieval,
+  getEnabledFrames,
+  hasJotcAdjacentSignal,
+  type UseFrameActivation,
+} from '@/lib/maia/use-frames';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
 import { logOracleUsage } from '@/lib/learning/oracleUsageLoggingService';
 import { OPUS_SAFE_FALLBACKS } from '@/lib/ethics/opusSafeFallbacks';
@@ -846,6 +853,51 @@ export async function POST(request: NextRequest) {
       : null;
     const memberWebPrompt = [memberWebBase, facetPrompt].filter(Boolean).join('\n\n');
 
+    // ─────────────────────────────────────────────────────────────────
+    // USE-FRAME v1: retrieval-hit activation (JOTC only).
+    // Spec: docs/canon/use-frames/USE_FRAME_ACTIVATION.md
+    //   - Gated by env kill switch (default off)
+    //   - Gated by LIBRARY_TRIGGERS or JOTC-adjacent signal
+    //   - Frame fires only if retrieved chunks include registered source IDs
+    //     above per-frame similarity threshold (boundaries 1, 2, 3)
+    //   - Frame block injected into system prompt; telemetry to logMaiaTurn
+    // ─────────────────────────────────────────────────────────────────
+    let useFrameBlock = '';
+    let useFrameTelemetry: UseFrameActivation = {
+      active: false, frameId: null, block: '', sourceIds: [], topScore: null,
+    };
+    let retrievalContextActive = false;
+    try {
+      const enabledFrames = getEnabledFrames();
+      if (enabledFrames.length > 0 && message) {
+        const libraryService = new LibraryService();
+        const triggerHit =
+          libraryService.shouldConsultLibrary(message) || hasJotcAdjacentSignal(message);
+        if (triggerHit) {
+          retrievalContextActive = true;
+          const ctx = await libraryService.search(message, { limit: 8, mode: 'fast' });
+          const hits = (ctx.chunks || []).map((c: any) => ({
+            source_id: c.source_id,
+            score: c.score,
+          }));
+          const activation = await activateFrameFromRetrieval(hits);
+          if (activation.active) {
+            useFrameBlock = activation.block;
+            useFrameTelemetry = activation;
+            console.log(
+              `[Oracle] use-frame { id: '${activation.frameId}', topScore: ${activation.topScore?.toFixed(3)}, sources: ${activation.sourceIds.length} }`
+            );
+          } else {
+            console.log(
+              `[Oracle] use-frame { gated: true, retrievalRan: true, activated: false, retrieved: ${hits.length} }`
+            );
+          }
+        }
+      }
+    } catch (ufErr) {
+      console.warn('[Oracle] use-frame failed (non-critical):', ufErr);
+    }
+
     // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
@@ -867,7 +919,8 @@ export async function POST(request: NextRequest) {
       memberWebPrompt,
       userId,
       activeEventContext,
-      activeRelationalContext
+      activeRelationalContext,
+      useFrameBlock
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1086,7 +1139,15 @@ export async function POST(request: NextRequest) {
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
             evolutionTriggers: suggestedInterventions.map(i => i.flowId)
-          }
+          },
+          // Use-frame v1 telemetry — folded into observerInsights JSONB
+          useFrame: {
+            active: useFrameTelemetry.active,
+            id: useFrameTelemetry.frameId,
+            sources: useFrameTelemetry.sourceIds,
+            topScore: useFrameTelemetry.topScore,
+          },
+          retrievalContextActive,
         }
       );
       console.log('🎓 [Apprentice Learning] Claude wisdom logged for sovereign learning');
@@ -1827,7 +1888,8 @@ async function generateSpiralogicResponseWithLLM(
   memberWebPrompt?: string,
   userId?: string,
   activeEventContext?: ActiveEventContext | null,
-  activeRelationalContext?: ActiveRelationalContext | null
+  activeRelationalContext?: ActiveRelationalContext | null,
+  useFrameBlock?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2035,6 +2097,7 @@ async function generateSpiralogicResponseWithLLM(
     collectiveWisdom,
     eventArcBlock,
     relationalContextBlock,
+    useFrameBlock,
   ].filter(Boolean).join('');
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)

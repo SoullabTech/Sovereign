@@ -480,8 +480,29 @@ export async function logMaiaTurn(
     element?: string;
     consciousnessData?: any;
     usedClaudeConsult?: boolean;
+    // Use-frame v1 telemetry (boundary #6 of USE_FRAME_ACTIVATION.md).
+    // Folded into observerInsights JSONB — no schema change.
+    useFrame?: {
+      active: boolean;
+      id: string | null;
+      sources: string[];
+      topScore: number | null;
+    };
+    retrievalContextActive?: boolean;
   } = {}
 ): Promise<number> {
+  // Fold use-frame telemetry into the existing observerInsights JSONB so we
+  // can persist without a schema migration.
+  const baseObserverInsights = metadata.consciousnessData?.observerInsights;
+  const observerInsights =
+    metadata.useFrame !== undefined || metadata.retrievalContextActive !== undefined
+      ? {
+          ...(baseObserverInsights || {}),
+          useFrame: metadata.useFrame,
+          retrievalContextActive: metadata.retrievalContextActive,
+        }
+      : baseObserverInsights;
+
   return MaiaTrainingDataService.logTurn({
     sessionId,
     turnIndex,
@@ -493,7 +514,7 @@ export async function logMaiaTurn(
     element: metadata.element as any,
     consciousnessLayers: metadata.consciousnessData?.layersActivated,
     consciousnessDepth: metadata.consciousnessData?.depth,
-    observerInsights: metadata.consciousnessData?.observerInsights,
+    observerInsights,
     evolutionTriggers: metadata.consciousnessData?.evolutionTriggers,
     usedClaudeConsult: metadata.usedClaudeConsult
   });
