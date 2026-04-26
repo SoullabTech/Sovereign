@@ -7949,10 +7949,10 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Message flow - Star Wars crawl: text flows from beneath holoflower */}
       {(showChatInterface || (!showChatInterface && showVoiceText)) && messages.length > 0 && (
-        <div className={`fixed top-44 sm:top-52 md:top-60 lg:top-64 z-30 transition-all duration-500 left-1/2 -translate-x-1/2 ${
+        <div className={`fixed top-44 sm:top-52 md:top-60 lg:top-64 z-30 transition-all duration-500 left-16 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 ${
           showChatInterface
-            ? 'w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-[600px] lg:w-[680px] xl:w-[720px] opacity-100'
-            : 'w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] md:w-[520px] lg:w-[560px] opacity-70'
+            ? 'sm:w-[calc(100%-2rem)] md:w-[600px] lg:w-[680px] xl:w-[720px] opacity-100'
+            : 'sm:w-[calc(100%-2rem)] md:w-[520px] lg:w-[560px] opacity-70'
         }`}
              style={{
                height: showChatInterface
@@ -8337,7 +8337,7 @@ I'm not sure what I'm feeling yet.`;
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed inset-x-0 z-below-nav" style={{ bottom: '2.5rem' }}>
+              <div className="fixed left-14 right-0 sm:inset-x-0 z-below-nav" style={{ bottom: 'calc(2.5rem + env(safe-area-inset-bottom, 0px))' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   {/* 📚 ASK MAIA chip — orientation + Knowledge Field stance toggle */}
