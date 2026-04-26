@@ -179,6 +179,24 @@ The boundaries are:
 7. **Kill-switch per frame.** A single env-var toggle per frame, off by
    default in production until each frame has been reviewed and accepted.
 
+### Architectural principle (canon)
+
+> **Explicit mention of a tradition or figure may open retrieval, but does
+> not itself authorize field activation. The field enters only when retrieved
+> source material clears the threshold and remains relevant to the member's
+> stated context.**
+
+This is the load-bearing distinction the v1 test surfaced empirically. A
+member asking *"What does St. John of the Cross have to do with my breakup?"*
+**named the source** but the corpus contains no language about modern
+breakups; semantic similarity didn't clear the 0.60 threshold; the frame
+correctly **did not fire**. MAIA asked the member what was drawing them to
+the connection rather than supplying a dark-night reading of their breakup.
+
+Naming-as-trigger would violate the non-ambient cognition canon by allowing
+the frame to be summoned by a single word. Retrieval-hit gating ensures the
+frame enters only when the **field itself** has something to say.
+
 ### What this looks like, end-to-end
 
 ```
