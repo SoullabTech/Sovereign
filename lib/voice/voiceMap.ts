@@ -7,6 +7,7 @@
  */
 
 import type { Element } from '@/lib/types/voiceIntent';
+import { resolveArchetypeToKokoro } from './voiceArchetypes';
 
 // Kokoro voices (local, sovereign)
 export type KokoroVoice = 'af_kore' | 'af_heart' | 'af_bella' | 'af_sarah' | 'am_adam' | 'am_michael';
@@ -79,4 +80,26 @@ export function resolveSpeed(element: Element, requested?: number): number {
   };
 
   return clampSpeed(defaults[element] || 1.0);
+}
+
+/**
+ * Resolve Kokoro voice considering member archetype preference.
+ *
+ * Restored 2026-04-26 from 57657b758~1 — function was dropped during the
+ * voiceMap.ts merge-conflict resolution. Caller `lib/tts/ttsRouter.ts:140`
+ * still depends on it; the follow-up fix `bff689e2e` ("archetype-aware
+ * voice routing") confirmed the intent to keep this behavior.
+ *
+ * Priority:
+ *   1. Member's chosen archetype (if set) → fixed voice regardless of element
+ *   2. Element-based mapping (conductor-driven, the original Bridge B path)
+ */
+export function resolveVoiceWithArchetype(
+  element: Element,
+  archetype?: string | null,
+): string {
+  if (archetype) {
+    return resolveArchetypeToKokoro(archetype);
+  }
+  return resolveKokoroVoice(element);
 }

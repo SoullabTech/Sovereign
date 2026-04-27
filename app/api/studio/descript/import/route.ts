@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDescriptClient } from '@/lib/descript/client';
-import { sql } from '@/lib/db/postgres';
+import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,18 +21,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Get Descript API token from settings
-    const settings = await sql`
-      SELECT value FROM studio_settings WHERE key = 'descript_api_token'
-    `;
+    const settings = await query<{ value: string }>(
+      `SELECT value FROM studio_settings WHERE key = 'descript_api_token'`
+    );
 
-    if (settings.length === 0 || !settings[0].value) {
+    if (settings.rows.length === 0 || !settings.rows[0].value) {
       return NextResponse.json(
         { error: 'Descript API token not configured. Go to Settings to add it.' },
         { status: 400 }
       );
     }
 
-    const client = getDescriptClient(settings[0].value);
+    const client = getDescriptClient(settings.rows[0].value);
 
     // Create import URL
     const result = await client.createImportUrl({
@@ -45,23 +45,17 @@ export async function POST(request: NextRequest) {
     });
 
     // Store project reference locally
-    await sql`
-      INSERT INTO studio_media_projects (
+    await query(
+      `INSERT INTO studio_media_projects (
         name,
         source,
         status,
         descript_import_url,
         source_file_url,
         created_at
-      ) VALUES (
-        ${projectName},
-        'descript',
-        'importing',
-        ${result.import_url},
-        ${fileUrl},
-        NOW()
-      )
-    `;
+      ) VALUES ($1, 'descript', 'importing', $2, $3, NOW())`,
+      [projectName, result.import_url, fileUrl]
+    );
 
     return NextResponse.json({
       success: true,
