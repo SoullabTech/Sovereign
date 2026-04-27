@@ -20,6 +20,13 @@ export interface SessionReviewContext {
   clientName?: string; // entered by practitioner in the review UI
 }
 
+export interface TranscriptSegment {
+  speaker?: string;
+  text: string;
+  startMs: number;
+  endMs: number;
+}
+
 export interface ReviewBuildResult {
   prompt: string;
   meta: {
