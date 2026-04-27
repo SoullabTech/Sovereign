@@ -596,6 +596,11 @@ export function getKnowledgeConceptMatches(input: string): Array<{
 
   for (const domain of Object.values(KNOWLEDGE_FIELD)) {
     for (const concept of domain.concepts) {
+      // Defensive guard — non-queryable concepts must not surface through any
+      // retrieval / activation path until a tradition-specific gate exists.
+      // See KnowledgeConcept.queryable docstring.
+      if (concept.queryable === false) continue;
+
       const names = [concept.label, ...(concept.aliases ?? [])].map((v) => v.toLowerCase());
 
       if (names.some((name) => text.includes(name))) {
