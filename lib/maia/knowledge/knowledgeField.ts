@@ -38,6 +38,18 @@ export type KnowledgeConcept = {
   label: string;
   description: string;
   aliases?: string[];
+  /**
+   * Surfacing flag for retrieval / activation paths.
+   *
+   * Default `true` (queryable) if omitted.
+   *
+   * When `false`, the concept is registered for canonical naming only and MUST
+   * NOT surface through retrieval, keyword expansion, prompt injection, or any
+   * activation path until a tradition-specific gate / containment system
+   * exists (cf. the astrologer gate). Any retrieval/activation code added
+   * later MUST filter out concepts with `queryable: false`.
+   */
+  queryable?: boolean;
 };
 
 export type KnowledgeMapping = {
@@ -279,6 +291,21 @@ export const KNOWLEDGE_FIELD: Record<KnowledgeDomainId, KnowledgeDomain> = {
       { id: 'union', label: 'Union', description: 'A sense of communion, non-separation, or intimate participation in a greater reality.' },
       { id: 'true_self', label: 'True Self', description: 'A deeper identity beyond defensive structures and surface conditioning.' },
       { id: 'surrender', label: 'Surrender', description: 'A release of compulsive control into trust, receptivity, or deeper alignment.' },
+      // ── Tradition-specific concepts (added 2026-04-26).
+      // Registered in their own field only; no cross-tradition mappings here.
+      // The Symbolic Field Containment canon forbids flattening these terms
+      // into one another.
+      //
+      // ALL marked `queryable: false` — they are NOT surfaceable until
+      // tradition-specific gate / containment systems exist (cf. the
+      // astrologer gate). Retrieval, keyword matching, prompt injection, and
+      // activation paths MUST filter these out. Premature availability is
+      // the failure mode this flag guards against.
+      { id: 'wu_wei', label: 'Wu Wei (無爲)', description: 'Daoist principle of non-coerced action — acting in accord with the grain of what is moving, without the internal violence of imposed will. Distinct from passivity, surrender, kenosis, or fana.', queryable: false },
+      { id: 'five_precepts', label: 'Five Precepts (五戒)', description: 'Five Daoist moral commitments transmitted in the Ultra Supreme Elder Lord\'s Scripture of Precepts: no killing, no stealing, no sexual misconduct, no false speech, no jealousy (or no taking of intoxicants in some streams). Held in lineage; not a generic ethic.', queryable: false },
+      { id: 'samaya', label: 'Samaya (Tantric Vow)', description: 'Vajrayāna vow-bond between practitioner and teacher, more strictly held than Prātimokṣa or Mahāyāna vows. Received in empowerment; cannot be transmitted through chat. Distinct from covenant, oath, or contract.', queryable: false },
+      { id: 'bodhicitta', label: 'Bodhicitta', description: 'Mahāyāna and Vajrayāna orientation toward awakening for the benefit of all beings. Carries specific tradition-internal scaffolding (relative and ultimate bodhicitta); not equivalent to generic compassion or empathy.', queryable: false },
+      { id: 'hermetic_principles', label: 'Seven Hermetic Principles', description: 'The seven principles (Mentalism, Correspondence, Vibration, Polarity, Rhythm, Cause and Effect, Gender) as articulated in The Kybalion (1908). A modern New Thought synthesis, not an ancient Hermetic source. To be cited as such.', queryable: false },
     ],
     mappings: [
       {
@@ -294,6 +321,9 @@ export const KNOWLEDGE_FIELD: Record<KnowledgeDomainId, KnowledgeDomain> = {
           { domain: 'somatics', conceptId: 'embodied_awareness', relationship: 'rough_equivalent', note: 'Contemplative presence often becomes experientially available through embodied awareness.' },
         ],
       },
+      // No mappings yet for wu_wei, five_precepts, samaya, bodhicitta,
+      // hermetic_principles. Cross-tradition resonance, if it ever lands,
+      // will be a separate, deliberate decision. Surface resemblance ≠ identity.
     ],
   },
 
@@ -566,6 +596,11 @@ export function getKnowledgeConceptMatches(input: string): Array<{
 
   for (const domain of Object.values(KNOWLEDGE_FIELD)) {
     for (const concept of domain.concepts) {
+      // Defensive guard — non-queryable concepts must not surface through any
+      // retrieval / activation path until a tradition-specific gate exists.
+      // See KnowledgeConcept.queryable docstring.
+      if (concept.queryable === false) continue;
+
       const names = [concept.label, ...(concept.aliases ?? [])].map((v) => v.toLowerCase());
 
       if (names.some((name) => text.includes(name))) {
