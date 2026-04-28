@@ -236,6 +236,7 @@
     "node-cron": "^4.2.1",
     "nostr-tools": "^2.23.3",
     "openai": "^4.67.3",
+    "pagedjs": "^0.4.3",
     "pdf-parse": "^2.4.5",
     "pg": "^8.16.3",
     "postcss": "^8.4.47",
