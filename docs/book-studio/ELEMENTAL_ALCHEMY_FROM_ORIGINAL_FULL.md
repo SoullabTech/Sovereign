@@ -504,7 +504,7 @@ The Agency is the medium through which the Agent engages its creative power. It 
 
 #### The Manifestation: The Creation
 
-From the Agent and Agency comes the Manifestation—the tangible outcome resulting from their union. This is the realization of our engagement with our intuitions, feelings, senses, and thoughts in the physical world—the actions we take and the reality we create. In Christian theology, this is reflected in the understanding that "From the Father and the Holy Spirit comes the Son," the breath of life and animating force that brings visions and ideas to fruition. This interpretation offers one perspective on the divine mystery, but similar dynamics are observed across cultures and systems of practice, supporting the notion that these sacred processes, while mysterious, also mirror fundamental human experiences.
+From the Agent and Agency comes the Manifestation—the tangible outcome resulting from their union. This is the realization of our engagement with our intuitions, feelings, senses, and thoughts in the physical world—the actions we take and the reality we create. In Christian theology, this is reflected in the understanding that "From the Father and the Son comes the Holy Spirit," the breath of life and animating force that brings visions and ideas to fruition. This interpretation offers one perspective on the divine mystery, but similar dynamics are observed across cultures and systems of practice, supporting the notion that these sacred processes, while mysterious, also mirror fundamental human experiences.
 
 ### The Refining Nature of the Spiral
 
