@@ -2411,8 +2411,6 @@ This phase calls us into our inner being of truth, of soul. It is a salve to the
 
 The immersive phase of water is where we fully engage with the transformative power of emotions. In this phase, we confront the challenges and opportunities presented by the emotional realm, facing our inner shadows and learning to express our authentic emotions. Water encourages us to transform our emotional energy, using it to fuel our actions and manifest our intentions. This is the state of harmonizing and stabilizing emotions for healing and inner equilibrium.
 
-This phase involves navigating the challenges and opportunities presented by the emotional realm, confronting our inner shadows, and learning to express our authentic emotions. Water encourages us to express ourselves genuinely through emotional experiences, fostering resonance between our inner self and the outer world. Here, we transform our emotional energy, using it to fuel our actions and manifest our intentions. This is the state of harmonizing and stabilizing emotions for healing and inner equilibrium.
-
 #### Integrative Phase- Holy (Transcendent Self as Part of a Collective)
 
 In the integrative phase, we evolve and integrate our emotional experiences. Water facilitates spiritual awakening and wisdom at the deepest level. As we integrate our experiences and insights, the water state within us dissolves the ego’s barriers, revealing the pure essence of our true nature.
@@ -2432,8 +2430,6 @@ Feeling and thinking represent polar opposites: right and left hemispheric funct
 *"Emotions are not just the fuel that powers the psychological mechanism of a reasoning creature; they are also parts, highly complex and messy parts, of this creature's reasoning itself." — Martha Nussbaum*
 
 ### The Alchemy of Water: Cleansing Emotional Impurities
-
-The alchemy of water is the process of cleansing ourselves of emotional impurities. Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through the selfless act of letting go and receiving what is wanting to be grown within us.
 
 As Carl Jung once said, *"The meeting of two personalities is like the contact of two chemical substances: if there is any reaction, both are transformed."* This quote beautifully encapsulates the transformative power of engaging with our emotional depths and the profound impact it can have on our relationships and personal growth.
 
