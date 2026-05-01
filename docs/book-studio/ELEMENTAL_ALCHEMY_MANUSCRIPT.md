@@ -632,6 +632,8 @@ It is in recognizing and honoring this mysterious third—the relationship itsel
 
 *"The basic word I-Thou can be spoken only with one's whole being."- Martin Buber*
 
+And these relationships move through their own rhythms.
+
 ### The Balance of Stability and Change *(Homeostasis and Heterostasis)*
 
 This book celebrates our shared elemental nature and invites you to explore your personal experience within the framework of five elements: fire, earth, water, air, and aether. Our spirits, emotions, minds, and bodies spiral through these elements, transforming us as we bring them into convergence at the center of our being—our soul.
