@@ -1068,8 +1068,6 @@ Change is a constant, permeating every aspect of our universe. From the cosmic c
 
 In this chapter, we will explore the dynamics of change through the model of the torus and the  lens of three phases of conscious process: intention, immersion, and integration of an individual element. These align with the metaphysical dynamics in many traditions including the three gunas of Hinduism, the movements of astrology’s cardinal, fixed, and mutable phases, the alchemical principles of sulfur, salt, and mercury, and the holon model of toroidal flows found in ancient and modern metaphysics. By understanding the interplay of these fundamental archetypal dynamics of change, we gain invaluable tools for consciously engaging with the dance of our own transformation.
 
-### 
-
 ### ![][image9]
 
 ### The Nature of Change
@@ -1100,8 +1098,6 @@ It's time to return to a primal state of awareness and clarity. To tune into the
 
 We've been waiting for this, the moment of return. There has never been a more critical time to turn inward, for what we've been seeking has been inside us all along.
 
-### 
-
 ### ![][image11]
 
 ### The Torus of Being and Becoming
@@ -1116,23 +1112,17 @@ Our ancestors had expressions and symbols acknowledging humanity's interconnecte
 
 All of nature is woven into the same matrix of life, seeking homeostasis and heterostasis, familiarity and novelty in a perpetual dance. Patterns repeat, recycle, and refine in infinite variations within finite manifest forms. In our everyday lives, we act out nature's ceaseless adaptation and evolution.
 
-### 
-
 ### ![][image12]
 
 ### Change Occurs Within the Same Geometry of Life
 
 We can see the dynamics of spiraling growth in the interplay of elemental forces:
 
-#### 
-
 #### ![][image13]
 
 #### The Circle: A Model of Wholeness
 
 *“The circle is a reminder that each moment, each step of the journey, is both a beginning and an end, a process of becoming whole.” — Adapted from Black Elk*
-
----
 
 While sitting in a circle of participants around a ceremonial fire in a teepee as a young man, I became entranced by a half-circle of clay arcing out of, and back into, the earth. The presence of this symbolic structure drew me in and anchored me in the ritual. Twelve hours of sitting in a circle with devoted and courageous souls revealed lifetimes of wisdom about the spiritual path.
 
@@ -1143,8 +1133,6 @@ Everything circles, cycles, and dances around a center of being. Each of us has 
 *“God is an infinite circle, whose circumference is nowhere, and whose center is everywhere.” \- NIcholas of Cusa*
 
 As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness.
-
-#### 
 
 #### ![][image14]
 
@@ -1163,8 +1151,6 @@ One of the biggest challenges we face is our tendency to fixate on our current p
 Each time we come back to a problem of the same sort, we are given the opportunity to refine our approach and move through the issue faster and with heightened sensitivity. Every challenge offers us the possibility of a more centered response and a better outcome. The goal is to return to our center from whence we can move faithfully, consciously, and wisely back into the world of creative engagement.
 
 *“There is no linear evolution; there is only circumambulation of the self.  Uniform development exists, at most, only at the beginning; later everything points towards the center.” \- Carl Jung*
-
-### 
 
 ### ![][image16]
 
@@ -1192,9 +1178,7 @@ Life is a journey. If we can learn to live from the dictates of our inner wisdom
 
 ### The Power of Focus: A Mountain Biking Lesson
 
-"Where your attention goes, energy flows." — James Redfield
-
----
+*"Where your attention goes, energy flows." — James Redfield*
 
 As an undergraduate psychology student, I spent many weekends mountain biking down treacherous single tracks. The narrow paths, lined with roots, rocks, and other obstacles, required skill and focus to navigate. One day, I suffered a major end-over-end wipe-out, flying over the handlebars and landing hard on the unforgiving terrain. It wasn't the first or last time I'd crash. And it didn’t end in an emergency room scenario—it was just enough to get my attention.
 
@@ -1210,17 +1194,15 @@ This experience taught me an invaluable lesson that extends far beyond the realm
 
 ### Choosing an Authentic Path
 
-"To thine own self be true." — William Shakespeare
+*"To thine own self be true." — William Shakespeare*
 
 Life is full of pivotal decisions that significantly influence our trajectory. Often, we find ourselves at crossroads, choosing between a prescribed path and an authentic one revealed through deep introspection or powerful experiences. Recognizing and acting upon these moments is crucial for personal growth.
 
 Despite our best-laid plans, life often takes unforeseen directions. We intuitively sense the underlying cycles and patterns that shape our experiences, even when life seems chaotic and random. This awareness allows us to navigate unpredictability with a sense of wonder and discovery.
 
-### 
-
 ### The Vision of the Crystalline Mandala
 
-"A mandala symbolizes a microcosm of the universe from the human perspective." — Carl Jung
+*"A mandala symbolizes a microcosm of the universe from the human perspective." — Carl Jung*
 
 Carl Jung once said that if you see a mandala in a dream, it is a vision of your own soul. In a powerful dream, I experienced a mandala that reflected my earlier experiences with Native American teachings and the sacred medicine wheel within a massive crystalline structure. This dream offered a vision of the collective soul, elegantly merging ancient models of reality with modern developmental theories.
 
@@ -1265,7 +1247,7 @@ As Sarah steps onto the rooftop gathering, a spark of excitement ignites within 
 
 Taking a sip of her drink, Sarah feels the soothing elixir relax her, making her feel more at home and connected in the moment (initiating Water). A close friend shares a powerful story with her, and she loses herself in the emotions. As she listens to her friend's heartfelt story, she becomes deeply empathetic, compassionately embracing the feelings rising from her friend as she goes deeper into her experience (immersive Water). The connection she feels with her friends brings a sense of emotional clarity, and some deep realizations hit her. Something within her has shifted, and the party takes on a different level of significance. She knows she will never forget this moment of closeness and connection. The boundaries between herself and her friend dissolve into this one shared experience. In this shared experience, an emotional epiphany arises, a profound understanding that forever alters the fabric of their connection (transcendent Water).
 
-"We are like islands in the sea, separate on the surface but connected in the deep." – William James
+*"We are like islands in the sea, separate on the surface but connected in the deep." – William James*
 
 Strolling through the garden together, Sarah feels the solid earth beneath her feet, smells the sweet scent of the flowers blooming, and hears the soothing sound of water cascading from a fountain nestled in the center of the garden (subtle Earth). A patch of blooming flowers evokes memories of childhood days spent gardening with her grandmother, a touchstone of continuity and belonging. Pausing to touch the flower, she grounds herself in the moment (immersive Earth). The beauty surrounding her and the closeness with her friend become a poignant reminder of the precious gift of life and the interconnectedness of all beings (transcendent Earth).
 
@@ -1273,7 +1255,7 @@ Strolling through the garden together, Sarah feels the solid earth beneath her f
 
 As the conversation turns to philosophical topics, Sarah's mind engages with new ideas (subtle Air). She participates in thoughtful discussions, exploring different perspectives (immersive Air). The exchange leaves her with a sense of mental clarity and enlightenment (transcendent Air).
 
-"The mind is everything. What you think you become." – Buddha
+*"The mind is everything. What you think you become." – Buddha*
 
 Throughout the evening, Sarah occasionally gazes at the city skyline, feeling a subtle sense of connection to the universe (subtle Aether). The vastness of the sky deepens her awareness of her place in the cosmos (immersive Aether). By the end of the night, she feels a profound unity with the world around her (transcendent Aether). Although Sarah may not be consciously aware of these shifting influences, maintaining a balanced awareness—the "sweet water" center of consciousness—allows her to navigate these dynamic forces with grace and authenticity. Too much awareness might make her appear inauthentic, while too little could leave her vulnerable to the elements' influences. The key lies in cultivating just enough consciousness to harmonize with these ever-present forces.
 
@@ -1290,15 +1272,7 @@ These questions aim to encourage continuous reflection and dialogue, emphasizing
 
 # ![][image17]
 
-# 
-
-# 
-
-# 
-
 # ![][image18]
-
-# 
 
 # Chapter 3: Understanding the Trinity and the Toroidal Flow
 
