@@ -1145,7 +1145,7 @@ So let this journey begin\! Embrace the sacred metamorphosis that awaits…
 
 ### ![][image8]
 
-"The only way to make sense out of change is to plunge into it, move with it, and join the dance." \- Alan Watts
+*"The only way to make sense out of change is to plunge into it, move with it, and join the dance." \- Alan Watts*
 
 ### The Dance of Transformation
 
