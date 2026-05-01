@@ -8,47 +8,9 @@ Hamden, Connecticut
 
 Dedication
 #elementalalchemy #elementalalchemybook 
-To the loves of my life: my family \- Andrea, Sophie, and Augusten \- whose soulful presence, encouragement, and support sustained me through the writing of this book. I couldn’t ask for a more soulful tribe\! To Stephen Clayton, for your wise counsel and endless support. And to all who aspire to live authentic lives in devotion to humanity and our amazing planet.
+For Andrea, Augusten, and Sophie—
 
-Acknowledgments
-
-The author would like to express gratitude to the following individuals for their contributions and support during the creation of this book:
-
-To Andrea: For being a soulful partner and unwavering support from the start of this journey. I love you beyond words and am deeply grateful for your commitment to our life together. Sharing this journey with you is a profound blessing.
-
-To Sophie: For being my grounding mirror, inspiration, and infinite reason to take a coffee break. You are a great teacher for me. From the moment I met you, before you were born, you were and are an amazing force of nature who challenges me to be authentic and aware. I'm a lucky dad.
-
-To Augusten: For being there through every phase of this work—from camping out with me during the full year of writing this book, waking me at 3:30 am to make sure I kept it going. Your presence through this process means the world to me. You are a wise and kind soul—a constant source of inspiration. This is a super-power\!
-
-To Luata Bray: My first true teacher in the shamanic and healing arts. Over 33 years ago, you set me on a path that I've endeavored to honor. Your guidance introduced me to a way of being that is simple yet magical, serious yet playful, heart-centered yet logical, and mysterious yet experiential. It took years to realize that my work over the past 30 years reflects your teachings. I hope this work honors your example of open-heartedness, professionalism, and soulful connection to earthly living and being.
-
-To Stephen Clayton, cherished guide, chosen family, and steadfast ally. You are one of my dearest friends, a supporter, wise counsel, and soulful collaborator who has added to the wisdom shared here and ceaselessly encouraged me to bring this work into the world.In your words, “It's so simple—it's all about one little word: L.O.V.E.”
-
-To my parents: I wish you were here to read it. Your handiwork and example is all over these pages in ways too fine and intricate to detail.
-
-To my sisters: Kristen, for her tremendous support in getting this work online and out in the world. I am so lucky to have such a talented and soulful sister. And Karen, for being an awesome big sister and always believing in me, even if she may still be baffled by this work\!
-
-To Kimberly Daugherty: For being my go-to wise woman advisor and an infinite source of wisdom, innovation, and metaphysical connections for more than 35 years. Your friendship means the world to me.
-
-To Jason Ruder: For being a devoted brother in exploration, inspiration, and experiences, and my Soullab bench-mate. You exemplify the value and potential of this work for a more soulful life. You are an inspiration.
-
-To Marie Louise "Weezie" DeLaVergne: For being a source of grace, wonder, and support. Our early conversations helped get me here.
-
-To Doug Forman: For being a trusted ally and source of support and inspiration for the development of this work as an applied practice. Here's to the future.
-
-To Andrea Fagan: For exemplifying the spirit of this work, of true friendship, being an intrepid explorer willing to challenge yourself and grow,  and a strong supporter of me and this work. I’m so grateful to you and our friendship.
-
-To Anthony Cassatt for 
-
-To Joseph Crown: For being a model of this work and a ceaselessly patient source of wisdom and support.
-
-To Nathan Kane: For being a trusted friend, supporter, and inspiration for this work. Wise and caring souls like you are the reason I have faith in the future.
-
-To Dr. C Michael Smith: For walking the walk, for Crow’s Nest, and for applying your wisdom to shamanic study and archetypal realities. Your role as a bridge between worlds is sacred, and you embody it powerfully, generously, and gracefully. I’m grateful for your guidance and direction.
-
-Special thanks: To Debra Harkins for assisting with the first draft and her continued encouragement;. To my amazing clients: I am deeply grateful for entrusting me with your sacred journeys. To all my colleagues: Thank you for sharing your journeys and processes.
-
-This book is for all those who are on the journey of exploring the depth, mystery, and absolute perfection of this soulful Earth walk as humans being human, striving to be good medicine for the world.
+my center, my home.
 
 Disclaimer: 
 
@@ -4375,7 +4337,9 @@ Throughout this journey of Elemental Alchemy, we've explored the depths of our b
 
 ### ![][image79]
 
-### 
+### Acknowledgments
+
+Gratitude to Luata, Stephen Clayton, Nathan Kane, Weezie DeLavergne, Jason Ruder, Michael C. Smith, and Debra Harkins for their presence, encouragement, and the ways they helped shape this work.
 
 ### Appendix:
 
