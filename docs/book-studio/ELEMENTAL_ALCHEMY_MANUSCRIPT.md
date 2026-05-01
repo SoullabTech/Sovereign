@@ -1907,6 +1907,8 @@ All awareness seems to return to this circle around the flames, smoke, smells, a
 
 *"The fire is the main comfort of the camp, whether in summer or winter." – Henry David Thoreau*
 
+Where some elements reveal themselves in layers, fire lives as movement—shifting through states and phases that ignite, intensify, and transform our becoming.
+
 ### The Three States of Personal Transformation Through Fire
 
 As we journey through the alchemy of personal transformation, the element of fire guides us through a powerful three-state spiral process of activating, amplifying, and adapting.
