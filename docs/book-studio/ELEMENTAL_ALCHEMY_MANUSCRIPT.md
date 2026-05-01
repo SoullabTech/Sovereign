@@ -1022,7 +1022,7 @@ Just as the elements arise from prime sources and manifest into form through a d
 
 ### The Integral Path: Reunion and Redemption
 
-"The privilege of a lifetime is to become who you truly are." – Carl Jung
+*"The privilege of a lifetime is to become who you truly are." – Carl Jung*
 
 Ultimately, by embracing the five elemental spheres and their corresponding three-phase developments, you'll experience a profound transformation—delving deeper into your true self while expanding your conscious awareness. This journey will enhance every aspect of your consciousness, aligning you with the natural rhythms of life.
 
@@ -1030,7 +1030,7 @@ You'll emerge from this soul-directed mystery school as a radiant embodiment of 
 
 ### The Road Ahead: The Alchemy of Re-Enchantment
 
-"Every one of us is a mystic. We may or may not realize it, we may not even like it. But whether we know it or not, whether we accept it or not, mystical experience is always there inviting us on a journey of ultimate discovery. We have been given the gift of life in this perplexing world to become who we ultimately are: creatures of boundless love, caring, compassion, and wisdom. Existence is a summons to the eternal journey of the sage—the sage we all are if only we could see." – Wayne Teasdale
+*"Every one of us is a mystic. We may or may not realize it, we may not even like it. But whether we know it or not, whether we accept it or not, mystical experience is always there inviting us on a journey of ultimate discovery. We have been given the gift of life in this perplexing world to become who we ultimately are: creatures of boundless love, caring, compassion, and wisdom. Existence is a summons to the eternal journey of the sage—the sage we all are if only we could see." – Wayne Teasdale*
 
 To guide you on this alchemical journey, the book is divided into three main sections:
 
