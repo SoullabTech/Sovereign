@@ -1581,8 +1581,6 @@ With an open heart and mind, embrace the adventure of transformation, trusting t
 
 #  Chapter 4: The Elements of Wholeness
 
-### 
-
 *"We try to realize the essential unity of the world with the conscious soul of man; we learn to perceive the unity held together by the one Eternal Spirit, whose power creates the earth, the sky, and the stars, and at the same time irradiates our mind." – Rabindranath Tagore*
 
 We begin to notice that the elements have never been separate from us. They have been moving through every thought, every emotion, every breath—shaping how we perceive, respond, and become.
