@@ -3071,22 +3071,6 @@ Each of us has our own way of making sense of the world and engaging it. Earth w
 
 *"The function of education is to teach one to think intensively and to think critically. Intelligence plus character—that is the goal of true education." — Martin Luther King Jr.*
 
-### The Embodiment of Earth
-
-My son, Augusten, and I recently went on our annual father/son trip in early March. We planned to spend the week fly fishing and do a bit of downhill skiing at a local ski mountain. Unfortunately, things didn't work out the way we had hoped. It was too early to fly fish and too late in the season to ski.
-
-If I had been more connected with the earth element wisdom before leaving, I would have done more research and planned better. I tend to have big visions, plenty of passion, and ideas, but I don't always devote enough time to the details that make ideas come alive. So, I continually learn earth lessons teaching me to be more organized, plan ahead, and think of as many of the variables through. I've been out of my element here but have learned to love and respect earth sensibilities.
-
-So many details were missed on this trip. Although fly fishing was available further south, we were too far north. Fly fishing didn't start until May here. It would've been possible to ski but the conditions a week earlier made skiing too icy. Also, most of the trails normally hikeable were covered in ice and snow. It wasn't quite the outdoor adventure we had dreamed about.
-
-Luckily, Augusten is easygoing and flexible, so we both adapted to what was available. We stayed a few nights in a small inn with a pool table and dartboard. He was a ten-year-old boy who never played pool before, so we spent many hours circling the pool table as I taught him all of the rules and techniques of playing pool.
-
-*"Adaptability is about the powerful difference between adapting to cope and adapting to win." — Max McKeown*
-
-Life doesn't always work out the way we plan, even when we do plan. Earth intelligence invites us to be practical and sensible so we can make the most out of the world as it is. Without this sense of presence, what can be will never come to be.
-
-This is the wisdom of the earth element. Techniques, strategies, and a series of ongoing lessons and learning are all part of the process. He was thrilled to be hanging out, talking, and playing pool. We were able to take a few local hikes and even walked on a frozen lake, but it was our ability to adapt to the environment as it is which made all the difference.
-
 ### The Manifesting Power of Earth
 
 The principles of earth wisdom are rightly personified as feminine since it provides the healing ground for all of the fragmented and disparate aspects of our lives to come together, out of chaos, into order. Much like the personification of the great mother goddess, Isis, worshiped in Egypt from 3,000 BC to the 2nd century AD, as the archetypal feminine mother, healer, and vessel of wholeness, compassion, and redemption.
