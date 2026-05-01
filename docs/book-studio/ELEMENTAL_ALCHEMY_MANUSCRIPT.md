@@ -890,7 +890,7 @@ To walk your path at its highest potential and deepest truth, it is essential to
 
 #### 
 
-#### A Prayer for Collective Illumination
+### A Prayer for Collective Illumination
 
 *May we all awaken to the profound realization of our boundless existence, transcending mere personhood to embody the elemental essences birthing creation. Let us recognize ourselves as stewards of consciousness, clad in cosmic flesh, dancing within the tapestry of mortal starhood.*
 
@@ -1077,7 +1077,7 @@ Welcome to an immersive journey into the alchemical process of the elements. Ima
 
 Fire, Water, Earth, and Air are all around us; we are surrounded by them and become them as a way to reconnect ourselves with our imaginal cells after years of separation and a lack of trust. Experiencing the core five elements will open our eyes and remind us of our ancestral roots, our derived essence—who we truly are and the enigmatic answers to the mystery of Aether.
 
-### Overview
+#### Overview
 
 #### Fire Up Imaginal Cells: Imagine the Elements of Experience
 
