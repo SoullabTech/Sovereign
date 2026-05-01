@@ -1058,7 +1058,7 @@ We begin by exploring the four classical elements—fire, water, earth, and air.
 * Experiential practices to open your awareness to the infinite possibilities and interconnectedness that aether represents.  
 * Wisdom teachings on sacred geometries, symbols, and mystic maps that can orient you towards the aetheric source from which your authentic self eternally springs.
 
-#### Part 2 \- Living Spherically
+#### Part IV \- Living Spherically
 
 *"The universe is not outside of you. Look inside yourself; everything that you want you already are." – Rumi*
 
