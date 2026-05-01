@@ -1681,47 +1681,47 @@ Embrace the unity of opposites. This key reminds us that duality exists for the 
 
 *“What we forget we can also remember.” \- John Perkins*
 
-### With its system of 64 hexagrams, each composed of broken (yin) and unbroken (yang) lines, The I Ching (the Book of Changes, originally named Yi Jing) embodies the essence of Chinese philosophy and has functioned as a system of divination for millennia. The 64 hexagrams reflect the mutability of the natural world and cycles of change, guiding us to synchronize our endeavors with the eternal flux of being and renewal.
+With its system of 64 hexagrams, each composed of broken (yin) and unbroken (yang) lines, The I Ching (the Book of Changes, originally named Yi Jing) embodies the essence of Chinese philosophy and has functioned as a system of divination for millennia. The 64 hexagrams reflect the mutability of the natural world and cycles of change, guiding us to synchronize our endeavors with the eternal flux of being and renewal.
 
-### Modern science reveals a related pattern in the very constituents of life itself. The molecules of life, the building blocks of all existence—DNA—form an alphabet of instruction composed of 64 codons. These combinations of three nucleotides comprise the text of the genome that contains instructions for producing proteins, which perform all the biological functions of a living being.
+Modern science reveals a related pattern in the very constituents of life itself. The molecules of life, the building blocks of all existence—DNA—form an alphabet of instruction composed of 64 codons. These combinations of three nucleotides comprise the text of the genome that contains instructions for producing proteins, which perform all the biological functions of a living being.
 
-### The Universal Pattern
+#### The Universal Pattern
 
-### Terence McKenna eloquently articulated this profound connection:
+Terence McKenna eloquently articulated this profound connection:
 
-### *"The DNA codons are based on a system of 64, exactly like the I Ching. My belief is that someone, some group of people thousands of years ago, looked into the human organism and saw an ebb and flow, an energy field in a constant state of flux. They asked themselves how many elements are necessary to describe this energy field, and the answer was 64\. Out of 64 subtypes of time, you can create everything. So, the I Ching is not just a book of Chinese mysticism; it's a book of molecular dynamics that sees through biology to the physics that allowed biology to come into existence."*
+*"The DNA codons are based on a system of 64, exactly like the I Ching. My belief is that someone, some group of people thousands of years ago, looked into the human organism and saw an ebb and flow, an energy field in a constant state of flux. They asked themselves how many elements are necessary to describe this energy field, and the answer was 64\. Out of 64 subtypes of time, you can create everything. So, the I Ching is not just a book of Chinese mysticism; it's a book of molecular dynamics that sees through biology to the physics that allowed biology to come into existence."*
 
-### This association between the I Ching and the 64 codons underscores that the wisdom of ancient sages and the insights of modern science describe an underlying organizing principle in the Universe—the same cosmic mandala that governs heaven, earth, and humanity. The I Ching and DNA, both defined by 64, illustrate the matrix of order and disorder, stability and transformation that characterizes our human condition.
+This association between the I Ching and the 64 codons underscores that the wisdom of ancient sages and the insights of modern science describe an underlying organizing principle in the Universe—the same cosmic mandala that governs heaven, earth, and humanity. The I Ching and DNA, both defined by 64, illustrate the matrix of order and disorder, stability and transformation that characterizes our human condition.
 
-### Nature's Wisdom in the I Ching
+#### Nature's Wisdom in the I Ching
 
-### The true wisdom of the I Ching lies in its deep adherence to the rhythms and cycles of nature. By studying these patterns, we enhance our ability to flow with the ebb and flow of energy, aligning ourselves with the natural world. This alignment fosters a deeper connection with the environment, promoting harmony and balance in our lives.
+The true wisdom of the I Ching lies in its deep adherence to the rhythms and cycles of nature. By studying these patterns, we enhance our ability to flow with the ebb and flow of energy, aligning ourselves with the natural world. This alignment fosters a deeper connection with the environment, promoting harmony and balance in our lives.
 
-### Incorporating the I Ching's principles into daily practice involves:
+Incorporating the I Ching's principles into daily practice involves:
 
-1. ### Observation: Paying close attention to the natural world and its cycles.
+1. Observation: Paying close attention to the natural world and its cycles.
 
-2. ### Reflection: Contemplating the hexagrams and their meanings in the context of personal experiences.
+2. Reflection: Contemplating the hexagrams and their meanings in the context of personal experiences.
 
-3. ### Action: Making decisions based on the patterns you discover and the insights derived from the I Ching.
+3. Action: Making decisions based on the patterns you discover and the insights derived from the I Ching.
 
-### By linking the genetic code to the I Ching’s 64 hexagrams, we glimpse the limitless and novel ways in which things can be put together. It’s an exercise in seeing the rules of the universe rather than relying on random chance. This promotes a holistic, naturalist philosophy of life, encouraging us to live in awareness of the intricate web of life that envelops the universe.
+By linking the genetic code to the I Ching’s 64 hexagrams, we glimpse the limitless and novel ways in which things can be put together. It’s an exercise in seeing the rules of the universe rather than relying on random chance. This promotes a holistic, naturalist philosophy of life, encouraging us to live in awareness of the intricate web of life that envelops the universe.
 
-### Embracing the I Ching
+#### Embracing the I Ching
 
-### Engaging in a dialogue with the I Ching allows us to participate in a venerable tradition that connects us with the primal flux of dreamtime, where we have our origins—and where, if we are fortunate, we can still return. Pulling these threads together and finding their connections puts us in touch with our own origins. It guides us toward a future where our perspective aligns more closely with the wisdom of the Dreamtime, one in which humanity and the natural world coexist in harmony.
+Engaging in a dialogue with the I Ching allows us to participate in a venerable tradition that connects us with the primal flux of dreamtime, where we have our origins—and where, if we are fortunate, we can still return. Pulling these threads together and finding their connections puts us in touch with our own origins. It guides us toward a future where our perspective aligns more closely with the wisdom of the Dreamtime, one in which humanity and the natural world coexist in harmony.
 
-### Augmented with the teachings of the I Ching, we can lead lives of balance and resilience, forging deep, elemental connections to the forces shaping our world. The focused beauty of the I Ching clarifies the challenges of life, especially in times when much seems rushed and complicated. It embodies the ancient wisdom that what we seek lies within.  
+Augmented with the teachings of the I Ching, we can lead lives of balance and resilience, forging deep, elemental connections to the forces shaping our world. The focused beauty of the I Ching clarifies the challenges of life, especially in times when much seems rushed and complicated. It embodies the ancient wisdom that what we seek lies within.  
 
 ### From Duality to Integration: The Four Brain Functions and the Elements
 
 #### Uniting the Four Brain Model with the Elements
 
-### In our search for personal growth, we find ways to become more connected to ourselves and our world. The progress toward self-actualization and greater consciousness is enhanced when various models of understanding are brought together. The interplay between the four brain model and the four elements enriches our self-awareness and unleashes our creativity. This correlation reflects both the neurological binding of brain experience and the elemental dance of the sacred and the profane, the transcendent and the ordinary.
+In our search for personal growth, we find ways to become more connected to ourselves and our world. The progress toward self-actualization and greater consciousness is enhanced when various models of understanding are brought together. The interplay between the four brain model and the four elements enriches our self-awareness and unleashes our creativity. This correlation reflects both the neurological binding of brain experience and the elemental dance of the sacred and the profane, the transcendent and the ordinary.
 
-### In the above illustration, I’ve added the elements to Herrmann’s Whole Brain Model. It is striking how closely Herrmann’s phenomenological account of the four aspects of the brain correlates with the nature of the four elements. This seems to indicate that much of what we’ve understood as the four elements corresponds to our brain's functioning.
+In the above illustration, I’ve added the elements to Herrmann’s Whole Brain Model. It is striking how closely Herrmann’s phenomenological account of the four aspects of the brain correlates with the nature of the four elements. This seems to indicate that much of what we’ve understood as the four elements corresponds to our brain's functioning.
 
-### This integration provides a potent platform for human development, shamanic consciousness, and higher states of consciousness, harmonizing our inner and outer worlds for optimal growth.
+This integration provides a potent platform for human development, shamanic consciousness, and higher states of consciousness, harmonizing our inner and outer worlds for optimal growth.
 
 #### The Four Brain Model
 
