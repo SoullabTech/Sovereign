@@ -765,7 +765,7 @@ This overview highlights the unique qualities and contributions of each elementa
 
 ### The Chapters of Elemental Life
 
-"As long as we do not know our essence, we shall continue to fail to know the essence of the world." — Rudolf Steiner
+*"As long as we do not know our essence, we shall continue to fail to know the essence of the world." — Rudolf Steiner*
 
 In the chapters ahead, we will explore the nature of the elements as they relate to our own being. We will witness the elements in their wholeness and dual nature, discovering opportunities for growth through life's polarities. We'll explore the elements as processes and states of being, guiding you to reconnect with your deepest self. Nature thrives on diversity, and when we embrace our unique and aware selves, nature rises to guide us.
 
@@ -996,7 +996,7 @@ We begin by exploring the four classical elements—fire, water, earth, and air.
 
 #### Part 3 \- The Quintessence
 
-"We are made of star stuff. We are a way for the cosmos to know itself." – Carl Sagan
+*"We are made of star stuff. We are a way for the cosmos to know itself." – Carl Sagan*
 
 ##### This chapter will include:
 
@@ -1686,7 +1686,7 @@ The purpose of this book is to make the chaos of our everyday existence visible,
 
 ### Conscious Awareness: The One, The Two, The Three, and The Four
 
-"One dot, that's on or off, defines what is and what is not. Two dots- a pair of eyes, a voice, a touch, complete surprise. Three dots- a trinity, a way to map the universe. Four dots- is what will make a square, a bed to build on, it's all there." — Peter Gabriel
+*"One dot, that's on or off, defines what is and what is not. Two dots- a pair of eyes, a voice, a touch, complete surprise. Three dots- a trinity, a way to map the universe. Four dots- is what will make a square, a bed to build on, it's all there." — Peter Gabriel*
 
 #### The One: Singular Awareness
 
@@ -1751,7 +1751,7 @@ In the dance between these two states, we find the rhythm of our conscious exper
 
 ### The Dance Between Stability and Change
 
-"The measure of intelligence is the ability to change." — Albert Einstein
+*"The measure of intelligence is the ability to change." — Albert Einstein*
 
 ---
 
@@ -3378,7 +3378,7 @@ I walked the intellectual, academic route, reading hundreds of books on alchemy,
 
 The beautiful irony, or perhaps the wise design, of it all is that my desire to share this truth with others, rather than simply keep it to myself, has been the major catalyst for me to fully live, transform, and come to understand what I “knew” on one level more than 20 years ago but hadn’t fully lived. This journey has highlighted the difference between sharing knowledge and information versus sharing wisdom. Only by experiencing the processes firsthand was I able to speak from true experience. As a process, this separates the projected visions of fire with the enlightened sharing of air.
 
-"Knowing yourself is the beginning of all wisdom." – Aristotle
+*"Knowing yourself is the beginning of all wisdom." – Aristotle*
 
 We are all invited into the air realm to refine our relations and communications by developing greater authenticity, integrity, and wisdom that comes from walking the walk. Our personal understanding is refined when we face the hurdles of turning our inner knowing into shareable insights.
 
@@ -3775,7 +3775,7 @@ Aether is as much a qualitative, felt experience as it is a state of being. It's
 
 ### Breaking Free from Attachments
 
-"It must be obvious that there is a contradiction in wanting to be perfectly secure in a universe whose very nature is momentariness and fluidity." — Alan Watts
+*"It must be obvious that there is a contradiction in wanting to be perfectly secure in a universe whose very nature is momentariness and fluidity." — Alan Watts*
 
 This is our aetheric body—the focal point of all mystical traditions, a gateway to expanded perception and liberation from the conditioned limitations of life. It connects us to something far beyond ourselves: timeless, mindless, and brimming with exuberance. When we sit still, quiet, and breathe in and out of the moment we inhabit, we may find ourselves expanding into a field of presence that transcends time and thought.
 
@@ -4045,7 +4045,7 @@ Many of us have chosen a path of service, helping, guiding, healing, and nurturi
 
 #### Section 17: Changes
 
-"To improve is to change; to be perfect is to change often." — Winston Churchill
+*"To improve is to change; to be perfect is to change often." — Winston Churchill*
 
 To be human is to move through cycles. Morning turns to midday, midday leads to dusk, dusk gives way to nightfall, and nighttime finds its way back to the light of day. Winter melts into the vibrancy of springtime, springtime leads the way to the height of summer, summer releases itself into the calmness and inwardness of fall, and fall returns to the dormancy of winter.
 
@@ -4057,7 +4057,7 @@ We undergo emotional ebbs and flows, experiencing pleasure and pain, happiness a
 
 Being alive means to be in these cycles. Each round, whether it lasts a second or a century, contributes to the vivid pattern of one’s life. Awareness of the cycles and acceptance of them enable us to live in accordance with the rhythms of nature, in balance with the ways of the world. Just as the Earth rounds from one season to the next on its never-ending orbit, we too round through a lifetime of self-expansion and contraction, returning to the same place—only to begin again.
 
-"All the world's a stage, and all the men and women merely players." – William Shakespeare
+*"All the world's a stage, and all the men and women merely players." – William Shakespeare*
 
 ---
 
