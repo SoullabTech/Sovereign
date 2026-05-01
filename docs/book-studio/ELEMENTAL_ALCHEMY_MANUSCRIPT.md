@@ -443,43 +443,6 @@ As the Buddha says, *"If you knew how perfect it all is you'd throw your head up
 
 Take what resonates, leave what doesn't, and may your path be illuminated with joy, laughter, and profound insights. 
 
-
-### A Message to My Colleagues in the Healing Arts:
-
-To those dedicated to the healing arts, holistic wellness, bodywork, energy healing, acupuncture, depth psychology, metaphysics, shamanic arts, acupuncture, qigong, chi kung, divination, psychic work, and the many other powerful practices beyond the confines of Western medicine- This book is written with this world in mind:
-
-The work of healing and wellness demands openness to mystery, awe, and humility, honoring the true order of Nature’s harmony and balance within reality's ultimate complexity. It is far too intricate for any one of us to fully comprehend, yet simple enough to engage with in daily life if approached correctly. This true work requires a child’s sense of awe, wonderment, and openness to embrace and experience what is just beyond our comprehension but within our reach to apply and learn from. The art of soulful, natural living revives the ancient wisdom found in nature, a task for each generation—an endless exploration of learning, discovery, and growth.
-
-Our ancestors practiced these arts for eons, even through dark periods of ignorance and bias. They were the ones communities turned to for help, regardless of the culture or challenges. I am proud to be part of such a deeply  gifted, talented, and committed community.
-
-Our practices have faced lifetimes of challenges, including misunderstanding and skepticism. They have often been seen as unconventional, quaint, or even controversial. However, despite these challenges, we have persevered and found ways to bridge gaps, fostering mutual support and collaboration across our diverse yet interconnected fields.
-
-Western medicine excels in addressing pathology but often falls short in leading the field of wellness. It has always benefited from the insights and results of traditional, indigenous, and metaphysical arts, drawing from their foundations both by choice and in response to patient demand. There is a science and art that extends beyond the molecular, into the energetic field that informs our material existence, from cells to our senses. Here, the imaginal, energetic, emotional, sensory, and phenomenological aspects of reality interplay with the biological world, allowing true health, wellness, and development to unfold in life's fullness.
-
-Many of you have worked tirelessly to integrate this work into mainstream treatments, therapies, and interventions. You have made a significant impact in a culture that resisted this work with fervent opposition, overcoming the odds by making your work accessible in clinics, schools, and insurable practices. The exponential growth in this field underscores its importance and the need in our society, which battles against massive change, depersonalization, and a growing sense of isolation. How we think, intuit, feel, and sense profoundly matters. These elements shape the world we live in and engage with.
-
-This book does not presume agreement on metaphysics or methods. One of the most endearing features of pioneers in the healing arts is our independent-mindedness, determination, and discerning nature. We are a collective of true individuals, often considered heretics—a proud minority seeking what is novel, needed, not known, and nuanced. We dare to look beyond what is offered and accepted into what is yet to be.
-
-This work honors you and all who courageously embrace the ways nature offers to carry this work forward. Growing numbers seek your support and guidance. This is my contribution to this endeavor. The capacity to psychonavigate, deepening your own process while supporting the alchemical path of your clients and loved ones, is needed to bring together the wisdom and practices from diverse fields of interconnected and interdependent healing.
-
-Healers and helpers discover essential remedies, develop sought-after techniques, and serve as the creative visionaries of our culture. They have made the modern healing arts movement indispensable, driving constant innovation and expanding our understanding of who we are and what we are capable of—almost anything if we open ourselves to possibilities and potentials.
-
-This book honors your path, our ancestors who paved the way, and future generations entering the healing arts with a true calling to be good medicine for the world. My hope is that this serves as a guide for you all to continue exploring the human condition holistically. No one element of being is superior or isolated from any other. All is one interdependent field of adaptive being.
-
-Our culture needs its medicine wheel, mandala, and methods to see how it all comes together—to navigate the path ahead, from the most complex elements of reality to the simplest and most obvious. On a higher level, we comprehend the totality and interconnectedness. On a deep, fundamental, elemental, and organic level, we get it. However, our conscious minds need guidance, direction, and a simplified way to bring it all together. Bringing the known and unknown into a collaborative field of new ways to be in service is the goal.
-
-I offer this homage to the elements as a way to honor a journey that has given so much and to connect us across our differences. We all find ourselves in our elements in certain areas while feeling out of our element in others. By looking to each other, we can create a circle of wholeness for ourselves and our communities.
-
-One crucial lesson this work has taught me is that no matter how many modalities I learn, practice, and develop, there is always more to discover and refine. We owe it to our clients, communities, and culture to keep advancing this work, augmenting it, and collaborating with each other rather than competing.
-
-I see the elements and the precepts of elemental alchemy as a way to unite us around our differences because nature thrives on diversity, deviations, and uniqueness. Nature doesn’t just hold space for our individuality; it is the very source and instigator of our heresies, differences, and innovations, providing the arena where we are united.
-
-May this book honor those who came before us, all of us taking up the mantle and the medicine, and those to come who will integrate the past, present, and future into an adaptive path forward for all.
-
-In the spirit of the elements,
-
-Kelly
-
 # ![][image3]
 
 # 
@@ -4280,6 +4243,42 @@ Celebrate this elemental ecstasy, for it is the song of your soul's liberation\!
 Throughout this journey of Elemental Alchemy, we've explored the depths of our being, the interconnectedness of all existence, and the transformative power within us. As we stand at the threshold of new beginnings, remember this: You are all. All is you. And the solution is always love.
 
 ### ![][image79]
+
+### A Message to My Colleagues in the Healing Arts
+
+To those dedicated to the healing arts, holistic wellness, bodywork, energy healing, acupuncture, depth psychology, metaphysics, shamanic arts, acupuncture, qigong, chi kung, divination, psychic work, and the many other powerful practices beyond the confines of Western medicine- This book is written with this world in mind:
+
+The work of healing and wellness demands openness to mystery, awe, and humility, honoring the true order of Nature’s harmony and balance within reality's ultimate complexity. It is far too intricate for any one of us to fully comprehend, yet simple enough to engage with in daily life if approached correctly. This true work requires a child’s sense of awe, wonderment, and openness to embrace and experience what is just beyond our comprehension but within our reach to apply and learn from. The art of soulful, natural living revives the ancient wisdom found in nature, a task for each generation—an endless exploration of learning, discovery, and growth.
+
+Our ancestors practiced these arts for eons, even through dark periods of ignorance and bias. They were the ones communities turned to for help, regardless of the culture or challenges. I am proud to be part of such a deeply  gifted, talented, and committed community.
+
+Our practices have faced lifetimes of challenges, including misunderstanding and skepticism. They have often been seen as unconventional, quaint, or even controversial. However, despite these challenges, we have persevered and found ways to bridge gaps, fostering mutual support and collaboration across our diverse yet interconnected fields.
+
+Western medicine excels in addressing pathology but often falls short in leading the field of wellness. It has always benefited from the insights and results of traditional, indigenous, and metaphysical arts, drawing from their foundations both by choice and in response to patient demand. There is a science and art that extends beyond the molecular, into the energetic field that informs our material existence, from cells to our senses. Here, the imaginal, energetic, emotional, sensory, and phenomenological aspects of reality interplay with the biological world, allowing true health, wellness, and development to unfold in life's fullness.
+
+Many of you have worked tirelessly to integrate this work into mainstream treatments, therapies, and interventions. You have made a significant impact in a culture that resisted this work with fervent opposition, overcoming the odds by making your work accessible in clinics, schools, and insurable practices. The exponential growth in this field underscores its importance and the need in our society, which battles against massive change, depersonalization, and a growing sense of isolation. How we think, intuit, feel, and sense profoundly matters. These elements shape the world we live in and engage with.
+
+This book does not presume agreement on metaphysics or methods. One of the most endearing features of pioneers in the healing arts is our independent-mindedness, determination, and discerning nature. We are a collective of true individuals, often considered heretics—a proud minority seeking what is novel, needed, not known, and nuanced. We dare to look beyond what is offered and accepted into what is yet to be.
+
+This work honors you and all who courageously embrace the ways nature offers to carry this work forward. Growing numbers seek your support and guidance. This is my contribution to this endeavor. The capacity to psychonavigate, deepening your own process while supporting the alchemical path of your clients and loved ones, is needed to bring together the wisdom and practices from diverse fields of interconnected and interdependent healing.
+
+Healers and helpers discover essential remedies, develop sought-after techniques, and serve as the creative visionaries of our culture. They have made the modern healing arts movement indispensable, driving constant innovation and expanding our understanding of who we are and what we are capable of—almost anything if we open ourselves to possibilities and potentials.
+
+This book honors your path, our ancestors who paved the way, and future generations entering the healing arts with a true calling to be good medicine for the world. My hope is that this serves as a guide for you all to continue exploring the human condition holistically. No one element of being is superior or isolated from any other. All is one interdependent field of adaptive being.
+
+Our culture needs its medicine wheel, mandala, and methods to see how it all comes together—to navigate the path ahead, from the most complex elements of reality to the simplest and most obvious. On a higher level, we comprehend the totality and interconnectedness. On a deep, fundamental, elemental, and organic level, we get it. However, our conscious minds need guidance, direction, and a simplified way to bring it all together. Bringing the known and unknown into a collaborative field of new ways to be in service is the goal.
+
+I offer this homage to the elements as a way to honor a journey that has given so much and to connect us across our differences. We all find ourselves in our elements in certain areas while feeling out of our element in others. By looking to each other, we can create a circle of wholeness for ourselves and our communities.
+
+One crucial lesson this work has taught me is that no matter how many modalities I learn, practice, and develop, there is always more to discover and refine. We owe it to our clients, communities, and culture to keep advancing this work, augmenting it, and collaborating with each other rather than competing.
+
+I see the elements and the precepts of elemental alchemy as a way to unite us around our differences because nature thrives on diversity, deviations, and uniqueness. Nature doesn’t just hold space for our individuality; it is the very source and instigator of our heresies, differences, and innovations, providing the arena where we are united.
+
+May this book honor those who came before us, all of us taking up the mantle and the medicine, and those to come who will integrate the past, present, and future into an adaptive path forward for all.
+
+In the spirit of the elements,
+
+Kelly
 
 ### Acknowledgments
 
