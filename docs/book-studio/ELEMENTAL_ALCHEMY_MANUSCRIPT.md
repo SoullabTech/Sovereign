@@ -560,6 +560,8 @@ Beyond recognizing this ‘field intelligence,’ we rightfully call upon names 
 
 It is in the relativity of our place in the mystery of reality that we stay in resonance with the life wishing to flow from us while safeguarding us from the isolating and debilitating hazards of hubris, hatred, inhumanity, and more. This balance keeps us open to the wisdom and guidance of the elemental forces that shape our existence, reminding us of the holiness, the holon, of our interconnectedness with all that is.
 
+And our world increasingly calls us to this remembering.
+
 #### Reclaiming Our True Nature
 
 In an increasingly impersonal, algorithmic world, we often find ourselves manipulated and controlled by external forces, losing touch with our true nature. Expediency, exploitation, and superficial connections dominate, creating a disconnection from what is most human and soulful.
