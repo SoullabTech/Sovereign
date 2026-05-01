@@ -2971,35 +2971,35 @@ None of us can be all things at all times yet earth continues to push us to stri
 
 ### The Soul in the Earth Process
 
-### The mother of diversity embodies renewable love, endlessly creative and producing new life from her ultimate bond with herself, becoming love without limits. This love that binds the mother of diversity is the soul of the earth, encompassing everything from pebbles and fallen trees to the hippopotamus, the ant, the stork, and human beings.
+The mother of diversity embodies renewable love, endlessly creative and producing new life from her ultimate bond with herself, becoming love without limits. This love that binds the mother of diversity is the soul of the earth, encompassing everything from pebbles and fallen trees to the hippopotamus, the ant, the stork, and human beings.
 
 #### The Divine Love of Mother Earth
 
-### Mother Earth’s creative process is not just sensible, organized, resourceful, and practical. It is a labor of love—a manifestation of divine care she extends to her children. Every new leaf, flower bud, and life on Earth is an expression of her abundant nurturing as the source of all that is.
+Mother Earth’s creative process is not just sensible, organized, resourceful, and practical. It is a labor of love—a manifestation of divine care she extends to her children. Every new leaf, flower bud, and life on Earth is an expression of her abundant nurturing as the source of all that is.
 
 #### The Womb of Creation
 
-### The womb of Mother Earth is the deepest valley that receives the energy of all the elements, transforming it daily in the cosmic process—the portal that gives origin to life. This event is not limited to physical birth but includes the unique way souls are formed. The earth’s womb is the canvas of her thoughts, with soil teeming with life, influenced by the desires of the Sun and Moon, combined with the heat of the mountains and the air. This ethereal substance transforms inorganic matter, turning every fruit and animal into something perfect.
+The womb of Mother Earth is the deepest valley that receives the energy of all the elements, transforming it daily in the cosmic process—the portal that gives origin to life. This event is not limited to physical birth but includes the unique way souls are formed. The earth’s womb is the canvas of her thoughts, with soil teeming with life, influenced by the desires of the Sun and Moon, combined with the heat of the mountains and the air. This ethereal substance transforms inorganic matter, turning every fruit and animal into something perfect.
 
 #### Unconditional Positive Regard
 
-### Mother Earth's love is unconditional. She does not discriminate between the stone and the stork, the insect and the man. She loves all created beings equally, honoring each as valuable. This divine love sustains and nourishes all existence, making the earth fruitful and providing a place where the soul of every being can grow.
+Mother Earth's love is unconditional. She does not discriminate between the stone and the stork, the insect and the man. She loves all created beings equally, honoring each as valuable. This divine love sustains and nourishes all existence, making the earth fruitful and providing a place where the soul of every being can grow.
 
 #### The Fertile Ground of Being
 
-### The soul of the earth lives in the soil. This fertile, life-giving matter is more than just soil; it is life itself, with an intimate community of forms embodying the mind of the earth. This delicate, dynamic, interdependent web of relationships is vital for the whole, with each being playing its part.
+The soul of the earth lives in the soil. This fertile, life-giving matter is more than just soil; it is life itself, with an intimate community of forms embodying the mind of the earth. This delicate, dynamic, interdependent web of relationships is vital for the whole, with each being playing its part.
 
 #### Embodying the Soul of Earth
 
-### To honor Mother Earth is to honor and manifest her creative spirit. It means moving in harmony with her rhythms, loving and serving others, being present, and creating with integrity. By aligning with her abundance, we can manifest a world that reflects our highest aspirations.
+To honor Mother Earth is to honor and manifest her creative spirit. It means moving in harmony with her rhythms, loving and serving others, being present, and creating with integrity. By aligning with her abundance, we can manifest a world that reflects our highest aspirations.
 
 #### The Sensibilities of Creation
 
-### She continually demonstrates the principles of balance, harmony, and respect for Life on all levels. She invites us to cultivate our sensibilities, teaching us to pay attention, act, and create from a place of love and relationship, rather than disregard for our bodies, other species, and the world around us.
+She continually demonstrates the principles of balance, harmony, and respect for Life on all levels. She invites us to cultivate our sensibilities, teaching us to pay attention, act, and create from a place of love and relationship, rather than disregard for our bodies, other species, and the world around us.
 
 #### Conclusion
 
-### Celebrating the 'womb of maternal earth' honors the wisdom and love that bring all things into being, the soul of the earth, the sacred love of life in all creatures, and the fertile ground that makes our creative lives possible. We grow in the sensibilities of creation and are called to be stewards of her fruits, offering nourishment to all.
+Celebrating the 'womb of maternal earth' honors the wisdom and love that bring all things into being, the soul of the earth, the sacred love of life in all creatures, and the fertile ground that makes our creative lives possible. We grow in the sensibilities of creation and are called to be stewards of her fruits, offering nourishment to all.
 
 ### The Creative Force of Earth
 
