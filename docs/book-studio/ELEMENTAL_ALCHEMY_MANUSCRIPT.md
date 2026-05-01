@@ -805,11 +805,51 @@ To walk your path at its highest potential and deepest truth, it is essential to
 
 ### A Prayer for Collective Illumination
 
-*May we all awaken to the profound realization of our boundless existence, transcending mere personhood to embody the elemental essences birthing creation. Let us recognize ourselves as stewards of consciousness, clad in cosmic flesh, dancing within the tapestry of mortal starhood.*
+*In this place —  
+built of love and creative life force —  
+may we experience, in the depth of our being,  
+what is here now and only here now.*
 
-*Grant us the wisdom to embrace our role as conduits for elemental mysteries, embarking on a lifelong journey of self-discovery and sacredization. May every moment be an initiation into the timeless wisdom pulsating at the heart of reality.*
+*The fire that brings energy and vitality  
+to our imagining souls.*
 
-*May our collective awakening unfold as an endless stream of insight, illuminating the interconnectedness between imagination and manifestation. As cosmic choreographers, may we shape reality through our elemental dance, inviting all beings to join in the eternal reimagining of existence. And may this lead to a more sustainable, equitable, peaceful, and soulful world. \- Kelly Nezat*
+*The water that moves as oceans, rivers, and streams —  
+a living current of soulful flow.*
+
+*The earth that offers ground, stability,  
+creativity, and growth.*
+
+*The air that breathes life into our being,  
+giving us voice —  
+the capacity to speak from the heart  
+and connect across distance.*
+
+*And the aether that unites and animates all  
+into living presence.*
+
+*May we remember who we are —  
+as part of something far greater than we can imagine,  
+and the source of all imagining.*
+
+*Where the elements meet and move  
+through us —  
+as us.*
+
+*May we walk this earth  
+as children of this soil who belong here.*
+
+*May the work we do feel like play.*
+
+*May our love for ourselves and all others  
+widen as it deepens.*
+
+*May every moment of our lives be an initiation —  
+into what reminds us that all we are,  
+and all we can ever be,  
+is already here  
+in the field of our remembering.*
+
+*— Kelly Nezat*
 
 *"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
 
