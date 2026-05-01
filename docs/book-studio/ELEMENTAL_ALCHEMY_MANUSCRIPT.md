@@ -940,7 +940,7 @@ This crystal embodies an intricate web of connections, interactions, and inflect
 
 In the rich tapestry of relationships, spiritual connections, emotional engagements, and physical interactions, the alchemy of the elements thrives. This encompasses everything we know, experience, believe, feel, sense, think, and intuit. All of this unfolds within the four facets of awareness corresponding to fire, water, earth, and air with the fifth element, Aether at its center.
 
-### Practical Application
+#### Practical Application
 
 To bring this metaphor to life, consider how you might use this crystal of self-knowledge in your daily life. Visualize yourself holding this crystal during moments of reflection or meditation. As you gaze into its facets, let it reveal diverse insights about your current state of being. Are you feeling balanced, or is there an area that needs attention? Use this crystal as a tool to focus your awareness and guide your actions.
 
