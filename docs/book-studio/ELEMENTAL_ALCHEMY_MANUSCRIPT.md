@@ -2304,11 +2304,9 @@ Rise, blaze, and transform in the sacred dance of the elements. Dance with fire.
 
 # Chapter 6: Water- The Depths of Emotional Intelligence and Transformation
 
-### 
+*"All the gods, all the heavens, all the hells, are within us." — Joseph Campbell*
 
-#### *"All the gods, all the heavens, all the hells, are within us." — Joseph Campbell*
-
-#### *![][image34]*
+![][image34]
 
 Diving into one's inner experience is the gateway to fully engaging with the world. By embracing this simple yet profound truth, you unlock the potential to journey far and achieve great things. When you understand and align with your inner self, you are better equipped to navigate and impact the outer world with authenticity and purpose.
 
@@ -2316,15 +2314,13 @@ What you feel carries great power to create your reality. At the heart of your e
 
 ![][image35]
 
-Honoring the Element of Water
+### Honoring the Element of Water
 
 To surf the waves of our fluid emotional intelligence and swim deep within the oceanic field of the inner psyche, we must become fluent in the capricious element of our water state of consciousness. To better comprehend the nature of the subconscious beliefs, values, and motives that influence our thoughts, emotions, and behaviors, we must be psychologically self-aware as well as tapped into the deeper source of collective wisdom, the unconscious mind. Water is also where we connect with all that is happening beneath the surface of our consciousness in the realm of daydreams and sleeping dreams. All personal change gestates in water.
 
 The alchemy of water is the process of cleansing ourselves of emotional impurities. Water is associated with love, compassion, and rebirth. As such, it holds the potential for all forms of redemption through selfless acts and deep emotional connections.
 
 This is to honor this divine gift by immersing ourselves in the wisdom of water, allowing its currents to cleanse and renew us, and flowing through life with empathy and grace. In doing so, we align ourselves with the fluid dance of creation, embodying the love and compassion that water so generously offers. May all we manifest be guided by this wisdom, and may we experience love flowing back to us in all our relationships, in all we create, and in all we do. Let our love be a way forward on the earth, passion for the air, and vision for our fire.
-
-### 
 
 ### The Three States of Personal Transformation Through Water
 
@@ -2335,8 +2331,6 @@ This is to honor this divine gift by immersing ourselves in the wisdom of water,
 #### State 1: Being (Nurturing Inner Awareness)
 
 The initial state of the water journey, Being, centers on feeling nurtured and true to one’s Self as well as the realization that our outer experiences are reflections of our inner world. As we navigate through life's challenges and interactions, we often project our beliefs, values, and meanings onto others. This state invites us to recognize that these projections stem from within us, shaped by our reactions and inner narratives. The water element calls us to see the reflection in ourselves, to release these projections, and to experience life more objectively. By turning our gaze inward, we begin to embrace and heal the aspects of ourselves that were once projected outward, moving from an external locus of control to an internal one.
-
-#### 
 
 #### ![][image37]
 
@@ -2652,17 +2646,6 @@ The Water chapter invites you to intellectually and communicatively explore your
 The Water chapter asks you to unify your emotional and spiritual worlds. It sees the interconnectedness of everything in the flow of water and asks you to view all that exists from both an inner and outer perspective. You are encouraged to move into balance and harmony with the entirety of who you are, balancing your emotions—which are a significant part of your spiritual mission—with your connection to the greater whole.
 
 # ![][image39]
-
-#### 
-
-#### 
-
-####
-
-
-#### 
-
-# 
 
 # ![][image40]
 
