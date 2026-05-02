@@ -82,6 +82,17 @@ async function main(): Promise<void> {
     console.warn('    [warn] no <nav id="TOC"> found in pandoc output');
   }
 
+  // Mark truly-italic-only paragraphs with class="epigraph". Only paragraphs
+  // whose entire content is a single <em> qualify — paragraphs with plain
+  // prose plus one inline italic citation are left untouched.
+  const epigraphRe = /<p>\s*<em>([\s\S]+?)<\/em>\s*<\/p>/g;
+  let epigraphCount = 0;
+  bodyHtml = bodyHtml.replace(epigraphRe, (_match, inner) => {
+    epigraphCount++;
+    return `<p class="epigraph"><em>${inner}</em></p>`;
+  });
+  console.log(`    epigraph paragraphs marked: ${epigraphCount}`);
+
   console.log('[2/4] Wrapping with print CSS...');
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
 

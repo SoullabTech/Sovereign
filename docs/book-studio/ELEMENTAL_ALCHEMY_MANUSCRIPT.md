@@ -263,7 +263,7 @@ Elemental alchemy unfolds as a path of perpetual renewal, as Schopenhauer procla
 
 By harmonizing with the cyclical rhythms of transformation, you step into the sacred dance of the elements. Each phase reveals deeper levels of soul-awakening, inviting you to embody your full essence.
 
- *"Every physical element, every living creature, every natural force is but a material expression of a spiritual reality." \- Manly P. Hall* 
+ *"Every physical element, every living creature, every natural force is but a material expression of a spiritual reality." \- Manly P. Hall* 
 
 #### Empowering Self-Discovery
 

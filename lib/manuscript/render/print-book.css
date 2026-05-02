@@ -133,10 +133,15 @@ h4 {
 
 /* ============================================================
  * EPIGRAPHS
- * Italic-only paragraph treatment (markdown `*"…" — Author*` line)
+ * Italic-only paragraphs (markdown `*"…" — Author*` lines).
+ *
+ * The `.epigraph` class is added at render time by render-book-print.ts
+ * post-processing — only paragraphs whose entire content is a single
+ * `<em>` get the class. Mixed paragraphs (plain prose with one inline
+ * italic citation) do NOT get this treatment.
  * ============================================================ */
 
-p:has(> em:only-child) {
+p.epigraph {
   font-style: italic;
   font-size: 10.5pt;
   text-align: center;
@@ -145,7 +150,7 @@ p:has(> em:only-child) {
   line-height: 1.35;
 }
 
-p > em:only-child {
+p.epigraph > em {
   font-style: italic;
 }
 
