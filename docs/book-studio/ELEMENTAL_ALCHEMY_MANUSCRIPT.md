@@ -1776,8 +1776,6 @@ Having understood the elements and their role in achieving wholeness, it's time 
 
 ![][image27]{.image-opener}
 
-![][image28]{.image-anchor}
-
 ### The Sacred Flame
 
 In the primordial dawn before time's first breath, a brilliant spark leapt forth—the primal flame of pure potential blazing through the cosmic womb. This was the holy fire of creation itself, the living source lighting the way for all possibility to emanate into being.
