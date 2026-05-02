@@ -42,16 +42,45 @@ async function main(): Promise<void> {
     fs.mkdirSync(OUT_DIR, { recursive: true });
   }
 
-  console.log('[1/4] Converting markdown → HTML via pandoc...');
-  const bodyHtml = execSync(
-    `pandoc "${MD_PATH}" -t html5 --no-highlight`,
+  console.log('[1/4] Converting markdown → HTML via pandoc (with TOC)...');
+  // Use --standalone so pandoc emits the <nav id="TOC"> block; --toc requires it.
+  // Then we extract just the body content and post-process the TOC position.
+  const fullHtml = execSync(
+    `pandoc "${MD_PATH}" -t html5 --standalone --syntax-highlighting=none --toc --toc-depth=3 -V toc-title=""`,
     {
-      maxBuffer: 256 * 1024 * 1024, // 256MB — manuscript has base64 images
+      maxBuffer: 256 * 1024 * 1024,
       encoding: 'utf-8',
     },
   );
 
+  // Extract body content from the standalone document
+  const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*)<\/body>/);
+  if (!bodyMatch) {
+    throw new Error('Could not extract <body> from pandoc standalone output');
+  }
+  let bodyHtml = bodyMatch[1];
   console.log(`    body length: ${(bodyHtml.length / 1024 / 1024).toFixed(2)} MB`);
+
+  // Post-process: move pandoc's auto-generated <nav id="TOC"> from top of body
+  // to right after the manual `# Table of Contents` heading position so TOC
+  // lands in the natural front-matter slot rather than before the title page.
+  const navRe = /<nav id="TOC"[\s\S]*?<\/nav>/;
+  const navMatch = bodyHtml.match(navRe);
+  if (navMatch) {
+    const navHtml = navMatch[0];
+    bodyHtml = bodyHtml.replace(navHtml, '');
+    const headingRe = /<h1 id="table-of-contents"[^>]*>[\s\S]*?<\/h1>/;
+    const headingMatch = bodyHtml.match(headingRe);
+    if (headingMatch) {
+      bodyHtml = bodyHtml.replace(headingMatch[0], `${headingMatch[0]}\n${navHtml}`);
+      console.log('    TOC nav moved to manual heading position');
+    } else {
+      console.warn('    [warn] could not find Table of Contents heading; TOC remains at top');
+      bodyHtml = `${navHtml}\n${bodyHtml}`;
+    }
+  } else {
+    console.warn('    [warn] no <nav id="TOC"> found in pandoc output');
+  }
 
   console.log('[2/4] Wrapping with print CSS...');
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
