@@ -1089,7 +1089,7 @@ So let this journey begin\! Embrace the sacred metamorphosis that awaits…
 
 # Chapter 2: The Torus of Change
 
-### ![][image8]
+![][image8]{.image-opener}
 
 *"The only way to make sense out of change is to plunge into it, move with it, and join the dance." \- Alan Watts*
 
@@ -1099,7 +1099,7 @@ Change is a constant, permeating every aspect of our universe. From the cosmic c
 
 In this chapter, we will explore the dynamics of change through the model of the torus and the  lens of three phases of conscious process: intention, immersion, and integration of an individual element. These align with the metaphysical dynamics in many traditions including the three gunas of Hinduism, the movements of astrology’s cardinal, fixed, and mutable phases, the alchemical principles of sulfur, salt, and mercury, and the holon model of toroidal flows found in ancient and modern metaphysics. By understanding the interplay of these fundamental archetypal dynamics of change, we gain invaluable tools for consciously engaging with the dance of our own transformation.
 
-### ![][image9]
+![][image9]{.image-anchor}
 
 ### The Nature of Change
 
@@ -1113,7 +1113,7 @@ Awareness acts as a catalyst, initiating transformative forces that far transcen
 
 What we seek is a disciplined attunement to the elements that inform and guide our souls—a mindful presence that allows us to heed the demands and richness of each present moment. There is a profound moral imperative for us to tend carefully to how we tend to our lives. For we are constantly undergoing multiple, simultaneous processes of growth and transformation, some more apparent than others. The goal is to cultivate a dedicated practice of awareness and attention, developing an intuitive, feeling relationship with our senses, thoughts, and the unfolding guidance of life itself. By nurturing a trusting intimacy with these elements of consciousness, we can live with greater integrity and responsiveness to life's ceaseless invitation for our awake participation.
 
-### ![][image10]
+![][image10]{.image-anchor}
 
 ### Rediscovering Ancient Wisdom
 
@@ -1129,7 +1129,7 @@ It's time to return to a primal state of awareness and clarity. To tune into the
 
 We've been waiting for this, the moment of return. There has never been a more critical time to turn inward, for what we've been seeking has been inside us all along.
 
-### ![][image11]
+![][image11]{.image-system}
 
 ### The Torus of Being and Becoming
 
@@ -1143,13 +1143,13 @@ Our ancestors had expressions and symbols acknowledging humanity's interconnecte
 
 All of nature is woven into the same matrix of life, seeking homeostasis and heterostasis, familiarity and novelty in a perpetual dance. Patterns repeat, recycle, and refine in infinite variations within finite manifest forms. In our everyday lives, we act out nature's ceaseless adaptation and evolution.
 
-### ![][image12]
+![][image12]{.image-anchor}
 
 ### Change Occurs Within the Same Geometry of Life
 
 We can see the dynamics of spiraling growth in the interplay of elemental forces:
 
-#### ![][image13]
+![][image13]{.image-system}
 
 #### The Circle: A Model of Wholeness
 
@@ -1165,7 +1165,7 @@ Everything circles, cycles, and dances around a center of being. Each of us has 
 
 As imaginal beings, we find simple symbols helpful in managing the complexity of our experience. We rely on symbolic representations of our world to ground us and guide our decisions. We also thrive when we identify parallels to our own experience in nature. The circle depicts the path of adapting to the elements of our reality. The circle is always whole, so symbolically, it is the model for our inherent wholeness.
 
-#### ![][image14]
+![][image14]{.image-system}
 
 #### The Spiral: A Model of Change
 
@@ -1173,9 +1173,9 @@ As imaginal beings, we find simple symbols helpful in managing the complexity of
 
 As we undergo personal and collective development, we cycle through the four elemental states of awareness repeatedly while reaching new levels with them. The spiral is a metaphor for how we form new, more refined relationships with the elements.
 
-![][image15]
-
 The ideal trajectory for personal development and collective evolution is a shape found everywhere in nature—the phi spiral, associated with the Fibonacci sequence or golden mean. It can also be traced in our emotional movement ever closer to our soul center, the intangible fifth element of aether. As life on Earth goes through constant cycles and spirals, so do we.
+
+![][image15]{.image-system}
 
 One of the biggest challenges we face is our tendency to fixate on our current perspective. This limits our view of the world. Fortunately, by simply shifting our perspective, we can open up a field of additional options and liberate ourselves.
 
@@ -1183,7 +1183,7 @@ Each time we come back to a problem of the same sort, we are given the opportuni
 
 *“There is no linear evolution; there is only circumambulation of the self.  Uniform development exists, at most, only at the beginning; later everything points towards the center.” \- Carl Jung*
 
-### ![][image16]
+![][image16]{.image-anchor}
 
 ### Using Sacred Geometry to Find Order and Create Meaning Amid the Chaos of Living
 
@@ -1301,9 +1301,7 @@ Throughout the evening, Sarah occasionally gazes at the city skyline, feeling a 
 
 These questions aim to encourage continuous reflection and dialogue, emphasizing the importance of engagement and exchange in your transformative journey.
 
-# ![][image17]
-
-# ![][image18]
+![][image18]{.image-end}
 
 # Chapter 3: Understanding the Trinity and the Toroidal Flow
 
