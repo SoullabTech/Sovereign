@@ -1085,7 +1085,7 @@ With an initial understanding of the elements in place, it's time to explore the
 
 So let this journey begin\! Embrace the sacred metamorphosis that awaits…
 
-![][image7]
+![][image7]{.image-end}
 
 # Chapter 2: The Torus of Change
 
@@ -1408,7 +1408,7 @@ Seeking Guidance: Mentors, coaches, or therapists can significantly enhance our 
 The spiral offers us a way of seeing our personal process in a more compassionate and patient light. As we recognize the cyclical, refining nature of our journey, we can embrace challenges as opportunities for deeper transformation and wisdom. In this way, we continually refine our understanding and draw closer to our true selves. We embody the wisdom and resilience that comes with navigating the spiral path.
 
 
-### ![][image19]
+![][image19]{.image-anchor}
 
 ### The Toroidal Flow: Cycles of Transformation
 
@@ -1488,11 +1488,9 @@ With an open heart and mind, embrace the adventure of transformation, trusting t
 
 *"The spiral is a spiritualized circle. In the spiral form, the circle, uncoiled, unwound, has ceased to be vicious; it has been set free." – Vladimir Nabokov*
 
-# ![][image20]
 
 
-
-![][image21]
+![][image21]{.image-end}
 
 #  Chapter 4: The Elements of Wholeness
 
@@ -1524,7 +1522,7 @@ Whenever I consider the ultimate path of the elements, I recall a story shared b
 
 By recognizing and balancing the elements within ourselves, we can move forward with a holistic perspective, creating a life that is rich, dynamic, and profoundly fulfilling.
 
-![][image22]
+![][image22]{.image-anchor}
 
 ### The Story of the Four Yogis
 
@@ -1574,7 +1572,7 @@ Our beliefs about reality can predetermine how we engage it. If someone believes
 
 Embrace the unity of opposites. This key reminds us that duality exists for the purpose of growth and transcendence. By embracing and integrating both the light and the dark aspects within ourselves, we can achieve wholeness and balance.
 
-### ![][image23]
+![][image23]{.image-anchor}
 
 ### The I Ching and Nature's Wisdom
 
@@ -1642,7 +1640,7 @@ Many spiritual and philosophical traditions define these four critical dimension
 * Water: Emotional, feelings, inner meaning, depth, inner truth, psyche, subconscious (Right Hemisphere).  
 * Earth: Sensible, sensory-oriented, organized, process-oriented, systems design, creative, grounded, rooted, resourceful (Left Hemisphere).
 
-![][image24]
+![][image24]{.image-anchor}
 
 ### Uniting the Four Brain Model with the Four Elements
 
@@ -1770,17 +1768,15 @@ In the context of our brain functions and elemental associations, the fifth elem
 
 Having understood the elements and their role in achieving wholeness, it's time to delve deeper into their individual qualities. The chapters ahead offer an exploration of the five elements, each one unfolding its unique attributes and insights. Through this journey, you will discover new ways of seeing your life and deepen your understanding of how these elements animate our existence, inform our consciousness, and offer us the tools we need to experience the world and express ourselves. This is an ode to the elements that shape our soulful living, inviting us to explore their wisdom and embrace their transformative power.
 
-# ![][image25]
-
-# ![][image26]
+![][image26]{.image-end}
 
 # Chapter 5: Fire 
 
 *"It is the eternal flame of becoming that animates each kaleidoscopic universe sparkling to life like fireflies winking in the infinite night." – Rumi*
 
-![][image27]
+![][image27]{.image-opener}
 
-### ![][image28]
+![][image28]{.image-anchor}
 
 ### The Sacred Flame
 
@@ -1825,7 +1821,7 @@ Where some elements reveal themselves in layers, fire lives as movement—shifti
 As we journey through the alchemy of personal transformation, the element of fire guides us through a powerful three-state spiral process of activating, amplifying, and adapting.
 
 
-![][image29]
+![][image29]{.image-system}
 
 #### State 1: Activating (Self-Awareness)
 
@@ -1833,7 +1829,7 @@ First, fire ignites our imagination, revealing an inner spark that inspires us t
 
 *"The beginning of love is the will to let those we love be perfectly themselves." – Thomas Merton*
 
-#### ![][image30]
+![][image30]{.image-system}
 
 #### State 2: Amplifying (Self-In-World Awareness)
 
@@ -1842,7 +1838,7 @@ Fire builds and intensifies our sense of energy and animation as we step into th
 *"We are here to awaken from our illusion of separateness." – Thich Nhat Hanh*
 
 
-#### ![][image31]
+![][image31]{.image-system}
 
 #### State 3: Actualizing (Transcendent Self-Awareness)
 
@@ -1861,7 +1857,7 @@ The three phases of Spiritual Fire mirror this journey but emphasize the cyclica
 ### Three Phases of Spiritual Fire
 
 
-![][image29]
+![][image29]{.image-anchor}
 
 #### Initiating Phase: Purpose \- An Invitation to Shine Brightly
 
@@ -1877,7 +1873,7 @@ This dance between inner and outer worlds is a reflection of the fire realm, whe
 
 Reflect on how your inner fire has danced with the world. Recall moments of inspiration and enchantment. Remember how it feels to radiate your spiritual presence and receive loving kindness in return. This dance of coherence and resonance is the essence of living a soulful, authentic life.
 
-#### ![][image30]
+![][image30]{.image-anchor}
 
 #### Immersion Phase: Play \- Discovering Your Potential Through Play
 
@@ -1891,7 +1887,7 @@ The Dream of the Ancestors
 
 Our being is shaped by our ancestors, providing us with the potential to adapt and transform. Embracing the creative process opens new possibilities for self-expression and growth. We are all in a state of awakening, moving from one dream to another. Recognizing life’s illusions is part of this process, allowing us to awaken to deeper truths. By playing with these visions and possibilities, we discover our potential and learn to navigate life with joy and curiosity.
 
-#### ![][image31]
+![][image31]{.image-anchor}
 
 #### Integrative Phase: Practice \- Transforming Will into Wisdom
 
@@ -2281,21 +2277,19 @@ May the fire always light your way, illuminating your footsteps, burning brightl
 
 Rise, blaze, and transform in the sacred dance of the elements. Dance with fire. Let the transfiguration into becoming unfold in the luminous light.
 
-![][image32]
-
-# ![][image33]
+![][image33]{.image-end}
 
 # Chapter 6: Water- The Depths of Emotional Intelligence and Transformation
 
 *"All the gods, all the heavens, all the hells, are within us." — Joseph Campbell*
 
-![][image34]
+![][image34]{.image-opener}
 
 Diving into one's inner experience opens the gateway to fully engaging with the world. Through this descent, we begin to sense the deeper currents shaping our lives. When you understand and align with your inner self, you are better equipped to navigate and impact the outer world with authenticity and purpose.
 
 What you feel carries great power to create your reality. At the heart of your emotions are source feelings that reveal inner knowing, certainty, conviction, and authenticity. The true gift is to be conscious of this inner power to emotionally connect and animate our lives.
 
-![][image35]
+![][image35]{.image-anchor}
 
 ### Honoring the Element of Water
 
@@ -2311,13 +2305,13 @@ Where fire ignites and rises, water draws us downward—into the depths where fe
 
 *"In one drop of water are found all the secrets of all the oceans." — Kahlil Gibran*
 
-#### ![][image36]
+![][image36]{.image-system}
 
 #### State 1: Being (Nurturing Inner Awareness)
 
 The initial state of the water journey, Being, centers on feeling nurtured and true to one’s Self as well as the realization that our outer experiences are reflections of our inner world. As we navigate through life's challenges and interactions, we often project our beliefs, values, and meanings onto others. This state invites us to recognize that these projections stem from within us, shaped by our reactions and inner narratives. The water element calls us to see the reflection in ourselves, to release these projections, and to experience life more objectively. By turning our gaze inward, we begin to embrace and heal the aspects of ourselves that were once projected outward, moving from an external locus of control to an internal one.
 
-#### ![][image37]
+![][image37]{.image-system}
 
 #### State 2: Balancing (Inner Coherence)
 
@@ -2325,7 +2319,7 @@ The second state in the water journey helps us harmonize and stabilize our emoti
 
 Water encourages us to express ourselves authentically through emotional experiences, fostering resonance between our inner self and the outer world. In alchemy, it is where the old king drowns so the new king can be reborn. This moment represents a spark of new light investing itself in the new being. This is akin, in many religions and spiritual practices, to being reborn after making a major sacrifice. This is the state of harmonizing and stabilizing emotions for healing and inner equilibrium.
 
-#### ![][image38]
+![][image38]{.image-system}
 
 #### State 3: Becoming (Transcendent Being)
 
@@ -2630,9 +2624,7 @@ The Water chapter invites you to intellectually and communicatively explore your
 
 The Water chapter asks you to unify your emotional and spiritual worlds. It sees the interconnectedness of everything in the flow of water and asks you to view all that exists from both an inner and outer perspective. You are encouraged to move into balance and harmony with the entirety of who you are, balancing your emotions—which are a significant part of your spiritual mission—with your connection to the greater whole.
 
-# ![][image39]
-
-# ![][image40]
+![][image40]{.image-end}
 
 # Chapter 7: Earth
 
@@ -2640,9 +2632,9 @@ The Water chapter asks you to unify your emotional and spiritual worlds. It sees
 
 *"The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent." \- Terrence McKenna*
 
-### ![][image41]
+![][image41]{.image-opener}
 
-### ![][image42]
+![][image42]{.image-anchor}
 
 ### The Ground of Being
 
@@ -2652,7 +2644,7 @@ The earth element is the bedrock and soil of manifested reality; all material th
 
 The alchemy of earth is coagulatio, the human transformational principle of producing structure and stability. It helps us understand our sacred medicine—the special gift and way of perceiving things that is ours to give to the world—and generate cohesive teams, resources, and plans to share or utilize it with intentionality.
 
-### ![][image43]
+![][image43]{.image-anchor}
 
 ### The Dynamics of the Elemental Earth Journey
 
@@ -2666,7 +2658,7 @@ Where water carries us into depth, earth brings us into form—into the structur
 
 There are three primary modes of earth living, each reflecting a sense of purpose, development, and refinement in the journey of personal transformation. These states are: Creating, Conceiving, and Clarifying.
 
-#### ![][image44]
+![][image44]{.image-system}
 
 #### State 1: Cultivating - The Conception (Mission, Purpose, Service to Community)
 
@@ -2686,7 +2678,7 @@ The first phase in the alchemical earth journey is to identify our purpose and e
 
 By embracing our mission and finding ways to serve, we align with our true purpose and contribute to the greater good. This is the essence of the alchemical earth journey: to transform ourselves and, in turn, transform the world around us.
 
-#### ![][image45]
+![][image45]{.image-system}
 
 #### State 2: Crystallizing: The Convergence- (Resources, Plans, and Outer Development)
 
@@ -2696,7 +2688,7 @@ Reflect on times when you had to develop an idea into a working plan of action, 
 
 *"The best preparation for tomorrow is doing your best today." — H. Jackson Brown Jr.*
 
-#### ![][image46]
+![][image46]{.image-system}
 
 #### State 3: Creating- The Creation (Methods and Medicine, Well-Formed Plan of Action, Code of Conduct, Ethics, and Service)
 
@@ -3030,16 +3022,14 @@ The Earth chapter invites Air types to explore the mental and social aspects of 
 
 With our foundations firmly in place, we ascend to the realm of Air. Chapter 8 focuses on the intellect and mind, offering insights on how to achieve mental clarity and foster innovative thinking.
 
-### ![][image41]
-
-![][image47]
+![][image47]{.image-end}
 
 # Chapter 8: Air
 
 
 *"Thoughts become perception, perception becomes reality. Alter your thoughts, alter your reality." – William James*
 
-![][image48]
+![][image48]{.image-opener}
 
 As the first rays of dawn light filtered through my study window, I sat in my favorite chair, wrapped in a blanket, sipping a steaming cup of tea. My mind wandered to a recent conversation with Massoud, a dear friend in Iran. Despite the thousands of miles separating us, technology allowed us to share our deepest thoughts and explore life's mysteries together. This connection exemplifies the transformative power of the air element—our ability to relate, share, and progress through intelligent, shared communication.
 
@@ -3047,7 +3037,7 @@ Air represents the realm of innovation and novel insights. Our thoughts, visions
 
 *"The wind of change carries seeds of new ideas, which bloom into the flowers of wisdom when nurtured with curiosity and openness." — Unknown*
 
-![][image49]
+![][image49]{.image-anchor}
 
 ### The Sublime Nature of Air
 
@@ -3083,7 +3073,7 @@ Let our lives be a song to the earth, love to the water, and a form of prayer to
 
 As Charles Tart aptly put it, *"In the end we can never be given knowledge by others; we can only be stimulated. We must develop our own knowledge"​​.* This highlights the importance of our journey with the Element of Air, as it not only encourages intellectual development but also stimulates self-discovery and personal enlightenment.
 
-## ![][image50]
+![][image50]{.image-anchor}
 
 ### The Elemental Journey of Air
 
@@ -3092,13 +3082,13 @@ The Elemental Journey of Air is a tale of intellectual evolution, where the tran
 *"Imagination is more important than knowledge. For knowledge is limited, whereas imagination embraces the entire world, stimulating progress, giving birth to evolution." — Albert Einstein*
 
 
-#### ![][image51]
+![][image51]{.image-anchor}
 
 Where earth gives form and structure, air opens the space between—carrying thought, language, and connection across the unseen currents that link us to one another.
 
 ### The Three States of Personal Transformation Through Air
 
-#### ![][image52]
+![][image52]{.image-system}
 
 #### State 1: Directing \- The Duet (Initiating and Guiding Thoughts, Ideas, and Awareness)
 
@@ -3125,7 +3115,7 @@ Overview: In the Directing state, we initiate and guide our thoughts and ideas t
   *“Language is a most incredible presence; it makes the world personal. It draws out the hidden affinities in that which is strange and alien.”- John O’Donohue*
 
 
-#### ![][image53]
+![][image53]{.image-system}
 
 ####  State 2: Developing \- The Drum Circle (Expanding and Advancing Perspectives)
 
@@ -3537,10 +3527,8 @@ The Air chapter is a celebration of intellectual curiosity, communication, and r
 
 The Air chapter encourages us to unite our mental and spiritual realms. It suggests allowing the expansive nature of air to foster freedom in both mind and spirit, creating a holistic view of our inner and outer worlds. By finding harmony and balance within these realms, we achieve intellectual clarity that enhances our spiritual journey and connection to the world.
 
-![][image55]
 
-
-![][image56]
+![][image56]{.image-end}
 
 # Chapter 9: Aether- The Infinite Self at Play
 
@@ -3557,7 +3545,7 @@ I had always dreamed of being there, and I was so close to arriving only moments
 As I transitioned back into the darkness of early, pre-dawn morning in our small home, synchronistically preparing to write this chapter on the Aether element, I feel a sense of mystery and awe guiding my process. The energy and experience of the dream were perfect preparation to write about such an elusive and elevated element.
 
 
-### ![][image57]
+![][image57]{.image-anchor}
 
 ### Aether: The Unifying Essence
 
@@ -3567,13 +3555,13 @@ Aether, in the context of personal and elemental alchemy, represents the quintes
 
 Imagine Aether as the space that allows a symphony to arise from silence, the canvas on which the colors of life are painted. It is the breath between words, the pause between actions, where possibility and existence dance.
 
-### ![][image58]
+![][image58]{.image-anchor}
 
 ### The Elemental Interplay: Aether as the Weaver
 
 Aether does not exist in isolation but rather as an integral part of the elemental tapestry, weaving together the four traditional elements and enlivening their dance within our reality. It is through Aether's pervasive presence that the elements find their expression, their interplay, and their ability to shape the world around us.
 
-#### ![][image59]
+![][image59]{.image-anchor}
 
 #### Fire: The Spark in the Void
 
@@ -3581,7 +3569,7 @@ Fire, the element of transformation and energy, thrives within the embrace of Ae
 
 *Practical Application:* Recognize moments of inspiration as sparks within the vastness of Aether, urging you to transform and create. Embrace these sparks, allowing them to light your path forward, knowing that Aether provides the boundless space for their manifestation.
 
-#### ![][image60]
+![][image60]{.image-anchor}
 
 #### Water: The Flow through Space
 
@@ -3589,7 +3577,7 @@ Water, representing emotion and adaptability, moves within the realm of Aether, 
 
 *Practical Application:* Observe how feelings ebb and flow within the expansive container of your awareness. Allow Aether to guide you in navigating your emotional landscapes with grace, understanding that emotions, like water, must flow and adapt to the terrain they encounter.
 
-#### ![][image61]
+![][image61]{.image-anchor}
 
 #### Earth: The Grounded Presence
 
@@ -3598,7 +3586,7 @@ Earth, symbolizing stability and grounding, finds its place in Aether by manifes
 *Practical Application:* Connect with the stability of Earth by recognizing the support of Aether in every physical experience. Embrace the moments of stillness and presence, grounding yourself in the now while understanding that it is Aether that breathes life into these moments, imbuing them with significance.
 
 
-#### ![][image62]
+![][image62]{.image-anchor}
 
 #### Air: The Whisper of Connectivity
 
@@ -3833,10 +3821,8 @@ As we embody the essence of aether, we realize that our journey is not just an i
 
 With this understanding of aether along with the four elements as our guide, we are now prepared to explore a practical approach to living a balanced and enriched life through the Spiralogic Process.
 
-![][image63]
 
-
-### ![][image64]
+![][image64]{.image-end}
 
 
 # Chapter 10: Living the Spiralogic Process
@@ -3844,7 +3830,7 @@ With this understanding of aether along with the four elements as our guide, we 
 *“To be spiritual means essentially to take responsibility for our inner journey while using all the resources from all the traditions available to us. They are our common heritage. All we require to tap into them is the capacity to do so, the requisite generosity of spirit. These great treasures are part of a universal mystical tradition, and our growth in the future depends on our willingness to integrate them into our own experience.” – Wayne Teasdale*
 
 
-### ![][image65]
+![][image65]{.image-opener}
 
 ### Overview
 
@@ -3887,11 +3873,11 @@ These elements are vital for living a meaningful, successful life. They are the 
 
 The five elements—earth, water, fire, air, and ether—remain constant, informing both our individuality and our collective intelligence. They are unique yet completely interrelated aspects of consciousness. Our energy or vibe affects how we feel about ourselves and the world, influencing our experience as human beings and shaping how we think, relate, and communicate with others.
 
-![][image66]
+![][image66]{.image-anchor}
 
 On a deep, central level of being, there is a vertical axis of selfhood. It can be understood as the part of us that is most internal and inwardly focused. This axis represents the unseen part of our nature, flowing like sweetwater within our inner being. In shamanic awareness, it is seen as having three parts: our higher Self, our conscious self, and our basic self.
 
-![][image67]
+![][image67]{.image-anchor}
 
 \\Additionally, there is a horizontal dimension to our nature that moves between our internal state of being and our external engagement with the physical world. Here, we vacillate between movements of introversion and extraversion, between our inward state of contemplation and our outward state of action and interaction.
 
@@ -3903,7 +3889,7 @@ It is in the constantly evolving interplay between these various elements of awa
 
 #### Section 4: The Dynamic Interplay of Elements
 
-![][image68]
+![][image68]{.image-anchor}
 
 To live our best life, we must engage the elemental influences on our consciousness skillfully. The ancient alchemists sought patterns of life to help us transform from our base nature to our highest nature. As a part of nature, we share in these evolutionary patterns present in all levels of life.
 
@@ -3917,7 +3903,7 @@ The patterns of spiritual alchemy exist as universal patterns of natural develop
 
 ### Part 4: Embracing the Spiralogic Process
 
-#### ![][image69]
+![][image69]{.image-anchor}
 
 #### Section 5: Embracing the Process of Soul Building
 
@@ -3936,7 +3922,7 @@ Once oriented, the Spiralogic Process will help you map out your personal develo
 ---
 
 
-### ![][image70]
+![][image70]{.image-anchor}
 
 ###  Part 5: Balancing the Elements
 
@@ -3951,7 +3937,7 @@ Example: Maya realized her passion for mentoring young entrepreneurs when she jo
 *"What lies behind us and what lies before us are tiny matters compared to what lies within us." – Ralph Waldo Emerson*
 
 
-#### ![][image71]
+![][image71]{.image-anchor}
 
 #### Section 9: Collecting the Water
 
@@ -3964,7 +3950,7 @@ Example: Maya practiced mindfulness, meditation, and journaling to become aware 
 *"Water is the softest thing, yet it can penetrate mountains and earth. This shows clearly the principle of softness overcoming hardness." – Lao Tzu*
 
 
-#### ![][image72]
+![][image72]{.image-anchor}
 
 #### Section 10: Forming the Earth
 
@@ -3977,7 +3963,7 @@ Example: Maya created a balanced routine, including regular exercise and healthy
 *"Look deep into nature, and then you will understand everything better." – Albert Einstein*
 
 
-#### ![][image73]
+![][image73]{.image-anchor}
 
 #### Section 11: Embracing the Air
 
@@ -4033,7 +4019,7 @@ Many of us have chosen a path of service, helping, guiding, healing, and nurturi
 
 ### Part 8: Embracing Change
 
-#### ![][image75]
+![][image75]{.image-anchor}
 
 #### Section 17: Changes
 
@@ -4071,7 +4057,7 @@ When we organize our wisdom, we honor the cyclical nature of our existence. Just
 
 #### Section 19: Applying the Spiralogic Model
 
-![][image76]
+![][image76]{.image-anchor}
 
 The Spiralogic model is a way I have discovered of navigating life’s complexities while holding my own center, my life journey, and my directive as a soul. It is how I have successfully worked with hundreds of clients along thousands of sessions to help them find their way along their journey, moving from uncertainty, confusion, and fear of the future to excitement, gratitude, and a feeling of adventure for the mystery unfolding before them.
 
@@ -4157,7 +4143,7 @@ This first section of the book delved into the metaphysics of this work, explori
 
 Now, let's explore the elements in detail. Each chapter is an attempt to describe the nature of each element, the states of development within each element, ways of engaging with the elements, and practical insights, exercises, and examples. All to support you on your unique exploration and discovery process. We begin with Fire, the element of inspiration, illumination, and investigation of your world.
 
-![][image78]
+![][image78]{.image-anchor}
 
 
 # Conclusion- Embracing Your Elemental Soul 
@@ -4188,7 +4174,7 @@ Celebrate this elemental ecstasy, for it is the song of your soul's liberation\!
 
 Throughout this journey of Elemental Alchemy, we've explored the depths of our being, the interconnectedness of all existence, and the transformative power within us. As we stand at the threshold of new beginnings, remember this: You are all. All is you. And the solution is always love.
 
-### ![][image79]
+![][image79]{.image-anchor}
 
 ### A Message to My Colleagues in the Healing Arts
 
@@ -4232,7 +4218,7 @@ Gratitude to Luata, Stephen Clayton, Nathan Kane, Weezie DeLavergne, Jason Ruder
 
 ### Appendix:
 
-### ![][image80]
+![][image80]{.image-anchor}
 
 
 ### The 12 Facets of the Spiralogic Profile
@@ -4855,7 +4841,7 @@ Thank you for reading "Elemental Alchemy: The Art of Living a Phenomenal Life." 
 
 Simply scan the QR code below with your smartphone to access all these materials instantly.
 
-![][image82]
+![][image82]{.image-anchor}
 
 Or visit: [www.soullab.org/elementalalchemybook](http://www.soullab.org/elementalalchemy) 
 
