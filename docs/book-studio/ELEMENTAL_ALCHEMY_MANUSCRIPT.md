@@ -4214,7 +4214,19 @@ Kelly
 
 Gratitude to Luata, Stephen Clayton, Nathan Kane, Weezie DeLavergne, Jason Ruder, Michael C. Smith, and Debra Harkins for their presence, encouragement, and the ways they helped shape this work.
 
-### Appendix:
+### Appendix A — The Elemental Model
+
+This appendix offers the canonical visual map of the five elements—earth, water, fire, air, and aether—as a single integrated wheel. Use it as orientation reference when the chapters call up the elements as a system.
+
+[APPENDIX FIGURE A1 — ELEMENTAL WHEEL (FULL PAGE)]
+
+### Appendix B — The Whole Brain (Elemental Mapping)
+
+The four elements correspond to the hemispheric quadrants of brain function—a mapping that grounds the elemental model in embodied cognition. This appendix presents that correspondence in a single full-page figure.
+
+[APPENDIX FIGURE B1 — WHOLE BRAIN ELEMENTAL MODEL (FULL PAGE)]
+
+### Appendix C — The Spiralogic Map (12 Facets)
 
 ![][image80]{.image-anchor}
 
@@ -4832,6 +4844,12 @@ Planck, Max. *The Universe in the Light of Modern Physics*. George Allen & Unwin
 Blake, William. *The Marriage of Heaven and Hell*. 1790\.
 
 Smith, C. Michael. *Jung and Shamanism in Dialogue: Retrieving the Soul/Retrieving the Sacred*. Paulist Press, 1997\.
+
+### Appendix D — Symbolic Foundations
+
+The deeper symbolic structures underlying the elemental model—the yin/yang polarity, the torus of being, and the sacred geometries that recur across cultures. This appendix gathers the foundational symbols in one place, as visual reference rather than commentary.
+
+[APPENDIX FIGURE D1 — TORUS / SACRED GEOMETRY / YIN-YANG (FULL PAGE)]
 
 ## **Additional Resources**
 
