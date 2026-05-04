@@ -415,3 +415,6 @@ ios/App/ios/
 essence
 .claire/
 data/sacred-texts/*.pdf
+
+# Soullab Press render outputs
+exports/

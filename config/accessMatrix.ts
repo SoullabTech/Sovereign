@@ -47,6 +47,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/portals', public: true, notes: 'Portals listing' },
   { exact: '/public-demo', public: true, notes: 'Public demo' },
   { exact: '/library', public: true, notes: 'Public library browse' },
+  { exact: '/book-studio', public: true, notes: 'Soullab Press / Book Studio landing' },
 
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },

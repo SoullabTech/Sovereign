@@ -1,0 +1,334 @@
+/*
+ * Elemental Alchemy — print.css (Soullab Press v1)
+ *
+ * Encodes the design system at:
+ *   docs/book-studio/ELEMENTAL_ALCHEMY_DESIGN_SYSTEM_v1.md
+ *
+ * Designed for Paged.js rendering. Applied to the canonical
+ * Manuscript model via lib/manuscript/render/html.ts.
+ *
+ * Phase 1 scope: Chapter 1 of Elemental Alchemy. No
+ * Fire/Water/Earth/Air variants here — deferred until proven
+ * necessary on a later chapter.
+ *
+ * Update this file and the design-system markdown together.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Fonts
+ * ------------------------------------------------------------------------- */
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Playfair+Display:wght@400;500;700&display=swap');
+
+/* ---------------------------------------------------------------------------
+ * Page geometry
+ * ------------------------------------------------------------------------- */
+
+@page {
+  size: 6in 9in;                 /* trade paperback */
+  margin: 0.875in 1in 0.875in 1in;
+}
+
+@page :left {
+  margin: 0.875in 1in 0.875in 0.875in;
+  @bottom-left {
+    content: counter(page);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 9pt;
+    color: #6b6b6b;
+  }
+}
+
+@page :right {
+  margin: 0.875in 0.875in 0.875in 1in;
+  @bottom-right {
+    content: counter(page);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 9pt;
+    color: #6b6b6b;
+  }
+}
+
+@page chapter-opener {
+  margin-top: 1.25in;            /* extra top breathing for the threshold */
+  @bottom-left { content: ''; }
+  @bottom-right { content: ''; }
+}
+
+/* Part opener — own page, deeper top breath, recto-forced, no folio.
+ * The page is the threshold; the H1 is centered, the rest is silence. */
+@page part-opener {
+  margin-top: 2in;
+  @bottom-left { content: ''; }
+  @bottom-right { content: ''; }
+}
+
+.part-opener {
+  break-before: right;           /* always start on a recto */
+  page: part-opener;
+  text-align: center;
+  padding-top: 1in;
+}
+
+.part-opener h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 28pt;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  margin: 0 0 2em 0;
+  color: #1a1a1a;
+}
+
+.part-opener .part-epigraph {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-style: italic;
+  font-size: 12pt;
+  line-height: 1.6;
+  width: 60%;
+  margin: 0 auto;
+  color: #555;
+}
+
+/* ---------------------------------------------------------------------------
+ * Body / paragraph system
+ * ------------------------------------------------------------------------- */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Crimson Text', Georgia, 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+p {
+  margin: 0 0 1em 0;
+  text-indent: 0;                /* no first-line indent */
+  text-align: left;
+  hyphens: auto;
+  widows: 2;
+  orphans: 2;
+}
+
+/* ---------------------------------------------------------------------------
+ * Chapter opener
+ * ------------------------------------------------------------------------- */
+
+.chapter {
+  break-before: page;
+  page: chapter-opener;
+}
+
+.chapter-header {
+  text-align: center;
+  margin: 0 0 2.5em 0;
+}
+
+.chapter-number {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 11pt;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+  margin: 0 0 1.5em 0;
+}
+
+.chapter-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 36pt;
+  line-height: 1.15;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+/* ---------------------------------------------------------------------------
+ * Image as threshold
+ * ------------------------------------------------------------------------- */
+
+.chapter-image,
+figure.image {
+  text-align: center;
+  margin: 2.75em auto;
+  break-inside: avoid;
+}
+
+.chapter-image img,
+figure.image img {
+  max-width: 80%;
+  height: auto;
+}
+
+.image-placeholder {
+  display: inline-block;
+  width: 70%;
+  border: 1px dashed #cfcfcf;
+  padding: 3em 2em;
+  color: #b3b3b3;
+  font-family: 'Crimson Text', serif;
+  font-style: italic;
+  font-size: 10pt;
+}
+
+figcaption {
+  margin-top: 0.6em;
+  font-family: 'Crimson Text', serif;
+  font-size: 9pt;
+  font-style: italic;
+  color: #6b6b6b;
+}
+
+/* ---------------------------------------------------------------------------
+ * Epigraph (the first quote of a chapter)
+ * ------------------------------------------------------------------------- */
+
+.epigraph {
+  width: 72%;
+  margin: 3em auto 4em auto;       /* extra bottom space — separation from prayer */
+  font-style: italic;
+  text-align: center;
+  font-size: 11pt;
+  line-height: 1.55;
+  border: none;
+  padding: 0;
+}
+
+.epigraph p {
+  margin: 0;
+}
+
+.epigraph cite {
+  display: block;
+  margin-top: 0.85em;
+  font-size: 9pt;
+  font-style: normal;
+  color: #555;
+  letter-spacing: 0.05em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Section title — left-anchored (the grounded contrast)
+ * ------------------------------------------------------------------------- */
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 17pt;
+  line-height: 1.25;
+  text-align: left;
+  margin: 2.5em 0 1.25em 0;
+  color: #1a1a1a;
+}
+
+/* ---------------------------------------------------------------------------
+ * Ritual / prayer block — italic, centered, narrower, breathing
+ * ------------------------------------------------------------------------- */
+
+.ritual-line {
+  font-style: italic;
+  text-align: center;            /* canon: ritual stays centered */
+  margin: 1.8em auto;
+  width: 75%;
+  line-height: 1.78;             /* slower reading */
+}
+
+.ritual-line + .ritual-line {
+  margin-top: 2.4em;             /* stanzas breathe more clearly */
+}
+
+.section-title + .ritual-line {
+  margin-top: 2.8em;             /* clearing after the section title */
+}
+
+.ritual-line.ritual-seal {
+  text-align: right;             /* asymmetry breaks the centered-everything trap */
+  font-style: normal;            /* seal contrasts with italic body */
+  font-size: 10pt;
+  color: #555;
+  letter-spacing: 0.05em;
+  margin-top: 2.6em;
+  margin-bottom: 2.4em;          /* let the seal close, don't crowd what follows */
+}
+
+/* ---------------------------------------------------------------------------
+ * Quotes (general — non-epigraph)
+ * ------------------------------------------------------------------------- */
+
+blockquote {
+  font-style: italic;
+  margin: 1.5em 2em;
+  padding: 0;
+  border: none;
+}
+
+blockquote p {
+  margin: 0 0 0.5em 0;
+}
+
+blockquote cite {
+  display: block;
+  margin-top: 0.5em;
+  font-size: 9pt;
+  font-style: normal;
+  color: #555;
+}
+
+.pullquote {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 14pt;
+  line-height: 1.4;
+  width: 70%;
+  margin: 2em auto;
+  text-align: center;
+  color: #1a1a1a;
+}
+
+/* ---------------------------------------------------------------------------
+ * Practice block
+ * ------------------------------------------------------------------------- */
+
+.practice {
+  border-left: 1px solid #999;
+  padding: 0.5em 0 0.5em 1em;
+  margin: 1.75em 0;
+  font-size: 10.5pt;
+  break-inside: avoid;
+}
+
+.callout {
+  background: #f7f5f1;
+  padding: 1em 1.25em;
+  margin: 1.5em 0;
+  font-size: 10.5pt;
+  break-inside: avoid;
+}
+
+/* ---------------------------------------------------------------------------
+ * Scene break — neutral mark for pre-elemental Chapter 1
+ * ------------------------------------------------------------------------- */
+
+.scene-break {
+  text-align: center;
+  margin: 2em 0;
+  font-size: 14pt;
+  color: #999;
+  letter-spacing: 0.5em;
+}
+
+.scene-break::before {
+  content: "·  ·  ·";
+}
+
+/* ---------------------------------------------------------------------------
+ * Print color sanity
+ * ------------------------------------------------------------------------- */
+
+* {
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
