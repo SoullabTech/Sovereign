@@ -176,6 +176,12 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 
 ---
 
+# Part One — The Ground
+
+*[Epigraph or framing line — to be authored by Kelly.]*
+
+---
+
 # Chapter 1: The Journey Begins
 
 *"And when you want something, all the universe conspires in helping you to achieve it." – Paulo Coelho, The Alchemist*
@@ -749,6 +755,12 @@ By embracing this journey, we become active participants in the recreation of re
 
 Having understood the elements and their role in achieving wholeness, it's time to delve deeper into their individual qualities. The chapters ahead offer an exploration of the five elements, each one unfolding its unique attributes and insights. Through this journey, you will discover new ways of seeing your life and deepen your understanding of how these elements animate our existence, inform our consciousness, and offer us the tools we need to experience the world and express ourselves. This is an ode to the elements that shape our soulful living, inviting us to explore their wisdom and embrace their transformative power.
 
+
+---
+
+# Part Two — The Elements
+
+*[Epigraph or framing line — to be authored by Kelly.]*
 
 ---
 
@@ -2077,6 +2089,12 @@ As we embody the essence of aether, we realize that our journey is not just an i
 
 With this understanding of aether along with the four elements as our guide, we are now prepared to explore a practical approach to living a balanced and enriched life through the Spiralogic Process.
 
+
+---
+
+# Part Three — The Spiral
+
+*[Epigraph or framing line — to be authored by Kelly.]*
 
 ---
 

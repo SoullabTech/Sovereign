@@ -177,10 +177,23 @@ blockquote p {
  *   text-width @ 6×9 trim, 0.9"+0.6" horizontal margins = 4.5in
  * ============================================================ */
 
+/* Paragraphs that wrap a block-level image: explicit center + no indent.
+ * Apple Books and several EPUB readers don't honor `margin: auto` on
+ * images consistently, so we set text-align on the parent as a safety net. */
+p:has(> img) {
+  text-align: center !important;
+  text-indent: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Default img — fallback if no class assigned. Treated as anchor. */
 img {
   display: block;
-  margin: 16pt auto;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 16pt;
+  margin-bottom: 16pt;
   max-width: 3.4in;            /* ~75% of text width */
   max-height: 6in;
   height: auto;
@@ -201,17 +214,31 @@ img.image-anchor {
   break-inside: avoid;
 }
 
-/* B — Chapter Opener: 80–90% of text width, larger presence,
- *     starts on a fresh page; chapter title flows after. */
+/* B — Chapter Opener: full-page standalone, centered both axes.
+ *     Image sits alone on a page that precedes the chapter title page. */
 img.image-opener {
   display: block;
-  margin: 24pt auto 28pt auto;
-  max-width: 3.9in;            /* 87% × 4.5in */
-  max-height: 5in;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 3in;
+  margin-bottom: 3in;
+  max-width: 4in;
+  max-height: 4.5in;
   height: auto;
   filter: grayscale(100%);
+  page-break-before: always;
+  page-break-after: always;
+  break-before: page;
+  break-after: page;
   page-break-inside: avoid;
   break-inside: avoid;
+}
+
+/* Wrapping paragraph for opener: own page, centered, no header */
+p:has(> img.image-opener) {
+  text-align: center !important;
+  text-indent: 0 !important;
+  margin: 0 !important;
 }
 
 /* C — System Diagram: 85–100% of text width, never inline,

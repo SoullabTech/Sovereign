@@ -23,7 +23,15 @@ export interface PassageBlock {
   source: string;
   feltState: readonly string[];
   readTime: string;
+  /** First sentence of the passage. Always present (metadata). */
   openingLine: string;
+  /**
+   * The full self-contained passage body (~150–500 words). Paragraph breaks
+   * preserved as `\n\n`. When present, rendered as the user-facing reading.
+   * When absent, the UI falls back to `openingLine` and the experience is
+   * thinner — extraction Phase 2 will close that gap.
+   */
+  body?: string;
   pairsWith?: string;
   isPolarity?: boolean;
   notes?: string;
@@ -41,6 +49,15 @@ export const PASSAGE_BLOCKS: readonly PassageBlock[] = [
     pairsWith: 'FIRE-02',
     openingLine:
       'I write these words as I sit down, welcomed by another stunning sunset and the dawn of night.',
+    body: `I write these words as I sit down, welcomed by another stunning sunset and the dawn of night. It's good to be back in front of the fire after a long day of mundane tasks, sessions with clients, and the distractions of a busy schedule. My son, Augusten, and I have been camping every night for nearly two months. We both look forward to bonding around the fire. Our evenings have become a ritual of gathering kindle and wood, as well as preparing our food and tent for the evening. I've been looking forward to this moment all day, to sit around the fire, tune in to its wisdom, and share stories with my son.
+
+It took a while to get the fire started because the wood was a bit damp from last night's rain. Still, it looks like it is once again taking hold and the flames are beginning to spread through the twigs and pine needles. The chopped wood is sizzling as it releases itself to the heat of the flames. The crackling of the fire brings my attention to the present moment, elevating my presence. The world slowly becomes increasingly quiet, still, and calm.
+
+There is always anticipation of whether the fire will catch and spread. It takes planning, preparation, adjustments, and effort at first. Then comes a sense of comfort when it spreads enough that we simply need to maintain the fire by adding wood as needed. Initially, it blazes hot and bright but soon begins to settle, mature, and soften into a soulful glow. Everything is dark around me as I sit before the campfire, but the fire itself glows brightly.
+
+This is the part I love most, when the embers grow and spread across the firepit, forming an undulating pattern of darkness and light that excites my imagination. Images and stories begin to rise from the ashes. Some stories bring back memories of past ceremonies and rituals. Some are fantasies of what might happen in the future. Surprising thoughts emerge reminding me of forgotten things, matters I need to attend to. Even unexplored topics rise from the imagination like sparks flying. Conversations with friends, memories of sitting fireside with teachers, friends, and loved ones all ignite my awareness, sparked by the fire and embers. The dark world around ebbs and flows in and out of the aura of light encircling the fire.
+
+All awareness seems to return to this circle around the flames, smoke, smells, and embers. As the light and heat eventually soften, it draws me closer, spiraling deeper into a soulful trance state. My son too has shifted from dancing around the fire, poking at it while telling stories of his day and sharing his favorite games, to a more inward, contemplative gaze softened by the soft glow of the fire.`,
   },
   {
     id: 'FIRE-02',
@@ -62,6 +79,13 @@ export const PASSAGE_BLOCKS: readonly PassageBlock[] = [
     readTime: '~2 min',
     openingLine:
       'An example is when my client David came into a session grieving the loss of his youth and anxious about his future.',
+    body: `At the heart of most of the challenges I witness in my life as well as in sessions are issues associated with fire. Whatever my clients' session goals are, we always come back to tending their inner fire. With too little fire, life can seem cold, impersonal, and threatening. This includes the inner worlds of emotions, body, and mind. When a client is under emotional stress, it is the nature of their fire that can determine the outcome of their experience. Strengthening their fire of personal agency, spirit, and energy helps burn away the heaviness of emotional upset and offers them a vision for the path forward.
+
+An example is when my client David came into a session grieving the loss of his youth and anxious about his future. This existential situation takes great personal power to manage. His inner fire was nearly extinguished — he had little awareness of his individuality or what lay ahead. His sense of self was drowning in uncertainty, regret, and despair.
+
+Returning to tending the fire that reignited purpose and meaning helped David regain a vision for his life path's importance. Rekindling the fires of remembrance to full flame isn't always easy, but even a spark of reconnection with our true Self provides warmth and encouragement to manage life's most challenging periods.
+
+Speaking for myself, it sometimes takes a while to get my own inner fires lit. Life has its ways of dampening the fires of my passion. My inner being can feel too damp from heavy emotions to sustain or reignite my will. If my spirit gets too fiery, I can't hold the intensity long enough to capture its brilliance. Or I can feel buried in apathy and exhaustion, like my inner fire has been reduced to smoldering embers and ashes. Even so, I take a deep breath and try to be fully present.`,
   },
   {
     id: 'FIRE-04',
@@ -92,6 +116,11 @@ export const PASSAGE_BLOCKS: readonly PassageBlock[] = [
     readTime: '~1 min',
     openingLine:
       'For example, a young client who was lost in his teenage angst, bound to their bedroom playing video games nonstop, transformed his life by answering the call of his passion for video games.',
+    body: `Many seek outer sources of light and inspiration; however, it is only when we fan the flames of our own true Self that we will find the answer to our life's journey. Every step of the way, it is important that we keep this fire safe and protected. It is this fire that fuels the potential for living a soulful life. We can turn our challenges into opportunities when we shine the right light on them.
+
+For example, a young client who was lost in his teenage angst, bound to their bedroom playing video games nonstop, transformed his life by answering the call of his passion for video games. He applied to a game development company, became a game tester, and began learning how to create his own games.
+
+There is genius in inspiration. Your secret fire's main motive is to guide you to your truth. For some it is a flicker, and for others it is a bonfire. Our task with fire is to manage it well. Too much or too little can either burn us out or extinguish our flame.`,
   },
   {
     id: 'FIRE-07',

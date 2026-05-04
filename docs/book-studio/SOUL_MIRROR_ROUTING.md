@@ -23,6 +23,17 @@ State → Element → Doorway
 
 Nothing more.
 
+## What Soul Mirror Is Not
+
+```
+Soul Mirror is not the Oracle.
+It is not divination.
+It is not coaching.
+It is a companioning doorway into the book.
+```
+
+Soul Mirror is **optional**. It does not need to become the whole platform doorway. It can live as a quiet "book companion" surface and remain there. Use it if it feels like *a reader finds the right passage at the right time.* Do not use it if it starts to feel like *the system knows what the person needs.*
+
 ---
 
 ## The Flow
@@ -82,16 +93,32 @@ A single line of recognition is returned before the doorway. The recognition nam
 
 ### 4. Doorway
 
-A single passage block is presented from the matching element.
+A single passage block is presented. Block selection follows a three-step routing order, each step filtering out blocks recently shown to the user.
 
-Block selection within an element:
+**Routing order:**
 
-- **MVP:** random selection from that element's blocks (excluding the polarity block on first encounter)
-- **Future (Phase 2):** context-aware selection based on free-text input or recurring state
+1. **Felt-state affinity** — blocks whose felt-vector matches the input. This is the primary path. The doorway must continue the moment named by the recognition line, not just the element.
+2. **General element pool** — non-polarity blocks in the matching element (fallback if affinity exhausted).
+3. **Final fallback** — any non-polarity block in the element, ignoring recency (only if the user has cycled through everything).
 
-Polarity blocks (FIRE-07, WATER-01, EARTH-06, AIR-07, AETHER-07) are surfaced only on later encounters or when the user is clearly in that polarity, not as a first doorway.
+**Why affinity matters:**
 
-For *unsure*: alternate between WATER-06 (*Misting the Bonsai* — quiet attunement) and AETHER-05 (*Within the Elemental Quaternity* — returning to center).
+Without it, routing was emotionally intelligent at the front (recognition) and mechanically indifferent at the back (random block). That breaks trust. With affinity, the doorway *continues* the user, instead of redirecting them.
+
+**Affinity map** (iterated as feedback comes in):
+
+| Felt Input | Aligned Blocks | Reason |
+|---|---|---|
+| alive | FIRE-01, FIRE-06, FIRE-03 | kindling, calling, rekindling |
+| overwhelmed | WATER-02, WATER-04, WATER-06, WATER-03 | holding, returning, surrender, softening |
+| grounding | EARTH-01, EARTH-02, EARTH-04 | service, place, resilience |
+| disconnected | AIR-01, AIR-03, AIR-02 | friendship, repair, transmission |
+| still | AETHER-05, AETHER-03, AETHER-02 | center, stillness, communion |
+| unsure | WATER-06, AETHER-05 | softest entries, no descent required |
+
+**Polarity blocks** (FIRE-07, WATER-01, EARTH-06, AIR-07, AETHER-07) are excluded from all first-doorway routing. They surface only on repeat encounters or when context indicates them.
+
+**Specific-situation blocks** (e.g. WATER-07 *Helpers Forget Themselves*) remain in the index but are intentionally absent from the affinity map for present-moment inputs. They will surface later via context-driven logic, not as default doorways.
 
 ---
 
@@ -239,12 +266,32 @@ function mapToElement(input: FeltInput): Element {
   }
 }
 
-function selectBlock(element: Element, history: BlockId[] = []): BlockId {
-  // MVP: random non-polarity block, avoiding recently shown
-  const candidates = blocksFor(element)
-    .filter(b => !b.isPolarity)
-    .filter(b => !history.slice(-3).includes(b.id));
-  return candidates[Math.floor(Math.random() * candidates.length)].id;
+const FELT_AFFINITY: Record<FeltInput, readonly string[]> = {
+  alive: ["FIRE-01", "FIRE-06", "FIRE-03"],
+  overwhelmed: ["WATER-02", "WATER-04", "WATER-06", "WATER-03"],
+  grounding: ["EARTH-01", "EARTH-02", "EARTH-04"],
+  disconnected: ["AIR-01", "AIR-03", "AIR-02"],
+  still: ["AETHER-05", "AETHER-03", "AETHER-02"],
+  unsure: ["WATER-06", "AETHER-05"],
+};
+
+function selectBlock(input: FeltInput, recentlyShown: string[] = []): PassageBlock {
+  const recent = new Set(recentlyShown.slice(-3));
+
+  // 1. Affinity-aligned blocks
+  const affinityPool = (FELT_AFFINITY[input] ?? [])
+    .map(blockById)
+    .filter((b): b is PassageBlock => !!b && !recent.has(b.id));
+  if (affinityPool.length) return pickRandom(affinityPool);
+
+  // 2. General element pool (no polarity)
+  const element = mapToElement(input);
+  const elementPool = blocksFor(element, { includePolarity: false })
+    .filter(b => !recent.has(b.id));
+  if (elementPool.length) return pickRandom(elementPool);
+
+  // 3. Final fallback
+  return pickRandom(blocksFor(element, { includePolarity: false }));
 }
 ```
 

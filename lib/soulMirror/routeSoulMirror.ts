@@ -15,7 +15,8 @@
  * See: docs/book-studio/SOUL_MIRROR_ROUTING.md
  */
 
-import { PASSAGE_BLOCKS, blocksFor, type PassageBlock, type Element } from './passageBlocks';
+import { PASSAGE_BLOCKS, blocksFor, blockById, type PassageBlock, type Element } from './passageBlocks';
+import { FELT_AFFINITY } from './affinity';
 
 export type FeltInput =
   | 'alive'
@@ -87,19 +88,47 @@ export interface SoulMirrorResponse {
   element: Element;
 }
 
+function pickRandom<T>(items: readonly T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
 /**
- * Select a doorway block for the given element.
- * Excludes polarity blocks (those surface on later encounters or via context).
- * Avoids any block whose ID appears in `recentlyShown`.
+ * Select a doorway block for the given felt input.
+ *
+ * Routing order (each step filters out blocks recently shown):
+ *   1. Felt-state affinity — blocks whose felt-vector matches the input.
+ *   2. General element pool — non-polarity blocks in the matching element.
+ *   3. Final fallback — any non-polarity block in the element, ignoring recency.
+ *
+ * Polarity blocks (e.g. FIRE-07 "Burns Too Hot") never surface as first
+ * doorways. They are reserved for later encounters or context-driven surfacing.
  */
-function selectBlock(element: Element, recentlyShown: readonly string[] = []): PassageBlock {
-  const candidates = blocksFor(element, { includePolarity: false }).filter(
-    (b) => !recentlyShown.slice(-3).includes(b.id)
+function selectBlock(input: FeltInput, recentlyShown: readonly string[] = []): PassageBlock {
+  const recent = new Set(recentlyShown.slice(-3));
+
+  // 1. Affinity-aligned blocks
+  const affinityIds = FELT_AFFINITY[input] ?? [];
+  const affinityPool = affinityIds
+    .map((id) => blockById(id))
+    .filter((b): b is PassageBlock => !!b)
+    .filter((b) => !recent.has(b.id));
+
+  if (affinityPool.length > 0) {
+    return pickRandom(affinityPool);
+  }
+
+  // 2. General element pool, excluding recently shown
+  const element = mapToElement(input);
+  const elementPool = blocksFor(element, { includePolarity: false }).filter(
+    (b) => !recent.has(b.id)
   );
-  // Fallback: if filter removed everything (small element, repeated visits),
-  // use the unfiltered non-polarity set.
-  const pool = candidates.length > 0 ? candidates : blocksFor(element, { includePolarity: false });
-  return pool[Math.floor(Math.random() * pool.length)];
+
+  if (elementPool.length > 0) {
+    return pickRandom(elementPool);
+  }
+
+  // 3. Final fallback — any non-polarity block in the element
+  return pickRandom(blocksFor(element, { includePolarity: false }));
 }
 
 /**
@@ -112,8 +141,7 @@ export function routeSoulMirror(
   input: FeltInput,
   recentlyShown: readonly string[] = []
 ): SoulMirrorResponse {
-  const element = mapToElement(input);
-  const block = selectBlock(element, recentlyShown);
+  const block = selectBlock(input, recentlyShown);
   const recognition = RECOGNITION[input];
-  return { recognition, block, element };
+  return { recognition, block, element: block.element };
 }

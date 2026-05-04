@@ -69,13 +69,19 @@ async function main(): Promise<void> {
   if (navMatch) {
     const navHtml = navMatch[0];
     bodyHtml = bodyHtml.replace(navHtml, '');
-    const headingRe = /<h1 id="table-of-contents"[^>]*>[\s\S]*?<\/h1>/;
-    const headingMatch = bodyHtml.match(headingRe);
-    if (headingMatch) {
-      bodyHtml = bodyHtml.replace(headingMatch[0], `${headingMatch[0]}\n${navHtml}`);
-      console.log('    TOC nav moved to manual heading position');
+    // Anchor: insert TOC right before the Preface heading (former manual TOC
+    // heading was removed; Preface is the first content after front matter).
+    const prefaceRe = /<h2 id="preface"[^>]*>[\s\S]*?<\/h2>/;
+    const prefaceMatch = bodyHtml.match(prefaceRe);
+    if (prefaceMatch) {
+      const tocHeading = '<h1 id="table-of-contents">Table of Contents</h1>';
+      bodyHtml = bodyHtml.replace(
+        prefaceMatch[0],
+        `${tocHeading}\n${navHtml}\n${prefaceMatch[0]}`,
+      );
+      console.log('    TOC + heading injected before Preface');
     } else {
-      console.warn('    [warn] could not find Table of Contents heading; TOC remains at top');
+      console.warn('    [warn] could not find Preface heading; TOC remains at top');
       bodyHtml = `${navHtml}\n${bodyHtml}`;
     }
   } else {

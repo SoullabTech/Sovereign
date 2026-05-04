@@ -3,9 +3,12 @@
 /**
  * Soul Mirror
  *
- * A first-touch entry mode into MAIA.
- * Not a feature. Not a tool. Not a dashboard.
- * A quiet threshold.
+ * A companioning doorway into Kelly's book.
+ *
+ *   Soul Mirror is not the Oracle.
+ *   It is not divination.
+ *   It is not coaching.
+ *   It is a companioning doorway into the book.
  *
  * Core principle:
  *   The system does not tell the user who they are.
@@ -21,6 +24,9 @@
  *   - No "results screen" language
  *   - No analytics or scoring surfaced
  *   - One screen only
+ *
+ * Use it if it feels like: a reader finds the right passage at the right time.
+ * Do not use it if it starts to feel like: the system knows what the person needs.
  *
  * See: docs/book-studio/SOUL_MIRROR_ROUTING.md
  */
@@ -202,9 +208,17 @@ function ReadingView({ response, saved, onSave, onReturn }: ReadingViewProps) {
           <p className="text-amber-200/30 text-[11px] tracking-wide mb-6">
             {block.source} · {block.readTime}
           </p>
-          <p className="text-amber-50/80 text-base md:text-lg leading-relaxed">
-            {block.openingLine}
-          </p>
+          {block.body ? (
+            <div className="text-amber-50/80 text-base md:text-lg leading-relaxed space-y-4">
+              {block.body.split('\n\n').map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-amber-50/80 text-base md:text-lg leading-relaxed">
+              {block.openingLine}
+            </p>
+          )}
         </div>
       </motion.div>
 

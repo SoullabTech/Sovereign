@@ -55,6 +55,41 @@
   @bottom-right { content: ''; }
 }
 
+/* Part opener — own page, deeper top breath, recto-forced, no folio.
+ * The page is the threshold; the H1 is centered, the rest is silence. */
+@page part-opener {
+  margin-top: 2in;
+  @bottom-left { content: ''; }
+  @bottom-right { content: ''; }
+}
+
+.part-opener {
+  break-before: right;           /* always start on a recto */
+  page: part-opener;
+  text-align: center;
+  padding-top: 1in;
+}
+
+.part-opener h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 28pt;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  margin: 0 0 2em 0;
+  color: #1a1a1a;
+}
+
+.part-opener .part-epigraph {
+  font-family: 'Crimson Text', Georgia, serif;
+  font-style: italic;
+  font-size: 12pt;
+  line-height: 1.6;
+  width: 60%;
+  margin: 0 auto;
+  color: #555;
+}
+
 /* ---------------------------------------------------------------------------
  * Body / paragraph system
  * ------------------------------------------------------------------------- */
