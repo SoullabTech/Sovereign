@@ -1,82 +1,136 @@
-'use client';
+import Link from 'next/link';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 /**
- * Soullab Press — Book Studio
+ * Book Studio index — editorial workspace.
  *
- * Public landing page. Calm, almost empty, matches the register of
- * the book itself and the Soul Mirror surface.
+ * Surfaces the existing Studio artifacts (manuscript, passages,
+ * illustration list, design system, render output) and any drafts
+ * imported from MAIA Ideas.
  *
- * Not a marketing page. Not a feature dashboard. A quiet doorway.
- *
- * Route: /book-studio  (public, no auth)
- * Access: config/accessMatrix.ts
+ * NOT a marketing page. NOT a Soul Mirror doorway.
  */
 
-import React from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+interface RoomLink {
+  href: string;
+  label: string;
+  description: string;
+}
 
-export default function BookStudioPage() {
+const ROOMS: RoomLink[] = [
+  {
+    href: '/book-studio/read',
+    label: 'Read Manuscript',
+    description: 'Elemental Alchemy — sealed source text.',
+  },
+  {
+    href: '/book-studio/passages',
+    label: 'Passage Blocks',
+    description: '34 self-contained doorways with felt-state tags.',
+  },
+  {
+    href: '/book-studio/illustrations',
+    label: 'Illustration List',
+    description: 'Structural longlist with anchors, role, tone-notes.',
+  },
+  {
+    href: '/book-studio/design-system',
+    label: 'Design System',
+    description: 'Typography, page rhythm, principles — Soullab Press v1.',
+  },
+  {
+    href: '/book-studio/render',
+    label: 'Render Print PDF',
+    description: 'Trigger the print pipeline; review output.',
+  },
+];
+
+async function listDrafts(): Promise<{ slug: string; title: string }[]> {
+  const draftsDir = path.join(process.cwd(), 'docs', 'book-studio', 'drafts');
+  try {
+    const files = await fs.readdir(draftsDir);
+    const drafts = await Promise.all(
+      files
+        .filter((f) => f.endsWith('.md'))
+        .map(async (f) => {
+          const slug = f.replace(/\.md$/, '');
+          const content = await fs.readFile(path.join(draftsDir, f), 'utf-8');
+          const titleMatch = content.match(/^#\s+Draft\s+—\s+(.+)$/m);
+          const title = titleMatch ? titleMatch[1].trim() : slug;
+          return { slug, title };
+        }),
+    );
+    return drafts;
+  } catch {
+    return [];
+  }
+}
+
+export default async function BookStudioIndex() {
+  const drafts = await listDrafts();
+
   return (
-    <div className="min-h-screen w-full bg-[#0f0d0b] text-amber-50/90 flex items-center justify-center px-6 py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, ease: 'easeOut' }}
-        className="w-full max-w-2xl text-center"
-      >
-        {/* Imprint */}
-        <p className="text-amber-200/40 text-[11px] tracking-[0.3em] uppercase mb-12">
-          Soullab Press
-        </p>
-
-        {/* Title */}
-        <h1 className="text-amber-100/90 text-3xl md:text-4xl font-light tracking-wide leading-tight mb-3">
+    <div>
+      <header className="mb-12">
+        <h1 className="text-amber-100/90 text-3xl md:text-4xl font-light tracking-wide leading-tight mb-2">
           The Book Studio
         </h1>
-
-        {/* Framing line */}
-        <p className="text-amber-200/55 text-base md:text-lg font-light italic leading-relaxed max-w-md mx-auto mb-20">
-          Books made slowly, held carefully, written to be entered.
+        <p className="text-amber-200/55 text-base font-light italic">
+          Editorial workspace for Elemental Alchemy.
         </p>
+      </header>
 
-        {/* Currently in the studio */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.4, delay: 0.6, ease: 'easeOut' }}
-          className="border-t border-amber-200/10 pt-12 pb-12"
-        >
-          <p className="text-amber-200/35 text-[11px] tracking-[0.25em] uppercase mb-6">
-            Currently in the studio
-          </p>
+      {/* Rooms */}
+      <section className="mb-16">
+        <h2 className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase mb-5">
+          Workspace
+        </h2>
+        <ul className="space-y-1">
+          {ROOMS.map((room) => (
+            <li key={room.href}>
+              <Link
+                href={room.href}
+                className="block py-3 px-4 -mx-4 rounded-md transition-colors hover:bg-amber-300/5 group"
+              >
+                <div className="flex flex-col md:flex-row md:items-baseline md:gap-6">
+                  <span className="text-amber-100/85 group-hover:text-amber-100 text-base md:text-[1.05rem] font-light min-w-[12rem]">
+                    {room.label}
+                  </span>
+                  <span className="text-amber-200/45 text-sm font-light italic">
+                    {room.description}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-          <p className="text-amber-100/85 text-2xl md:text-[1.6rem] font-light leading-snug mb-2">
-            Elemental Alchemy
+      {/* Drafts from MAIA Ideas */}
+      <section>
+        <h2 className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase mb-5">
+          Drafts from MAIA Ideas
+        </h2>
+        {drafts.length === 0 ? (
+          <p className="text-amber-200/35 text-sm font-light italic">
+            No drafts yet. Move an idea here when it wants form.
           </p>
-          <p className="text-amber-200/60 text-sm md:text-base font-light italic mb-1">
-            The Art of Living a Phenomenal Life
-          </p>
-          <p className="text-amber-200/40 text-xs md:text-sm tracking-wide mt-3">
-            Kelly Nezat
-          </p>
-        </motion.div>
-
-        {/* Doorway */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, delay: 1.4, ease: 'easeOut' }}
-          className="mt-2"
-        >
-          <Link
-            href="/maia/soul-mirror"
-            className="text-amber-200/65 hover:text-amber-100 text-sm tracking-wide transition-colors duration-300"
-          >
-            Enter the Soul Mirror
-          </Link>
-        </motion.div>
-      </motion.div>
+        ) : (
+          <ul className="space-y-1">
+            {drafts.map((draft) => (
+              <li key={draft.slug}>
+                <Link
+                  href={`/book-studio/drafts/${draft.slug}`}
+                  className="block py-2 px-4 -mx-4 rounded-md transition-colors hover:bg-amber-300/5 text-amber-100/80 hover:text-amber-100 text-base font-light"
+                >
+                  {draft.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
