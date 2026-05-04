@@ -18,6 +18,7 @@ type Status = 'idle' | 'rendering' | 'complete' | 'error';
 interface RenderResult {
   ok: boolean;
   pdfUrl?: string;
+  epubUrl?: string;
   pageCount?: number;
   sizeKB?: number;
   generatedAt?: string;
@@ -27,20 +28,39 @@ interface RenderResult {
 }
 
 export default function RenderPage() {
-  const [status, setStatus] = useState<Status>('idle');
-  const [result, setResult] = useState<RenderResult | null>(null);
+  const [pdfStatus, setPdfStatus] = useState<Status>('idle');
+  const [pdfResult, setPdfResult] = useState<RenderResult | null>(null);
+  const [epubStatus, setEpubStatus] = useState<Status>('idle');
+  const [epubResult, setEpubResult] = useState<RenderResult | null>(null);
+
+  const status = pdfStatus;
+  const result = pdfResult;
 
   const handleRender = async () => {
-    setStatus('rendering');
-    setResult(null);
+    setPdfStatus('rendering');
+    setPdfResult(null);
     try {
       const res = await fetch('/api/book-studio/render', { method: 'POST' });
       const data: RenderResult = await res.json();
-      setResult(data);
-      setStatus(res.ok && data.ok ? 'complete' : 'error');
+      setPdfResult(data);
+      setPdfStatus(res.ok && data.ok ? 'complete' : 'error');
     } catch (err) {
-      setResult({ ok: false, error: err instanceof Error ? err.message : String(err) });
-      setStatus('error');
+      setPdfResult({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setPdfStatus('error');
+    }
+  };
+
+  const handleEpubRender = async () => {
+    setEpubStatus('rendering');
+    setEpubResult(null);
+    try {
+      const res = await fetch('/api/book-studio/render/epub', { method: 'POST' });
+      const data: RenderResult = await res.json();
+      setEpubResult(data);
+      setEpubStatus(res.ok && data.ok ? 'complete' : 'error');
+    } catch (err) {
+      setEpubResult({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setEpubStatus('error');
     }
   };
 
@@ -166,7 +186,7 @@ export default function RenderPage() {
           </div>
         )}
 
-        {/* Result — error */}
+        {/* Result — error (PDF) */}
         {status === 'error' && result && (
           <div className="border border-red-400/30 rounded-md p-6 bg-red-400/[0.04]">
             <p className="text-red-300/85 text-[11px] tracking-[0.25em] uppercase mb-3">
@@ -183,6 +203,86 @@ export default function RenderPage() {
             )}
           </div>
         )}
+
+        {/* ──────────────────────────────────────────────────────────────
+            EPUB — working draft (separate from print)
+            ──────────────────────────────────────────────────────────── */}
+        <div className="border-t border-amber-200/10 pt-10 mt-10">
+          <p className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase mb-3">
+            EPUB — working draft
+          </p>
+          <p className="text-amber-50/65 text-sm font-light italic leading-relaxed mb-5 max-w-xl">
+            Reflowable, regeneratable on each manuscript update. Useful for
+            early readers and the cover designer. Not yet production-ready
+            (no cover image, no embedded illustrations, no ISBN).
+          </p>
+
+          <button
+            type="button"
+            onClick={handleEpubRender}
+            disabled={epubStatus === 'rendering'}
+            className={[
+              'text-sm tracking-wide px-5 py-2 rounded-md transition-colors duration-300 border',
+              epubStatus === 'rendering'
+                ? 'text-amber-200/40 border-amber-200/15 cursor-wait'
+                : 'text-amber-200/80 hover:text-amber-100 border-amber-200/25 hover:border-amber-200/45',
+              'disabled:opacity-60',
+            ].join(' ')}
+          >
+            {epubStatus === 'rendering' ? 'Building EPUB…' : 'Build EPUB (draft)'}
+          </button>
+
+          {/* EPUB success */}
+          {epubStatus === 'complete' && epubResult?.ok && (
+            <div className="mt-6 border border-amber-300/20 rounded-md p-5 bg-amber-300/[0.04] max-w-xl">
+              <p className="text-amber-200/55 text-[11px] tracking-[0.25em] uppercase mb-3">
+                EPUB ready
+              </p>
+              <dl className="grid grid-cols-[8rem,1fr] gap-y-1.5 text-sm mb-4">
+                <dt className="text-amber-200/55 font-light">File size</dt>
+                <dd className="text-amber-100/85 font-light">
+                  {epubResult.sizeKB
+                    ? epubResult.sizeKB > 1024
+                      ? `${(epubResult.sizeKB / 1024).toFixed(1)} MB`
+                      : `${epubResult.sizeKB} KB`
+                    : '—'}
+                </dd>
+                <dt className="text-amber-200/55 font-light">Generated</dt>
+                <dd className="text-amber-100/85 font-light">
+                  {epubResult.generatedAt
+                    ? new Date(epubResult.generatedAt).toLocaleString()
+                    : '—'}
+                </dd>
+              </dl>
+              <a
+                href={epubResult.epubUrl}
+                className="text-amber-200/85 hover:text-amber-100 text-sm tracking-wide underline decoration-amber-300/30 hover:decoration-amber-300/70 underline-offset-4 transition-colors duration-300"
+              >
+                Download EPUB →
+              </a>
+            </div>
+          )}
+
+          {/* EPUB error */}
+          {epubStatus === 'error' && epubResult && (
+            <div className="mt-6 border border-red-400/30 rounded-md p-5 bg-red-400/[0.04] max-w-xl">
+              <p className="text-red-300/85 text-[11px] tracking-[0.25em] uppercase mb-2">
+                EPUB build failed
+              </p>
+              <p className="text-amber-50/85 text-sm font-light">
+                {epubResult.step ? (
+                  <span className="text-amber-200/55 italic">{epubResult.step}: </span>
+                ) : null}
+                {epubResult.error || 'Unknown error'}
+              </p>
+              {epubResult.details && (
+                <p className="mt-2 text-amber-200/55 text-xs italic leading-relaxed">
+                  {epubResult.details}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
