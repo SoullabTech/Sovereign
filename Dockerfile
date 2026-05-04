@@ -59,8 +59,15 @@ ENV APP_VERSION=${APP_VERSION}
 ENV BUILD_DATE=${BUILD_DATE}
 
 # Install psql for migrations + curl for worker preflight health checks + ffmpeg for media processing
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl ffmpeg \
+# + pandoc and chromium for the Book Studio print render (markdown → PDF via Paged.js)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client curl ffmpeg pandoc chromium fonts-liberation \
   && rm -rf /var/lib/apt/lists/*
+
+# Tell Puppeteer to use the system Chromium instead of downloading its own
+# (npm ci runs with --ignore-scripts in deps stage, so no download anyway).
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy standalone output + static assets
 COPY --from=builder --chown=node:node /app/.next/standalone ./

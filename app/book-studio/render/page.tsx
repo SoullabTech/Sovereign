@@ -1,26 +1,47 @@
 'use client';
 
 /**
- * Render Print PDF — the studio's render trigger surface.
+ * Render Print PDF — generates the print-ready PDF and reports
+ * final page count.
  *
- * Wires to the existing render scripts (scripts/render-book-print.ts,
- * lib/manuscript/render/pagedPdf.ts). This page surfaces the latest
- * output and a placeholder trigger button.
+ * Calls POST /api/book-studio/render. The render takes 60–120s for
+ * a full book (Paged.js paginates 60k words in headless Chromium).
  *
- * Phase 1: shows status + last-known PDF link if present.
- * Phase 2: trigger render via API endpoint.
+ * Spine note: do not lock cover spine until this report's pageCount
+ * is final.
  */
 
 import { useState } from 'react';
 
+type Status = 'idle' | 'rendering' | 'complete' | 'error';
+
+interface RenderResult {
+  ok: boolean;
+  pdfUrl?: string;
+  pageCount?: number;
+  sizeKB?: number;
+  generatedAt?: string;
+  error?: string;
+  step?: string;
+  details?: string;
+}
+
 export default function RenderPage() {
-  const [running, setRunning] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>('idle');
+  const [result, setResult] = useState<RenderResult | null>(null);
 
   const handleRender = async () => {
-    setRunning(true);
-    setMessage('Render trigger not yet wired to API. Run locally: npx tsx scripts/render-book-print.ts');
-    setRunning(false);
+    setStatus('rendering');
+    setResult(null);
+    try {
+      const res = await fetch('/api/book-studio/render', { method: 'POST' });
+      const data: RenderResult = await res.json();
+      setResult(data);
+      setStatus(res.ok && data.ok ? 'complete' : 'error');
+    } catch (err) {
+      setResult({ ok: false, error: err instanceof Error ? err.message : String(err) });
+      setStatus('error');
+    }
   };
 
   return (
@@ -33,43 +54,135 @@ export default function RenderPage() {
           Render Print PDF
         </h1>
         <p className="text-amber-200/45 text-sm font-light italic mt-1">
-          Trigger the print pipeline; review output.
+          Generate the print-ready PDF and resolve final page count.
         </p>
       </header>
 
       <section className="space-y-8 max-w-2xl">
+        {/* Pipeline summary */}
         <div className="border border-amber-200/10 rounded-md p-6 bg-amber-300/[0.02]">
           <p className="text-amber-200/55 text-[11px] tracking-[0.25em] uppercase mb-3">
             Pipeline
           </p>
           <ul className="text-amber-50/75 text-sm font-light space-y-1.5 leading-relaxed">
             <li>Source: <code className="text-amber-300/70">docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md</code></li>
-            <li>Renderer: <code className="text-amber-300/70">lib/manuscript/render/pagedPdf.ts</code> (Paged.js)</li>
-            <li>Stylesheet: <code className="text-amber-300/70">lib/manuscript/render/print.css</code></li>
-            <li>Script: <code className="text-amber-300/70">scripts/render-book-print.ts</code></li>
+            <li>Stylesheet: <code className="text-amber-300/70">lib/manuscript/render/print-book.css</code></li>
+            <li>Engine: pandoc → Paged.js → Puppeteer (headless Chromium)</li>
+            <li>Output: <code className="text-amber-300/70">public/exports/elemental-alchemy-print.pdf</code></li>
           </ul>
         </div>
 
+        {/* Trigger button + status */}
         <div>
           <button
             type="button"
             onClick={handleRender}
-            disabled={running}
-            className="text-amber-200/70 hover:text-amber-100 text-sm tracking-wide transition-colors duration-300 border border-amber-200/20 hover:border-amber-200/40 px-5 py-2 rounded-md disabled:opacity-50"
+            disabled={status === 'rendering'}
+            className={[
+              'text-sm tracking-wide px-5 py-2 rounded-md transition-colors duration-300',
+              'border',
+              status === 'rendering'
+                ? 'text-amber-200/40 border-amber-200/15 cursor-wait'
+                : 'text-amber-200/80 hover:text-amber-100 border-amber-200/25 hover:border-amber-200/45',
+              'disabled:opacity-60',
+            ].join(' ')}
           >
-            {running ? 'Rendering…' : 'Trigger render'}
+            {status === 'rendering' ? 'Rendering… (60–120s)' : 'Render Print PDF'}
           </button>
-          {message && (
+
+          {status === 'rendering' && (
             <p className="mt-4 text-amber-200/55 text-sm font-light italic">
-              {message}
+              Pagination in progress. Headless Chromium is rendering ~60k words
+              through Paged.js. Don't navigate away.
             </p>
           )}
         </div>
 
-        <p className="text-amber-200/35 text-xs italic">
-          Note: render trigger via API not yet wired. For now, run the script locally
-          and the PDF lands in <code>exports/</code>.
-        </p>
+        {/* Result — success */}
+        {status === 'complete' && result?.ok && (
+          <div className="border border-amber-300/20 rounded-md p-6 bg-amber-300/[0.04]">
+            <p className="text-amber-200/55 text-[11px] tracking-[0.25em] uppercase mb-4">
+              Complete
+            </p>
+
+            <dl className="grid grid-cols-[10rem,1fr] gap-y-2 text-sm">
+              <dt className="text-amber-200/55 font-light">Final page count</dt>
+              <dd className="text-amber-100/95 font-light">
+                {result.pageCount} pages
+              </dd>
+
+              <dt className="text-amber-200/55 font-light">File size</dt>
+              <dd className="text-amber-100/85 font-light">
+                {result.sizeKB ? `${(result.sizeKB / 1024).toFixed(1)} MB` : '—'}
+              </dd>
+
+              <dt className="text-amber-200/55 font-light">Generated</dt>
+              <dd className="text-amber-100/85 font-light">
+                {result.generatedAt
+                  ? new Date(result.generatedAt).toLocaleString()
+                  : '—'}
+              </dd>
+            </dl>
+
+            <div className="mt-6">
+              <a
+                href={result.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-200/85 hover:text-amber-100 text-sm tracking-wide underline decoration-amber-300/30 hover:decoration-amber-300/70 underline-offset-4 transition-colors duration-300"
+              >
+                Download PDF →
+              </a>
+            </div>
+
+            {/* Spine working note */}
+            <div className="mt-6 pt-5 border-t border-amber-200/10">
+              <p className="text-amber-200/45 text-[11px] tracking-[0.25em] uppercase mb-2">
+                Spine note
+              </p>
+              <p className="text-amber-50/75 text-sm font-light italic leading-relaxed">
+                Use this final page count to calculate spine width. Do not lock
+                the cover before this report is final.
+              </p>
+              {result.pageCount ? (
+                <p className="text-amber-200/55 text-sm font-light mt-3 leading-relaxed">
+                  Working spine math: {result.pageCount} pages ÷ PPI =
+                  {' '}
+                  <span className="text-amber-100/85">
+                    ~{(result.pageCount / 444).toFixed(2)}″
+                  </span>{' '}
+                  on 55# white,
+                  {' '}
+                  <span className="text-amber-100/85">
+                    ~{(result.pageCount / 360).toFixed(2)}″
+                  </span>{' '}
+                  on 50# cream.
+                  {' '}<span className="text-amber-200/45 italic">
+                    Confirm PPI with printer before final cover.
+                  </span>
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Result — error */}
+        {status === 'error' && result && (
+          <div className="border border-red-400/30 rounded-md p-6 bg-red-400/[0.04]">
+            <p className="text-red-300/85 text-[11px] tracking-[0.25em] uppercase mb-3">
+              Render failed
+            </p>
+            <p className="text-amber-50/85 text-sm font-light leading-relaxed">
+              {result.step ? <span className="text-amber-200/55 italic">{result.step}: </span> : null}
+              {result.error || 'Unknown error'}
+            </p>
+            {result.details && (
+              <p className="mt-3 text-amber-200/55 text-xs font-light italic leading-relaxed">
+                {result.details}
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );

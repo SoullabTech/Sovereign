@@ -51,7 +51,12 @@ export async function renderHtmlToPdf(
   const height = options.height ?? '9in';
   const timeout = options.timeoutMs ?? 60_000;
 
-  const browser = await puppeteer.launch({ headless: true });
+  // --no-sandbox required when running Chromium in Docker (no setuid sandbox).
+  // PUPPETEER_EXECUTABLE_PATH env var (set in Dockerfile) picks up system chromium.
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
   try {
     const page = await browser.newPage();
 
