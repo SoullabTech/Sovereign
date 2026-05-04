@@ -40,9 +40,6 @@ interface MaiaShellProps {
   askMode?: boolean;
   onAskModeChange?: (active: boolean) => void;
   children: React.ReactNode;
-  /** MAIA mode — Talk / Care / Note (primary state of entry) */
-  activeMode?: 'normal' | 'patient' | 'session';
-  onModeChange?: (mode: 'normal' | 'patient' | 'session') => void;
 }
 
 export function MaiaShell({
@@ -64,8 +61,6 @@ export function MaiaShell({
   askMode,
   onAskModeChange,
   children,
-  activeMode,
-  onModeChange,
 }: MaiaShellProps) {
   const router = useRouter();
   const [activeWorld, setActiveWorld] = useState<MaiaWorldId>('maia');
