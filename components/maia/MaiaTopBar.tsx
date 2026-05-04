@@ -14,7 +14,7 @@ import type { MaiaBehavior } from '@/lib/navigation/types';
 const BEHAVIOR_LABELS: Record<MaiaBehavior, { label: string; color: string }> = {
   default: { label: 'Talk', color: 'text-[#D4B896]/50' },
   care: { label: 'Care', color: 'text-emerald-400/60' },
-  scribe: { label: 'Scribe', color: 'text-blue-400/60' },
+  scribe: { label: 'Note', color: 'text-blue-400/60' },
   mark: { label: 'Mark', color: 'text-purple-400/60' },
 };
 
