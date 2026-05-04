@@ -901,7 +901,8 @@ export async function POST(request: NextRequest) {
       userId,
       activeEventContext,
       activeRelationalContext,
-      memoryPlan.promptBlock
+      memoryPlan.promptBlock,
+      spiralState?.dominant_element ?? null
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -1874,7 +1875,9 @@ async function generateSpiralogicResponseWithLLM(
   activeEventContext?: ActiveEventContext | null,
   activeRelationalContext?: ActiveRelationalContext | null,
   /** Pre-computed memory influence block from memoryOrchestrator (runtime plan). */
-  memoryInfluenceBlock?: string
+  memoryInfluenceBlock?: string,
+  /** Member's persisted dominant element from spiralState (passed in to avoid outer-scope closure). */
+  dominantElement?: string | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -2039,7 +2042,7 @@ async function generateSpiralogicResponseWithLLM(
   // PROMPT LIBRARY: load active weekly theme with cycle fallback (non-blocking)
   let activeThemeBlock = '';
   try {
-    const memberElement = spiralState?.dominant_element || null;
+    const memberElement = dominantElement ?? null;
     const themeResult = await buildActiveThemeBlock(memberElement);
     if (themeResult) {
       activeThemeBlock = themeResult.block;

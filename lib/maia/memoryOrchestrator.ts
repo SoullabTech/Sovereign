@@ -47,7 +47,7 @@ import type {
  */
 function detectContradiction(message: string): boolean {
   const m = message.toLowerCase();
-  return /\b(second-?guess|reconsider|not sure anymore|maybe i was wrong|i thought i was clear but now|i'?m no longer sure|changed my mind|going back and forth|this has changed)\b/.test(m);
+  return /\b(second-?guess(?:ing)?|reconsider(?:ing)?|not sure anymore|maybe i was wrong|i thought i was clear but now|i'?m no longer sure|changed my mind|going back and forth|this has changed)\b/.test(m);
 }
 
 /**
