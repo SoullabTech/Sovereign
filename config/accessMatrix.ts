@@ -47,7 +47,14 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/portals', public: true, notes: 'Portals listing' },
   { exact: '/public-demo', public: true, notes: 'Public demo' },
   { exact: '/library', public: true, notes: 'Public library browse' },
-  { exact: '/book-studio', public: true, notes: 'Soullab Press / Book Studio landing' },
+  { exact: '/book-studio', public: true, notes: 'Book Studio — editorial workspace index' },
+  { exact: '/book-studio/read', public: true, notes: 'Book Studio — manuscript reader' },
+  { exact: '/book-studio/passages', public: true, notes: 'Book Studio — passage blocks index' },
+  { exact: '/book-studio/illustrations', public: true, notes: 'Book Studio — illustration list' },
+  { exact: '/book-studio/design-system', public: true, notes: 'Book Studio — design system v1' },
+  { exact: '/book-studio/render', public: true, notes: 'Book Studio — render trigger' },
+  { prefix: '/book-studio/drafts/', public: true, notes: 'Book Studio — imported drafts from MAIA Ideas' },
+  { prefix: '/api/book-studio/', public: true, notes: 'Book Studio — drafts API (POST from MAIA Ideas)' },
 
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
