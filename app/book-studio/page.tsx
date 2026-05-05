@@ -21,8 +21,8 @@ interface RoomLink {
 const ROOMS: RoomLink[] = [
   {
     href: '/book-studio/read',
-    label: 'Read Manuscript',
-    description: 'Elemental Alchemy — sealed source text.',
+    label: 'Read Flow',
+    description: 'Elemental Alchemy — continuous prose, sealed source.',
   },
   {
     href: '/book-studio/passages',
