@@ -6,9 +6,10 @@
 <title>Book Studio — Canvas</title>
 <style>
   /* ═══════════════════════════════════════════════════════════════
-     Book Studio — Canvas (Phase A0 rebuild from screenshot)
-     Reconstruction of the deleted Atticus-alternative artifact.
-     Chrome matches screenshot; behaviors land in Phase B as Kelly fills them in.
+     Book Studio — Canvas
+     Phase A0: visual chrome + draggable blocks (reconstruction)
+     Phase A1: local multi-project support
+     localStorage-only. No server / DB / member persistence yet.
      ═══════════════════════════════════════════════════════════════ */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -98,14 +99,15 @@
   /* ── workspace ──────────────────────────────────────────────── */
   .workspace {
     display: grid;
-    grid-template-columns: 110px 1fr 240px;
+    grid-template-columns: 180px 1fr 240px;
     height: calc(100vh - 92px);
   }
-  .page-list {
+  .left-sidebar {
     background: var(--panel);
     border-right: 1px solid var(--border);
     overflow-y: auto;
-    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
   }
   .canvas-area {
     background: var(--bg);
@@ -121,7 +123,118 @@
     padding: 16px;
     overflow-y: auto;
   }
-  /* ── page thumbnails ───────────────────────────────────────── */
+  /* ── projects section ──────────────────────────────────────── */
+  .section-header {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    padding: 10px 12px 6px 12px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .projects-list { padding: 4px 6px 6px 6px; border-bottom: 1px solid var(--border); }
+  .project-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.3;
+    border: 1px solid transparent;
+  }
+  .project-item:hover { background: var(--panel-2); }
+  .project-item.active { background: var(--panel-2); border-color: var(--accent); }
+  .project-item .name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 4px;
+  }
+  .project-item .name[contenteditable="true"] {
+    background: var(--bg);
+    outline: 1px solid var(--accent);
+    border-radius: 2px;
+    padding: 1px 4px;
+    white-space: normal;
+  }
+  .project-item .type-tag {
+    font-size: 8px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .project-item .actions {
+    display: none;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .project-item:hover .actions { display: flex; }
+  .project-item.active .actions { display: flex; }
+  .project-item .actions button {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 3px;
+    line-height: 1;
+  }
+  .project-item .actions button:hover { color: var(--text); }
+  .new-project-wrap {
+    position: relative;
+    padding: 4px 6px 8px 6px;
+  }
+  .new-project-btn {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px dashed var(--border);
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    text-align: center;
+  }
+  .new-project-btn:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+  .new-project-menu {
+    position: absolute;
+    top: 100%;
+    left: 6px;
+    right: 6px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 10;
+    display: none;
+  }
+  .new-project-menu.open { display: block; }
+  .new-project-menu button {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .new-project-menu button:hover { background: var(--bg); color: var(--accent); }
+  /* ── pages list ────────────────────────────────────────────── */
+  .pages-list { padding: 8px 6px; flex: 1; overflow-y: auto; }
   .page-thumb {
     background: var(--panel-2);
     border: 1px solid var(--border);
@@ -265,9 +378,7 @@
     margin-bottom: 8px;
   }
   .inspector ul { list-style: none; }
-  .inspector .field {
-    margin-bottom: 10px;
-  }
+  .inspector .field { margin-bottom: 10px; }
   .inspector .field label {
     display: block;
     font-size: 10px;
@@ -320,9 +431,10 @@
     <select class="select" id="doc-type">
       <option>Book</option>
       <option>Workbook</option>
-      <option>Training Manual</option>
+      <option>Training Program</option>
       <option>Retreat Packet</option>
-      <option>Oracle / Deck Guidebook</option>
+      <option>Oracle Deck Guide</option>
+      <option>Audiobook</option>
     </select>
     <select class="select" id="preset">
       <option>Classic — Soullab Press</option>
@@ -361,7 +473,23 @@
 </header>
 
 <div class="workspace">
-  <aside class="page-list" id="page-list"></aside>
+  <aside class="left-sidebar">
+    <div class="section-header">Projects</div>
+    <div class="projects-list" id="projects-list"></div>
+    <div class="new-project-wrap">
+      <button class="new-project-btn" id="btn-new-project">+ New Project ▾</button>
+      <div class="new-project-menu" id="new-project-menu">
+        <button data-type="Book">Book</button>
+        <button data-type="Workbook">Workbook</button>
+        <button data-type="Training Program">Training Program</button>
+        <button data-type="Retreat Packet">Retreat Packet</button>
+        <button data-type="Oracle Deck Guide">Oracle Deck Guide</button>
+        <button data-type="Audiobook">Audiobook</button>
+      </div>
+    </div>
+    <div class="section-header">Pages</div>
+    <div class="pages-list" id="pages-list"></div>
+  </aside>
   <main class="canvas-area" id="canvas-area">
     <div class="page" id="page"></div>
   </main>
@@ -381,72 +509,311 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   State
+   Storage layer — localStorage keys
    ═══════════════════════════════════════════════════════════════ */
-const STORAGE_KEY = 'book-studio-canvas-v1';
-
-const DEFAULT_STATE = {
-  documentType: 'Book',
-  preset: 'Classic — Soullab Press',
-  pages: [
-    {
-      id: 'p1',
-      type: 'Frontmatter',
-      label: 'Title',
-      blocks: [
-        { id: 'b1', kind: 'heading', text: 'Elemental Alchemy', x: 60, y: 280, w: 480, h: 70, opacity: 1, z: 1 },
-        { id: 'b2', kind: 'text', text: "A Practitioner's Field Manual", x: 90, y: 380, w: 420, h: 40, opacity: 1, z: 1, italic: true },
-        { id: 'b3', kind: 'text', text: 'Kelly Nezat', x: 200, y: 700, w: 200, h: 30, opacity: 1, z: 1, spaced: true },
-      ],
-    },
-    { id: 'p2', type: 'Doorway', label: 'Fire',  blocks: [{ id: 'd2', kind: 'doorway-marker', text: 'Fire',  x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
-    { id: 'p3', type: 'Doorway', label: 'Water', blocks: [{ id: 'd3', kind: 'doorway-marker', text: 'Water', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
-    { id: 'p4', type: 'Doorway', label: 'Earth', blocks: [{ id: 'd4', kind: 'doorway-marker', text: 'Earth', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
-    { id: 'p5', type: 'Doorway', label: 'Air',   blocks: [{ id: 'd5', kind: 'doorway-marker', text: 'Air',   x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
-    {
-      id: 'p6',
-      type: 'Chapter Opener',
-      label: 'Chapter 1',
-      blocks: [
-        { id: 'c1', kind: 'text', text: 'Chapter 1', x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-        { id: 'c2', kind: 'heading', text: 'The Journey Begins', x: 80, y: 280, w: 440, h: 70, opacity: 1, z: 1 },
-        { id: 'c3', kind: 'image-placeholder', text: '◯', x: 240, y: 660, w: 120, h: 120, opacity: 1, z: 1 },
-      ],
-    },
-  ],
-  activePageId: 'p1',
-  activeBlockId: null,
+const STORAGE = {
+  legacy:    'book-studio-canvas-v1',                              // Phase A0 single-state key (migrated on first load)
+  projects:  'book-studio-canvas-v1::projects',                    // ordered array of project IDs
+  active:    'book-studio-canvas-v1::active',                      // currently active project ID
+  project:   (id) => `book-studio-canvas-v1::project::${id}`,      // per-project state
 };
 
-let state = loadState() || JSON.parse(JSON.stringify(DEFAULT_STATE));
+const DEFAULT_NAMES = {
+  'Book':              'Untitled Book',
+  'Workbook':          'Untitled Workbook',
+  'Training Program':  'Untitled Training Program',
+  'Retreat Packet':    'Untitled Retreat Packet',
+  'Oracle Deck Guide': 'Untitled Oracle Deck Guide',
+  'Audiobook':         'Untitled Audiobook',
+};
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+function uid(prefix) { return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`; }
+
+function loadJSON(key) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+  catch { return null; }
 }
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  setStatus('Saved ' + new Date().toLocaleTimeString());
+function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function setStatus(s) { const el = document.getElementById('status'); if (el) el.textContent = s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   Project model
+   ═══════════════════════════════════════════════════════════════ */
+function buildEmptyProject(type) {
+  const now = Date.now();
+  const projectId = uid('proj');
+  const pageId = uid('p');
+  const headingId = uid('b');
+  const project = {
+    id: projectId,
+    name: DEFAULT_NAMES[type] || 'Untitled Project',
+    documentType: type,
+    preset: 'Classic — Soullab Press',
+    pages: [
+      {
+        id: pageId,
+        type: 'Frontmatter',
+        label: 'Title',
+        blocks: [
+          {
+            id: headingId,
+            kind: 'heading',
+            text: DEFAULT_NAMES[type] || 'Untitled',
+            x: 60, y: 280, w: 480, h: 70, opacity: 1, z: 1,
+          },
+        ],
+      },
+    ],
+    activePageId: pageId,
+    activeBlockId: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+  return project;
 }
-function setStatus(s) {
-  const el = document.getElementById('status');
-  if (el) el.textContent = s;
+
+function buildElementalAlchemySeed() {
+  const now = Date.now();
+  return {
+    id: uid('proj'),
+    name: 'Elemental Alchemy',
+    documentType: 'Book',
+    preset: 'Classic — Soullab Press',
+    pages: [
+      {
+        id: 'p1', type: 'Frontmatter', label: 'Title',
+        blocks: [
+          { id: 'b1', kind: 'heading', text: 'Elemental Alchemy', x: 60, y: 280, w: 480, h: 70, opacity: 1, z: 1 },
+          { id: 'b2', kind: 'text', text: "A Practitioner's Field Manual", x: 90, y: 380, w: 420, h: 40, opacity: 1, z: 1, italic: true },
+          { id: 'b3', kind: 'text', text: 'Kelly Nezat', x: 200, y: 700, w: 200, h: 30, opacity: 1, z: 1, spaced: true },
+        ],
+      },
+      { id: 'p2', type: 'Doorway', label: 'Fire',  blocks: [{ id: 'd2', kind: 'doorway-marker', text: 'Fire',  x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+      { id: 'p3', type: 'Doorway', label: 'Water', blocks: [{ id: 'd3', kind: 'doorway-marker', text: 'Water', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+      { id: 'p4', type: 'Doorway', label: 'Earth', blocks: [{ id: 'd4', kind: 'doorway-marker', text: 'Earth', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+      { id: 'p5', type: 'Doorway', label: 'Air',   blocks: [{ id: 'd5', kind: 'doorway-marker', text: 'Air',   x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+      {
+        id: 'p6', type: 'Chapter Opener', label: 'Chapter 1',
+        blocks: [
+          { id: 'c1', kind: 'text', text: 'Chapter 1', x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+          { id: 'c2', kind: 'heading', text: 'The Journey Begins', x: 80, y: 280, w: 440, h: 70, opacity: 1, z: 1 },
+          { id: 'c3', kind: 'image-placeholder', text: '◯', x: 240, y: 660, w: 120, h: 120, opacity: 1, z: 1 },
+        ],
+      },
+    ],
+    activePageId: 'p1',
+    activeBlockId: null,
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Render
+   Boot — migrate legacy state if present
    ═══════════════════════════════════════════════════════════════ */
-function activePage() { return state.pages.find(p => p.id === state.activePageId); }
+function bootstrap() {
+  let projectIds = loadJSON(STORAGE.projects);
+  // Migration: legacy Phase A0 state key exists, no projects index yet
+  if (!projectIds) {
+    const legacy = loadJSON(STORAGE.legacy);
+    if (legacy && Array.isArray(legacy.pages)) {
+      // wrap legacy state as Elemental Alchemy project (preserve the user's Phase A0 work)
+      const id = uid('proj');
+      const now = Date.now();
+      const project = {
+        id,
+        name: 'Elemental Alchemy',
+        documentType: legacy.documentType || 'Book',
+        preset: legacy.preset || 'Classic — Soullab Press',
+        pages: legacy.pages,
+        activePageId: legacy.activePageId || (legacy.pages[0] && legacy.pages[0].id),
+        activeBlockId: legacy.activeBlockId ?? null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      saveJSON(STORAGE.project(id), project);
+      saveJSON(STORAGE.projects, [id]);
+      saveJSON(STORAGE.active, id);
+      // do NOT delete legacy key — keep as backup until user explicitly resets
+      setStatus('Migrated existing canvas → "Elemental Alchemy" project');
+      projectIds = [id];
+    } else {
+      // Fresh install — seed Elemental Alchemy as the first project
+      const seed = buildElementalAlchemySeed();
+      saveJSON(STORAGE.project(seed.id), seed);
+      saveJSON(STORAGE.projects, [seed.id]);
+      saveJSON(STORAGE.active, seed.id);
+      projectIds = [seed.id];
+    }
+  }
+  let activeId = loadJSON(STORAGE.active);
+  if (!activeId || !projectIds.includes(activeId)) {
+    activeId = projectIds[0];
+    saveJSON(STORAGE.active, activeId);
+  }
+  return { projectIds, activeId };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   In-memory state — current project loaded from storage
+   ═══════════════════════════════════════════════════════════════ */
+let projectIds = [];
+let activeId = null;
+let state = null; // current active project
+
+function persistCurrent() {
+  if (!state) return;
+  state.updatedAt = Date.now();
+  saveJSON(STORAGE.project(state.id), state);
+  saveJSON(STORAGE.projects, projectIds);
+  saveJSON(STORAGE.active, activeId);
+}
+
+function loadProject(id) {
+  state = loadJSON(STORAGE.project(id));
+  activeId = id;
+  saveJSON(STORAGE.active, id);
+}
+
+function activePage() { return state && state.pages.find(p => p.id === state.activePageId); }
 function activeBlock() {
   const p = activePage();
   return p && state.activeBlockId ? p.blocks.find(b => b.id === state.activeBlockId) : null;
 }
 
-function renderPageList() {
-  const list = document.getElementById('page-list');
+/* ═══════════════════════════════════════════════════════════════
+   Project actions
+   ═══════════════════════════════════════════════════════════════ */
+function switchProject(id) {
+  if (id === activeId) return;
+  persistCurrent();
+  loadProject(id);
+  renderAll();
+  setStatus(`Switched to "${state.name}"`);
+}
+
+function createProject(type) {
+  persistCurrent();
+  const project = buildEmptyProject(type);
+  saveJSON(STORAGE.project(project.id), project);
+  projectIds.push(project.id);
+  saveJSON(STORAGE.projects, projectIds);
+  loadProject(project.id);
+  renderAll();
+  setStatus(`Created "${project.name}"`);
+}
+
+function renameProject(id, newName) {
+  const trimmed = (newName || '').trim();
+  if (!trimmed) return;
+  if (id === activeId) {
+    state.name = trimmed;
+    state.updatedAt = Date.now();
+    saveJSON(STORAGE.project(id), state);
+  } else {
+    const p = loadJSON(STORAGE.project(id));
+    if (p) { p.name = trimmed; p.updatedAt = Date.now(); saveJSON(STORAGE.project(id), p); }
+  }
+  renderProjectList();
+  setStatus(`Renamed → "${trimmed}"`);
+}
+
+function deleteProject(id) {
+  const p = loadJSON(STORAGE.project(id));
+  const name = p ? p.name : id;
+  if (!confirm(`Delete project "${name}"? This cannot be undone.`)) return;
+  localStorage.removeItem(STORAGE.project(id));
+  projectIds = projectIds.filter(x => x !== id);
+  saveJSON(STORAGE.projects, projectIds);
+  if (id === activeId) {
+    if (projectIds.length === 0) {
+      // Always keep at least one project — auto-create
+      const seed = buildEmptyProject('Book');
+      saveJSON(STORAGE.project(seed.id), seed);
+      projectIds.push(seed.id);
+      saveJSON(STORAGE.projects, projectIds);
+      loadProject(seed.id);
+    } else {
+      loadProject(projectIds[0]);
+    }
+  }
+  renderAll();
+  setStatus(`Deleted "${name}"`);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Render — projects sidebar
+   ═══════════════════════════════════════════════════════════════ */
+function renderProjectList() {
+  const list = document.getElementById('projects-list');
   list.innerHTML = '';
+  projectIds.forEach((id) => {
+    const p = id === activeId ? state : loadJSON(STORAGE.project(id));
+    if (!p) return;
+    const div = document.createElement('div');
+    div.className = 'project-item' + (id === activeId ? ' active' : '');
+    div.dataset.id = id;
+    div.innerHTML = `
+      <span class="name" title="Double-click to rename">${escapeHtml(p.name)}</span>
+      <span class="type-tag">${escapeHtml(p.documentType)}</span>
+      <span class="actions">
+        <button data-action="rename" title="Rename">✎</button>
+        <button data-action="delete" title="Delete">×</button>
+      </span>
+    `;
+    div.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') return;
+      if (e.target.classList.contains('name') && e.target.contentEditable === 'true') return;
+      switchProject(id);
+    });
+    div.querySelector('[data-action="rename"]').addEventListener('click', e => {
+      e.stopPropagation();
+      startInlineRename(div, id);
+    });
+    div.querySelector('[data-action="delete"]').addEventListener('click', e => {
+      e.stopPropagation();
+      deleteProject(id);
+    });
+    div.querySelector('.name').addEventListener('dblclick', e => {
+      e.stopPropagation();
+      startInlineRename(div, id);
+    });
+    list.appendChild(div);
+  });
+}
+
+function startInlineRename(rowDiv, id) {
+  const nameEl = rowDiv.querySelector('.name');
+  nameEl.contentEditable = 'true';
+  nameEl.focus();
+  // place cursor at end
+  const range = document.createRange();
+  range.selectNodeContents(nameEl);
+  range.collapse(false);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  function commit() {
+    nameEl.removeEventListener('blur', commit);
+    nameEl.removeEventListener('keydown', onKey);
+    nameEl.contentEditable = 'false';
+    renameProject(id, nameEl.textContent);
+  }
+  function onKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); nameEl.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); nameEl.textContent = (id === activeId ? state.name : (loadJSON(STORAGE.project(id))?.name || '')); nameEl.blur(); }
+  }
+  nameEl.addEventListener('blur', commit);
+  nameEl.addEventListener('keydown', onKey);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Render — pages
+   ═══════════════════════════════════════════════════════════════ */
+function renderPageList() {
+  const list = document.getElementById('pages-list');
+  list.innerHTML = '';
+  if (!state) return;
   state.pages.forEach((p, i) => {
     const div = document.createElement('div');
     div.className = 'page-thumb' + (p.id === state.activePageId ? ' active' : '');
@@ -506,7 +873,7 @@ function renderCanvas() {
     div.addEventListener('blur', () => {
       const block = activePage().blocks.find(x => x.id === b.id);
       if (block) block.text = div.textContent;
-      saveState();
+      persistCurrent();
       renderPageList();
     });
     div.addEventListener('mousedown', e => onBlockMouseDown(e, b.id));
@@ -548,22 +915,20 @@ function renderInspector() {
   ['x','y','w','h','opacity','z'].forEach(k => {
     document.getElementById('i-' + k).addEventListener('input', e => {
       b[k] = parseFloat(e.target.value) || 0;
-      renderCanvas();
-      renderPageList();
-      saveState();
+      renderCanvas(); renderPageList(); persistCurrent();
     });
   });
   document.getElementById('i-text').addEventListener('input', e => {
     b.text = e.target.value;
-    renderCanvas();
-    renderPageList();
-    saveState();
+    renderCanvas(); renderPageList(); persistCurrent();
   });
 }
 
 function renderAll() {
+  if (!state) return;
   document.getElementById('doc-type').value = state.documentType;
   document.getElementById('preset').value = state.preset;
+  renderProjectList();
   renderPageList();
   renderCanvas();
   renderInspector();
@@ -574,9 +939,10 @@ function escapeHtml(s) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Interactions
+   Page-level actions (within active project)
    ═══════════════════════════════════════════════════════════════ */
 function handlePageAction(action, id) {
+  if (!state) return;
   const idx = state.pages.findIndex(p => p.id === id);
   if (idx < 0) return;
   if (action === 'up' && idx > 0) {
@@ -585,24 +951,27 @@ function handlePageAction(action, id) {
     [state.pages[idx+1], state.pages[idx]] = [state.pages[idx], state.pages[idx+1]];
   } else if (action === 'dup') {
     const dup = JSON.parse(JSON.stringify(state.pages[idx]));
-    dup.id = 'p' + Date.now();
-    dup.blocks.forEach((b, i) => b.id = 'b' + Date.now() + '_' + i);
+    dup.id = uid('p');
+    dup.blocks.forEach((b, i) => b.id = uid('b'));
     state.pages.splice(idx + 1, 0, dup);
   } else if (action === 'del' && state.pages.length > 1) {
     state.pages.splice(idx, 1);
     if (state.activePageId === id) state.activePageId = state.pages[0].id;
   }
-  saveState();
+  persistCurrent();
   renderAll();
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Block drag/resize
+   ═══════════════════════════════════════════════════════════════ */
 function onBlockMouseDown(e, blockId) {
   state.activeBlockId = blockId;
   renderInspector();
   document.querySelectorAll('.block').forEach(el => el.classList.remove('selected'));
   e.currentTarget.classList.add('selected');
   if (e.target.classList.contains('resize-handle')) return;
-  if (e.detail >= 2) return; // double-click → edit
+  if (e.detail >= 2) return;
   const b = activeBlock();
   if (!b) return;
   const startX = e.clientX, startY = e.clientY;
@@ -621,7 +990,7 @@ function onBlockMouseDown(e, blockId) {
   function onUp() {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
-    saveState();
+    persistCurrent();
     renderPageList();
   }
   document.addEventListener('mousemove', onMove);
@@ -641,7 +1010,7 @@ function onResizeStart(e, blockId) {
   function onUp() {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
-    saveState();
+    persistCurrent();
     renderInspector();
   }
   document.addEventListener('mousemove', onMove);
@@ -657,7 +1026,7 @@ document.querySelectorAll('[data-add]').forEach(btn => {
     const p = activePage();
     if (!p) return;
     const newBlock = {
-      id: 'b' + Date.now(),
+      id: uid('b'),
       kind,
       text: kind === 'heading' ? 'New Heading' :
             kind === 'quote' ? '"A new quote."' :
@@ -670,57 +1039,89 @@ document.querySelectorAll('[data-add]').forEach(btn => {
     };
     p.blocks.push(newBlock);
     state.activeBlockId = newBlock.id;
-    saveState();
+    persistCurrent();
     renderAll();
   });
 });
 
 document.getElementById('doc-type').addEventListener('change', e => {
+  if (!state) return;
   state.documentType = e.target.value;
-  saveState();
+  persistCurrent();
+  renderProjectList();
 });
 document.getElementById('preset').addEventListener('change', e => {
+  if (!state) return;
   state.preset = e.target.value;
-  saveState();
+  persistCurrent();
 });
 document.getElementById('page-type').addEventListener('change', e => {
   const p = activePage();
-  if (p) { p.type = e.target.value; saveState(); renderPageList(); }
+  if (p) { p.type = e.target.value; persistCurrent(); renderPageList(); }
 });
 
-document.getElementById('btn-save').addEventListener('click', saveState);
+document.getElementById('btn-save').addEventListener('click', () => { persistCurrent(); setStatus('Saved ' + new Date().toLocaleTimeString()); });
 document.getElementById('btn-load').addEventListener('click', () => {
-  const loaded = loadState();
-  if (loaded) { state = loaded; renderAll(); setStatus('Loaded'); }
-  else setStatus('No saved state');
+  const reloaded = loadJSON(STORAGE.project(activeId));
+  if (reloaded) { state = reloaded; renderAll(); setStatus('Reloaded from storage'); }
 });
 document.getElementById('btn-reset').addEventListener('click', () => {
-  if (!confirm('Reset to default state? This will discard all your work in this canvas.')) return;
-  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  saveState();
+  if (!state) return;
+  if (!confirm(`Reset "${state.name}" to a single empty title page? This will discard all your work in this project.`)) return;
+  const empty = buildEmptyProject(state.documentType);
+  empty.id = state.id;
+  empty.name = state.name;
+  empty.createdAt = state.createdAt;
+  state = empty;
+  persistCurrent();
   renderAll();
 });
 document.getElementById('btn-export').addEventListener('click', () => window.print());
-document.getElementById('btn-duplicate-page').addEventListener('click', () => handlePageAction('dup', state.activePageId));
+document.getElementById('btn-duplicate-page').addEventListener('click', () => {
+  if (state) handlePageAction('dup', state.activePageId);
+});
 document.getElementById('btn-delete-block').addEventListener('click', () => {
   const p = activePage();
   if (!p || !state.activeBlockId) return;
   p.blocks = p.blocks.filter(b => b.id !== state.activeBlockId);
   state.activeBlockId = null;
-  saveState();
+  persistCurrent();
   renderAll();
+});
+
+/* ── new project menu ───────────────────────────────────────── */
+const newProjectBtn = document.getElementById('btn-new-project');
+const newProjectMenu = document.getElementById('new-project-menu');
+newProjectBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  newProjectMenu.classList.toggle('open');
+});
+newProjectMenu.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.type;
+    newProjectMenu.classList.remove('open');
+    createProject(type);
+  });
+});
+document.addEventListener('click', e => {
+  if (!newProjectMenu.contains(e.target) && e.target !== newProjectBtn) {
+    newProjectMenu.classList.remove('open');
+  }
 });
 
 ['btn-image','btn-templates','btn-image-bank','btn-auto-typeset','btn-reality'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('click', () => {
-    setStatus(`"${el.textContent.trim()}" — behavior fills in Phase B (Kelly drives)`);
+    setStatus(`"${el.textContent.trim()}" — behavior fills in Phase B`);
   });
 });
 
 /* ═══════════════════════════════════════════════════════════════
    Boot
    ═══════════════════════════════════════════════════════════════ */
+const boot = bootstrap();
+projectIds = boot.projectIds;
+loadProject(boot.activeId);
 renderAll();
 </script>
 </body>
