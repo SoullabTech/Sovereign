@@ -20,9 +20,15 @@
 > **Applied so far:**
 > - **Ch1 → Ch2 bridge (L317–319)** — Option A applied 2026-05-04.
 > - **Ch2 setup (L331)** — Full 4-beat reshape with synthesis pre-load
->   applied 2026-05-04. Trinity sequence corrected to *"salt, sulphur,
->   and mercury"* (UK spelling) per Kelly. Trinity-propagation question
->   for Ch3 + later chapters held open pending Kelly's call.
+>   applied 2026-05-04. Trinity sequence later normalized back to
+>   canonical *"sulfur, salt, and mercury"* (US spelling) per Kelly's
+>   structural call.
+> - **Ch2 Torus of Being and Becoming (L363)** — Full reshape applied
+>   2026-05-04. Anatomy paragraph promoted to entry beat; torus-as-form
+>   paragraph receives synthesis pre-load (*"What the body has always
+>   done has long been named as a form — the torus…"*) and arrives as
+>   recognition rather than introduction. Kelly: *"It lands. Cleanly.
+>   No seam between this section and the elemental chapters."*
 
 **Method principle discovered during C1:**
 > **Synthesis must precede density, not follow it.** When synthesis
