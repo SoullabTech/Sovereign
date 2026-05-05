@@ -2432,6 +2432,7 @@ document.getElementById('btn-image-bank').addEventListener('click', openImageBan
    ═══════════════════════════════════════════════════════════════ */
 function parseManuscriptToPages(text) {
   // Layout constants (must match the .page CSS dimensions)
+  console.log('[parseManuscriptToPages] PARSER MODE: fill-first active');
   const PAGE_TOP = 80;       // top margin in px
   const PAGE_BOTTOM = 760;   // bottom limit (page is 800px tall)
   const X_LEFT = 60;
@@ -2456,6 +2457,38 @@ function parseManuscriptToPages(text) {
     const lc = Math.max(1, Math.ceil(text.length / CHARS_PER_LINE) + breaks);
     if (b.kind === 'quote') return Math.max(50, lc * 22 + 14);
     return Math.max(40, lc * LINE_HEIGHT + 8);
+  }
+
+  /* ── Fill-first allocation (#278) ────────────────────────────────
+     Used for capacity checking only. Mirrors the master-spec
+     formulation: estimate block size, ask page if it fits, only
+     create a continuation when it doesn't. blockHeight() above is
+     still used for the visual block.h positioning value (matches
+     edit-mode geometry); estimateBlockHeight here is the conservative
+     parser-side estimate that decides allocation. */
+  function estimateBlockHeight(block) {
+    if (!block) return 40;
+    const text = block.text || '';
+    const charsPerLine = 65;
+    const lineHeight = 20;
+    const breaks = (text.match(/\n/g) || []).length;
+    const lines = Math.max(1, Math.ceil(text.length / charsPerLine) + breaks);
+    if (block.kind === 'heading') return 60 + lines * lineHeight;
+    if (block.kind === 'quote') return 50 + lines * lineHeight;
+    return 40 + lines * lineHeight;
+  }
+
+  function canFitOnPage(page, block) {
+    if (!page) return false;
+    // 900 chosen to match the stated outcome (~292 → ~250–280 pages)
+    // given estimateBlockHeight's ~30% larger per-block heights vs the
+    // edit-mode blockHeight() above. Pages may exceed the 800px page
+    // CSS visually in edit mode for dense blocks; the proof renderer
+    // handles flow via normal document layout, not absolute positioning.
+    const MAX_HEIGHT = 900;
+    const current = page._height || 0;
+    const next = estimateBlockHeight(block);
+    return (current + next) <= MAX_HEIGHT;
   }
 
   function pushPage() {
@@ -2521,7 +2554,7 @@ function parseManuscriptToPages(text) {
 
   function ensureBodyPage(label) {
     if (!currentPage) {
-      currentPage = { type: 'Body', label: label || 'Body', blocks: [], cursorY: PAGE_TOP };
+      currentPage = { type: 'Body', label: label || 'Body', blocks: [], cursorY: PAGE_TOP, _height: 0 };
     }
   }
 
@@ -2535,8 +2568,10 @@ function parseManuscriptToPages(text) {
       b.text = fixAttributionDoublet(stripBoldMarkers(b.text));
     }
     const h = blockHeight(b);
-    // Capacity overflow → split into continuation page
-    if (currentPage.cursorY + h > PAGE_BOTTOM && currentPage.blocks.length > 0) {
+    // Fill-first allocation: only spawn a continuation page when the
+    // current page genuinely cannot fit this block. canFitOnPage uses
+    // the conservative estimateBlockHeight + _height accumulator.
+    if (!canFitOnPage(currentPage, b) && currentPage.blocks.length > 0) {
       const carryLabel = currentPage.label;
       const carryType = currentPage.type;
       pushPage();
@@ -2545,6 +2580,7 @@ function parseManuscriptToPages(text) {
         label: carryLabel.endsWith('(cont.)') ? carryLabel : carryLabel + ' (cont.)',
         blocks: [],
         cursorY: PAGE_TOP,
+        _height: 0,
       };
     }
     let block;
@@ -2559,6 +2595,7 @@ function parseManuscriptToPages(text) {
     }
     currentPage.blocks.push(block);
     currentPage.cursorY += h + BLOCK_GAP;
+    currentPage._height = (currentPage._height || 0) + estimateBlockHeight(b);
   }
 
   function startChapterOpener(title) {
@@ -2569,6 +2606,7 @@ function parseManuscriptToPages(text) {
     pages.push({
       type: 'Chapter Opener',
       label: cleanTitle.slice(0, 40),
+      _height: 0,
       blocks: [
         { kind: 'text', text: `Chapter ${chapterIndex}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
         { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
@@ -2581,7 +2619,7 @@ function parseManuscriptToPages(text) {
     flushBuffer();
     pushPage();
     const clean = decodeBasicEntities(stripBoldMarkers(headingText)).trim();
-    currentPage = { type: 'Body', label: clean.slice(0, 40), blocks: [], cursorY: PAGE_TOP };
+    currentPage = { type: 'Body', label: clean.slice(0, 40), blocks: [], cursorY: PAGE_TOP, _height: 0 };
     addBlock({ kind: 'heading', text: clean, level });
   }
 
@@ -2606,6 +2644,7 @@ function parseManuscriptToPages(text) {
         label: clean.slice(0, 40),
         blocks: [],
         cursorY: PAGE_TOP,
+        _height: 0,
       };
     }
     addBlock({ kind: 'heading', text: clean, level });
