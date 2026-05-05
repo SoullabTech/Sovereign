@@ -11,6 +11,9 @@
      Phase A1: local multi-project support
      localStorage-only. No server / DB / member persistence yet.
      ═══════════════════════════════════════════════════════════════ */
+  /* EB Garamond — used by Page Proof to mirror lib/manuscript/render/print-book.css
+     so the in-browser preview matches the print PDF rendering. */
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #1a1c20;
@@ -836,22 +839,28 @@
     padding: 40px 20px 80px;
     background: var(--bg);
   }
-  /* ── Page Proof typography override (block-cards → book typography)
-     Override absolute-positioned editor blocks to flow as continuous
-     prose inside the .page canvas. Pure CSS; no JS / data model touched. */
+  /* ── Page Proof typography (mirrors lib/manuscript/render/print-book.css)
+     Page Proof's purpose is to preview the printed book. Numbers below
+     come from the Soullab Press canon (2026-05-01) — EB Garamond,
+     11pt body, 1.4 line-height, justified, first-line indent, no
+     paragraph-margin rhythm; H3 small-caps; epigraph centered with
+     side margins. Margins symmetric for v1 (mirrored later if needed).
+     Pure CSS; scoped to body.reading-mode; editor mode untouched. */
   body.reading-mode .page {
     height: auto !important;
     min-height: 9in;
-    padding: 0.7in 0.65in 0.7in 0.65in;
+    padding: 0.75in 0.75in 0.75in 0.75in; /* canon: 0.75 T/B; horizontal symmetric until mirroring */
     display: block;
-    font-family: "Crimson Text", "Iowan Old Style", "Charter", Georgia, serif;
-    font-size: 11.5pt;
-    line-height: 1.55;
-    color: #2a2418;
-    text-align: left;
+    font-family: 'EB Garamond', 'Adobe Garamond Pro', 'Garamond Premier Pro', Garamond, serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #111;
+    text-align: justify;
+    -webkit-hyphens: auto;
+    hyphens: auto;
   }
   body.reading-mode .block {
-    /* Drop absolute positioning + inline x/y/w/h styles */
+    /* Override absolute positioning + inline x/y/w/h editor styles */
     position: static !important;
     left: auto !important;
     top: auto !important;
@@ -870,69 +879,109 @@
     font-size: inherit;
     line-height: inherit;
     color: inherit;
-    text-align: left !important;
     padding: 0;
-    margin: 0 0 0.85em 0;
+    margin: 0;            /* canon: no paragraph-margin rhythm */
     white-space: normal;
   }
-  body.reading-mode .block.heading {
-    font-family: "Playfair Display", "Georgia", serif;
-    font-size: 17pt;
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 1.6em 0 0.55em 0;
-    color: #1f1a10;
-    letter-spacing: -0.005em;
-  }
+  /* Body paragraphs — canon: first-line indent, no margin */
   body.reading-mode .block.text {
-    font-size: 11.5pt;
-    line-height: 1.55;
-    margin-bottom: 0.85em;
-  }
-  body.reading-mode .block.text.italic { font-style: italic; }
-  body.reading-mode .block.text.spaced {
-    /* Chapter number / section label — distinct but tightened */
-    font-family: "Crimson Text", Georgia, serif;
-    font-size: 9.5pt;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    text-align: center !important;
-    color: #6a5e4a;
-    margin: 1em 0 1.4em 0;
-    font-weight: 400;
-  }
-  body.reading-mode .block.quote {
-    font-style: italic;
     font-size: 11pt;
-    line-height: 1.5;
-    margin: 1.1em 0 1.1em 0;
-    padding: 0 0 0 1em;
-    border-left: 2px solid rgba(106, 86, 41, 0.18) !important;
-    color: #4d4332;
+    line-height: 1.4;
+    text-indent: 0.2in;
+    text-align: justify !important;
+    orphans: 2;
+    widows: 2;
   }
-  body.reading-mode .block.doorway-marker {
+  /* First text block after a heading / quote: no indent (canon `h# + p`, `blockquote + p`) */
+  body.reading-mode .block.heading + .block.text,
+  body.reading-mode .block.quote + .block.text {
+    text-indent: 0;
+  }
+  /* Default heading style — canon H3 (most non-chapter headings are ## or ###) */
+  body.reading-mode .block.heading {
+    font-family: inherit;
+    font-size: 13pt;
+    font-weight: 600;
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    text-align: left !important;
+    margin: 18pt 0 6pt 0;
+    page-break-after: avoid;
+    break-after: avoid;
+    color: inherit;
+    text-indent: 0;
+  }
+  /* Chapter title heading on Chapter Opener pages: canon H1.
+     The opener layout is `text.spaced` ("Chapter N") + `heading` (title),
+     so the title is the heading directly following a `.text.spaced` block. */
+  body.reading-mode .block.text.spaced + .block.heading {
+    font-size: 22pt;
+    font-weight: 500;
+    font-variant: normal;
     text-align: center !important;
-    margin: 1.5em 0;
-    font-family: "Playfair Display", Georgia, serif;
-    font-size: 14pt;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #6a5e4a;
+    letter-spacing: 0.04em;
+    margin: 24pt 0 0.5in 0;
   }
+  /* Chapter / section label ("Chapter N", subtitle, byline) — canon-ish:
+     small-caps, light tracking, centered. Distinct from body. */
+  body.reading-mode .block.text.spaced {
+    font-size: 9.5pt;
+    font-variant: small-caps;
+    letter-spacing: 0.18em;
+    text-transform: none;
+    text-align: center !important;
+    text-indent: 0;
+    color: #333;
+    margin: 24pt 0 8pt 0;
+    font-weight: 500;
+  }
+  /* Italic-attribution + markdown blockquotes — canon `.epigraph` styling:
+     italic 10.5pt, centered, side-indented, tighter line-height. */
+  body.reading-mode .block.quote {
+    font-family: inherit;
+    font-style: italic;
+    font-size: 10.5pt;
+    line-height: 1.35;
+    text-align: center !important;
+    text-indent: 0;
+    margin: 12pt 0.5in 16pt 0.5in;
+    padding: 0;
+    color: #1a1a1a;
+  }
+  /* Italic-only text blocks (e.g. title-page subtitle) — epigraph-like */
+  body.reading-mode .block.text.italic {
+    font-style: italic;
+    text-align: center !important;
+    text-indent: 0;
+    margin: 12pt 0;
+    font-size: 12pt;
+  }
+  /* Doorway page marker — Soullab-specific concept (no print canon) */
+  body.reading-mode .block.doorway-marker {
+    font-family: inherit;
+    font-style: italic;
+    font-size: 16pt;
+    text-align: center !important;
+    letter-spacing: 0.12em;
+    margin: 1in 0 0.5in 0;
+    text-indent: 0;
+  }
+  /* Images — canon: grayscale, max 5.25in, centered, block */
   body.reading-mode .block.image,
   body.reading-mode .block.image-placeholder {
     display: block;
-    max-width: 100%;
-    margin: 1.2em auto;
+    max-width: 5.25in;
+    margin: 24pt auto;
     text-align: center !important;
-    background: rgba(0,0,0,0.03);
-    padding: 0.5em;
+    background: transparent !important;
+    padding: 0;
   }
   body.reading-mode .block.image img {
     max-width: 100%;
     height: auto;
     object-fit: contain;
     position: static !important;
+    filter: grayscale(100%);
   }
   body.reading-mode .block .resize-handle { display: none !important; }
   /* Subtle hover hint that blocks remain editable in Page Proof */
