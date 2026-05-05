@@ -2267,11 +2267,15 @@ function openImportDialog() {
       <h3 style="margin:0 0 10px 0;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Import Manuscript</h3>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5;">
         Paste markdown — or click <code>Pull from book-studio/read</code> to fetch the sealed manuscript directly.
-        <br>Each <code>#</code> becomes a Chapter Opener · each <code>##</code> becomes a Body page · <code>###</code> stays as a sub-heading on the same page.
+        <br>Each <code>#</code> becomes a Chapter Opener · each <code>##</code> becomes a Body page · <code>###</code> also becomes a Body page.
         <br>Quotes (<code>*"…" — Author*</code> or <code>&gt; "…"</code>) and lists are preserved as their own blocks.
       </p>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
         <button class="btn" id="import-pull">⬇ Pull from book-studio/read</button>
+        <label class="btn" style="cursor:pointer;margin:0;">
+          ⬆ Choose .docx…
+          <input id="import-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" />
+        </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);margin-left:auto;">
           <input type="checkbox" id="import-replace"> Replace existing pages
         </label>
@@ -2299,6 +2303,31 @@ function openImportDialog() {
       stat.textContent = `Loaded ${Math.round(text.length / 1024)} KB · ${(text.match(/^#\s+/gm) || []).length} chapters · ${(text.match(/^##\s+/gm) || []).length} sections`;
     } catch (err) {
       stat.textContent = 'Could not fetch manuscript: ' + (err && err.message ? err.message : 'unknown');
+    }
+  });
+
+  overlay.querySelector('#import-file').addEventListener('change', async (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if (!f) return;
+    stat.textContent = `Converting ${f.name} via pandoc…`;
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      const r = await fetch('/api/book-studio/import-docx', { method: 'POST', body: fd, credentials: 'include' });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) {
+        const msg = (data && (data.error || data.details)) || `HTTP ${r.status}`;
+        stat.textContent = `Convert failed: ${msg}`;
+        return;
+      }
+      const md = data.markdown || '';
+      ta.value = md;
+      const kb = Math.round(md.length / 1024);
+      const chapters = (md.match(/^#\s+/gm) || []).length;
+      const sections = (md.match(/^##\s+/gm) || []).length;
+      stat.textContent = `Converted ${f.name} → ${kb} KB · ${chapters} chapters · ${sections} sections`;
+    } catch (err) {
+      stat.textContent = 'Convert failed: ' + (err && err.message ? err.message : 'unknown');
     }
   });
 
