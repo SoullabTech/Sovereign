@@ -1587,10 +1587,18 @@ function openImportDialog() {
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px;max-width:560px;width:90%;color:var(--text);font-family:inherit;">
       <h3 style="margin:0 0 10px 0;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Import Manuscript</h3>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5;">
-        Paste markdown text. Each <code>#&nbsp;Heading</code> becomes a Chapter Opener page.
-        Sections under it become body pages with that heading at the top.
+        Upload a <code>.docx</code> (auto-converted via pandoc) or paste markdown directly.
+        <code>#</code> headings become Chapter Openers; <code>##</code> sections become body pages;
+        italic-quote-attribution lines become Quote blocks; long sections paginate by word count.
       </p>
-      <textarea id="import-textarea" placeholder="# Chapter 1\n\nBody paragraph...\n\n# Chapter 2\n\n..." style="width:100%;min-height:240px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <label class="btn" style="cursor:pointer;margin:0;">
+          Choose .docx…
+          <input id="import-file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" />
+        </label>
+        <span id="import-file-status" style="font-size:11px;color:var(--text-dim);"></span>
+      </div>
+      <textarea id="import-textarea" placeholder="# Chapter 1&#10;&#10;Body paragraph...&#10;&#10;# Chapter 2&#10;&#10;..." style="width:100%;min-height:240px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn" id="import-cancel">Cancel</button>
         <button class="btn primary" id="import-go">Import as pages</button>
@@ -1599,9 +1607,36 @@ function openImportDialog() {
   `;
   document.body.appendChild(overlay);
   const ta = overlay.querySelector('#import-textarea');
+  const fileInput = overlay.querySelector('#import-file');
+  const fileStatus = overlay.querySelector('#import-file-status');
+  const goBtn = overlay.querySelector('#import-go');
   ta.focus();
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    fileStatus.textContent = `Converting ${f.name} via pandoc…`;
+    goBtn.disabled = true;
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      const res = await fetch('/api/book-studio/import-docx', { method: 'POST', body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const msg = data && (data.error || data.details) || `HTTP ${res.status}`;
+        fileStatus.textContent = `Convert failed: ${msg}`;
+        return;
+      }
+      ta.value = data.markdown || '';
+      const kb = Math.round((data.markdown || '').length / 1024);
+      fileStatus.textContent = `Converted ${f.name} → ${kb} KB markdown. Review, then Import.`;
+    } catch (err) {
+      fileStatus.textContent = `Convert failed: ${err && err.message || err}`;
+    } finally {
+      goBtn.disabled = false;
+    }
+  });
   overlay.querySelector('#import-cancel').addEventListener('click', () => overlay.remove());
-  overlay.querySelector('#import-go').addEventListener('click', () => {
+  goBtn.addEventListener('click', () => {
     importManuscriptText(ta.value);
     overlay.remove();
   });
@@ -1609,53 +1644,161 @@ function openImportDialog() {
 }
 function importManuscriptText(text) {
   if (!state || !text || !text.trim()) { setStatus('Nothing to import'); return; }
-  // split by `# H1` markers; everything before first H1 becomes a "body" page
+
+  // Layout — matches existing 6×9 page coordinate space.
+  const PAGE_H = 900, M_X = 80, M_Y = 80;
+  const CONTENT_W = 600 - M_X * 2;     // 440
+  const CONTENT_H = PAGE_H - M_Y * 2;  // 740
+  const WORDS_PER_PAGE = 280;
+  const LINE_PX = 22, BLOCK_GAP = 16;
+  const CPL_TEXT = 60, CPL_QUOTE = 50;
+
+  // Strip pandoc-style heading attributes: "Title {#id .class}" → "Title"
+  const cleanHeading = s => s.replace(/\s*\{[^}]*\}\s*$/, '').trim();
+
+  // ── Parse: lines → chapters → sections → typed blocks ───────────────
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const chapters = [];
-  let current = { heading: null, body: [] };
+  let chapter = null, section = null, para = [];
+
+  function ensureChapter() {
+    if (!chapter) { chapter = { heading: null, sections: [] }; chapters.push(chapter); }
+  }
+  function ensureSection() {
+    ensureChapter();
+    if (!section) { section = { heading: null, blocks: [] }; chapter.sections.push(section); }
+  }
+  function classify(t) {
+    if (/^>\s+/.test(t)) return { kind: 'quote', text: t.replace(/^>\s+/, '').trim() };
+    let m = t.match(/^[*_]+\s*(["“].+?["”])\s*[—–-]+\s*([^*_]+?)\s*[*_]+$/);
+    if (m) return { kind: 'quote', text: `${m[1]} — ${m[2].trim()}` };
+    m = t.match(/^[*_]+(.+?)\s*[—–-]{1,3}\s*([^*_]+?)[*_]+$/);
+    if (m && /["“”]/.test(m[1])) return { kind: 'quote', text: `${m[1].trim()} — ${m[2].trim()}` };
+    m = t.match(/^["“](.+?)["”]\s*[—–-]{1,3}\s*(.+)$/);
+    if (m) return { kind: 'quote', text: `“${m[1]}” — ${m[2].trim()}` };
+    return { kind: 'text', text: t };
+  }
+  function flushPara() {
+    if (!para.length) return;
+    const isList = /^(\d+\.\s+|[-*+]\s+)/.test(para[0].trim());
+    const txt = para
+      .map(l => l.replace(/^\s+|\s+$/g, ''))
+      .filter(Boolean)
+      .join(isList ? '\n' : ' ')
+      .replace(/[ \t]+/g, ' ')
+      .trim();
+    para = [];
+    if (!txt) return;
+    ensureSection();
+    section.blocks.push(classify(txt));
+  }
+
   for (const ln of lines) {
-    const m = ln.match(/^#\s+(.+)$/);
-    if (m) {
-      if (current.heading || current.body.length) chapters.push(current);
-      current = { heading: m[1].trim(), body: [] };
-    } else {
-      current.body.push(ln);
+    let m;
+    if ((m = ln.match(/^#\s+(.+?)\s*$/))) {
+      flushPara();
+      chapter = { heading: cleanHeading(m[1]), sections: [] };
+      chapters.push(chapter);
+      section = null;
+      continue;
+    }
+    if ((m = ln.match(/^##\s+(.+?)\s*$/))) {
+      flushPara();
+      ensureChapter();
+      section = { heading: cleanHeading(m[1]), blocks: [] };
+      chapter.sections.push(section);
+      continue;
+    }
+    if ((m = ln.match(/^###\s+(.+?)\s*$/)) || (m = ln.match(/^####\s+(.+?)\s*$/))) {
+      flushPara();
+      ensureSection();
+      section.blocks.push({ kind: 'heading', text: cleanHeading(m[1]), level: 3 });
+      continue;
+    }
+    if (/^---+\s*$/.test(ln) || /^&nbsp;\s*$/.test(ln.trim())) { flushPara(); continue; }
+    if (!ln.trim()) { flushPara(); continue; }
+    para.push(ln);
+  }
+  flushPara();
+
+  // ── Estimate block height + word cost for pagination ────────────────
+  function estHeight(b) {
+    if (b.kind === 'heading') return b.level === 3 ? 50 : 70;
+    const cpl = b.kind === 'quote' ? CPL_QUOTE : CPL_TEXT;
+    const segs = (b.text || '').split('\n');
+    let lns = 0;
+    for (const s of segs) lns += Math.max(1, Math.ceil(s.length / cpl));
+    return Math.max(40, lns * LINE_PX + 16);
+  }
+  function estWords(b) {
+    return b.kind === 'heading' ? 0 : (b.text || '').split(/\s+/).filter(Boolean).length;
+  }
+
+  function paginate(sectionHeading, blocks) {
+    const queue = [];
+    if (sectionHeading) queue.push({ kind: 'heading', text: sectionHeading, level: 2 });
+    queue.push(...blocks);
+    const pages = [];
+    let pg = [], yUsed = 0, words = 0;
+    for (const b of queue) {
+      const h = estHeight(b), w = estWords(b);
+      const gap = pg.length ? BLOCK_GAP : 0;
+      const overflowH = (yUsed + gap + h) > CONTENT_H;
+      const overflowW = (words + w) > WORDS_PER_PAGE;
+      const onlyHeading = pg.length === 1 && pg[0].kind === 'heading';
+      if ((overflowH || overflowW) && pg.length && !onlyHeading) {
+        pages.push(pg); pg = []; yUsed = 0; words = 0;
+      }
+      pg.push(b);
+      yUsed += (pg.length > 1 ? BLOCK_GAP : 0) + h;
+      words += w;
+    }
+    if (pg.length) pages.push(pg);
+    return pages;
+  }
+
+  function buildBodyPage(blocksOnPage) {
+    const out = [];
+    let y = M_Y;
+    for (const b of blocksOnPage) {
+      const h = estHeight(b);
+      let x = M_X, w = CONTENT_W;
+      if (b.kind === 'quote') { x = M_X + 40; w = CONTENT_W - 80; }
+      out.push({ id: uid('b'), kind: b.kind, text: b.text, x, y, w, h, opacity: 1, z: 1 });
+      y += h + BLOCK_GAP;
+    }
+    return { id: uid('p'), type: 'Body', label: 'Body', blocks: out };
+  }
+
+  function buildOpener(heading, label) {
+    const blocks = [];
+    if (label) {
+      blocks.push({ id: uid('b'), kind: 'text', text: label, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true });
+    }
+    blocks.push({ id: uid('b'), kind: 'heading', text: heading, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 });
+    return { id: uid('p'), type: 'Chapter Opener', label: heading.slice(0, 30), blocks };
+  }
+
+  // ── Emit pages ──────────────────────────────────────────────────────
+  const newPages = [];
+  for (const ch of chapters) {
+    if (ch.heading) {
+      const cm = ch.heading.match(/^Chapter\s+(\d+|[IVXLCDM]+)\s*[:\s—–-]+\s*(.+)$/i);
+      newPages.push(cm ? buildOpener(cm[2].trim(), `Chapter ${cm[1]}`)
+                       : buildOpener(ch.heading, null));
+    }
+    for (const s of ch.sections) {
+      for (const g of paginate(s.heading, s.blocks)) newPages.push(buildBodyPage(g));
     }
   }
-  if (current.heading || current.body.length) chapters.push(current);
-
-  const newPages = [];
-  chapters.forEach((c, i) => {
-    if (c.heading) {
-      newPages.push({
-        id: uid('p'),
-        type: 'Chapter Opener',
-        label: c.heading.slice(0, 30),
-        blocks: [
-          { id: uid('b'), kind: 'text', text: `Chapter ${newPages.length + 1}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-          { id: uid('b'), kind: 'heading', text: c.heading, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
-        ],
-      });
-    }
-    const bodyText = c.body.join('\n').trim();
-    if (bodyText) {
-      newPages.push({
-        id: uid('p'),
-        type: 'Body',
-        label: 'Body',
-        blocks: [
-          { id: uid('b'), kind: 'text', text: bodyText.slice(0, 4000), x: 80, y: 80, w: 440, h: 700, opacity: 1, z: 1 },
-        ],
-      });
-    }
-  });
   if (!newPages.length) { setStatus('No content found'); return; }
   state.pages.push(...newPages);
   state.activePageId = newPages[0].id;
   state.activeBlockId = null;
   persistCurrent();
   renderAll();
-  setStatus(`Imported ${newPages.length} pages from ${chapters.filter(c => c.heading).length} chapters`);
+  const chCount = chapters.filter(c => c.heading).length;
+  setStatus(`Imported ${newPages.length} pages from ${chCount} chapter${chCount === 1 ? '' : 's'}`);
 }
 
 /* ── Keyboard shortcuts ──────────────────────────────────── */
