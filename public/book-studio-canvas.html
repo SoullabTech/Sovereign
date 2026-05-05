@@ -2629,12 +2629,13 @@ function parseManuscriptToPages(text) {
     const h2 = line.match(/^##\s+(.+)$/);
     if (h2 && !line.startsWith('###')) { addInlineSectionHeading(h2[1].trim(), 2); i++; continue; }
 
-    // ### Subsection — keeps the legacy fresh-page allocation for
-    // now. Master spec for #277 was strict: "only change how `##`
-    // allocates pages." Revisit if `###` over-pagination still
-    // surfaces in a later read.
+    // ### Subsection — INLINE heading, same rule as ##. Completes the
+    // L1 flow rule: only `#` (real chapters/parts) forces a page break;
+    // sections and subsections flow until capacity demands one. The 185
+    // ### headings in the Elemental Alchemy manuscript would otherwise
+    // produce 185 fragmented pages — most near-empty.
     const h3 = line.match(/^###\s+(.+)$/);
-    if (h3) { startBodyPage(h3[1].trim(), 3); i++; continue; }
+    if (h3) { addInlineSectionHeading(h3[1].trim(), 3); i++; continue; }
 
     // Italic-quote: *"..." — Author*
     const itq = trimmed.match(/^\*\s*"([^"]+)"\s*[—–-]\s*([^*]+?)\s*\*$/);
