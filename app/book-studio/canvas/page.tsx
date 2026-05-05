@@ -25,7 +25,7 @@ export const metadata = {
 
 // Bumped per deploy so the browser doesn't serve a cached iframe.
 // Update this string when shipping changes that must reach the user immediately.
-const CANVAS_VERSION = '2026-05-05-c2-edit-nav';
+const CANVAS_VERSION = '2026-05-05-c3-page-proof-typography';
 
 export default function CanvasPage() {
   return (

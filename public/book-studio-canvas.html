@@ -833,18 +833,112 @@
   }
   body.reading-mode .reading-bar { display: flex; }
   body.reading-mode .canvas-area {
-    padding: 40px 20px 60px;
+    padding: 40px 20px 80px;
     background: var(--bg);
   }
+  /* ── Page Proof typography override (block-cards → book typography)
+     Override absolute-positioned editor blocks to flow as continuous
+     prose inside the .page canvas. Pure CSS; no JS / data model touched. */
+  body.reading-mode .page {
+    height: auto !important;
+    min-height: 9in;
+    padding: 0.7in 0.65in 0.7in 0.65in;
+    display: block;
+    font-family: "Crimson Text", "Iowan Old Style", "Charter", Georgia, serif;
+    font-size: 11.5pt;
+    line-height: 1.55;
+    color: #2a2418;
+    text-align: left;
+  }
   body.reading-mode .block {
+    /* Drop absolute positioning + inline x/y/w/h styles */
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    display: block;
+    /* Strip editor chrome */
     border: none !important;
     outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    cursor: text;
+    /* Inherit page typography by default */
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    text-align: left !important;
+    padding: 0;
+    margin: 0 0 0.85em 0;
+    white-space: normal;
   }
-  body.reading-mode .page:hover .block:not(.image):not(.image-placeholder) {
-    border: 1px dashed rgba(255,255,255,0.06);
+  body.reading-mode .block.heading {
+    font-family: "Playfair Display", "Georgia", serif;
+    font-size: 17pt;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 1.6em 0 0.55em 0;
+    color: #1f1a10;
+    letter-spacing: -0.005em;
   }
-  body.reading-mode .block .resize-handle { display: none; }
+  body.reading-mode .block.text {
+    font-size: 11.5pt;
+    line-height: 1.55;
+    margin-bottom: 0.85em;
+  }
+  body.reading-mode .block.text.italic { font-style: italic; }
+  body.reading-mode .block.text.spaced {
+    /* Chapter number / section label — distinct but tightened */
+    font-family: "Crimson Text", Georgia, serif;
+    font-size: 9.5pt;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-align: center !important;
+    color: #6a5e4a;
+    margin: 1em 0 1.4em 0;
+    font-weight: 400;
+  }
+  body.reading-mode .block.quote {
+    font-style: italic;
+    font-size: 11pt;
+    line-height: 1.5;
+    margin: 1.1em 0 1.1em 0;
+    padding: 0 0 0 1em;
+    border-left: 2px solid rgba(106, 86, 41, 0.18) !important;
+    color: #4d4332;
+  }
+  body.reading-mode .block.doorway-marker {
+    text-align: center !important;
+    margin: 1.5em 0;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 14pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #6a5e4a;
+  }
+  body.reading-mode .block.image,
+  body.reading-mode .block.image-placeholder {
+    display: block;
+    max-width: 100%;
+    margin: 1.2em auto;
+    text-align: center !important;
+    background: rgba(0,0,0,0.03);
+    padding: 0.5em;
+  }
+  body.reading-mode .block.image img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    position: static !important;
+  }
+  body.reading-mode .block .resize-handle { display: none !important; }
+  /* Subtle hover hint that blocks remain editable in Page Proof */
+  body.reading-mode .block:hover { background: rgba(0,0,0,0.02) !important; }
   body.reading-mode .block.selected {
+    background: rgba(217, 119, 6, 0.08) !important;
     border: 1px solid var(--accent) !important;
   }
   /* ── print ─────────────────────────────────────────────────── */
@@ -2281,7 +2375,18 @@ function parseManuscriptToPages(text) {
     if (!buffer.length) return;
     const para = buffer.join('\n').trim();
     buffer = [];
-    if (para) addBlock({ kind: 'text', text: para });
+    if (!para) return;
+    // Whole-paragraph **bold** → inline heading (level 3).
+    // Catches TOC-style entries like "**Preface**" / "**Introduction**"
+    // that pandoc emits from Word styling. Anchored start/end +
+    // no-internal-`**` ensures inline emphasis ("She felt **alive**.")
+    // does not match.
+    const boldOnly = para.match(/^\*\*([\s\S]+?)\*\*$/);
+    if (boldOnly && !boldOnly[1].includes('**')) {
+      addBlock({ kind: 'heading', text: boldOnly[1].replace(/\s+/g, ' ').trim(), level: 3 });
+      return;
+    }
+    addBlock({ kind: 'text', text: para });
   }
 
   function ensureBodyPage(label) {
