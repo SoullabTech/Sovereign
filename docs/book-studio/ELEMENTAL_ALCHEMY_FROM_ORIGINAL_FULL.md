@@ -284,7 +284,7 @@ There have been times when this practice has helped me see where someone is limi
 
 ### The Opportunity of a Lifetime
 
-As a culture, we are being forced to rediscover how to tune-in to our inner world and bring ourselves into harmony with the vast network of support that is a natural part of a self-sustaining, whole person. Our world can no longer accept a collective of imbalanced, disharmonious individuals who consume blindly, act soullessly, and create turmoil in their lives and in the world.
+There is a moment many of us are recognizing — when we begin to rediscover how to tune-in to our inner world and bring ourselves into harmony with the vast network of support that is a natural part of a self-sustaining, whole person. Our world can no longer accept a collective of imbalanced, disharmonious individuals who consume blindly, act soullessly, and create turmoil in their lives and in the world.
 
 We need to design our intelligence to adapt and innovate, a heart that connects and supports others in a field of mutuality and love, and a spirit that always looks beyond what is to what might be when we come from a place of soul to achieve harmony, balance, and wellness in our world. Each of us is born with an intellect, free will, and onboard intelligence that combines nature-based wisdom with open-source programming, coming from an infinite source of intelligence.
 
@@ -422,7 +422,7 @@ We are being forced to rely on our instincts to make decisions, yet we operate w
 
 The five elements of our perception enable us to become more educated participants in the construction of our reality. Rather than being bound by external sources of information, we can be internally informed as well. This taps us into the wisdom of nature promising to guide us out of the mess we've gotten ourselves into.
 
-Life is a journey. If we can learn to live from the dictates of our inner wisdom, we will develop self-reliance and enhance our sense of personal agency to accomplish that which we set out to do. To attain the level of wisdom that is demanded of us at this time in history, we will need to relearn the ways of our ancestors who understood how to see through the eyes of nature and live accordingly. This may be the next level in the collective spiral development of humankind.
+What this asks of us is something old — to see, once more, through the eyes of nature, as our ancestors did.
 
 ### The Web of Life
 
@@ -432,7 +432,7 @@ For Hindus, Indra is a significant deity, akin to Zeus in ancient Greece. But th
 
 Each of these crystal-beings takes form from the infinite field of elemental energies, containing the entirety of all the other crystals on the web. The experiences of a single crystal influence the entirety of the web and those woven into it, like each cell in the body affects all others. This metaphor seemed strange and confusing to Western culture until recently. However, the imagery of a web connecting us all has grown more accessible as most of us now communicate and work primarily within the world wide web.
 
-Indra's web exists as a vibrational field manifesting all material reality. The study of visible sound and vibrations gaining form and revealing patterns, known as cymatics, provides insight into the dance between vibratory realms of frequencies and energies that create physical structure and form. All the elements of life exist in both energetic and material forms. All are interconnected and mutually interdependent.
+Indra's web exists as a vibrational field manifesting all material reality. This pattern is not only mythic — something similar appears in how vibration takes form. The study of visible sound and vibrations gaining form and revealing patterns, known as cymatics, provides insight into the dance between vibratory realms of frequencies and energies that create physical structure and form. All the elements of life exist in both energetic and material forms. All are interconnected and mutually interdependent.
 
 Our awareness of our spiritual interconnection, as well as our responsibility to consciously embrace it, is critical. Returning to elemental awareness is a return to our senses, guiding us on a path of personal, interpersonal, and collective redemption. We don't need to return to archaic lifestyles to access and apply ancient wisdom. We don't need to destroy our technology to become natural.
 

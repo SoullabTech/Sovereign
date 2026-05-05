@@ -29,6 +29,23 @@
 >   done has long been named as a form — the torus…"*) and arrives as
 >   recognition rather than introduction. Kelly: *"It lands. Cleanly.
 >   No seam between this section and the elemental chapters."*
+> - **Ch2 Web of Life — Indra/cymatics bridge (L433)** — Hybrid applied
+>   2026-05-04. One recognition line inserted: *"This pattern is not
+>   only mythic — something similar appears in how vibration takes
+>   form."* Cymatics now reads as confirmation, not pivot.
+> - **Ch1 Opportunity of a Lifetime opening (L287)** — Light soften
+>   applied 2026-05-04. *"As a culture, we are being forced to
+>   rediscover…"* → *"There is a moment many of us are recognizing —
+>   when we begin to rediscover…"* Externalized → internalized; rest
+>   of sentence preserved verbatim.
+> - **Ch2 Sacred Geometry close (L423)** — Trim and land applied
+>   2026-05-04. Four-sentence didactic close cut to single image-beat:
+>   *"What this asks of us is something old — to see, once more,
+>   through the eyes of nature, as our ancestors did."* Civilizational
+>   frame dropped; section closes on image rather than abstraction.
+
+**All 6 candidates applied.** Locked scope (3 full + 3 light) honored.
+Final read-through pending Kelly's calibration check after redeploy.
 
 **Method principle discovered during C1:**
 > **Synthesis must precede density, not follow it.** When synthesis
