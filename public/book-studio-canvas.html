@@ -153,6 +153,48 @@
     justify-content: center;
     padding: 30px 20px;
   }
+  /* ── Edit Mode page navigation arrows ──────────────────────── */
+  /* Subtle floating chevrons either side of the canvas. Hidden in
+     Page Proof (which has its own toolbar nav). Keyboard ←/→ also
+     work; the arrows are a discoverable visual hint. */
+  .canvas-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(40, 40, 40, 0.6);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    opacity: 0.45;
+    transition: opacity 150ms ease, background 150ms ease, color 150ms ease;
+    user-select: none;
+    padding: 0;
+  }
+  .canvas-nav:hover:not(:disabled) {
+    opacity: 1;
+    background: rgba(60, 60, 60, 0.95);
+    color: var(--text);
+  }
+  .canvas-nav.left  { left: 230px; }   /* just past 220px left sidebar */
+  .canvas-nav.right { right: 250px; }  /* just before 240px inspector */
+  .canvas-nav:disabled {
+    opacity: 0.12;
+    cursor: not-allowed;
+  }
+  body.reading-mode .canvas-nav { display: none; }
+  @media (max-width: 1100px) {
+    .canvas-nav.left  { left: 12px; }
+    .canvas-nav.right { right: 12px; }
+  }
   .inspector {
     background: var(--panel);
     border-left: 1px solid var(--border);
@@ -944,6 +986,10 @@
   </aside>
 </div>
 
+<!-- Edit Mode page navigation arrows (hidden by CSS while in Page Proof) -->
+<button class="canvas-nav left" id="canvas-nav-prev" type="button" title="Previous page (←)" aria-label="Previous page">‹</button>
+<button class="canvas-nav right" id="canvas-nav-next" type="button" title="Next page (→)" aria-label="Next page">›</button>
+
 <script>
 /* ═══════════════════════════════════════════════════════════════
    Storage layer — localStorage keys
@@ -1517,6 +1563,7 @@ function renderAll() {
   renderCanvas();
   renderInspector();
   renderBlocksList();
+  refreshCanvasNav();
   if (document.body.classList.contains('reading-mode')) {
     buildReadingJumpOptions();
     refreshReadingBar();
@@ -2590,6 +2637,21 @@ function readingNavigate(delta) {
   renderAll();
 }
 
+/* Edit Mode arrow disabled-state — first/last page should not be clickable. */
+function refreshCanvasNav() {
+  const prev = document.getElementById('canvas-nav-prev');
+  const next = document.getElementById('canvas-nav-next');
+  if (!prev || !next) return;
+  if (!state || !Array.isArray(state.pages) || !state.pages.length) {
+    prev.disabled = true;
+    next.disabled = true;
+    return;
+  }
+  const idx = state.pages.findIndex(p => p.id === state.activePageId);
+  prev.disabled = (idx <= 0);
+  next.disabled = (idx < 0 || idx >= state.pages.length - 1);
+}
+
 function readingJumpTo(pageId) {
   if (!state || !pageId) return;
   state.activePageId = pageId;
@@ -2603,6 +2665,11 @@ document.getElementById('rm-next').addEventListener('click', () => readingNaviga
 document.getElementById('rm-exit').addEventListener('click', () => setReadingMode(false));
 document.getElementById('rm-jump').addEventListener('change', e => readingJumpTo(e.target.value));
 
+/* Edit Mode floating arrows — share readingNavigate() since the page-walk
+   logic is identical; the only difference is which mode owns the surface. */
+document.getElementById('canvas-nav-prev').addEventListener('click', () => readingNavigate(-1));
+document.getElementById('canvas-nav-next').addEventListener('click', () => readingNavigate(1));
+
 document.addEventListener('keydown', e => {
   // ignore when user is editing text in a contenteditable block, an input, or a textarea
   const t = e.target;
@@ -2615,6 +2682,13 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); readingNavigate(-1); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); readingNavigate(1); return; }
     if (e.key === 'Escape') { e.preventDefault(); setReadingMode(false); return; }
+  }
+
+  // Edit Mode page navigation — only when NOT in Page Proof and NOT editing
+  // text/inputs. ←/→ walk through pages in the order shown in the sidebar.
+  if (!isReadingMode() && !isEditingText) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); readingNavigate(-1); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); readingNavigate(1); return; }
   }
 
   // Undo: Cmd+Z (mac) or Ctrl+Z (win) — works even while editing text OUT of inputs
