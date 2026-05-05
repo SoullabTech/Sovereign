@@ -2279,9 +2279,58 @@ function parseManuscriptToPages(text) {
 
   function flushBuffer() {
     if (!buffer.length) return;
-    const para = buffer.join('\n').trim();
+    let para = buffer.join('\n').trim();
     buffer = [];
-    if (para) addBlock({ kind: 'text', text: para });
+    if (!para) return;
+    // Decode HTML entities first (Word emits &nbsp; for spacer lines
+    // and as inline horizontal spacing). Then drop blocks whose entire
+    // content was just a non-breaking-space spacer.
+    para = decodeBasicEntities(para);
+    if (!/\S/.test(para)) return;
+    addBlock({ kind: 'text', text: para });
+  }
+
+  /* ── Markdown leak cleaners ───────────────────────────────────────
+     Three visible-noise patterns that survive Word docx → pandoc → md
+     round-trips and would otherwise render as literal text:
+
+       1. Inline bold markers `**foo**` that didn't get caught by the
+          standalone-bold-line promotion (e.g. mid-paragraph emphasis).
+       2. Em-dash + hyphen attribution doublet `— -` that pandoc emits
+          for Word's em-dash-then-hyphen attribution style. Should be
+          a single `—`.
+       3. HTML entities — `&nbsp;` (and friends) — that Word emits as
+          line spacers and inline horizontal spacing inside chapter
+          listings. Visible as literal text; standalone &nbsp; lines
+          should not produce a block at all.
+
+     Applied at the boundary points (heading constructors + addBlock
+     for text/quote + flushBuffer skip-if-blank) so the parser sees
+     clean strings. Italic markers and pandoc attribute syntax
+     `{#anchor .class}` are out of scope for this pass. ─── */
+
+  function stripBoldMarkers(t) {
+    if (typeof t !== 'string' || !t) return t;
+    return t.replace(/\*\*([^*\n]+?)\*\*/g, '$1');  // **bold** → bold
+  }
+
+  function fixAttributionDoublet(t) {
+    if (typeof t !== 'string' || !t) return t;
+    // '— - Joseph Campbell' → '— Joseph Campbell'
+    // Also '— – Author' (en-dash variant)
+    return t.replace(/—\s*[-–]\s+/g, '— ');
+  }
+
+  function decodeBasicEntities(t) {
+    if (typeof t !== 'string' || !t) return t;
+    return t
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
   }
 
   function ensureBodyPage(label) {
@@ -2292,6 +2341,13 @@ function parseManuscriptToPages(text) {
 
   function addBlock(b) {
     ensureBodyPage();
+    // Strip leaked markdown noise from text/quote so it doesn't render
+    // as literal characters in Page Proof. Headings get cleaned by
+    // their own constructors.
+    if ((b.kind === 'text' || b.kind === 'quote') && typeof b.text === 'string') {
+      b.text = decodeBasicEntities(b.text);
+      b.text = fixAttributionDoublet(stripBoldMarkers(b.text));
+    }
     const h = blockHeight(b);
     // Capacity overflow → split into continuation page
     if (currentPage.cursorY + h > PAGE_BOTTOM && currentPage.blocks.length > 0) {
@@ -2323,12 +2379,13 @@ function parseManuscriptToPages(text) {
     flushBuffer();
     pushPage();
     chapterIndex++;
+    const cleanTitle = decodeBasicEntities(stripBoldMarkers(title)).trim();
     pages.push({
       type: 'Chapter Opener',
-      label: title.slice(0, 40),
+      label: cleanTitle.slice(0, 40),
       blocks: [
         { kind: 'text', text: `Chapter ${chapterIndex}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-        { kind: 'heading', text: title, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
+        { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
       ],
     });
     currentPage = null;
@@ -2337,8 +2394,9 @@ function parseManuscriptToPages(text) {
   function startBodyPage(headingText, level) {
     flushBuffer();
     pushPage();
-    currentPage = { type: 'Body', label: headingText.slice(0, 40), blocks: [], cursorY: PAGE_TOP };
-    addBlock({ kind: 'heading', text: headingText, level });
+    const clean = decodeBasicEntities(stripBoldMarkers(headingText)).trim();
+    currentPage = { type: 'Body', label: clean.slice(0, 40), blocks: [], cursorY: PAGE_TOP };
+    addBlock({ kind: 'heading', text: clean, level });
   }
 
   while (i < lines.length) {
@@ -2395,6 +2453,21 @@ function parseManuscriptToPages(text) {
         else break;
       }
       addBlock({ kind: 'text', text: lLines.join('\n').trim() });
+      continue;
+    }
+
+    // Standalone bold-only markdown lines become heading blocks before
+    // they fall through to paragraph text. Handles pandoc/Word output
+    // like **Preface** / **Introduction** that survives docx → markdown
+    // conversion as a literal bold paragraph instead of a real heading.
+    // Runs after all structural rules (#, ##, ###, quotes, lists) so it
+    // never overrides them; uses `trimmed` so it does not affect inline
+    // bold inside paragraphs.
+    const boldHeading = trimmed.match(/^\*\*(.+?)\*\*$/);
+    if (boldHeading) {
+      flushBuffer();
+      addBlock({ kind: 'heading', text: boldHeading[1].trim(), level: 2 });
+      i++;
       continue;
     }
 
