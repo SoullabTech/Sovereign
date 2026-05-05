@@ -2585,6 +2585,32 @@ function parseManuscriptToPages(text) {
     addBlock({ kind: 'heading', text: clean, level });
   }
 
+  /* Inline section heading — does NOT force a new page. The current
+     page continues to accumulate content; addBlock's capacity check
+     handles overflow into a continuation page when geometry demands.
+     Used for `##` so a section that fits inside the current page
+     stays on it (eliminates orphan-quote pages, near-empty pages, and
+     the every-`##`-is-a-new-page over-pagination that breaks reading
+     flow). `#` still forces a new opener; `###` still uses the
+     legacy fresh-page path. */
+  function addInlineSectionHeading(headingText, level) {
+    flushBuffer();
+    const clean = decodeBasicEntities(stripBoldMarkers(headingText)).trim();
+    // First section after a chapter opener: the auto-created body
+    // page can take its label from this heading so the jump-nav
+    // dropdown keeps a useful entry. Mid-page sections leave the
+    // existing page label intact and just append the heading inline.
+    if (!currentPage) {
+      currentPage = {
+        type: 'Body',
+        label: clean.slice(0, 40),
+        blocks: [],
+        cursorY: PAGE_TOP,
+      };
+    }
+    addBlock({ kind: 'heading', text: clean, level });
+  }
+
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -2595,11 +2621,18 @@ function parseManuscriptToPages(text) {
     const h1 = line.match(/^#\s+(.+)$/);
     if (h1 && !line.startsWith('##')) { startChapterOpener(h1[1].trim()); i++; continue; }
 
-    // ## Section
+    // ## Section — INLINE heading on current page (no forced break).
+    // Capacity overflow in addBlock pushes to a continuation page when
+    // geometry actually demands it. This is the flow unlock per master
+    // spec: pages break where the page is full, not where the author
+    // typed `##`.
     const h2 = line.match(/^##\s+(.+)$/);
-    if (h2 && !line.startsWith('###')) { startBodyPage(h2[1].trim(), 2); i++; continue; }
+    if (h2 && !line.startsWith('###')) { addInlineSectionHeading(h2[1].trim(), 2); i++; continue; }
 
-    // ### Subsection — also new Body page
+    // ### Subsection — keeps the legacy fresh-page allocation for
+    // now. Master spec for #277 was strict: "only change how `##`
+    // allocates pages." Revisit if `###` over-pagination still
+    // surfaces in a later read.
     const h3 = line.match(/^###\s+(.+)$/);
     if (h3) { startBodyPage(h3[1].trim(), 3); i++; continue; }
 
