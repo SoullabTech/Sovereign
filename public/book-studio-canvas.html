@@ -839,13 +839,113 @@
   body.reading-mode .block {
     border: none !important;
     outline: none !important;
+    box-shadow: none !important;
   }
-  body.reading-mode .page:hover .block:not(.image):not(.image-placeholder) {
-    border: 1px dashed rgba(255,255,255,0.06);
+  body.reading-mode .block::before,
+  body.reading-mode .block::after,
+  body.reading-mode .resize-handle {
+    display: none !important;
   }
-  body.reading-mode .block .resize-handle { display: none; }
-  body.reading-mode .block.selected {
-    border: 1px solid var(--accent) !important;
+  /* (legacy hover/selection editor affordances intentionally removed
+     for proof mode — Page Proof v2 renders semantic HTML, no .block
+     elements are produced in this mode) */
+
+  /* ═══════════════════════════════════════════════════════════════
+     Page Proof v2 — book-page typography render
+     ═══════════════════════════════════════════════════════════════
+     Active only inside `body.reading-mode`. The renderer
+     (renderProofPage in JS) replaces the absolute-positioned editor
+     blocks with semantic HTML in normal document flow; this CSS
+     gives that flow real book typography: serif body, real margins,
+     left-aligned prose, integrated quotes, opener-page centering.
+     Edit Mode is untouched. ═══════════════════════════════════════ */
+  body.reading-mode .page {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  body.reading-mode .proof-page-inner {
+    width: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: 0.78in 0.68in 0.72in 0.78in;
+  }
+  body.reading-mode .proof-text-column {
+    max-width: 4.45in;
+    margin: 0 auto;
+    color: #252016;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  body.reading-mode .proof-heading {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 23px;
+    line-height: 1.12;
+    font-weight: 600;
+    text-align: left;
+    margin: 0 0 26px 0;
+    color: #262016;
+  }
+  body.reading-mode .proof-paragraph {
+    font-size: 13.5px;
+    line-height: 1.42;
+    text-align: left;
+    margin: 0 0 12px 0;
+    color: #211b13;
+    white-space: pre-line;
+  }
+  body.reading-mode .proof-quote {
+    font-size: 13px;
+    line-height: 1.38;
+    text-align: left;
+    font-style: italic;
+    margin: 18px 0 18px 0.18in;
+    padding-left: 0.18in;
+    border-left: 1px solid rgba(70, 55, 35, 0.35);
+    color: #3a3022;
+    white-space: pre-line;
+  }
+  body.reading-mode .proof-image {
+    margin: 22px auto;
+    text-align: center;
+  }
+  body.reading-mode .proof-image img {
+    max-width: 100%;
+    height: auto;
+  }
+  body.reading-mode .proof-continuation {
+    text-align: right;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(45, 35, 25, 0.45);
+    margin-bottom: 10px;
+  }
+  /* Opener pages (chapter / part) — centered threshold treatment */
+  body.reading-mode .proof-page-type-chapter-opener,
+  body.reading-mode .proof-page-type-part-opener {
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  body.reading-mode .proof-page-type-chapter-opener .proof-text-column,
+  body.reading-mode .proof-page-type-part-opener .proof-text-column {
+    max-width: 4.7in;
+    text-align: center;
+  }
+  body.reading-mode .proof-page-type-chapter-opener .proof-heading,
+  body.reading-mode .proof-page-type-part-opener .proof-heading {
+    text-align: center;
+    font-size: 26px;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  body.reading-mode .proof-page-type-chapter-opener .proof-paragraph,
+  body.reading-mode .proof-page-type-part-opener .proof-paragraph {
+    text-align: center;
+    font-size: 12.5px;
+    line-height: 1.35;
+    margin-top: 12px;
   }
   /* ── print ─────────────────────────────────────────────────── */
   @media print {
@@ -1388,12 +1488,98 @@ function renderPageList() {
   });
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Page Proof v2 — render-layer override
+   ═══════════════════════════════════════════════════════════════
+   In Page Proof mode, blocks render as semantic HTML in normal
+   document flow (no absolute positioning, no editor affordances,
+   no x/y/w/h, no resize handles, no selection borders). The data
+   model is unchanged — this is a presentational override only.
+   Edit Mode keeps the existing absolute-positioned block render. */
+
+function cleanProofText(t) {
+  if (typeof t !== 'string' || !t) return '';
+  // Render-time strip only — does NOT mutate stored block data.
+  // Mirrors the parser-layer cleaners so older imports (parsed before
+  // the parser cleanup shipped) still proof clean.
+  return t
+    .replace(/^\s*\*\*([\s\S]+?)\*\*\s*$/, '$1')   // surrounding **
+    .replace(/\*\*([^*\n]+?)\*\*/g, '$1')           // inline **
+    .replace(/&nbsp;/g, ' ')                        // entity decode
+    .replace(/—\s*[-–]\s+/g, '— ');                  // em-dash doublet
+}
+
+function pageTypeSlug(t) {
+  return String(t || 'body').toLowerCase().replace(/\s+/g, '-');
+}
+
+function renderProofPage(pageEl, p) {
+  const isCont = /\(cont\.\)\s*$/i.test(p.label || '');
+  const inner = document.createElement('div');
+  inner.className =
+    'proof-page-inner proof-page-type-' + pageTypeSlug(p.type) +
+    (isCont ? ' proof-page-continuation-page' : '');
+
+  const col = document.createElement('div');
+  col.className = 'proof-text-column';
+
+  for (const b of (p.blocks || [])) {
+    // Image blocks render as figures in flow.
+    if (b.kind === 'image' && b.src) {
+      const fig = document.createElement('figure');
+      fig.className = 'proof-image';
+      const img = document.createElement('img');
+      img.src = b.src;
+      img.alt = '';
+      img.draggable = false;
+      fig.appendChild(img);
+      col.appendChild(fig);
+      continue;
+    }
+
+    const text = cleanProofText(b.text || '');
+    if (!text) continue;
+
+    // Suppress a heading block whose only content is "(cont.)" — the
+    // continuation page indicator lives in the Page Proof bar, not in
+    // the typeset content.
+    if (b.kind === 'heading' && /\(cont\.\)\s*$/i.test(text)) continue;
+
+    let el;
+    if (b.kind === 'heading') {
+      el = document.createElement('h2');
+      el.className = 'proof-heading';
+    } else if (b.kind === 'quote') {
+      el = document.createElement('blockquote');
+      el.className = 'proof-quote';
+    } else {
+      // text, doorway-marker, image-placeholder, unknown → paragraph
+      el = document.createElement('p');
+      el.className = 'proof-paragraph';
+    }
+    el.textContent = text;
+    col.appendChild(el);
+  }
+
+  inner.appendChild(col);
+  pageEl.appendChild(inner);
+}
+
 function renderCanvas() {
   const page = document.getElementById('page');
   const p = activePage();
   page.innerHTML = '';
   if (!p) return;
   document.getElementById('page-type').value = p.type;
+
+  // Page Proof v2: book-page typography render path. No editor
+  // affordances, no absolute positioning, no resize handles. Edit
+  // Mode falls through to the original block rendering below.
+  if (typeof isReadingMode === 'function' && isReadingMode()) {
+    renderProofPage(page, p);
+    return;
+  }
+
   p.blocks.forEach(b => {
     const div = document.createElement('div');
     div.className = `block ${b.kind}` + (b.italic ? ' italic' : '') + (b.spaced ? ' spaced' : '') + (b.id === state.activeBlockId ? ' selected' : '');
