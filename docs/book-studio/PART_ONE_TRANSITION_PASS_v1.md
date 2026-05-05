@@ -19,6 +19,17 @@
 >
 > **Applied so far:**
 > - **Ch1 → Ch2 bridge (L317–319)** — Option A applied 2026-05-04.
+> - **Ch2 setup (L331)** — Full 4-beat reshape with synthesis pre-load
+>   applied 2026-05-04. Trinity sequence corrected to *"salt, sulphur,
+>   and mercury"* (UK spelling) per Kelly. Trinity-propagation question
+>   for Ch3 + later chapters held open pending Kelly's call.
+
+**Method principle discovered during C1:**
+> **Synthesis must precede density, not follow it.** When synthesis
+> follows: reader works. When synthesis precedes: reader recognizes.
+> Pre-load the recognition cue before any list / framework stack
+> arrives. Pattern → examples → reinforcement, not pattern → examples
+> → synthesis.
 
 ---
 

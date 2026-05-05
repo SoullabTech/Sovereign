@@ -326,7 +326,11 @@ The elements, once met, do not stay still. They move through us, through each ot
 
 Change is a constant, permeating every aspect of our universe. From the cosmic cycles of stars being born and dying to the personal cycles of growth, loss, and renewal in our lives, transformation is ever-present. Ancient philosophical and astrological systems offer profound wisdom for navigating this perpetual metamorphosis. Great works such as the I Ching or the Book of Changes are gifts from early civilizations devoted to understanding and studying the patterns of personal and collective growth and change. Central to these is the realization that there is an order that underlies the perceived chaos, complexity, and uniqueness of all life. As we begin to recognize these patterns, a different kind of awareness often emerges around how change unfolds.
 
-In this chapter, we will explore the dynamics of change through the model of the torus and the lens of three phases of conscious process: intention, immersion, and integration of an individual element. These align with the metaphysical dynamics in many traditions including the three gunas of Hinduism, the movements of astrology's cardinal, fixed, and mutable phases, the alchemical principles of sulfur, salt, and mercury, and the holon model of toroidal flows found in ancient and modern metaphysics. By understanding the interplay of these fundamental archetypal dynamics of change, we gain invaluable tools for consciously engaging with the dance of our own transformation.
+There are moments when something begins to shift in us — a relationship turning, a way of seeing arriving, a long-held grief loosening — though we may not yet have words for what is moving. We feel it before we can describe it. The body, often, knows first.
+
+What is moving in us at moments like these has been recognized, again and again, in many traditions — each speaking of the same shape in its own language: the torus, with its rhythm of flow inward and outward; the three phases of intention, immersion, and integration; the gunas of Hinduism; the cardinal, fixed, and mutable movements of astrology; the alchemical principles of salt, sulphur, and mercury; the holon and toroidal flows of ancient and modern metaphysics. Different languages, the same shape recognized.
+
+What this chapter offers is a way to notice these movements as they happen — not as concepts to be applied, but as a shape already moving through our lives.
 
 ### The Nature of Change
 
