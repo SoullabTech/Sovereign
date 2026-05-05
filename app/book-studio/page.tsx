@@ -44,6 +44,11 @@ const ROOMS: RoomLink[] = [
     label: 'Render Print PDF',
     description: 'Trigger the print pipeline; review output.',
   },
+  {
+    href: '/book-studio/canvas',
+    label: 'Canvas (Layout)',
+    description: 'Visual page-by-page layout — Atticus-alternative rebuild, Phase A0.',
+  },
 ];
 
 async function listDrafts(): Promise<{ slug: string; title: string }[]> {

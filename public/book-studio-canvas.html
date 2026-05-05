@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Studio — Canvas</title>
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     Book Studio — Canvas (Phase A0 rebuild from screenshot)
+     Reconstruction of the deleted Atticus-alternative artifact.
+     Chrome matches screenshot; behaviors land in Phase B as Kelly fills them in.
+     ═══════════════════════════════════════════════════════════════ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #1a1c20;
+    --panel: #232629;
+    --panel-2: #2b2e32;
+    --border: #3a3d41;
+    --text: #e6e6e6;
+    --text-dim: #9aa0a6;
+    --accent: #d97706;
+    --accent-hover: #b45309;
+    --doorway: #ea580c;
+    --frontmatter: #ea580c;
+    --chapter: #dc2626;
+    --page-cream: #f3eddd;
+    --page-block-border: #c9bfa6;
+  }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  /* ── toolbar ────────────────────────────────────────────────── */
+  .toolbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .brand {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-right: 8px;
+  }
+  .btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: var(--panel-2); }
+  .btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.disabled-soft {
+    color: var(--text-dim);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .toolbar .spacer { flex: 1; }
+  /* ── workspace ──────────────────────────────────────────────── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 110px 1fr 240px;
+    height: calc(100vh - 92px);
+  }
+  .page-list {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 8px 6px;
+  }
+  .canvas-area {
+    background: var(--bg);
+    overflow: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 30px 20px;
+  }
+  .inspector {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+  }
+  /* ── page thumbnails ───────────────────────────────────────── */
+  .page-thumb {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-thumb.active { border-color: var(--accent); }
+  .page-thumb .role-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--doorway);
+    color: white;
+    padding: 2px 6px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    z-index: 2;
+  }
+  .page-thumb .role-tag.frontmatter { background: var(--frontmatter); }
+  .page-thumb .role-tag.chapter-opener { background: var(--chapter); }
+  .page-thumb .preview {
+    background: var(--page-cream);
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 8px 8px 8px;
+    color: #2a2418;
+    font-size: 7px;
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+  }
+  .page-thumb .preview .thumb-title {
+    font-family: "Playfair Display", "Georgia", serif;
+    font-size: 9px;
+    margin-bottom: 4px;
+  }
+  .page-thumb .preview .thumb-sub {
+    font-style: italic;
+    font-size: 6px;
+    color: #5a5040;
+  }
+  .page-thumb .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: var(--panel-2);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  .page-thumb .actions button {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 0 2px;
+  }
+  .page-thumb .actions button:hover { color: var(--text); }
+  /* ── canvas ────────────────────────────────────────────────── */
+  .page {
+    width: 600px;
+    height: 800px;
+    background: var(--page-cream);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    position: relative;
+    color: #2a2418;
+    font-family: "Crimson Text", "Georgia", serif;
+  }
+  .block {
+    position: absolute;
+    border: 1px dashed var(--page-block-border);
+    padding: 12px 16px;
+    cursor: move;
+    user-select: none;
+  }
+  .block.selected { border: 1px solid var(--accent); border-style: solid; }
+  .block.heading {
+    font-family: "Playfair Display", "Georgia", serif;
+    font-size: 32px;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .block.text {
+    font-size: 14px;
+    text-align: center;
+  }
+  .block.text.italic { font-style: italic; }
+  .block.text.spaced { letter-spacing: 0.25em; text-transform: none; }
+  .block.quote {
+    font-style: italic;
+    font-size: 13px;
+    text-align: center;
+    color: #5a5040;
+  }
+  .block.image-placeholder {
+    background: rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a7e60;
+    font-size: 11px;
+  }
+  .block.doorway-marker {
+    text-align: center;
+    font-family: "Playfair Display", "Georgia", serif;
+    font-size: 22px;
+    color: #5a5040;
+    font-style: italic;
+  }
+  .block .resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
+    opacity: 0;
+  }
+  .block.selected .resize-handle { opacity: 1; }
+  /* ── inspector ─────────────────────────────────────────────── */
+  .inspector h3 {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .inspector p, .inspector li {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .inspector ul { list-style: none; }
+  .inspector .field {
+    margin-bottom: 10px;
+  }
+  .inspector .field label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .inspector .field input,
+  .inspector .field textarea,
+  .inspector .field select {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 4px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .inspector .field textarea { min-height: 60px; resize: vertical; }
+  .inspector .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  /* ── print ─────────────────────────────────────────────────── */
+  @media print {
+    body * { visibility: hidden; }
+    .canvas-area, .canvas-area * { visibility: visible; }
+    .canvas-area { position: absolute; left: 0; top: 0; padding: 0; }
+    .page {
+      box-shadow: none;
+      page-break-after: always;
+      width: 6in !important;
+      height: 9in !important;
+    }
+    .block { border: none !important; }
+    .block .resize-handle { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="toolbar">
+  <div class="toolbar-row">
+    <span class="brand">BOOK STUDIO</span>
+    <button class="btn" id="btn-image">+ Image ▼</button>
+    <button class="btn" id="btn-templates">📋 Templates</button>
+    <select class="select" id="doc-type">
+      <option>Book</option>
+      <option>Workbook</option>
+      <option>Training Manual</option>
+      <option>Retreat Packet</option>
+      <option>Oracle / Deck Guidebook</option>
+    </select>
+    <select class="select" id="preset">
+      <option>Classic — Soullab Press</option>
+    </select>
+    <button class="btn disabled-soft" title="Phase B">↓ Density</button>
+    <button class="btn disabled-soft" title="Phase B">↑ Air</button>
+    <button class="btn active" id="btn-auto-typeset" title="Phase B">Auto Typeset</button>
+    <button class="btn active" id="btn-reality" title="Phase B">Reality ✓</button>
+    <button class="btn" data-add="text">+ Text</button>
+    <button class="btn" data-add="heading">+ Heading</button>
+    <button class="btn" data-add="quote">+ Quote</button>
+  </div>
+  <div class="toolbar-row">
+    <button class="btn" data-add="doorway-marker">+ Doorway</button>
+    <button class="btn" data-add="image-placeholder">+ Image Plate</button>
+    <button class="btn" id="btn-duplicate-page">Duplicate Page</button>
+    <span style="color:var(--text-dim);font-size:11px;margin-left:8px;">Page type</span>
+    <select class="select" id="page-type">
+      <option>Frontmatter</option>
+      <option>Doorway</option>
+      <option>Chapter Opener</option>
+      <option>Image Plate</option>
+      <option>Body</option>
+    </select>
+    <button class="btn" id="btn-delete-block">Delete Block</button>
+    <span class="spacer"></span>
+    <button class="btn" id="btn-image-bank" title="Phase B">📚 Image Bank</button>
+  </div>
+  <div class="toolbar-row">
+    <button class="btn" id="btn-save">Save</button>
+    <button class="btn" id="btn-load">Load</button>
+    <button class="btn" id="btn-reset">Reset</button>
+    <button class="btn primary" id="btn-export">Export PDF</button>
+    <span style="color:var(--text-dim);font-size:11px;margin-left:auto;" id="status">Ready</span>
+  </div>
+</header>
+
+<div class="workspace">
+  <aside class="page-list" id="page-list"></aside>
+  <main class="canvas-area" id="canvas-area">
+    <div class="page" id="page"></div>
+  </main>
+  <aside class="inspector" id="inspector">
+    <h3>INSPECTOR</h3>
+    <div id="inspector-default">
+      <p>Select a block to edit its position, size, opacity, and stacking order.</p>
+      <ul>
+        <li>Drag image blocks to move</li>
+        <li>Drag corner handles to resize</li>
+        <li>Click text to edit inline</li>
+      </ul>
+    </div>
+    <div id="inspector-block" style="display:none;"></div>
+  </aside>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   State
+   ═══════════════════════════════════════════════════════════════ */
+const STORAGE_KEY = 'book-studio-canvas-v1';
+
+const DEFAULT_STATE = {
+  documentType: 'Book',
+  preset: 'Classic — Soullab Press',
+  pages: [
+    {
+      id: 'p1',
+      type: 'Frontmatter',
+      label: 'Title',
+      blocks: [
+        { id: 'b1', kind: 'heading', text: 'Elemental Alchemy', x: 60, y: 280, w: 480, h: 70, opacity: 1, z: 1 },
+        { id: 'b2', kind: 'text', text: "A Practitioner's Field Manual", x: 90, y: 380, w: 420, h: 40, opacity: 1, z: 1, italic: true },
+        { id: 'b3', kind: 'text', text: 'Kelly Nezat', x: 200, y: 700, w: 200, h: 30, opacity: 1, z: 1, spaced: true },
+      ],
+    },
+    { id: 'p2', type: 'Doorway', label: 'Fire',  blocks: [{ id: 'd2', kind: 'doorway-marker', text: 'Fire',  x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+    { id: 'p3', type: 'Doorway', label: 'Water', blocks: [{ id: 'd3', kind: 'doorway-marker', text: 'Water', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+    { id: 'p4', type: 'Doorway', label: 'Earth', blocks: [{ id: 'd4', kind: 'doorway-marker', text: 'Earth', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+    { id: 'p5', type: 'Doorway', label: 'Air',   blocks: [{ id: 'd5', kind: 'doorway-marker', text: 'Air',   x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 }] },
+    {
+      id: 'p6',
+      type: 'Chapter Opener',
+      label: 'Chapter 1',
+      blocks: [
+        { id: 'c1', kind: 'text', text: 'Chapter 1', x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+        { id: 'c2', kind: 'heading', text: 'The Journey Begins', x: 80, y: 280, w: 440, h: 70, opacity: 1, z: 1 },
+        { id: 'c3', kind: 'image-placeholder', text: '◯', x: 240, y: 660, w: 120, h: 120, opacity: 1, z: 1 },
+      ],
+    },
+  ],
+  activePageId: 'p1',
+  activeBlockId: null,
+};
+
+let state = loadState() || JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  setStatus('Saved ' + new Date().toLocaleTimeString());
+}
+function setStatus(s) {
+  const el = document.getElementById('status');
+  if (el) el.textContent = s;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Render
+   ═══════════════════════════════════════════════════════════════ */
+function activePage() { return state.pages.find(p => p.id === state.activePageId); }
+function activeBlock() {
+  const p = activePage();
+  return p && state.activeBlockId ? p.blocks.find(b => b.id === state.activeBlockId) : null;
+}
+
+function renderPageList() {
+  const list = document.getElementById('page-list');
+  list.innerHTML = '';
+  state.pages.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'page-thumb' + (p.id === state.activePageId ? ' active' : '');
+    const roleClass = p.type.toLowerCase().replace(/\s+/g, '-');
+    const titleBlock = p.blocks.find(b => b.kind === 'heading') || p.blocks.find(b => b.kind === 'doorway-marker') || p.blocks.find(b => b.kind === 'text');
+    const subBlock = p.blocks.filter(b => b.kind === 'text' && b !== titleBlock)[0];
+    div.innerHTML = `
+      <div class="role-tag ${roleClass}">${p.type.toUpperCase()}</div>
+      <div class="preview">
+        <div class="thumb-title">${titleBlock ? escapeHtml(titleBlock.text) : ''}</div>
+        ${subBlock ? `<div class="thumb-sub">${escapeHtml(subBlock.text)}</div>` : ''}
+      </div>
+      <div class="actions">
+        <span>p.${i + 1}</span>
+        <span>
+          <button data-action="up" data-id="${p.id}" title="Move up">↑</button>
+          <button data-action="down" data-id="${p.id}" title="Move down">↓</button>
+          <button data-action="dup" data-id="${p.id}" title="Duplicate">⎘</button>
+          <button data-action="del" data-id="${p.id}" title="Delete">×</button>
+        </span>
+      </div>
+    `;
+    div.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') {
+        e.stopPropagation();
+        handlePageAction(e.target.dataset.action, e.target.dataset.id);
+      } else {
+        state.activePageId = p.id;
+        state.activeBlockId = null;
+        renderAll();
+      }
+    });
+    list.appendChild(div);
+  });
+}
+
+function renderCanvas() {
+  const page = document.getElementById('page');
+  const p = activePage();
+  page.innerHTML = '';
+  if (!p) return;
+  document.getElementById('page-type').value = p.type;
+  p.blocks.forEach(b => {
+    const div = document.createElement('div');
+    div.className = `block ${b.kind}` + (b.italic ? ' italic' : '') + (b.spaced ? ' spaced' : '') + (b.id === state.activeBlockId ? ' selected' : '');
+    div.style.left = b.x + 'px';
+    div.style.top = b.y + 'px';
+    div.style.width = b.w + 'px';
+    div.style.height = b.h + 'px';
+    div.style.opacity = b.opacity;
+    div.style.zIndex = b.z;
+    div.dataset.blockId = b.id;
+    div.contentEditable = b.kind !== 'image-placeholder' ? 'true' : 'false';
+    div.spellcheck = false;
+    div.textContent = b.text;
+    div.addEventListener('focus', () => { state.activeBlockId = b.id; renderInspector(); });
+    div.addEventListener('blur', () => {
+      const block = activePage().blocks.find(x => x.id === b.id);
+      if (block) block.text = div.textContent;
+      saveState();
+      renderPageList();
+    });
+    div.addEventListener('mousedown', e => onBlockMouseDown(e, b.id));
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.addEventListener('mousedown', e => { e.stopPropagation(); onResizeStart(e, b.id); });
+    div.appendChild(handle);
+    page.appendChild(div);
+  });
+}
+
+function renderInspector() {
+  const def = document.getElementById('inspector-default');
+  const blk = document.getElementById('inspector-block');
+  const b = activeBlock();
+  if (!b) {
+    def.style.display = '';
+    blk.style.display = 'none';
+    return;
+  }
+  def.style.display = 'none';
+  blk.style.display = '';
+  blk.innerHTML = `
+    <div class="field"><label>Block</label><div style="font-size:11px;color:var(--text-dim);">${b.kind} · ${b.id}</div></div>
+    <div class="field"><label>Content</label><textarea id="i-text">${escapeHtml(b.text)}</textarea></div>
+    <div class="row">
+      <div class="field"><label>X</label><input type="number" id="i-x" value="${b.x}"/></div>
+      <div class="field"><label>Y</label><input type="number" id="i-y" value="${b.y}"/></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Width</label><input type="number" id="i-w" value="${b.w}"/></div>
+      <div class="field"><label>Height</label><input type="number" id="i-h" value="${b.h}"/></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Opacity</label><input type="number" step="0.05" min="0" max="1" id="i-opacity" value="${b.opacity}"/></div>
+      <div class="field"><label>Z-index</label><input type="number" id="i-z" value="${b.z}"/></div>
+    </div>
+  `;
+  ['x','y','w','h','opacity','z'].forEach(k => {
+    document.getElementById('i-' + k).addEventListener('input', e => {
+      b[k] = parseFloat(e.target.value) || 0;
+      renderCanvas();
+      renderPageList();
+      saveState();
+    });
+  });
+  document.getElementById('i-text').addEventListener('input', e => {
+    b.text = e.target.value;
+    renderCanvas();
+    renderPageList();
+    saveState();
+  });
+}
+
+function renderAll() {
+  document.getElementById('doc-type').value = state.documentType;
+  document.getElementById('preset').value = state.preset;
+  renderPageList();
+  renderCanvas();
+  renderInspector();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Interactions
+   ═══════════════════════════════════════════════════════════════ */
+function handlePageAction(action, id) {
+  const idx = state.pages.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  if (action === 'up' && idx > 0) {
+    [state.pages[idx-1], state.pages[idx]] = [state.pages[idx], state.pages[idx-1]];
+  } else if (action === 'down' && idx < state.pages.length - 1) {
+    [state.pages[idx+1], state.pages[idx]] = [state.pages[idx], state.pages[idx+1]];
+  } else if (action === 'dup') {
+    const dup = JSON.parse(JSON.stringify(state.pages[idx]));
+    dup.id = 'p' + Date.now();
+    dup.blocks.forEach((b, i) => b.id = 'b' + Date.now() + '_' + i);
+    state.pages.splice(idx + 1, 0, dup);
+  } else if (action === 'del' && state.pages.length > 1) {
+    state.pages.splice(idx, 1);
+    if (state.activePageId === id) state.activePageId = state.pages[0].id;
+  }
+  saveState();
+  renderAll();
+}
+
+function onBlockMouseDown(e, blockId) {
+  state.activeBlockId = blockId;
+  renderInspector();
+  document.querySelectorAll('.block').forEach(el => el.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  if (e.target.classList.contains('resize-handle')) return;
+  if (e.detail >= 2) return; // double-click → edit
+  const b = activeBlock();
+  if (!b) return;
+  const startX = e.clientX, startY = e.clientY;
+  const origX = b.x, origY = b.y;
+  function onMove(ev) {
+    b.x = origX + (ev.clientX - startX);
+    b.y = origY + (ev.clientY - startY);
+    e.currentTarget.style.left = b.x + 'px';
+    e.currentTarget.style.top = b.y + 'px';
+    if (state.activeBlockId === blockId) {
+      const ix = document.getElementById('i-x'), iy = document.getElementById('i-y');
+      if (ix) ix.value = b.x;
+      if (iy) iy.value = b.y;
+    }
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    saveState();
+    renderPageList();
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function onResizeStart(e, blockId) {
+  const b = activePage().blocks.find(x => x.id === blockId);
+  if (!b) return;
+  const startX = e.clientX, startY = e.clientY;
+  const origW = b.w, origH = b.h;
+  function onMove(ev) {
+    b.w = Math.max(40, origW + (ev.clientX - startX));
+    b.h = Math.max(20, origH + (ev.clientY - startY));
+    renderCanvas();
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    saveState();
+    renderInspector();
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Toolbar bindings
+   ═══════════════════════════════════════════════════════════════ */
+document.querySelectorAll('[data-add]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const kind = btn.dataset.add;
+    const p = activePage();
+    if (!p) return;
+    const newBlock = {
+      id: 'b' + Date.now(),
+      kind,
+      text: kind === 'heading' ? 'New Heading' :
+            kind === 'quote' ? '"A new quote."' :
+            kind === 'doorway-marker' ? 'Doorway' :
+            kind === 'image-placeholder' ? '◯' : 'New text',
+      x: 100, y: 200,
+      w: kind === 'image-placeholder' ? 200 : 400,
+      h: kind === 'image-placeholder' ? 200 : (kind === 'heading' ? 70 : 40),
+      opacity: 1, z: 1,
+    };
+    p.blocks.push(newBlock);
+    state.activeBlockId = newBlock.id;
+    saveState();
+    renderAll();
+  });
+});
+
+document.getElementById('doc-type').addEventListener('change', e => {
+  state.documentType = e.target.value;
+  saveState();
+});
+document.getElementById('preset').addEventListener('change', e => {
+  state.preset = e.target.value;
+  saveState();
+});
+document.getElementById('page-type').addEventListener('change', e => {
+  const p = activePage();
+  if (p) { p.type = e.target.value; saveState(); renderPageList(); }
+});
+
+document.getElementById('btn-save').addEventListener('click', saveState);
+document.getElementById('btn-load').addEventListener('click', () => {
+  const loaded = loadState();
+  if (loaded) { state = loaded; renderAll(); setStatus('Loaded'); }
+  else setStatus('No saved state');
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (!confirm('Reset to default state? This will discard all your work in this canvas.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  saveState();
+  renderAll();
+});
+document.getElementById('btn-export').addEventListener('click', () => window.print());
+document.getElementById('btn-duplicate-page').addEventListener('click', () => handlePageAction('dup', state.activePageId));
+document.getElementById('btn-delete-block').addEventListener('click', () => {
+  const p = activePage();
+  if (!p || !state.activeBlockId) return;
+  p.blocks = p.blocks.filter(b => b.id !== state.activeBlockId);
+  state.activeBlockId = null;
+  saveState();
+  renderAll();
+});
+
+['btn-image','btn-templates','btn-image-bank','btn-auto-typeset','btn-reality'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => {
+    setStatus(`"${el.textContent.trim()}" — behavior fills in Phase B (Kelly drives)`);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   Boot
+   ═══════════════════════════════════════════════════════════════ */
+renderAll();
+</script>
+</body>
+</html>
