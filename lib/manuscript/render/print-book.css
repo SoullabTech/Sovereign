@@ -1,0 +1,393 @@
+/*
+ * Elemental Alchemy — Full Book Print CSS v1
+ * Kelly's specs (2026-05-01):
+ *   - Trim 6×9, mirrored margins (inside 0.9" / outside 0.6", T/B 0.75")
+ *   - Body: EB Garamond 11pt, leading 1.4, justified, 0.2" first-line indent
+ *   - Chapter titles: 18–22pt, centered, slight tracking
+ *   - Section headings: 13–14pt, bold, 12–18pt above / 6pt below
+ *   - Epigraphs: italic, 10–11pt, centered, tighter spacing
+ *   - Verse / prayer: italic, no indent, line breaks preserved, stanza spacing
+ *   - Images: grayscale, 300 DPI, max width 5.25", centered
+ *   - Running headers: NONE; page numbers only in footer (Option A)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap');
+
+/* ============================================================
+ * PAGE GEOMETRY
+ * ============================================================ */
+
+@page {
+  size: 6in 9in;
+  margin: 0.75in 0.6in 0.75in 0.9in; /* T R B L — odd/right pages */
+
+  @bottom-center {
+    content: counter(page);
+    font-family: 'EB Garamond', Garamond, serif;
+    font-size: 9pt;
+    color: #444;
+  }
+}
+
+@page :left {
+  margin: 0.75in 0.9in 0.75in 0.6in; /* T R B L — even/verso: outside left, inside right */
+}
+
+@page :right {
+  margin: 0.75in 0.6in 0.75in 0.9in; /* T R B L — odd/recto: inside left, outside right */
+}
+
+/* Front-matter pages get no page number */
+@page :first {
+  @bottom-center { content: ''; }
+}
+
+/* ============================================================
+ * BASE TYPOGRAPHY
+ * ============================================================ */
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'EB Garamond', Garamond, 'Adobe Garamond Pro', 'Garamond Premier Pro', serif;
+  font-size: 11pt;
+  line-height: 1.4;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  color: #111;
+}
+
+/* Paragraphs: justified, first-line indent, no extra space */
+p {
+  margin: 0;
+  text-indent: 0.2in;
+  orphans: 2;
+  widows: 2;
+}
+
+/* First paragraph after a heading or break: no indent */
+h1 + p,
+h2 + p,
+h3 + p,
+h4 + p,
+hr + p,
+blockquote + p,
+figure + p {
+  text-indent: 0;
+}
+
+/* ============================================================
+ * HEADINGS
+ * ============================================================ */
+
+h1 {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 22pt;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5in 0;
+  page-break-before: always;
+  page-break-after: avoid;
+  break-before: page;
+  break-after: avoid;
+}
+
+/* The book title (h2 at front matter) */
+h2 {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 18pt;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.03em;
+  margin: 24pt 0 12pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h3 {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 13pt;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  text-align: left;
+  margin: 18pt 0 6pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h4 {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 11pt;
+  font-weight: 700;
+  text-align: left;
+  margin: 12pt 0 4pt 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+/* ============================================================
+ * EPIGRAPHS
+ * Italic-only paragraphs (markdown `*"…" — Author*` lines).
+ *
+ * The `.epigraph` class is added at render time by render-book-print.ts
+ * post-processing — only paragraphs whose entire content is a single
+ * `<em>` get the class. Mixed paragraphs (plain prose with one inline
+ * italic citation) do NOT get this treatment.
+ * ============================================================ */
+
+p.epigraph {
+  font-style: italic;
+  font-size: 10.5pt;
+  text-align: center;
+  text-indent: 0;
+  margin: 12pt 0.5in 16pt 0.5in;
+  line-height: 1.35;
+}
+
+p.epigraph > em {
+  font-style: italic;
+}
+
+/* ============================================================
+ * BLOCKQUOTES
+ * ============================================================ */
+
+blockquote {
+  margin: 12pt 0.5in;
+  padding: 0;
+  font-style: italic;
+  font-size: 10.5pt;
+}
+
+blockquote p {
+  text-indent: 0;
+}
+
+/* ============================================================
+ * IMAGE SYSTEM (Kelly canon, 2026-05-01)
+ *   Four classes only. Grayscale always. No inline / floating.
+ *   Block elements only, centered.
+ *
+ *   text-width @ 6×9 trim, 0.9"+0.6" horizontal margins = 4.5in
+ * ============================================================ */
+
+/* Paragraphs that wrap a block-level image: explicit center + no indent.
+ * Apple Books and several EPUB readers don't honor `margin: auto` on
+ * images consistently, so we set text-align on the parent as a safety net. */
+p:has(> img) {
+  text-align: center !important;
+  text-indent: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Default img — fallback if no class assigned. Treated as anchor. */
+img {
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 16pt;
+  margin-bottom: 16pt;
+  max-width: 3.4in;            /* ~75% of text width */
+  max-height: 6in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* A — Section Anchor: 70–80% of text width, moderate spacing. */
+img.image-anchor {
+  display: block;
+  margin: 16pt auto 18pt auto;
+  max-width: 3.4in;            /* 75% × 4.5in text width */
+  max-height: 5.5in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* B — Chapter Opener: full-page standalone, centered both axes.
+ *     Image sits alone on a page that precedes the chapter title page. */
+img.image-opener {
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 3in;
+  margin-bottom: 3in;
+  max-width: 4in;
+  max-height: 4.5in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-before: always;
+  page-break-after: always;
+  break-before: page;
+  break-after: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Wrapping paragraph for opener: own page, centered, no header */
+p:has(> img.image-opener) {
+  text-align: center !important;
+  text-indent: 0 !important;
+  margin: 0 !important;
+}
+
+/* C — System Diagram: 85–100% of text width, never inline,
+ *     never split across pages. Generous spacing. */
+img.image-system {
+  display: block;
+  margin: 20pt auto 22pt auto;
+  max-width: 4.4in;            /* up to ~98% of text width */
+  max-height: 6in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* End Divider: smaller, subtle closure mark. */
+img.image-end {
+  display: block;
+  margin: 28pt auto 0 auto;
+  max-width: 2in;
+  max-height: 1.5in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Headings that wrap an image: keep centered, don't apply heading style.
+ * (Legacy pattern; new manuscript should use plain image with class.) */
+h1:has(> img),
+h2:has(> img),
+h3:has(> img),
+h4:has(> img) {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  text-align: center;
+  margin: 16pt 0;
+  page-break-before: auto;
+  break-before: auto;
+}
+
+h1 > img,
+h2 > img,
+h3 > img,
+h4 > img {
+  max-width: 3.4in;
+  max-height: 2.5in;
+}
+
+/* ============================================================
+ * LISTS
+ * ============================================================ */
+
+ul, ol {
+  margin: 6pt 0 12pt 0.3in;
+  padding: 0;
+}
+
+li {
+  margin: 0 0 4pt 0;
+}
+
+/* ============================================================
+ * HORIZONTAL RULES
+ * ============================================================ */
+
+hr {
+  border: none;
+  border-top: 0.5pt solid #999;
+  width: 1in;
+  margin: 18pt auto;
+}
+
+/* ============================================================
+ * EM / STRONG within text
+ * ============================================================ */
+
+em { font-style: italic; }
+strong { font-weight: 700; }
+
+/* ============================================================
+ * TABLE OF CONTENTS
+ * Auto-generated by pandoc --toc --toc-depth=3
+ * Post-processed in render-book-print.ts to land under the
+ * manual `# Table of Contents` heading.
+ * ============================================================ */
+
+nav#TOC {
+  margin-top: 24pt;
+  page-break-after: always;
+  break-after: page;
+}
+
+nav#TOC ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Chapter level — primary navigation anchor; stronger weight + generous
+ * breathing above so the eye finds the chapter blocks first. */
+nav#TOC > ul > li {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 12pt;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin-top: 18pt;
+  margin-bottom: 5pt;
+  color: #000;
+}
+
+/* Section level — clearly nested under chapter, scannable for direct
+ * navigation to a known section. */
+nav#TOC > ul > li ul > li {
+  font-size: 10pt;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+  margin-top: 3pt;
+  margin-bottom: 3pt;
+  margin-left: 16pt;
+  color: #222;
+}
+
+/* Sub-section level — present for completeness but visually quieter. */
+nav#TOC > ul > li ul ul > li {
+  font-size: 9pt;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  margin-top: 1pt;
+  margin-bottom: 1pt;
+  margin-left: 30pt;
+  color: #555;
+}
+
+/* Anchor layout — flex for dot leaders + right-aligned page numbers. */
+nav#TOC a {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Page number with dot leaders. Tabular figures keep page numbers
+ * aligned in a clean right column for fast scanning. */
+nav#TOC a::after {
+  content: leader('.') ' ' target-counter(attr(href url), page);
+  font-feature-settings: 'tnum' 'lnum';
+  margin-left: 0.5em;
+  flex-shrink: 0;
+}

@@ -34,6 +34,9 @@ import { consult } from '@/lib/ain/consultation';
 import type { ConsultationDecision, ConsultationResult } from '@/lib/ain/types';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { inferStateVector, getDefaultStateVector, getDefaultPracticeRecommendation } from '@/lib/maia/state-vector/stateDefaults';
+import { buildMemoryInfluencePlan, summarizePlanForLog } from '@/lib/maia/memoryOrchestrator';
+import { detectForwardReadiness, buildForwardReadinessBlock } from '@/lib/maia/forwardReadiness';
+import { loadRecentDevelopmentalMemories, loadRecentThemeSignals } from '@/lib/maia/memoryLoaders';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
@@ -1442,7 +1445,10 @@ This user is in guest mode (no authenticated identity).
       if (!showMetaSafe) {
         outboundText = outboundText
           .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-          .replace(/---SOUL_METADATA---[\s\S]*/g, '');
+          .replace(/---SOUL_METADATA---[\s\S]*/g, '')
+          // Strip STATE_VECTOR fenced code blocks (safe mode path, same as full path)
+          .replace(/```STATE_VECTOR[\s\S]*?```/g, '')
+          .replace(/```STATE_VECTOR[\s\S]*/g, '');
       }
       if (!showMarkdownSafe) {
         outboundText = outboundText
@@ -1838,6 +1844,46 @@ This user is in guest mode (no authenticated identity).
           })
         : Promise.resolve(null);
 
+    // ═══ MEMORY ORCHESTRATOR (live runtime activation) ═══
+    // Build memory influence plan + forward-readiness signal BEFORE generation.
+    // Both blocks flow to maiaService via the context addendum chain. Loaders
+    // are graceful: empty arrays on failure, conversation continues normally.
+    // Skipped for sanctuary sessions (no cross-session memory should bleed in).
+    let memoryInfluenceAddendum: string | undefined;
+    let forwardReadinessAddendum: string | undefined;
+    if (!isSanctuary && effectiveUserId && !effectiveUserId.startsWith('anon:')) {
+      try {
+        const [recentDevelopmentalMemories, recentThemeSignals] = await Promise.all([
+          loadRecentDevelopmentalMemories(effectiveUserId, 3),
+          loadRecentThemeSignals(effectiveUserId, 10),
+        ]);
+        const memoryPlan = buildMemoryInfluencePlan({
+          message,
+          userId: effectiveUserId,
+          conversationHistory,
+          recentDevelopmentalMemories,
+          recentThemeSignals,
+          hasMemberLiveContext: !!relationshipMemory,
+          hasRelationshipAnamnesis: !!relationshipMemory,
+        });
+        if (memoryPlan.shouldUseMemory || memoryPlan.contradictionDetected || memoryPlan.reinforcementCandidate) {
+          console.log('[MAIA/between] memory-plan', summarizePlanForLog(memoryPlan));
+        }
+        memoryInfluenceAddendum = memoryPlan.promptBlock || undefined;
+
+        const readiness = detectForwardReadiness(message);
+        if (readiness.ready) {
+          console.log('[MAIA/between] forward-readiness', {
+            signals: readiness.signals,
+            preview: message.slice(0, 120),
+          });
+          forwardReadinessAddendum = buildForwardReadinessBlock();
+        }
+      } catch (memOrchErr) {
+        console.warn('[MAIA/between] memory orchestrator non-fatal:', memOrchErr);
+      }
+    }
+
     // Use full fail-soft consciousness orchestrator — runs in parallel with consultation
     const [orchestratorResult, consultationResult] = await Promise.all([
       generateMaiaTurn({
@@ -1872,6 +1918,10 @@ This user is in guest mode (no authenticated identity).
           knowledgeGateAddendum: safeAddenda.knowledgeGate || undefined,
           // 🌀 AIN FIELD BRIDGE: Collective Spiralogic wisdom (Phase 3)
           fieldWisdomAddendum: safeAddenda.fieldWisdom || undefined,
+          // 🧠 MEMORY ORCHESTRATOR: Runtime memory coordination plan
+          memoryInfluenceAddendum,
+          // ▶️ FORWARD READINESS: Counter the depth-first reflex when user signals execution-ready
+          forwardReadinessAddendum,
         },
         // Route/profile tracing for corpus callosum filtering
         originRoute: '/api/between/chat',
@@ -2213,7 +2263,13 @@ This user is in guest mode (no authenticated identity).
     if (!showMetadata) {
       cleanedText = cleanedText
         .replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '')
-        .replace(/---SOUL_METADATA---[\s\S]*/g, ''); // partial block at end
+        .replace(/---SOUL_METADATA---[\s\S]*/g, '') // partial block at end
+        // Strip STATE_VECTOR code blocks — model sometimes emits these as
+        // fenced code (```STATE_VECTOR {...} ```) which bypasses the
+        // SOUL_METADATA stripper. This is internal processing output that
+        // must never reach the member's conversation surface.
+        .replace(/```STATE_VECTOR[\s\S]*?```/g, '')
+        .replace(/```STATE_VECTOR[\s\S]*/g, ''); // partial block at end
     }
 
     // Strip markdown artifacts that look messy in plain text UI

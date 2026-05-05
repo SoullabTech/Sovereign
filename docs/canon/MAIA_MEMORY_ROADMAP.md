@@ -2,14 +2,16 @@
 
 > Single source of truth for the MAIA memory architecture build. Read by the weekly Monday governance review (cloud-scheduled trigger). Updated as the system evolves.
 
-## Current state (as of 2026-04-09)
+## Current state (as of 2026-05-04)
 
-- **Phase**: 1.5 complete → observation cycle open
-- **Live branch**: `feature/memory-orchestrator-phase1` deployed on minisForum (commit `76c9f1611`)
-- **Production health**: orchestrator firing on every turn; `developmental_memory` selected at HIGH strength alongside `spiral_state`, `relationship_anamnesis`, `theme_signals`, `member_live_context`
-- **Last verified**: 2026-04-09 production smoke test (T01 forward-readiness behavioral shift confirmed; T03 ambivalence held; T05 containment clean)
-- **Posture**: observation, not building — listening to the system through real usage before adding more layers
-- **Last roadmap update**: 2026-04-09
+- **Phase**: 1.5 deployed → observation cycle starting (now actually measurable)
+- **Live branch**: `clean-main-no-secrets` deployed on minisForum
+  - **Activation commit** (merge): `919e7e855` — `feature/memory-orchestrator-phase1` merged into `clean-main-no-secrets` with both bodies of work preserved (orchestrator wiring + clean-main UX/content)
+  - **Stabilization commit**: `ea10ffa8a` — `fix(build): resolve MaiaShell duplicate parameter error` (post-merge webpack/build unblock)
+- **Production health**: orchestrator files present in running container (`/app/lib/maia/memoryOrchestrator.ts`, `memoryLoaders.ts`, `forwardReadiness.ts`, `types/memoryOrchestrator.ts`); container rebuilt cleanly; ready to fire on first turn
+- **Last verified**: 2026-05-04 — minisForum HEAD `ea10ffa8a`; orchestrator files confirmed inside running container via `docker exec`; all four services (sovereign, postgres, whisper, caddy) healthy
+- **Posture**: observation, not building. Important correction: the previous ~25 days were observing `clean-main-no-secrets` *without* the orchestrator, because the production branch had silently diverged. The observation cycle for memory-governed MAIA behavior begins now.
+- **Last roadmap update**: 2026-05-04
 
 ## Phase status
 
@@ -17,7 +19,7 @@
 |---|---|---|
 | **1** | Memory Orchestrator + Forward-Readiness | ✅ DEPLOYED |
 | **1.5** | memoryLoaders + wire into `/oracle` + `/between/chat` + `maiaService` FAST path | ✅ DEPLOYED |
-| **1.5 cleanup** | Contradiction regex (present participles) + spiralState closure bug at `app/api/oracle/conversation/route.ts:2042` | ⏳ Queued (cheap, ~5-min combined fix) |
+| **1.5 cleanup** | Contradiction regex (present participles) + spiralState closure bug | ✅ DEPLOYED (commit `534b187ed`, merged via `919e7e855`) |
 | **1.5 wiring** | Orchestrator into `/sovereign/app/maia` and CORE/DEEP/repair/shadow/rewrite paths in `lib/sovereign/maiaService.ts` | ⏳ Queued |
 | **2a** | Semantic memory (pgvector inspection, embedding generation, retrieval, orchestrator integration via `semanticCandidate`) | ⏳ Blocked on observation cycle |
 | **2b** | Somatic memory (user-reported body-state detection, normalized cues, retrieval via `somaticCandidate`) | ⏳ Blocked on Phase 2a |
@@ -38,10 +40,10 @@
 - **Containment**: cross-session memory must not bleed into unrelated topics
 - **Collective layer rules**: must aggregate only from already-distilled artifacts, never raw user content; minimum distinct-member threshold; consent + privacy gates before aggregation
 
-## Open issues (1.5 cleanup, non-blocking but worth fixing before next phase)
+## Open issues
 
-1. **Contradiction regex misses present participles** in `lib/maia/memoryOrchestrator.ts` `detectContradiction()`. Add `(ing)?` suffix to `\bsecond-?guess\b` and `\breconsider\b`. Two-line fix.
-2. **`spiralState is not defined` ReferenceError** at `app/api/oracle/conversation/route.ts:2042` inside `generateSpiralogicResponseWithLLM`. Pre-existing closure bug — `spiralState` is defined in the outer POST handler and not in scope inside the function. Pass it (or `dominant_element`) as a parameter. Three-line fix.
+1. ~~Contradiction regex misses present participles~~ — ✅ resolved in `534b187ed`: regex now matches `second-?guess(?:ing)?` and `reconsider(?:ing)?`.
+2. ~~`spiralState is not defined` ReferenceError~~ — ✅ resolved in `534b187ed`: `dominantElement?: string | null` parameter added to `generateSpiralogicResponseWithLLM`, threaded from outer POST-handler call site.
 3. **`/between/chat` smoke test pending real session auth** — production hard-blocks client-supplied userId without `MAIA_TRUST_BODY_ID_IN_PROD=1`. Smoke-tested via `/oracle/conversation` instead. End-to-end `/between` probe with Kelly's actual session cookie still pending.
 
 ## Production verification (when SSH access is available)
@@ -89,7 +91,7 @@ When observing the system through real usage (not logs):
 - **Oracle wiring**: `app/api/oracle/conversation/route.ts` (lines 74, 564–573, 851–870, 1828, 2059–2066, 2068–2086; repair path 891–915)
 - **Between/chat wiring**: `app/api/between/chat/route.ts` (lines 37–39, 1842–1880)
 - **maiaService consumption**: `lib/sovereign/maiaService.ts` (lines 1144–1158, 1181)
-- **Production tracking branch**: `feature/memory-orchestrator-phase1` (NOT merged to `clean-main-no-secrets` yet — observation first)
+- **Production tracking branch**: `clean-main-no-secrets` (orchestrator merged from `feature/memory-orchestrator-phase1` via `919e7e855` on 2026-05-04; stabilized at `ea10ffa8a`). Note: line numbers in the wiring entries above were captured pre-merge and may have shifted; trust the file contents over the line numbers.
 - **GitHub default branch**: `clean-main-no-secrets`
 
 ## Update protocol

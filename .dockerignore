@@ -75,6 +75,11 @@ Thumbs.db
 # Documentation and docs
 *.md
 docs/
+
+# Book Studio surfaces (app/book-studio/*) read these markdown files at runtime.
+# Allow only the specific folder; rest of docs/ stays excluded.
+!docs/book-studio/
+!docs/book-studio/*.md
 Community-Commons/
 
 # Test files
