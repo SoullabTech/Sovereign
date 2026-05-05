@@ -328,7 +328,7 @@ Change is a constant, permeating every aspect of our universe. From the cosmic c
 
 There are moments when something begins to shift in us — a relationship turning, a way of seeing arriving, a long-held grief loosening — though we may not yet have words for what is moving. We feel it before we can describe it. The body, often, knows first.
 
-What is moving in us at moments like these has been recognized, again and again, in many traditions — each speaking of the same shape in its own language: the torus, with its rhythm of flow inward and outward; the three phases of intention, immersion, and integration; the gunas of Hinduism; the cardinal, fixed, and mutable movements of astrology; the alchemical principles of salt, sulphur, and mercury; the holon and toroidal flows of ancient and modern metaphysics. Different languages, the same shape recognized.
+What is moving in us at moments like these has been recognized, again and again, in many traditions — each speaking of the same shape in its own language: the torus, with its rhythm of flow inward and outward; the three phases of intention, immersion, and integration; the gunas of Hinduism; the cardinal, fixed, and mutable movements of astrology; the alchemical principles of sulfur, salt, and mercury; the holon and toroidal flows of ancient and modern metaphysics. Different languages, the same shape recognized.
 
 What this chapter offers is a way to notice these movements as they happen — not as concepts to be applied, but as a shape already moving through our lives.
 
@@ -1967,7 +1967,7 @@ There is most often a three-part self: the lower self being the basic self, belo
 
 The realm of aether is a challenging energy field to speak about since it is where our nonlocal beingness synapses with the physical world to bring it to life. Here, in the midst of the four elements of fire, water, earth, and air resides an intelligence that weaves these elements into a personal and collective experience.
 
-An ancient alchemist might have said that it is mercury weaving salt that coagulates and sulfur that dissolves into a harmonious dance of life. Aether flows things into and out of being, like our lungs breathing in and breathing out. In the middle of everything, there is also our soul weaving our bodies into being.
+An ancient alchemist might have said that it is sulfur that dissolves and salt that coagulates, woven by mercury into a harmonious dance of life. Aether flows things into and out of being, like our lungs breathing in and breathing out. In the middle of everything, there is also our soul weaving our bodies into being.
 
 In this realm, all opposites unite in a singular effort of being. All duality concedes to the creative life force of our aether nature. At the heart of all of our doing and living is our abiding, true Self. This self is at the center of our stillness when we're in a state associated with the element of aether and connects us with "more than this." This state is the still point and no-mind state of Zen meditation. It is called wuji in Taoism, prana in Hinduism, and the inner kingdom in Christianity.
 
@@ -2240,9 +2240,9 @@ While the states provide distinct stages of development, the phases offer a dyna
 
 ---
 
-### Mercury, Salt, Sulfur — The Inner Alchemy
+### Sulfur, Salt, Mercury — The Inner Alchemy
 
-An ancient alchemist might have said that it is mercury weaving salt that coagulates and sulfur that dissolves into a harmonious dance of life. Aether flows things into and out of being, like our lungs breathing in and breathing out. In the middle of everything, there is also our soul weaving our bodies into being.
+An ancient alchemist might have said that it is sulfur that dissolves and salt that coagulates, woven by mercury into a harmonious dance of life. Aether flows things into and out of being, like our lungs breathing in and breathing out. In the middle of everything, there is also our soul weaving our bodies into being.
 
 ---
 
