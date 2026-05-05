@@ -1,16 +1,24 @@
 # Part One — Transition Pass v1
 
-> **Status.** v1, 2026-05-04. Diagnostic only — no rewrites here.
+> **Status.** v2, 2026-05-04. Scope locked + first reshape applied.
 > **Scope.** Ch1 (Introduction) + Ch2 (Torus of Change). Same scope as
 > Invitational Voice Pass v1. Voice pass already applied.
 >
-> **What this pass audits.** Cognitive load transitions —
-> openings, closings, and bridges between sections. Where readers
-> are *not given a moment to metabolize* before the next concept
-> arrives.
+> **Method refinement** *(Kelly, 2026-05-04):* Reshape the **entry
+> point and exit point**, not the paragraph. Problems are at
+> thresholds, not interiors. A better door in, a better place to land.
 >
-> **Constraint.** Minimal, surgical, rhythmic. Do not expand sections.
-> Do not over-poeticize. Do not rewrite — only map.
+> **Locked scope.** **Max 3 full reshapes + 3 light touches.** No more.
+> Beyond that risks over-homogenizing voice and flattening the natural
+> variation that gives the book life.
+>
+> **Calibration anchors.** *Rediscovering Ancient Wisdom* (L345) +
+> *The Vision of the Crystalline Mandala* (L447). After each reshape,
+> ask: *"Does this belong to the same book?"* — not *"is it more
+> beautiful?"*
+>
+> **Applied so far:**
+> - **Ch1 → Ch2 bridge (L317–319)** — Option A applied 2026-05-04.
 
 ---
 
@@ -257,10 +265,27 @@
 
 ---
 
-## Reshape candidates *(4-beat: experience → hold → reveal → return)*
+## Reshape candidates — final 3+3 split
 
-Six paragraphs are pressure points. The first four are highest leverage.
-Candidates 5 and 6 are smaller but still recommended.
+After review, six candidates split by depth:
+
+**Full 4-beat reshape (3 only):**
+- Candidate 1 — Ch2 setup (L331). *Drafted prior turn; pending apply.*
+- **Candidate 3 — Ch1 → Ch2 bridge (L317–319). ✅ APPLIED 2026-05-04** *(see end of file).*
+- Candidate 2 — Ch2 Torus of Being and Becoming (L363). Promote the
+  anatomy paragraph as the entry beat.
+
+**Hybrid (light insertion + minor reduction):**
+- Candidate 4 — Ch2 Web of Life: Indra + cymatics (L431–433). Insert
+  a recognition line before cymatics; reduce the "two frameworks at
+  once" effect. **Do not fully reshape.**
+
+**Light touch only (door + landing):**
+- Candidate 5 — Ch1 Opportunity of a Lifetime opening (L287). Soften
+  entry, add a breath/recognition line. **Do not expand.**
+- Candidate 6 — Ch2 Sacred Geometry closing (L421–423). Closing
+  energy problem, not structure problem. Trim 1 paragraph; end on
+  image or felt recognition. **Do not expand.**
 
 ---
 
@@ -455,6 +480,37 @@ the lighter pass alongside the six candidates above:
 
 - ❌ Did not write replacement prose for any of the six candidates
   (Candidate 1 has a draft from the prior turn — review only)
-- ❌ Did not edit the manuscript itself
+- ❌ Did not edit the manuscript itself *(except Candidate 3, applied)*
 - ❌ Did not extend the audit beyond Ch1 + Ch2
 - ❌ Did not flag passages that already breathe
+
+---
+
+## Applied reshapes
+
+### Candidate 3 — Ch1 → Ch2 bridge (L317–319) · applied 2026-05-04
+
+**Was:**
+
+> *With an initial understanding of the elements in place, it's time
+> to explore the dynamic nature of transformation. Chapter 2
+> introduces the concept of the Torus of Change, illustrating how
+> cyclical patterns guide our growth and evolution.*
+>
+> *So let this journey begin! Embrace the sacred metamorphosis that
+> awaits…*
+
+**Now:**
+
+> *The elements, once met, do not stay still. They move through us,
+> through each other, through every turning. What follows is the
+> shape of that movement — the rhythm change takes when we begin to
+> notice it.*
+
+**Notes:**
+- Option A selected over Option B (B reintroduced "journey" /
+  "metamorphosis" — duplicated work the Watts quote already does at
+  the top of Ch2).
+- Micro-adjustment applied: *"as it happens"* dropped — slightly
+  cleaner, slightly less explained.
+- Reads as *"nothing happened…but everything shifted."*

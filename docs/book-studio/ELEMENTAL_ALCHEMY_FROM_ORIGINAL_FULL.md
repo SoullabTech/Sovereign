@@ -314,9 +314,7 @@ Ultimately, the real mystery school is your own being. All answers you'll ever n
 
 The path ahead has a way of unlocking, awakening, and empowering—each person, in their own time, finding the radiant elemental nature that was theirs all along. The first step is inward; the light blazes outward of its own.
 
-With an initial understanding of the elements in place, it's time to explore the dynamic nature of transformation. Chapter 2 introduces the concept of the Torus of Change, illustrating how cyclical patterns guide our growth and evolution.
-
-So let this journey begin! Embrace the sacred metamorphosis that awaits…
+The elements, once met, do not stay still. They move through us, through each other, through every turning. What follows is the shape of that movement — the rhythm change takes when we begin to notice it.
 
 ---
 
