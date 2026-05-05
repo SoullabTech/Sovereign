@@ -53,6 +53,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/book-studio/illustrations', public: true, notes: 'Book Studio — illustration list' },
   { exact: '/book-studio/design-system', public: true, notes: 'Book Studio — design system v1' },
   { exact: '/book-studio/render', public: true, notes: 'Book Studio — render trigger' },
+  { exact: '/book-studio/canvas', public: true, notes: 'Book Studio — visual canvas (Atticus-alternative)' },
+  { exact: '/book-studio-canvas.html', public: true, notes: 'Book Studio — canvas standalone HTML asset' },
   { prefix: '/book-studio/drafts/', public: true, notes: 'Book Studio — imported drafts from MAIA Ideas' },
   { prefix: '/api/book-studio/', public: true, notes: 'Book Studio — drafts API (POST from MAIA Ideas)' },
 
