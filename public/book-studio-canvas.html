@@ -718,6 +718,93 @@
     margin-top: 16px;
   }
   .ib-edit .ib-actions button.danger:hover { background: #3a2424; }
+  /* ── reading mode ──────────────────────────────────────────── */
+  .reading-bar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    padding: 0 16px;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text);
+  }
+  .reading-bar .nav-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .reading-bar .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .reading-bar .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .reading-bar select {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 12px;
+    flex: 0 1 auto;
+    max-width: 360px;
+  }
+  .reading-bar .page-counter {
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    min-width: 100px;
+    text-align: center;
+  }
+  .reading-bar .cont-hint {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .reading-bar .spacer { flex: 1; }
+  .reading-bar .exit-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+  }
+  .reading-bar .exit-btn:hover { color: var(--accent); border-color: var(--accent); }
+  body.reading-mode .toolbar { display: none; }
+  body.reading-mode .left-sidebar,
+  body.reading-mode .inspector { display: none; }
+  body.reading-mode .workspace {
+    grid-template-columns: 1fr;
+    height: calc(100vh - 48px);
+    margin-top: 48px;
+  }
+  body.reading-mode .reading-bar { display: flex; }
+  body.reading-mode .canvas-area {
+    padding: 40px 20px 60px;
+    background: var(--bg);
+  }
+  body.reading-mode .block {
+    border: none !important;
+    outline: none !important;
+  }
+  body.reading-mode .page:hover .block:not(.image):not(.image-placeholder) {
+    border: 1px dashed rgba(255,255,255,0.06);
+  }
+  body.reading-mode .block .resize-handle { display: none; }
+  body.reading-mode .block.selected {
+    border: 1px solid var(--accent) !important;
+  }
   /* ── print ─────────────────────────────────────────────────── */
   @media print {
     body * { visibility: hidden; }
@@ -731,6 +818,7 @@
     }
     .block { border: none !important; }
     .block .resize-handle { display: none; }
+    .reading-bar { display: none !important; }
   }
 </style>
 </head>
@@ -769,6 +857,7 @@
     <button class="btn" id="btn-air" title="Air: looser spacing for ceremonial pages">↑ Air</button>
     <button class="btn active" id="btn-auto-typeset" title="Auto Typeset: re-flow text into the page grid (Phase B engine pending)">Auto Typeset</button>
     <button class="btn active" id="btn-reality" title="Reality preview: render with print fidelity">Reality ✓</button>
+    <button class="btn" id="btn-read-mode" title="Reading Mode: cover-to-cover single-page view (Esc to exit)">📖 Read Mode</button>
     <button class="btn" data-add="text">+ Text</button>
     <button class="btn" data-add="heading">+ Heading</button>
     <button class="btn" data-add="quote">+ Quote</button>
@@ -797,6 +886,16 @@
     <button class="btn primary" id="btn-export">Export PDF</button>
     <span style="color:var(--text-dim);font-size:11px;margin-left:auto;" id="status">Ready</span>
   </div>
+</header>
+
+<header class="reading-bar" id="reading-bar" aria-hidden="true">
+  <button class="nav-btn" id="rm-prev" title="Previous page (←)">← Previous</button>
+  <select id="rm-jump" title="Jump to chapter or section"></select>
+  <span class="page-counter" id="rm-counter">Page 0 of 0</span>
+  <span class="cont-hint" id="rm-cont-hint" hidden>continued</span>
+  <button class="nav-btn" id="rm-next" title="Next page (→)">Next →</button>
+  <span class="spacer"></span>
+  <button class="exit-btn" id="rm-exit" title="Exit Reading Mode (Esc)">Exit Reading Mode</button>
 </header>
 
 <div class="workspace">
@@ -1417,6 +1516,10 @@ function renderAll() {
   renderCanvas();
   renderInspector();
   renderBlocksList();
+  if (document.body.classList.contains('reading-mode')) {
+    buildReadingJumpOptions();
+    refreshReadingBar();
+  }
 }
 
 function escapeHtml(s) {
@@ -2402,12 +2505,115 @@ function autoTypesetCurrentPage() {
 }
 
 /* ── Keyboard shortcuts ──────────────────────────────────── */
+/* ── Reading Mode ──────────────────────────────────────────── */
+const READING_MODE_KEY = 'book-studio-canvas-v1::readingMode';
+
+function isReadingMode() { return document.body.classList.contains('reading-mode'); }
+
+function setReadingMode(on) {
+  if (on) {
+    document.body.classList.add('reading-mode');
+    try { localStorage.setItem(READING_MODE_KEY, '1'); } catch (e) { /* ignore */ }
+    buildReadingJumpOptions();
+    refreshReadingBar();
+  } else {
+    document.body.classList.remove('reading-mode');
+    try { localStorage.removeItem(READING_MODE_KEY); } catch (e) { /* ignore */ }
+  }
+  const btn = document.getElementById('btn-read-mode');
+  if (btn) btn.classList.toggle('active', on);
+  const bar = document.getElementById('reading-bar');
+  if (bar) bar.setAttribute('aria-hidden', String(!on));
+}
+
+function buildReadingJumpOptions() {
+  const sel = document.getElementById('rm-jump');
+  if (!sel || !state || !Array.isArray(state.pages)) return;
+  const opts = [];
+  for (const p of state.pages) {
+    const label = p.label || '';
+    if (/\(cont\.\)\s*$/.test(label)) continue;
+    if (p.type === 'Chapter Opener') {
+      opts.push({ id: p.id, text: label || 'Chapter' });
+    } else if (p.type === 'Body' && label && label !== 'Body') {
+      opts.push({ id: p.id, text: '    ↳ ' + label });
+    }
+  }
+  sel.innerHTML = opts.length
+    ? opts.map(o => `<option value="${o.id}">${escapeHtml(o.text)}</option>`).join('')
+    : '<option value="">(no chapters yet)</option>';
+}
+
+function refreshReadingBar() {
+  if (!isReadingMode()) return;
+  const pages = (state && state.pages) || [];
+  const idx = pages.findIndex(p => p.id === state.activePageId);
+  const total = pages.length;
+  const cur = idx >= 0 ? pages[idx] : null;
+
+  const counter = document.getElementById('rm-counter');
+  if (counter) counter.textContent = total ? `Page ${idx + 1} of ${total}` : 'Page 0 of 0';
+
+  const prev = document.getElementById('rm-prev');
+  const next = document.getElementById('rm-next');
+  if (prev) prev.disabled = idx <= 0;
+  if (next) next.disabled = idx < 0 || idx >= total - 1;
+
+  const sel = document.getElementById('rm-jump');
+  if (sel && cur) {
+    const opts = Array.from(sel.options);
+    const direct = opts.find(o => o.value === cur.id);
+    if (direct) {
+      sel.value = cur.id;
+    } else {
+      // walk back to nearest in-dropdown page (likely the chapter/section this page belongs to)
+      for (let i = idx; i >= 0; i--) {
+        const back = opts.find(o => o.value === pages[i].id);
+        if (back) { sel.value = pages[i].id; break; }
+      }
+    }
+  }
+
+  const contHint = document.getElementById('rm-cont-hint');
+  if (contHint) contHint.hidden = !(cur && /\(cont\.\)\s*$/.test(cur.label || ''));
+}
+
+function readingNavigate(delta) {
+  if (!state || !Array.isArray(state.pages) || !state.pages.length) return;
+  const idx = state.pages.findIndex(p => p.id === state.activePageId);
+  const target = Math.max(0, Math.min(state.pages.length - 1, (idx < 0 ? 0 : idx) + delta));
+  if (target === idx) return;
+  state.activePageId = state.pages[target].id;
+  state.activeBlockId = null;
+  renderAll();
+}
+
+function readingJumpTo(pageId) {
+  if (!state || !pageId) return;
+  state.activePageId = pageId;
+  state.activeBlockId = null;
+  renderAll();
+}
+
+document.getElementById('btn-read-mode').addEventListener('click', () => setReadingMode(!isReadingMode()));
+document.getElementById('rm-prev').addEventListener('click', () => readingNavigate(-1));
+document.getElementById('rm-next').addEventListener('click', () => readingNavigate(1));
+document.getElementById('rm-exit').addEventListener('click', () => setReadingMode(false));
+document.getElementById('rm-jump').addEventListener('change', e => readingJumpTo(e.target.value));
+
 document.addEventListener('keydown', e => {
   // ignore when user is editing text in a contenteditable block, an input, or a textarea
   const t = e.target;
   const isEditingText =
     (t && t.isContentEditable) ||
     (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'));
+
+  // Reading Mode navigation (when not editing text and mode is active)
+  if (isReadingMode() && !isEditingText) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); readingNavigate(-1); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); readingNavigate(1); return; }
+    if (e.key === 'Escape') { e.preventDefault(); setReadingMode(false); return; }
+  }
 
   // Undo: Cmd+Z (mac) or Ctrl+Z (win) — works even while editing text OUT of inputs
   if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
@@ -2436,6 +2642,10 @@ const boot = bootstrap();
 projectIds = boot.projectIds;
 loadProject(boot.activeId);
 pushHistory(); // seed the history with the loaded state so the first edit can be undone
+// Restore Reading Mode if it was on in the last session
+try {
+  if (localStorage.getItem(READING_MODE_KEY) === '1') setReadingMode(true);
+} catch (e) { /* ignore */ }
 renderAll();
 </script>
 </body>
