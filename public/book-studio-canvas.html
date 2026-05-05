@@ -1731,8 +1731,11 @@ document.getElementById('preset').addEventListener('change', e => {
   setStatus(`Preset: ${state.preset}`);
 });
 
-/* ── Phase B toggle buttons (visual on/off; behavior to follow) ── */
-['btn-auto-typeset', 'btn-reality', 'btn-density', 'btn-air'].forEach(id => {
+/* ── Auto Typeset — parse current page text into structured blocks ── */
+document.getElementById('btn-auto-typeset').addEventListener('click', autoTypesetCurrentPage);
+
+/* ── Visual-only toggle buttons (behavior to follow in later phases) ── */
+['btn-reality', 'btn-density', 'btn-air'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('click', () => {
     el.classList.toggle('active');
@@ -2074,20 +2077,208 @@ function deleteAsset(assetId) {
 
 document.getElementById('btn-image-bank').addEventListener('click', openImageBank);
 
+/* ═══════════════════════════════════════════════════════════════
+   Smart Manuscript Parser (shared by Importer + Auto Typeset)
+   ═══════════════════════════════════════════════════════════════
+   Page rules:
+     # Chapter X: Title   → Chapter Opener page
+     ## Section           → new Body page (heading block at top)
+     ### Subsection       → new Body page (heading block at top)
+
+   Block rules (within a page):
+     *"..." — Author* / *"..." – Author*  → quote block (current MS style)
+     > "..."   followed by (optional) — Author next non-blank line
+                                         → quote block (clean style)
+     1. ... / 2. ... / - ...   (consecutive)  → single list block
+     paragraph between blank lines           → text block
+     --- horizontal rule                    → ignored (chapter divider)
+   ═══════════════════════════════════════════════════════════════ */
+function parseManuscriptToPages(text) {
+  // Layout constants (must match the .page CSS dimensions)
+  const PAGE_TOP = 80;       // top margin in px
+  const PAGE_BOTTOM = 760;   // bottom limit (page is 800px tall)
+  const X_LEFT = 60;
+  const BLOCK_W = 480;
+  const CHARS_PER_LINE = 60;
+  const LINE_HEIGHT = 18;
+  const BLOCK_GAP = 14;
+
+  const pages = [];
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  let i = 0;
+  let chapterIndex = 0;
+  let currentPage = null; // { type, label, blocks: [], cursorY }
+  let buffer = [];
+
+  function blockHeight(b) {
+    if (b.kind === 'heading') {
+      return b.level === 1 ? 70 : (b.level === 2 ? 56 : 44);
+    }
+    const text = b.text || '';
+    const breaks = (text.match(/\n/g) || []).length;
+    const lc = Math.max(1, Math.ceil(text.length / CHARS_PER_LINE) + breaks);
+    if (b.kind === 'quote') return Math.max(50, lc * 22 + 14);
+    return Math.max(40, lc * LINE_HEIGHT + 8);
+  }
+
+  function pushPage() {
+    if (currentPage && currentPage.blocks.length) pages.push(currentPage);
+    currentPage = null;
+  }
+
+  function flushBuffer() {
+    if (!buffer.length) return;
+    const para = buffer.join('\n').trim();
+    buffer = [];
+    if (para) addBlock({ kind: 'text', text: para });
+  }
+
+  function ensureBodyPage(label) {
+    if (!currentPage) {
+      currentPage = { type: 'Body', label: label || 'Body', blocks: [], cursorY: PAGE_TOP };
+    }
+  }
+
+  function addBlock(b) {
+    ensureBodyPage();
+    const h = blockHeight(b);
+    // Capacity overflow → split into continuation page
+    if (currentPage.cursorY + h > PAGE_BOTTOM && currentPage.blocks.length > 0) {
+      const carryLabel = currentPage.label;
+      const carryType = currentPage.type;
+      pushPage();
+      currentPage = {
+        type: carryType,
+        label: carryLabel.endsWith('(cont.)') ? carryLabel : carryLabel + ' (cont.)',
+        blocks: [],
+        cursorY: PAGE_TOP,
+      };
+    }
+    let block;
+    if (b.kind === 'heading') {
+      block = { kind: 'heading', text: b.text, x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
+    } else if (b.kind === 'quote') {
+      block = { kind: 'quote', text: b.text, x: X_LEFT + 20, y: currentPage.cursorY, w: BLOCK_W - 40, h, opacity: 1, z: 1 };
+    } else {
+      block = { kind: 'text', text: b.text || '', x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
+      if (b.spaced) block.spaced = true;
+      if (b.italic) block.italic = true;
+    }
+    currentPage.blocks.push(block);
+    currentPage.cursorY += h + BLOCK_GAP;
+  }
+
+  function startChapterOpener(title) {
+    flushBuffer();
+    pushPage();
+    chapterIndex++;
+    pages.push({
+      type: 'Chapter Opener',
+      label: title.slice(0, 40),
+      blocks: [
+        { kind: 'text', text: `Chapter ${chapterIndex}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+        { kind: 'heading', text: title, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
+      ],
+    });
+    currentPage = null;
+  }
+
+  function startBodyPage(headingText, level) {
+    flushBuffer();
+    pushPage();
+    currentPage = { type: 'Body', label: headingText.slice(0, 40), blocks: [], cursorY: PAGE_TOP };
+    addBlock({ kind: 'heading', text: headingText, level });
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (/^-{3,}$/.test(trimmed)) { flushBuffer(); i++; continue; }
+
+    // # Chapter (single hash only)
+    const h1 = line.match(/^#\s+(.+)$/);
+    if (h1 && !line.startsWith('##')) { startChapterOpener(h1[1].trim()); i++; continue; }
+
+    // ## Section
+    const h2 = line.match(/^##\s+(.+)$/);
+    if (h2 && !line.startsWith('###')) { startBodyPage(h2[1].trim(), 2); i++; continue; }
+
+    // ### Subsection — also new Body page
+    const h3 = line.match(/^###\s+(.+)$/);
+    if (h3) { startBodyPage(h3[1].trim(), 3); i++; continue; }
+
+    // Italic-quote: *"..." — Author*
+    const itq = trimmed.match(/^\*\s*"([^"]+)"\s*[—–-]\s*([^*]+?)\s*\*$/);
+    if (itq) { flushBuffer(); addBlock({ kind: 'quote', text: `"${itq[1]}"\n— ${itq[2].trim()}` }); i++; continue; }
+
+    // Blockquote (> ...) optionally followed by — Author line
+    if (trimmed.startsWith('>')) {
+      flushBuffer();
+      const qLines = [];
+      while (i < lines.length && lines[i].trim().startsWith('>')) {
+        qLines.push(lines[i].replace(/^\s*>\s?/, ''));
+        i++;
+      }
+      let j = i;
+      while (j < lines.length && lines[j].trim() === '') j++;
+      let author = '';
+      if (j < lines.length && /^[—–-]\s*\S/.test(lines[j].trim())) {
+        author = lines[j].trim().replace(/^[—–-]\s*/, '').trim();
+        i = j + 1;
+      }
+      const qText = qLines.join('\n').trim() + (author ? `\n— ${author}` : '');
+      addBlock({ kind: 'quote', text: qText });
+      continue;
+    }
+
+    // Lists (numbered or bulleted)
+    if (/^\s*(\d+\.|[-*])\s+/.test(line)) {
+      flushBuffer();
+      const lLines = [];
+      while (i < lines.length) {
+        const l = lines[i];
+        if (/^\s*(\d+\.|[-*])\s+/.test(l)) { lLines.push(l); i++; }
+        else if (l.trim() === '' && i + 1 < lines.length && /^\s*(\d+\.|[-*])\s+/.test(lines[i + 1])) { lLines.push(l); i++; }
+        else if (/^\s+\S/.test(l) && lLines.length > 0) { lLines.push(l); i++; }
+        else break;
+      }
+      addBlock({ kind: 'text', text: lLines.join('\n').trim() });
+      continue;
+    }
+
+    if (trimmed === '') { flushBuffer(); i++; continue; }
+
+    buffer.push(line);
+    i++;
+  }
+  flushBuffer();
+  pushPage();
+  return pages;
+}
+
 /* ── Import Manuscript modal ─────────────────────────────── */
 document.getElementById('btn-import').addEventListener('click', openImportDialog);
 function openImportDialog() {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;';
   overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px;max-width:560px;width:90%;color:var(--text);font-family:inherit;">
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px;max-width:640px;width:92%;color:var(--text);font-family:inherit;">
       <h3 style="margin:0 0 10px 0;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Import Manuscript</h3>
       <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5;">
-        Paste markdown text. Each <code>#&nbsp;Heading</code> becomes a Chapter Opener page.
-        Sections under it become body pages with that heading at the top.
+        Paste markdown — or click <code>Pull from book-studio/read</code> to fetch the sealed manuscript directly.
+        <br>Each <code>#</code> becomes a Chapter Opener · each <code>##</code> becomes a Body page · <code>###</code> stays as a sub-heading on the same page.
+        <br>Quotes (<code>*"…" — Author*</code> or <code>&gt; "…"</code>) and lists are preserved as their own blocks.
       </p>
-      <textarea id="import-textarea" placeholder="# Chapter 1\n\nBody paragraph...\n\n# Chapter 2\n\n..." style="width:100%;min-height:240px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
-      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button class="btn" id="import-pull">⬇ Pull from book-studio/read</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);margin-left:auto;">
+          <input type="checkbox" id="import-replace"> Replace existing pages
+        </label>
+      </div>
+      <textarea id="import-textarea" placeholder="# Chapter 1\\n\\n## Overview\\n\\nBody paragraph..." style="width:100%;min-height:300px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+        <span id="import-status" style="font-size:11px;color:var(--text-dim);font-style:italic;margin-right:auto;"></span>
         <button class="btn" id="import-cancel">Cancel</button>
         <button class="btn primary" id="import-go">Import as pages</button>
       </div>
@@ -2095,63 +2286,90 @@ function openImportDialog() {
   `;
   document.body.appendChild(overlay);
   const ta = overlay.querySelector('#import-textarea');
+  const stat = overlay.querySelector('#import-status');
   ta.focus();
+
+  overlay.querySelector('#import-pull').addEventListener('click', async () => {
+    stat.textContent = 'Fetching manuscript…';
+    try {
+      const r = await fetch('/api/book-studio/manuscript/raw', { credentials: 'include' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const text = await r.text();
+      ta.value = text;
+      stat.textContent = `Loaded ${Math.round(text.length / 1024)} KB · ${(text.match(/^#\s+/gm) || []).length} chapters · ${(text.match(/^##\s+/gm) || []).length} sections`;
+    } catch (err) {
+      stat.textContent = 'Could not fetch manuscript: ' + (err && err.message ? err.message : 'unknown');
+    }
+  });
+
   overlay.querySelector('#import-cancel').addEventListener('click', () => overlay.remove());
   overlay.querySelector('#import-go').addEventListener('click', () => {
-    importManuscriptText(ta.value);
+    const replace = overlay.querySelector('#import-replace').checked;
+    importManuscriptText(ta.value, { replace });
     overlay.remove();
   });
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
-function importManuscriptText(text) {
-  if (!state || !text || !text.trim()) { setStatus('Nothing to import'); return; }
-  // split by `# H1` markers; everything before first H1 becomes a "body" page
-  const lines = text.replace(/\r\n/g, '\n').split('\n');
-  const chapters = [];
-  let current = { heading: null, body: [] };
-  for (const ln of lines) {
-    const m = ln.match(/^#\s+(.+)$/);
-    if (m) {
-      if (current.heading || current.body.length) chapters.push(current);
-      current = { heading: m[1].trim(), body: [] };
-    } else {
-      current.body.push(ln);
-    }
-  }
-  if (current.heading || current.body.length) chapters.push(current);
 
-  const newPages = [];
-  chapters.forEach((c, i) => {
-    if (c.heading) {
-      newPages.push({
-        id: uid('p'),
-        type: 'Chapter Opener',
-        label: c.heading.slice(0, 30),
-        blocks: [
-          { id: uid('b'), kind: 'text', text: `Chapter ${newPages.length + 1}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-          { id: uid('b'), kind: 'heading', text: c.heading, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
-        ],
-      });
-    }
-    const bodyText = c.body.join('\n').trim();
-    if (bodyText) {
-      newPages.push({
-        id: uid('p'),
-        type: 'Body',
-        label: 'Body',
-        blocks: [
-          { id: uid('b'), kind: 'text', text: bodyText.slice(0, 4000), x: 80, y: 80, w: 440, h: 700, opacity: 1, z: 1 },
-        ],
-      });
-    }
-  });
-  if (!newPages.length) { setStatus('No content found'); return; }
-  state.pages.push(...newPages);
+function importManuscriptText(text, opts) {
+  opts = opts || {};
+  if (!state || !text || !text.trim()) { setStatus('Nothing to import'); return; }
+
+  const parsedPages = parseManuscriptToPages(text);
+  if (!parsedPages.length) { setStatus('No content found'); return; }
+
+  const newPages = parsedPages.map(p => ({
+    id: uid('p'),
+    type: p.type,
+    label: p.label,
+    blocks: p.blocks.map(b => ({ ...b, id: uid('b') })),
+  }));
+
+  if (opts.replace) {
+    if (!confirm(`Replace all ${state.pages.length} existing pages with ${newPages.length} freshly-imported ones? You can ⌘Z to undo.`)) return;
+    state.pages = newPages;
+  } else {
+    state.pages.push(...newPages);
+  }
   state.activePageId = newPages[0].id;
   state.activeBlockId = null;
   persistCurrent();
   renderAll();
-  setStatus(`Imported ${newPages.length} pages from ${chapters.filter(c => c.heading).length} chapters`);
+  const chapterCount = parsedPages.filter(p => p.type === 'Chapter Opener').length;
+  const sectionCount = parsedPages.filter(p => p.type === 'Body').length;
+  setStatus(`Imported ${newPages.length} pages — ${chapterCount} chapters, ${sectionCount} sections`);
+}
+
+/* ── Auto Typeset (current page) ─────────────────────────── */
+function autoTypesetCurrentPage() {
+  const p = activePage();
+  if (!p) { setStatus('No active page'); return; }
+  const idx = state.pages.findIndex(x => x.id === p.id);
+  if (idx < 0) return;
+  // Collect text from the page's blocks (preserving order)
+  const allText = p.blocks
+    .filter(b => typeof b.text === 'string' && b.text.trim())
+    .map(b => b.text)
+    .join('\n\n');
+  if (!allText.trim()) { setStatus('No text on this page to typeset'); return; }
+  const parsed = parseManuscriptToPages(allText);
+  if (!parsed.length) { setStatus('No structure detected'); return; }
+  const newPages = parsed.map(pp => ({
+    id: uid('p'),
+    type: pp.type === 'Chapter Opener' ? 'Chapter Opener' : 'Body',
+    label: pp.label,
+    blocks: pp.blocks.map(b => ({ ...b, id: uid('b') })),
+  }));
+  state.pages.splice(idx, 1, ...newPages);
+  state.activePageId = newPages[0].id;
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  if (newPages.length === 1) {
+    setStatus(`Auto Typeset → ${newPages[0].blocks.length} blocks on this page`);
+  } else {
+    setStatus(`Auto Typeset → split into ${newPages.length} pages`);
+  }
 }
 
 /* ── Keyboard shortcuts ──────────────────────────────────── */
