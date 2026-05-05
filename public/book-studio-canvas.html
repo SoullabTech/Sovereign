@@ -718,7 +718,7 @@
     margin-top: 16px;
   }
   .ib-edit .ib-actions button.danger:hover { background: #3a2424; }
-  /* ── reading mode ──────────────────────────────────────────── */
+  /* ── page proof (reading-mode CSS class kept for stable selectors) ── */
   .reading-bar {
     display: none;
     position: fixed;
@@ -857,7 +857,8 @@
     <button class="btn" id="btn-air" title="Air: looser spacing for ceremonial pages">↑ Air</button>
     <button class="btn active" id="btn-auto-typeset" title="Auto Typeset: re-flow text into the page grid (Phase B engine pending)">Auto Typeset</button>
     <button class="btn active" id="btn-reality" title="Reality preview: render with print fidelity">Reality ✓</button>
-    <button class="btn" id="btn-read-mode" title="Reading Mode: cover-to-cover single-page view (Esc to exit)">📖 Read Mode</button>
+    <button class="btn" id="btn-read-mode" title="Page Proof: single-page view of the typeset canvas for layout review (Esc to exit)">📖 Page Proof</button>
+    <a class="btn" href="/book-studio/read" target="_blank" rel="noopener" title="Read Flow: continuous prose view of the sealed manuscript (opens new tab)">📜 Read Flow</a>
     <button class="btn" data-add="text">+ Text</button>
     <button class="btn" data-add="heading">+ Heading</button>
     <button class="btn" data-add="quote">+ Quote</button>
@@ -895,7 +896,7 @@
   <span class="cont-hint" id="rm-cont-hint" hidden>continued</span>
   <button class="nav-btn" id="rm-next" title="Next page (→)">Next →</button>
   <span class="spacer"></span>
-  <button class="exit-btn" id="rm-exit" title="Exit Reading Mode (Esc)">Exit Reading Mode</button>
+  <button class="exit-btn" id="rm-exit" title="Exit Page Proof (Esc)">Exit Page Proof</button>
 </header>
 
 <div class="workspace">
@@ -2505,7 +2506,8 @@ function autoTypesetCurrentPage() {
 }
 
 /* ── Keyboard shortcuts ──────────────────────────────────── */
-/* ── Reading Mode ──────────────────────────────────────────── */
+/* ── Page Proof (a.k.a. Reading Mode internally — names kept stable for
+       persisted localStorage keys + CSS classes) ─────────────────── */
 const READING_MODE_KEY = 'book-studio-canvas-v1::readingMode';
 
 function isReadingMode() { return document.body.classList.contains('reading-mode'); }
@@ -2608,7 +2610,7 @@ document.addEventListener('keydown', e => {
     (t && t.isContentEditable) ||
     (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'));
 
-  // Reading Mode navigation (when not editing text and mode is active)
+  // Page Proof navigation (when not editing text and mode is active)
   if (isReadingMode() && !isEditingText) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); readingNavigate(-1); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); readingNavigate(1); return; }
@@ -2642,7 +2644,7 @@ const boot = bootstrap();
 projectIds = boot.projectIds;
 loadProject(boot.activeId);
 pushHistory(); // seed the history with the loaded state so the first edit can be undone
-// Restore Reading Mode if it was on in the last session
+// Restore Page Proof if it was on in the last session
 try {
   if (localStorage.getItem(READING_MODE_KEY) === '1') setReadingMode(true);
 } catch (e) { /* ignore */ }

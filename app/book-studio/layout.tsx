@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 const NAV = [
-  { href: '/book-studio/read', label: 'Read Manuscript' },
+  { href: '/book-studio/read', label: 'Read Flow' },
   { href: '/book-studio/passages', label: 'Passage Blocks' },
   { href: '/book-studio/illustrations', label: 'Illustration List' },
   { href: '/book-studio/design-system', label: 'Design System' },
