@@ -52,11 +52,12 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/book-studio/passages', public: true, notes: 'Book Studio — passage blocks index' },
   { exact: '/book-studio/illustrations', public: true, notes: 'Book Studio — illustration list' },
   { exact: '/book-studio/design-system', public: true, notes: 'Book Studio — design system v1' },
-  { exact: '/book-studio/render', public: true, notes: 'Book Studio — render trigger' },
-  { exact: '/book-studio/canvas', public: true, notes: 'Book Studio — visual canvas (Atticus-alternative)' },
-  { exact: '/book-studio-canvas.html', public: true, notes: 'Book Studio — canvas standalone HTML asset' },
-  { prefix: '/book-studio/drafts/', public: true, notes: 'Book Studio — imported drafts from MAIA Ideas' },
-  { prefix: '/api/book-studio/', public: true, notes: 'Book Studio — drafts API (POST from MAIA Ideas)' },
+  { exact: '/book-studio-canvas.html', public: true, notes: 'Book Studio — canvas standalone HTML asset (founder gate enforced on /book-studio/canvas wrapper)' },
+  // Founder-gated below — auth required at minTier:free, founder check happens in route layout via requireFounder()
+  { exact: '/book-studio/render', minTier: 'free', notes: 'Book Studio — render trigger (founder-gated in layout)' },
+  { exact: '/book-studio/canvas', minTier: 'free', notes: 'Book Studio — visual canvas, founder-gated in layout' },
+  { prefix: '/book-studio/drafts/', minTier: 'free', notes: 'Book Studio — imported drafts (founder-gated in layout)' },
+  { prefix: '/api/book-studio/', minTier: 'free', notes: 'Book Studio — drafts API (auth required)' },
 
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },

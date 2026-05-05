@@ -22,6 +22,7 @@ import {
   MessageCircle,
   FlaskConical,
   BookCopy,
+  NotebookPen,
 } from 'lucide-react';
 
 import type {
@@ -81,11 +82,21 @@ export const MAIA_WORLDS: MaiaRailItem[] = [
 
 export const STUDIO_RAIL_ITEM: MaiaRailItem = {
   id: 'studio',
-  label: 'Studio',
+  label: 'Pro Studio',
   icon: Briefcase,
   route: '/studio',
   classification: 'studio',
-  tooltip: 'Enter Studio workspace',
+  tooltip: 'Practitioner workspace',
+  isBoundaryTransition: true,
+};
+
+export const BOOK_STUDIO_RAIL_ITEM: MaiaRailItem = {
+  id: 'book-studio',
+  label: 'Book Studio',
+  icon: NotebookPen,
+  route: '/book-studio',
+  classification: 'studio',
+  tooltip: 'Editorial workspace for Soullab Press',
   isBoundaryTransition: true,
 };
 
@@ -178,6 +189,7 @@ export const MAIA_CONTEXTUAL_PANELS: MaiaContextualPanel[] = [
 
 export const MAIA_BOUNDARIES: MaiaRailItem[] = [
   STUDIO_RAIL_ITEM,
+  BOOK_STUDIO_RAIL_ITEM,
   CIRCLES_RAIL_ITEM,
   ASTROLOGY_RAIL_ITEM,
   LABTOOLS_RAIL_ITEM,
@@ -209,7 +221,7 @@ export function getPanelForWorld(world: MaiaWorldId | null): MaiaContextualPanel
   return MAIA_CONTEXTUAL_PANELS.find(p => p.world === world);
 }
 
-/** All rail items in display order (worlds + studio) */
+/** All rail items in display order (worlds + pro studio + book studio) */
 export function getRailItems(): MaiaRailItem[] {
-  return [...MAIA_WORLDS, STUDIO_RAIL_ITEM];
+  return [...MAIA_WORLDS, STUDIO_RAIL_ITEM, BOOK_STUDIO_RAIL_ITEM];
 }
