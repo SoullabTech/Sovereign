@@ -369,6 +369,21 @@
     color: #5a5040;
     font-style: italic;
   }
+  .block.image {
+    background: rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0;
+  }
+  .block.image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+  }
   .block .resize-handle {
     position: absolute;
     width: 10px;
@@ -421,6 +436,27 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
+  }
+  .inspector .delete-btn {
+    width: 100%;
+    background: transparent;
+    color: #ef6b6b;
+    border: 1px solid #5a3434;
+    padding: 7px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 12px;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .inspector .delete-btn:hover { background: #3a2424; color: #ff8a8a; }
+  .inspector .hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 6px;
+    font-style: italic;
   }
   /* ── print ─────────────────────────────────────────────────── */
   @media print {
@@ -481,9 +517,10 @@
     <button class="btn" id="btn-image-bank" title="Phase B">📚 Image Bank</button>
   </div>
   <div class="toolbar-row">
-    <button class="btn" id="btn-save">Save</button>
-    <button class="btn" id="btn-load">Load</button>
-    <button class="btn" id="btn-reset">Reset</button>
+    <button class="btn" id="btn-undo" title="Undo last change (⌘Z / Ctrl+Z)">↶ Undo</button>
+    <button class="btn" id="btn-save" title="Save snapshot manually (autosave is always on)">Save</button>
+    <button class="btn" id="btn-load" title="Reload current project from disk">Load</button>
+    <button class="btn" id="btn-reset" title="Reset current project to one empty page">Reset</button>
     <button class="btn primary" id="btn-export">Export PDF</button>
     <span style="color:var(--text-dim);font-size:11px;margin-left:auto;" id="status">Ready</span>
   </div>
@@ -513,11 +550,11 @@
   <aside class="inspector" id="inspector">
     <h3>INSPECTOR</h3>
     <div id="inspector-default">
-      <p>Select a block to edit its position, size, opacity, and stacking order.</p>
+      <p>Click a block to select it. Drag to move. Drag the corner to resize. Double-click text to edit.</p>
       <ul>
-        <li>Drag image blocks to move</li>
-        <li>Drag corner handles to resize</li>
-        <li>Click text to edit inline</li>
+        <li>Delete / Backspace — delete selected block</li>
+        <li>⌘Z / Ctrl+Z — undo last change</li>
+        <li>Esc — exit text editing</li>
       </ul>
     </div>
     <div id="inspector-block" style="display:none;"></div>
@@ -678,12 +715,56 @@ let projectIds = [];
 let activeId = null;
 let state = null; // current active project
 
+/* ── Undo history (per-project) ────────────────────────────── */
+const HISTORY_MAX = 30;
+const HISTORY_THROTTLE_MS = 400;
+const history = []; // { projectId, snapshot } stacks per project, last entry is most recent
+let lastHistoryAt = 0;
+let suppressHistory = false; // set true while restoring (undo) to avoid feedback loops
+
+function pushHistory() {
+  if (!state || suppressHistory) return;
+  const now = Date.now();
+  const snapshot = { projectId: state.id, json: JSON.stringify(state), at: now };
+  if (history.length > 0 && history[history.length - 1].projectId === state.id && now - lastHistoryAt < HISTORY_THROTTLE_MS) {
+    history[history.length - 1] = snapshot; // overlay rapid micro-edits
+  } else {
+    history.push(snapshot);
+    if (history.length > HISTORY_MAX) history.shift();
+  }
+  lastHistoryAt = now;
+}
+
+function undo() {
+  if (!state) return;
+  // collect indices in this project's history, newest-first
+  const myIdx = [];
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].projectId === state.id) myIdx.push(i);
+  }
+  if (myIdx.length < 2) {
+    setStatus('Nothing to undo');
+    return;
+  }
+  // newest entry = current state → remove
+  // next-newest = the state we want to restore (its index is < newest's, so no shift)
+  history.splice(myIdx[0], 1);
+  const restoreEntry = history[myIdx[1]];
+  suppressHistory = true;
+  state = JSON.parse(restoreEntry.json);
+  saveJSON(STORAGE.project(state.id), state);
+  renderAll();
+  suppressHistory = false;
+  setStatus('Undone');
+}
+
 function persistCurrent() {
   if (!state) return;
   state.updatedAt = Date.now();
   saveJSON(STORAGE.project(state.id), state);
   saveJSON(STORAGE.projects, projectIds);
   saveJSON(STORAGE.active, activeId);
+  pushHistory();
 }
 
 function loadProject(id) {
@@ -705,6 +786,7 @@ function switchProject(id) {
   if (id === activeId) return;
   persistCurrent();
   loadProject(id);
+  pushHistory();
   renderAll();
   setStatus(`Switched to "${state.name}"`);
 }
@@ -716,6 +798,7 @@ function createProject(type) {
   projectIds.push(project.id);
   saveJSON(STORAGE.projects, projectIds);
   loadProject(project.id);
+  pushHistory();
   renderAll();
   setStatus(`Created "${project.name}"`);
 }
@@ -891,17 +974,44 @@ function renderCanvas() {
     div.style.opacity = b.opacity;
     div.style.zIndex = b.z;
     div.dataset.blockId = b.id;
-    div.contentEditable = b.kind !== 'image-placeholder' ? 'true' : 'false';
+    div.contentEditable = 'false'; // non-editable by default; double-click enters edit mode
     div.spellcheck = false;
-    div.textContent = b.text;
+    if (b.kind === 'image' && b.src) {
+      const img = document.createElement('img');
+      img.src = b.src;
+      img.draggable = false;
+      div.appendChild(img);
+    } else {
+      div.textContent = b.text;
+    }
     div.addEventListener('focus', () => { state.activeBlockId = b.id; renderInspector(); });
     div.addEventListener('blur', () => {
-      const block = activePage().blocks.find(x => x.id === b.id);
-      if (block) block.text = div.textContent;
-      persistCurrent();
-      renderPageList();
+      // exit edit mode + commit text content
+      const wasEditing = div.contentEditable === 'true';
+      if (wasEditing) {
+        const block = activePage().blocks.find(x => x.id === b.id);
+        if (block && block.kind !== 'image' && block.kind !== 'image-placeholder') {
+          block.text = div.textContent;
+        }
+        div.contentEditable = 'false';
+        persistCurrent();
+        renderPageList();
+      }
     });
     div.addEventListener('mousedown', e => onBlockMouseDown(e, b.id));
+    div.addEventListener('dblclick', e => {
+      if (b.kind === 'image' || b.kind === 'image-placeholder') return;
+      e.preventDefault();
+      div.contentEditable = 'true';
+      div.focus();
+      // place cursor at click point (browser default puts caret at end if no selection)
+      const range = document.createRange();
+      range.selectNodeContents(div);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
     const handle = document.createElement('div');
     handle.className = 'resize-handle';
     handle.addEventListener('mousedown', e => { e.stopPropagation(); onResizeStart(e, b.id); });
@@ -921,9 +1031,10 @@ function renderInspector() {
   }
   def.style.display = 'none';
   blk.style.display = '';
+  const isImage = b.kind === 'image';
   blk.innerHTML = `
-    <div class="field"><label>Block</label><div style="font-size:11px;color:var(--text-dim);">${b.kind} · ${b.id}</div></div>
-    <div class="field"><label>Content</label><textarea id="i-text">${escapeHtml(b.text)}</textarea></div>
+    <div class="field"><label>Block</label><div style="font-size:11px;color:var(--text-dim);">${b.kind}</div></div>
+    ${isImage ? '' : `<div class="field"><label>Content</label><textarea id="i-text">${escapeHtml(b.text)}</textarea></div>`}
     <div class="row">
       <div class="field"><label>X</label><input type="number" id="i-x" value="${b.x}"/></div>
       <div class="field"><label>Y</label><input type="number" id="i-y" value="${b.y}"/></div>
@@ -936,6 +1047,8 @@ function renderInspector() {
       <div class="field"><label>Opacity</label><input type="number" step="0.05" min="0" max="1" id="i-opacity" value="${b.opacity}"/></div>
       <div class="field"><label>Z-index</label><input type="number" id="i-z" value="${b.z}"/></div>
     </div>
+    <button class="delete-btn" id="i-delete">🗑  Delete this block</button>
+    <div class="hint">Or press Delete / Backspace</div>
   `;
   ['x','y','w','h','opacity','z'].forEach(k => {
     document.getElementById('i-' + k).addEventListener('input', e => {
@@ -943,10 +1056,23 @@ function renderInspector() {
       renderCanvas(); renderPageList(); persistCurrent();
     });
   });
-  document.getElementById('i-text').addEventListener('input', e => {
-    b.text = e.target.value;
-    renderCanvas(); renderPageList(); persistCurrent();
-  });
+  if (!isImage) {
+    document.getElementById('i-text').addEventListener('input', e => {
+      b.text = e.target.value;
+      renderCanvas(); renderPageList(); persistCurrent();
+    });
+  }
+  document.getElementById('i-delete').addEventListener('click', deleteSelectedBlock);
+}
+
+function deleteSelectedBlock() {
+  const p = activePage();
+  if (!p || !state.activeBlockId) return;
+  p.blocks = p.blocks.filter(b => b.id !== state.activeBlockId);
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  setStatus('Block deleted');
 }
 
 function renderAll() {
@@ -1050,6 +1176,7 @@ document.querySelectorAll('[data-add]').forEach(btn => {
     const kind = btn.dataset.add;
     const p = activePage();
     if (!p) return;
+    const stackOffset = (p.blocks.length % 12) * 18; // cycle so they don't all pile up at one spot
     const newBlock = {
       id: uid('b'),
       kind,
@@ -1057,7 +1184,7 @@ document.querySelectorAll('[data-add]').forEach(btn => {
             kind === 'quote' ? '"A new quote."' :
             kind === 'doorway-marker' ? 'Doorway' :
             kind === 'image-placeholder' ? '◯' : 'New text',
-      x: 100, y: 200,
+      x: 80 + stackOffset, y: 180 + stackOffset,
       w: kind === 'image-placeholder' ? 200 : 400,
       h: kind === 'image-placeholder' ? 200 : (kind === 'heading' ? 70 : 40),
       opacity: 1, z: 1,
@@ -1068,6 +1195,49 @@ document.querySelectorAll('[data-add]').forEach(btn => {
     renderAll();
   });
 });
+
+/* ── + Image (file picker → image block) ─────────────────── */
+function addImageBlockFromFile(file) {
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Image is larger than 2 MB. Try a smaller version (localStorage size limit).\n\n(Once Phase C — database persistence — is wired up, this limit goes away.)');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const p = activePage();
+    if (!p) return;
+    const stackOffset = (p.blocks.length % 12) * 18;
+    const newBlock = {
+      id: uid('b'),
+      kind: 'image',
+      src: ev.target.result,
+      text: '',
+      x: 80 + stackOffset, y: 180 + stackOffset,
+      w: 320, h: 240,
+      opacity: 1, z: 1,
+    };
+    p.blocks.push(newBlock);
+    state.activeBlockId = newBlock.id;
+    persistCurrent();
+    renderAll();
+    setStatus(`Image added: ${file.name}`);
+  };
+  reader.readAsDataURL(file);
+}
+function openImagePicker() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  input.addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    addImageBlockFromFile(file);
+    input.remove();
+  });
+  document.body.appendChild(input);
+  input.click();
+}
 
 document.getElementById('doc-type').addEventListener('change', e => {
   if (!state) return;
@@ -1134,11 +1304,46 @@ document.addEventListener('click', e => {
   }
 });
 
-['btn-image','btn-templates','btn-image-bank','btn-auto-typeset','btn-reality'].forEach(id => {
+/* + Image — file picker → image block */
+document.getElementById('btn-image').addEventListener('click', openImagePicker);
+
+/* Undo button + Cmd/Ctrl-Z */
+document.getElementById('btn-undo').addEventListener('click', undo);
+
+/* Phase B placeholders — wired to status hint until specs land */
+['btn-templates','btn-image-bank','btn-auto-typeset','btn-reality'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('click', () => {
     setStatus(`"${el.textContent.trim()}" — behavior fills in Phase B`);
   });
+});
+
+/* ── Keyboard shortcuts ──────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  // ignore when user is editing text in a contenteditable block, an input, or a textarea
+  const t = e.target;
+  const isEditingText =
+    (t && t.isContentEditable) ||
+    (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'));
+
+  // Undo: Cmd+Z (mac) or Ctrl+Z (win) — works even while editing text OUT of inputs
+  if ((e.metaKey || e.ctrlKey) && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) {
+    if (isEditingText) return; // let the text input handle native undo
+    e.preventDefault();
+    undo();
+    return;
+  }
+  // Delete / Backspace: delete selected block when not editing text
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !isEditingText) {
+    if (state && state.activeBlockId) {
+      e.preventDefault();
+      deleteSelectedBlock();
+    }
+  }
+  // Escape: blur whatever is focused (exits text edit mode on blocks)
+  if (e.key === 'Escape' && t && typeof t.blur === 'function') {
+    t.blur();
+  }
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1147,6 +1352,7 @@ document.addEventListener('click', e => {
 const boot = bootstrap();
 projectIds = boot.projectIds;
 loadProject(boot.activeId);
+pushHistory(); // seed the history with the loaded state so the first edit can be undone
 renderAll();
 </script>
 </body>
