@@ -1,8 +1,14 @@
 # "Elemental Alchemy" Phrase Pass v1
 
-> **Status.** v1, 2026-05-04. Diagnostic only — no edits to the
-> manuscript. Scope: **Part One + Part Two** (body text only — skip
-> headers, titles, section names, formal references).
+> **Status.** v2, 2026-05-04. **All 4 proposed cuts applied** to the
+> sealed manuscript. KEEPs untouched. Scope: **Part One + Part Two**
+> (body text only — skipped headers, titles, section names, formal
+> references).
+>
+> **Verification:** Post-cut, 7 instances of *"elemental alchemy"*
+> remain in the manuscript — all in legitimate naming positions
+> (title, Ch2 closer, Ch5 Fire distinguishing function, Ch8 Air
+> testimony, Conclusion opener, Conclusion mid, Resources back matter).
 >
 > **Decision rule** *(Kelly):* If removed → meaning intact → **CUT**.
 > If removed → meaning unclear → **KEEP**. No gray zone.
@@ -24,6 +30,14 @@
 Extension:
 > *The more real the system becomes in the reader's experience, the
 > less it needs to be named.*
+
+**Working rule** *(Kelly, applied across the book going forward):*
+
+| Mention | Action |
+|---|---|
+| First mention in a section | establishes field — keep |
+| Second mention nearby | allowed if doing real work — pressure-test |
+| Third mention | remove unless essential |
 
 ---
 

@@ -1315,7 +1315,7 @@ In the water realm, there is no fixed pattern. Water energy is a fluid field of 
 
 Recognition of the dynamics of water gives the alchemist, shaman, and healer, or anyone else who can perceive the subtle grades of water, the ability to work with a bowl of water, the rain, a ceremonial baptism in a body of water, such as a river or a pond, or even a visualization of water as a potent source of self-compassion, redemption, and transformation. Symbols and rituals can anchor our awareness of the water that exists in us and in the world and subtle fields around us. Our relationship with elemental water can reflect the special wisdom of our soul, which invites us to return to what is most precious within our nature so we may delight in being alive.
 
-Upon realizing that you are in the water phase in your journey of elemental alchemy, it may be useful to answer the direct question: What in your past, present, or future do you feel passionately about? Water will inspire you by providing you with insights on your genuine truth.
+Upon realizing that you are in the water phase in your journey, it may be useful to answer the direct question: What in your past, present, or future do you feel passionately about? Water will inspire you by providing you with insights on your genuine truth.
 
 ### Emotional Immersion: Cleansing Your Mind
 
@@ -1511,7 +1511,7 @@ To learn it, live it, and love it, earth wisdom says we must embody it and exper
 
 Thriving while alive in a body requires endurance, openness, tenacity, and a constant advancement of personal and collective know-how. What we do to live involves both borrowed wisdom and personally acquired insights. We are reliant on the resources that the element of earth provides us to accomplish everything in our lives, even making a simple meal.
 
-When you find yourself in the earth phase of your journey of elemental alchemy, it may be useful to answer the direct question: What resources and plans are required to move forward? Earth will help you fulfill your intentions.
+When you find yourself in the earth phase of your journey, it may be useful to answer the direct question: What resources and plans are required to move forward? Earth will help you fulfill your intentions.
 
 ### The How of Earth
 
@@ -1557,7 +1557,7 @@ We are because we are embodied. Our bodies are the keepers of earth wisdom. When
 
 *"The best and most efficient pharmacy is within your own system." — Robert C. Peale*
 
-Of course, our goal in this elemental alchemy journey is to develop as much of the elements within our own nature. At the very least, we strive to have the functional awareness of areas that are 'out of our element' so that we can gather the support from those who are "in their element."
+Of course, our goal in this journey is to develop as much of the elements within our own nature. At the very least, we strive to have the functional awareness of areas that are 'out of our element' so that we can gather the support from those who are "in their element."
 
 In fact, after all these years of exploring, learning, and growing, I firmly believe that much of this earth experience is about remembering the value of our greatest resource: each other. It seems we are destined to exit the isolation and limitations of an individualistic culture that has imperiled not only our own futures but that of our planet. We can no longer think in terms of self-needs alone but must develop a way of being that is in harmony and in union with all other sentient beings that share this planet.
 
@@ -1951,7 +1951,7 @@ As I transitioned back into the darkness of early, pre-dawn morning in our small
 
 *"If the doors of perception were cleansed every thing would appear to man as it is, Infinite. For man has closed himself up, till he sees all things thro' narrow chinks of his cavern." — William Blake*
 
-Aether, in the context of personal and elemental alchemy, represents the quintessence or the fifth element beyond the traditional four. It is often seen as the medium that permeates all space, the binding agent of the universe, and is associated with the spiritual and ethereal realms. Aether embodies unity, potential, and the fundamental qualities of existence itself.
+Aether represents the quintessence or the fifth element beyond the traditional four. It is often seen as the medium that permeates all space, the binding agent of the universe, and is associated with the spiritual and ethereal realms. Aether embodies unity, potential, and the fundamental qualities of existence itself.
 
 Imagine Aether as the space that allows a symphony to arise from silence, the canvas on which the colors of life are painted. It is the breath between words, the pause between actions, where possibility and existence dance.
 
