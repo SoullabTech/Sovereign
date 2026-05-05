@@ -23,6 +23,10 @@ export const metadata = {
   title: 'Canvas · The Book Studio',
 };
 
+// Bumped per deploy so the browser doesn't serve a cached iframe.
+// Update this string when shipping changes that must reach the user immediately.
+const CANVAS_VERSION = '2026-05-05-a17';
+
 export default function CanvasPage() {
   return (
     <div
@@ -34,7 +38,7 @@ export default function CanvasPage() {
       }}
     >
       <iframe
-        src="/book-studio-canvas.html"
+        src={`/book-studio-canvas.html?v=${CANVAS_VERSION}`}
         style={{
           width: '100%',
           height: '100%',
