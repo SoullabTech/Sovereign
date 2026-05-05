@@ -2398,6 +2398,21 @@ function parseManuscriptToPages(text) {
       continue;
     }
 
+    // Standalone bold-only markdown lines become heading blocks before
+    // they fall through to paragraph text. Handles pandoc/Word output
+    // like **Preface** / **Introduction** that survives docx → markdown
+    // conversion as a literal bold paragraph instead of a real heading.
+    // Runs after all structural rules (#, ##, ###, quotes, lists) so it
+    // never overrides them; uses `trimmed` so it does not affect inline
+    // bold inside paragraphs.
+    const boldHeading = trimmed.match(/^\*\*(.+?)\*\*$/);
+    if (boldHeading) {
+      flushBuffer();
+      addBlock({ kind: 'heading', text: boldHeading[1].trim(), level: 2 });
+      i++;
+      continue;
+    }
+
     if (trimmed === '') { flushBuffer(); i++; continue; }
 
     buffer.push(line);
