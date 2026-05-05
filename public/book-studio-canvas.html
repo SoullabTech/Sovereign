@@ -96,6 +96,42 @@
     cursor: pointer;
   }
   .toolbar .spacer { flex: 1; }
+  .toolbar .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 4px;
+    align-self: center;
+  }
+  .dropdown-wrap { position: relative; display: inline-block; }
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 180px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    z-index: 100;
+    display: none;
+    padding: 4px;
+  }
+  .dropdown-menu.open { display: block; }
+  .dropdown-menu button {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: inherit;
+  }
+  .dropdown-menu button:hover { background: var(--bg); color: var(--accent); }
   /* ── workspace ──────────────────────────────────────────────── */
   .workspace {
     display: grid;
@@ -451,6 +487,19 @@
     transition: background 0.15s;
   }
   .inspector .delete-btn:hover { background: #3a2424; color: #ff8a8a; }
+  .inspector .clear-page-btn {
+    width: 100%;
+    background: transparent;
+    color: #ef6b6b;
+    border: 1px dashed #5a3434;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: inherit;
+  }
+  .inspector .clear-page-btn:hover { background: #3a2424; color: #ff8a8a; }
   .inspector .hint {
     font-size: 10px;
     color: var(--text-dim);
@@ -458,6 +507,54 @@
     margin-top: 6px;
     font-style: italic;
   }
+  .inspector .blocks-list {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .inspector .blocks-list h4 {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .inspector .blocks-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.3;
+    border: 1px solid transparent;
+  }
+  .inspector .blocks-list-item:hover { background: var(--panel-2); }
+  .inspector .blocks-list-item.active { background: var(--panel-2); border-color: var(--accent); }
+  .inspector .blocks-list-item .label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .inspector .blocks-list-item .kind {
+    font-size: 8px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 6px;
+  }
+  .inspector .blocks-list-item .del {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0 4px;
+  }
+  .inspector .blocks-list-item .del:hover { color: #ef6b6b; }
   /* ── print ─────────────────────────────────────────────────── */
   @media print {
     body * { visibility: hidden; }
@@ -479,8 +576,19 @@
 <header class="toolbar">
   <div class="toolbar-row">
     <span class="brand">BOOK STUDIO</span>
-    <button class="btn" id="btn-image">+ Image ▼</button>
-    <button class="btn" id="btn-templates">📋 Templates</button>
+    <button class="btn primary" id="btn-undo" title="Undo last change (⌘Z / Ctrl+Z)">↶ Undo</button>
+    <span class="divider"></span>
+    <button class="btn" id="btn-image" title="Add an image to the current page">+ Image</button>
+    <div class="dropdown-wrap">
+      <button class="btn" id="btn-templates" title="Insert a templated page">📋 Templates ▾</button>
+      <div class="dropdown-menu" id="templates-menu">
+        <button data-template="title">Title Page</button>
+        <button data-template="chapter">Chapter Opener</button>
+        <button data-template="body">Body Page</button>
+        <button data-template="image-plate">Image Plate (full)</button>
+        <button data-template="doorway">Doorway Page</button>
+      </div>
+    </div>
     <select class="select" id="doc-type">
       <option>Book</option>
       <option>Workbook</option>
@@ -489,20 +597,22 @@
       <option>Oracle Deck Guide</option>
       <option>Audiobook</option>
     </select>
-    <select class="select" id="preset">
+    <select class="select" id="preset" title="Visual preset — applies to current project">
       <option>Classic — Soullab Press</option>
+      <option>Modern — Wide Margins</option>
+      <option>Minimalist — No Ornament</option>
     </select>
-    <button class="btn disabled-soft" title="Phase B">↓ Density</button>
-    <button class="btn disabled-soft" title="Phase B">↑ Air</button>
-    <button class="btn active" id="btn-auto-typeset" title="Phase B">Auto Typeset</button>
-    <button class="btn active" id="btn-reality" title="Phase B">Reality ✓</button>
+    <button class="btn" id="btn-density" title="Density: tighter spacing for body pages">↓ Density</button>
+    <button class="btn" id="btn-air" title="Air: looser spacing for ceremonial pages">↑ Air</button>
+    <button class="btn active" id="btn-auto-typeset" title="Auto Typeset: re-flow text into the page grid (Phase B engine pending)">Auto Typeset</button>
+    <button class="btn active" id="btn-reality" title="Reality preview: render with print fidelity">Reality ✓</button>
     <button class="btn" data-add="text">+ Text</button>
     <button class="btn" data-add="heading">+ Heading</button>
     <button class="btn" data-add="quote">+ Quote</button>
   </div>
   <div class="toolbar-row">
-    <button class="btn" data-add="doorway-marker">+ Doorway</button>
-    <button class="btn" data-add="image-placeholder">+ Image Plate</button>
+    <button class="btn" data-page-template="doorway" title="Add a new Doorway page (e.g. Fire / Water / Earth / Air)">+ Doorway Page</button>
+    <button class="btn" data-page-template="image-plate" title="Add a new full-page image plate">+ Image Plate Page</button>
     <button class="btn" id="btn-duplicate-page">Duplicate Page</button>
     <span style="color:var(--text-dim);font-size:11px;margin-left:8px;">Page type</span>
     <select class="select" id="page-type">
@@ -513,11 +623,11 @@
       <option>Body</option>
     </select>
     <button class="btn" id="btn-delete-block">Delete Block</button>
+    <button class="btn" id="btn-import" title="Paste manuscript text and split into pages">⬆ Import Manuscript</button>
     <span class="spacer"></span>
-    <button class="btn" id="btn-image-bank" title="Phase B">📚 Image Bank</button>
+    <button class="btn" id="btn-image-bank" title="Image Bank — Phase B">📚 Image Bank</button>
   </div>
   <div class="toolbar-row">
-    <button class="btn" id="btn-undo" title="Undo last change (⌘Z / Ctrl+Z)">↶ Undo</button>
     <button class="btn" id="btn-save" title="Save snapshot manually (autosave is always on)">Save</button>
     <button class="btn" id="btn-load" title="Reload current project from disk">Load</button>
     <button class="btn" id="btn-reset" title="Reset current project to one empty page">Reset</button>
@@ -549,8 +659,18 @@
   </main>
   <aside class="inspector" id="inspector">
     <h3>INSPECTOR</h3>
+
+    <!-- Always-visible block list for the active page -->
+    <div class="blocks-list" id="inspector-blocks-list-wrap">
+      <h4>Blocks on this page</h4>
+      <div id="inspector-blocks-list"></div>
+      <button class="clear-page-btn" id="i-clear-page">Clear all blocks on this page</button>
+    </div>
+
     <div id="inspector-default">
-      <p>Click a block to select it. Drag to move. Drag the corner to resize. Double-click text to edit.</p>
+      <p style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        Click a block to select it. Drag to move. Drag the corner to resize. Double-click text to edit.
+      </p>
       <ul>
         <li>Delete / Backspace — delete selected block</li>
         <li>⌘Z / Ctrl+Z — undo last change</li>
@@ -724,15 +844,11 @@ let suppressHistory = false; // set true while restoring (undo) to avoid feedbac
 
 function pushHistory() {
   if (!state || suppressHistory) return;
-  const now = Date.now();
-  const snapshot = { projectId: state.id, json: JSON.stringify(state), at: now };
-  if (history.length > 0 && history[history.length - 1].projectId === state.id && now - lastHistoryAt < HISTORY_THROTTLE_MS) {
-    history[history.length - 1] = snapshot; // overlay rapid micro-edits
-  } else {
-    history.push(snapshot);
-    if (history.length > HISTORY_MAX) history.shift();
-  }
-  lastHistoryAt = now;
+  // Always add a new entry. Capped at HISTORY_MAX so memory stays bounded.
+  // (Earlier throttling caused the first action to overwrite the boot seed,
+  // which made undo think there was nothing to undo.)
+  history.push({ projectId: state.id, json: JSON.stringify(state), at: Date.now() });
+  if (history.length > HISTORY_MAX) history.shift();
 }
 
 function undo() {
@@ -1075,14 +1191,64 @@ function deleteSelectedBlock() {
   setStatus('Block deleted');
 }
 
+function renderBlocksList() {
+  const list = document.getElementById('inspector-blocks-list');
+  if (!list) return;
+  const p = activePage();
+  if (!p) { list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;font-style:italic;">No page</div>'; return; }
+  if (p.blocks.length === 0) { list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;font-style:italic;">Empty page</div>'; return; }
+  list.innerHTML = '';
+  p.blocks.forEach((b, i) => {
+    const div = document.createElement('div');
+    div.className = 'blocks-list-item' + (b.id === state.activeBlockId ? ' active' : '');
+    const label = (b.text || '').slice(0, 28) || (b.kind === 'image' ? '(image)' : b.kind);
+    div.innerHTML = `
+      <span class="kind">${escapeHtml(b.kind.replace('-marker','').replace('-placeholder',''))}</span>
+      <span class="label" title="${escapeHtml(b.text || '')}">${escapeHtml(label) || '—'}</span>
+      <button class="del" title="Delete this block">×</button>
+    `;
+    div.addEventListener('click', e => {
+      if (e.target.classList.contains('del')) return;
+      state.activeBlockId = b.id;
+      renderCanvas();
+      renderInspector();
+    });
+    div.querySelector('.del').addEventListener('click', e => {
+      e.stopPropagation();
+      // delete this specific block (not necessarily the selected one)
+      const page = activePage();
+      if (!page) return;
+      page.blocks = page.blocks.filter(x => x.id !== b.id);
+      if (state.activeBlockId === b.id) state.activeBlockId = null;
+      persistCurrent();
+      renderAll();
+    });
+    list.appendChild(div);
+  });
+}
+
+function clearPage() {
+  const p = activePage();
+  if (!p) return;
+  if (p.blocks.length === 0) { setStatus('Page is already empty'); return; }
+  if (!confirm(`Clear all ${p.blocks.length} blocks on this page? You can undo with ⌘Z.`)) return;
+  p.blocks = [];
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  setStatus('Page cleared (⌘Z to undo)');
+}
+
 function renderAll() {
   if (!state) return;
   document.getElementById('doc-type').value = state.documentType;
   document.getElementById('preset').value = state.preset;
+  applyPreset(state.preset);
   renderProjectList();
   renderPageList();
   renderCanvas();
   renderInspector();
+  renderBlocksList();
 }
 
 function escapeHtml(s) {
@@ -1310,13 +1476,187 @@ document.getElementById('btn-image').addEventListener('click', openImagePicker);
 /* Undo button + Cmd/Ctrl-Z */
 document.getElementById('btn-undo').addEventListener('click', undo);
 
-/* Phase B placeholders — wired to status hint until specs land */
-['btn-templates','btn-image-bank','btn-auto-typeset','btn-reality'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('click', () => {
-    setStatus(`"${el.textContent.trim()}" — behavior fills in Phase B`);
+/* Clear page (default inspector) */
+document.getElementById('i-clear-page').addEventListener('click', clearPage);
+
+/* ── Page-template buttons (+ Doorway Page, + Image Plate Page) ── */
+function addPageFromTemplate(kind) {
+  if (!state) return;
+  const id = uid('p');
+  let page;
+  if (kind === 'title') {
+    page = { id, type: 'Frontmatter', label: 'Title', blocks: [
+      { id: uid('b'), kind: 'heading', text: 'Title', x: 60, y: 280, w: 480, h: 70, opacity: 1, z: 1 },
+      { id: uid('b'), kind: 'text', text: 'Subtitle', x: 90, y: 380, w: 420, h: 40, opacity: 1, z: 1, italic: true },
+      { id: uid('b'), kind: 'text', text: 'Author', x: 200, y: 700, w: 200, h: 30, opacity: 1, z: 1, spaced: true },
+    ]};
+  } else if (kind === 'chapter') {
+    page = { id, type: 'Chapter Opener', label: 'Chapter', blocks: [
+      { id: uid('b'), kind: 'text', text: 'Chapter', x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+      { id: uid('b'), kind: 'heading', text: 'Chapter Title', x: 80, y: 280, w: 440, h: 70, opacity: 1, z: 1 },
+    ]};
+  } else if (kind === 'body') {
+    page = { id, type: 'Body', label: 'Body', blocks: [
+      { id: uid('b'), kind: 'text', text: 'Body text starts here…', x: 80, y: 100, w: 440, h: 600, opacity: 1, z: 1 },
+    ]};
+  } else if (kind === 'image-plate') {
+    page = { id, type: 'Image Plate', label: 'Image Plate', blocks: [
+      { id: uid('b'), kind: 'image-placeholder', text: '◯', x: 60, y: 80, w: 480, h: 640, opacity: 1, z: 1 },
+    ]};
+  } else if (kind === 'doorway') {
+    page = { id, type: 'Doorway', label: 'Doorway', blocks: [
+      { id: uid('b'), kind: 'doorway-marker', text: 'Element', x: 220, y: 380, w: 160, h: 50, opacity: 1, z: 1 },
+    ]};
+  } else {
+    return;
+  }
+  state.pages.push(page);
+  state.activePageId = page.id;
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  setStatus(`Added ${page.type} page`);
+}
+document.querySelectorAll('[data-page-template]').forEach(btn => {
+  btn.addEventListener('click', () => addPageFromTemplate(btn.dataset.pageTemplate));
+});
+
+/* ── Templates dropdown ───────────────────────────────────── */
+const templatesBtn = document.getElementById('btn-templates');
+const templatesMenu = document.getElementById('templates-menu');
+templatesBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  templatesMenu.classList.toggle('open');
+});
+templatesMenu.querySelectorAll('button').forEach(b => {
+  b.addEventListener('click', () => {
+    addPageFromTemplate(b.dataset.template);
+    templatesMenu.classList.remove('open');
   });
 });
+document.addEventListener('click', e => {
+  if (!templatesMenu.contains(e.target) && e.target !== templatesBtn) {
+    templatesMenu.classList.remove('open');
+  }
+});
+
+/* ── Preset application (Classic — Soullab Press / Modern / Minimalist) ── */
+function applyPreset(name) {
+  const root = document.documentElement;
+  if (name === 'Modern — Wide Margins') {
+    root.style.setProperty('--page-cream', '#fbfaf6');
+    root.style.setProperty('--page-block-border', '#cccccc');
+  } else if (name === 'Minimalist — No Ornament') {
+    root.style.setProperty('--page-cream', '#ffffff');
+    root.style.setProperty('--page-block-border', '#dddddd');
+  } else {
+    // Classic — Soullab Press (default)
+    root.style.setProperty('--page-cream', '#f3eddd');
+    root.style.setProperty('--page-block-border', '#c9bfa6');
+  }
+}
+document.getElementById('preset').addEventListener('change', e => {
+  if (!state) return;
+  state.preset = e.target.value;
+  applyPreset(state.preset);
+  persistCurrent();
+  setStatus(`Preset: ${state.preset}`);
+});
+
+/* ── Phase B toggle buttons (visual on/off; behavior to follow) ── */
+['btn-auto-typeset', 'btn-reality', 'btn-density', 'btn-air'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => {
+    el.classList.toggle('active');
+    const onOff = el.classList.contains('active') ? 'on' : 'off';
+    setStatus(`${el.textContent.trim()}: ${onOff}`);
+  });
+});
+
+/* ── Image Bank (placeholder hint until Phase B specs) ─────── */
+document.getElementById('btn-image-bank').addEventListener('click', () => {
+  setStatus('Image Bank — opens shared asset library in Phase B');
+});
+
+/* ── Import Manuscript modal ─────────────────────────────── */
+document.getElementById('btn-import').addEventListener('click', openImportDialog);
+function openImportDialog() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px;max-width:560px;width:90%;color:var(--text);font-family:inherit;">
+      <h3 style="margin:0 0 10px 0;font-size:13px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);">Import Manuscript</h3>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5;">
+        Paste markdown text. Each <code>#&nbsp;Heading</code> becomes a Chapter Opener page.
+        Sections under it become body pages with that heading at the top.
+      </p>
+      <textarea id="import-textarea" placeholder="# Chapter 1\n\nBody paragraph...\n\n# Chapter 2\n\n..." style="width:100%;min-height:240px;background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:8px;font-family:ui-monospace,monospace;font-size:12px;"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" id="import-cancel">Cancel</button>
+        <button class="btn primary" id="import-go">Import as pages</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const ta = overlay.querySelector('#import-textarea');
+  ta.focus();
+  overlay.querySelector('#import-cancel').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#import-go').addEventListener('click', () => {
+    importManuscriptText(ta.value);
+    overlay.remove();
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+function importManuscriptText(text) {
+  if (!state || !text || !text.trim()) { setStatus('Nothing to import'); return; }
+  // split by `# H1` markers; everything before first H1 becomes a "body" page
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const chapters = [];
+  let current = { heading: null, body: [] };
+  for (const ln of lines) {
+    const m = ln.match(/^#\s+(.+)$/);
+    if (m) {
+      if (current.heading || current.body.length) chapters.push(current);
+      current = { heading: m[1].trim(), body: [] };
+    } else {
+      current.body.push(ln);
+    }
+  }
+  if (current.heading || current.body.length) chapters.push(current);
+
+  const newPages = [];
+  chapters.forEach((c, i) => {
+    if (c.heading) {
+      newPages.push({
+        id: uid('p'),
+        type: 'Chapter Opener',
+        label: c.heading.slice(0, 30),
+        blocks: [
+          { id: uid('b'), kind: 'text', text: `Chapter ${newPages.length + 1}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+          { id: uid('b'), kind: 'heading', text: c.heading, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
+        ],
+      });
+    }
+    const bodyText = c.body.join('\n').trim();
+    if (bodyText) {
+      newPages.push({
+        id: uid('p'),
+        type: 'Body',
+        label: 'Body',
+        blocks: [
+          { id: uid('b'), kind: 'text', text: bodyText.slice(0, 4000), x: 80, y: 80, w: 440, h: 700, opacity: 1, z: 1 },
+        ],
+      });
+    }
+  });
+  if (!newPages.length) { setStatus('No content found'); return; }
+  state.pages.push(...newPages);
+  state.activePageId = newPages[0].id;
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  setStatus(`Imported ${newPages.length} pages from ${chapters.filter(c => c.heading).length} chapters`);
+}
 
 /* ── Keyboard shortcuts ──────────────────────────────────── */
 document.addEventListener('keydown', e => {
