@@ -2432,7 +2432,7 @@ document.getElementById('btn-image-bank').addEventListener('click', openImageBan
    ═══════════════════════════════════════════════════════════════ */
 function parseManuscriptToPages(text) {
   // Layout constants (must match the .page CSS dimensions)
-  console.log('[parseManuscriptToPages] PARSER MODE: fill-first active');
+  console.log('[parseManuscriptToPages] PARSER MODE: keep-with-next active');
   const PAGE_TOP = 80;       // top margin in px
   const PAGE_BOTTOM = 760;   // bottom limit (page is 800px tall)
   const X_LEFT = 60;
@@ -2449,6 +2449,12 @@ function parseManuscriptToPages(text) {
   // is forbidden per L1 spec §1.3 (PAGE_PROOF_SPEC_v1.md).
   let currentPage = null; // { type, label, blocks: [], cursorY }
   let buffer = [];
+  // Group-builder state (#278 keep-with-next). See placeAtomically /
+  // addBlock state machine below. Headings + their immediate body
+  // (optional quote + first paragraph) place atomically; quotes alone
+  // do not drag forward.
+  let groupBuffer = [];
+  let groupState = 'IDLE'; // 'IDLE' | 'HEADING_OPEN' | 'HEADING_QUOTE_OPEN'
 
   function blockHeight(b) {
     if (b.kind === 'heading') {
@@ -2461,13 +2467,19 @@ function parseManuscriptToPages(text) {
     return Math.max(40, lc * LINE_HEIGHT + 8);
   }
 
-  /* ── Fill-first allocation (#278) ────────────────────────────────
-     Used for capacity checking only. Mirrors the master-spec
-     formulation: estimate block size, ask page if it fits, only
-     create a continuation when it doesn't. blockHeight() above is
-     still used for the visual block.h positioning value (matches
-     edit-mode geometry); estimateBlockHeight here is the conservative
-     parser-side estimate that decides allocation. */
+  /* ── Fill-first capacity estimate (#278 keep-with-next) ──────────
+     estimateBlockHeight is the conservative parser-side estimate used
+     to decide whether a group fits on the current page. It is ~30%
+     larger than the visual blockHeight() positioning value (which
+     matches edit-mode geometry). Group-aware placement (see
+     placeAtomically below) sums the per-block estimate across all
+     members of a semantic group and never splits the group across
+     page boundaries. The 900px MAX is chosen so the manuscript renders
+     to ~250–280 pages — pages may visually exceed the 800px page CSS
+     for dense blocks; the proof renderer handles flow via normal
+     document layout, not absolute positioning. */
+  const MAX_GROUP_HEIGHT = 900;
+
   function estimateBlockHeight(block) {
     if (!block) return 40;
     const text = block.text || '';
@@ -2480,17 +2492,69 @@ function parseManuscriptToPages(text) {
     return 40 + lines * lineHeight;
   }
 
-  function canFitOnPage(page, block) {
-    if (!page) return false;
-    // 900 chosen to match the stated outcome (~292 → ~250–280 pages)
-    // given estimateBlockHeight's ~30% larger per-block heights vs the
-    // edit-mode blockHeight() above. Pages may exceed the 800px page
-    // CSS visually in edit mode for dense blocks; the proof renderer
-    // handles flow via normal document layout, not absolute positioning.
-    const MAX_HEIGHT = 900;
-    const current = page._height || 0;
-    const next = estimateBlockHeight(block);
-    return (current + next) <= MAX_HEIGHT;
+  /* ── Group-aware atomic placement (#278) ─────────────────────────
+     placeAtomically([blocks]) is the only path that writes to a page.
+     It measures the full group height first, decides whether to spawn
+     a continuation, and then writes every member to one page so a
+     semantic group never splits across pages. Oversized groups (a
+     heading + a very long paragraph that exceeds MAX alone) are
+     allowed to overflow rather than split — semantic integrity beats
+     geometry. */
+  function placeAtomically(blocks) {
+    if (!blocks || !blocks.length) return;
+
+    let groupHeight = 0;
+    for (const b of blocks) groupHeight += estimateBlockHeight(b);
+    if (blocks.length > 1) groupHeight += (blocks.length - 1) * BLOCK_GAP;
+
+    ensureBodyPage();
+
+    if (
+      currentPage.blocks.length > 0 &&
+      (currentPage._height || 0) + groupHeight > MAX_GROUP_HEIGHT
+    ) {
+      const carryLabel = currentPage.label;
+      const carryType = currentPage.type;
+      pushPage();
+      currentPage = {
+        type: carryType,
+        label: carryLabel.endsWith('(cont.)') ? carryLabel : carryLabel + ' (cont.)',
+        blocks: [],
+        cursorY: PAGE_TOP,
+        _height: 0,
+      };
+    }
+
+    for (const b of blocks) placeOnCurrentPage(b);
+  }
+
+  function placeOnCurrentPage(b) {
+    const h = blockHeight(b);
+    let block;
+    if (b.kind === 'heading') {
+      block = { kind: 'heading', text: b.text, x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
+    } else if (b.kind === 'quote') {
+      block = { kind: 'quote', text: b.text, x: X_LEFT + 20, y: currentPage.cursorY, w: BLOCK_W - 40, h, opacity: 1, z: 1 };
+    } else {
+      block = { kind: 'text', text: b.text || '', x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
+      if (b.spaced) block.spaced = true;
+      if (b.italic) block.italic = true;
+    }
+    currentPage.blocks.push(block);
+    currentPage.cursorY += h + BLOCK_GAP;
+    currentPage._height = (currentPage._height || 0) + estimateBlockHeight(b);
+  }
+
+  /* ── flushGroup() ───────────────────────────────────────────────
+     Called at every structural break (chapter/part opener, end of
+     stream) to drain any pending group. A pending group at a break
+     has no following body block — placing it now is the closest we
+     can get to never-orphan-a-heading without rewriting upstream. */
+  function flushGroup() {
+    if (!groupBuffer.length) return;
+    placeAtomically(groupBuffer);
+    groupBuffer = [];
+    groupState = 'IDLE';
   }
 
   function pushPage() {
@@ -2560,8 +2624,23 @@ function parseManuscriptToPages(text) {
     }
   }
 
+  /* ── addBlock — group-builder state machine (#278) ──────────────
+     Public entry point for the parser. Defers placement until a
+     complete semantic group is assembled, then calls placeAtomically.
+
+     Group composition (Kelly canon, 2026-05-06):
+       Heading group:  heading [+ immediate quote] + first following paragraph
+                       Multi-heading runs (h2 → h3 → ...) absorb into one
+                       group so section + subsection ride to the body
+                       block together.
+       Quote group:    quote standalone — does NOT attach forward unless
+                       absorbed by a preceding heading group. Solo quote
+                       pages allowed where intentionally designed.
+       Solo text:      paragraph alone — no grouping.
+
+     Core invariant: headings do not orphan; quotes do not drag
+     unrelated prose forward. */
   function addBlock(b) {
-    ensureBodyPage();
     // Strip leaked markdown noise from text/quote so it doesn't render
     // as literal characters in Page Proof. Headings get cleaned by
     // their own constructors.
@@ -2569,39 +2648,59 @@ function parseManuscriptToPages(text) {
       b.text = decodeBasicEntities(b.text);
       b.text = fixAttributionDoublet(stripBoldMarkers(b.text));
     }
-    const h = blockHeight(b);
-    // Fill-first allocation: only spawn a continuation page when the
-    // current page genuinely cannot fit this block. canFitOnPage uses
-    // the conservative estimateBlockHeight + _height accumulator.
-    if (!canFitOnPage(currentPage, b) && currentPage.blocks.length > 0) {
-      const carryLabel = currentPage.label;
-      const carryType = currentPage.type;
-      pushPage();
-      currentPage = {
-        type: carryType,
-        label: carryLabel.endsWith('(cont.)') ? carryLabel : carryLabel + ' (cont.)',
-        blocks: [],
-        cursorY: PAGE_TOP,
-        _height: 0,
-      };
+
+    switch (groupState) {
+      case 'IDLE':
+        if (b.kind === 'heading') {
+          groupBuffer = [b];
+          groupState = 'HEADING_OPEN';
+        } else {
+          // Solo paragraph or standalone quote — place alone.
+          placeAtomically([b]);
+        }
+        break;
+      case 'HEADING_OPEN':
+        if (b.kind === 'heading') {
+          // h2 immediately followed by h3 (or vice versa). Absorb so
+          // the multi-heading run rides to the body block together.
+          groupBuffer.push(b);
+        } else if (b.kind === 'quote') {
+          groupBuffer.push(b);
+          groupState = 'HEADING_QUOTE_OPEN';
+        } else if (b.kind === 'text') {
+          groupBuffer.push(b);
+          placeAtomically(groupBuffer);
+          groupBuffer = [];
+          groupState = 'IDLE';
+        }
+        break;
+      case 'HEADING_QUOTE_OPEN':
+        if (b.kind === 'text') {
+          groupBuffer.push(b);
+          placeAtomically(groupBuffer);
+          groupBuffer = [];
+          groupState = 'IDLE';
+        } else if (b.kind === 'heading') {
+          // Heading + quote pair places atomically; new heading starts
+          // its own group. Quote does not drag forward.
+          placeAtomically(groupBuffer);
+          groupBuffer = [b];
+          groupState = 'HEADING_OPEN';
+        } else if (b.kind === 'quote') {
+          // Heading + quote, then another quote — first pair places
+          // atomically; second quote stands alone.
+          placeAtomically(groupBuffer);
+          groupBuffer = [];
+          groupState = 'IDLE';
+          placeAtomically([b]);
+        }
+        break;
     }
-    let block;
-    if (b.kind === 'heading') {
-      block = { kind: 'heading', text: b.text, x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
-    } else if (b.kind === 'quote') {
-      block = { kind: 'quote', text: b.text, x: X_LEFT + 20, y: currentPage.cursorY, w: BLOCK_W - 40, h, opacity: 1, z: 1 };
-    } else {
-      block = { kind: 'text', text: b.text || '', x: X_LEFT, y: currentPage.cursorY, w: BLOCK_W, h, opacity: 1, z: 1 };
-      if (b.spaced) block.spaced = true;
-      if (b.italic) block.italic = true;
-    }
-    currentPage.blocks.push(block);
-    currentPage.cursorY += h + BLOCK_GAP;
-    currentPage._height = (currentPage._height || 0) + estimateBlockHeight(b);
   }
 
   function startChapterOpener(title) {
     flushBuffer();
+    flushGroup();
     pushPage();
     const cleanTitle = decodeBasicEntities(stripBoldMarkers(title)).trim();
 
@@ -2660,6 +2759,7 @@ function parseManuscriptToPages(text) {
 
   function startBodyPage(headingText, level) {
     flushBuffer();
+    flushGroup();
     pushPage();
     const clean = decodeBasicEntities(stripBoldMarkers(headingText)).trim();
     currentPage = { type: 'Body', label: clean.slice(0, 40), blocks: [], cursorY: PAGE_TOP, _height: 0 };
@@ -2779,6 +2879,7 @@ function parseManuscriptToPages(text) {
     i++;
   }
   flushBuffer();
+  flushGroup();
   pushPage();
   return pages;
 }
