@@ -226,8 +226,6 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 > *as part of something
 > far greater
 > than we can imagine.*
->
-> *— Kelly Nezat*
 
 *"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
 
