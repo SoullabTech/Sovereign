@@ -2444,7 +2444,9 @@ function parseManuscriptToPages(text) {
   const pages = [];
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   let i = 0;
-  let chapterIndex = 0;
+  // chapterIndex was removed in #275 — chapter numbers are derived ONLY
+  // from heading text matching `^Chapter (\d+|[IVXLCDM]+)`. Auto-incrementing
+  // is forbidden per L1 spec §1.3 (PAGE_PROOF_SPEC_v1.md).
   let currentPage = null; // { type, label, blocks: [], cursorY }
   let buffer = [];
 
@@ -2601,16 +2603,57 @@ function parseManuscriptToPages(text) {
   function startChapterOpener(title) {
     flushBuffer();
     pushPage();
-    chapterIndex++;
     const cleanTitle = decodeBasicEntities(stripBoldMarkers(title)).trim();
+
+    // #275 — Chapter logic, parser-side only.
+    // Detection rules (per L1 spec §1.3 — AUTHORITATIVE, non-negotiable):
+    //   isChapter → heading text matches /^Chapter\s+(\d+|[IVXLCDM]+)/i
+    //   isPart    → heading text matches /^Part\s+/i
+    //   else      → frontmatter-opener
+    // chapterLabel is derived ONLY from the matched group. No
+    // auto-incrementing. No inferred numbering.
+    const isChapter = /^Chapter\s+(\d+|[IVXLCDM]+)/i.test(cleanTitle);
+    const isPart = /^Part\s+/i.test(cleanTitle);
+
+    let pageType;
+    let chapterLabel = null;
+    if (isChapter) {
+      pageType = 'chapter-opener';
+      const m = cleanTitle.match(/^Chapter\s+(\d+|[IVXLCDM]+)/i);
+      chapterLabel = `Chapter ${m[1]}`;
+    } else if (isPart) {
+      pageType = 'part-opener';
+    } else {
+      // Renderer compatibility guard (L1 spec §1.2 + #275 step 5):
+      // even if no CSS exists for `proof-page-type-frontmatter-opener`,
+      // we must not inject a chapter label. Visual fallback is body-style
+      // for now; opener typography will follow in a separate render-layer PR.
+      pageType = 'frontmatter-opener';
+    }
+
+    // Build blocks: ONLY include the "Chapter N" subtitle when we have
+    // a real chapterLabel from the heading text. Frontmatter and Part
+    // openers never receive one.
+    const blocks = [];
+    if (chapterLabel) {
+      blocks.push({
+        kind: 'text', text: chapterLabel,
+        x: 220, y: 220, w: 160, h: 30,
+        opacity: 1, z: 1, spaced: true,
+      });
+    }
+    blocks.push({
+      kind: 'heading', text: cleanTitle,
+      x: 60, y: 280, w: 480, h: 80,
+      opacity: 1, z: 1,
+    });
+
     pages.push({
-      type: 'Chapter Opener',
+      type: pageType,
       label: cleanTitle.slice(0, 40),
+      chapterLabel,
       _height: 0,
-      blocks: [
-        { kind: 'text', text: `Chapter ${chapterIndex}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-        { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
-      ],
+      blocks,
     });
     currentPage = null;
   }
@@ -2847,7 +2890,12 @@ function importManuscriptText(text, opts) {
   state.activeBlockId = null;
   persistCurrent();
   renderAll();
-  const chapterCount = parsedPages.filter(p => p.type === 'Chapter Opener').length;
+  // #275 — chapter count = real chapters only (chapterLabel was set
+  // from heading text). Legacy 'Chapter Opener' type retained for
+  // pages stored before #275 ships.
+  const chapterCount = parsedPages.filter(
+    p => p.chapterLabel || p.type === 'chapter-opener' || p.type === 'Chapter Opener',
+  ).length;
   const sectionCount = parsedPages.filter(p => p.type === 'Body').length;
   setStatus(`Imported ${newPages.length} pages — ${chapterCount} chapters, ${sectionCount} sections`);
 }
@@ -2868,8 +2916,12 @@ function autoTypesetCurrentPage() {
   if (!parsed.length) { setStatus('No structure detected'); return; }
   const newPages = parsed.map(pp => ({
     id: uid('p'),
-    type: pp.type === 'Chapter Opener' ? 'Chapter Opener' : 'Body',
+    // #275 — pass parser's type through verbatim. Parser only emits
+    // 'Body' or one of the new opener types ('chapter-opener',
+    // 'part-opener', 'frontmatter-opener') or legacy 'Chapter Opener'.
+    type: pp.type || 'Body',
     label: pp.label,
+    chapterLabel: pp.chapterLabel || null,
     blocks: pp.blocks.map(b => ({ ...b, id: uid('b') })),
   }));
   state.pages.splice(idx, 1, ...newPages);
@@ -2914,7 +2966,14 @@ function buildReadingJumpOptions() {
   for (const p of state.pages) {
     const label = p.label || '';
     if (/\(cont\.\)\s*$/.test(label)) continue;
-    if (p.type === 'Chapter Opener') {
+    // #275 — recognize all opener types in the jump-nav dropdown.
+    // Legacy 'Chapter Opener' kept for pages stored before #275.
+    const isOpener =
+      p.type === 'Chapter Opener' ||
+      p.type === 'chapter-opener' ||
+      p.type === 'part-opener' ||
+      p.type === 'frontmatter-opener';
+    if (isOpener) {
       opts.push({ id: p.id, text: label || 'Chapter' });
     } else if (p.type === 'Body' && label && label !== 'Body') {
       opts.push({ id: p.id, text: '    ↳ ' + label });
