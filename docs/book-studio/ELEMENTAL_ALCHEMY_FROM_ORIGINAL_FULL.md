@@ -180,8 +180,6 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 
 # Part One — The Ground
 
-*[Epigraph or framing line — to be authored by Kelly.]*
-
 ---
 
 # Chapter 1: The Journey Begins
@@ -758,8 +756,6 @@ Having understood the elements and their role in achieving wholeness, it's time 
 ---
 
 # Part Two — The Elements
-
-*[Epigraph or framing line — to be authored by Kelly.]*
 
 ---
 
@@ -2092,8 +2088,6 @@ With this understanding of aether along with the four elements as our guide, we 
 ---
 
 # Part Three — The Spiral
-
-*[Epigraph or framing line — to be authored by Kelly.]*
 
 ---
 
