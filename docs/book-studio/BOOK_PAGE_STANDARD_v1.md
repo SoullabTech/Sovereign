@@ -104,11 +104,32 @@ A page is exactly one of the following types. The parser tags each page with its
 - No body text
 - Validator does NOT enforce density rules
 
+### 1.8 Authored exception — principle
+
+**Principle.** *The renderer enforces structural bonds; editorial intelligence may preserve authored exception.*
+
+The hard rules of §2 are absolute against renderer-generated pages. They are not absolute against authored editorial decisions encoded in the type system. §1.6 `quote-page` and §1.7 `image-plate` / `doorway` are not loopholes — they are first-class authored types. §11 (`Invocation Page`, deferred) extends the same principle. The renderer must preserve all of them exactly. Future automation must not "fix" them.
+
+**Rule (HARD).** A page tagged with an authored-exception type is exempt from the hard rules of §2 that contradict its purpose. The validator does not flag it. Layout Health (§9.2) does not warn on it.
+
+**What this protects.**
+- Single-quote standalone pages used as ceremonial thresholds (the Chapter 1 Invocation rendering as one quote block on its own page is the live example; see §11)
+- Image plates that occupy a page in silence
+- Authored doorways between sections
+- Any future page type Kelly designates as intentional
+
+**What this is NOT.**
+- A loophole for "rules I don't want to follow this time"
+- A way to retroactively name an accidental orphan as intentional
+- Available to renderer-generated pages — those obey §2 absolutely
+
+**Why this exists.** Without this principle, automation eventually "fixes" the moments the book most needs to keep: invocation pages flatten into running text, plates fill with body, thresholds dissolve into continuity. The renderer protects the body from default failure; this doctrine protects the ceremony from default success. Type markers carry the author's intent across the seam where geometry alone cannot distinguish authored exception from accidental orphan.
+
 ---
 
 ## 2. Hard composition rules
 
-These are absolute. No exceptions, no heuristics. A page violating any of these is incorrect.
+These are absolute. No exceptions, no heuristics. A page violating any of these is incorrect — **unless** the page is tagged with an authored-exception type per §1.8, in which case the rule contradicting that page's purpose does not apply to it.
 
 ### 2.1 No invented chapter numbers
 
