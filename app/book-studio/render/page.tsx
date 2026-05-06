@@ -71,10 +71,10 @@ export default function RenderPage() {
           The Book Studio
         </p>
         <h1 className="text-amber-100/90 text-2xl md:text-3xl font-light tracking-wide">
-          Render Print PDF
+          Render — Print &amp; EPUB
         </h1>
         <p className="text-amber-200/45 text-sm font-light italic mt-1">
-          Generate the print-ready PDF and resolve final page count.
+          Generate the print-ready PDF (final page count) and the reflowable EPUB (early readers, cover designer).
         </p>
       </header>
 
@@ -216,6 +216,19 @@ export default function RenderPage() {
             early readers and the cover designer. Not yet production-ready
             (no cover image, no embedded illustrations, no ISBN).
           </p>
+
+          {/* EPUB pipeline summary — parity with print block above */}
+          <div className="border border-amber-200/10 rounded-md p-6 bg-amber-300/[0.02] mb-6 max-w-xl">
+            <p className="text-amber-200/55 text-[11px] tracking-[0.25em] uppercase mb-3">
+              Pipeline
+            </p>
+            <ul className="text-amber-50/75 text-sm font-light space-y-1.5 leading-relaxed">
+              <li>Source: <code className="text-amber-300/70">docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md</code></li>
+              <li>Stylesheet: <code className="text-amber-300/70">lib/manuscript/render/epub-book.css</code></li>
+              <li>Engine: pandoc → EPUB3 (chapter split at H1)</li>
+              <li>Output: <code className="text-amber-300/70">public/exports/elemental-alchemy.epub</code></li>
+            </ul>
+          </div>
 
           <button
             type="button"
