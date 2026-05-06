@@ -339,6 +339,114 @@ If a rule slips past §9.1 (structural enforcement) and shows up in §9.2 (obser
 
 ---
 
+## 10. Opener Composition (Deferred — Layer 3)
+
+> **Status:** Parked. NOT active. Do NOT implement until Layer 1 composition is fully stable per §0 primary law (Page Proof feels like Read Flow, just paginated).
+
+### 10.0 Position in the layer model
+
+This section belongs to **Layer 3 — Expression / Aesthetic Encoding**, not Layer 1 (composition integrity).
+
+- **Layer 1** answers: *is the page structurally and compositionally correct?*
+- **Layer 2** answers: *can the system observe its own structural correctness?*
+- **Layer 3** answers: *now that the structure is correct, how does it speak beautifully?*
+
+Implementing Layer 3 before Layer 1 is stable will mask structural errors, create false positives ("this looks better" when it's still wrong), force rework, and entangle parser + presentation prematurely. The keystone (semantic grouping in §2.2 and continuation integrity in §2.3) must hold before any of this work begins.
+
+### 10.1 Activation gate
+
+This section becomes implementable when, and only when, all of these hold:
+
+- §2 hard composition rules pass on the full Elemental Alchemy manuscript with zero failures
+- §3 aesthetic proportion ranges are observably hit on body pages (no accidental whitespace)
+- A 30–40 page scroll-read in Page Proof produces no "this feels off" signal
+- The Read Flow ↔ Page Proof equivalence test (§5.10) passes qualitatively
+
+Until those hold, this section is reference material only. No parser changes. No renderer changes. No CSS classes added for these elements.
+
+### 10.2 Opener element vocabulary (catalog, not an implementation)
+
+When Layer 3 work becomes active, opener pages may compose from this vocabulary:
+
+| Element | Definition | Where it fires |
+|---|---|---|
+| **Title** (required) | The heading text — chapter / part / section name | Every opener |
+| **Epigraph** | Italic framing quote or short framing line directly below the title; same as §2.5 attached epigraph | Any opener; only when manuscript has a `>` quote / italic-quote / short italic line immediately after `#` |
+| **Decorative ornament** | Asterism `* * *` · fleuron · alchemical glyph | Any opener; thematic |
+| **Element marker** | Small element glyph (🜂 fire / 🜄 water / 🜃 earth / 🜁 air / 🜀 aether) | Chapter openers whose title contains an element name; Part openers thematically mapped |
+| **Threshold rule** | Thin decorative horizontal line under title or above body | Any opener |
+| **Part marker overline** | Small-caps "PART ONE" above the part name | Part openers only |
+| **Chapter-number wordform** | "Chapter One" instead of "Chapter 1" (stylistic) | Chapter openers — author choice, not automatic |
+| **Subtitle slot** | "A Practitioner's Field Manual" treatment under main title | Book title page; extended to chapters as needed |
+
+### 10.3 Hard constraints when this layer is implemented
+
+These constraints are non-negotiable for the eventual implementation. They are stated now so the future spec amendment doesn't drift.
+
+#### 10.3.1 Optional, not required
+
+Not every opener gets every element. The minimum opener is: title alone (current behavior). Each additional element is an *option*, not a default. A book may choose to have plain openers throughout; another may choose to ornament every threshold. Both must be valid.
+
+#### 10.3.2 Hierarchical — never compete with the title
+
+The title is the strongest visual element on an opener page. Every other element must:
+- Be smaller in size than the title
+- Be lower in visual weight (lighter weight, smaller leading, less letter-spacing)
+- Resolve to the title rather than draw the eye away from it
+- Sit either above (small marker) or below (epigraph, ornament, body) the title — never to the side
+
+If an element competes with the title, the element is wrong.
+
+#### 10.3.3 Semantically triggered first, aesthetic second
+
+Elements appear because the manuscript or page-type *demands* them, not because they look nice. Examples:
+
+| Wrong | Right |
+|---|---|
+| Add ornament because it looks nice | Add ornament because this is a Part boundary |
+| Add element glyph for visual interest | Add element glyph because Chapter 5 is mapped to Fire |
+| Always add a threshold rule | Add threshold rule when an epigraph is present (separates threshold from body) |
+
+The activation logic is **structural** (heading is a Part opener; chapter title contains an element name; epigraph is present); the aesthetic treatment is *consequence*, not cause.
+
+### 10.4 Vertical rhythm (when implemented)
+
+The default top-down sequence on an opener page, when all elements are present:
+
+```
+[part marker overline]      ← if Part opener
+[title]                     ← always
+[chapter-number wordform]   ← if requested by author
+[threshold rule]            ← if epigraph present, separator
+[epigraph]                  ← if manuscript provides
+[ornament]                  ← if thematic / Part boundary
+[element marker]            ← if applicable
+[body content]              ← if §1.1 short-section inline allowed (currently disabled)
+```
+
+Vertical spacing rules between elements: deferred. They will be specified when this layer becomes active, after observing real opener pages with real content.
+
+### 10.5 What this section is NOT
+
+- A specification for typography (`font-size`, `letter-spacing`, etc.) — those will be added when implementation begins
+- A list of CSS classes — none are reserved yet
+- A render-layer specification — `renderProofPage` does not consume any of these elements yet
+- A parser specification — `startChapterOpener` does not detect or emit any of these markers yet
+- A green light for piecemeal implementation — all of §10 lands together as one coherent Layer 3 amendment, never one element at a time
+
+### 10.6 When the gate opens
+
+When §10.1 activation conditions are met, the implementation amendment will:
+
+1. Add a new section in `PAGE_PROOF_SPEC_v1.md` covering parser detection, renderer rules, and CSS for the elements in §10.2
+2. Add validation tests in BOOK_PAGE_STANDARD §5 (and Layout Health rules in `LAYOUT_HEALTH_SPEC_v1.md`) for opener composition correctness
+3. Reference this section as the canonical source
+
+Until then, this is reference. The system continues to teach itself how to think before it learns to speak beautifully.
+
+---
+
 *End of Book Page Standard v1.*
 
 > The current renderer is no longer enough; the system needs **composition law**.
+> Composition first. Expression after.
