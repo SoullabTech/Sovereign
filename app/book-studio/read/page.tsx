@@ -22,9 +22,17 @@ export default function ReadFlowPage() {
   return (
     <div>
       <header className="mb-10">
-        <p className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase mb-2">
-          The Book Studio
-        </p>
+        <div className="flex items-center gap-2 mb-2">
+          <img
+            src="/holoflower-amber.png"
+            alt=""
+            aria-hidden="true"
+            className="w-4 h-4 block opacity-70"
+          />
+          <p className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase">
+            The Book Studio
+          </p>
+        </div>
         <h1 className="text-amber-100/90 text-2xl md:text-3xl font-light tracking-wide">
           Read Flow
         </h1>
