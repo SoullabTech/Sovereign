@@ -4,6 +4,20 @@ export const metadata = {
   title: 'Read Flow · The Book Studio',
 };
 
+/**
+ * Read fresh from disk on every request.
+ *
+ * `/book-studio/read` is a living manuscript view, not a static marketing
+ * page. It must always reflect the current source file, mirroring the
+ * behavior of `/api/book-studio/manuscript/raw` (which is also dynamic).
+ *
+ * Without this, Next.js statically prerenders the page at build time and
+ * serves it with `Cache-Control: s-maxage=31536000`, which causes the
+ * Read Flow to drift from the canvas Page Proof if the manuscript is
+ * updated outside of a full rebuild.
+ */
+export const dynamic = 'force-dynamic';
+
 export default function ReadFlowPage() {
   return (
     <div>
