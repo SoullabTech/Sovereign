@@ -186,55 +186,40 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 
 # Chapter 1: The Journey Begins
 
-*"And when you want something, all the universe conspires in helping you to achieve it." – Paulo Coelho, The Alchemist*
-
-## A Prayer for Collective Illumination
-
-In this place —
-built of love and creative life force —
-may we experience, in the depth of our being,
-what is here now and only here now.
-
-The fire that brings energy and vitality
-to our imagining souls.
-
-The water that moves as oceans, rivers, and streams —
-a living current of soulful flow.
-
-The earth that offers ground, stability,
-creativity, and growth.
-
-The air that breathes life into our being,
-giving us voice —
-the capacity to speak from the heart
-and connect across distance.
-
-And the aether that unites and animates all
-into living presence.
-
-May we remember who we are —
-as part of something far greater than we can imagine,
-and the source of all imagining.
-
-Where the elements meet and move
-through us —
-as us.
-
-May we walk this earth
-as children of this soil who belong here.
-
-May the work we do feel like play.
-
-May our love for ourselves and all others
-widen as it deepens.
-
-May every moment of our lives be an initiation —
-into what reminds us that all we are,
-and all we can ever be,
-is already here
-in the field of our remembering.
-
-— Kelly Nezat
+> In this place—
+> built of love
+> and creative life force—
+>
+> we come into
+> what is here…
+>
+> The fire—
+> alive with energy
+> in the imagining soul.
+>
+> The water—
+> moving as current
+> through feeling and form.
+>
+> The earth—
+> holding,
+> growing,
+> becoming.
+>
+> The air—
+> breathing through us,
+> giving voice
+> to what longs to be spoken.
+>
+> And the aether—
+> the quiet field
+> in which all things
+> are already joined.
+>
+> …and here—
+>
+> something in us
+> recognizes itself.
 
 *"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
 
