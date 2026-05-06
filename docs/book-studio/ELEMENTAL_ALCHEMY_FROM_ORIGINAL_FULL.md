@@ -186,40 +186,50 @@ Take what resonates, leave what doesn't, and may your path be illuminated with j
 
 # Chapter 1: The Journey Begins
 
-> In this place—
+> *In this place—
 > built of love
-> and creative life force—
+> and creative life force—*
 >
-> we come into
-> what is here…
+> *may we come to experience,
+> in the depth of our being,
+> what is here now…
+> and only here now.*
 >
-> The fire—
-> alive with energy
-> in the imagining soul.
+> *The fire—
+> alive with energy,
+> awakening vitality
+> in the imagining soul.*
 >
-> The water—
-> moving as current
-> through feeling and form.
+> *The water—
+> moving as ocean, river, and stream—
+> a current of feeling
+> that carries us inward.*
 >
-> The earth—
-> holding,
-> growing,
-> becoming.
+> *The earth—
+> ground beneath us,
+> holding form,
+> giving rise to growth.*
 >
-> The air—
+> *The air—
 > breathing through us,
 > giving voice
-> to what longs to be spoken.
+> to what longs to be spoken.*
 >
-> And the aether—
-> the quiet field
+> *And the aether—
+> the unseen presence
 > in which all things
-> are already joined.
+> are joined and made alive.*
 >
-> …and here—
+> *May we remember—
+> not as idea,
+> but as living truth—
+> who we are…*
 >
-> something in us
-> recognizes itself.
+> *as part of something
+> far greater
+> than we can imagine.*
+>
+> *— Kelly Nezat*
 
 *"The Soul should always stand ajar, ready to welcome the ecstatic experience." – Emily Dickinson*
 
