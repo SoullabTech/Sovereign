@@ -35,6 +35,7 @@ export const maxDuration = 120;
 
 const REPO_ROOT = process.cwd();
 const MD_PATH = path.join(REPO_ROOT, 'docs/book-studio/ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md');
+const CSS_PATH = path.join(REPO_ROOT, 'lib/manuscript/render/epub-book.css');
 const OUT_DIR = path.join(REPO_ROOT, 'public/exports');
 const EPUB_OUT = path.join(OUT_DIR, 'elemental-alchemy.epub');
 const EPUB_URL = '/exports/elemental-alchemy.epub';
@@ -55,25 +56,37 @@ export async function POST() {
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
+  // EPUB stylesheet is optional — pandoc has a sane default if missing.
+  const args: string[] = [
+    MD_PATH,
+    '-f', 'markdown',
+    '-t', 'epub3',
+    '--metadata', 'title=Elemental Alchemy',
+    '--metadata', 'subtitle=The Art of Living a Phenomenal Life',
+    '--metadata', 'author=Kelly Nezat',
+    '--metadata', 'publisher=Soullab Press',
+    '--metadata', 'lang=en-US',
+    '--toc',
+    '--toc-depth=2',
+    // ─────────────────────────────────────────────────────────────────
+    // DO NOT change to --split-level=N.
+    // Production currently runs Pandoc 2.17 (Debian Bookworm apt), where
+    // --split-level is *unsupported* and pandoc exits with
+    //   "Unknown option --split-level."
+    // --split-level was introduced in Pandoc 3.x. --epub-chapter-level
+    // is the back-compatible form and continues to work in 3.x (with a
+    // deprecation warning). Keep this until the Dockerfile pins Pandoc 3+.
+    // ─────────────────────────────────────────────────────────────────
+    '--epub-chapter-level=1',
+    '-o', EPUB_OUT,
+  ];
+
+  if (fs.existsSync(CSS_PATH)) {
+    args.splice(args.length - 2, 0, '--css', CSS_PATH);
+  }
+
   try {
-    execFileSync(
-      'pandoc',
-      [
-        MD_PATH,
-        '-f', 'markdown',
-        '-t', 'epub3',
-        '--metadata', 'title=Elemental Alchemy',
-        '--metadata', 'subtitle=The Art of Living a Phenomenal Life',
-        '--metadata', 'author=Kelly Nezat',
-        '--metadata', 'publisher=Soullab Press',
-        '--metadata', 'lang=en-US',
-        '--toc',
-        '--toc-depth=2',
-        '--split-level=1',
-        '-o', EPUB_OUT,
-      ],
-      { maxBuffer: 256 * 1024 * 1024, encoding: 'utf-8' },
-    );
+    execFileSync('pandoc', args, { maxBuffer: 256 * 1024 * 1024, encoding: 'utf-8' });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes('ENOENT')) {

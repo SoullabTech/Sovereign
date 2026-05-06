@@ -1,0 +1,184 @@
+/*
+ * Elemental Alchemy — EPUB CSS v1
+ *
+ * Mirrors the typographic discipline of print-book.css inside EPUB
+ * constraints: no fixed page geometry, no @page rules, no margin
+ * counters. Reading-system controlled flow, but the same family,
+ * proportions, and editorial register.
+ *
+ * Soullab Press editorial canon:
+ *   - text sovereign; geometry punctuates only at thresholds
+ *   - notebook register (Bollingen discipline, not look)
+ *   - no UI in the body; reflowable, calm, serif
+ */
+
+/* ============================================================
+ * BASE TYPOGRAPHY
+ * ============================================================ */
+
+body {
+  font-family: "EB Garamond", Garamond, "Adobe Garamond Pro", serif;
+  line-height: 1.45;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -epub-hyphens: auto;
+  color: #111;
+  margin: 0;
+  padding: 0;
+}
+
+p {
+  margin: 0;
+  text-indent: 1.1em;
+  orphans: 2;
+  widows: 2;
+}
+
+/* First paragraph after a heading or break: no indent */
+h1 + p,
+h2 + p,
+h3 + p,
+h4 + p,
+hr + p,
+blockquote + p,
+figure + p {
+  text-indent: 0;
+}
+
+/* ============================================================
+ * HEADINGS
+ * ============================================================ */
+
+h1, h2, h3, h4 {
+  font-family: "EB Garamond", Garamond, serif;
+  font-weight: 500;
+  text-align: center;
+  page-break-after: avoid;
+  break-after: avoid;
+  hyphens: none;
+  -webkit-hyphens: none;
+  -epub-hyphens: none;
+}
+
+h1 {
+  font-size: 1.6em;
+  margin: 2.4em 0 1.2em;
+  letter-spacing: 0.02em;
+  page-break-before: always;
+  break-before: page;
+}
+
+h2 {
+  font-size: 1.2em;
+  margin: 1.8em 0 0.6em;
+}
+
+h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  text-align: left;
+  margin: 1.4em 0 0.3em;
+}
+
+h4 {
+  font-size: 1em;
+  font-style: italic;
+  text-align: left;
+  margin: 1.2em 0 0.3em;
+}
+
+/* ============================================================
+ * EPIGRAPHS, BLOCKQUOTES, VERSE
+ * ============================================================ */
+
+blockquote {
+  margin: 1.2em 1.4em;
+  font-style: italic;
+  font-size: 0.95em;
+  line-height: 1.4;
+  text-align: left;
+}
+
+blockquote p {
+  text-indent: 0;
+}
+
+/* ============================================================
+ * THRESHOLDS & RULES
+ * ============================================================ */
+
+hr {
+  border: none;
+  text-align: center;
+  margin: 2em 0;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+hr::after {
+  content: "❦";
+  font-size: 1em;
+  color: #555;
+  letter-spacing: 0.4em;
+}
+
+/* ============================================================
+ * IMAGES
+ * ============================================================ */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.2em auto;
+}
+
+figure {
+  margin: 1.5em 0;
+  text-align: center;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+figcaption {
+  font-size: 0.85em;
+  font-style: italic;
+  color: #555;
+  margin-top: 0.4em;
+}
+
+/* ============================================================
+ * LISTS
+ * ============================================================ */
+
+ul, ol {
+  margin: 0.6em 0 0.6em 1.2em;
+  padding: 0;
+}
+
+li {
+  margin: 0.15em 0;
+}
+
+/* ============================================================
+ * TABLE OF CONTENTS (pandoc-generated)
+ * ============================================================ */
+
+nav#toc h1,
+nav#toc h2 {
+  text-align: left;
+  page-break-before: avoid;
+  break-before: avoid;
+}
+
+nav#toc ol,
+nav#toc ul {
+  list-style: none;
+  margin-left: 0;
+}
+
+nav#toc a {
+  text-decoration: none;
+  color: #111;
+}
