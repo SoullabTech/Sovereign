@@ -114,13 +114,27 @@ These are absolute. No exceptions, no heuristics. A page violating any of these 
 
 A "Chapter N" subtitle exists ONLY when the page's title heading matches `^Chapter\s+(\d+|[IVXLCDM]+)` and N is the captured value. No counter. No inference. No numbering on Part openers or front matter.
 
-### 2.2 Heading must never be the final meaningful block on a page
+### 2.2 Heading–body bond — ABSOLUTE
 
-Specifically: the last block of a `body` or `body-continuation` page must NOT be a heading (h2 / h3 / h4).
+**Principle.** A heading is bound to the body that follows it. They form a single semantic unit, and that unit MUST NOT be broken by a page boundary. A heading without its body beneath it on the same page **breaks the bond with what is beneath it** — the reader's eye lands on a label, drops into whitespace, and the connection between the section's name and its meaning is severed before the section can begin.
 
-If adding the next block (paragraph, quote, list, image) would force a continuation, the heading and at least its first following paragraph or quote MUST move together to the continuation. Heading + first body block stay together — always.
+This is not a layout preference. It is structural. A heading without its body is not a heading — it is a fragment.
 
-In the rare case where heading + first body block exceed page capacity together (estimated >900 px), they STILL stay together — overflow is acceptable; widow is not.
+**Rule (HARD).** The last meaningful block of a `body` or `body-continuation` page MUST NOT be a heading (h2 / h3 / h4 / h5 / h6).
+
+**Implication.** If placing the heading at the current position would make it the last block on the page — for any reason, including:
+- the heading's body would not fit
+- the heading lands in the bottom region of the page
+- a measurement edge case
+- a "safety skip" or any other defensive fallback
+
+— then the heading itself does NOT belong on this page. It moves, with at least its first following paragraph (or quote, if that is the heading's immediate continuation), to the next page. They travel together. Always.
+
+**Overflow is acceptable; widow is not.** In the rare case where heading + first following body block together exceed estimated page capacity (>900 px), they STILL stay together. The page extends, or the typography accepts pressure, or the engine reports the case for review — but the heading does NOT separate from its body. There is no exception.
+
+**No fallback may produce a widow heading.** Any code path — overflow handling, error recovery, measurement skip, alignment fallback — that leaves a heading as the last block on the page is a canon violation, not a "soft case." It must be re-routed through the keep-with-next path.
+
+**Why this matters structurally.** A heading is a promise to the reader: *what follows is named this.* When the heading lands at the bottom of the page with empty space beneath it, the promise is severed. The next page begins as if no name had been given. The bond between name and substance — the most basic act of authoring — is broken. This is unacceptable in any rendered Page Proof.
 
 ### 2.3 Continuation page must not begin abruptly
 
