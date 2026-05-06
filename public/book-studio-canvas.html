@@ -920,28 +920,34 @@
     color: rgba(45, 35, 25, 0.45);
     margin-bottom: 10px;
   }
-  /* Opener pages (chapter / part) — centered threshold treatment */
+  /* Opener pages (chapter / part / frontmatter) — centered threshold treatment.
+     Frontmatter-opener aliases to the same opener styling per #275 guardrail
+     until front/back-matter gets its own typographic register. */
   body.reading-mode .proof-page-type-chapter-opener,
-  body.reading-mode .proof-page-type-part-opener {
+  body.reading-mode .proof-page-type-part-opener,
+  body.reading-mode .proof-page-type-frontmatter-opener {
     display: flex;
     min-height: 100%;
     align-items: center;
     justify-content: center;
   }
   body.reading-mode .proof-page-type-chapter-opener .proof-text-column,
-  body.reading-mode .proof-page-type-part-opener .proof-text-column {
+  body.reading-mode .proof-page-type-part-opener .proof-text-column,
+  body.reading-mode .proof-page-type-frontmatter-opener .proof-text-column {
     max-width: 4.7in;
     text-align: center;
   }
   body.reading-mode .proof-page-type-chapter-opener .proof-heading,
-  body.reading-mode .proof-page-type-part-opener .proof-heading {
+  body.reading-mode .proof-page-type-part-opener .proof-heading,
+  body.reading-mode .proof-page-type-frontmatter-opener .proof-heading {
     text-align: center;
     font-size: 26px;
     line-height: 1.15;
     margin-bottom: 14px;
   }
   body.reading-mode .proof-page-type-chapter-opener .proof-paragraph,
-  body.reading-mode .proof-page-type-part-opener .proof-paragraph {
+  body.reading-mode .proof-page-type-part-opener .proof-paragraph,
+  body.reading-mode .proof-page-type-frontmatter-opener .proof-paragraph {
     text-align: center;
     font-size: 12.5px;
     line-height: 1.35;
@@ -2444,7 +2450,8 @@ function parseManuscriptToPages(text) {
   const pages = [];
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   let i = 0;
-  let chapterIndex = 0;
+  // chapterIndex removed in #275 — no auto-incrementing; chapter number
+  // (when present) comes from the parsed heading itself, not from a counter.
   let currentPage = null; // { type, label, blocks: [], cursorY }
   let buffer = [];
 
@@ -2601,16 +2608,47 @@ function parseManuscriptToPages(text) {
   function startChapterOpener(title) {
     flushBuffer();
     pushPage();
-    chapterIndex++;
     const cleanTitle = decodeBasicEntities(stripBoldMarkers(title)).trim();
+
+    // #275 (B) — three opener types, no auto-incrementing.
+    // Core invariant: no `Chapter N` label unless heading literally says so.
+    //   `# Chapter N: Title`  → 'Chapter Opener'  + parsed N label
+    //   `# Part Foo`          → 'Part Opener'     + no label
+    //   anything else (Contents, Preface, Conclusion, Afterword,
+    //   Acknowledgments, Appendix, Bibliography, the book title itself)
+    //                         → 'Frontmatter Opener' + no label
+    //   (Frontmatter-opener aliases to opener styling in CSS for now.)
+    const chapterMatch = cleanTitle.match(/^Chapter\s+(\d+|[IVXLCDM]+)(?:\s*[:.\s—–-]+\s*(.+))?$/i);
+    const isPart = !chapterMatch && /^Part\s+/i.test(cleanTitle);
+
+    let pageType, openerBlocks;
+    if (chapterMatch) {
+      const num = chapterMatch[1];
+      const displayTitle = (chapterMatch[2] || '').trim();
+      pageType = 'Chapter Opener';
+      openerBlocks = [
+        { kind: 'text', text: `Chapter ${num}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
+      ];
+      if (displayTitle) {
+        openerBlocks.push({ kind: 'heading', text: displayTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 });
+      }
+    } else if (isPart) {
+      pageType = 'Part Opener';
+      openerBlocks = [
+        { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
+      ];
+    } else {
+      pageType = 'Frontmatter Opener';
+      openerBlocks = [
+        { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
+      ];
+    }
+
     pages.push({
-      type: 'Chapter Opener',
+      type: pageType,
       label: cleanTitle.slice(0, 40),
       _height: 0,
-      blocks: [
-        { kind: 'text', text: `Chapter ${chapterIndex}`, x: 220, y: 220, w: 160, h: 30, opacity: 1, z: 1, spaced: true },
-        { kind: 'heading', text: cleanTitle, x: 60, y: 280, w: 480, h: 80, opacity: 1, z: 1 },
-      ],
+      blocks: openerBlocks,
     });
     currentPage = null;
   }
