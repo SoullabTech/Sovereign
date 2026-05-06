@@ -53,11 +53,21 @@
     width: 100%;
   }
   .brand {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    color: var(--text-dim);
-    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: #fff;
+    opacity: 0.93;
+    margin-right: 10px;
+  }
+  .brand-logo {
+    width: 16px;
+    height: 16px;
+    display: block;
+    filter: brightness(0) invert(1);
   }
   .btn {
     background: transparent;
@@ -968,7 +978,7 @@
 
 <header class="toolbar">
   <div class="toolbar-row">
-    <span class="brand">BOOK STUDIO</span>
+    <span class="brand"><img class="brand-logo" src="/holoflower.svg" alt="" aria-hidden="true" />Soullab Press</span>
     <button class="btn primary" id="btn-undo" title="Undo last change (⌘Z / Ctrl+Z)">↶ Undo</button>
     <span class="divider"></span>
     <button class="btn" id="btn-image" title="Add an image to the current page">+ Image</button>
