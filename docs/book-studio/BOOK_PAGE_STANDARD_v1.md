@@ -496,6 +496,197 @@ Until then, this is reference. The system continues to teach itself how to think
 
 ---
 
+## 11. Invocation Page (Deferred — Layer 3)
+
+> **Status:** Parked. NOT active. Do NOT implement until §11.6 activation gate is satisfied (same gate as §10 Opener Composition — Layer 1 must be observably stable).
+
+### 11.0 Definition
+
+An **Invocation Page** is a standalone threshold page in which meaning is carried through spatial pacing rather than paragraph density.
+
+It is not:
+- an epigraph
+- a section
+- body text
+
+It is a **mode of entry**.
+
+### 11.1 Structural classification
+
+Add to page types:
+
+```
+proof-page-type-invocation
+```
+
+This is a first-class page type, but activation is gated (§11.6).
+
+### 11.2 Structural rules — non-negotiable
+
+**11.2.1 Isolation**
+- Occupies exactly one page
+- Cannot co-exist with: headings, standard paragraphs, continuation text
+
+**11.2.2 No continuation**
+- Cannot continue from previous page
+- Cannot continue to next page
+- The Invocation Page is **complete in itself**
+
+**11.2.3 No competition**
+- Must not include epigraph above OR section heading below
+- It **replaces** both
+
+**11.2.4 Placement rules**
+- Allowed positions: immediately after Part Opener · immediately after Chapter Opener
+- Maximum one Invocation Page per structural entry point
+- Must not stack with epigraph on same transition
+
+### 11.3 Composition model
+
+**11.3.1 Unit of meaning**
+
+Replace paragraphs with **line clusters**. A cluster = 2–4 lines expressing a single idea.
+
+**11.3.2 Spacing semantics**
+
+Spacing carries meaning:
+
+| Space | Meaning |
+|---|---|
+| 1 line break | breath |
+| 2 line breaks | shift |
+| 3+ line breaks | structural rupture (rare) |
+
+**11.3.3 Line constraints**
+- Target: 8–12 words per line
+- Hard max: ~65% of page width
+- Avoid: full-width justification, dense paragraph blocks
+
+**11.3.4 Text behavior**
+- Break on meaning, not grammar
+- Allow: fragments · enjambment · poetic cadence
+
+### 11.4 Layout behavior
+
+**11.4.1 Vertical anchoring**
+- Default: upper-third anchoring (not centered)
+- Optional: centered only if explicitly specified
+
+**11.4.2 Density constraint**
+- Must not visually resemble a paragraph page
+- Must not visually resemble an empty page
+- Target: **perceptible presence without compression**
+
+**11.4.3 Attribution handling**
+- If author attribution is present: appears as final cluster, separated by one shift (2 line breaks)
+- If absent (recommended for invocations Kelly authors): no separation between body and reader; the field belongs to both
+
+### 11.5 Detection & authoring
+
+**11.5.1 Explicit marker (preferred)**
+
+```
+<!-- invocation -->
+```
+
+Marks the next block as an Invocation Page.
+
+**11.5.2 Pattern detection (fallback — optional)**
+
+If explicit marker is absent, classify as Invocation Page when **all** hold:
+- High line-break density
+- No paragraph-length blocks
+- Consistent short-line structure
+
+### 11.6 Activation gate (HARD CONSTRAINT)
+
+Invocation Pages are NOT enabled until:
+- §2 hard composition rules → zero failures on the full Elemental Alchemy manuscript
+- §3 density ranges → stable
+- 30–40 page scroll-read → no structural breaks
+- Read Flow ↔ Page Proof equivalence achieved (§5.10)
+
+**No Invocation Page may render until L1 integrity is confirmed.** Until activation, content marked for future invocation rendering (e.g., the refined Prayer for Collective Illumination at Chapter 1) renders as a normal blockquote — italic, indented, left border. Same content, deeper rendering later.
+
+### 11.7 Relationship to other elements
+
+| Element | Relationship |
+|---|---|
+| Epigraph | Replaced by Invocation Page (never coexists) |
+| Chapter Opener | May follow |
+| Part Opener | May follow |
+| Body text | Begins on next page only |
+| §10 Opener Composition elements (ornament, glyph, threshold rule) | Suppressed on Invocation Pages — the page is functional silence; ornaments compete |
+
+### 11.8 Failure conditions
+
+Hard failures (when activated):
+- Invocation Page shares space with body text
+- Invocation Page splits across pages
+- Invocation Page contains paragraph-form text
+- Invocation Page appears without §11.6 gate satisfied
+
+### 11.9 Intent
+
+The Invocation Page exists to:
+- regulate reader tempo
+- create threshold experience
+- initiate state transition
+
+It is **not decorative**. It is **functional silence structured as language**.
+
+### 11.10 Reader-state architecture (why this matters)
+
+The Invocation Page is the print equivalent of:
+- a slow induction
+- a narrowing of attention
+- a shift from discursive mind → receptive field
+
+#### 11.10.1 Mechanics
+
+**Deceleration.** Short lines force micro-pauses, eye resets, reduced scanning. Breaks the normal information-consumption rhythm.
+
+**Breath synchronization.** Line breaks create implicit breathing cadence — physiological entrainment, even when the reader isn't aware of it.
+
+**Semantic spacing.** Meaning is not carried only by words but by distance between thoughts and silence between phrases. This is where the induction quality lives.
+
+**Reduced cognitive load.** No argument, no explanation, no structure to track. The reader stops processing and starts receiving.
+
+#### 11.10.2 Three reader states (Opener → Invocation → Body)
+
+A book with Invocation Pages produces three distinct reader states:
+
+1. **Opener** — orientation
+2. **Invocation** — induction
+3. **Body** — exploration
+
+Most books have only states 1 and 3. Adding 2 introduces a **real entry mechanism** — a bridge between analytical reading and participatory experience.
+
+#### 11.10.3 Risk to name (overuse)
+
+Used at every transition, the Invocation Page becomes:
+- performative
+- heavy-handed
+- "trying to be profound"
+
+The constraint matters: **use only at real thresholds, not everywhere**. Test each placement by reading the surrounding pages aloud and asking: *does the page draw me in, or ask me to understand?* If the second, it's the wrong moment for an invocation.
+
+#### 11.10.4 Subtle principle
+
+For the Invocation Page:
+> Every line should feel like it **opens** the reader — not guides or fixes them.
+> Awe doesn't come from intensity. It comes from **permission and space**.
+
+### 11.11 Status
+
+- **Defined:** ✓
+- **Implemented:** ✗
+- **Activated:** ✗ (gated by §11.6)
+
+Content authored for future Invocation rendering may be placed in the manuscript today as an ordinary blockquote. The parser renders it as a quote block (italic, indented, left border) — visually adjacent to the future Invocation Page but without the dedicated isolation, vertical anchoring, or page-type rules. When §11.6 activates, the same content is automatically promoted to a true Invocation Page without manuscript edits.
+
+---
+
 *End of Book Page Standard v1.*
 
 > The current renderer is no longer enough; the system needs **composition law**.
