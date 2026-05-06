@@ -300,42 +300,70 @@ The heading and the first body block now occupy the continuation page together. 
 
 **Validation (§5.1):** for every Body page in `parseManuscriptToPages` output, the last block's `kind` must NOT be `heading`.
 
-### 3.5 Placeholder handling — EXPLICIT RULE
+### 3.5 Placeholder handling — HARD RULE
+
+Per `BOOK_PAGE_STANDARD §2.7` (canonical). The parser implementation summary:
 
 ```
-Lines matching:
-  *[ ... ]*
-or containing "to be authored"
-
-→ are suppressed in Page Proof
-→ remain visible in Edit Mode
-→ remain in the source markdown (Read Flow's surface)
+A line identified as a placeholder or editorial instruction:
+  - does NOT render in Page Proof
+  - does NOT generate a body page
+  - does NOT trigger an opener page
+  - does NOT anchor an epigraph slot
+  - does NOT count toward layout density
+  - DOES remain in the source markdown (Read Flow surface)
 ```
 
-**Detection patterns (any match):**
+**Layer:** Structural (per §0.2). The parser drops placeholder lines from its input stream BEFORE any block is created — therefore the page-allocation pipeline never sees them and they cannot generate pages by any path.
 
-```
-Pattern A:  ^\s*\*\[[^\]]+\]\*\s*$        (italic-bracket placeholder)
-Pattern B:  /to be authored/i              (anywhere on the line)
-Pattern C:  ^\s*\*\[\s*TODO[^\]]*\]\*\s*$  (italic-TODO bracket)
-Pattern D:  ^\s*\[(TBD|TODO)[^\]]*\]\s*$   (plain-bracket TODO)
-```
+**Detection patterns (canonical — see `BOOK_PAGE_STANDARD §2.7.1` for full table with worked examples):**
 
-**Worked examples:**
-
-| Source line | Suppressed in Page Proof? |
+| Pattern ID | Regex / rule |
 |---|---|
-| `*[Epigraph or framing line — to be authored by Kelly.]*` | yes |
-| `*[TODO: Add citation]*` | yes |
-| `[TBD]` | yes |
-| `It was time to be authored. He said softly...` | **no** — narrative use of "authored" in prose; pattern B requires whole-line context. *Refinement: pattern B fires only when the line is short AND contains "to be authored" AND has fewer than 12 words.* |
-| `**Important** announcement here.` | no — bold emphasis, not placeholder |
+| `PLC-A` italic-bracket | `^\s*\*\[[^\]]*\]\*\s*$` |
+| `PLC-B` plain-bracket marker | `^\s*\[\s*(TBD\|TODO\|DRAFT\|PLACEHOLDER\|FIXME\|NOTE)\b[^\]]*\]\s*$` (case-insensitive) |
+| `PLC-C` HTML comment whole-line | `^\s*<!--[\s\S]*?-->\s*$` |
+| `PLC-D` author-instruction phrase | line ≤ 12 words AND matches `^[^a-zA-Z0-9]*\s*(to be (authored\|written\|added\|filled\|completed)\|placeholder text\|fill in here\|insert .{1,30} here)\b` |
+| `PLC-E` all-caps editorial flag | `^\s*\*?(REVISE\|REVIEW\|EXPAND\|CITATION NEEDED\|REWRITE)\*?\s*$` |
 
-**Layer:** Structural (per §0.2). The parser drops placeholder lines before they become blocks. They never enter the page allocation pipeline.
+A pattern fires only on a **whole-line trimmed match**. Inline placeholder text inside a longer paragraph is NOT suppressed.
 
-**Edit Mode behavior:** The parser is shared between Page Proof and Edit Mode (§5.8). To preserve "remains visible in Edit Mode," the placeholder line is converted to a special block type `kind: 'placeholder'` that the **edit-mode renderer** displays (with a faded amber tint to mark "author TODO") but the **proof renderer** suppresses entirely. Stored block data carries the placeholder flag; rendering decides visibility per surface.
+**Implementation contract:**
 
-**Validation (§5.4):** No Page Proof page may contain rendered text matching pattern A, B, C, or D. Edit Mode may show placeholder blocks with their amber treatment.
+```js
+function isPlaceholderLine(line) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  // PLC-A — italic-bracket
+  if (/^\*\[[^\]]*\]\*$/.test(trimmed)) return true;
+  // PLC-B — plain-bracket marker
+  if (/^\[\s*(TBD|TODO|DRAFT|PLACEHOLDER|FIXME|NOTE)\b[^\]]*\]$/i.test(trimmed)) return true;
+  // PLC-C — HTML comment whole-line
+  if (/^<!--[\s\S]*?-->$/.test(trimmed)) return true;
+  // PLC-D — short whole-line author instruction
+  const wordCount = trimmed.split(/\s+/).length;
+  if (wordCount <= 12 &&
+      /^[^a-zA-Z0-9]*\s*(to be (authored|written|added|filled|completed)|placeholder text|fill in here|insert .{1,30} here)\b/i.test(trimmed)) {
+    return true;
+  }
+  // PLC-E — all-caps editorial flag
+  if (/^\*?(REVISE|REVIEW|EXPAND|CITATION NEEDED|REWRITE)\*?$/.test(trimmed)) return true;
+  return false;
+}
+
+// In parseManuscriptToPages's main while loop, BEFORE any heading/quote/list classification:
+while (i < lines.length) {
+  const line = lines[i];
+  if (isPlaceholderLine(line)) { i++; continue; }
+  // ... rest of classification ...
+}
+```
+
+The check runs FIRST in the line classifier. Placeholders are skipped entirely — they don't enter the paragraph buffer, don't produce blocks, don't trigger `ensureBodyPage()`, don't allocate continuation pages. The rule "no page generation" is automatic when detection precedes all other parser logic.
+
+**Edit Mode behavior:** v1 = suppressed everywhere (Edit Mode also doesn't show them). Read Flow remains the raw-source surface where authors find their TODOs. A future amendment may surface placeholders in Edit Mode only with an amber tint via a `kind: 'placeholder'` block flag, but that adds parser surface-branching complexity and is deferred.
+
+**Validation (§5.4 / `BPS-PLACEHOLDER-PAGE`):** No Page Proof page contains rendered text matching `PLC-A` through `PLC-E`. The parser-output validator scans every page's blocks for any match and reports `BPS-PLACEHOLDER-PAGE` (high-severity) if found.
 
 ### 3.6 Markdown noise cleanup (already mostly done, kept for completeness)
 

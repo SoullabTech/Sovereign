@@ -159,14 +159,64 @@ A quote must NOT appear alone on a body page unless the page is explicitly `quot
 - Attach to the preceding opener as epigraph (§2.5), OR
 - Be combined with the preceding paragraph as lead-in on the same page
 
-### 2.7 No placeholder pages
+### 2.7 No placeholder pages — HARD RULE
 
-Author TODO patterns must be suppressed in Page Proof:
-- `^\s*\*\[[^\]]+\]\*\s*$` (italic-bracket placeholder)
-- `^\s*\[(TBD|TODO)[^\]]*\]\s*$` (plain-bracket TODO)
-- Whole-line text containing "to be authored"
+The system cannot distinguish editorial scaffolding from reader-facing content unless we name the scaffolding explicitly. The rule:
 
-These remain visible in the source markdown (Read Flow) and in Edit Mode (with an amber tint marker), so the author can find them. Page Proof never shows them.
+```
+A line identified as a placeholder or editorial instruction:
+  - does NOT render in Page Proof
+  - does NOT generate a body page
+  - does NOT trigger an opener page
+  - does NOT anchor an epigraph slot
+  - does NOT count toward layout density
+  - DOES remain in the source markdown (Read Flow surface)
+  - MAY be shown in Edit Mode with an amber author-only marker
+```
+
+#### 2.7.1 Detection patterns (canonical)
+
+A line is a placeholder if it matches **any** of these patterns (case-insensitive on words; whole-line match):
+
+| Pattern ID | Regex / rule | Example matches |
+|---|---|---|
+| `PLC-A` italic-bracket | `^\s*\*\[[^\]]*\]\*\s*$` | `*[Epigraph or framing line — to be authored by Kelly.]*` · `*[TODO]*` · `*[]*` |
+| `PLC-B` plain-bracket marker | `^\s*\[\s*(TBD\|TODO\|DRAFT\|PLACEHOLDER\|FIXME\|NOTE)\b[^\]]*\]\s*$` | `[TBD]` · `[TODO: add citation]` · `[DRAFT — needs review]` · `[PLACEHOLDER]` |
+| `PLC-C` HTML comment whole-line | `^\s*<!--[\s\S]*?-->\s*$` | `<!-- TODO -->` · `<!-- needs revision -->` |
+| `PLC-D` author-instruction phrase | line is ≤ 12 words AND matches `^[^a-zA-Z0-9]*\s*(to be (authored\|written\|added\|filled\|completed)\|placeholder text\|fill in here\|insert .{1,30} here)\b` (case-insensitive) | `*To be authored.*` · `Placeholder text` · `Fill in here` · `Insert epigraph here.` |
+| `PLC-E` all-caps editorial flag | `^\s*\*?(REVISE\|REVIEW\|EXPAND\|CITATION NEEDED\|REWRITE)\*?\s*$` | `REVISE` · `*REVIEW*` · `CITATION NEEDED` |
+
+A pattern fires only on a **whole-line** match (after trimming). A line that has placeholder text mid-paragraph is NOT a placeholder — only standalone author-scaffold lines are suppressed.
+
+#### 2.7.2 Implementation contract
+
+- Detection runs at **parse time**, before any block is created from the line.
+- Matched lines are dropped from the parser's input stream entirely. The page-allocation pipeline never sees them; therefore they cannot generate pages, cannot trigger openers, cannot anchor epigraphs.
+- The empty space the line would have occupied collapses naturally — the next non-placeholder line proceeds as if the placeholder didn't exist.
+- Edit Mode rendering: deferred decision. v1 = simply suppressed everywhere. A future amendment may surface them in Edit Mode only as a `kind: 'placeholder'` block with an amber tint, so authors can find their TODOs without polluting Page Proof.
+- Read Flow (`/book-studio/read`): renders the source markdown verbatim. Placeholders remain visible there because that's the raw-source surface, by design.
+
+#### 2.7.3 What this rule is NOT
+
+- It is NOT content authoring. The author can replace any placeholder with real content (e.g., write a real epigraph) and the page composes naturally per §2.5.
+- It is NOT a hide-from-the-author. The author can find every placeholder in the source markdown (`/book-studio/read`).
+- It is NOT a smart-suppression that infers intent. Only the explicit patterns in §2.7.1 fire. If a line doesn't match a pattern, it's content.
+
+#### 2.7.4 Worked examples
+
+| Source line | Suppressed? | Why |
+|---|---|---|
+| `*[Epigraph or framing line — to be authored by Kelly.]*` | yes | matches `PLC-A` |
+| `*[TODO]*` | yes | matches `PLC-A` |
+| `[TBD]` | yes | matches `PLC-B` |
+| `[TODO: add Sadhguru citation]` | yes | matches `PLC-B` |
+| `<!-- needs revision before print -->` | yes | matches `PLC-C` |
+| `*To be authored.*` | yes | matches `PLC-D` (≤ 12 words; phrase) |
+| `Insert epigraph here.` | yes | matches `PLC-D` |
+| `Placeholder text` | yes | matches `PLC-D` |
+| `It was time to be authored, he wrote softly...` | **no** | line is > 12 words AND it's narrative prose |
+| `**Important** announcement here.` | **no** | not a placeholder pattern; bold emphasis is rendering |
+| `[Smith 2024]` (a real bracketed citation) | **no** | doesn't match any TBD/TODO/etc. keyword |
 
 ### 2.8 Front matter never gets chapter numbering
 
