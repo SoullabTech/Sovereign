@@ -2570,20 +2570,79 @@ function parseManuscriptToPages(text) {
       b.text = fixAttributionDoublet(stripBoldMarkers(b.text));
     }
     const h = blockHeight(b);
-    // Fill-first allocation: only spawn a continuation page when the
-    // current page genuinely cannot fit this block. canFitOnPage uses
-    // the conservative estimateBlockHeight + _height accumulator.
+    // Fill-first allocation + #273b keep-with-next + §3.8a continuation
+    // integrity (PAGE_PROOF_SPEC_v1.md §3.4 + §3.8a — HARD RULES, no
+    // heuristics, no exceptions).
+    //
+    // Rule §3.4 keep-with-next: a heading or quote must NEVER be the
+    // last block on a page. If `b` triggers a continuation, pull the
+    // trailing heading(s) and/or quote(s) forward so they land at the
+    // top of the continuation page along with `b`.
+    //
+    // Rule §3.8a continuation integrity: a continuation page must NOT
+    // begin with a quote without a lead-in. If `b` is a quote and
+    // nothing else is being carried, pull the previous paragraph
+    // forward as lead-in.
     if (!canFitOnPage(currentPage, b) && currentPage.blocks.length > 0) {
-      const carryLabel = currentPage.label;
-      const carryType = currentPage.type;
+      // Compute trailing blocks to carry forward.
+      const blocks = currentPage.blocks;
+      let carryStart = blocks.length;
+
+      // §3.4: walk backward while seeing heading/quote.
+      while (carryStart > 0 &&
+             (blocks[carryStart - 1].kind === 'heading' ||
+              blocks[carryStart - 1].kind === 'quote')) {
+        carryStart--;
+      }
+
+      // §3.8a: if `b` is a quote and we have no carry yet, pull last
+      // text block as lead-in.
+      if (b.kind === 'quote' &&
+          carryStart === blocks.length &&
+          carryStart > 0 &&
+          blocks[carryStart - 1].kind === 'text') {
+        carryStart--;
+      }
+
+      // Safety: if carrying everything would empty the page entirely,
+      // a continuation that re-spawns the same content can loop. Skip
+      // the carry in that pathological case (a single oversized block
+      // pair is rare; visual widow on the previous page is acceptable
+      // over an infinite recursion).
+      let carry = blocks.slice(carryStart);
+      if (carry.length === blocks.length) {
+        carry = [];
+      }
+
+      // Truncate the current page to drop carried blocks; recompute
+      // _height from scratch (simpler than tracking deltas).
+      if (carry.length > 0) {
+        blocks.length = blocks.length - carry.length;
+        currentPage._height = blocks.reduce(
+          (s, blk) => s + estimateBlockHeight(blk), 0,
+        );
+      }
+
+      // Spawn the continuation (existing behavior).
+      const prevLabel = currentPage.label;
+      const prevType = currentPage.type;
       pushPage();
       currentPage = {
-        type: carryType,
-        label: carryLabel.endsWith('(cont.)') ? carryLabel : carryLabel + ' (cont.)',
+        type: prevType,
+        label: prevLabel.endsWith('(cont.)') ? prevLabel : prevLabel + ' (cont.)',
         blocks: [],
         cursorY: PAGE_TOP,
         _height: 0,
       };
+
+      // Re-place carried blocks on the continuation, updating y to
+      // match the new cursor (preserves edit-mode positioning).
+      for (const cf of carry) {
+        cf.y = currentPage.cursorY;
+        currentPage.blocks.push(cf);
+        currentPage.cursorY += blockHeight(cf) + BLOCK_GAP;
+        currentPage._height = (currentPage._height || 0) + estimateBlockHeight(cf);
+      }
     }
     let block;
     if (b.kind === 'heading') {
