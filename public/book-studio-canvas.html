@@ -1128,7 +1128,18 @@ const DEFAULT_NAMES = {
   'Audiobook':         'Untitled Audiobook',
 };
 
-function uid(prefix) { return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}`; }
+function uid(prefix) {
+  // crypto.randomUUID guarantees uniqueness; the legacy form
+  // (Date.now + Math.random*10000) collided when ~270 pages were
+  // generated in a single tick — the random space was too small for
+  // the call rate, producing ~3 duplicate IDs per Replace-import.
+  // Duplicate IDs broke jump-nav: findIndex returned the FIRST match,
+  // so a chapter dropdown could send the reader hundreds of pages back.
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `${prefix}_${crypto.randomUUID()}`;
+  }
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+}
 
 function loadJSON(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
