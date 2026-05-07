@@ -20,6 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 import { renderHtmlToPdf } from '../lib/manuscript/render/pagedPdf';
 
@@ -106,10 +107,18 @@ async function main(): Promise<void> {
   console.log('[2/4] Wrapping with print CSS...');
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
 
+  // <base href="file://.../public/"> resolves absolute image src paths
+  // (e.g. /book-studio/figures/F05-fire-calcinatio.png) against the
+  // public directory when Puppeteer loads via setContent (which uses
+  // about:blank as document URL). Without this, canonical-plate <img>
+  // tags render as broken-image placeholders.
+  const publicBaseHref = pathToFileURL(path.join(REPO_ROOT, 'public') + path.sep).toString();
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<base href="${publicBaseHref}" />
 <title>Elemental Alchemy: The Art of Living a Phenomenal Life</title>
 <style>
 ${css}

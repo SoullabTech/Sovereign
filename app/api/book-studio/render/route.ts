@@ -110,10 +110,18 @@ export async function POST() {
 
   // ── 3. Wrap with print template ───────────────────────────────────
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
+  // <base href="file:///app/public/"> resolves absolute image src paths
+  // (e.g. /book-studio/figures/F05-fire-calcinatio.png) against the
+  // container's public directory when Puppeteer loads via setContent
+  // (which uses about:blank as document URL by default). Without this,
+  // canonical-plate <img> tags fall back to the broken-image icon.
+  // Container-only path; production runs in Docker with /app as repo root.
+  const PUBLIC_BASE_HREF = 'file:///app/public/';
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <base href="${PUBLIC_BASE_HREF}" />
   <title>Elemental Alchemy — Print</title>
   <style>${css}</style>
 </head>
