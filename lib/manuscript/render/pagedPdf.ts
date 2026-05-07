@@ -53,9 +53,21 @@ export async function renderHtmlToPdf(
 
   // --no-sandbox required when running Chromium in Docker (no setuid sandbox).
   // PUPPETEER_EXECUTABLE_PATH env var (set in Dockerfile) picks up system chromium.
+  //
+  // --allow-file-access-from-files lets the rendered document fetch
+  // file:// resources (canonical plate PNGs at /app/public/book-studio/figures/...)
+  // resolved via the <base href="file:///app/public/"> tag. Without this
+  // flag, Chromium refuses to dereference file:// URLs from the about:blank
+  // origin used by setContent, even when the path is correct.
+  // PDF-render context only — has no effect on any other surface.
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--allow-file-access-from-files',
+    ],
   });
   try {
     const page = await browser.newPage();
