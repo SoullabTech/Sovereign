@@ -568,6 +568,57 @@
     letter-spacing: 0.05em;
     pointer-events: none;
   }
+  /* ── Canonical Plate Mode ──────────────────────────────────
+     Doorway pages with page.doorwayPlate set render the canonical
+     PNG locked, centered, non-interactive. No drag, no resize,
+     no x/y inspector — these are threshold objects, not
+     positioned content. */
+  .page.page--canonical-plate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .canonical-plate-image {
+    max-width: 78%;
+    max-height: 78%;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none; /* image itself is not draggable / clickable */
+    -webkit-user-drag: none;
+  }
+  .canonical-plate-placeholder {
+    text-align: center;
+    color: #8a7e60;
+    font-family: "Crimson Text", "Georgia", serif;
+    font-style: italic;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+    padding: 20px;
+    border: 1px dashed var(--page-block-border);
+    border-radius: 4px;
+    max-width: 60%;
+    background: rgba(0,0,0,0.02);
+  }
+  .canonical-plate-placeholder .plate-label {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 9px;
+    font-style: normal;
+    color: #5a5040;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .canonical-plate-placeholder .plate-path {
+    display: block;
+    margin-top: 10px;
+    font-size: 10px;
+    font-style: normal;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: #a59678;
+    word-break: break-all;
+  }
   /* ── inspector ─────────────────────────────────────────────── */
   .inspector h3 {
     font-size: 11px;
@@ -1128,7 +1179,16 @@
     <button class="btn" data-add="quote">+ Quote</button>
   </div>
   <div class="toolbar-row">
-    <button class="btn" data-page-template="doorway" title="Add a new Doorway page (e.g. Fire / Water / Earth / Air)">+ Doorway Page</button>
+    <div class="dropdown-wrap">
+      <button class="btn" id="btn-element-doorway" title="Add a canonical Element Doorway (Fire / Water / Earth / Air / Aether)">+ Element Doorway ▾</button>
+      <div class="dropdown-menu" id="element-doorway-menu">
+        <button data-element="fire">Fire</button>
+        <button data-element="water">Water</button>
+        <button data-element="earth">Earth</button>
+        <button data-element="air">Air</button>
+        <button data-element="aether">Aether</button>
+      </div>
+    </div>
     <button class="btn" data-page-template="image-plate" title="Add a new full-page image plate">+ Image Plate Page</button>
     <button class="btn" id="btn-duplicate-page">Duplicate Page</button>
     <span style="color:var(--text-dim);font-size:11px;margin-left:8px;">Page type</span>
@@ -1453,16 +1513,51 @@ function defaultAlignForKind(kind) {
   // and never hit this path.
   return 'left';
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Canonical plates — Doorway page → locked image renderer
+   ═══════════════════════════════════════════════════════════════
+   Doorway pages are not draggable image containers. They are
+   threshold objects. Each element resolves to a canonical PNG at
+   a fixed repo path; the page renders the image locked, centered,
+   non-editable. If the file is not yet authored, a quiet
+   placeholder appears — no broken-image icon, no entropy.
+   F-numbering follows the Soullab Press editorial canon
+   (F00 cosmogram, F05 fire, F06 water, F07 earth, F08 air, F09 aether). */
+const ELEMENTAL_DOORWAYS = ['fire', 'water', 'earth', 'air', 'aether'];
+const CANONICAL_PLATES = {
+  fire:   '/book-studio/figures/F05-fire-calcinatio.png',
+  water:  '/book-studio/figures/F06-water-solutio.png',
+  earth:  '/book-studio/figures/F07-earth-coagulatio.png',
+  air:    '/book-studio/figures/F08-air-sublimatio.png',
+  aether: '/book-studio/figures/F09-aether-conjunctio.png',
+};
+function getCanonicalPlatePath(element) {
+  return CANONICAL_PLATES[String(element || '').toLowerCase()] || null;
+}
+function isCanonicalPlatePage(p) {
+  return !!(p && p.type === 'Doorway' && p.doorwayPlate && CANONICAL_PLATES[p.doorwayPlate]);
+}
 function migrateLayoutOntology(project) {
-  // Idempotent. Stamps page.layout and block.align on the first
-  // encounter; subsequent loads are no-ops. Existing pixel data
-  // remains in blocks (harmless when flow render ignores it).
+  // Idempotent. Stamps page.layout, block.align, and (for Doorway
+  // pages whose label names a known element) page.doorwayPlate.
+  // Subsequent loads are no-ops. Existing pixel data remains in
+  // blocks (harmless when flow render ignores it; bypassed when
+  // canonical plate render takes over).
   if (!project || !Array.isArray(project.pages)) return project;
   for (const p of project.pages) {
     if (!p.layout) p.layout = defaultLayoutForPageType(p.type);
     if (p.layout === 'flow' && Array.isArray(p.blocks)) {
       for (const b of p.blocks) {
         if (!b.align) b.align = defaultAlignForKind(b.kind);
+      }
+    }
+    // Canonical plate inference — Doorway page whose label is a
+    // known elemental name becomes a canonical plate container.
+    if (p.type === 'Doorway' && !p.doorwayPlate) {
+      const label = String(p.label || '').toLowerCase().trim();
+      if (ELEMENTAL_DOORWAYS.includes(label)) {
+        p.doorwayPlate = label;
       }
     }
   }
@@ -1748,8 +1843,8 @@ function renderCanvas() {
   const page = document.getElementById('page');
   const p = activePage();
   page.innerHTML = '';
-  // Reset page-mode classes; flow pages get .page--flow added below.
-  page.classList.remove('page--flow', 'page--overflow');
+  // Reset page-mode classes; the appropriate one is added below.
+  page.classList.remove('page--flow', 'page--overflow', 'page--canonical-plate');
   if (!p) return;
   document.getElementById('page-type').value = p.type;
 
@@ -1761,12 +1856,55 @@ function renderCanvas() {
     return;
   }
 
+  // Canonical Plate Mode — Doorway pages whose doorwayPlate is
+  // set render the locked plate image. Bypasses block rendering
+  // entirely; the existing block data is preserved (so an
+  // "unlock plate" affordance could restore it later) but not
+  // shown.
+  if (isCanonicalPlatePage(p)) {
+    renderCanonicalPlate(page, p);
+    return;
+  }
+
   // Phase B render split.
   if (p.layout === 'flow') {
     renderCanvasFlow(page, p);
   } else {
     renderCanvasAbsolute(page, p);
   }
+}
+
+function renderCanonicalPlate(page, p) {
+  page.classList.add('page--canonical-plate');
+  const path = getCanonicalPlatePath(p.doorwayPlate);
+  // Probe the image; on load, swap in the <img>. On error, render
+  // a quiet placeholder. We always start with the placeholder so
+  // there's no flash of broken-image.
+  const placeholder = document.createElement('div');
+  placeholder.className = 'canonical-plate-placeholder';
+  const elementName = String(p.doorwayPlate || '').replace(/^./, c => c.toUpperCase());
+  placeholder.innerHTML = `
+    <span class="plate-label">Canonical Plate</span>
+    Canonical plate pending: ${escapeHtml(elementName)}
+    <span class="plate-path">${escapeHtml(path)}</span>
+  `;
+  page.appendChild(placeholder);
+
+  if (!path) return;
+  const probe = new Image();
+  probe.onload = () => {
+    // Image is available — replace placeholder with the locked image.
+    if (!page.classList.contains('page--canonical-plate')) return; // navigated away
+    page.innerHTML = '';
+    const img = document.createElement('img');
+    img.className = 'canonical-plate-image';
+    img.src = path;
+    img.alt = elementName + ' — canonical plate';
+    img.draggable = false;
+    page.appendChild(img);
+  };
+  probe.onerror = () => { /* leave placeholder in place */ };
+  probe.src = path;
 }
 
 function attachBlockHandlers(div, b) {
@@ -1895,9 +2033,46 @@ function renderCanvasFlow(page, p) {
   });
 }
 
+// Cache the original default-panel HTML once so we can restore it
+// after a canonical-plate page replaces it with locked-state copy.
+let _defaultInspectorHtml = null;
+function restoreDefaultInspectorHtml() {
+  const def = document.getElementById('inspector-default');
+  if (!def) return;
+  if (_defaultInspectorHtml === null) _defaultInspectorHtml = def.innerHTML;
+  else if (def.innerHTML !== _defaultInspectorHtml) def.innerHTML = _defaultInspectorHtml;
+}
+
 function renderInspector() {
   const def = document.getElementById('inspector-default');
   const blk = document.getElementById('inspector-block');
+  if (_defaultInspectorHtml === null && def) _defaultInspectorHtml = def.innerHTML;
+
+  // Canonical plate pages have no editable blocks. The inspector
+  // shows the threshold context only — element name + locked
+  // notice — never X/Y/W/H. This is the architectural guarantee
+  // that plates feel inevitable, not movable.
+  const ap = activePage();
+  if (isCanonicalPlatePage(ap)) {
+    def.style.display = '';
+    blk.style.display = 'none';
+    const elementName = String(ap.doorwayPlate || '').replace(/^./, c => c.toUpperCase());
+    def.innerHTML = `
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">Canonical Plate</div>
+        <div style="font-family:'Playfair Display','Georgia',serif;font-size:18px;color:var(--text);margin-bottom:10px;">${escapeHtml(elementName)}</div>
+        <p style="font-size:11px;color:var(--text-dim);line-height:1.5;font-style:italic;">
+          This page renders the canonical ${escapeHtml(elementName)} plate. Locked from positional editing — plates are threshold objects, not movable content.
+        </p>
+        <p style="font-size:10px;color:var(--text-dim);line-height:1.5;margin-top:10px;font-family:ui-monospace,'SF Mono',Menlo,monospace;word-break:break-all;">
+          ${escapeHtml(getCanonicalPlatePath(ap.doorwayPlate) || '')}
+        </p>
+      </div>
+    `;
+    return;
+  }
+  // Non-plate page — make sure the default panel is its original form.
+  restoreDefaultInspectorHtml();
   const b = activeBlock();
   if (!b) {
     def.style.display = '';
@@ -1983,6 +2158,13 @@ function renderBlocksList() {
   if (!list) return;
   const p = activePage();
   if (!p) { list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;font-style:italic;">No page</div>'; return; }
+  // Canonical plate pages: hide block list entirely. The plate is
+  // not a stack of editable blocks; surfacing its dormant blocks
+  // would invite the wrong kind of interaction.
+  if (isCanonicalPlatePage(p)) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;font-style:italic;">Locked — canonical plate</div>';
+    return;
+  }
   if (p.blocks.length === 0) { list.innerHTML = '<div style="color:var(--text-dim);font-size:11px;font-style:italic;">Empty page</div>'; return; }
   list.innerHTML = '';
   p.blocks.forEach((b, i) => {
@@ -2369,6 +2551,48 @@ templatesMenu.querySelectorAll('button').forEach(b => {
 document.addEventListener('click', e => {
   if (!templatesMenu.contains(e.target) && e.target !== templatesBtn) {
     templatesMenu.classList.remove('open');
+  }
+});
+
+/* ── Element Doorway dropdown ─────────────────────────────────
+   Each menu entry creates a Doorway page already stamped with
+   the canonical doorwayPlate, so render is locked from the
+   moment of insertion. No manual labeling, no path drift. */
+function addCanonicalDoorwayPage(element) {
+  if (!state) return;
+  const el = String(element || '').toLowerCase();
+  if (!ELEMENTAL_DOORWAYS.includes(el)) return;
+  const label = el.charAt(0).toUpperCase() + el.slice(1);
+  const page = {
+    id: uid('p'),
+    type: 'Doorway',
+    label,
+    layout: 'absolute',
+    doorwayPlate: el,
+    blocks: [],
+  };
+  state.pages.push(page);
+  state.activePageId = page.id;
+  state.activeBlockId = null;
+  persistCurrent();
+  renderAll();
+  setStatus(`Added canonical ${label} doorway`);
+}
+const elementDoorwayBtn = document.getElementById('btn-element-doorway');
+const elementDoorwayMenu = document.getElementById('element-doorway-menu');
+elementDoorwayBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  elementDoorwayMenu.classList.toggle('open');
+});
+elementDoorwayMenu.querySelectorAll('button').forEach(b => {
+  b.addEventListener('click', () => {
+    addCanonicalDoorwayPage(b.dataset.element);
+    elementDoorwayMenu.classList.remove('open');
+  });
+});
+document.addEventListener('click', e => {
+  if (!elementDoorwayMenu.contains(e.target) && e.target !== elementDoorwayBtn) {
+    elementDoorwayMenu.classList.remove('open');
   }
 });
 
