@@ -2109,7 +2109,7 @@ Maya became her own alchemist over the years, dancing with the elements of her l
 
 ### The Significance of the Spiralogic Process
 
-The Spiralogic Process intertwines with the alchemical process of the elements, offering a dynamic exploration of personal refinement. Our spiritual well-being is the outcome of living from an inner fire that informs us about who we are, why we are here, how to express ourselves successfully, and how to become enlightened. Emotional intelligence guides our interactions and transformations. Physical vitality supports our endeavors, and mental clarity helps us navigate our world.
+The Spiralogic Process intertwines with the alchemical movements of the elements, offering a dynamic exploration of personal refinement and transformation. Fire awakens vision, purpose, and the illuminating force that calls us toward greater possibility. Water nurtures our emotional life, deepens us through inner transformation, and reveals the wisdom hidden within our lived experience. Earth helps us embody our purpose through discipline, development, and the steady refinement of our gifts in the world. Air invites us to share what we have learned through authentic connection, collaborative community, and the creation of more conscious systems of relationship and meaning. Together, the elements form a living spiral through which we continuously evolve, integrate, and awaken.
 
 *"He who knows others is wise; he who knows himself is enlightened." – Lao Tzu*
 
