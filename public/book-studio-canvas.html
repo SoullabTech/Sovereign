@@ -483,6 +483,91 @@
     opacity: 0;
   }
   .block.selected .resize-handle { opacity: 1; }
+  /* ── Phase B: Flow Layout primitives ─────────────────────────
+     Body pages render their blocks as a vertically-stacked
+     typographic column. Doorway / Image Plate / Chapter Opener /
+     Frontmatter pages keep absolute positioning (plate geometry
+     untouched). Edit affordances (select, edit, delete, reorder)
+     are preserved in flow mode; pixel x/y is not. */
+  .page--flow {
+    /* same dimensions, but children render via flow column */
+    overflow: visible;
+  }
+  .page--flow .flow-column {
+    position: absolute;
+    top: 80px;
+    bottom: 80px;
+    left: 84px;     /* centers a ~432px column on the 600px page */
+    width: 432px;   /* ~30em at 14px — controlled measure */
+    display: flex;
+    flex-direction: column;
+  }
+  .page--flow .block {
+    position: static;
+    width: 100%;
+    height: auto;
+    border: 1px dashed transparent;
+    margin: 0 0 14px 0;
+    padding: 4px 6px;
+    cursor: text;
+  }
+  .page--flow .block:hover { border-color: var(--page-block-border); }
+  .page--flow .block.selected { border: 1px solid var(--accent); border-style: solid; }
+  .page--flow .block .resize-handle { display: none; }
+  /* Default flow typography (left-aligned, rag-right) */
+  .page--flow .block.heading {
+    text-align: left;
+    font-size: 26px;
+    line-height: 1.2;
+    margin-top: 8px;
+    margin-bottom: 14px;
+  }
+  .page--flow .block.text {
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .page--flow .block.text.italic { font-style: italic; }
+  .page--flow .block.text.spaced { letter-spacing: 0.25em; }
+  .page--flow .block.quote {
+    text-align: left;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #5a5040;
+    padding-left: 18px;
+    border-left: 2px solid var(--page-block-border);
+    margin: 8px 0 14px 0;
+  }
+  .page--flow .block.doorway-marker,
+  .page--flow .block.image-placeholder,
+  .page--flow .block.image {
+    /* These kinds are rare in body pages, but if they appear
+       in a flow page, render them sensibly without breaking flow. */
+    text-align: center;
+    margin: 12px auto;
+  }
+  /* Per-block alignment overrides (apply in both modes) */
+  .block.align-left    { text-align: left !important; }
+  .block.align-center  { text-align: center !important; }
+  .block.align-right   { text-align: right !important; }
+  .block.align-justify { text-align: justify !important; }
+  /* Overflow indicator — fires when measured column height
+     exceeds the page's available body region. Silent clipping
+     is the failure mode we're correcting. */
+  .page.page--overflow { box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 0 2px #c75c5c inset; }
+  .page-overflow-warning {
+    position: absolute;
+    bottom: -26px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: #c75c5c;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
   /* ── inspector ─────────────────────────────────────────────── */
   .inspector h3 {
     font-size: 11px;
@@ -598,7 +683,9 @@
     letter-spacing: 0.08em;
     margin-right: 6px;
   }
-  .inspector .blocks-list-item .del {
+  .inspector .blocks-list-item .del,
+  .inspector .blocks-list-item .up,
+  .inspector .blocks-list-item .dn {
     background: transparent;
     border: none;
     color: var(--text-dim);
@@ -607,6 +694,10 @@
     padding: 0 4px;
   }
   .inspector .blocks-list-item .del:hover { color: #ef6b6b; }
+  .inspector .blocks-list-item .up:hover,
+  .inspector .blocks-list-item .dn:hover { color: var(--accent); }
+  .inspector .blocks-list-item .up:disabled,
+  .inspector .blocks-list-item .dn:disabled { opacity: 0.25; cursor: default; }
   /* ── Image Bank ───────────────────────────────────────────── */
   .ib-overlay {
     position: fixed; inset: 0;
@@ -1337,10 +1428,53 @@ function persistCurrent() {
   pushHistory();
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Phase B — layout ontology
+   ═══════════════════════════════════════════════════════════════
+   Two layout modes:
+     'flow'     — body prose. Blocks stack vertically in a
+                  controlled-measure column. Auto-height. Per-block
+                  alignment. No pixel x/y dependency.
+     'absolute' — plates / doorway compositions / chapter openers.
+                  Existing positioned-object behavior. Plate
+                  geometry untouched.
+   Default is derived from page.type:
+     Body                       → 'flow'
+     Doorway / Image Plate /
+     Chapter Opener /
+     Frontmatter / Part Opener  → 'absolute'
+*/
+const FLOW_PAGE_TYPES = new Set(['Body']);
+function defaultLayoutForPageType(t) {
+  return FLOW_PAGE_TYPES.has(String(t)) ? 'flow' : 'absolute';
+}
+function defaultAlignForKind(kind) {
+  // Flow body prose default. Plate/doorway pages use absolute mode
+  // and never hit this path.
+  return 'left';
+}
+function migrateLayoutOntology(project) {
+  // Idempotent. Stamps page.layout and block.align on the first
+  // encounter; subsequent loads are no-ops. Existing pixel data
+  // remains in blocks (harmless when flow render ignores it).
+  if (!project || !Array.isArray(project.pages)) return project;
+  for (const p of project.pages) {
+    if (!p.layout) p.layout = defaultLayoutForPageType(p.type);
+    if (p.layout === 'flow' && Array.isArray(p.blocks)) {
+      for (const b of p.blocks) {
+        if (!b.align) b.align = defaultAlignForKind(b.kind);
+      }
+    }
+  }
+  return project;
+}
+
 function loadProject(id) {
   state = loadJSON(STORAGE.project(id));
   // Forward-compatible migration: pre-Image-Bank projects had no assets array
   if (state && !Array.isArray(state.assets)) state.assets = [];
+  // Phase B forward-compatible migration: stamp layout/align
+  if (state) migrateLayoutOntology(state);
   activeId = id;
   saveJSON(STORAGE.active, id);
 }
@@ -1614,6 +1748,8 @@ function renderCanvas() {
   const page = document.getElementById('page');
   const p = activePage();
   page.innerHTML = '';
+  // Reset page-mode classes; flow pages get .page--flow added below.
+  page.classList.remove('page--flow', 'page--overflow');
   if (!p) return;
   document.getElementById('page-type').value = p.type;
 
@@ -1625,18 +1761,58 @@ function renderCanvas() {
     return;
   }
 
+  // Phase B render split.
+  if (p.layout === 'flow') {
+    renderCanvasFlow(page, p);
+  } else {
+    renderCanvasAbsolute(page, p);
+  }
+}
+
+function attachBlockHandlers(div, b) {
+  // Shared editor affordances for both flow and absolute blocks.
+  // (Drag/resize are absolute-only and added separately.)
+  div.dataset.blockId = b.id;
+  div.contentEditable = 'false';
+  div.spellcheck = false;
+  div.addEventListener('focus', () => { state.activeBlockId = b.id; renderInspector(); });
+  div.addEventListener('blur', () => {
+    const wasEditing = div.contentEditable === 'true';
+    if (wasEditing) {
+      const block = activePage().blocks.find(x => x.id === b.id);
+      if (block && block.kind !== 'image' && block.kind !== 'image-placeholder') {
+        block.text = div.textContent;
+      }
+      div.contentEditable = 'false';
+      persistCurrent();
+      renderPageList();
+    }
+  });
+  div.addEventListener('dblclick', e => {
+    if (b.kind === 'image' || b.kind === 'image-placeholder') return;
+    e.preventDefault();
+    div.contentEditable = 'true';
+    div.focus();
+    const range = document.createRange();
+    range.selectNodeContents(div);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+}
+
+function renderCanvasAbsolute(page, p) {
   p.blocks.forEach(b => {
     const div = document.createElement('div');
-    div.className = `block ${b.kind}` + (b.italic ? ' italic' : '') + (b.spaced ? ' spaced' : '') + (b.id === state.activeBlockId ? ' selected' : '');
+    const alignClass = b.align ? ' align-' + b.align : '';
+    div.className = `block ${b.kind}` + (b.italic ? ' italic' : '') + (b.spaced ? ' spaced' : '') + alignClass + (b.id === state.activeBlockId ? ' selected' : '');
     div.style.left = b.x + 'px';
     div.style.top = b.y + 'px';
     div.style.width = b.w + 'px';
     div.style.height = b.h + 'px';
     div.style.opacity = b.opacity;
     div.style.zIndex = b.z;
-    div.dataset.blockId = b.id;
-    div.contentEditable = 'false'; // non-editable by default; double-click enters edit mode
-    div.spellcheck = false;
     if (b.kind === 'image' && b.src) {
       const img = document.createElement('img');
       img.src = b.src;
@@ -1645,39 +1821,77 @@ function renderCanvas() {
     } else {
       div.textContent = b.text;
     }
-    div.addEventListener('focus', () => { state.activeBlockId = b.id; renderInspector(); });
-    div.addEventListener('blur', () => {
-      // exit edit mode + commit text content
-      const wasEditing = div.contentEditable === 'true';
-      if (wasEditing) {
-        const block = activePage().blocks.find(x => x.id === b.id);
-        if (block && block.kind !== 'image' && block.kind !== 'image-placeholder') {
-          block.text = div.textContent;
-        }
-        div.contentEditable = 'false';
-        persistCurrent();
-        renderPageList();
-      }
-    });
+    attachBlockHandlers(div, b);
     div.addEventListener('mousedown', e => onBlockMouseDown(e, b.id));
-    div.addEventListener('dblclick', e => {
-      if (b.kind === 'image' || b.kind === 'image-placeholder') return;
-      e.preventDefault();
-      div.contentEditable = 'true';
-      div.focus();
-      // place cursor at click point (browser default puts caret at end if no selection)
-      const range = document.createRange();
-      range.selectNodeContents(div);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    });
     const handle = document.createElement('div');
     handle.className = 'resize-handle';
     handle.addEventListener('mousedown', e => { e.stopPropagation(); onResizeStart(e, b.id); });
     div.appendChild(handle);
     page.appendChild(div);
+  });
+}
+
+function renderCanvasFlow(page, p) {
+  // Flow mode — body prose stacks vertically in a controlled-measure
+  // column. No pixel x/y. Auto height. Per-block alignment via
+  // .align-* modifier classes. Editor affordances preserved
+  // (select / edit / delete / reorder via Inspector).
+  page.classList.add('page--flow');
+  const col = document.createElement('div');
+  col.className = 'flow-column';
+  col.id = 'flow-column';
+
+  p.blocks.forEach(b => {
+    const div = document.createElement('div');
+    const alignClass = b.align ? ' align-' + b.align : ' align-left';
+    div.className = `block ${b.kind}` + (b.italic ? ' italic' : '') + (b.spaced ? ' spaced' : '') + alignClass + (b.id === state.activeBlockId ? ' selected' : '');
+    if (typeof b.opacity === 'number' && b.opacity !== 1) div.style.opacity = b.opacity;
+    if (b.kind === 'image' && b.src) {
+      const img = document.createElement('img');
+      img.src = b.src;
+      img.draggable = false;
+      img.style.maxWidth = '100%';
+      div.appendChild(img);
+    } else {
+      div.textContent = b.text;
+    }
+    attachBlockHandlers(div, b);
+    // In flow mode, mousedown selects but does NOT initiate pixel drag.
+    div.addEventListener('mousedown', () => {
+      if (state.activeBlockId !== b.id) {
+        state.activeBlockId = b.id;
+        renderInspector();
+        renderBlocksList();
+        // re-mark selected without rerunning full canvas render
+        document.querySelectorAll('#page .block').forEach(el => {
+          el.classList.toggle('selected', el.dataset.blockId === b.id);
+        });
+      }
+    });
+    col.appendChild(div);
+  });
+
+  page.appendChild(col);
+
+  // Overflow detection — measured after layout settles.
+  // Compares the rendered column height against its allotted region.
+  // Silent clipping is the failure mode we're correcting; if the
+  // column overruns, the page gets a red outline + warning banner.
+  requestAnimationFrame(() => {
+    const colEl = document.getElementById('flow-column');
+    if (!colEl) return;
+    const allotted = colEl.clientHeight; // bounded by top:80 / bottom:80
+    const content = colEl.scrollHeight;
+    if (content > allotted + 1) {
+      page.classList.add('page--overflow');
+      let warn = page.querySelector('.page-overflow-warning');
+      if (!warn) {
+        warn = document.createElement('div');
+        warn.className = 'page-overflow-warning';
+        page.appendChild(warn);
+      }
+      warn.textContent = `⚠ Content exceeds page (${content - allotted}px over)`;
+    }
   });
 }
 
@@ -1693,29 +1907,57 @@ function renderInspector() {
   def.style.display = 'none';
   blk.style.display = '';
   const isImage = b.kind === 'image';
+  const p = activePage();
+  const isFlow = p && p.layout === 'flow';
+  const align = b.align || (isFlow ? 'left' : '');
+  // In flow mode, pixel fields (x/y/w/h/z) are not load-bearing —
+  // hide them to keep the inspector aligned with the layout
+  // ontology. Alignment dropdown is shown in both modes.
+  const positionalFields = isFlow ? '' : `
+    <div class="row">
+      <div class="field"><label>X</label><input type="number" id="i-x" value="${b.x ?? 0}"/></div>
+      <div class="field"><label>Y</label><input type="number" id="i-y" value="${b.y ?? 0}"/></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Width</label><input type="number" id="i-w" value="${b.w ?? 0}"/></div>
+      <div class="field"><label>Height</label><input type="number" id="i-h" value="${b.h ?? 0}"/></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Opacity</label><input type="number" step="0.05" min="0" max="1" id="i-opacity" value="${b.opacity ?? 1}"/></div>
+      <div class="field"><label>Z-index</label><input type="number" id="i-z" value="${b.z ?? 1}"/></div>
+    </div>
+  `;
+  const flowHint = isFlow ? `<div class="hint" style="text-align:left;font-style:normal;margin-bottom:8px;">Flow page — blocks stack vertically. Use ↑ / ↓ in the block list to reorder.</div>` : '';
   blk.innerHTML = `
-    <div class="field"><label>Block</label><div style="font-size:11px;color:var(--text-dim);">${b.kind}</div></div>
+    <div class="field"><label>Block</label><div style="font-size:11px;color:var(--text-dim);">${b.kind}${isFlow ? ' · flow' : ''}</div></div>
     ${isImage ? '' : `<div class="field"><label>Content</label><textarea id="i-text">${escapeHtml(b.text)}</textarea></div>`}
-    <div class="row">
-      <div class="field"><label>X</label><input type="number" id="i-x" value="${b.x}"/></div>
-      <div class="field"><label>Y</label><input type="number" id="i-y" value="${b.y}"/></div>
+    <div class="field">
+      <label>Alignment</label>
+      <select id="i-align">
+        <option value="left"${align === 'left' ? ' selected' : ''}>Left</option>
+        <option value="center"${align === 'center' ? ' selected' : ''}>Center</option>
+        <option value="right"${align === 'right' ? ' selected' : ''}>Right</option>
+        <option value="justify"${align === 'justify' ? ' selected' : ''}>Justify</option>
+      </select>
     </div>
-    <div class="row">
-      <div class="field"><label>Width</label><input type="number" id="i-w" value="${b.w}"/></div>
-      <div class="field"><label>Height</label><input type="number" id="i-h" value="${b.h}"/></div>
-    </div>
-    <div class="row">
-      <div class="field"><label>Opacity</label><input type="number" step="0.05" min="0" max="1" id="i-opacity" value="${b.opacity}"/></div>
-      <div class="field"><label>Z-index</label><input type="number" id="i-z" value="${b.z}"/></div>
-    </div>
+    ${flowHint}
+    ${positionalFields}
     <button class="delete-btn" id="i-delete">🗑  Delete this block</button>
     <div class="hint">Or press Delete / Backspace</div>
   `;
-  ['x','y','w','h','opacity','z'].forEach(k => {
-    document.getElementById('i-' + k).addEventListener('input', e => {
-      b[k] = parseFloat(e.target.value) || 0;
-      renderCanvas(); renderPageList(); persistCurrent();
+  if (!isFlow) {
+    ['x','y','w','h','opacity','z'].forEach(k => {
+      const el = document.getElementById('i-' + k);
+      if (!el) return;
+      el.addEventListener('input', e => {
+        b[k] = parseFloat(e.target.value) || 0;
+        renderCanvas(); renderPageList(); persistCurrent();
+      });
     });
+  }
+  document.getElementById('i-align').addEventListener('change', e => {
+    b.align = e.target.value;
+    renderCanvas(); persistCurrent();
   });
   if (!isImage) {
     document.getElementById('i-text').addEventListener('input', e => {
@@ -1747,20 +1989,35 @@ function renderBlocksList() {
     const div = document.createElement('div');
     div.className = 'blocks-list-item' + (b.id === state.activeBlockId ? ' active' : '');
     const label = (b.text || '').slice(0, 28) || (b.kind === 'image' ? '(image)' : b.kind);
+    const isFirst = i === 0;
+    const isLast  = i === p.blocks.length - 1;
+    // Up/down arrows reorder the block within the page's blocks
+    // array. In flow mode this is the natural reordering control
+    // (no pixel drag). In absolute mode it changes z-stack order
+    // without altering x/y.
     div.innerHTML = `
       <span class="kind">${escapeHtml(b.kind.replace('-marker','').replace('-placeholder',''))}</span>
       <span class="label" title="${escapeHtml(b.text || '')}">${escapeHtml(label) || '—'}</span>
+      <button class="up"  title="Move up"   ${isFirst ? 'disabled' : ''}>↑</button>
+      <button class="dn"  title="Move down" ${isLast  ? 'disabled' : ''}>↓</button>
       <button class="del" title="Delete this block">×</button>
     `;
     div.addEventListener('click', e => {
-      if (e.target.classList.contains('del')) return;
+      if (e.target.tagName === 'BUTTON') return;
       state.activeBlockId = b.id;
       renderCanvas();
       renderInspector();
     });
+    div.querySelector('.up').addEventListener('click', e => {
+      e.stopPropagation();
+      moveBlock(b.id, -1);
+    });
+    div.querySelector('.dn').addEventListener('click', e => {
+      e.stopPropagation();
+      moveBlock(b.id, +1);
+    });
     div.querySelector('.del').addEventListener('click', e => {
       e.stopPropagation();
-      // delete this specific block (not necessarily the selected one)
       const page = activePage();
       if (!page) return;
       page.blocks = page.blocks.filter(x => x.id !== b.id);
@@ -1770,6 +2027,19 @@ function renderBlocksList() {
     });
     list.appendChild(div);
   });
+}
+
+function moveBlock(blockId, delta) {
+  const page = activePage();
+  if (!page) return;
+  const idx = page.blocks.findIndex(x => x.id === blockId);
+  if (idx < 0) return;
+  const target = idx + delta;
+  if (target < 0 || target >= page.blocks.length) return;
+  const [moved] = page.blocks.splice(idx, 1);
+  page.blocks.splice(target, 0, moved);
+  persistCurrent();
+  renderAll();
 }
 
 function clearPage() {
@@ -1968,7 +2238,19 @@ document.getElementById('preset').addEventListener('change', e => {
 });
 document.getElementById('page-type').addEventListener('change', e => {
   const p = activePage();
-  if (p) { p.type = e.target.value; persistCurrent(); renderPageList(); }
+  if (!p) return;
+  p.type = e.target.value;
+  // Layout follows page type: Body → flow, plates / openers → absolute.
+  // Re-derive on every type change so the page mode stays consistent
+  // with the type the user just picked.
+  p.layout = defaultLayoutForPageType(p.type);
+  if (p.layout === 'flow' && Array.isArray(p.blocks)) {
+    for (const b of p.blocks) {
+      if (!b.align) b.align = defaultAlignForKind(b.kind);
+    }
+  }
+  persistCurrent();
+  renderAll();
 });
 
 document.getElementById('btn-save').addEventListener('click', () => { persistCurrent(); setStatus('Saved ' + new Date().toLocaleTimeString()); });
@@ -2046,8 +2328,8 @@ function addPageFromTemplate(kind) {
       { id: uid('b'), kind: 'heading', text: 'Chapter Title', x: 80, y: 280, w: 440, h: 70, opacity: 1, z: 1 },
     ]};
   } else if (kind === 'body') {
-    page = { id, type: 'Body', label: 'Body', blocks: [
-      { id: uid('b'), kind: 'text', text: 'Body text starts here…', x: 80, y: 100, w: 440, h: 600, opacity: 1, z: 1 },
+    page = { id, type: 'Body', label: 'Body', layout: 'flow', blocks: [
+      { id: uid('b'), kind: 'text', text: 'Body text starts here…', align: 'left', x: 80, y: 100, w: 440, h: 600, opacity: 1, z: 1 },
     ]};
   } else if (kind === 'image-plate') {
     page = { id, type: 'Image Plate', label: 'Image Plate', blocks: [
@@ -3042,6 +3324,9 @@ function importManuscriptText(text, opts) {
   }
   state.activePageId = newPages[0].id;
   state.activeBlockId = null;
+  // Phase B: stamp layout/align on freshly-imported pages so Body
+  // pages render in flow mode this session (not just after reload).
+  migrateLayoutOntology(state);
   persistCurrent();
   renderAll();
   // #275 — chapter count = real chapters only (chapterLabel was set
@@ -3081,6 +3366,8 @@ function autoTypesetCurrentPage() {
   state.pages.splice(idx, 1, ...newPages);
   state.activePageId = newPages[0].id;
   state.activeBlockId = null;
+  // Phase B: stamp layout/align on freshly typeset pages.
+  migrateLayoutOntology(state);
   persistCurrent();
   renderAll();
   if (newPages.length === 1) {
