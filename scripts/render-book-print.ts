@@ -47,7 +47,10 @@ async function main(): Promise<void> {
   // Then we extract just the body content and post-process the TOC position.
   const LUA_FILTER = path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua');
   const fullHtml = execSync(
-    `pandoc "${MD_PATH}" -t html5 --standalone --syntax-highlighting=none --toc --toc-depth=3 -V toc-title="" --lua-filter "${LUA_FILTER}"`,
+    // --no-highlight is supported on both Pandoc 2.x and 3.x.
+    // (--syntax-highlighting=none was Pandoc 3.x only — production
+    // runs Pandoc 2.17 from Debian Bookworm apt, which rejected it.)
+    `pandoc "${MD_PATH}" -t html5 --standalone --no-highlight --toc --toc-depth=3 -V toc-title="" --lua-filter "${LUA_FILTER}"`,
     {
       maxBuffer: 256 * 1024 * 1024,
       encoding: 'utf-8',
