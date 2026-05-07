@@ -95,7 +95,7 @@ export function HeroSection() {
           className="text-sm sm:text-base text-white/35 max-w-lg mx-auto mb-10"
           style={{ fontFamily: "'Source Sans Pro', sans-serif" }}
         >
-          Consciousness AI &amp; relational intelligence systems.
+          Relational intelligence for human coherence.
           The engine that brings soul to any app, site, or platform.
         </motion.p>
 

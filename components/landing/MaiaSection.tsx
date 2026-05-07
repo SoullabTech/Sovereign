@@ -36,6 +36,9 @@ export function MaiaSection() {
                 A sovereignty-first intelligence layer for reflection, coherence, and inner navigation — built to feel like
                 weather, not surveillance.
               </p>
+              <p className="mt-6 text-[11px] tracking-[0.3em] uppercase text-white/35">
+                Built with AI &middot; Oriented to soul
+              </p>
             </div>
           </SectionReveal>
 

@@ -6,6 +6,8 @@ import { MaiaSection } from './MaiaSection';
 import { ResearchSection } from './ResearchSection';
 import { ProjectsSection } from './ProjectsSection';
 import { PortfolioSection } from './PortfolioSection';
+import { BookAnnouncement } from './BookAnnouncement';
+import { PastSitesSection } from './PastSitesSection';
 import { AskSection } from './AskSection';
 import { ContactSection } from './ContactSection';
 import { AskWidget } from './AskWidget';
@@ -19,8 +21,10 @@ export function SoullabLanding() {
         <MaiaSection />
         <ResearchSection />
         <PortfolioSection />
+        <BookAnnouncement />
         <ProjectsSection />
         <AskSection />
+        <PastSitesSection />
         <ContactSection />
       </main>
       <AskWidget />
