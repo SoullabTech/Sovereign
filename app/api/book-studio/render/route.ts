@@ -83,6 +83,7 @@ export async function POST() {
         '--toc',
         '--toc-depth=3',
         '-V', 'toc-title=',
+        '--lua-filter', path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua'),
       ],
       { maxBuffer: 256 * 1024 * 1024, encoding: 'utf-8' },
     );

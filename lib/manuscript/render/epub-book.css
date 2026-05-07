@@ -182,3 +182,38 @@ nav#toc a {
   text-decoration: none;
   color: #111;
 }
+
+/* ============================================================
+ * CANONICAL PLATES — F00 cosmogram + F05–F09 elemental thresholds
+ * ============================================================
+ * EPUB readers handle "pages" loosely; the goal is a quiet, full-
+ * width figure that stands alone between sections, with no caption
+ * and no surrounding text crowding it.
+ */
+
+.canonical-plate {
+  display: block;
+  text-align: center;
+  margin: 2em 0;
+  page-break-before: always;
+  page-break-after: always;
+  break-before: page;
+  break-after: page;
+  page-break-inside: avoid;
+}
+
+.canonical-plate p {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  text-indent: 0;
+}
+
+.canonical-plate img,
+img.canonical-plate-img {
+  display: block;
+  margin: 0 auto;
+  max-width: 90%;
+  height: auto;
+  page-break-inside: avoid;
+}

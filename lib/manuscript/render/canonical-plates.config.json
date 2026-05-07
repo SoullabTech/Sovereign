@@ -1,0 +1,43 @@
+{
+  "_doc": "Canonical plate placement for export pipeline (PDF + EPUB). Editorial decisions, authored after repeated slow-read convergence — never derived algorithmically from heading text. Each threshold pairs a plate (binary at /book-studio/figures/{plate}.png) with a heading prefix; the canonical-plates.lua filter emits a full-page plate <div> immediately before any heading whose text starts with `beforeHeading`. Missing plate files are silently skipped (no broken-image render).",
+  "_authored": "2026-05-07 — Kelly Nezat, post-slow-read convergence",
+  "_invariants": "no auto-discovery; no parser changes; no manuscript edits; placement is sovereign editorial",
+  "thresholds": [
+    {
+      "plate": "F00-cosmogram",
+      "beforeHeading": "Preface",
+      "alt": "Cosmogram",
+      "role": "frontispiece"
+    },
+    {
+      "plate": "F05-fire-calcinatio",
+      "beforeHeading": "Chapter 5:",
+      "alt": "Fire — Calcinatio",
+      "role": "threshold"
+    },
+    {
+      "plate": "F06-water-solutio",
+      "beforeHeading": "Chapter 6:",
+      "alt": "Water — Solutio",
+      "role": "threshold"
+    },
+    {
+      "plate": "F07-earth-coagulatio",
+      "beforeHeading": "Chapter 7:",
+      "alt": "Earth — Coagulatio",
+      "role": "threshold"
+    },
+    {
+      "plate": "F08-air-sublimatio",
+      "beforeHeading": "Chapter 8:",
+      "alt": "Air — Sublimatio",
+      "role": "threshold"
+    },
+    {
+      "plate": "F09-aether-conjunctio",
+      "beforeHeading": "Chapter 9:",
+      "alt": "Aether — Conjunctio",
+      "role": "threshold"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import StudioMarkdown from '../_lib/StudioMarkdown';
+import Frontispiece from '../_lib/Frontispiece';
 
 export const metadata = {
   title: 'Read Flow · The Book Studio',
@@ -40,6 +41,7 @@ export default function ReadFlowPage() {
           Elemental Alchemy — continuous prose, sealed source.
         </p>
       </header>
+      <Frontispiece />
       <StudioMarkdown file="ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md" />
     </div>
   );

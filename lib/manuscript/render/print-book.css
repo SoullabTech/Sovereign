@@ -391,3 +391,72 @@ nav#TOC a::after {
   margin-left: 0.5em;
   flex-shrink: 0;
 }
+
+/* ============================================================
+ * CANONICAL PLATES — F00 cosmogram + F05–F09 elemental thresholds
+ * ============================================================
+ * Editorial placement lives in canonical-plates.config.json; this
+ * stylesheet defines how plates appear when injected.
+ *
+ * Plates are full-page threshold objects. They occupy their own
+ * page, suppress the page number footer, and break before/after
+ * so the chapter/section heading lands on the next recto.
+ */
+
+.canonical-plate {
+  page-break-before: always;
+  page-break-after: always;
+  break-before: page;
+  break-after: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  display: block;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  /* The plate page should breathe — vertical centering is achieved by
+   * the surrounding paragraph margins; large top/bottom keep the image
+   * reserved rather than crowding the trim. */
+}
+
+.canonical-plate p {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  text-indent: 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.canonical-plate img,
+img.canonical-plate-img {
+  display: block;
+  margin: 1.5in auto;          /* generous breath above and below */
+  max-width: 4.2in;            /* < text width — reserved, not display-asking */
+  max-height: 6in;
+  height: auto;
+  filter: grayscale(100%);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Frontispiece (F00) sits before the Preface, identical visual treatment
+ * to elemental thresholds. The role distinction is structural, not
+ * stylistic — both occupy a full page with no caption. */
+.canonical-plate--frontispiece img,
+.canonical-plate--frontispiece p > img {
+  /* Frontispiece may run a touch larger to function as the orienting
+   * field of the work. Still well under the text trim. */
+  max-width: 4.4in;
+  max-height: 6.2in;
+}
+
+/* Suppress page numbers on plate pages — thresholds are unnumbered.
+ * Paged.js honors named-page rules; we declare a `plate` page that
+ * blanks the running footer. */
+@page plate {
+  @bottom-center { content: ''; }
+}
+.canonical-plate {
+  page: plate;
+}
