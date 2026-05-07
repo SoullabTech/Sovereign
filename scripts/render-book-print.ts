@@ -45,8 +45,9 @@ async function main(): Promise<void> {
   console.log('[1/4] Converting markdown → HTML via pandoc (with TOC)...');
   // Use --standalone so pandoc emits the <nav id="TOC"> block; --toc requires it.
   // Then we extract just the body content and post-process the TOC position.
+  const LUA_FILTER = path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua');
   const fullHtml = execSync(
-    `pandoc "${MD_PATH}" -t html5 --standalone --syntax-highlighting=none --toc --toc-depth=3 -V toc-title=""`,
+    `pandoc "${MD_PATH}" -t html5 --standalone --syntax-highlighting=none --toc --toc-depth=3 -V toc-title="" --lua-filter "${LUA_FILTER}"`,
     {
       maxBuffer: 256 * 1024 * 1024,
       encoding: 'utf-8',

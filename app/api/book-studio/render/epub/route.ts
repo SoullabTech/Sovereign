@@ -78,6 +78,7 @@ export async function POST() {
     // deprecation warning). Keep this until the Dockerfile pins Pandoc 3+.
     // ─────────────────────────────────────────────────────────────────
     '--epub-chapter-level=1',
+    '--lua-filter', path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua'),
     '-o', EPUB_OUT,
   ];
 
