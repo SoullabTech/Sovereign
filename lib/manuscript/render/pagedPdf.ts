@@ -16,7 +16,11 @@
  * Chapter 1 artifact. Reused by future chapter / book renders.
  */
 
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { randomUUID } from 'node:crypto';
 
 import puppeteer from 'puppeteer';
 
@@ -54,12 +58,11 @@ export async function renderHtmlToPdf(
   // --no-sandbox required when running Chromium in Docker (no setuid sandbox).
   // PUPPETEER_EXECUTABLE_PATH env var (set in Dockerfile) picks up system chromium.
   //
-  // --allow-file-access-from-files lets the rendered document fetch
-  // file:// resources (canonical plate PNGs at /app/public/book-studio/figures/...)
-  // resolved via the <base href="file:///app/public/"> tag. Without this
-  // flag, Chromium refuses to dereference file:// URLs from the about:blank
-  // origin used by setContent, even when the path is correct.
-  // PDF-render context only — has no effect on any other surface.
+  // --allow-file-access-from-files is retained as a defensive belt for
+  // Chromium versions where it's still consulted; it has no effect on
+  // newer Chromium for setContent-loaded documents but is harmless. The
+  // load mechanism below (page.goto on a file:// URL) is what actually
+  // enables canonical plate <img> resolution.
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -69,11 +72,30 @@ export async function renderHtmlToPdf(
       '--allow-file-access-from-files',
     ],
   });
+  // Stage the rendered HTML to a temp file so the document loads from
+  // a file:// origin. Modern Chromium silently blocks file:// resource
+  // fetches from about:blank documents (which is what setContent
+  // produces), regardless of <base> tag or --allow-file-access-from-files
+  // flag. Loading via page.goto('file://...') puts the document in a
+  // file:// origin, which can natively dereference sibling file://
+  // resources (canonical plate PNGs at /app/public/book-studio/figures/).
+  // The temp file is removed in the finally block whether render
+  // succeeds or fails.
+  const tmpHtmlPath = path.join(
+    os.tmpdir(),
+    `book-studio-render-${randomUUID()}.html`,
+  );
+  await fs.writeFile(tmpHtmlPath, html, 'utf-8');
   try {
     const page = await browser.newPage();
 
-    // Stage the document with the inline CSS already embedded.
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    // Load from file:// so the document inherits a file:// origin.
+    // The <base href="file:///app/public/"> in the wrapper HTML still
+    // resolves absolute /book-studio/figures/... paths into that
+    // directory; from a file:// origin Chromium will fetch them.
+    await page.goto(pathToFileURL(tmpHtmlPath).toString(), {
+      waitUntil: 'networkidle0',
+    });
 
     // Configure Paged.js BEFORE loading the polyfill so the `after`
     // hook is registered when pagination completes.
@@ -102,5 +124,12 @@ export async function renderHtmlToPdf(
     });
   } finally {
     await browser.close();
+    // Best-effort cleanup; surfacing the unlink failure would mask any
+    // earlier render error, so we swallow it.
+    try {
+      await fs.unlink(tmpHtmlPath);
+    } catch {
+      /* temp file already gone or unreachable */
+    }
   }
 }
