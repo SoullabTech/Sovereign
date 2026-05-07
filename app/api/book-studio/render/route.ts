@@ -110,12 +110,10 @@ export async function POST() {
 
   // ── 3. Wrap with print template ───────────────────────────────────
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
-  // <base href="file:///app/public/"> resolves absolute image src paths
-  // (e.g. /book-studio/figures/F05-fire-calcinatio.png) against the
-  // container's public directory when Puppeteer loads via setContent
-  // (which uses about:blank as document URL by default). Without this,
-  // canonical-plate <img> tags fall back to the broken-image icon.
-  // Container-only path; production runs in Docker with /app as repo root.
+  // <base href="file:///app/public/"> retained as defensive belt; data
+  // URIs below mean URL resolution is no longer load-bearing for
+  // canonical plates. Kept so any future relative-path references in
+  // the body still resolve as expected.
   const PUBLIC_BASE_HREF = 'file:///app/public/';
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -130,9 +128,57 @@ ${bodyHtml}
 </body>
 </html>`;
 
+  // ── 3b. Inline canonical plate binaries as data URIs ─────────────
+  // The Lua filter emits <img src="/book-studio/figures/F0X-name.png">.
+  // URL resolution at PDF render time is unreliable: setContent loads
+  // the document with about:blank origin (blocking file:// fetches);
+  // the <base> tag doesn't reparent *absolute* paths (only relative
+  // ones); page.goto(file://) gets the origin right but absolute paths
+  // resolve against filesystem root, not the base path.
+  // Data URIs bypass URL resolution entirely. Each plate is read from
+  // disk, base64-encoded, and substituted into the HTML before render.
+  // Missing files leave the original src unchanged and are logged.
+  const CANONICAL_PLATE_FILENAMES = [
+    'F00-cosmogram',
+    'F05-fire-calcinatio',
+    'F06-water-solutio',
+    'F07-earth-coagulatio',
+    'F08-air-sublimatio',
+    'F09-aether-conjunctio',
+  ];
+  const inlinedPlates: string[] = [];
+  const missingPlates: string[] = [];
+  let renderHtml = html;
+  for (const filename of CANONICAL_PLATE_FILENAMES) {
+    const srcPath = `/book-studio/figures/${filename}.png`;
+    const diskPath = path.join(REPO_ROOT, 'public', 'book-studio', 'figures', `${filename}.png`);
+    if (!fs.existsSync(diskPath)) {
+      missingPlates.push(filename);
+      continue;
+    }
+    const data = fs.readFileSync(diskPath);
+    const dataUri = `data:image/png;base64,${data.toString('base64')}`;
+    // Pandoc emits attributes with double quotes; defensively handle
+    // single quotes too in case any source HTML uses them.
+    const before = renderHtml;
+    renderHtml = renderHtml.split(`src="${srcPath}"`).join(`src="${dataUri}"`);
+    renderHtml = renderHtml.split(`src='${srcPath}'`).join(`src='${dataUri}'`);
+    if (renderHtml !== before) inlinedPlates.push(filename);
+  }
+  console.log(
+    '[BookStudio/Render] canonical plates inlined as data URIs:',
+    inlinedPlates.length ? inlinedPlates.join(', ') : '(none matched src in HTML)',
+  );
+  if (missingPlates.length > 0) {
+    console.warn(
+      '[BookStudio/Render] missing plate binaries (left as original src refs, will render as broken-image):',
+      missingPlates.join(', '),
+    );
+  }
+
   // ── 4. Paged.js + Puppeteer → PDF ─────────────────────────────────
   try {
-    await renderHtmlToPdf(html, {
+    await renderHtmlToPdf(renderHtml, {
       outputPath: PDF_OUT,
       width: '6in',
       height: '9in',
