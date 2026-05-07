@@ -903,8 +903,21 @@
     color: #211b13;
     white-space: pre-line;
   }
-  /* H4 sub-subsections — smaller than the 23px H2/H3 baseline so the
-     reader can feel hierarchy without forcing a structural break. */
+  /* H3 subsections — between the 23px H2 baseline and the 16px H4
+     sub-subsection. Restores the missing register so ### headings
+     (185 instances in the Elemental Alchemy manuscript, ~67% of all
+     body headings) render distinctly from ## section headings (25
+     instances). Before this rule, both fell back to .proof-heading
+     at 23px and the hierarchy collapsed. */
+  body.reading-mode .proof-heading-level-3 {
+    font-size: 19px;
+    line-height: 1.18;
+    font-weight: 600;
+    margin: 22px 0 10px 0;
+  }
+  /* H4 sub-subsections — smaller than the 23px H2 baseline and the
+     19px H3 register so the reader can feel hierarchy without forcing
+     a structural break. */
   body.reading-mode .proof-heading-level-4 {
     font-size: 16px;
     line-height: 1.25;
