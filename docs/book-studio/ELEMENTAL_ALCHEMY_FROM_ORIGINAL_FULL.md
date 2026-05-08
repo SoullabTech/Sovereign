@@ -109,6 +109,8 @@ Additional Resources
 
 ---
 
+![Cosmogram — orientation chamber](/book-studio/figures/F00-cosmogram.png)
+
 # Preface
 
 *"Once upon a time, I, Zhuangzi, was unconscious of my individuality as a man. Suddenly, I awoke, and there I lay, myself again. Now I do not know whether I was then a man dreaming I was a butterfly, or whether I am now a butterfly, dreaming I am a man. Between a man and a butterfly, there is a barrier. The transition is called Metempsychosis, or the transmigration of the soul." – Zhuangzi*
@@ -759,6 +761,8 @@ Having understood the elements and their role in achieving wholeness, it's time 
 
 # Chapter 5: Fire
 
+![Calcinatio — the operation of fire](/book-studio/figures/F05-fire-calcinatio.png)
+
 *"It is the eternal flame of becoming that animates each kaleidoscopic universe sparkling to life like fireflies winking in the infinite night." – Rumi*
 
 ### The Sacred Flame
@@ -1146,6 +1150,8 @@ Rise, blaze, and transform in the sacred dance of the elements. Dance with fire.
 
 # Chapter 6: Water — The Depths of Emotional Intelligence and Transformation
 
+![Solutio — the operation of water](/book-studio/figures/F06-water-solutio.png)
+
 *"All the gods, all the heavens, all the hells, are within us." — Joseph Campbell*
 
 Diving into one's inner experience is the gateway to fully engaging with the world. By embracing this simple yet profound truth, you unlock the potential to journey far and achieve great things. When you understand and align with your inner self, you are better equipped to navigate and impact the outer world with authenticity and purpose.
@@ -1401,6 +1407,8 @@ Balancing fluid water and solid Earth, we will experience life both deeply groun
 ---
 
 # Chapter 7: Earth — The Element of Stability and Groundedness
+
+![Coagulatio — the operation of earth](/book-studio/figures/F07-earth-coagulatio.png)
 
 *"The archaic mind understood and perceived that nature is conscious, nature is alive, nature is an organism full of intent." — Terrence McKenna*
 
@@ -1665,6 +1673,8 @@ With our foundations firmly in place, we ascend to the realm of Air. The next ch
 
 # Chapter 8: Air
 
+![Sublimatio — the operation of air](/book-studio/figures/F08-air-sublimatio.png)
+
 *"Thoughts become perception, perception becomes reality. Alter your thoughts, alter your reality." – William James*
 
 As the first rays of dawn light filtered through my study window, I sat in my favorite chair, wrapped in a blanket, sipping a steaming cup of tea. My mind wandered to a recent conversation with Massoud, a dear friend in Iran. Despite the thousands of miles separating us, technology allowed us to share our deepest thoughts and explore life's mysteries together. This connection exemplifies the transformative power of the air element—our ability to relate, share, and progress through intelligent, shared communication.
@@ -1925,6 +1935,8 @@ Refining our ability to think well draws us closer to embracing our true self, h
 ---
 
 # Chapter 9: Aether — The Self at Play
+
+![Conjunctio — the operation of aether](/book-studio/figures/F09-aether-conjunctio.png)
 
 *"I have lived on the lip of insanity, wanting to know reasons, knocking on a door. It opens. I've been knocking from the inside." — Rumi*
 
