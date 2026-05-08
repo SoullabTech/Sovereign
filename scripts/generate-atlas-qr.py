@@ -11,23 +11,26 @@ Design principles:
   - Static QR encoding the canonical URL only — no redirect, no shortener, no third party.
   - Square modules. No rounded corners. No frame. No scan label.
   - Parchment background, taupe geometry.
-  - Subtle holoflower glyph at center, sized within H-level error-correction tolerance.
+  - Center mark is the canonical Holoflower (public/holoflower.svg), recolored
+    to taupe and scaled within H-level error-correction tolerance.
   - The QR becomes part of the book design system, not a SaaS widget.
 
 Run:
+  python3 -m venv /tmp/qrvenv
+  /tmp/qrvenv/bin/pip install qrcode pillow cairosvg
   /tmp/qrvenv/bin/python3 scripts/generate-atlas-qr.py
 """
 
 from __future__ import annotations
 
 import math
-import os
+import re
 import xml.sax.saxutils as xml_utils
 from pathlib import Path
 
+import cairosvg
 import qrcode
 from qrcode.constants import ERROR_CORRECT_H
-from PIL import Image, ImageDraw
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -46,16 +49,21 @@ QUIET_ZONE = 4
 # (≈ 0.20 of side, π/4 of that as a circle ≈ 12.5% of total area).
 CENTER_CLEAR_FRACTION = 0.20
 
-# Holoflower geometry inside the cleared circle.
-GLYPH_OUTER_RING_FRACTION = 0.94   # of clear circle radius
-GLYPH_INNER_RING_FRACTION = 0.46
-GLYPH_PETAL_RADIUS_FRACTION = 0.13  # of clear circle radius — petal dot size
-GLYPH_PETAL_ORBIT_FRACTION = 0.66   # how far petal centers sit from center
-GLYPH_CENTER_DOT_FRACTION = 0.12
+# Holoflower visual scale within the cleared circle. Slightly less than the
+# clear circle diameter so the holoflower's outer reach remains separated
+# from the surrounding QR modules.
+GLYPH_SCALE_FRACTION = 0.92
+
+# Holoflower opacity. 1.0 = solid taupe. < 1.0 leaves the parchment field
+# faintly visible through the petals — keeps the center reading as a
+# breath rather than a dense seal.
+GLYPH_OPACITY = 1.0
 
 PNG_PIXELS = 3000
 
-OUTPUT_DIR = Path(__file__).resolve().parent.parent / "public" / "book-studio" / "qr"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+HOLOFLOWER_PATH = REPO_ROOT / "public" / "holoflower.svg"
+OUTPUT_DIR = REPO_ROOT / "public" / "book-studio" / "qr"
 
 
 # ---------------------------------------------------------------------------
@@ -72,63 +80,70 @@ def build_matrix(payload: str) -> list[list[bool]]:
     )
     qr.add_data(payload)
     qr.make(fit=True)
-    matrix = qr.get_matrix()
-    return matrix
+    return qr.get_matrix()
 
 
 # ---------------------------------------------------------------------------
-# Holoflower glyph
+# Canonical Holoflower
 # ---------------------------------------------------------------------------
 
-def holoflower_svg(cx: float, cy: float, r: float) -> str:
-    """A small monastic flower-of-life glyph centered at (cx, cy), radius r.
+def load_holoflower() -> tuple[str, float, float]:
+    """Read the canonical holoflower SVG, return its inner content recolored to
+    taupe along with its viewBox dimensions.
 
-    Composition (parchment-on-taupe):
-      - thin outer ring
-      - thin inner ring
-      - 6 petal dots arranged on a hexagon
-      - center dot
+    The source SVG uses fill="#FFFFFF" on every path (designed for dark
+    backgrounds). We recolor each fill to taupe so the holoflower reads
+    correctly on the parchment field of the QR.
     """
-    parts: list[str] = []
+    raw = HOLOFLOWER_PATH.read_text(encoding="utf-8")
 
-    outer_r = r * GLYPH_OUTER_RING_FRACTION
-    inner_r = r * GLYPH_INNER_RING_FRACTION
-    petal_orbit = r * GLYPH_PETAL_ORBIT_FRACTION
-    petal_r = r * GLYPH_PETAL_RADIUS_FRACTION
-    center_r = r * GLYPH_CENTER_DOT_FRACTION
+    # Extract viewBox dimensions.
+    vb_match = re.search(r'viewBox="\s*([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s+([\d.\-]+)\s*"', raw)
+    if not vb_match:
+        raise RuntimeError("Could not parse viewBox from canonical holoflower.svg")
+    vb_w = float(vb_match.group(3))
+    vb_h = float(vb_match.group(4))
 
-    # Hairline strokes scale with the cleared radius so they read at any output size.
-    hairline = max(r * 0.018, 0.04)
+    # Pull out everything between the opening <svg> and closing </svg>.
+    inner_match = re.search(r"<svg[^>]*>(.*)</svg>", raw, re.DOTALL)
+    if not inner_match:
+        raise RuntimeError("Could not extract inner content from canonical holoflower.svg")
+    inner = inner_match.group(1)
 
-    parts.append(
-        f'<circle cx="{cx:.3f}" cy="{cy:.3f}" r="{outer_r:.3f}" '
-        f'fill="none" stroke="{TAUPE}" stroke-width="{hairline:.3f}"/>'
+    # Recolor: every #FFFFFF path becomes taupe. Case-insensitive across
+    # 6-digit and 3-digit hex forms.
+    recolored = re.sub(r'fill="#FFFFFF"', f'fill="{TAUPE}"', inner)
+    recolored = re.sub(r'fill="#FFF"', f'fill="{TAUPE}"', recolored)
+    recolored = re.sub(r'fill="white"', f'fill="{TAUPE}"', recolored, flags=re.IGNORECASE)
+
+    return recolored, vb_w, vb_h
+
+
+def embed_holoflower(cx: float, cy: float, max_diameter: float, content: str, vb_w: float, vb_h: float) -> str:
+    """Wrap the canonical holoflower content in a <g> that:
+       - centers it on (cx, cy)
+       - scales it to fit within max_diameter (preserving aspect ratio)
+       - applies the configured opacity
+    """
+    longest_side = max(vb_w, vb_h)
+    scale = max_diameter / longest_side
+    drawn_w = vb_w * scale
+    drawn_h = vb_h * scale
+    tx = cx - drawn_w / 2
+    ty = cy - drawn_h / 2
+    return (
+        f'<g transform="translate({tx:.4f} {ty:.4f}) scale({scale:.6f})" '
+        f'opacity="{GLYPH_OPACITY:.3f}">\n'
+        f'    {content}\n'
+        f'  </g>'
     )
-    parts.append(
-        f'<circle cx="{cx:.3f}" cy="{cy:.3f}" r="{inner_r:.3f}" '
-        f'fill="none" stroke="{TAUPE}" stroke-width="{hairline:.3f}"/>'
-    )
-
-    for i in range(6):
-        angle = -math.pi / 2 + i * (math.pi / 3)  # start at top, six points
-        px = cx + petal_orbit * math.cos(angle)
-        py = cy + petal_orbit * math.sin(angle)
-        parts.append(
-            f'<circle cx="{px:.3f}" cy="{py:.3f}" r="{petal_r:.3f}" fill="{TAUPE}"/>'
-        )
-
-    parts.append(
-        f'<circle cx="{cx:.3f}" cy="{cy:.3f}" r="{center_r:.3f}" fill="{TAUPE}"/>'
-    )
-
-    return "\n  ".join(parts)
 
 
 # ---------------------------------------------------------------------------
 # SVG
 # ---------------------------------------------------------------------------
 
-def render_svg(matrix: list[list[bool]], payload: str) -> str:
+def render_svg(matrix: list[list[bool]], payload: str) -> tuple[str, int, int]:
     n = len(matrix)
     side = n + QUIET_ZONE * 2
 
@@ -136,6 +151,7 @@ def render_svg(matrix: list[list[bool]], payload: str) -> str:
     cy = side / 2
 
     clear_radius = (n * CENTER_CLEAR_FRACTION) / 2
+    glyph_diameter = clear_radius * 2 * GLYPH_SCALE_FRACTION
 
     # Build modules as one path with rectangular subpaths — keeps file small and
     # yields hard square corners. Skip modules whose centers fall inside the
@@ -155,6 +171,9 @@ def render_svg(matrix: list[list[bool]], payload: str) -> str:
             y = QUIET_ZONE + r_idx
             rects.append(f"M{x},{y}h1v1h-1z")
 
+    holoflower_inner, vb_w, vb_h = load_holoflower()
+    holoflower_group = embed_holoflower(cx, cy, glyph_diameter, holoflower_inner, vb_w, vb_h)
+
     payload_safe = xml_utils.escape(payload)
 
     svg = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -168,72 +187,24 @@ def render_svg(matrix: list[list[bool]], payload: str) -> str:
   <path d="{''.join(rects)}" fill="{TAUPE}"/>
   <!-- holoflower clear zone -->
   <circle cx="{cx:.3f}" cy="{cy:.3f}" r="{clear_radius:.3f}" fill="{PARCHMENT}"/>
-  {holoflower_svg(cx, cy, clear_radius)}
+  {holoflower_group}
 </svg>
 """
     return svg, skipped, n
 
 
 # ---------------------------------------------------------------------------
-# PNG (rasterized directly from the matrix — no SVG→PNG dependency)
+# PNG (rasterized from the SVG — single source of truth)
 # ---------------------------------------------------------------------------
 
-def render_png(matrix: list[list[bool]], pixels: int) -> Image.Image:
-    n = len(matrix)
-    side_modules = n + QUIET_ZONE * 2
-
-    # Choose integer module size so the QR grid stays pixel-perfect, then
-    # center within the requested canvas (parchment around it).
-    module_px = max(1, pixels // side_modules)
-    qr_px = module_px * side_modules
-    canvas_px = max(qr_px, pixels)
-
-    img = Image.new("RGB", (canvas_px, canvas_px), PARCHMENT)
-    draw = ImageDraw.Draw(img)
-
-    offset = (canvas_px - qr_px) // 2
-    cx = offset + (QUIET_ZONE + n / 2) * module_px
-    cy = cx
-    clear_radius_px = (n * CENTER_CLEAR_FRACTION / 2) * module_px
-
-    for r_idx, row in enumerate(matrix):
-        for c_idx, bit in enumerate(row):
-            if not bit:
-                continue
-            x0 = offset + (QUIET_ZONE + c_idx) * module_px
-            y0 = offset + (QUIET_ZONE + r_idx) * module_px
-            mxc = x0 + module_px / 2
-            myc = y0 + module_px / 2
-            if math.hypot(mxc - cx, myc - cy) < clear_radius_px:
-                continue
-            draw.rectangle([x0, y0, x0 + module_px - 1, y0 + module_px - 1], fill=TAUPE)
-
-    # Holoflower over the clear zone.
-    outer_r = clear_radius_px * GLYPH_OUTER_RING_FRACTION
-    inner_r = clear_radius_px * GLYPH_INNER_RING_FRACTION
-    petal_orbit = clear_radius_px * GLYPH_PETAL_ORBIT_FRACTION
-    petal_r = clear_radius_px * GLYPH_PETAL_RADIUS_FRACTION
-    center_r = clear_radius_px * GLYPH_CENTER_DOT_FRACTION
-    hairline = max(int(round(clear_radius_px * 0.025)), 2)
-
-    def circle(cx_, cy_, rad, fill=None, outline=None, width=1):
-        draw.ellipse(
-            [cx_ - rad, cy_ - rad, cx_ + rad, cy_ + rad],
-            fill=fill,
-            outline=outline,
-            width=width,
-        )
-
-    circle(cx, cy, outer_r, outline=TAUPE, width=hairline)
-    circle(cx, cy, inner_r, outline=TAUPE, width=hairline)
-    for i in range(6):
-        angle = -math.pi / 2 + i * (math.pi / 3)
-        px = cx + petal_orbit * math.cos(angle)
-        py = cy + petal_orbit * math.sin(angle)
-        circle(px, py, petal_r, fill=TAUPE)
-    circle(cx, cy, center_r, fill=TAUPE)
-
-    return img
+def render_png_from_svg(svg: str, pixels: int) -> bytes:
+    """Convert the generated SVG to PNG via cairosvg. Both outputs share
+    the same source — the SVG — so any geometry tuning lives in one place."""
+    return cairosvg.svg2png(
+        bytestring=svg.encode("utf-8"),
+        output_width=pixels,
+        output_height=pixels,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -298,7 +269,7 @@ TEST_HTML = """<!doctype html>
       <dt>Background</dt><dd>{parchment}</dd>
       <dt>Foreground</dt><dd>{taupe}</dd>
       <dt>Quiet zone</dt><dd>{quiet} modules</dd>
-      <dt>Center mark</dt><dd>Holoflower glyph (within H-level tolerance)</dd>
+      <dt>Center mark</dt><dd>Canonical Holoflower (recolored taupe)</dd>
       <dt>Vector</dt><dd><a href="qr-atlas.svg">qr-atlas.svg</a></dd>
       <dt>Raster</dt><dd><a href="qr-atlas.png">qr-atlas.png</a> · {png}px</dd>
     </dl>
@@ -324,8 +295,8 @@ def main() -> None:
 
     svg_path.write_text(svg, encoding="utf-8")
 
-    img = render_png(matrix, PNG_PIXELS)
-    img.save(png_path, "PNG", optimize=True)
+    png_bytes = render_png_from_svg(svg, PNG_PIXELS)
+    png_path.write_bytes(png_bytes)
 
     html_path.write_text(
         TEST_HTML.format(
@@ -333,7 +304,7 @@ def main() -> None:
             taupe=TAUPE,
             url=URL,
             quiet=QUIET_ZONE,
-            png=img.size[0],
+            png=PNG_PIXELS,
         ),
         encoding="utf-8",
     )
@@ -345,9 +316,10 @@ def main() -> None:
         f"  matrix: {n}x{n} modules ({total_modules} total)\n"
         f"  cleared modules under glyph: {skipped} ({occlusion_pct:.1f}%)\n"
         f"  ECC level: H (30% recovery — well within tolerance)\n"
-        f"  svg:  {svg_path.relative_to(OUTPUT_DIR.parent.parent)} ({svg_path.stat().st_size} bytes)\n"
-        f"  png:  {png_path.relative_to(OUTPUT_DIR.parent.parent)} ({img.size[0]}x{img.size[1]}, {png_path.stat().st_size} bytes)\n"
-        f"  test: {html_path.relative_to(OUTPUT_DIR.parent.parent)}"
+        f"  center: canonical Holoflower (public/holoflower.svg, recolored taupe)\n"
+        f"  svg:  {svg_path.relative_to(REPO_ROOT)} ({svg_path.stat().st_size} bytes)\n"
+        f"  png:  {png_path.relative_to(REPO_ROOT)} ({PNG_PIXELS}x{PNG_PIXELS}, {png_path.stat().st_size} bytes)\n"
+        f"  test: {html_path.relative_to(REPO_ROOT)}"
     )
 
 
