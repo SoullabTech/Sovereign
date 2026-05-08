@@ -893,12 +893,13 @@
 
 /*  Plates / doorway images — symbolic thresholds within the prose.
     Sized smaller than the prose container so they read as plates,
-    not full-page hero images. Different from the print plates,
-    which are full-page bleeds. */
+    not full-page hero images, but large enough for the cosmogram's
+    inner labels and the doorway plates' operation text to remain
+    legible. Different from the print plates, which are full-page bleeds. */
 .studio-prose img {
   display: block;
   margin: 3rem auto;
-  max-width: min(380px, 75%);
+  max-width: min(540px, 90%);
   height: auto;
   user-select: none;
   -webkit-user-drag: none;
