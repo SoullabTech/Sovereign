@@ -2884,3 +2884,10 @@ To further enhance your journey, a companion collection of worksheets, practices
 **[soullab.life](http://soullab.life)**
 
 This page is updated continuously to reflect new tools and resources supporting the elemental alchemy journey.
+
+
+# Continue to the Atlas
+
+![](/book-studio/qr/qr-atlas.svg)
+
+[soullab.life/atlas](https://soullab.life/atlas)

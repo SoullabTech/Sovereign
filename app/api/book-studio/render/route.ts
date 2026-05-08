@@ -106,7 +106,29 @@ export async function POST() {
   if (!bodyMatch) {
     return fail({ step: 'pandoc-extract', message: 'pandoc output missing <body>' });
   }
-  const bodyHtml = bodyMatch[1];
+  let bodyHtml = bodyMatch[1];
+
+  // ── 2b. Suppress the Atlas threshold from the printed TOC ────────
+  // The back-matter Atlas threshold ("Continue to the Atlas") is a
+  // doorway gesture, not navigational architecture. Per Book Studio
+  // QR Doctrine (2026-05-08): discovered, not announced. The TOC is
+  // for the argumentative structure of the book; the threshold is
+  // the closing atmospheric field. So we scrub its <li> entry from
+  // pandoc's auto-generated <nav id="TOC"> while leaving the heading
+  // intact in the body (where it's the page-break anchor for print).
+  const ATLAS_TOC_ENTRY_RE =
+    /<li>\s*<a[^>]*\bhref="#continue-to-the-atlas"[^>]*>[\s\S]*?<\/a>\s*<\/li>\s*/g;
+  const beforeScrub = bodyHtml;
+  bodyHtml = bodyHtml.replace(ATLAS_TOC_ENTRY_RE, '');
+  if (bodyHtml === beforeScrub) {
+    console.log(
+      '[BookStudio/Render] atlas-threshold TOC scrub: no entry found',
+    );
+  } else {
+    console.log(
+      '[BookStudio/Render] atlas-threshold TOC scrub: entry suppressed',
+    );
+  }
 
   // ── 3. Wrap with print template ───────────────────────────────────
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
@@ -173,6 +195,38 @@ ${bodyHtml}
     console.warn(
       '[BookStudio/Render] missing plate binaries (left as original src refs, will render as broken-image):',
       missingPlates.join(', '),
+    );
+  }
+
+  // ── 3c. Inline Atlas QR SVG as data URI ──────────────────────────
+  // Same URL-resolution problem as the canonical plates, applied to
+  // the back-matter Atlas threshold. The QR is its own ontological
+  // category (threshold of invitation, not threshold of image), so
+  // it lives outside the F00–F09 list rather than being absorbed
+  // into the canonical-plate machinery. Sovereign asset:
+  // public/book-studio/qr/qr-atlas.svg — direct URL, no shortener.
+  const ATLAS_QR_SRC = '/book-studio/qr/qr-atlas.svg';
+  const ATLAS_QR_DISK = path.join(
+    REPO_ROOT,
+    'public',
+    'book-studio',
+    'qr',
+    'qr-atlas.svg',
+  );
+  if (fs.existsSync(ATLAS_QR_DISK)) {
+    const svg = fs.readFileSync(ATLAS_QR_DISK);
+    const dataUri = `data:image/svg+xml;base64,${svg.toString('base64')}`;
+    const beforeQr = renderHtml;
+    renderHtml = renderHtml.split(`src="${ATLAS_QR_SRC}"`).join(`src="${dataUri}"`);
+    renderHtml = renderHtml.split(`src='${ATLAS_QR_SRC}'`).join(`src='${dataUri}'`);
+    console.log(
+      '[BookStudio/Render] atlas QR inlined as data URI:',
+      renderHtml === beforeQr ? '(no src match in HTML)' : 'qr-atlas.svg',
+    );
+  } else {
+    console.warn(
+      '[BookStudio/Render] atlas QR missing on disk (left as original src ref):',
+      ATLAS_QR_DISK,
     );
   }
 

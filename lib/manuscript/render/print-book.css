@@ -460,3 +460,90 @@ img.canonical-plate-img {
 .canonical-plate {
   page: plate;
 }
+
+/* ============================================================
+ * ATLAS THRESHOLD — back-matter doorway
+ * ============================================================
+ * The single QR placement in the book. Per Book Studio QR Doctrine
+ * (2026-05-08): one QR, at the end, discovered not promoted. The
+ * physical book remains sovereign; the Atlas is continuation, not
+ * augmentation.
+ *
+ * Different ontological category from F00–F09 plates: this is a
+ * threshold of *invitation*, not of *image*. So it lives outside
+ * the canonical-plate machinery and is styled by ID rather than
+ * via the lua-filter injection pipeline. The asset is sovereign:
+ * public/book-studio/qr/qr-atlas.svg — no shortener, no redirect.
+ *
+ * Editorial slot: the manuscript's final H1, after Bibliography
+ * and Additional Resources. The H1 carries page-break-before;
+ * the QR and URL paragraphs follow as siblings on the same page.
+ */
+
+h1#continue-to-the-atlas {
+  page-break-before: always;
+  break-before: page;
+  margin: 2.6in 0 0;
+  font-family: 'Crimson Pro', 'Iowan Old Style', Georgia, serif;
+  font-size: 11pt;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #5e544b;
+}
+
+h1#continue-to-the-atlas + p {
+  /* QR image paragraph — kept on the threshold page */
+  text-align: center;
+  text-indent: 0;
+  margin: 0.7in 0 0.5in;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+h1#continue-to-the-atlas + p img {
+  display: block;
+  margin: 0 auto;
+  width: 1.5in;
+  height: auto;
+  /* Keep the parchment tones from the SVG; do not grayscale the QR. */
+  filter: none;
+}
+
+h1#continue-to-the-atlas + p + p {
+  /* URL line — single italic line under the QR, no link styling */
+  text-align: center;
+  text-indent: 0;
+  margin: 0;
+  font-family: 'Crimson Pro', 'Iowan Old Style', Georgia, serif;
+  font-size: 9pt;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #5e544b;
+}
+
+h1#continue-to-the-atlas + p + p a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: inherit;
+}
+
+/* Suppress page number on the threshold page — same contemplative
+ * closure as the canonical plates. The threshold is a seal/opening
+ * outside numbered manuscript flow; pagination consciousness ends
+ * with the back matter that precedes it.
+ *
+ * Paged.js honors named-page rules; we declare an `atlas-threshold`
+ * page that blanks the running footer, then assign it to the three
+ * elements that compose the threshold (heading, QR paragraph, URL
+ * paragraph) so all land on the same unnumbered page.
+ */
+@page atlas-threshold {
+  @bottom-center { content: ''; }
+}
+h1#continue-to-the-atlas,
+h1#continue-to-the-atlas + p,
+h1#continue-to-the-atlas + p + p {
+  page: atlas-threshold;
+}
