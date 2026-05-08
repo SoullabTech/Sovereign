@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>QR · Atlas</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    :root {
+      --parchment: #F4EBDD;
+      --taupe: #5E544B;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: var(--taupe);
+      font-family: ui-serif, "Iowan Old Style", "Apple Garamond", "Baskerville", Georgia, serif;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 56px 32px 96px;
+    }
+    .frame {
+      background: var(--parchment);
+      padding: 56px;
+      border-radius: 2px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+      display: flex;
+      justify-content: center;
+    }
+    .frame img {
+      width: 320px;
+      height: 320px;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+    h1 { font-weight: 400; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; margin: 48px 0 8px; }
+    p  { font-size: 15px; line-height: 1.6; max-width: 56ch; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .meta { margin-top: 32px; font-size: 13px; opacity: 0.75; }
+    .meta dt { float: left; width: 9rem; opacity: 0.7; }
+    .meta dd { margin: 0 0 6px 0; }
+    .meta dd::after { content: ""; display: block; clear: both; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="frame">
+      <img src="qr-atlas.svg" alt="QR linking to https://soullab.life/atlas"/>
+    </div>
+    <h1>Soullab Press · Atlas</h1>
+    <p>Scan the mark above to verify it resolves to <code>https://soullab.life/atlas</code>. The same vector is used for print; the PNG export is provided only as a fallback for tools that require raster.</p>
+    <dl class="meta">
+      <dt>Encoding</dt><dd>Static · ECC level H (≈ 30% recovery)</dd>
+      <dt>Background</dt><dd>#F4EBDD</dd>
+      <dt>Foreground</dt><dd>#5E544B</dd>
+      <dt>Quiet zone</dt><dd>4 modules</dd>
+      <dt>Center mark</dt><dd>Holoflower glyph (within H-level tolerance)</dd>
+      <dt>Vector</dt><dd><a href="qr-atlas.svg">qr-atlas.svg</a></dd>
+      <dt>Raster</dt><dd><a href="qr-atlas.png">qr-atlas.png</a> · 3000px</dd>
+    </dl>
+  </main>
+</body>
+</html>

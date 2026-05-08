@@ -460,3 +460,64 @@ img.canonical-plate-img {
 .canonical-plate {
   page: plate;
 }
+
+/* ============================================================
+ * ATLAS THRESHOLD — single QR doorway in the back matter
+ * ============================================================
+ * Doctrine: one QR, at the end. Discovered, not promoted.
+ * Continuation, not augmentation. Structurally distinct from the
+ * canonical plate procession (different class, different role).
+ *
+ * The QR SVG is inlined at render time; the .atlas-qr container
+ * controls the displayed size. Restrained scale — the QR should
+ * feel like a quiet doorway, not a poster.
+ */
+.atlas-threshold {
+  page-break-before: always;
+  break-before: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  page: plate; /* shares the no-footer rule with canonical plates */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.atlas-threshold .atlas-heading {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 13pt;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: #555;
+  margin: 0 0 0.7in 0;
+  page-break-after: avoid;
+}
+
+.atlas-threshold .atlas-qr {
+  width: 1.6in;
+  height: 1.6in;
+  margin: 0;
+  page-break-inside: avoid;
+}
+
+.atlas-threshold .atlas-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.atlas-threshold .atlas-url {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 9.5pt;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: #777;
+  margin: 0.55in 0 0 0;
+  text-indent: 0;
+  page-break-before: avoid;
+}

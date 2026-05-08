@@ -106,7 +106,29 @@ export async function POST() {
   if (!bodyMatch) {
     return fail({ step: 'pandoc-extract', message: 'pandoc output missing <body>' });
   }
-  const bodyHtml = bodyMatch[1];
+  let bodyHtml = bodyMatch[1];
+
+  // ── 2b. Append Atlas threshold (back matter only) ──────────────────
+  // Single QR code at the very end of the back matter. Doctrine:
+  // discovered-not-promoted, continuation-not-augmentation, no
+  // marketing language, no "scan here", no platform energy. The
+  // physical book remains sovereign; the QR is one quiet doorway.
+  // Class is .atlas-threshold (NOT .canonical-plate) — structurally
+  // distinct from the F00–F09 plate procession.
+  // SVG is inlined raw at render time so it bypasses URL resolution
+  // entirely (sibling of the data-URI plate strategy below).
+  const QR_SVG_PATH = path.join(REPO_ROOT, 'public', 'book-studio', 'qr', 'qr-atlas.svg');
+  const qrSvgInline = fs.existsSync(QR_SVG_PATH) ? fs.readFileSync(QR_SVG_PATH, 'utf-8') : '';
+  if (qrSvgInline) {
+    bodyHtml += `
+<section class="atlas-threshold" role="region" aria-label="Continue to the Atlas">
+  <h2 class="atlas-heading">Continue to the Atlas</h2>
+  <div class="atlas-qr">${qrSvgInline}</div>
+  <p class="atlas-url">soullab.life/atlas</p>
+</section>`;
+  } else {
+    console.warn('[BookStudio/Render] QR SVG missing at', QR_SVG_PATH, '— Atlas threshold omitted');
+  }
 
   // ── 3. Wrap with print template ───────────────────────────────────
   const css = fs.readFileSync(CSS_PATH, 'utf-8');
