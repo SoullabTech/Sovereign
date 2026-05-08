@@ -11,6 +11,8 @@ const statusBadge: Record<string, { label: string; className: string }> = {
 };
 
 export function PortfolioSection() {
+  const helperTools = PORTFOLIO_PROJECTS.filter(p => p.group === 'helper-tools');
+
   return (
     <section id="portfolio" className="relative py-24 sm:py-32 px-4 bg-maia-navy-950">
       <div className="max-w-6xl mx-auto">
@@ -21,13 +23,24 @@ export function PortfolioSection() {
           >
             Powered by Soullab
           </h2>
-          <p className="text-white/40 text-center text-sm tracking-widest uppercase mb-16">
-            Sites and systems we&rsquo;ve built
-          </p>
+          <div
+            className="max-w-2xl mx-auto mb-16 text-center space-y-4"
+            style={{ fontFamily: "'Crimson Pro', serif" }}
+          >
+            <p className="text-white/70 text-lg sm:text-xl font-light italic">
+              Built from inside the work.
+            </p>
+            <p className="text-white/55 text-base sm:text-lg leading-relaxed font-light">
+              Studios we needed in our own practice — now opened for other practitioners, teachers, writers, and guides who should not have to rent their craft, relationships, or intellectual life from extractive platforms.
+            </p>
+            <p className="text-white/65 text-base sm:text-lg font-light tracking-wide">
+              Sovereign tools. Human-scale economics. Fully yours.
+            </p>
+          </div>
         </SectionReveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PORTFOLIO_PROJECTS.map((project, i) => {
+          {helperTools.map((project, i) => {
             const badge = statusBadge[project.status];
             return (
               <SectionReveal key={project.slug} delay={0.08 * (i + 1)}>

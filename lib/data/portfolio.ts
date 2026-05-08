@@ -6,6 +6,7 @@ export interface PortfolioProject {
   status: 'live' | 'development' | 'idea';
   accent: string;
   tags: string[];
+  group?: 'sites' | 'helper-tools';
 }
 
 export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
@@ -17,6 +18,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'live',
     accent: '#D4A574',
     tags: ['Astro', 'AI Guide', 'Craft'],
+    group: 'sites',
   },
   {
     name: 'Rudeboy Baking Co.',
@@ -26,6 +28,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'live',
     accent: '#FF8C42',
     tags: ['Astro', 'Operations', 'Food'],
+    group: 'sites',
   },
   {
     name: 'JL Master Handyman',
@@ -35,6 +38,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'live',
     accent: '#4A7BA7',
     tags: ['Astro', 'Services', 'Local'],
+    group: 'sites',
   },
   {
     name: 'Loralee Starweaver',
@@ -44,15 +48,17 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'live',
     accent: '#6A4C93',
     tags: ['Portal', 'Voice', 'Astrology'],
+    group: 'sites',
   },
   {
-    name: 'Elemental Alchemy',
+    name: 'Elemental Alchemy — Audiobook',
     slug: 'elemental-alchemy',
     domain: 'https://elementalalchemy.soullab.life',
     description: 'Interactive audiobook experience with elemental navigation and immersive design.',
     status: 'live',
     accent: '#6A4C93',
     tags: ['Audiobook', 'Interactive', 'Education'],
+    group: 'sites',
   },
   {
     name: 'White-Label Demo',
@@ -62,6 +68,27 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     status: 'live',
     accent: '#14b8a6',
     tags: ['Demo', 'Platform', 'White-Label'],
+    group: 'sites',
+  },
+  {
+    name: 'Pro Studio',
+    slug: 'studio',
+    domain: 'https://soullab.life/studio',
+    description: 'Practitioner workspace for sessions, reflections, continuity, and relational care — designed to support the real work of helping people without platform bloat or subscription exhaustion.',
+    status: 'live',
+    accent: '#5C8B95',
+    tags: ['Practitioner', 'Sessions', 'Continuity'],
+    group: 'helper-tools',
+  },
+  {
+    name: 'Book Studio',
+    slug: 'book-studio',
+    domain: 'https://soullab.life/book-studio/read',
+    description: 'A sovereign publishing and reading studio for authors, teachers, and independent presses. Read Flow opens into living works like Elemental Alchemy; Canvas supports members publishing works fully their own.',
+    status: 'development',
+    accent: '#F0B95C',
+    tags: ['Soullab Press', 'Reading', 'Publishing'],
+    group: 'helper-tools',
   },
 ];
 
@@ -117,6 +144,11 @@ export const INNOVATIONS: Innovation[] = [
     description: 'Conversations unfold through a relational sequence that helps MAIA recognize what kind of response is needed next — attunement, clarification, reflection, or forward movement.',
     category: 'core-intelligence',
   },
+  {
+    title: 'AIN Relational Field Intelligence',
+    description: 'The intelligence beneath relating — a field-level awareness that holds turns, sessions, and emerging spaces in coherent relation, prior to any specific feature or response. The condition that makes everything else possible.',
+    category: 'core-intelligence',
+  },
   // — Relational Safety —
   {
     title: 'Relational Safeguards',
@@ -139,6 +171,11 @@ export const INNOVATIONS: Innovation[] = [
     description: 'A governing developmental framework helps MAIA stay oriented to process, pacing, and human complexity so responses remain coherent, grounded, and evolution-sensitive.',
     category: 'developmental-continuity',
   },
+  {
+    title: 'MAIA Mentor',
+    description: 'MAIA walks members through the full arc of their work — idea, development, design, distribution — without becoming the author of it. Continuous mentorship across stages, not a one-shot assistant.',
+    category: 'developmental-continuity',
+  },
   // — Knowledge & Modality —
   {
     title: 'Knowledge Field',
@@ -148,6 +185,11 @@ export const INNOVATIONS: Innovation[] = [
   {
     title: 'Care Lens System',
     description: 'MAIA can interpret the same moment through different care lenses — therapeutic, developmental, symbolic, practical, or spiritual — so the response matches the real need of the exchange.',
+    category: 'knowledge-modality',
+  },
+  {
+    title: 'Relational Context Bridge',
+    description: 'The lens you brought in the morning is still present in the evening. MAIA stabilizes a way of seeing across turns and across surfaces, so members don’t have to re-explain themselves to be understood.',
     category: 'knowledge-modality',
   },
   // — Infrastructure —
