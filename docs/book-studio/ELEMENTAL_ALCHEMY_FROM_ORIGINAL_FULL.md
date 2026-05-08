@@ -12,6 +12,8 @@ Hamden, Connecticut
 
 For Andrea, Sophie, and Augusten —
 
+In honor of my sister, Karen.
+
 ---
 
 ## Disclaimer
