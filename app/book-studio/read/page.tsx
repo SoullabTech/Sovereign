@@ -1,5 +1,4 @@
 import StudioMarkdown from '../_lib/StudioMarkdown';
-import Frontispiece from '../_lib/Frontispiece';
 
 export const metadata = {
   title: 'Read Flow · The Book Studio',
@@ -65,9 +64,8 @@ export default function ReadFlowPage() {
         </p>
       </div>
 
-      {/* Cosmogram — orientation chamber inside the book, not website hero */}
-      <Frontispiece />
-
+      {/* Cosmogram now lives inside the manuscript at the Preface threshold,
+          so it does not compete with the cover and metadata at the top. */}
       <StudioMarkdown file="ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md" />
     </div>
   );

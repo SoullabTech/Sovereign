@@ -109,6 +109,8 @@ Additional Resources
 
 ---
 
+![Cosmogram — orientation chamber](/book-studio/figures/F00-cosmogram.png)
+
 # Preface
 
 *"Once upon a time, I, Zhuangzi, was unconscious of my individuality as a man. Suddenly, I awoke, and there I lay, myself again. Now I do not know whether I was then a man dreaming I was a butterfly, or whether I am now a butterfly, dreaming I am a man. Between a man and a butterfly, there is a barrier. The transition is called Metempsychosis, or the transmigration of the soul." – Zhuangzi*
