@@ -1,5 +1,24 @@
 # Elemental Chapter Openers (Ch 5–9) — Pass v1
 
+> **REVISED 2026-05-08 — full alchemical procession canonized.**
+>
+> The four-plate lock (F00, F05, F09, F11) below applied to a prior state of the suite, when only Fire and Aether plates had matured and Water/Earth/Air still risked photographic-infill drift. The suite has since evolved into a **coherent six-plate alchemical procession**:
+>
+> 1. **F00** Cosmogram — field orientation
+> 2. **F05** Calcinatio — Fire / illumination
+> 3. **F06** Solutio — Water / dissolution
+> 4. **F07** Coagulatio — Earth / stabilization
+> 5. **F08** Sublimatio — Air / elevation
+> 6. **F09** Conjunctio — Aether / integration
+>
+> Each plate now carries its operation as geometry (not element appearance) within a unified visual language. F06/F07/F08 step **up** into plate status; the four-plate lock is superseded.
+>
+> The "operation as geometry, never element's appearance" rule below still holds for all six plates.
+>
+> Read Flow at `/book-studio/read` places all six as structural thresholds: F00 as frontispiece (after cover + metadata), F05–F09 at the openings of Chapters 5–9. F11 (Return) remains out of scope until authored.
+
+---
+
 **Source:** Chapter openers for Fire (Ch5), Water (Ch6), Earth (Ch7), Air (Ch8), Aether (Ch9).
 
 **Scope:** Opening pages only. Chapter bodies unchanged.

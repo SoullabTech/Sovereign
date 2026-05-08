@@ -22,26 +22,52 @@ export const dynamic = 'force-dynamic';
 export default function ReadFlowPage() {
   return (
     <div>
-      <header className="mb-10">
-        <div className="flex items-center gap-2 mb-2">
-          <img
-            src="/holoflower-amber.png"
-            alt=""
-            aria-hidden="true"
-            className="w-4 h-4 block opacity-70"
-          />
-          <p className="text-amber-200/40 text-[11px] tracking-[0.25em] uppercase">
-            The Book Studio
-          </p>
-        </div>
-        <h1 className="text-amber-100/90 text-2xl md:text-3xl font-light tracking-wide">
-          Read Flow
-        </h1>
-        <p className="text-amber-200/45 text-sm font-light italic mt-1">
-          Elemental Alchemy — continuous prose, sealed source.
+      {/* Platform eyebrow — Soullab Press / Read Flow surface */}
+      <header className="mb-10 text-center">
+        <img
+          src="/holoflower-amber.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className="mx-auto w-14 h-14 md:w-16 md:h-16 mb-3 opacity-75 select-none"
+        />
+        <p className="text-amber-200/40 text-[10px] md:text-[11px] tracking-[0.3em] uppercase">
+          Soullab Press &middot; Read Flow
         </p>
       </header>
+
+      {/* Cover threshold — entering the book object */}
+      <div className="my-12 md:my-16 flex justify-center">
+        <img
+          src="/book-studio/elemental-alchemy-cover.jpg"
+          alt="Elemental Alchemy — front cover"
+          draggable={false}
+          className="block w-full max-w-xs md:max-w-sm rounded-md shadow-2xl ring-1 ring-amber-200/15 select-none"
+        />
+      </div>
+
+      {/* Book metadata — title, subtitle, author */}
+      <div className="mb-16 md:mb-20 text-center space-y-2">
+        <h1
+          className="text-amber-100/95 text-3xl md:text-4xl font-light tracking-wide"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          Elemental Alchemy
+        </h1>
+        <p
+          className="text-amber-200/55 text-sm md:text-base italic font-light tracking-wide"
+          style={{ fontFamily: "'Crimson Pro', serif" }}
+        >
+          The Art of Living a Phenomenal Life
+        </p>
+        <p className="text-amber-200/45 text-xs md:text-sm tracking-[0.2em] uppercase pt-1">
+          by Kelly W. Nezat
+        </p>
+      </div>
+
+      {/* Cosmogram — orientation chamber inside the book, not website hero */}
       <Frontispiece />
+
       <StudioMarkdown file="ELEMENTAL_ALCHEMY_FROM_ORIGINAL_FULL.md" />
     </div>
   );
