@@ -112,27 +112,7 @@ export async function POST() {
   }
   let bodyHtml = bodyMatch[1];
 
-  // ── 2b. Append Arendt threshold leaf (back matter, before Atlas) ──
-  // A single contemplative aperture between the manuscript body and
-  // the Atlas doorway. Sibling to .atlas-threshold — same render-
-  // architecture layer, same page: plate discipline (footer suppressed),
-  // distinct class so each threshold owns its own visual register.
-  // Two voices, separated by breath:
-  //   .threshold-leaf-quote      → Arendt (italic, attributed)
-  //   .threshold-leaf-reflection → Kelly (upright, distinct register)
-  // Not in the editorial manuscript — this is page architecture, not
-  // book content. No TOC entry (never enters pandoc), no Conclusion
-  // disruption, no Additional Resources displacement.
-  bodyHtml += `
-<section class="threshold-leaf threshold-leaf--arendt" role="region" aria-label="Reflection on flourishing">
-  <blockquote class="threshold-leaf-quote">
-    <p>&ldquo;The ultimate end of human acts is eudaimonia, happiness in the sense of living well&hellip;&rdquo;</p>
-    <cite class="threshold-leaf-cite">&mdash; Hannah Arendt, paraphrasing Aristotle</cite>
-  </blockquote>
-  <p class="threshold-leaf-reflection">Beyond the pursuit of happiness is the desire for &mdash; and the attainment of &mdash; a flourishing that becomes possible when the daimon, our inner guide, and the elements enter a living rhythm together.</p>
-</section>`;
-
-  // ── 2c. Append Atlas threshold (back matter, final doorway) ────────
+  // ── 2b. Append Atlas threshold (back matter, final doorway) ────────
   // Single QR code at the very end of the back matter. Doctrine:
   // discovered-not-promoted, continuation-not-augmentation, no
   // marketing language, no "scan here", no platform energy. The
