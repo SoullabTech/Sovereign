@@ -25,6 +25,11 @@ const MODE_CONFIG: Record<MaiaMode, { label: string; icon: typeof MessageCircle;
   session: { label: 'Note', icon: PenLine,       activeColor: 'text-[#A0B4C8]',  activeBg: 'bg-[#A0B4C8]/25',  activeBorder: 'border-[#A0B4C8]/70'  },
 };
 
+// Phase 1 first-delivery awake set — capture/immediate-self stratum only.
+// All other worlds and boundaries receive sleeping treatment (~35% opacity) when not active.
+// See docs/canon/MAIA_RELATIONAL_ARCHITECTURE.md.
+const AWAKE_WORLDS: readonly MaiaWorldId[] = ['maia', 'journal'] as const;
+
 interface MaiaLeftRailProps {
   activeWorld: MaiaWorldId | null;
   calmMode: boolean;
@@ -208,7 +213,10 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
         {MAIA_WORLDS.flatMap((world) => {
           const Icon = world.icon;
           const isActive = activeWorld === world.id;
-          const hasHint = !isActive && worldHints?.[world.id];
+          const isAwake = AWAKE_WORLDS.includes(world.id as MaiaWorldId);
+          const isSleeping = !isAwake && !isActive;
+          // Sleeping worlds suppress hints — hints are a form of wake-logic that hasn't been earned yet.
+          const hasHint = !isActive && !isSleeping && worldHints?.[world.id];
 
           const worldButton = (
             <button
@@ -216,6 +224,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
               onClick={() => handleItemClick(world.id, world.route)}
               className={`
                 group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${isSleeping ? 'opacity-[0.35] hover:opacity-100' : ''}
                 ${isActive
                   ? 'bg-[#D4B896]/15 text-[#D4B896]'
                   : hasHint
@@ -247,10 +256,11 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
             </button>
           );
 
-          // Capture sits as a pre-interpretive intake threshold, just above Ideas.
-          // Raw intake precedes formed exploration: jot, save, hold → then work.
-          if (world.id === 'ideas') {
+          // Capture follows Journal as a paired immediate-self surface.
+          // Capture is member-authored intake, not interpretation — it stays awake alongside Journal.
+          if (world.id === 'journal') {
             return [
+              worldButton,
               <button
                 key="capture"
                 onClick={() => onCaptureSpirit?.()}
@@ -262,7 +272,6 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
                   Capture
                 </span>
               </button>,
-              worldButton,
             ];
           }
 
@@ -291,6 +300,7 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
               onClick={() => handleItemClick(boundary.id, boundary.route)}
               className={`
                 group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200
+                ${!isActive ? 'opacity-[0.35] hover:opacity-100' : ''}
                 ${isActive
                   ? `${accent.activeBg} ${accent.text}`
                   : `text-stone-500 ${accent.hover}`
