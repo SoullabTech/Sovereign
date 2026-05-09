@@ -86,6 +86,17 @@ figure + p {
   margin-top: 1em;
 }
 
+/* Front matter sections each open on their own page (Pass 1 — Proof
+ * Architecture). Pandoc gives each `## Heading` a deterministic id from
+ * the heading text; these four ids are unique to the front matter.
+ * Pass 2 will refine into recto/verso ceremonial discipline. */
+#dedication,
+#disclaimer,
+#permissions,
+#contents {
+  page-break-before: always;
+}
+
 /* ============================================================
  * HEADINGS
  * ============================================================ */
