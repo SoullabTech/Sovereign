@@ -3,7 +3,7 @@
 
 Kelly Nezat
 
-Soullab Media
+Soullab Media\
 Hamden, Connecticut
 
 ---
