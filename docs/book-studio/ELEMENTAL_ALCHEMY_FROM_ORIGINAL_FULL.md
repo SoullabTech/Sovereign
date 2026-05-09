@@ -2881,3 +2881,11 @@ To further enhance your journey, a companion collection of worksheets, practices
 **[soullab.life](http://soullab.life)**
 
 This page is updated continuously to reflect new tools and resources supporting the elemental alchemy journey.
+
+<section class="closing-meditation" role="region" aria-label="Closing meditation">
+  <blockquote class="closing-quote">
+    <p>"The ultimate end of human acts is eudaimonia, happiness in the sense of living well…"</p>
+  </blockquote>
+  <p class="closing-attribution">— Hannah Arendt, reflecting on Aristotelian thought</p>
+  <p class="closing-reflection">Beyond the pursuit of happiness is the desire for — and attainment of — a flourishing that becomes possible when the daimon, our inner guide, and the elements enter a living rhythm together.</p>
+</section>
