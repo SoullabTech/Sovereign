@@ -83,9 +83,13 @@ export async function POST() {
         // (--syntax-highlighting=none was Pandoc 3.x only — production
         // runs Pandoc 2.17 from Debian Bookworm apt, which rejected it.)
         '--no-highlight',
-        '--toc',
-        '--toc-depth=3',
-        '-V', 'toc-title=',
+        // No --toc: the manuscript has a curated Contents section under
+        // `# Contents` that is the canonical TOC for this book. Pandoc's
+        // auto-TOC duplicates and bloats it (depth=3 includes every front-
+        // matter h2 and chapter sub-heading), and places the auto-TOC at
+        // document head — *before* front matter — which breaks book
+        // structure. The render pipeline trusts the editorial sequence
+        // in the manuscript.
         '--lua-filter', path.join(REPO_ROOT, 'lib/manuscript/render/canonical-plates.lua'),
       ],
       { maxBuffer: 256 * 1024 * 1024, encoding: 'utf-8' },
