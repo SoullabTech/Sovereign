@@ -521,13 +521,6 @@ img.canonical-plate-img {
   text-align: center;
   margin: 0;
   padding: 0;
-  /* Min-height fills the @page plate usable area (9" trim − 0.25" × 2
-   * margin = 8.5") so flex `justify-content: center` actually centers
-   * vertically. Without this, the flex container collapses to content
-   * height and the threshold leaf top-aligns. The doctrine intends a
-   * contemplative aperture suspended in the middle, with silence
-   * above and below. */
-  min-height: 8.5in;
 }
 
 .closing-meditation .closing-quote {
