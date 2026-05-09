@@ -627,3 +627,81 @@ img.canonical-plate-img {
   text-indent: 0;
   page-break-before: avoid;
 }
+
+/* ============================================================
+ * THRESHOLD LEAF — contemplative aperture in the back matter
+ * ============================================================
+ * A single full-page page-architecture surface between the
+ * manuscript body and the Atlas doorway. Sibling to
+ * .atlas-threshold (shared page: plate footer suppression,
+ * shared full-page flex centering), distinct visual register:
+ * two voices separated by breath, not a heading + glyph + url.
+ *
+ *   .threshold-leaf-quote       → quoted voice (Arendt)
+ *     .threshold-leaf-cite      → attribution
+ *   .threshold-leaf-reflection  → Kelly's voice
+ *
+ * Restrained measure (max-width below page width) so the lines
+ * read as meditation rather than wall-of-text. The two voices
+ * are typographically distinguished — italic quote vs upright
+ * reflection — and separated by ~0.55in of breath.
+ */
+.threshold-leaf {
+  page-break-before: always;
+  break-before: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  page: plate; /* shares the no-footer rule with canonical plates */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.threshold-leaf-quote {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 12pt;
+  font-style: italic;
+  font-weight: 400;
+  color: #444;
+  line-height: 1.55;
+  max-width: 4.2in;
+  margin: 0;
+  padding: 0;
+  border: none;
+  page-break-after: avoid;
+}
+
+.threshold-leaf-quote p {
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+}
+
+.threshold-leaf-cite {
+  display: block;
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 9.5pt;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #888;
+  margin: 0.35in 0 0 0;
+  page-break-before: avoid;
+}
+
+.threshold-leaf-reflection {
+  font-family: 'EB Garamond', Garamond, serif;
+  font-size: 11pt;
+  font-style: normal;
+  font-weight: 400;
+  color: #333;
+  line-height: 1.6;
+  max-width: 4.2in;
+  margin: 0.7in 0 0 0;
+  text-indent: 0;
+  page-break-before: avoid;
+}
