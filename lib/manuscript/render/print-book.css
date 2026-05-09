@@ -457,9 +457,9 @@ nav#TOC a::after {
 .canonical-plate img,
 img.canonical-plate-img {
   display: block;
-  margin: 0.25in auto;         /* minimal vertical breath — plate dominates the page */
-  max-width: 5.5in;            /* fills page within KDP no-bleed safety (6" trim − 0.25" each side) */
-  max-height: 8.5in;           /* fills page height within safety (9" trim − 0.25" each side) */
+  margin: 0 auto;              /* plate fills the page within @page plate margins */
+  max-width: 5.5in;            /* full text-width within KDP no-bleed safety */
+  max-height: 8.5in;           /* full text-height within KDP no-bleed safety */
   height: auto;
   filter: grayscale(100%);
   page-break-inside: avoid;
@@ -478,14 +478,19 @@ img.canonical-plate-img {
 }
 
 /* Suppress page numbers on plate pages — thresholds are unnumbered —
- * AND override the binding-gutter asymmetry so the plate centers on
- * the physical page, not on the offset text frame. The book uses
- * inside 0.9" / outside 0.6" margins for body pages (binding gutter);
- * plates are threshold objects, not body content, so symmetric margins
- * are correct. Without this, recto plates appear shifted right and
- * verso plates appear shifted left. */
+ * AND tighten margins to KDP no-bleed safety (0.25") so doorway plates
+ * fill the page edge-to-edge. The body @page rules use 0.6"/0.9"
+ * binding-gutter margins; plates are threshold objects, not body
+ * content, so symmetric tight margins are correct.
+ *
+ * Why 0.25": KDP requires content stay 0.25" inside trim for no-bleed.
+ * Page = 6"×9", so usable area = 5.5"×8.5". Plates have aspect ~1.5
+ * (1023×1537) — at 5.5" wide they render at 8.26" tall, just under
+ * the 8.5" available. The previous 0.75" margins (7.5" available
+ * height) caused F05–F09 to overflow and render blank under
+ * page-break-inside: avoid. */
 @page plate {
-  margin: 0.75in 0.75in 0.75in 0.75in;
+  margin: 0.25in 0.25in 0.25in 0.25in;
   @bottom-center { content: ''; }
 }
 .canonical-plate {
