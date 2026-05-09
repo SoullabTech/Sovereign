@@ -55,13 +55,18 @@ body {
   font-family: 'EB Garamond', Garamond, 'Adobe Garamond Pro', 'Garamond Premier Pro', serif;
   font-size: 11pt;
   line-height: 1.4;
-  text-align: justify;
-  hyphens: auto;
-  -webkit-hyphens: auto;
+  /* Ragged-right (left-aligned) prioritizes readability and flow
+   * over justified block-shape — aligned with the book's
+   * contemplative register. Hyphens off so line ends stay clean.
+   * Restraint: line-height and size unchanged from prior justified
+   * setting — only the forced compression is removed. */
+  text-align: left;
+  hyphens: none;
+  -webkit-hyphens: none;
   color: #111;
 }
 
-/* Paragraphs: justified, first-line indent, no extra space */
+/* Paragraphs: left-aligned, first-line indent, no extra space */
 p {
   margin: 0;
   text-indent: 0.2in;
