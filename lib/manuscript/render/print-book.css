@@ -55,13 +55,18 @@ body {
   font-family: 'EB Garamond', Garamond, 'Adobe Garamond Pro', 'Garamond Premier Pro', serif;
   font-size: 11pt;
   line-height: 1.4;
-  text-align: justify;
-  hyphens: auto;
-  -webkit-hyphens: auto;
+  /* Ragged-right (left-aligned) prioritizes readability and flow
+   * over justified block-shape — aligned with the book's
+   * contemplative register. Hyphens off so line ends stay clean.
+   * Restraint: line-height and size unchanged from prior justified
+   * setting — only the forced compression is removed. */
+  text-align: left;
+  hyphens: none;
+  -webkit-hyphens: none;
   color: #111;
 }
 
-/* Paragraphs: justified, first-line indent, no extra space */
+/* Paragraphs: left-aligned, first-line indent, no extra space */
 p {
   margin: 0;
   text-indent: 0.2in;
@@ -89,10 +94,42 @@ figure + p {
   text-indent: 0;
 }
 
-/* Dedication: each dedicatory line gets its own breath, no prose indent */
-#dedication + p + p {
+/* Title page: byline + publisher centered under the title axis.
+ * h1 + h2 inherit centering from heading rules; the following
+ * paragraphs need explicit centering and indent removal so the
+ * whole title page reads as a coherent centered axis. */
+h2#the-art-of-living-a-phenomenal-life + p,
+h2#the-art-of-living-a-phenomenal-life + p + p {
+  text-align: center;
   text-indent: 0;
-  margin-top: 1em;
+}
+
+/* Publisher block: subordinate to byline (smaller, soft grey,
+ * slight tracking) — classical title-page hierarchy. */
+h2#the-art-of-living-a-phenomenal-life + p + p {
+  margin-top: 1.8em;
+  font-size: 10pt;
+  color: #555;
+  letter-spacing: 0.04em;
+}
+
+/* Dedication: centered dedicatory lines. First line normal;
+ * second line (in-honor) in soft italic — traditional in-memoriam
+ * treatment that distinguishes living dedicatees from honored
+ * memory. */
+h2#dedication + p {
+  text-align: center;
+  text-indent: 0;
+  font-size: 12pt;
+  margin-top: 0.6in;
+}
+
+#dedication + p + p {
+  text-align: center;
+  text-indent: 0;
+  margin-top: 1.5em;
+  font-style: italic;
+  color: #444;
 }
 
 /* Front matter sections each open on their own page (Pass 1 — Proof
@@ -161,10 +198,18 @@ h4 {
  * EPIGRAPHS
  * Italic-only paragraphs (markdown `*"…" — Author*` lines).
  *
- * The `.epigraph` class is added at render time by render-book-print.ts
- * post-processing — only paragraphs whose entire content is a single
- * `<em>` get the class. Mixed paragraphs (plain prose with one inline
- * italic citation) do NOT get this treatment.
+ * Two paths exist:
+ *
+ * 1. p.epigraph — added post-render by the legacy script
+ *    scripts/render-book-print.ts. The production API renderer
+ *    (app/api/book-studio/render/route.ts) does NOT apply this
+ *    class. These rules remain in place for the legacy script.
+ *
+ * 2. p:has(> em:only-child) — production-side detection of
+ *    italic-only paragraphs via CSS. Renders epigraphs as a
+ *    quiet pause: left-aligned italic, breath above and below,
+ *    slightly smaller. The next paragraph drops its first-line
+ *    indent so the body resumes cleanly under the quote.
  * ============================================================ */
 
 p.epigraph {
@@ -178,6 +223,26 @@ p.epigraph {
 
 p.epigraph > em {
   font-style: italic;
+}
+
+/* Production epigraph detection: any paragraph whose only child
+ * is a single <em> is treated as an epigraph. Quiet pause —
+ * not ceremonial. Left-aligned, italic, breath above and below. */
+p:has(> em:only-child) {
+  font-style: italic;
+  font-size: 10.5pt;
+  text-align: left;
+  text-indent: 0;
+  margin: 14pt 0 18pt 0;
+  line-height: 1.4;
+  color: #333;
+}
+
+/* Paragraph immediately after an epigraph: no first-line indent.
+ * The epigraph functions like a heading-adjacent element; the
+ * body resumes flush left, not under an awkward indent. */
+p:has(> em:only-child) + p {
+  text-indent: 0;
 }
 
 /* ============================================================
@@ -326,6 +391,19 @@ ul, ol {
 
 li {
   margin: 0 0 4pt 0;
+}
+
+/* Bibliography list items: left-align, no justification.
+ * Body text-align: justify creates "rivers" of white space on
+ * short bibliographic entries (e.g., "Sun Tzu. The Art of War.")
+ * and on the last line of long entries (e.g., dates pushed to
+ * the right margin). Bibliographies follow a different
+ * typographic discipline from body prose — left-align with
+ * hyphenation off is the classical standard. */
+h1#bibliography ~ ul li {
+  text-align: left;
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 /* ============================================================
