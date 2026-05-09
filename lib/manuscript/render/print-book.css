@@ -574,7 +574,13 @@ img.canonical-plate-img {
  * Restrained measure (max-width below page width) so the lines
  * read as meditation rather than wall-of-text. The two voices
  * are typographically distinguished — italic quote vs upright
- * reflection — and separated by ~0.55in of breath.
+ * reflection — and separated by 0.85in of breath.
+ *
+ * Visual specs match PR #314's .closing-meditation values (the
+ * "absolutely beautiful" page Kelly approved). Architecture is
+ * Option A render-injection; the visual rhythm is the one that
+ * landed in PR #314. No min-height — content top-loads with
+ * silence flowing below into the Atlas threshold.
  */
 .threshold-leaf {
   page-break-before: always;
@@ -596,9 +602,9 @@ img.canonical-plate-img {
   font-size: 12pt;
   font-style: italic;
   font-weight: 400;
-  color: #444;
+  color: #333;
   line-height: 1.55;
-  max-width: 4.2in;
+  max-width: 4.5in;
   margin: 0;
   padding: 0;
   border: none;
@@ -614,12 +620,12 @@ img.canonical-plate-img {
 .threshold-leaf-cite {
   display: block;
   font-family: 'EB Garamond', Garamond, serif;
-  font-size: 9.5pt;
+  font-size: 10pt;
   font-style: italic;
   font-weight: 400;
   letter-spacing: 0.04em;
-  color: #888;
-  margin: 0.35in 0 0 0;
+  color: #777;
+  margin: 0.45in 0 0 0;
   page-break-before: avoid;
 }
 
@@ -630,8 +636,8 @@ img.canonical-plate-img {
   font-weight: 400;
   color: #333;
   line-height: 1.6;
-  max-width: 4.2in;
-  margin: 0.7in 0 0 0;
+  max-width: 4.5in;
+  margin: 0.85in 0 0 0;
   text-indent: 0;
   page-break-before: avoid;
 }
