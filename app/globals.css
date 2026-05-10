@@ -952,6 +952,48 @@
   padding-left: 1.5rem;
 }
 
+/*  Epigraph paragraphs — italic-only paragraphs (markdown `*"…" — Author*`).
+    Mirrors print register: quiet pause with breath above and below, slightly
+    smaller and softer than body. Uses :has() to detect single-em paragraphs
+    automatically, so any `*…*` epigraph in the manuscript is styled without
+    manual class tagging. The body paragraph immediately after gets a tighter
+    top margin so the body resumes cleanly under the quote. */
+.studio-prose p:has(> em:only-child) {
+  font-size: 0.95em;
+  line-height: 1.55;
+  color: rgba(254, 243, 199, 0.66);
+  margin: 1.6em 0 1.8em 0;
+  max-width: 38em;
+}
+
+.studio-prose p:has(> em:only-child) > em {
+  color: inherit; /* override the amber em color so epigraphs read calmer */
+}
+
+.studio-prose p:has(> em:only-child) + p {
+  margin-top: 0;
+}
+
+/*  Title page — byline and publisher centered under the title axis.
+    Targets the first one or two paragraphs that follow the manuscript's
+    opening h1 ("Elemental Alchemy"). Subordinates the publisher block
+    (smaller, soft, slight tracking) — classical title-page hierarchy
+    matching the print register. */
+.studio-prose h1:first-child + p,
+.studio-prose h1:first-child + p + p,
+.studio-prose h1:first-child + h2 + p,
+.studio-prose h1:first-child + h2 + p + p {
+  text-align: center;
+}
+
+.studio-prose h1:first-child + p + p,
+.studio-prose h1:first-child + h2 + p + p {
+  font-size: 0.85em;
+  color: rgba(254, 243, 199, 0.55);
+  letter-spacing: 0.05em;
+  margin-top: 1.4em;
+}
+
 .studio-prose li {
   margin: 0.3em 0;
 }
