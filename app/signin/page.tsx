@@ -53,10 +53,12 @@ function SigninContent() {
     // Parse to confirm it's a real session, not corrupted data
     try { JSON.parse(betaUser); } catch { return; }
 
-    // Honor forced re-auth reason codes — don't skip signin for these
+    // If middleware put any auth reason on the URL, the server has already
+    // decided this user is not authenticated — stay on signin regardless of
+    // what stale localStorage claims. Prevents /signin ⇄ /maia flicker loops
+    // when beta_user persists past a missing/expired session cookie.
     const reason = getSearchParam('reason');
-    const forcedReauthReasons = ['invalid_session', 'expired_session', 'revoked_session'];
-    if (reason && forcedReauthReasons.includes(reason)) return;
+    if (reason) return;
 
     // Validate and use ?next= if present, otherwise go to /maia
     const next = getSearchParam('next');
