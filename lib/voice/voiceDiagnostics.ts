@@ -17,11 +17,30 @@
  */
 
 export type VoiceDiagEvent =
+  // Web path (Web Speech API, see components/voice/ContinuousConversation.tsx web branch)
   | 'voice_mic_granted'
   | 'voice_listening_started'
   | 'voice_transcribe_sent'
   | 'voice_transcribe_result'
-  | 'voice_transcribe_error';
+  | 'voice_transcribe_error'
+  // Native iOS path (@capacitor-community/speech-recognition)
+  // Naming follows "Observable state before interpreted meaning":
+  // we report what the plugin emitted, not what we think it meant.
+  //
+  // Note: this plugin only exposes three listeners (partialResults, audioLevel,
+  // listeningState) — there is no native "final result" event. We emit
+  // `ios_voice_final_result_received` when the app commits a partial as final
+  // (silence-timeout auto-submit). The metadata `source` field makes the
+  // origin explicit so analysts can tell observed from synthesized.
+  | 'ios_voice_permission_requested'
+  | 'ios_voice_permission_granted'
+  | 'ios_voice_permission_denied'
+  | 'ios_voice_listening_started'
+  | 'ios_voice_partial_result_received'
+  | 'ios_voice_final_result_received'
+  | 'ios_voice_result_empty'
+  | 'ios_voice_error'
+  | 'ios_voice_listening_stopped';
 
 type Meta = Record<string, string | number | boolean | null>;
 

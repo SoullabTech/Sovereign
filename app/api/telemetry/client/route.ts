@@ -19,11 +19,22 @@ export const runtime = 'nodejs';
 
 const ALLOWED_EVENTS = new Set([
   'redirect_loop_detected',
+  // Web voice path
   'voice_mic_granted',
   'voice_listening_started',
   'voice_transcribe_sent',
   'voice_transcribe_result',
   'voice_transcribe_error',
+  // Native iOS voice path (@capacitor-community/speech-recognition)
+  'ios_voice_permission_requested',
+  'ios_voice_permission_granted',
+  'ios_voice_permission_denied',
+  'ios_voice_listening_started',
+  'ios_voice_partial_result_received',
+  'ios_voice_final_result_received',
+  'ios_voice_result_empty',
+  'ios_voice_error',
+  'ios_voice_listening_stopped',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
