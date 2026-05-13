@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -354,6 +355,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log('✅ [ContinuousConversation] Registered with VoiceFeedbackPrevention');
 
     recognition.onstart = () => {
+      logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
@@ -397,6 +399,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     recognition.onresult = (event: any) => {
+      logVoiceEvent('voice_transcribe_result', {
+        resultCount: event.results?.length ?? 0,
+        isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
+      });
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
       // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
@@ -485,6 +491,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     recognition.onerror = (event: any) => {
+      logVoiceEvent('voice_transcribe_error', { error: String(event.error || 'unknown') });
       // Only log critical errors (not no-speech or aborted, which are common)
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         console.error('❌ [Continuous] Speech recognition error:', event.error);
@@ -1140,6 +1147,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
 
       micStreamRef.current = stream;
+      resetVoiceSession();
+      logVoiceEvent('voice_mic_granted', {
+        audioTracks: stream.getAudioTracks().length,
+        trackLabel: stream.getAudioTracks()[0]?.label?.slice(0, 80) ?? '',
+      });
 
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContext();
@@ -1206,12 +1218,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const perms = await NativeSpeechRecognition.checkPermissions();
       addDebug(`Perms: ${perms?.speechRecognition}`);
       console.log('🔐 [ensureNativeSpeechReady] Current perms:', perms);
+      if (perms?.speechRecognition === 'granted') {
+        logVoiceEvent('ios_voice_permission_granted', { source: 'already_granted' });
+      }
 
       if (perms?.speechRecognition !== 'granted') {
         // Request permissions (this covers both speech + mic on iOS)
         addDebug('Requesting permissions...');
         console.log('🔐 [ensureNativeSpeechReady] Requesting permissions NOW...');
+        logVoiceEvent('ios_voice_permission_requested');
         const req = await NativeSpeechRecognition.requestPermissions();
+        logVoiceEvent(
+          req?.speechRecognition === 'granted' ? 'ios_voice_permission_granted' : 'ios_voice_permission_denied',
+          { state: String(req?.speechRecognition || 'unknown'), source: 'fresh_request' }
+        );
         addDebug(`Req result: ${req?.speechRecognition}`);
         console.log('🔐 [ensureNativeSpeechReady] Permission result:', req);
 
@@ -1225,6 +1245,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       console.log('🔐 [ensureNativeSpeechReady] ✅ All permissions granted!');
       return { ok: true };
     } catch (e: any) {
+      logVoiceEvent('ios_voice_error', {
+        where: 'ensureNativeSpeechReady',
+        name: String(e?.name || 'UnknownError').slice(0, 60),
+      });
       addDebug(`❌ Error: ${e?.message || e}`);
       console.error('🔐 [ensureNativeSpeechReady] ❌ ERROR:', e);
       return { ok: false, reason: e?.message || String(e) };
@@ -1398,6 +1422,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
           if (data.matches && data.matches.length > 0) {
             const transcript = data.matches[0];
+            logVoiceEvent('ios_voice_partial_result_received', {
+              matchCount: data.matches.length,
+              transcriptLength: transcript.length,
+            });
             console.log('📝 [Native] Partial:', transcript);
             addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
             lastSpeechTime.current = Date.now();
@@ -1425,6 +1453,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             nativeSilenceTimerRef.current = setTimeout(() => {
               const finalTranscript = accumulatedTranscript.current.trim();
               if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
+                logVoiceEvent('ios_voice_final_result_received', {
+                  source: 'partial_silence_timeout_2500ms',
+                  transcriptLength: finalTranscript.length,
+                });
                 console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
                 addDebug('⏱️ Auto-submit (2.5s silence)');
                 accumulatedTranscript.current = '';
@@ -1438,6 +1470,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               nativeSilenceTimerRef.current = null;
             }, 2500); // 2.5s of no partials = end of speech
           } else {
+            logVoiceEvent('ios_voice_result_empty');
             addDebug('⚠️ partialResults fired but no matches');
           }
         });
@@ -1516,6 +1549,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 // Double-check we still have transcript
                 if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
                   const finalTranscript = accumulatedTranscript.current.trim();
+                  if (finalTranscript) {
+                    logVoiceEvent('ios_voice_final_result_received', {
+                      source: 'audio_level_silence_timeout_1500ms',
+                      transcriptLength: finalTranscript.length,
+                    });
+                  }
                   console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
                   accumulatedTranscript.current = '';
                   isProcessingRef.current = true;
@@ -1538,6 +1577,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Handle when speech ends - store listener reference for cleanup
         addDebug('📡 Setting up listeningState listener...');
         nativeStateListenerRef.current = await NativeSpeechRecognition.addListener('listeningState', async (state: { status: string }) => {
+          if (state.status === 'started') {
+            logVoiceEvent('ios_voice_listening_started', { status: state.status });
+          } else {
+            logVoiceEvent('ios_voice_listening_stopped', { status: state.status });
+          }
           console.log('🔊 [Native] State:', state.status);
           addDebug(`📻 listeningState: ${state.status}`);
           // 🔑 Update single source of truth for native status
@@ -1732,6 +1776,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           const errName = startError?.name || 'UnknownError';
           const errMsg = startError?.message || String(startError);
           const errCode = startError?.code || 'no-code';
+          logVoiceEvent('ios_voice_error', {
+            where: 'start',
+            attempt: 'popup_false',
+            name: errName.slice(0, 60),
+            code: errCode.slice(0, 60),
+          });
           console.error('❌ [ContinuousConversation] NativeSpeechRecognition.start() FAILED:', startError);
           console.error('❌ [ContinuousConversation] Error details:', JSON.stringify(startError, null, 2));
           addDebug(`❌ start() FAILED: ${errName}`);
@@ -1752,6 +1802,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             console.log('✅ [ContinuousConversation] Retry with popup: true succeeded!');
             addDebug('✅ Retry succeeded!');
           } catch (retryError: any) {
+            logVoiceEvent('ios_voice_error', {
+              where: 'start',
+              attempt: 'popup_true_retry',
+              name: String(retryError?.name || 'UnknownError').slice(0, 60),
+              code: String(retryError?.code || 'no-code').slice(0, 60),
+            });
             console.error('❌ [ContinuousConversation] Retry also FAILED:', retryError);
             addDebug(`❌ Retry failed: ${retryError?.message || retryError}`);
             throw retryError;

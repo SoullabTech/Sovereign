@@ -1,0 +1,89 @@
+/**
+ * Voice diagnostic events — client-side, fire-and-forget.
+ *
+ * Captures the four boundaries that fail silently on Android Chrome (and
+ * potentially other browsers) so we can diagnose "mic granted, but no
+ * conversation" issues without bothering the user for repro.
+ *
+ *   voice_mic_granted        — getUserMedia resolved
+ *   voice_listening_started  — recognition/recorder reports it's listening
+ *   voice_transcribe_sent    — audio dispatched to transcription path
+ *   voice_transcribe_result  — transcription returned (any text, even empty)
+ *   voice_transcribe_error   — transcription failed
+ *
+ * No conversation content is logged — only technical metadata (UA, codec,
+ * duration, error name). Fires to /api/telemetry/client which logs to
+ * `docker logs maia-sovereign` (no DB table until volume justifies one).
+ */
+
+export type VoiceDiagEvent =
+  // Web path (Web Speech API, see components/voice/ContinuousConversation.tsx web branch)
+  | 'voice_mic_granted'
+  | 'voice_listening_started'
+  | 'voice_transcribe_sent'
+  | 'voice_transcribe_result'
+  | 'voice_transcribe_error'
+  // Native iOS path (@capacitor-community/speech-recognition)
+  // Naming follows "Observable state before interpreted meaning":
+  // we report what the plugin emitted, not what we think it meant.
+  //
+  // Note: this plugin only exposes three listeners (partialResults, audioLevel,
+  // listeningState) — there is no native "final result" event. We emit
+  // `ios_voice_final_result_received` when the app commits a partial as final
+  // (silence-timeout auto-submit). The metadata `source` field makes the
+  // origin explicit so analysts can tell observed from synthesized.
+  | 'ios_voice_permission_requested'
+  | 'ios_voice_permission_granted'
+  | 'ios_voice_permission_denied'
+  | 'ios_voice_listening_started'
+  | 'ios_voice_partial_result_received'
+  | 'ios_voice_final_result_received'
+  | 'ios_voice_result_empty'
+  | 'ios_voice_error'
+  | 'ios_voice_listening_stopped';
+
+type Meta = Record<string, string | number | boolean | null>;
+
+let sessionToken: string | null = null;
+function getSessionToken(): string {
+  if (sessionToken) return sessionToken;
+  // Short random session token correlates events within one mic-engagement.
+  // Not persisted — just helps grouping in docker logs.
+  sessionToken = Math.random().toString(36).slice(2, 10);
+  return sessionToken;
+}
+
+/** Reset the session token — call when a new mic engagement begins. */
+export function resetVoiceSession(): void {
+  sessionToken = null;
+}
+
+export function logVoiceEvent(event: VoiceDiagEvent, metadata: Meta = {}): void {
+  if (typeof window === 'undefined') return;
+
+  const payload = {
+    event,
+    path: typeof window !== 'undefined' ? window.location.pathname : null,
+    metadata: {
+      ...metadata,
+      session: getSessionToken(),
+      ua: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 120) : '',
+    },
+  };
+
+  // Browser console for live debugging
+  // eslint-disable-next-line no-console
+  console.log('[voice-diag]', event, payload.metadata);
+
+  // Server-side log via /api/telemetry/client
+  try {
+    fetch('/api/telemetry/client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // never block voice flow on telemetry
+  }
+}
