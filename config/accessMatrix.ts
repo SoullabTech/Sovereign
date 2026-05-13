@@ -357,6 +357,11 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Telemetry API (POST = free, GET = admin-gated in route handler)
   { prefix: '/api/telemetry', minTier: 'free', notes: 'World telemetry events' },
+  // Client diagnostic telemetry MUST be reachable when auth is broken or incomplete —
+  // that is the failure state it was built to observe (redirect loops, voice failures
+  // from the signin page). Endpoint validates events via strict allowlist + truncates
+  // metadata; no PII beyond a 120-char UA. Anon by design.
+  { exact: '/api/telemetry/client', public: true, notes: 'Client diagnostic telemetry — reachable in unauthenticated/broken states (signin breaker + voice events). See PR #328.' },
 
   // Public API
   { exact: '/api/ask', public: true, notes: 'Landing page Ask Kelly/MAIA' },
