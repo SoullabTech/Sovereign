@@ -1,0 +1,96 @@
+/**
+ * Client diagnostic telemetry receiver.
+ *
+ * Accepts fire-and-forget events from the browser when known broken states
+ * are detected (redirect loops, voice pipeline boundaries). Strict event
+ * allowlist — no arbitrary client claims. No PII beyond truncated UA.
+ *
+ * Dispatch:
+ *   redirect_loop_detected  → onboarding_events (via trackOnboarding)
+ *   voice_*                 → server console.log only (visible in docker logs)
+ *
+ * Always returns 204 — telemetry never blocks user flow.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
+const ALLOWED_EVENTS = new Set([
+  'redirect_loop_detected',
+  'voice_mic_granted',
+  'voice_listening_started',
+  'voice_transcribe_sent',
+  'voice_transcribe_result',
+  'voice_transcribe_error',
+] as const);
+
+type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
+
+interface ClientPayload {
+  event: AllowedEvent;
+  path?: string;
+  metadata?: Record<string, string | number | boolean | null>;
+}
+
+export async function POST(req: NextRequest) {
+  // Static export bypass for Capacitor builds
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  let payload: ClientPayload;
+  try {
+    payload = await req.json();
+  } catch {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  if (!payload?.event || !ALLOWED_EVENTS.has(payload.event)) {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const memberId = req.cookies.get('maia_member_id')?.value
+    || req.headers.get('x-member-id')
+    || null;
+
+  // Truncate metadata to bounded sizes — defense in depth
+  const safeMetadata: Record<string, string | number | boolean | null> = {};
+  if (payload.metadata && typeof payload.metadata === 'object') {
+    for (const [k, v] of Object.entries(payload.metadata)) {
+      if (typeof k !== 'string' || k.length > 64) continue;
+      if (v === null || typeof v === 'boolean' || typeof v === 'number') {
+        safeMetadata[k] = v;
+      } else if (typeof v === 'string') {
+        safeMetadata[k] = v.slice(0, 200);
+      }
+    }
+  }
+
+  if (payload.event === 'redirect_loop_detected') {
+    try {
+      const { trackOnboarding } = await import('@/lib/onboarding/telemetry');
+      trackOnboarding({
+        event: 'redirect_loop_detected',
+        memberId,
+        path: typeof payload.path === 'string' ? payload.path.slice(0, 80) : null,
+        metadata: safeMetadata,
+      });
+    } catch {
+      // never throw from telemetry
+    }
+  } else {
+    // Voice diagnostics: server-side log only (visible via `docker logs maia-sovereign`)
+    // No DB write yet — table will be added in a follow-up if voice events prove load-bearing.
+    console.log('[client-telemetry]', JSON.stringify({
+      event: payload.event,
+      member_id: memberId,
+      path: typeof payload.path === 'string' ? payload.path.slice(0, 80) : null,
+      metadata: safeMetadata,
+      ts: new Date().toISOString(),
+    }));
+  }
+
+  return new NextResponse(null, { status: 204 });
+}

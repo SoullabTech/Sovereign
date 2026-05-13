@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
+import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -354,6 +355,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log('✅ [ContinuousConversation] Registered with VoiceFeedbackPrevention');
 
     recognition.onstart = () => {
+      logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
       setIsRecording(true);
       isRecordingRef.current = true; // Update ref immediately
@@ -397,6 +399,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     recognition.onresult = (event: any) => {
+      logVoiceEvent('voice_transcribe_result', {
+        resultCount: event.results?.length ?? 0,
+        isFinal: event.results?.[event.results.length - 1]?.isFinal === true,
+      });
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
       // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
@@ -485,6 +491,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     recognition.onerror = (event: any) => {
+      logVoiceEvent('voice_transcribe_error', { error: String(event.error || 'unknown') });
       // Only log critical errors (not no-speech or aborted, which are common)
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         console.error('❌ [Continuous] Speech recognition error:', event.error);
@@ -1140,6 +1147,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       }
 
       micStreamRef.current = stream;
+      resetVoiceSession();
+      logVoiceEvent('voice_mic_granted', {
+        audioTracks: stream.getAudioTracks().length,
+        trackLabel: stream.getAudioTracks()[0]?.label?.slice(0, 80) ?? '',
+      });
 
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContext();

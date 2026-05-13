@@ -38,6 +38,69 @@ function SigninContent() {
     console.log("[SignIn] userAgent:", navigator.userAgent.slice(0, 80));
   }, []);
 
+  // Redirect-loop circuit breaker.
+  // If we've landed on /signin?reason=… ≥3 times in 60s, the local auth state
+  // has become un-trustable (server says "no session" but localStorage still
+  // claims a session — typically a stale beta_user past an expired cookie).
+  // Clear the stale keys, stay on signin, and surface a humanized message.
+  // Fire telemetry so ops can see this happening before testers report it.
+  // Must run before any auth-check useEffects below so cleared keys take effect.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const reason = new URLSearchParams(window.location.search).get('reason');
+    if (!reason) return; // only count bounces middleware initiated
+
+    const KEY = 'maia_signin_bounces';
+    const WINDOW_MS = 60_000;
+    const THRESHOLD = 3;
+    const now = Date.now();
+
+    let bounces: number[] = [];
+    try { bounces = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch { bounces = []; }
+    bounces = bounces.filter((t: number) => now - t < WINDOW_MS);
+    bounces.push(now);
+    sessionStorage.setItem(KEY, JSON.stringify(bounces));
+
+    if (bounces.length < THRESHOLD) return;
+
+    console.warn('[SignIn] Redirect-loop circuit breaker triggered', {
+      bounces: bounces.length,
+      reason,
+      windowMs: WINDOW_MS,
+    });
+
+    // Clear stale local auth state — server has already said we're not authed.
+    // Display names (explorerName, explorerPreferredName) are left intact.
+    ['beta_user', 'memberId', 'explorerId', 'betaOnboardingComplete', 'maia_session_token']
+      .forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(KEY);
+
+    setError('We refreshed your session. Please sign in again.');
+
+    // Fire-and-forget telemetry so ops sees the pattern within seconds.
+    // keepalive lets the request survive even if the page navigates away.
+    try {
+      fetch('/api/telemetry/client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'redirect_loop_detected',
+          path: '/signin',
+          metadata: {
+            reason,
+            bounces: bounces.length,
+            windowMs: WINDOW_MS,
+            ua: navigator.userAgent.slice(0, 120),
+          },
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      // never block user flow on telemetry
+    }
+  }, []);
+
   // Already authenticated? Skip signin and go where they're headed.
   // Skip on native (handled by /enter), skip if explicit re-auth is requested,
   // skip if user explicitly signed out (signout latch).
