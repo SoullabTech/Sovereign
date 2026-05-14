@@ -1,0 +1,411 @@
+# MAIA Android Release Playbook
+
+> **Two distribution paths. One keystore. Zero secrets in git.**
+
+This playbook is the single source of truth for producing Android builds of MAIA — debug APKs for testing, signed APKs for sideload, and signed AABs for the Play Store. The signing infrastructure is already wired in [android/app/build.gradle](../android/app/build.gradle); this doc tells you how to use it.
+
+The Android side of MAIA is the Capacitor wrapper at `android/` — same web shell as iOS, different native container. The React Native `mobile-app/` directory referenced in older docs is **gone** (see [Sovereign#333](https://github.com/SoullabTech/Sovereign/pull/333)).
+
+---
+
+## Quick Reference
+
+| Goal | Command |
+|------|---------|
+| Debug APK | `npm run android:build` |
+| Signed release APK | `source .env.android && npm run android:release` |
+| Signed AAB (Play Store) | `source .env.android && npm run android:bundle` |
+| Sideload via web | `bash scripts/deploy-android-web.sh` |
+| Open in Android Studio | `npx cap open android` |
+| Sync web → native | `npx cap sync android` |
+
+---
+
+## Green Path (First Release or After Any Problem)
+
+### Step 1 — Verify environment
+
+You need:
+
+- **JDK 21** — `java -version` must print `21.x`. Install via `brew install openjdk@21`.
+- **Android SDK** — set via `ANDROID_HOME` (default: `~/Library/Android/sdk`). Install via Android Studio.
+- **Capacitor 8+** — already in `package.json`. Verify with `npx cap --version`.
+- **Node 22+, npm 10+** — same as iOS.
+
+The build script auto-exports `JAVA_HOME=/opt/homebrew/opt/openjdk@21` and `ANDROID_HOME=~/Library/Android/sdk` if not set ([scripts/build-android.sh:12-14](../scripts/build-android.sh)). Override by setting them in your shell.
+
+Sanity check:
+
+```bash
+java -version
+ls $ANDROID_HOME/platform-tools/adb
+./android/gradlew --version
+```
+
+---
+
+### Step 2 — One-time keystore generation (release/AAB only)
+
+The keystore is the cryptographic identity of MAIA on Android. Generate it **once**, then store it outside the repo. **Losing this keystore means you can never publish an update to the same Play Store listing again** — Google requires the same signing key for every version of an app.
+
+```bash
+keytool -genkey -v \
+  -keystore android-release.keystore \
+  -alias maia-release \
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+You'll be prompted for:
+
+- A keystore password (≥ 6 chars)
+- A key password (can be the same as the keystore password)
+- Name / org / locale fields
+
+Store the keystore file somewhere durable and backed up. The repo root `.gitignore` already excludes `*.keystore`, `*.jks`, and `.env.android`, so nothing leaks if you keep it next to the project — but a separate location is safer.
+
+> ⚠️ **Keystore loss = identity loss.** Back up the keystore + passwords to a secure offline location (encrypted USB, 1Password, etc). If the keystore is lost, you cannot ship updates to the existing Play listing; you'd have to publish a new app under a different `applicationId`. There is no recovery path.
+
+---
+
+### Step 3 — Set up `.env.android`
+
+Copy the tracked template to a local override:
+
+```bash
+cp .env.android.template .env.android
+```
+
+Then edit `.env.android` with your actual keystore path and passwords:
+
+```bash
+ANDROID_KEYSTORE_PATH=./android-release.keystore
+ANDROID_KEYSTORE_PASSWORD=<your keystore password>
+ANDROID_KEY_ALIAS=maia-release
+ANDROID_KEY_PASSWORD=<your key password>
+```
+
+`.env.android` is gitignored. Never commit it.
+
+The release `signingConfig` in [android/app/build.gradle:21-30](../android/app/build.gradle) reads these four env vars. When `ANDROID_KEYSTORE_PATH` is unset, the signingConfig block is empty and Gradle produces an unsigned release artifact instead of failing — convenient for CI smoke tests, but means **you must `source .env.android` in your shell before any release/bundle build**, or you'll silently get an unsigned binary.
+
+---
+
+### Step 4 — Debug build (no signing required)
+
+```bash
+npm run android:build
+```
+
+This runs `bash scripts/build-android.sh debug`, which is a self-contained pipeline parallel to `scripts/ios/build.sh`:
+
+1. Patches dynamic routes for static export (`MOBILE_MODE=1 + scripts/capacitor-patch-routes.sh`).
+2. `CAPACITOR_BUILD=1 npm run build` — produces `out/`.
+3. Patches `out/index.html` → `/enter` redirect.
+4. Reverts route patches (trap ensures this even on failure).
+5. `npx cap sync android` — copies web assets into the native project.
+6. `./gradlew assembleDebug` — produces `android/app/build/outputs/apk/debug/app-debug.apk`.
+7. Copies the APK to repo root as `maia-android-debug.apk` for easy access.
+
+**Expected duration:** ~6–10 min on first run, ~3–5 min incremental.
+
+To reuse an existing `out/` (e.g., when only Gradle changed):
+
+```bash
+npm run android:build -- --skip-web
+```
+
+The debug APK is signed with the Android debug keystore (auto-generated by the Android SDK on first use) — fine for installing on your own device, **not** suitable for distribution.
+
+---
+
+### Step 5 — Signed release APK (sideload distribution)
+
+```bash
+source .env.android
+npm run android:release
+```
+
+Same pipeline as Step 4, but the Gradle phase runs `assembleRelease` with ProGuard minification + resource shrinking, then signs with your release keystore.
+
+**Output:** `android/app/build/outputs/apk/release/app-release.apk` (signed) — copied to repo root as `maia-android-release.apk`.
+
+The build script auto-detects whether Gradle produced a signed `app-release.apk` or an unsigned `app-release-unsigned.apk` (the fallback when `ANDROID_KEYSTORE_PATH` is unset). If you see `-unsigned` in the copied filename, the signing config didn't pick up your env vars — re-check that `source .env.android` ran in the same shell as `npm run android:release`.
+
+To verify which artifact Gradle wrote:
+
+```bash
+ls -la android/app/build/outputs/apk/release/
+```
+
+**Distribute via sideload:**
+
+```bash
+bash scripts/deploy-android-web.sh
+```
+
+This currently copies the **debug** APK to `public/download/maia-android.apk`. For signed-release distribution, edit the script's source path to `android/app/build/outputs/apk/release/app-release.apk` before running, or copy manually:
+
+```bash
+cp android/app/build/outputs/apk/release/app-release.apk public/download/maia-android.apk
+```
+
+Users install via `https://soullab.life/download/android.html` with "Install from Unknown Sources" enabled.
+
+---
+
+### Step 6 — Signed AAB (Google Play Store)
+
+```bash
+source .env.android
+npm run android:bundle
+```
+
+This runs `./gradlew bundleRelease` and produces:
+
+```
+android/app/build/outputs/bundle/release/app-release.aab
+```
+
+Copied to repo root as `maia-android-bundle.aab`.
+
+The AAB is what you upload to Play Console — Google generates per-device APKs from it (smaller downloads via ABI + density splits, both enabled in [android/app/build.gradle:42-55](../android/app/build.gradle)).
+
+**Expected duration:** ~5–10 min on first run.
+
+---
+
+### Step 7 — Upload to Play Console
+
+Manual for now — there's no Fastlane lane for Android yet (parallel to iOS would be `fastlane supply`).
+
+1. Go to [Play Console](https://play.google.com/console) → MAIA Consciousness Computing → Production (or Internal/Closed testing track).
+2. **Create new release** → upload `maia-android-bundle.aab`.
+3. Fill in release notes ("What's new").
+4. **Review release** → **Start rollout to Production**.
+
+For the first release, you'll also need to complete:
+
+- Store listing (description, screenshots, feature graphic, icon)
+- Content rating questionnaire
+- Target audience + content
+- Data safety form
+- Privacy policy URL
+
+Subsequent releases need only the AAB + release notes + rollout.
+
+---
+
+### Versioning reminder
+
+Before every release, bump:
+
+- `versionCode` (integer, must increase) — [android/app/build.gradle:10](../android/app/build.gradle)
+- `versionName` (semver string shown to users) — [android/app/build.gradle:11](../android/app/build.gradle)
+
+[scripts/version-bump.sh](../scripts/version-bump.sh) handles this for both Android and iOS in one command. Play Console **rejects** an AAB upload with a `versionCode` that's already been used — bump even for hotfixes.
+
+---
+
+## Red Paths (What Breaks and How to Fix It)
+
+### R1. `java -version` not found, or wrong version
+
+**Symptom:** Gradle fails with `Unsupported class file major version` or similar.
+
+**Fix:**
+```bash
+brew install openjdk@21
+# Then for the current shell:
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version  # → 21.x
+```
+
+---
+
+### R2. `Could not find tools.jar` or `ANDROID_HOME not set`
+
+**Symptom:** Gradle exits with SDK location error.
+
+**Fix:** Install Android Studio (provides the SDK). Then:
+
+```bash
+export ANDROID_HOME=~/Library/Android/sdk
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+```
+
+The `local.properties` file is gitignored — every dev creates their own.
+
+---
+
+### R3. `cap sync android` fails
+
+**Symptom:** `npx cap sync android` exits non-zero.
+
+**Diagnosis:**
+```bash
+ls out/  # must exist and be non-empty
+npx cap sync android 2>&1 | tail -20
+```
+
+**Common causes:**
+- `out/` missing — run `CAPACITOR_BUILD=1 npm run build` first.
+- Capacitor version mismatch — `npm install`.
+- Stale Gradle state — `cd android && ./gradlew clean`.
+
+---
+
+### R4. Release build produces `app-release-unsigned.apk` instead of `app-release.apk`
+
+**Symptom:** Signed APK missing; only unsigned file in output dir.
+
+**Cause:** `ANDROID_KEYSTORE_PATH` was unset when Gradle ran the signingConfig block.
+
+**Fix:**
+```bash
+source .env.android
+env | grep ANDROID_K   # all 4 vars should print
+npm run android:release
+```
+
+If env vars are set but signing still fails, verify the keystore path is correct relative to the `android/` directory (Gradle's working dir during the build):
+
+```bash
+ls -la "$(pwd)/$ANDROID_KEYSTORE_PATH"
+```
+
+---
+
+### R5. `keytool: command not found`
+
+**Symptom:** Can't generate the keystore.
+
+**Fix:** `keytool` ships with the JDK. Confirm `JAVA_HOME` is set and add `$JAVA_HOME/bin` to PATH:
+
+```bash
+export PATH="$JAVA_HOME/bin:$PATH"
+which keytool
+```
+
+---
+
+### R6. Play Console: "You uploaded an APK or Android App Bundle that was signed in debug mode"
+
+**Symptom:** AAB rejected at upload.
+
+**Cause:** You ran `assembleRelease`/`bundleRelease` without `source .env.android`, so it was signed with the debug keystore (or unsigned).
+
+**Fix:** Re-source the env file, rebuild, re-upload.
+
+---
+
+### R7. Play Console: "Version code XXXX has already been used"
+
+**Symptom:** AAB upload rejected.
+
+**Fix:** Bump `versionCode` in [android/app/build.gradle:10](../android/app/build.gradle) (integer must monotonically increase), rebuild, re-upload.
+
+```bash
+bash scripts/version-bump.sh
+```
+
+---
+
+### R8. Play Console: "You need to use a different package name"
+
+**Symptom:** First-time upload rejected.
+
+**Cause:** Someone else already published `life.soullab.maia` — extremely unlikely, but possible if a test account uploaded under that ID first.
+
+**Fix:** Verify in Play Console that the app listing was created under the same Google account that owns the keystore. If not, either change `applicationId` in build.gradle (which orphans the keystore — you'd need to regenerate) or transfer ownership of the Play listing.
+
+---
+
+### R9. Lost the keystore
+
+**Symptom:** You can build a new AAB, but Play rejects it: "The Android App Bundle was not signed".
+
+**There is no recovery.** Options:
+
+- **If Play App Signing was enabled** when the app was first published: contact Google Support to reset the upload key. They can issue a new upload key while keeping the app-signing key (which only Google holds). This is the only real recovery path.
+- **If Play App Signing was not enabled**: you cannot publish updates to the existing listing. You'd have to publish a new app under a different `applicationId` and ask users to migrate.
+
+This is why the keystore + passwords must be backed up offline before any production release.
+
+---
+
+## Environment Lock (Version Reference)
+
+| Tool | Required | Notes |
+|------|----------|-------|
+| Node.js | >= 22 | Same as iOS |
+| npm | >= 10 | |
+| JDK | 21 (LTS) | `openjdk@21` via Homebrew |
+| Android SDK | API 34+ | Installed via Android Studio |
+| Gradle | (wrapper) | Pinned via `android/gradle/wrapper/gradle-wrapper.properties` |
+| Android Gradle Plugin | (wrapper) | Defined in `android/build.gradle` |
+| Capacitor CLI | >= 8 | `npx cap --version` |
+
+---
+
+## Key Identifiers
+
+| Field | Value |
+|-------|-------|
+| Application ID | `life.soullab.maia` |
+| Namespace | `life.soullab.maia` |
+| Build file | [android/app/build.gradle](../android/app/build.gradle) |
+| Keystore alias (default) | `maia-release` |
+| Signed APK output | `android/app/build/outputs/apk/release/app-release.apk` |
+| Signed AAB output | `android/app/build/outputs/bundle/release/app-release.aab` |
+| Debug APK output | `android/app/build/outputs/apk/debug/app-debug.apk` |
+| Env template | [.env.android.template](../.env.android.template) |
+| Local env (gitignored) | `.env.android` |
+
+---
+
+## Useful Commands
+
+```bash
+# Check current versionCode / versionName
+grep -E 'versionCode|versionName' android/app/build.gradle
+
+# Inspect a built APK
+cd android/app/build/outputs/apk/release/
+unzip -p app-release.apk META-INF/MANIFEST.MF | head -10
+
+# Verify APK signature
+$ANDROID_HOME/build-tools/<version>/apksigner verify --verbose app-release.apk
+
+# List signing certs in a keystore
+keytool -list -v -keystore android-release.keystore
+
+# Install signed APK to attached device
+adb install android/app/build/outputs/apk/release/app-release.apk
+
+# View Gradle task list
+cd android && ./gradlew tasks --all | grep -i 'release\|bundle'
+
+# Clean Android build state only
+cd android && ./gradlew clean
+
+# Open in Android Studio (for debugging UI / signing config)
+npx cap open android
+```
+
+---
+
+## Distribution Channels Summary
+
+| Channel | Build command | Distribution | Audience |
+|---------|---------------|--------------|----------|
+| Local debug install | `npm run android:build` | `adb install` | Dev only |
+| Sideload via web | `npm run android:release` → `deploy-android-web.sh` | `soullab.life/download/android.html` | Sovereignty-aligned testers |
+| Google Play Store | `npm run android:bundle` → Play Console | Play Store listing | Public |
+
+The sideload path is the sovereignty-aligned default. The Play Store path exists for users who want store discovery + auto-updates without configuring "Unknown Sources".
+
+---
+
+*Maintained by: Soullab Engineering*
+*Last updated: 2026-05-14*
