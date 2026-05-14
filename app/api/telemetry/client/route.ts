@@ -31,6 +31,9 @@ const ALLOWED_EVENTS = new Set([
   // Synthesized fallback signal — fires when listening_started arrived
   // but no transcribe_result followed within timeout (Android Chrome scope).
   'voice_silent_after_listening',
+  // Observed Android Chrome failure mode: audio_started fires, speech_started
+  // never does, recognition_ended — recognizer's VAD never triggered.
+  'voice_audio_no_speech',
   // Native iOS voice path (@capacitor-community/speech-recognition)
   'ios_voice_permission_requested',
   'ios_voice_permission_granted',
