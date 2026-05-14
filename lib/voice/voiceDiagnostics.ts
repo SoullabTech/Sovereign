@@ -18,11 +18,23 @@
 
 export type VoiceDiagEvent =
   // Web path (Web Speech API, see components/voice/ContinuousConversation.tsx web branch)
+  // Lifecycle events follow the spec order: granted → start → audiostart →
+  // speechstart → result|error → end. We log every boundary so the next
+  // tester report ("voice didn't work") translates directly to the layer
+  // that failed: e.g., listening_started without audio_started =
+  // recognition reported start but never received audio.
   | 'voice_mic_granted'
   | 'voice_listening_started'
+  | 'voice_audio_started'
+  | 'voice_speech_started'
   | 'voice_transcribe_sent'
   | 'voice_transcribe_result'
   | 'voice_transcribe_error'
+  | 'voice_recognition_ended'
+  // Stage 2 — silent-after-listening fallback (Android Chrome). Fires when
+  // listening_started arrived but no transcribe_result followed within the
+  // timeout. Synthesized from observed boundaries; metadata makes that explicit.
+  | 'voice_silent_after_listening'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.
