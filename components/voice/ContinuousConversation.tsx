@@ -354,6 +354,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     feedbackPrevention.registerRecognition(recognition);
     console.log('✅ [ContinuousConversation] Registered with VoiceFeedbackPrevention');
 
+    // Audio capture began. On Android Chrome, this sometimes never arrives
+    // even after onstart fires — the gap between voice_listening_started and
+    // voice_audio_started is the first observable signal of that failure mode.
+    recognition.onaudiostart = () => {
+      logVoiceEvent('voice_audio_started');
+    };
+
+    // VAD detected speech onset. Distinguishes "audio capture working but no
+    // speech detected" from "speech detected but no transcript returned."
+    recognition.onspeechstart = () => {
+      logVoiceEvent('voice_speech_started');
+    };
+
     recognition.onstart = () => {
       logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
@@ -534,6 +547,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     };
 
     recognition.onend = () => {
+      logVoiceEvent('voice_recognition_ended');
       console.log('🏁 [onend] Recognition stopped');
       recognitionActiveRef.current = false; // Clear double-start guard
       setIsRecording(false);

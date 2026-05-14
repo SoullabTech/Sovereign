@@ -19,12 +19,18 @@ export const runtime = 'nodejs';
 
 const ALLOWED_EVENTS = new Set([
   'redirect_loop_detected',
-  // Web voice path
+  // Web voice path (Web Speech API lifecycle, in spec order)
   'voice_mic_granted',
   'voice_listening_started',
+  'voice_audio_started',
+  'voice_speech_started',
   'voice_transcribe_sent',
   'voice_transcribe_result',
   'voice_transcribe_error',
+  'voice_recognition_ended',
+  // Synthesized fallback signal — fires when listening_started arrived
+  // but no transcribe_result followed within timeout (Android Chrome scope).
+  'voice_silent_after_listening',
   // Native iOS voice path (@capacitor-community/speech-recognition)
   'ios_voice_permission_requested',
   'ios_voice_permission_granted',

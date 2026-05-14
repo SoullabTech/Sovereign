@@ -28,6 +28,32 @@ export function isIOSSimulator(): boolean {
 }
 
 /**
+ * Detect Android Chrome running in a browser tab (NOT the Capacitor native app).
+ *
+ * This is the path where webkitSpeechRecognition lives — and where the
+ * "recognition starts but no transcript returns" failure mode reported by
+ * testers occurs. Used to scope Android-specific restart protections and
+ * timeout fallback UX without touching desktop, iOS Safari, or native paths.
+ *
+ * Returns true only when:
+ *   - UA matches /Android/
+ *   - UA matches /Chrome|CriOS/ (Chrome family browsers)
+ *   - NOT running inside Capacitor (`Capacitor.isNativePlatform() === false`)
+ *
+ * Returns false for: any iOS, desktop Chrome, Firefox, Safari, Capacitor
+ * builds, or SSR.
+ */
+export function isAndroidWebChrome(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  if (Capacitor.isNativePlatform()) return false;
+
+  const ua = navigator.userAgent;
+  const isAndroid = /Android/.test(ua);
+  const isChrome = /Chrome|CriOS/.test(ua);
+  return isAndroid && isChrome;
+}
+
+/**
  * Detect if running in Android Emulator
  */
 export function isAndroidEmulator(): boolean {
