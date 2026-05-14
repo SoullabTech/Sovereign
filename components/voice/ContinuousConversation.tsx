@@ -1505,10 +1505,64 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           // Ignore errors - recognition may not have been running
         }
 
+        // ─── Android native-failure fallback helper ─────────────────────────
+        // When the Capacitor SpeechRecognition plugin can't run on this
+        // device (e.g. Samsung tablets where Google Speech Services is
+        // disabled, available() returns false), or when permission/start
+        // fails, route to MediaRecorder + local Whisper instead of dying
+        // silently. Without this, the user taps "Tap to Speak" and nothing
+        // happens — confirmed by Tara's 2026-05-14 Samsung tab test.
+        // iOS native path is unaffected (helper no-ops when platform !== 'android').
+        const tryAndroidFallback = async (reason: string): Promise<boolean> => {
+          if (platform !== 'android') return false;
+          console.log('🔁 [Android] Native voice unavailable — MediaRecorder fallback', { reason });
+          logVoiceEvent('ios_voice_error', { where: 'native_fallback_attempt', name: reason.slice(0, 60) });
+
+          let stream: MediaStream;
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          } catch (err: any) {
+            console.warn('🚫 [Android fallback] getUserMedia failed:', err?.name);
+            return false;
+          }
+
+          setIsListening(true);
+          isListeningRef.current = true;
+          setMicState('LISTENING', 'android_native_fallback');
+
+          try {
+            const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
+            const result = await recordAndTranscribe(stream);
+            if (result.ok && result.transcript) {
+              console.log(`✅ [Android fallback] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
+              isProcessingRef.current = true;
+              onTranscript(result.transcript);
+              return true;
+            }
+            console.warn(`❌ [Android fallback] Failed: ${result.reason}`);
+          } catch (err: any) {
+            console.error('💥 [Android fallback] Threw:', err);
+          } finally {
+            stream.getTracks().forEach((t) => t.stop());
+            setIsListening(false);
+            isListeningRef.current = false;
+            setMicState('IDLE', 'android_native_fallback_done');
+            isStartingRef.current = false;
+          }
+          return false;
+        };
+
         // 🎛️ CRITICAL: Ensure permissions before showing "Listening..."
         const ready = await ensureNativeSpeechReady();
         if (!ready.ok) {
           console.warn('🚫 [Native] Not starting recognition:', ready.reason);
+
+          // Android: try MediaRecorder + local Whisper before giving up.
+          // Covers cases (1) speech unavailable and (2) permission/setup fail.
+          if (await tryAndroidFallback(ready.reason || 'native_not_ready')) {
+            return;
+          }
+
           setVoiceError(ready.reason || 'Speech recognition not available');
           // DON'T show "Listening..." if we can't actually listen
           isStartingRef.current = false;
@@ -1959,6 +2013,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             });
             console.error('❌ [ContinuousConversation] Retry also FAILED:', retryError);
             addDebug(`❌ Retry failed: ${retryError?.message || retryError}`);
+
+            // Android: native start failed even after retry — case (3) of the
+            // three native-failure modes. Try MediaRecorder + local Whisper
+            // before throwing. tryAndroidFallback is a no-op on iOS so the
+            // iOS retry-failed behavior (rethrow) is preserved.
+            if (await tryAndroidFallback(`start_retry_${retryError?.name || 'unknown'}`)) {
+              return;
+            }
+
             throw retryError;
           }
         }
