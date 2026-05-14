@@ -301,7 +301,21 @@ hide_incompatible_pages() {
                 local page_dir="$(dirname "$file")"
                 local page_rel_dir="$(dirname "$rel_path")"
 
-                # Already has generateStaticParams? Skip - it's compatible
+                # Check force-dynamic / cookies / headers FIRST. These flags
+                # disqualify a page from static export regardless of whether
+                # generateStaticParams is also declared — Next.js treats
+                # `dynamic = 'force-dynamic'` as overriding any static-params
+                # intent. Without this ordering, pages like
+                # /field/[slug]/book that have BOTH (force-dynamic +
+                # generateStaticParams() { return []; }) fall through to the
+                # "compatible" shortcut below and crash the static export.
+                if grep -qE "(cookies\(|headers\(|export const dynamic.*=.*['\"]force-dynamic['\"])" "$file" 2>/dev/null; then
+                    log_warn "  Will exclude (dynamic API): $rel_path"
+                    echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
+                    continue
+                fi
+
+                # Already has generateStaticParams (and no force-dynamic)? Compatible.
                 if grep -q "generateStaticParams" "$file" 2>/dev/null; then
                     continue
                 fi
@@ -311,13 +325,6 @@ hide_incompatible_pages() {
                     # Client Component with dynamic params can't have generateStaticParams
                     # Must exclude it
                     log_warn "  Will exclude (client + dynamic): $rel_path"
-                    echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
-                    continue
-                fi
-
-                # Check if it uses cookies(), headers(), or force-dynamic
-                if grep -qE "(cookies\(|headers\(|export const dynamic.*=.*['\"]force-dynamic['\"])" "$file" 2>/dev/null; then
-                    log_warn "  Will exclude (dynamic API): $rel_path"
                     echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
                     continue
                 fi
