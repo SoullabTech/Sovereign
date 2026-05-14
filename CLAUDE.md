@@ -88,14 +88,15 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
 
 ### What we DO use
-- **Production**: Mac Studio running Docker + **Caddy** (auto TLS via Let's Encrypt)
+- **Production host**: **minisforum** (LAN: `192.168.0.104`), accessed via `ssh soullab@minisforum`. Running Docker + **Caddy** (auto TLS via Let's Encrypt).
+- **Public DNS for `soullab.life`** routes to the LAN's public IP → router forwards :443/:80 to minisforum. Mac Studio is **not** in the public traffic path.
 - **Domain**: `soullab.life` (apex), `api.soullab.life`, `oldhead.soullab.life`, etc.
-- **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`)
-- **Database**: Self-hosted PostgreSQL in Docker (`maia-postgres`)
-- **Containers**: Docker and docker-compose
+- **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`) on minisforum.
+- **Database**: Self-hosted PostgreSQL in Docker (`maia-postgres`) on minisforum.
+- **Containers**: Docker and docker-compose.
 
-### Production Stack (Local Mac Studio)
-All services run in Docker on the Mac Studio:
+### Production Stack (on minisforum)
+All services run in Docker on **minisforum**:
 - `maia-sovereign` — Main Next.js app (port 3000, Docker-internal only)
 - `maia-api` — API backend (port 3001, published)
 - `maia-caddy` — Reverse proxy (ports 80/443, published)
@@ -104,23 +105,39 @@ All services run in Docker on the Mac Studio:
 - `maia-whisper` — Speech processing
 - `maia-rlm` — RLM service
 
+### Mac Studio role
+The Mac Studio (this machine, where Claude Code typically runs) hosts the active git worktrees and is the primary dev environment. It runs a parallel docker stack with the same container names and the same compose file, but **that stack is not in the public soullab.life traffic path**. A successful `docker compose up -d --build` on the Mac Studio updates the local stack only — production stays unchanged.
+
 ### Check Production Status
 ```bash
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-curl http://localhost/api/health          # via Caddy
-curl https://soullab.life/api/health      # external
+# Inspect the actual production container on minisforum (not the local stack):
+ssh soullab@minisforum 'docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}} {{.Image}}"'
+
+# External (hits the LAN public IP → router → minisforum):
+curl -k https://soullab.life/api/health
 ```
 
 ### Production Deployment
-- Stack: Docker + Caddy (local Mac Studio)
+- Host: **minisforum** (SSH from Mac Studio: `ssh soullab@minisforum`)
+- Stack: Docker + Caddy
 - Compose file: `docker-compose.production.yml`
-- **Deploy command** (local):
+- **Deploy command** (run from Mac Studio, executes on minisforum):
   ```bash
-  cd ~/MAIA-SOVEREIGN
-  git pull
-  docker compose -f docker-compose.production.yml up -d --build
+  ssh soullab@minisforum 'cd ~/MAIA-SOVEREIGN \
+    && git fetch origin clean-main-no-secrets \
+    && git checkout clean-main-no-secrets \
+    && git pull \
+    && docker compose -p maia-sovereign -f docker-compose.production.yml --env-file .env.production up -d --build maia'
   ```
-- CI deploys are disabled (self-hosted runner not yet configured)
+- **Verify after deploy**:
+  ```bash
+  ssh soullab@minisforum 'docker inspect maia-sovereign --format "{{.Created}}"'
+  curl -k https://soullab.life/api/health
+  ```
+  `Created` must show a timestamp under a minute old, and `/api/health` must return fresh JSON with `uptime` near zero.
+- CI deploys are disabled (self-hosted runner not yet configured).
+- **Common deploy mistake**: rebuilding on the Mac Studio instead of minisforum. The local stack will report healthy and `Created` will update, but the public soullab.life traffic continues hitting minisforum's old container. Always verify with the minisforum-side `Created` check above, not just the local one.
 
 ### Why This Architecture
 - No third party sits between users and their data
