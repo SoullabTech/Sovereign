@@ -163,12 +163,25 @@ export function MobileRouteGuard({ children }: MobileRouteGuardProps) {
   const [state, setState] = useState<GuardState>('checking');
   const currentPath = useRef(pathname);
 
+  const router = useRouter();
+
   useEffect(() => {
     currentPath.current = pathname;
 
     // No-op on web — this guard only runs in the Capacitor shell
     if (!isNativePlatform()) {
       setState('allow');
+      return;
+    }
+
+    // Native launch can land on '/' if the index.html → /enter redirect
+    // doesn't navigate on Android (Capacitor's asset resolver doesn't
+    // always auto-fallback to enter.html for the bare /enter path).
+    // The root path is not in ALL_MOBILE_ROUTES and isn't meant to be a
+    // user-facing surface on mobile, so route to /enter immediately.
+    // Without this, fresh installs hit the OpenInWebScreen guard.
+    if (pathname === '/') {
+      router.replace('/enter');
       return;
     }
 
