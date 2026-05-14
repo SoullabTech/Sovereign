@@ -8,6 +8,7 @@ import { SystemHealthProvider } from "@/components/providers/SystemHealthProvide
 import { FeatureTooltipProvider } from "@/components/help/FeatureTooltip";
 import FlagsDebug from "@/components/FlagsDebug";
 import { CapacitorBoot } from "@/components/CapacitorBoot";
+import { NativeSessionHydrator } from "@/components/NativeSessionHydrator";
 import { MobileRouteGuard } from "@/components/mobile/MobileRouteGuard";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 
@@ -188,6 +189,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} bg-[#1A1513]`} suppressHydrationWarning>
         <CapacitorBoot />
+        <NativeSessionHydrator />
         <FlagsDebug />
         <AppErrorBoundary>
         <SubscriptionProvider>
