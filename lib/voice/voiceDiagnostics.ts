@@ -35,6 +35,21 @@ export type VoiceDiagEvent =
   // listening_started arrived but no transcribe_result followed within the
   // timeout. Synthesized from observed boundaries; metadata makes that explicit.
   | 'voice_silent_after_listening'
+  // Observed failure mode on Android Chrome (Tara's trace, 2026-05-14):
+  // audio_started fires, but speech_started never does, then recognition_ended
+  // — recognizer received audio but its VAD never acknowledged speech.
+  // Observational name. Recovery behavior (stop restart loop, switch to text)
+  // is gated to Android Chrome via isAndroidWebChrome().
+  | 'voice_audio_no_speech'
+  // Stage 3 — Android Chrome voice fallback. When voice_audio_no_speech hits
+  // the recovery threshold, instead of going straight to text we try a
+  // one-shot MediaRecorder capture + POST to /api/voice/transcribe-simple
+  // (local maia-whisper, NOT OpenAI cloud). All four are observational —
+  // no transcript content in telemetry, only durations/byte-counts/mime/error.
+  | 'voice_fallback_recording_started'
+  | 'voice_fallback_transcribe_sent'
+  | 'voice_fallback_transcribe_result'
+  | 'voice_fallback_failed'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.

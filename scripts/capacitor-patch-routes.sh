@@ -492,6 +492,10 @@ MOBILE_EXCLUDED_DIRS=(
     "app/studio/services"
     # Admin (web-only always)
     "app/admin"
+    # Book Studio (desktop authoring environment, web-only)
+    "app/book-studio"
+    # Team (desktop practitioner collaboration; layout.tsx uses cookies())
+    "app/team"
     # MAIA advanced tools (web-only)
     "app/maia/labtools"
     "app/maia/community"

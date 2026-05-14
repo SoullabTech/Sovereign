@@ -137,6 +137,8 @@ export const STUDIO_ROUTES = [
 export const WEB_ONLY_PREFIXES = [
   '/studio/',             // All Studio routes are web-only in the Capacitor build
   '/admin',
+  '/book-studio',         // Desktop authoring environment (manuscript/illustration tools)
+  '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
   '/maia/labtools',
   '/maia/community',
   '/maia/realtime-monitor',
@@ -250,5 +252,11 @@ function normalise(pathname: string): string {
 /**
  * Web Studio base URL.
  * Deep-link target for the Open-in-Web hatch.
+ *
+ * Points to the main soullab.life domain; Studio routes live at
+ * /studio/* on the apex. The previous `studio.soullab.life` subdomain
+ * was never provisioned in DNS (NXDOMAIN), which made the hatch
+ * unusable. If a dedicated Studio subdomain is ever introduced as a
+ * deliberate product decision, update this constant.
  */
-export const WEB_STUDIO_BASE_URL = 'https://studio.soullab.life';
+export const WEB_STUDIO_BASE_URL = 'https://soullab.life';

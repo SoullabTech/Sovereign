@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "lucide-react";
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
-import { getPlatformInfo, getVoiceUnavailableMessage, type PlatformInfo } from "@/lib/utils/platformDetection";
+import { getPlatformInfo, getVoiceUnavailableMessage, isAndroidWebChrome, type PlatformInfo } from "@/lib/utils/platformDetection";
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
@@ -129,6 +129,14 @@ export interface ContinuousConversationProps {
   persistentListening?: boolean;
   /** Called when hands-free mode auto-falls back to push-to-talk (e.g. after backoff exhaustion) */
   onHandsFreeFallback?: () => void;
+  /**
+   * Called when voice has been bounded-recovery-stopped because a known
+   * platform failure mode was observed (e.g. Android Chrome: audio captured
+   * but VAD never triggered for 2 consecutive cycles). Parent should surface
+   * the userMessage and emphasize the text input path. Does NOT fire on
+   * transient errors or normal end-of-speech.
+   */
+  onVoiceUnavailable?: (info: { reason: string; userMessage: string }) => void;
 }
 
 export interface ContinuousConversationRef {
@@ -165,6 +173,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     interruptThresholdMultiplier = 1.2,
     persistentListening = false,
     onHandsFreeFallback,
+    onVoiceUnavailable,
   } = props;
 
   const [isListening, setIsListening] = useState(false);
@@ -243,6 +252,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const consecutiveRestartCount = useRef<number>(0);
   const lastRestartTime = useRef<number>(0);
   const recognitionStartTime = useRef<number>(0);
+
+  // Android Chrome bounded-recovery tracking (PR for Tara's observed failure mode).
+  // Per-cycle: did audio_started fire? did speech_started fire? Set on the
+  // respective handlers, evaluated in onend. Across-cycles: how many
+  // consecutive cycles had audio but no speech? Reset on a successful cycle
+  // (speech_started fires) or any user-driven stop. At threshold the restart
+  // loop is suppressed and onVoiceUnavailable is called once.
+  const audioStartedThisCycleRef = useRef<boolean>(false);
+  const speechStartedThisCycleRef = useRef<boolean>(false);
+  const noSpeechCycleCountRef = useRef<number>(0);
+  const noSpeechFallbackFiredRef = useRef<boolean>(false);
+  const NO_SPEECH_CYCLE_LIMIT = 2;
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
 
@@ -358,16 +379,26 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // even after onstart fires — the gap between voice_listening_started and
     // voice_audio_started is the first observable signal of that failure mode.
     recognition.onaudiostart = () => {
+      audioStartedThisCycleRef.current = true;
       logVoiceEvent('voice_audio_started');
     };
 
     // VAD detected speech onset. Distinguishes "audio capture working but no
     // speech detected" from "speech detected but no transcript returned."
+    // A successful speech_started resets the no-speech cycle counter — we're
+    // making forward progress.
     recognition.onspeechstart = () => {
+      speechStartedThisCycleRef.current = true;
+      noSpeechCycleCountRef.current = 0;
       logVoiceEvent('voice_speech_started');
     };
 
     recognition.onstart = () => {
+      // Reset per-cycle flags before the new cycle begins. The no-speech
+      // ACROSS-cycle counter is intentionally NOT reset here — it only resets
+      // on a successful speech_started or on a user-driven stop.
+      audioStartedThisCycleRef.current = false;
+      speechStartedThisCycleRef.current = false;
       logVoiceEvent('voice_listening_started');
       recognitionStartTime.current = Date.now(); // Track when recognition actually started
       setIsRecording(true);
@@ -553,6 +584,110 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setIsRecording(false);
       isRecordingRef.current = false; // Update ref immediately
       onRecordingStateChange?.(false);
+
+      // ──────────────────────────────────────────────────────────────────
+      // Android Chrome bounded recovery: audio_started but no speech_started.
+      // Detect → count → stop restart loop after 2 consecutive failures →
+      // call onVoiceUnavailable so parent can surface text fallback.
+      //
+      // Why this exists: observed in Tara's trace (2026-05-14). Android Chrome
+      // captures audio (onaudiostart fires) but the recognizer's VAD never
+      // triggers (onspeechstart never fires), recognition ends silently,
+      // auto-restart fires the same loop, producing the visible "bleeping
+      // and flashing listening" pattern. The recognizer is Google's; we
+      // can't fix it. Bounded recovery: stop the loop, tell the user
+      // honestly, preserve continuity through text.
+      // ──────────────────────────────────────────────────────────────────
+      const audioWithoutSpeech =
+        audioStartedThisCycleRef.current && !speechStartedThisCycleRef.current;
+      if (audioWithoutSpeech) {
+        noSpeechCycleCountRef.current += 1;
+        logVoiceEvent('voice_audio_no_speech', {
+          cycleCount: noSpeechCycleCountRef.current,
+          limit: NO_SPEECH_CYCLE_LIMIT,
+          androidWebChrome: isAndroidWebChrome(),
+        });
+
+        // Bounded recovery is Android-Chrome-only. Other platforms keep
+        // existing behavior (event still fires above for observability).
+        if (
+          isAndroidWebChrome() &&
+          noSpeechCycleCountRef.current >= NO_SPEECH_CYCLE_LIMIT &&
+          !noSpeechFallbackFiredRef.current
+        ) {
+          noSpeechFallbackFiredRef.current = true;
+          console.warn(
+            `🛑 [onend] Android Chrome no-speech limit reached ` +
+            `(${noSpeechCycleCountRef.current}/${NO_SPEECH_CYCLE_LIMIT}) — ` +
+            `stopping Web Speech restart loop, attempting MediaRecorder fallback`
+          );
+          // Stop the Web Speech restart pathway. The remaining checks in this
+          // handler will see these refs and short-circuit before any setTimeout
+          // fires.
+          wantsContinuousConversationRef.current = false;
+          setIsListening(false);
+          isListeningRef.current = false;
+          setMicState('IDLE', 'android_no_speech_fallback');
+          audioStartedThisCycleRef.current = false;
+          speechStartedThisCycleRef.current = false;
+          if (recognitionTimeoutRef.current) {
+            clearTimeout(recognitionTimeoutRef.current);
+            recognitionTimeoutRef.current = null;
+          }
+
+          // The user-facing message used whenever the fallback fails (any
+          // reason). Same wording across reasons — from the user's POV this
+          // is one situation: voice isn't working, switching to text.
+          const fallbackTextMessage =
+            "Your mic is connected, but MAIA isn't detecting speech clearly on Android Chrome right now. You can keep going by typing, and we'll keep improving voice.";
+
+          // Stage 3: try MediaRecorder → /api/voice/transcribe-simple before
+          // escalating to the text fallback. Sovereignty: this path keeps
+          // audio first-party (local maia-whisper), while the Web Speech API
+          // it's replacing would have sent audio to Google.
+          const fallbackStream = micStreamRef.current;
+          if (!fallbackStream) {
+            // No stream to record from — skip straight to text fallback.
+            onVoiceUnavailable?.({
+              reason: 'android_chrome_no_speech_no_stream',
+              userMessage: fallbackTextMessage,
+            });
+            return;
+          }
+
+          // Dynamic import keeps the fallback module out of the main bundle
+          // until the failure mode actually fires. Fire-and-forget — the
+          // result feeds either onTranscript (success → conversation
+          // continues with voice) or onVoiceUnavailable (failure → text).
+          import('@/lib/voice/androidVoiceFallback')
+            .then(({ recordAndTranscribe }) => recordAndTranscribe(fallbackStream))
+            .then((result) => {
+              if (result.ok && result.transcript) {
+                console.log(
+                  `✅ [fallback] Transcript received (${result.transcript.length} chars, ` +
+                  `${result.durationMs}ms, ${result.bytes} bytes) — feeding to conversation`
+                );
+                onTranscript(result.transcript);
+                return;
+              }
+              console.warn(
+                `❌ [fallback] Failed: reason=${result.reason} — escalating to text`
+              );
+              onVoiceUnavailable?.({
+                reason: `android_chrome_no_speech_${result.reason ?? 'unknown'}`,
+                userMessage: fallbackTextMessage,
+              });
+            })
+            .catch((err: unknown) => {
+              console.error('💥 [fallback] Module load or execution threw:', err);
+              onVoiceUnavailable?.({
+                reason: 'android_chrome_no_speech_fallback_threw',
+                userMessage: fallbackTextMessage,
+              });
+            });
+          return;
+        }
+      }
 
       // Clear timeout
       if (recognitionTimeoutRef.current) {
@@ -1948,6 +2083,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (options?.userExitMode) {
       console.log('🚪 [ContinuousConversation] User explicitly exited voice mode - clearing wantsContinuousConversationRef');
       wantsContinuousConversationRef.current = false;
+      // Reset Android no-speech counters on explicit user stop so a future
+      // mic tap gets a fresh budget (the failure may have been transient).
+      noSpeechCycleCountRef.current = 0;
+      noSpeechFallbackFiredRef.current = false;
     }
 
     // 🔥 CRITICAL: Process accumulated transcript BEFORE stopping

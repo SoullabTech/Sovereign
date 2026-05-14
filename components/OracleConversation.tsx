@@ -8610,6 +8610,18 @@ I'm not sure what I'm feeling yet.`;
               toast('Hands-free paused — tap to talk', { duration: 2500 });
               console.log('🔄 [HandsFree] Auto-fallback to push-to-talk (backoff exhausted)');
             }}
+            onVoiceUnavailable={({ reason, userMessage }) => {
+              // Bounded recovery from ContinuousConversation: a known platform
+              // failure mode was observed and the restart loop was stopped.
+              // Switch to text mode so the text input becomes the obvious
+              // primary affordance, and surface the message Kelly drafted
+              // for the relational tone. Single-fire; the callback only
+              // triggers once per session per the child's noSpeechFallbackFiredRef.
+              console.warn('🛑 [OracleConversation] onVoiceUnavailable:', reason);
+              setIsHandsFreeMode(false);
+              setShowChatInterface(true);
+              toast(userMessage, { duration: 10000 });
+            }}
           />
         </div>
       )}

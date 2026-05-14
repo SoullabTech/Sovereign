@@ -63,8 +63,6 @@ const IGNORE_DIRS = new Set([
   'out',
   'tmp',
   'temp',
-  'mobile-app/android/.gradle',
-  'mobile-app/android/app/.cxx',
 ]);
 
 const ALLOWED_EXT = new Set([

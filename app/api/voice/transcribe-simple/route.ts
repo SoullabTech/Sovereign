@@ -33,10 +33,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Feature gate: audio uploads disabled by default (local-only policy)
-    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+    // Feature gates (canon distinction):
+    //
+    //   ALLOW_AUDIO_UPLOADS         — broad permission for general audio
+    //                                 uploads. Default: false. Sovereignty
+    //                                 stance: audio stays on-device.
+    //
+    //   ALLOW_AUDIO_TRANSCRIPTION   — narrower permission, scoped to bounded
+    //                                 transcription recovery (e.g. Android
+    //                                 Chrome voice-fallback when the browser's
+    //                                 Web Speech API fails). Audio is
+    //                                 transcribed by local maia-whisper and
+    //                                 NOT sent to OpenAI cloud. This is more
+    //                                 sovereign than the alternative — Android
+    //                                 Chrome's webkitSpeechRecognition sends
+    //                                 audio to Google's speech servers; this
+    //                                 path keeps it first-party.
+    //
+    // Either gate is sufficient. The narrower flag is preferred for
+    // accessibility/recovery use cases; the broader flag remains available
+    // if a future workflow needs general audio uploads.
+    const audioUploadsAllowed = process.env.ALLOW_AUDIO_UPLOADS === 'true';
+    const transcriptionAllowed = process.env.ALLOW_AUDIO_TRANSCRIPTION === 'true';
+    if (!audioUploadsAllowed && !transcriptionAllowed) {
       return NextResponse.json(
-        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { success: false, error: 'Audio transcription is disabled. Local-only by default.' },
         { status: 410 }
       );
     }

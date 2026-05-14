@@ -81,14 +81,6 @@ if [ -f "android/app/build.gradle" ]; then
     echo "  → Android version code: $NEW_CODE"
 fi
 
-# Update React Native mobile app if it exists
-if [ -f "mobile-app/package.json" ]; then
-    echo "  → React Native mobile-app/package.json"
-    cd mobile-app
-    npm version $VERSION --no-git-tag-version
-    cd ..
-fi
-
 echo ""
 echo "✅ All platforms updated to version $VERSION"
 echo ""
