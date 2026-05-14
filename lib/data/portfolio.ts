@@ -85,7 +85,7 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     slug: 'studio',
     domain: 'https://soullab.life/studio',
     description: 'Practitioner workspace for sessions, reflections, continuity, and relational care — designed to support the real work of helping people without platform bloat or subscription exhaustion.',
-    status: 'live',
+    status: 'beta',
     accent: '#5C8B95',
     tags: ['Practitioner', 'Sessions', 'Continuity'],
     group: 'helper-tools',
