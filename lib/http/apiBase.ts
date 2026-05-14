@@ -31,6 +31,28 @@ export function apiBaseUrl(): string {
   // If env is set, always trust it.
   if (env) return env.replace(/\/+$/, "");
 
+  // Native platform check — MUST come before protocol/hostname checks.
+  // Android Capacitor presents window.location as `https://localhost` (with
+  // androidScheme=https), which slips through the protocol-based detection
+  // below and falls into the localhost dev-server branch. iOS Capacitor
+  // presents `capacitor://localhost` so the protocol check catches it.
+  // Without this guard, Android API calls go to https://localhost/api/*
+  // and hit Capacitor's WebViewLocalServer, which returns the SPA fallback
+  // HTML — causing res.json() to fail with "Unexpected token '<'".
+  // Surfaced by Tara on Samsung tablet 2026-05-14.
+  if (typeof window !== 'undefined') {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { Capacitor } = require('@capacitor/core');
+      if (Capacitor?.isNativePlatform?.()) {
+        console.log('[apiBaseUrl] Capacitor native platform — using soullab.life');
+        return "https://soullab.life";
+      }
+    } catch {
+      // @capacitor/core not available (web build) — fall through to heuristics
+    }
+  }
+
   // LOCAL DEVELOPMENT: Use relative paths (same-origin) for localhost
   // This prevents cross-origin cookie issues when running dev server locally
   // BUT: Capacitor uses capacitor://localhost which has hostname="localhost"
@@ -41,6 +63,7 @@ export function apiBaseUrl(): string {
 
     // Capacitor/native uses capacitor:// or ionic:// or file:// protocol
     // These MUST use absolute URLs to the real API server
+    // (Retained as fallback in case @capacitor/core can't be loaded above.)
     if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') {
       console.log('[apiBaseUrl] Native protocol detected:', protocol, '- using soullab.life');
       return "https://soullab.life";

@@ -31,6 +31,14 @@ export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}
 export ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk}
 export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 
+# Belt-and-suspenders: ensure the Next.js build (when invoked by this pipeline
+# or its caller) bakes the production API base URL into the bundled JS.
+# lib/http/apiBase.ts also has a runtime Capacitor.isNativePlatform() guard,
+# but pre-baking the env var means web/native both resolve to soullab.life
+# without needing the runtime check. See PR #343 following Tara's 2026-05-14
+# report of "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON" on Android.
+export NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-https://soullab.life}
+
 # Args: first positional is BUILD_TYPE (debug|release|bundle), flags supported.
 BUILD_TYPE="debug"
 SKIP_WEB=false
