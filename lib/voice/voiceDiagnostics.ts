@@ -35,6 +35,12 @@ export type VoiceDiagEvent =
   // listening_started arrived but no transcribe_result followed within the
   // timeout. Synthesized from observed boundaries; metadata makes that explicit.
   | 'voice_silent_after_listening'
+  // Observed failure mode on Android Chrome (Tara's trace, 2026-05-14):
+  // audio_started fires, but speech_started never does, then recognition_ended
+  // — recognizer received audio but its VAD never acknowledged speech.
+  // Observational name. Recovery behavior (stop restart loop, switch to text)
+  // is gated to Android Chrome via isAndroidWebChrome().
+  | 'voice_audio_no_speech'
   // Native iOS path (@capacitor-community/speech-recognition)
   // Naming follows "Observable state before interpreted meaning":
   // we report what the plugin emitted, not what we think it meant.
