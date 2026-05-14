@@ -1,25 +1,103 @@
 #!/bin/bash
 
 # MAIA-SOVEREIGN Android Build Script
-# Builds and packages the Android application
+# Mirrors scripts/ios/build.sh — runs the web export with MOBILE_MODE route
+# patching, then Capacitor sync, then Gradle.
+#
+# Pipeline:
+#   1. Patch dynamic routes for static export (MOBILE_MODE=1)
+#   2. Build Next.js → out/ (CAPACITOR_BUILD=1)
+#   3. Patch root index.html → /enter redirect
+#   4. Revert route patches
+#   5. Capacitor sync (cap sync android)
+#   6. Gradle build (assembleDebug | assembleRelease | bundleRelease)
+#
+# Usage:
+#   ./scripts/build-android.sh                  # debug APK
+#   ./scripts/build-android.sh release          # signed release APK (needs .env.android)
+#   ./scripts/build-android.sh bundle           # signed AAB for Play Store
+#   ./scripts/build-android.sh debug --skip-web # reuse existing out/
 
 set -e
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT_DIR="$REPO_ROOT/out"
 
 echo "🤖 MAIA-SOVEREIGN Android Build Pipeline"
 echo "========================================="
 
-# Set Android environment (use existing env vars if set, otherwise fall back to Mac paths)
+# Toolchain (use existing env vars if set, otherwise fall back to Mac defaults)
 export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}
 export ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk}
 export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
 
-# Build type (debug or release)
-BUILD_TYPE=${1:-debug}
+# Args: first positional is BUILD_TYPE (debug|release|bundle), flags supported.
+BUILD_TYPE="debug"
+SKIP_WEB=false
+for arg in "$@"; do
+  case "$arg" in
+    debug|release|bundle) BUILD_TYPE="$arg" ;;
+    --skip-web)           SKIP_WEB=true ;;
+  esac
+done
 
 echo "📱 Building Android app (${BUILD_TYPE} mode)..."
 
-# Sync Capacitor
+# ── Web export with MOBILE_MODE route patching ────────────────────────────────
+if $SKIP_WEB; then
+  if [ -d "$OUT_DIR" ] && [ -n "$(ls -A "$OUT_DIR")" ]; then
+    echo "⏭️  Skipping web build (--skip-web) — reusing $OUT_DIR"
+  else
+    echo "❌ out/ is missing or empty — cannot skip web build"
+    exit 1
+  fi
+else
+  echo "🩹 Patching dynamic routes for static export (MOBILE_MODE=1)..."
+  export MOBILE_MODE=1
+  "$REPO_ROOT/scripts/capacitor-patch-routes.sh" patch
+
+  # Ensure patches are reverted even on failure
+  trap '"$REPO_ROOT/scripts/capacitor-patch-routes.sh" revert 2>/dev/null || true' EXIT
+
+  echo "🏗️  Building static export (CAPACITOR_BUILD=1)..."
+  cd "$REPO_ROOT"
+  CAPACITOR_BUILD=1 MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+
+  if [ ! -d "$OUT_DIR" ] || [ -z "$(ls -A "$OUT_DIR")" ]; then
+    echo "❌ out/ is missing or empty after npm run build"
+    exit 1
+  fi
+fi
+
+# Patch root index.html → /enter redirect (parity with iOS build.sh)
+cat > "$OUT_DIR/index.html" << 'HTMLEOF'
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
+    <script>
+      if (!window.__maiaRedirected) {
+        window.__maiaRedirected = true;
+        window.location.replace('/enter');
+      }
+    </script>
+  </head>
+  <body></body>
+</html>
+HTMLEOF
+echo "✅ Root index.html → /enter redirect patched"
+
+# Revert route patches before cap sync
+if ! $SKIP_WEB; then
+  "$REPO_ROOT/scripts/capacitor-patch-routes.sh" revert
+  trap - EXIT
+fi
+
+# ── Capacitor sync ────────────────────────────────────────────────────────────
 echo "🔄 Syncing Capacitor..."
+cd "$REPO_ROOT"
 npx cap sync android
 
 # Build the Android app
@@ -33,7 +111,13 @@ elif [ "$BUILD_TYPE" == "release" ]; then
     echo "🏗️ Building release APK..."
     cd android
     ./gradlew assembleRelease
-    APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+    # Signed output is app-release.apk when .env.android was sourced;
+    # unsigned (no env) falls back to app-release-unsigned.apk.
+    if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+        APK_PATH="app/build/outputs/apk/release/app-release.apk"
+    else
+        APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+    fi
     OUTPUT_TYPE="apk"
 else
     echo "🔨 Building debug APK..."
