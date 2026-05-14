@@ -619,29 +619,72 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.warn(
             `🛑 [onend] Android Chrome no-speech limit reached ` +
             `(${noSpeechCycleCountRef.current}/${NO_SPEECH_CYCLE_LIMIT}) — ` +
-            `stopping restart loop, surfacing text fallback`
+            `stopping Web Speech restart loop, attempting MediaRecorder fallback`
           );
-          // Stop the restart pathway. The remaining checks in this handler
-          // will see these refs and short-circuit before any setTimeout fires.
+          // Stop the Web Speech restart pathway. The remaining checks in this
+          // handler will see these refs and short-circuit before any setTimeout
+          // fires.
           wantsContinuousConversationRef.current = false;
           setIsListening(false);
           isListeningRef.current = false;
           setMicState('IDLE', 'android_no_speech_fallback');
-
-          // Single-fire callback to parent. Parent surfaces the message
-          // and emphasizes the text input path.
-          onVoiceUnavailable?.({
-            reason: 'android_chrome_no_speech',
-            userMessage:
-              "Your mic is connected, but MAIA isn't detecting speech clearly on Android Chrome right now. You can keep going by typing, and we'll keep improving voice.",
-          });
-          // Clear cycle flags + return so we don't fall through into restart logic
           audioStartedThisCycleRef.current = false;
           speechStartedThisCycleRef.current = false;
           if (recognitionTimeoutRef.current) {
             clearTimeout(recognitionTimeoutRef.current);
             recognitionTimeoutRef.current = null;
           }
+
+          // The user-facing message used whenever the fallback fails (any
+          // reason). Same wording across reasons — from the user's POV this
+          // is one situation: voice isn't working, switching to text.
+          const fallbackTextMessage =
+            "Your mic is connected, but MAIA isn't detecting speech clearly on Android Chrome right now. You can keep going by typing, and we'll keep improving voice.";
+
+          // Stage 3: try MediaRecorder → /api/voice/transcribe-simple before
+          // escalating to the text fallback. Sovereignty: this path keeps
+          // audio first-party (local maia-whisper), while the Web Speech API
+          // it's replacing would have sent audio to Google.
+          const fallbackStream = micStreamRef.current;
+          if (!fallbackStream) {
+            // No stream to record from — skip straight to text fallback.
+            onVoiceUnavailable?.({
+              reason: 'android_chrome_no_speech_no_stream',
+              userMessage: fallbackTextMessage,
+            });
+            return;
+          }
+
+          // Dynamic import keeps the fallback module out of the main bundle
+          // until the failure mode actually fires. Fire-and-forget — the
+          // result feeds either onTranscript (success → conversation
+          // continues with voice) or onVoiceUnavailable (failure → text).
+          import('@/lib/voice/androidVoiceFallback')
+            .then(({ recordAndTranscribe }) => recordAndTranscribe(fallbackStream))
+            .then((result) => {
+              if (result.ok && result.transcript) {
+                console.log(
+                  `✅ [fallback] Transcript received (${result.transcript.length} chars, ` +
+                  `${result.durationMs}ms, ${result.bytes} bytes) — feeding to conversation`
+                );
+                onTranscript(result.transcript);
+                return;
+              }
+              console.warn(
+                `❌ [fallback] Failed: reason=${result.reason} — escalating to text`
+              );
+              onVoiceUnavailable?.({
+                reason: `android_chrome_no_speech_${result.reason ?? 'unknown'}`,
+                userMessage: fallbackTextMessage,
+              });
+            })
+            .catch((err: unknown) => {
+              console.error('💥 [fallback] Module load or execution threw:', err);
+              onVoiceUnavailable?.({
+                reason: 'android_chrome_no_speech_fallback_threw',
+                userMessage: fallbackTextMessage,
+              });
+            });
           return;
         }
       }

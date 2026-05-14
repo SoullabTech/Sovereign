@@ -47,8 +47,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Feature gate: audio uploads disabled by default (local-only policy)
-    if (process.env.ALLOW_AUDIO_UPLOADS !== 'true') {
+    // Feature gates (canon distinction):
+    //   ALLOW_AUDIO_UPLOADS       — broad audio-upload permission (default off)
+    //   ALLOW_AUDIO_TRANSCRIPTION — narrower, bounded transcription recovery
+    //                               (e.g. Android Chrome voice-fallback);
+    //                               first-party + local maia-whisper only,
+    //                               never OpenAI cloud. Preferred for
+    //                               accessibility/recovery use cases.
+    // Either gate is sufficient.
+    const audioUploadsAllowed = process.env.ALLOW_AUDIO_UPLOADS === 'true';
+    const transcriptionAllowed = process.env.ALLOW_AUDIO_TRANSCRIPTION === 'true';
+    if (!audioUploadsAllowed && !transcriptionAllowed) {
       logAudioUsageEvent({
         memberId,
         route: "/api/voice/transcribe",
@@ -56,10 +65,10 @@ export async function POST(req: NextRequest) {
         bytes: 0,
         status: "rejected",
         errorCode: "FEATURE_DISABLED",
-        meta: { reason: "ALLOW_AUDIO_UPLOADS not enabled" },
+        meta: { reason: "ALLOW_AUDIO_UPLOADS and ALLOW_AUDIO_TRANSCRIPTION both unset" },
       });
       return NextResponse.json(
-        { success: false, error: 'Audio uploads are disabled. Audio is stored locally on-device by default.' },
+        { success: false, error: 'Audio transcription is disabled. Local-only by default.' },
         { status: 410 }
       );
     }
