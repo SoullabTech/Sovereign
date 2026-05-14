@@ -183,29 +183,6 @@ prepare_android() {
     success "Android consciousness computing app prepared"
 }
 
-# Build React Native mobile app
-build_react_native() {
-    if [ -d "mobile-app" ]; then
-        log "Building React Native consciousness computing app..."
-
-        cd mobile-app
-
-        # Install dependencies if needed
-        if [ ! -d "node_modules" ]; then
-            npm install || error "Failed to install React Native dependencies"
-        fi
-
-        # Build for consciousness computing
-        log "Preparing React Native consciousness bundle..."
-        npm run metro || warn "Metro bundler preparation had warnings"
-
-        cd ..
-        success "React Native consciousness app prepared"
-    else
-        log "React Native mobile app not found - using Capacitor apps only"
-    fi
-}
-
 # Generate deployment summary
 generate_summary() {
     log "Generating consciousness computing deployment summary..."
@@ -338,7 +315,6 @@ main() {
     deploy_pwa
     prepare_ios
     prepare_android
-    build_react_native
 
     # Summary
     generate_summary
