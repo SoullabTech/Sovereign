@@ -69,25 +69,26 @@ else
   fi
 fi
 
-# Patch root index.html → /enter redirect (parity with iOS build.sh)
-cat > "$OUT_DIR/index.html" << 'HTMLEOF'
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>html,body{margin:0;padding:0;background:#1A1513;}</style>
-    <script>
-      if (!window.__maiaRedirected) {
-        window.__maiaRedirected = true;
-        window.location.replace('/enter');
-      }
-    </script>
-  </head>
-  <body></body>
-</html>
-HTMLEOF
-echo "✅ Root index.html → /enter redirect patched"
+# NOTE: We intentionally do NOT patch out/index.html on Android.
+#
+# scripts/ios/build.sh replaces out/index.html with a static HTML page that
+# does window.location.replace('/enter'). On iOS that works because WKWebView
+# resolves /enter against the bundled assets (it auto-finds enter.html for the
+# bare /enter path).
+#
+# Android Capacitor's WebView does NOT auto-fallback /enter → enter.html. When
+# the redirect fires, the WebView can't find the file, falls back to serving
+# index.html again, and the page's __maiaRedirected guard prevents a second
+# attempt — resulting in a blank dark page on launch (confirmed by tester
+# round 2 on 2026-05-14).
+#
+# Instead, we let Next.js's React-built index.html (containing SoullabLanding)
+# load normally. MobileRouteGuard intercepts pathname === '/' on native and
+# does a client-side router.replace('/enter'), which doesn't need Capacitor's
+# asset resolver because it's React Router navigation within the already-
+# mounted app.
+#
+# See: components/mobile/MobileRouteGuard.tsx, PR #340.
 
 # Revert route patches before cap sync
 if ! $SKIP_WEB; then

@@ -96,15 +96,16 @@ The release `signingConfig` in [android/app/build.gradle:21-30](../android/app/b
 npm run android:build
 ```
 
-This runs `bash scripts/build-android.sh debug`, which is a self-contained pipeline parallel to `scripts/ios/build.sh`:
+This runs `bash scripts/build-android.sh debug`, which is a self-contained pipeline closely paralleling `scripts/ios/build.sh`:
 
 1. Patches dynamic routes for static export (`MOBILE_MODE=1 + scripts/capacitor-patch-routes.sh`).
 2. `CAPACITOR_BUILD=1 npm run build` — produces `out/`.
-3. Patches `out/index.html` → `/enter` redirect.
-4. Reverts route patches (trap ensures this even on failure).
-5. `npx cap sync android` — copies web assets into the native project.
-6. `./gradlew assembleDebug` — produces `android/app/build/outputs/apk/debug/app-debug.apk`.
-7. Copies the APK to repo root as `maia-android-debug.apk` for easy access.
+3. Reverts route patches (trap ensures this even on failure).
+4. `npx cap sync android` — copies web assets into the native project.
+5. `./gradlew assembleDebug` — produces `android/app/build/outputs/apk/debug/app-debug.apk`.
+6. Copies the APK to repo root as `maia-android-debug.apk` for easy access.
+
+> **Difference from iOS pipeline**: `scripts/ios/build.sh` replaces `out/index.html` with a static HTML page that redirects to `/enter`. We **do not** do that on Android because Capacitor's Android WebView doesn't auto-resolve `/enter` to `enter.html`, so the redirect ends up looping back to the static page (resulting in a blank dark screen on launch). Instead, Android lets Next.js's React-built `index.html` load normally, and [components/mobile/MobileRouteGuard.tsx](../components/mobile/MobileRouteGuard.tsx) handles the `/` → `/enter` redirect via client-side React Router navigation.
 
 **Expected duration:** ~6–10 min on first run, ~3–5 min incremental.
 
