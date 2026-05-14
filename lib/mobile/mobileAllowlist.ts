@@ -138,6 +138,7 @@ export const WEB_ONLY_PREFIXES = [
   '/studio/',             // All Studio routes are web-only in the Capacitor build
   '/admin',
   '/book-studio',         // Desktop authoring environment (manuscript/illustration tools)
+  '/team',                // Desktop practitioner collaboration (channels, DMs, admin)
   '/maia/labtools',
   '/maia/community',
   '/maia/realtime-monitor',
