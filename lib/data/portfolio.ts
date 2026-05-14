@@ -3,7 +3,7 @@ export interface PortfolioProject {
   slug: string;
   domain: string;
   description: string;
-  status: 'live' | 'development' | 'idea';
+  status: 'live' | 'beta' | 'development' | 'idea';
   accent: string;
   tags: string[];
   group?: 'sites' | 'helper-tools';
@@ -71,6 +71,16 @@ export const PORTFOLIO_PROJECTS: PortfolioProject[] = [
     group: 'sites',
   },
   {
+    name: 'MAIA',
+    slug: 'maia',
+    domain: 'https://soullab.life/maia',
+    description: 'MAIA is Soullab’s relational intelligence system — designed for voice, reflection, continuity, and deeper participation in one’s lived experience.',
+    status: 'beta',
+    accent: '#B8956F',
+    tags: ['Relational Intelligence', 'Voice Presence', 'Reflective Systems'],
+    group: 'helper-tools',
+  },
+  {
     name: 'Pro Studio',
     slug: 'studio',
     domain: 'https://soullab.life/studio',
@@ -99,11 +109,6 @@ export interface UpcomingProject {
 }
 
 export const UPCOMING_PROJECTS: UpcomingProject[] = [
-  {
-    name: 'MAIA iOS App',
-    description: 'Native iOS companion via TestFlight. Voice-first, sovereignty-intact.',
-    status: 'in-progress',
-  },
   {
     name: 'Community Commons',
     description: 'Shared knowledge space for practitioners, researchers, and builders.',

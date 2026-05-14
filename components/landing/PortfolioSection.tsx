@@ -6,6 +6,7 @@ import { SectionReveal } from './SectionReveal';
 
 const statusBadge: Record<string, { label: string; className: string }> = {
   live: { label: 'Live', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20' },
+  beta: { label: 'Beta', className: 'bg-sky-500/15 text-sky-400 border-sky-500/20' },
   development: { label: 'In Dev', className: 'bg-maia-spice-500/15 text-maia-spice-400 border-maia-spice-500/20' },
   idea: { label: 'Idea', className: 'bg-white/10 text-white/40 border-white/10' },
 };
