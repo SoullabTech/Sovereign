@@ -2418,7 +2418,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       isMicrophonePausedRef.current = false;
       // Resume mic after short delay
       setTimeout(() => {
-        if (voiceSession.state.capabilities.canStartListening && !showChatInterface && streamingVoiceMode) {
+        const isHandsFree = voiceMicRef.current?.isHandsFree ?? true;
+        if (voiceSession.state.capabilities.canStartListening && streamingVoiceMode && isHandsFree) {
           console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
           setIsMuted(false);
           voiceSession.methods.startListening('streaming_force_recovery');
@@ -2476,13 +2477,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // 🔥 FIX: Don't gate on voiceSession.state.capabilities — it's a stale closure
       // from the render where isAudioPlaying was still true. Call startListening directly
       // and let CC's authority guard decide.
-      if (!showChatInterface && streamingVoiceMode) {
+      //
+      // NOTE: Chat visibility used to gate this (`!showChatInterface`); removed because
+      // voice intent (streamingVoiceMode + isHandsFree, checked above) is the correct
+      // lifecycle authority. Chat visibility is a presentation concern, not a voice
+      // lifecycle concern. See: continuous talk-mode parity goal.
+      if (streamingVoiceMode) {
         console.log('🎤 [StreamingVoice] Hands-free mode - requesting mic restart');
         setIsListening(true);
         setIsActivating(false);
 
         setTimeout(() => {
-          if (!showChatInterface && streamingVoiceMode) {
+          if (streamingVoiceMode) {
             setIsMuted(false);
             console.log('🎤 [StreamingVoice] Calling startListening after 300ms');
             voiceSession.methods.startListening('streaming_response_complete');
@@ -2562,7 +2568,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   useEffect(() => {
     // Only run watchdog in voice mode
-    if (!streamingVoiceMode || showChatInterface) {
+    // NOTE: Chat visibility removed from gate — voice intent (streamingVoiceMode)
+    // is the correct authority. Watchdog must guard voice lifecycle regardless of
+    // whether chat is visible or hidden.
+    if (!streamingVoiceMode) {
       if (voiceWatchdogRef.current) {
         clearInterval(voiceWatchdogRef.current);
         voiceWatchdogRef.current = null;
