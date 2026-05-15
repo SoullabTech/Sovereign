@@ -50,6 +50,13 @@ export interface MaiaRailItem {
   tooltip?: string;
   /** Whether this is the boundary transition to Studio */
   isBoundaryTransition?: boolean;
+  /**
+   * Visibility audience for the rail icon.
+   * 'all' (default) — visible to every authenticated member.
+   * 'founder' — visible only to founder/practitioner (admin || practitioner role).
+   * Audience controls rail visibility only; server-side route auth is enforced separately.
+   */
+  audience?: 'all' | 'founder';
 }
 
 // --- Utility items ---
