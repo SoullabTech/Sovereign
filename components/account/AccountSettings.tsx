@@ -2936,6 +2936,20 @@ export function AccountSettings() {
         )}
       </AnimatePresence>
 
+      {/* Internal: VoiceController Phase 1 smoke test entry point (native only).
+          Removable after Phase 6. See docs/architecture/MAIA_VOICE_CONTROLLER_DESIGN.md */}
+      {Capacitor.isNativePlatform() && (
+        <div className="mt-6 pt-4 border-t border-white/5 text-center">
+          <button
+            type="button"
+            onClick={() => { window.location.href = '/voice-controller-test'; }}
+            className="text-[10px] text-stone-500 hover:text-amber-400 font-mono cursor-pointer"
+          >
+            🧪 Voice Controller Test (internal — Phase 1)
+          </button>
+        </div>
+      )}
+
       {/* Build Info Footer - subtle version stamp */}
       <div className="mt-12 pt-6 border-t border-white/10 text-center">
         <p className="text-[10px] text-stone-300 font-mono">
