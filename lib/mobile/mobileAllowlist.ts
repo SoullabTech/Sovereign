@@ -59,6 +59,7 @@ export const PHONE_ROUTES = [
   '/birth-chart',
   '/capture',             // Quick capture action
   '/how-to-use',          // "Where should I use MAIA?" orientation page
+  '/voice-controller-test', // Internal Phase 1 smoke test for new VoiceController (Kelly only)
 ] as const;
 
 export const PHONE_PREFIXES = [
