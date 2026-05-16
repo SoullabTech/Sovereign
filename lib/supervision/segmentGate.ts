@@ -25,8 +25,24 @@
 // Tuning constants — start permissive, refine experimentally
 // ---------------------------------------------------------------------------
 
-/** Silence-gate threshold. Kelly's range: 1500–2500ms. Start at 2000ms. */
-const SILENCE_GATE_MS = 2000;
+/**
+ * Silence-gate threshold (raised 2026-05-16 from 2000ms → 7000ms).
+ *
+ * MediaRecorder chunk cadence is fixed at 5000ms (`recorder.start(5000)` in
+ * RecordingContext.tsx). At the prior 2000ms threshold, *every* chunk arrival
+ * was ≥ 2000ms after the previous one, so silenceElapsed fired on every chunk
+ * boundary regardless of actual silence — leading to sentence fragmentation
+ * when a single utterance spanned chunks.
+ *
+ * 7000ms means: real silence (audio guard rejecting one or more intermediate
+ * chunks) results in elapsed > 7s on the next live chunk → finalize prior.
+ * Continuous speech across one chunk boundary stays under 7s → continuation.
+ *
+ * Companion fix: prefix-continuation replacement (see isPrefixContinuation)
+ * handles Whisper's previousTail-driven context re-emission so this threshold
+ * doesn't need to do all the work alone.
+ */
+const SILENCE_GATE_MS = 7000;
 
 /** Below this char count, treat as filler/noise unless context says otherwise. */
 const MIN_INFORMATIONAL_LENGTH = 8;
@@ -178,6 +194,31 @@ function isUltraShort(text: string): boolean {
  * repeated phrases ("I really really love this", "yes yes yes I will") — which
  * ARE user speech — are not punished.
  */
+/**
+ * Prefix-continuation detector — Whisper's previousTail prompt mechanism
+ * causes chunk N+1's transcription to often re-emit chunk N's text + the
+ * new continuation. Example:
+ *   chunk 0 → "This is sentence"
+ *   chunk 1 → "This is sentence number one."
+ *
+ * The naive flow would treat chunk 1 as a separate sentence and the silence-
+ * elapsed check would finalize the truncated chunk 0 as its own segment,
+ * leaving two fragmented rows. This detector recognizes chunk 1 as the
+ * extension of chunk 0 and replaces the candidate text in place.
+ *
+ * Returns true when normalized `incoming` strictly extends normalized
+ * `existing` (incoming starts with existing AND is longer).
+ */
+function isPrefixContinuation(existing: string, incoming: string): boolean {
+  const normalize = (s: string): string =>
+    s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const a = normalize(existing);
+  const b = normalize(incoming);
+  if (!a || !b) return false;
+  if (b.length <= a.length) return false;
+  return b.startsWith(a);
+}
+
 function hasHighInternalRepetition(text: string): boolean {
   const tokens = text
     .toLowerCase()
@@ -270,6 +311,46 @@ export function evaluate(input: EvaluateInput): SegmentDecision {
   }
 
   // Have a prior candidate.
+
+  // Prefix-continuation check (Phase A.2 tuning, 2026-05-16). Whisper's
+  // previousTail prompt frequently produces chunk N+1 transcriptions that
+  // re-emit chunk N's text plus the new extension. Recognize that as
+  // continuation, replace the candidate text in place, and skip the
+  // silence-elapse check. Without this, the wall-clock-based silence gate
+  // (even at 7000ms) would still fragment longer multi-chunk sentences.
+  if (isPrefixContinuation(existing.text, trimmed)) {
+    existing.text = trimmed;
+    existing.updatedAt = arrivedAt;
+    existing.chunkCount += 1;
+    existing.chunkIndices.push(input.chunkIndex);
+    existing.endMs = input.endMs;
+    existing.state = 'CONTINUING';
+
+    // If the extended candidate now ends with a terminator, finalize.
+    if (endsWithSentenceTerminator(existing.text)) {
+      const finalized = existing.text;
+      const finalStart = existing.startMs;
+      const finalEnd = existing.endMs;
+      const finalChunk = existing.chunkIndices[0];
+      const finalSpeaker = existing.speaker;
+      candidateBuffers.delete(input.sessionId);
+      return {
+        shouldFinalize: true,
+        shouldDiscard: false,
+        reason: 'prefix-continuation-completes-sentence',
+        finalText: finalized,
+        finalStartMs: finalStart,
+        finalEndMs: finalEnd,
+        finalChunkIndex: finalChunk,
+        speaker: finalSpeaker,
+      };
+    }
+    return {
+      shouldFinalize: false,
+      shouldDiscard: false,
+      reason: 'prefix-continuation',
+    };
+  }
 
   // Heuristic 2 (silence gate) — if enough wall-clock time has elapsed since
   // the prior candidate's last update, finalize it. Filler/empty incoming

@@ -516,6 +516,251 @@ describe('segmentGate.evaluate — A.2 tuning: hallucination suppression (2026-0
   });
 });
 
+describe('segmentGate.evaluate — A.2 tuning: prefix-continuation + raised silence threshold (2026-05-16)', () => {
+  describe('prefix-continuation replacement (Whisper previousTail re-emission)', () => {
+    it('replaces "This is sentence" with "This is sentence number one." → one finalized segment', () => {
+      const finalized: string[] = [];
+
+      let d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      if (d.shouldFinalize && d.finalText) finalized.push(d.finalText);
+      expect(d.shouldFinalize).toBe(false);
+      expect(d.reason).toBe('new-candidate-buffered');
+
+      d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence number one.',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000, // 5s after first chunk — within new SILENCE_GATE_MS
+      });
+      if (d.shouldFinalize && d.finalText) finalized.push(d.finalText);
+      expect(d.reason).toBe('prefix-continuation-completes-sentence');
+      expect(d.shouldFinalize).toBe(true);
+      expect(d.finalText).toBe('This is sentence number one.');
+
+      expect(finalized).toEqual(['This is sentence number one.']);
+    });
+
+    it('handles multi-chunk prefix extension chain', () => {
+      // chunk 0: "This is"
+      // chunk 1: "This is sentence"
+      // chunk 2: "This is sentence number one."
+      // Expected: one finalized segment at chunk 2
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000,
+      });
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence number one.',
+        chunkIndex: 2,
+        startMs: 10000,
+        endMs: 15000,
+        speaker: 'Speaker 1',
+        arrivedAt: 11000,
+      });
+      expect(d.shouldFinalize).toBe(true);
+      expect(d.finalText).toBe('This is sentence number one.');
+      expect(d.reason).toBe('prefix-continuation-completes-sentence');
+    });
+
+    it('does NOT prefix-replace when incoming is unrelated to prior candidate', () => {
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      // Unrelated incoming — should NOT trigger prefix-continuation
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'Now I am speaking about something else.',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000,
+      });
+      expect(d.reason).not.toBe('prefix-continuation');
+      expect(d.reason).not.toBe('prefix-continuation-completes-sentence');
+    });
+
+    it('does NOT prefix-replace when incoming is shorter than prior (would be repetition or no-op)', () => {
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence number one',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      // Incoming is just "This is" — strictly shorter than prior, prefix-match fails.
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000,
+      });
+      expect(d.reason).not.toBe('prefix-continuation');
+    });
+  });
+
+  describe('raised SILENCE_GATE_MS (7000ms) — no premature finalization within chunk cadence', () => {
+    it('does NOT finalize prior when next chunk arrives within ~5s and is NOT a prefix extension', () => {
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'I want to tell you about the system',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: "that we have been building this week.",
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000, // 5s after prior — under 7000ms threshold
+      });
+      // Not a prefix continuation (no word overlap with prior). Continuation path
+      // should merge, not finalize prior independently.
+      expect(d.reason).toBe('continuation-completes-sentence');
+      expect(d.finalText).toBe('I want to tell you about the system that we have been building this week.');
+    });
+
+    it('DOES finalize prior when sufficient wall-clock elapses (audio-guard-rejected gap > 7s)', () => {
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence one.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      // Prior was already terminator-finalized; verify with an active non-terminator prior:
+      evaluate({
+        sessionId: SESSION_A,
+        newText: 'Some incomplete utterance',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 6000,
+      });
+      // Now 20s elapses (silent chunks rejected by audio guard, gate never sees them):
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'After the long pause now I speak.',
+        chunkIndex: 6,
+        startMs: 30000,
+        endMs: 35000,
+        speaker: 'Speaker 1',
+        arrivedAt: 26000, // 20s after the buffered candidate
+      });
+      expect(d.shouldFinalize).toBe(true);
+      expect(d.reason).toBe('silence-finalizes-prior-new-candidate-opens');
+      expect(d.finalText).toBe('Some incomplete utterance');
+    });
+  });
+
+  describe('two distinct sentences separated by real silence still become two segments', () => {
+    it('preserves separation across audio-guard-rejected silent gap', () => {
+      const finalized: string[] = [];
+
+      let d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence number one.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      if (d.shouldFinalize && d.finalText) finalized.push(d.finalText);
+
+      // Audio guard rejected chunks 1-5 (silence). Chunk 6 arrives after 30s.
+      d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'This is sentence number two.',
+        chunkIndex: 6,
+        startMs: 30000,
+        endMs: 35000,
+        speaker: 'Speaker 1',
+        arrivedAt: 31000,
+      });
+      if (d.shouldFinalize && d.finalText) finalized.push(d.finalText);
+
+      expect(finalized).toEqual([
+        'This is sentence number one.',
+        'This is sentence number two.',
+      ]);
+    });
+  });
+
+  describe('hallucination suppression regression (must still hold)', () => {
+    it('still discards "All right. All right. All right." as filler', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'All right. All right. All right.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(true);
+    });
+
+    it('still discards "It\'s now a bit of a bit of a bit..." as internal-repetition hallucination', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: "It's now a bit of a bit of a bit of a bit of a bit of a bit of a bit",
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(true);
+    });
+  });
+});
+
 describe('flushPendingCandidate', () => {
   it('finalizes a pending non-filler candidate', () => {
     evaluate({
