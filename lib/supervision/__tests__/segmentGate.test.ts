@@ -384,9 +384,14 @@ describe('segmentGate — session isolation', () => {
   });
 });
 
-describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-05-16)', () => {
-  describe('multi-word filler — "All right. All right." patterns', () => {
-    it('rejects "All right. All right. All right." as filler with no prior candidate', () => {
+describe('segmentGate.evaluate — A.2 tuning: hallucination suppression (2026-05-16)', () => {
+  // The phrases tested below are NOT user speech. They are ASR hallucinations
+  // produced by Whisper during silence / low-signal audio. Per Kelly (post-A.2
+  // deploy): "these phrases are not content to clean up. They are fabricated
+  // speech to block." The tests prove the gate discards these candidates
+  // before they become transcript segments.
+  describe('hallucination suppression — multi-word "All right" patterns from silence', () => {
+    it('rejects hallucinated "All right. All right. All right." with no prior candidate', () => {
       const d = evaluate({
         sessionId: SESSION_A,
         newText: 'All right. All right. All right.',
@@ -400,7 +405,7 @@ describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-0
       expect(d.shouldFinalize).toBe(false);
     });
 
-    it('rejects mixed "Okay. Okay. All right. All right." chunk', () => {
+    it('rejects mixed hallucinated "Okay. Okay. All right. All right." chunk', () => {
       const d = evaluate({
         sessionId: SESSION_A,
         newText: 'Okay. Okay. All right. All right. All right.',
@@ -414,7 +419,7 @@ describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-0
       expect(d.shouldFinalize).toBe(false);
     });
 
-    it('rejects "All right. All right." (2 reps) as filler', () => {
+    it('rejects hallucinated "All right. All right." (2 reps) without treating as user speech', () => {
       const d = evaluate({
         sessionId: SESSION_A,
         newText: 'All right. All right.',
@@ -428,8 +433,8 @@ describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-0
     });
   });
 
-  describe('autoregressive hallucination — "a bit of a bit" patterns', () => {
-    it('rejects "It\'s now a bit of a bit of a bit of a bit of a bit of a bit of a bit"', () => {
+  describe('hallucination suppression — autoregressive "a bit of a bit" drift from silence', () => {
+    it('rejects hallucinated "It\'s now a bit of a bit of a bit..." — not user speech', () => {
       const d = evaluate({
         sessionId: SESSION_A,
         newText: "It's now a bit of a bit of a bit of a bit of a bit of a bit of a bit",
@@ -443,7 +448,7 @@ describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-0
       expect(d.shouldFinalize).toBe(false);
     });
 
-    it('rejects "of a bit of a bit" trailing hallucination if long enough', () => {
+    it('rejects hallucinated trailing "of a bit of a bit..." drift before persistence', () => {
       // "of a bit of a bit" has 6 tokens — below the min-tokens gate.
       // But the longer continuation "of a bit of a bit of a bit of a bit" hits >=8 tokens.
       const d = evaluate({

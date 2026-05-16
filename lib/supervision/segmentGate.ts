@@ -44,10 +44,11 @@ const FILLER_DENYLIST = new Set([
   'mmhmm',
   'uh-huh',
   'uhhuh',
-  // Phase A.2 tuning (2026-05-16): "all" added so "All right. All right." patterns
-  // are caught as filler-loop. Without "all" in the per-token denylist, mixed
-  // multi-word fillers like "All right." split into ["all", "right"] and fail
-  // tokens.every() because "all" wasn't recognized.
+  // Phase A.2 tuning (2026-05-16): "all" added so hallucinated "All right.
+  // All right." patterns (Whisper fabrications during silence — not user
+  // speech) are discarded before becoming transcript segments. Without "all"
+  // in the per-token denylist, mixed multi-word hallucinations like "All
+  // right." split into ["all", "right"] and pass tokens.every().
   'all',
   'all right',
   'alright',
@@ -59,12 +60,15 @@ const FILLER_DENYLIST = new Set([
 ]);
 
 /**
- * Internal-repetition threshold for hallucinated autoregressive drift.
- * Kelly (2026-05-16, post-A.2 deploy): "It's now a bit of a bit of a bit..." —
- * low-confidence token continuation promoted as transcript content. Reject when
- * unique-word ratio is low AND the candidate is long enough for the signal to
- * be meaningful (short normal phrases like "I really really love this" are not
- * punished).
+ * Hallucination suppression — autoregressive drift threshold.
+ * Kelly (2026-05-16, post-A.2 deploy): "It's now a bit of a bit of a bit..." is
+ * not user speech. It is a Whisper fabrication produced during silence/low-signal
+ * audio via low-confidence token continuation. Reject candidates with low
+ * unique-word ratio when long enough for the signal to be meaningful — short
+ * normal phrases like "I really really love this" are not punished.
+ *
+ * Per the canonical principle: these phrases are not content to clean up; they
+ * are fabricated speech to block before they become transcript segments.
  */
 const INTERNAL_REPETITION_UNIQUE_RATIO = 0.3;
 const INTERNAL_REPETITION_MIN_TOKENS = 8;
@@ -162,13 +166,17 @@ function isUltraShort(text: string): boolean {
 }
 
 /**
- * Detect autoregressive ASR hallucination: long candidates with very low
- * lexical diversity. "It's now a bit of a bit of a bit of a bit of a bit
- * of a bit of a bit" → 5 unique tokens / 19 total ≈ 0.26 → reject.
+ * Hallucination detector — autoregressive ASR drift with low lexical diversity.
+ *
+ * Whisper produces candidates like "It's now a bit of a bit of a bit of a bit
+ * of a bit of a bit of a bit" during silence/low-signal audio. These are not
+ * user speech; they are ASR fabrications via low-confidence token continuation.
+ * Reject them before they become transcript segments. (5 unique / 19 total ≈
+ * 0.26 → reject.)
  *
  * Gated at INTERNAL_REPETITION_MIN_TOKENS so short emphatic or naturally
- * repeated phrases ("I really really love this", "yes yes yes I will")
- * are NOT punished.
+ * repeated phrases ("I really really love this", "yes yes yes I will") — which
+ * ARE user speech — are not punished.
  */
 function hasHighInternalRepetition(text: string): boolean {
   const tokens = text
