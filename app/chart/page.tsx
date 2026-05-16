@@ -152,7 +152,7 @@ export default function ChartLandingPage() {
             <span className="font-serif text-lg">Soullab</span>
           </Link>
           <Link
-            href="/begin"
+            href="/signin"
             className="text-sm text-white/60 hover:text-[#D4B896] transition-colors"
           >
             Sign in
@@ -353,7 +353,7 @@ export default function ChartLandingPage() {
                         <span className="px-2 py-1 bg-white/5 rounded">Trust vs. Mistrust</span>
                       </div>
                       <Link
-                        href="/begin"
+                        href="/signin"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4B896] text-black rounded-lg font-medium hover:bg-[#E5C9A7] transition-colors"
                       >
                         Create Free Account
@@ -383,7 +383,7 @@ export default function ChartLandingPage() {
                         MAIA understands your cosmic blueprint and can guide you through its meaning.
                       </p>
                       <Link
-                        href="/begin"
+                        href="/signin"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded-lg font-medium hover:bg-purple-500/30 transition-colors"
                       >
                         Meet MAIA

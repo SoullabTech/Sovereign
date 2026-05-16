@@ -37,7 +37,7 @@ export default function FieldEnterPage() {
     // Fresh install — no auth data at all → onboarding
     if (!hasAnySessionData) {
       console.log('[Field/enter] Fresh install — routing to /begin');
-      router.replace('/begin');
+      router.replace('/signin');
       return;
     }
 
@@ -58,7 +58,7 @@ export default function FieldEnterPage() {
 
     if (!onboarded) {
       console.log('[Field/enter] Not onboarded — routing to /begin');
-      router.replace('/begin');
+      router.replace('/signin');
       return;
     }
 

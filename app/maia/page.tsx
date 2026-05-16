@@ -421,7 +421,7 @@ function MAIAPageContent() {
       const sessionCheck = checkAndMigrateSession();
       if (sessionCheck === 'fresh') {
         console.log('[NAV] /maia -> /begin (reason: fresh install)');
-        router.replace('/begin');
+        router.replace('/signin');
         return;
       }
       if (sessionCheck === 'migrate') {

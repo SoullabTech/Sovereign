@@ -115,7 +115,7 @@ export function MaiaSection() {
             </p>
             <div className="text-center">
               <Link
-                href="/begin"
+                href="/signin"
                 className="inline-flex items-center text-maia-spice-400 hover:text-maia-spice-400 font-medium transition-colors group"
               >
                 Meet MAIA

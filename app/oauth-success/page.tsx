@@ -95,7 +95,7 @@ function OAuthSuccessContent() {
         // Returning user who hasn't finished onboarding
         setTimeout(() => {
           const stepMap: Record<string, string> = {
-            'begin': '/begin',
+            'begin': '/signin',
             'test-elemental': '/test-elemental',
             'faq': '/faq',
             'onboarding': '/onboarding',

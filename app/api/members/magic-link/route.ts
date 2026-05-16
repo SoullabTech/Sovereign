@@ -364,12 +364,14 @@ export async function GET(request: NextRequest) {
       return response;
 
     } else {
-      // New user — redirect to /begin profile step (email pre-verified)
+      // New user — redirect to /signin (canonical threshold/auth surface).
+      // /begin was deprecated 2026-05-16; query params preserved in case
+      // /signin grows to handle pre-verified email + verified=true UX.
       console.log(`[MAGIC-LINK] New user email verified: ${record.email}`);
-      const beginUrl = new URL('/begin', baseUrl);
-      beginUrl.searchParams.set('email', record.email as string);
-      beginUrl.searchParams.set('verified', 'true');
-      return NextResponse.redirect(beginUrl);
+      const signinUrl = new URL('/signin', baseUrl);
+      signinUrl.searchParams.set('email', record.email as string);
+      signinUrl.searchParams.set('verified', 'true');
+      return NextResponse.redirect(signinUrl);
     }
 
   } catch (error) {
