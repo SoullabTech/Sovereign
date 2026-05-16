@@ -9,6 +9,11 @@
 
 import { redirect } from 'next/navigation';
 
+// Force dynamic so redirect() executes at request time instead of being
+// captured by Next.js static prerender. Without this, the page is
+// prerendered and served as a 200 with empty body instead of a 307.
+export const dynamic = 'force-dynamic';
+
 export default function BeginPage() {
   redirect('/signin');
 }
