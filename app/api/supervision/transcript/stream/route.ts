@@ -8,6 +8,10 @@ import {
   isSilenceHallucination,
   NO_SPEECH_PROB_THRESHOLD,
 } from '@/lib/supervision/silenceHallucinationGuard';
+import {
+  consumeSkipPromptFlag,
+  markSilenceHallucination,
+} from '@/lib/supervision/promptContinuityState';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -167,8 +171,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, skipped: true, reason: 'silence', chunkIndex });
     }
 
-    // Fire parallel DB query for previous chunk tail (Whisper context anchoring)
-    const previousTailPromise = getLastChunkTail(sessionId);
+    // Fire parallel DB query for previous chunk tail (Whisper context anchoring).
+    // Phase A.2 continuity-state reset (2026-05-16, Kelly): if the previous
+    // chunk was rejected as silence-hallucination, the prior persisted tail
+    // represents a now-stale conversational continuity. Skip the prompt for
+    // exactly one chunk so silence resets context — the next real utterance
+    // arrives unconditioned by what the user said before the gap.
+    // Narrow scope: silence-hallucination only. whisper-no-text is NOT
+    // included pending telemetry evidence of fragmentation after no-text.
+    const skipPromptThisChunk = consumeSkipPromptFlag(sessionId);
+    const previousTailPromise: Promise<string | null> = skipPromptThisChunk
+      ? Promise.resolve(null)
+      : getLastChunkTail(sessionId);
 
     // Prepare audio for Whisper
     const audioBuffer = await audioFile.arrayBuffer();
@@ -270,6 +284,10 @@ export async function POST(request: NextRequest) {
         startMs,
         endMs,
       });
+      // Phase A.2 continuity-state reset (2026-05-16): silence resets
+      // conversational continuity. Arm the one-shot skip-prompt flag so the
+      // NEXT real chunk reaches Whisper without a now-stale previousTail.
+      markSilenceHallucination(sessionId);
       return NextResponse.json({
         success: true,
         chunkIndex,
