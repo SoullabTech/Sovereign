@@ -384,6 +384,133 @@ describe('segmentGate — session isolation', () => {
   });
 });
 
+describe('segmentGate.evaluate — A.2 tuning (post-deploy live evidence, 2026-05-16)', () => {
+  describe('multi-word filler — "All right. All right." patterns', () => {
+    it('rejects "All right. All right. All right." as filler with no prior candidate', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'All right. All right. All right.',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1100,
+      });
+      expect(d.shouldDiscard).toBe(true);
+      expect(d.shouldFinalize).toBe(false);
+    });
+
+    it('rejects mixed "Okay. Okay. All right. All right." chunk', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'Okay. Okay. All right. All right. All right.',
+        chunkIndex: 1,
+        startMs: 5000,
+        endMs: 10000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1100,
+      });
+      expect(d.shouldDiscard).toBe(true);
+      expect(d.shouldFinalize).toBe(false);
+    });
+
+    it('rejects "All right. All right." (2 reps) as filler', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'All right. All right.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(true);
+    });
+  });
+
+  describe('autoregressive hallucination — "a bit of a bit" patterns', () => {
+    it('rejects "It\'s now a bit of a bit of a bit of a bit of a bit of a bit of a bit"', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: "It's now a bit of a bit of a bit of a bit of a bit of a bit of a bit",
+        chunkIndex: 5,
+        startMs: 25000,
+        endMs: 30000,
+        speaker: 'Speaker 1',
+        arrivedAt: 26000,
+      });
+      expect(d.shouldDiscard).toBe(true);
+      expect(d.shouldFinalize).toBe(false);
+    });
+
+    it('rejects "of a bit of a bit" trailing hallucination if long enough', () => {
+      // "of a bit of a bit" has 6 tokens — below the min-tokens gate.
+      // But the longer continuation "of a bit of a bit of a bit of a bit" hits >=8 tokens.
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'of a bit of a bit of a bit of a bit',
+        chunkIndex: 6,
+        startMs: 30000,
+        endMs: 35000,
+        speaker: 'Speaker 1',
+        arrivedAt: 31000,
+      });
+      expect(d.shouldDiscard).toBe(true);
+    });
+  });
+
+  describe('does NOT overblock normal speech', () => {
+    it('accepts a normal long sentence with high lexical diversity', () => {
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'I am running multiple tests today and they all pass without any issues happening.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(false);
+      expect(d.shouldFinalize).toBe(true); // ends with terminator
+      expect(d.finalText).toBe(
+        'I am running multiple tests today and they all pass without any issues happening.'
+      );
+    });
+
+    it('does NOT block short emphatic repetition under the min-tokens threshold', () => {
+      // "I really really really love this" — 6 tokens, below min-tokens gate.
+      // Internal-repetition heuristic does not apply.
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'I really really really love this.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(false);
+      expect(d.shouldFinalize).toBe(true);
+      expect(d.finalText).toBe('I really really really love this.');
+    });
+
+    it('does NOT block legitimate longer speech with naturally repeated common words', () => {
+      // 12 tokens, plenty of unique content — ratio well above 0.3
+      const d = evaluate({
+        sessionId: SESSION_A,
+        newText: 'I am going to the store and the park and the office today.',
+        chunkIndex: 0,
+        startMs: 0,
+        endMs: 5000,
+        speaker: 'Speaker 1',
+        arrivedAt: 1000,
+      });
+      expect(d.shouldDiscard).toBe(false);
+      expect(d.shouldFinalize).toBe(true);
+    });
+  });
+});
+
 describe('flushPendingCandidate', () => {
   it('finalizes a pending non-filler candidate', () => {
     evaluate({
