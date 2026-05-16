@@ -14,11 +14,15 @@ import {
   getSession,
   updateSession,
   enqueueJob,
-  getTranscript
+  getTranscript,
+  addTranscriptSegment,
+  getRecentTranscriptTexts,
 } from '@/lib/supervision/SupervisionStore';
 import { analyzeSession } from '@/lib/supervision/ClinicalSupervisionEngine';
 import { runSessionSynthesis } from '@/lib/supervision/SessionSynthesizer';
 import { runAssembly } from '@/lib/supervision/transcriptAssembler';
+import { flushPendingCandidate } from '@/lib/supervision/segmentGate';
+import { isLikelyPhantomDuplicate } from '@/lib/scribe/transcriptCleaner';
 
 interface StopSessionRequest {
   sessionId: string;
@@ -40,6 +44,37 @@ export async function POST(request: NextRequest) {
 
     // Stop the session
     const session = await stopSession(body.sessionId);
+
+    // Phase A.2 — flush any pending candidate from the segment gate so an
+    // in-flight utterance isn't dropped silently when the session closes.
+    // Runs before assembly so the assembler sees the complete final picture.
+    try {
+      const flushDecision = flushPendingCandidate(body.sessionId);
+      if (flushDecision.shouldFinalize && flushDecision.finalText) {
+        const recentTexts = await getRecentTranscriptTexts(body.sessionId, 5);
+        if (!isLikelyPhantomDuplicate(flushDecision.finalText, recentTexts)) {
+          await addTranscriptSegment({
+            sessionId: body.sessionId,
+            speaker: flushDecision.speaker ?? 'unknown',
+            speakerConfidence: 0.8,
+            startMs: flushDecision.finalStartMs ?? 0,
+            endMs: flushDecision.finalEndMs ?? 0,
+            text: flushDecision.finalText,
+            transcriptionConfidence: 0.9,
+            chunkIndex: flushDecision.finalChunkIndex ?? -1,
+          });
+          console.log(
+            `[SegmentGate] Flushed pending candidate on stop (${flushDecision.reason}): "${flushDecision.finalText.slice(0, 80)}..."`
+          );
+        } else {
+          console.log(
+            `[SegmentGate] Flushed candidate suppressed as duplicate at stop: "${flushDecision.finalText.slice(0, 50)}..."`
+          );
+        }
+      }
+    } catch (flushErr) {
+      console.error('[SegmentGate] Flush-on-stop failed (non-fatal):', flushErr);
+    }
 
     // Fire-and-forget transcript assembly — must not block the stop response
     runAssembly(body.sessionId).catch(err =>
