@@ -167,6 +167,31 @@ function wordOverlap(a: string, b: string): number {
   return overlap / Math.max(wa.length, wb.length);
 }
 
+/**
+ * Pre-persistence guard: should this newly transcribed segment be rejected as a
+ * phantom duplicate or silence-text artifact before being INSERTed?
+ *
+ * Single-segment counterpart to detectPhantomPrefix (which is batch-oriented and
+ * needs >=5 segments). Uses the same SIMILARITY_THRESHOLD and MIN_MEANINGFUL_LENGTH
+ * constants so source-side and downstream cleaning agree on what counts as phantom.
+ *
+ * Returns true when the segment should be rejected: short-enough-to-be-silence/noise,
+ * or near-identical to one of the recent segments (the shape of the audio-prepending
+ * contamination this guard exists to stop from entering the continuity field).
+ */
+export function isLikelyPhantomDuplicate(
+  newText: string,
+  recentTexts: string[],
+): boolean {
+  const trimmed = newText.trim();
+  if (trimmed.length < MIN_MEANINGFUL_LENGTH) return true;
+  for (const recent of recentTexts) {
+    if (!recent) continue;
+    if (wordOverlap(trimmed, recent) >= SIMILARITY_THRESHOLD) return true;
+  }
+  return false;
+}
+
 export interface TranscriptQualityMetrics {
   totalSegments: number;
   uniqueSegments: number;

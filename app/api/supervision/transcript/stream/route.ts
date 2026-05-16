@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getSession } from '@/lib/supervision/SupervisionStore';
+import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getRecentTranscriptTexts, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
+import { isLikelyPhantomDuplicate } from '@/lib/scribe/transcriptCleaner';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -158,6 +159,26 @@ export async function POST(request: NextRequest) {
 
     // Only store if we have text
     if (transcriptText) {
+      // Pre-persistence guard: reject phantom duplicates / silence-text before INSERT.
+      // Phantom contamination from client-side audio prepending (Phase A) reaches this
+      // path as text near-identical to recent segments. Letting it INSERT means the
+      // continuity field absorbs fabricated events; this guard is the structural belt.
+      const recentTexts = await getRecentTranscriptTexts(sessionId, 5);
+      if (isLikelyPhantomDuplicate(transcriptText, recentTexts)) {
+        console.log(
+          `[TranscriptStream] Rejected chunk=${chunkIndex} as phantom/silence: "${transcriptText.slice(0, 50)}..."`
+        );
+        return NextResponse.json({
+          success: true,
+          chunkIndex,
+          silenceSkipped: false,
+          duplicateRejected: true,
+          whisperPromptUsed: !!previousTail,
+          segment: null,
+          message: 'Rejected as likely phantom duplicate or silence-text'
+        });
+      }
+
       const segment = await addTranscriptSegment({
         sessionId,
         speaker,

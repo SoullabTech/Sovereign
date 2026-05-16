@@ -293,6 +293,24 @@ export async function getLastChunkTail(sessionId: string): Promise<string | null
   return result.rows[0].text.slice(-80) || null;
 }
 
+/**
+ * Fetch the most recent finalized transcript-segment texts for a session.
+ * Used by the pre-persistence phantom-duplicate guard to compare a newly
+ * transcribed chunk against the texts produced by recent prior chunks.
+ */
+export async function getRecentTranscriptTexts(
+  sessionId: string,
+  limit: number = 5,
+): Promise<string[]> {
+  const result = await query<{ text: string }>(`
+    SELECT text FROM supervision_transcript_segments
+    WHERE session_id = $1 AND is_final = true
+    ORDER BY end_ms DESC
+    LIMIT $2
+  `, [sessionId, Math.min(Math.max(limit, 1), 20)]);
+  return result.rows.map(r => r.text).filter((t): t is string => !!t);
+}
+
 export async function getTranscript(
   sessionId: string,
   practitionerId?: string
