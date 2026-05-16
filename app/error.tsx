@@ -2,7 +2,14 @@
 
 /**
  * App Router Error Boundary
- * Handles runtime errors for static export (Capacitor builds)
+ * Handles runtime errors for static export (Capacitor builds).
+ *
+ * IMPORTANT: framework errors (NEXT_REDIRECT, NEXT_NOT_FOUND,
+ * NEXT_HTTP_ERROR_FALLBACK) must be re-thrown so Next.js can handle them.
+ * Without the rethrow, server-component `redirect()` / `notFound()` get
+ * caught here and rendered as "Something Went Wrong" instead of producing
+ * the proper HTTP response. /begin's redirect to /signin was silently
+ * broken by exactly this — fixed by the rethrow guard below.
  */
 
 import { useEffect } from 'react';
@@ -14,6 +21,16 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Re-throw framework errors so Next.js routing handles them.
+  // redirect(), notFound(), and HTTP fallbacks all use digest prefixes.
+  if (
+    error?.digest?.startsWith('NEXT_REDIRECT') ||
+    error?.digest?.startsWith('NEXT_NOT_FOUND') ||
+    error?.digest?.startsWith('NEXT_HTTP_ERROR_FALLBACK')
+  ) {
+    throw error;
+  }
+
   useEffect(() => {
     // Log the error for debugging
     console.error('App error:', error);
