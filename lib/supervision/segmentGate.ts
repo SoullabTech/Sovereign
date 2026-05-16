@@ -44,6 +44,11 @@ const FILLER_DENYLIST = new Set([
   'mmhmm',
   'uh-huh',
   'uhhuh',
+  // Phase A.2 tuning (2026-05-16): "all" added so "All right. All right." patterns
+  // are caught as filler-loop. Without "all" in the per-token denylist, mixed
+  // multi-word fillers like "All right." split into ["all", "right"] and fail
+  // tokens.every() because "all" wasn't recognized.
+  'all',
   'all right',
   'alright',
   'okay',
@@ -52,6 +57,17 @@ const FILLER_DENYLIST = new Set([
   'thanks',
   'thank you',
 ]);
+
+/**
+ * Internal-repetition threshold for hallucinated autoregressive drift.
+ * Kelly (2026-05-16, post-A.2 deploy): "It's now a bit of a bit of a bit..." —
+ * low-confidence token continuation promoted as transcript content. Reject when
+ * unique-word ratio is low AND the candidate is long enough for the signal to
+ * be meaningful (short normal phrases like "I really really love this" are not
+ * punished).
+ */
+const INTERNAL_REPETITION_UNIQUE_RATIO = 0.3;
+const INTERNAL_REPETITION_MIN_TOKENS = 8;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -145,6 +161,26 @@ function isUltraShort(text: string): boolean {
   return text.trim().length < MIN_INFORMATIONAL_LENGTH;
 }
 
+/**
+ * Detect autoregressive ASR hallucination: long candidates with very low
+ * lexical diversity. "It's now a bit of a bit of a bit of a bit of a bit
+ * of a bit of a bit" → 5 unique tokens / 19 total ≈ 0.26 → reject.
+ *
+ * Gated at INTERNAL_REPETITION_MIN_TOKENS so short emphatic or naturally
+ * repeated phrases ("I really really love this", "yes yes yes I will")
+ * are NOT punished.
+ */
+function hasHighInternalRepetition(text: string): boolean {
+  const tokens = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+  if (tokens.length < INTERNAL_REPETITION_MIN_TOKENS) return false;
+  const uniqueCount = new Set(tokens).size;
+  return uniqueCount / tokens.length < INTERNAL_REPETITION_UNIQUE_RATIO;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -180,7 +216,8 @@ export function evaluate(input: EvaluateInput): SegmentDecision {
 
   // Heuristic 5 (early gate) — filler-only or ultra-short text cannot itself
   // open a new candidate or be a meaningful continuation.
-  const incomingIsFiller = isFillerOnly(trimmed) || isUltraShort(trimmed);
+  const incomingIsFiller =
+    isFillerOnly(trimmed) || isUltraShort(trimmed) || hasHighInternalRepetition(trimmed);
 
   // No prior candidate
   if (!existing) {
@@ -389,7 +426,11 @@ export function flushPendingCandidate(sessionId: string): SegmentDecision {
     return { shouldFinalize: false, shouldDiscard: false, reason: 'no-pending' };
   }
   candidateBuffers.delete(sessionId);
-  if (isUltraShort(existing.text) || isFillerOnly(existing.text)) {
+  if (
+    isUltraShort(existing.text) ||
+    isFillerOnly(existing.text) ||
+    hasHighInternalRepetition(existing.text)
+  ) {
     return {
       shouldFinalize: false,
       shouldDiscard: true,
