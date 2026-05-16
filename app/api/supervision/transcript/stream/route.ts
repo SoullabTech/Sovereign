@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getRecentTranscriptTexts, getSession } from '@/lib/supervision/SupervisionStore';
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { isLikelyPhantomDuplicate } from '@/lib/scribe/transcriptCleaner';
+import { evaluate as evaluateSegmentGate } from '@/lib/supervision/segmentGate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -159,53 +160,108 @@ export async function POST(request: NextRequest) {
 
     // Only store if we have text
     if (transcriptText) {
-      // Pre-persistence guard: reject phantom duplicates / silence-text before INSERT.
-      // Phantom contamination from client-side audio prepending (Phase A) reaches this
-      // path as text near-identical to recent segments. Letting it INSERT means the
-      // continuity field absorbs fabricated events; this guard is the structural belt.
-      const recentTexts = await getRecentTranscriptTexts(sessionId, 5);
-      if (isLikelyPhantomDuplicate(transcriptText, recentTexts)) {
+      // Phase A.2 — Segment Integrity gate. Holds Whisper candidates until a
+      // plausible utterance boundary is detected (silence, sentence terminator,
+      // or repetition signal). Chunk cadence is not utterance cadence.
+      const decision = evaluateSegmentGate({
+        sessionId,
+        newText: transcriptText,
+        chunkIndex,
+        startMs,
+        endMs,
+        speaker,
+      });
+
+      if (decision.shouldDiscard) {
         console.log(
-          `[TranscriptStream] Rejected chunk=${chunkIndex} as phantom/silence: "${transcriptText.slice(0, 50)}..."`
+          `[TranscriptStream] Gate discarded chunk=${chunkIndex} (${decision.reason}): "${transcriptText.slice(0, 50)}..."`
+        );
+        return NextResponse.json({
+          success: true,
+          chunkIndex,
+          silenceSkipped: false,
+          gateDiscarded: true,
+          gateReason: decision.reason,
+          whisperPromptUsed: !!previousTail,
+          segment: null,
+          message: `Gate discarded: ${decision.reason}`,
+        });
+      }
+
+      if (!decision.shouldFinalize) {
+        console.log(
+          `[TranscriptStream] Gate buffered chunk=${chunkIndex} (${decision.reason}): "${transcriptText.slice(0, 50)}..."`
+        );
+        return NextResponse.json({
+          success: true,
+          chunkIndex,
+          silenceSkipped: false,
+          gateBuffered: true,
+          gateReason: decision.reason,
+          whisperPromptUsed: !!previousTail,
+          segment: null,
+          message: `Gate buffered: ${decision.reason}`,
+        });
+      }
+
+      // Gate approved finalization. Use the finalized text (may be merged) and
+      // its preserved chunk-start timing.
+      const finalText = decision.finalText ?? transcriptText;
+      const finalChunkIndex = decision.finalChunkIndex ?? chunkIndex;
+      const finalStartMs = decision.finalStartMs ?? startMs;
+      const finalEndMs = decision.finalEndMs ?? endMs;
+      const finalSpeaker = decision.speaker ?? speaker;
+
+      // Phase A.1 — pre-persistence dedup guard against already-persisted
+      // recent segments. Belt protection if the gate buffer drifts.
+      const recentTexts = await getRecentTranscriptTexts(sessionId, 5);
+      if (isLikelyPhantomDuplicate(finalText, recentTexts)) {
+        console.log(
+          `[TranscriptStream] Rejected finalized text chunk=${finalChunkIndex} as phantom/silence: "${finalText.slice(0, 50)}..."`
         );
         return NextResponse.json({
           success: true,
           chunkIndex,
           silenceSkipped: false,
           duplicateRejected: true,
+          gateReason: decision.reason,
           whisperPromptUsed: !!previousTail,
           segment: null,
-          message: 'Rejected as likely phantom duplicate or silence-text'
+          message: 'Gate finalized but rejected as phantom duplicate at persistence',
         });
       }
 
       const segment = await addTranscriptSegment({
         sessionId,
-        speaker,
+        speaker: finalSpeaker,
         speakerConfidence: 0.8,
-        startMs,
-        endMs,
-        text: transcriptText,
+        startMs: finalStartMs,
+        endMs: finalEndMs,
+        text: finalText,
         transcriptionConfidence: confidence,
-        chunkIndex,
+        chunkIndex: finalChunkIndex,
       });
 
-      console.log(`[TranscriptStream] Stored chunk=${chunkIndex}: "${transcriptText.slice(0, 50)}..."`);
+      console.log(
+        `[TranscriptStream] Stored segment (gate=${decision.reason}, chunk=${finalChunkIndex}): "${finalText.slice(0, 80)}..."`
+      );
 
       return NextResponse.json({
         success: true,
         chunkIndex,
         silenceSkipped: false,
+        gateFinalized: true,
+        gateReason: decision.reason,
         whisperPromptUsed: !!previousTail,
         segment: {
           id: segment.id,
-          text: transcriptText,
-          startMs,
-          endMs,
-          speaker,
+          text: finalText,
+          startMs: finalStartMs,
+          endMs: finalEndMs,
+          speaker: finalSpeaker,
           confidence,
           language,
-        }
+        },
       });
     }
 
