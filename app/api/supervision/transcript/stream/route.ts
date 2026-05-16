@@ -32,6 +32,48 @@ interface WhisperResponse {
 }
 
 /**
+ * Phase A.2 observability (2026-05-16). One grep-friendly JSON line per
+ * chunk decision so missing utterances and over-aggressive rejections
+ * become diagnosable. Use:
+ *   grep '\[GateTelemetry\]' production.log | jq '.'
+ */
+type ChunkDecisionKind =
+  | 'silence-gate-bytes'        // audio too small to send to Whisper
+  | 'whisper-error'             // Whisper API returned non-OK
+  | 'whisper-connection-error'  // Whisper unreachable
+  | 'whisper-no-text'           // Whisper returned no transcript text
+  | 'silence-hallucination'     // no_speech_prob > threshold → reject
+  | 'gate-discarded'            // segmentGate said discard (filler/internal-rep)
+  | 'gate-buffered'             // segmentGate said keep as candidate, not yet finalize
+  | 'gate-finalized'            // segmentGate said finalize → persisted as segment
+  | 'persistence-dedup';        // gate finalized but dedup guard rejected
+
+interface ChunkDecisionLog {
+  sessionId: string;
+  chunkIndex: number;
+  audioBytes: number;
+  noSpeechProb: number | null;
+  whisperText: string;
+  whisperConfidence: number;
+  whisperPromptUsed: boolean;
+  decision: ChunkDecisionKind;
+  reason: string;
+  finalizedTextPreview?: string;
+  startMs?: number;
+  endMs?: number;
+}
+
+function logChunkDecision(ctx: ChunkDecisionLog): void {
+  const payload = {
+    ts: new Date().toISOString(),
+    ...ctx,
+    whisperText: ctx.whisperText?.slice(0, 120) ?? '',
+    finalizedTextPreview: ctx.finalizedTextPreview?.slice(0, 120),
+  };
+  console.log(`[GateTelemetry] ${JSON.stringify(payload)}`);
+}
+
+/**
  * POST - Receive audio chunk, transcribe via Whisper, store in database
  */
 export async function POST(request: NextRequest) {
@@ -109,7 +151,19 @@ export async function POST(request: NextRequest) {
     // Silence gate: skip Whisper for near-empty chunks (avoids hallucination on silence/noise)
     const audioSizeBytes = audioFile.size;
     if (audioSizeBytes < SILENCE_GATE_BYTES) {
-      console.log(`[SupervisionTranscript] Chunk skipped (silence gate): ${audioSizeBytes} bytes`);
+      logChunkDecision({
+        sessionId,
+        chunkIndex,
+        audioBytes: audioSizeBytes,
+        noSpeechProb: null,
+        whisperText: '',
+        whisperConfidence: 0,
+        whisperPromptUsed: false,
+        decision: 'silence-gate-bytes',
+        reason: `bytes<${SILENCE_GATE_BYTES}`,
+        startMs,
+        endMs,
+      });
       return NextResponse.json({ success: true, skipped: true, reason: 'silence', chunkIndex });
     }
 
@@ -161,10 +215,37 @@ export async function POST(request: NextRequest) {
           averageNoSpeechProb = computeAverageNoSpeechProb(whisperResult.segments);
         }
       } else {
-        console.error('[TranscriptStream] Whisper error:', await whisperResponse.text());
+        const errBody = await whisperResponse.text();
+        console.error('[TranscriptStream] Whisper error:', errBody);
+        logChunkDecision({
+          sessionId,
+          chunkIndex,
+          audioBytes: audioSizeBytes,
+          noSpeechProb: null,
+          whisperText: '',
+          whisperConfidence: 0,
+          whisperPromptUsed: !!previousTail,
+          decision: 'whisper-error',
+          reason: `whisper http ${whisperResponse.status}`,
+          startMs,
+          endMs,
+        });
       }
     } catch (whisperError) {
       console.error('[TranscriptStream] Whisper connection error:', whisperError);
+      logChunkDecision({
+        sessionId,
+        chunkIndex,
+        audioBytes: audioSizeBytes,
+        noSpeechProb: null,
+        whisperText: '',
+        whisperConfidence: 0,
+        whisperPromptUsed: !!previousTail,
+        decision: 'whisper-connection-error',
+        reason: whisperError instanceof Error ? whisperError.message : 'unknown',
+        startMs,
+        endMs,
+      });
       // Fall back to browser transcription if provided
       transcriptText = formData.get('fallbackText') as string || '';
     }
@@ -176,11 +257,19 @@ export async function POST(request: NextRequest) {
     // own no_speech_prob field to reject the source before the candidate gate
     // ever sees it. Field absence is treated as no signal (defer to text gate).
     if (transcriptText && isSilenceHallucination(averageNoSpeechProb)) {
-      console.log(
-        `[TranscriptStream] Rejected chunk=${chunkIndex} as silence-hallucination ` +
-        `(no_speech_prob=${averageNoSpeechProb?.toFixed(2)} > ${NO_SPEECH_PROB_THRESHOLD}): ` +
-        `"${transcriptText.slice(0, 50)}..."`
-      );
+      logChunkDecision({
+        sessionId,
+        chunkIndex,
+        audioBytes: audioSizeBytes,
+        noSpeechProb: averageNoSpeechProb,
+        whisperText: transcriptText,
+        whisperConfidence: confidence,
+        whisperPromptUsed: !!previousTail,
+        decision: 'silence-hallucination',
+        reason: `no_speech_prob=${averageNoSpeechProb?.toFixed(2)}>${NO_SPEECH_PROB_THRESHOLD}`,
+        startMs,
+        endMs,
+      });
       return NextResponse.json({
         success: true,
         chunkIndex,
@@ -208,9 +297,19 @@ export async function POST(request: NextRequest) {
       });
 
       if (decision.shouldDiscard) {
-        console.log(
-          `[TranscriptStream] Gate discarded chunk=${chunkIndex} (${decision.reason}): "${transcriptText.slice(0, 50)}..."`
-        );
+        logChunkDecision({
+          sessionId,
+          chunkIndex,
+          audioBytes: audioSizeBytes,
+          noSpeechProb: averageNoSpeechProb,
+          whisperText: transcriptText,
+          whisperConfidence: confidence,
+          whisperPromptUsed: !!previousTail,
+          decision: 'gate-discarded',
+          reason: decision.reason,
+          startMs,
+          endMs,
+        });
         return NextResponse.json({
           success: true,
           chunkIndex,
@@ -224,9 +323,19 @@ export async function POST(request: NextRequest) {
       }
 
       if (!decision.shouldFinalize) {
-        console.log(
-          `[TranscriptStream] Gate buffered chunk=${chunkIndex} (${decision.reason}): "${transcriptText.slice(0, 50)}..."`
-        );
+        logChunkDecision({
+          sessionId,
+          chunkIndex,
+          audioBytes: audioSizeBytes,
+          noSpeechProb: averageNoSpeechProb,
+          whisperText: transcriptText,
+          whisperConfidence: confidence,
+          whisperPromptUsed: !!previousTail,
+          decision: 'gate-buffered',
+          reason: decision.reason,
+          startMs,
+          endMs,
+        });
         return NextResponse.json({
           success: true,
           chunkIndex,
@@ -251,9 +360,20 @@ export async function POST(request: NextRequest) {
       // recent segments. Belt protection if the gate buffer drifts.
       const recentTexts = await getRecentTranscriptTexts(sessionId, 5);
       if (isLikelyPhantomDuplicate(finalText, recentTexts)) {
-        console.log(
-          `[TranscriptStream] Rejected finalized text chunk=${finalChunkIndex} as phantom/silence: "${finalText.slice(0, 50)}..."`
-        );
+        logChunkDecision({
+          sessionId,
+          chunkIndex,
+          audioBytes: audioSizeBytes,
+          noSpeechProb: averageNoSpeechProb,
+          whisperText: transcriptText,
+          whisperConfidence: confidence,
+          whisperPromptUsed: !!previousTail,
+          decision: 'persistence-dedup',
+          reason: `gate-finalized-but-dedup-blocked (gate.reason=${decision.reason})`,
+          finalizedTextPreview: finalText,
+          startMs: finalStartMs,
+          endMs: finalEndMs,
+        });
         return NextResponse.json({
           success: true,
           chunkIndex,
@@ -277,9 +397,20 @@ export async function POST(request: NextRequest) {
         chunkIndex: finalChunkIndex,
       });
 
-      console.log(
-        `[TranscriptStream] Stored segment (gate=${decision.reason}, chunk=${finalChunkIndex}): "${finalText.slice(0, 80)}..."`
-      );
+      logChunkDecision({
+        sessionId,
+        chunkIndex,
+        audioBytes: audioSizeBytes,
+        noSpeechProb: averageNoSpeechProb,
+        whisperText: transcriptText,
+        whisperConfidence: confidence,
+        whisperPromptUsed: !!previousTail,
+        decision: 'gate-finalized',
+        reason: decision.reason,
+        finalizedTextPreview: finalText,
+        startMs: finalStartMs,
+        endMs: finalEndMs,
+      });
 
       return NextResponse.json({
         success: true,
@@ -300,6 +431,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    logChunkDecision({
+      sessionId,
+      chunkIndex,
+      audioBytes: audioSizeBytes,
+      noSpeechProb: averageNoSpeechProb,
+      whisperText: '',
+      whisperConfidence: confidence,
+      whisperPromptUsed: !!previousTail,
+      decision: 'whisper-no-text',
+      reason: 'whisper returned empty text',
+      startMs,
+      endMs,
+    });
     return NextResponse.json({
       success: true,
       chunkIndex,
