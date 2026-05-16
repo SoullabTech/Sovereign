@@ -91,6 +91,16 @@ const nextConfig = {
     // the HTML and the browser will receive 200 instead of 308.
     async redirects() {
       return [
+        // /begin was deprecated 2026-05-16 in favor of /signin as the
+        // canonical threshold/auth surface. Page-level redirect() did not
+        // work here for the reasons noted above — the page was statically
+        // optimized and served as 200 with the NEXT_REDIRECT digest
+        // serialized into the body instead of a true 307/308.
+        {
+          source: '/begin',
+          destination: '/signin',
+          permanent: true,
+        },
         {
           source: '/maia/patterns',
           destination: '/worlds/patterns',
