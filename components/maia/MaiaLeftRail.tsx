@@ -12,8 +12,9 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Bookmark, MessageCircle, Heart, PenLine, Mic, Keyboard, BookOpen, Compass } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { MAIA_WORLDS, MAIA_BOUNDARIES, MAIA_UTILITIES, getBoundaryFromPathname } from '@/lib/navigation/maiaNav';
+import { MAIA_WORLDS, MAIA_UTILITIES, getBoundaryFromPathname, getVisibleBoundaries } from '@/lib/navigation/maiaNav';
 import { useVoiceState } from '@/lib/maia/voiceStateContext';
+import { useSession } from '@/lib/hooks/useSession';
 import type { MaiaWorldId, MaiaRailItemId, BoundaryId } from '@/lib/navigation/types';
 
 /** MAIA communication mode — how the member enters the conversation */
@@ -50,6 +51,12 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
   const router = useRouter();
   const pathname = usePathname();
   const { presenceState, amplitude } = useVoiceState();
+  const { isAdmin, isPractitioner } = useSession();
+
+  // Founder/practitioner can see operational rooms (Pro Studio, Book Studio, Circles, Lab Tools).
+  // Conflated for v1 per Move 1 spec — no separate founder role yet on the client.
+  const isFounder = isAdmin || isPractitioner;
+  const visibleBoundaries = getVisibleBoundaries(isFounder);
 
   // Derive active boundary from pathname if not explicitly provided
   const resolvedBoundary = activeBoundary ?? (pathname ? getBoundaryFromPathname(pathname) : null);
@@ -272,8 +279,8 @@ export function MaiaLeftRail({ activeWorld, calmMode, calmCeiling, worldHints, a
         {/* Divider before boundaries */}
         <div className="w-6 h-px bg-[#3a2a1f]/40 my-2" />
 
-        {/* Boundary transitions — config-driven */}
-        {MAIA_BOUNDARIES.map((boundary) => {
+        {/* Boundary transitions — config-driven, filtered by audience */}
+        {visibleBoundaries.map((boundary) => {
           const Icon = boundary.icon;
           const isActive = resolvedBoundary === boundary.id;
           // Per-boundary accent colors

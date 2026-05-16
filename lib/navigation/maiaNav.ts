@@ -88,6 +88,7 @@ export const STUDIO_RAIL_ITEM: MaiaRailItem = {
   classification: 'studio',
   tooltip: 'Practitioner workspace',
   isBoundaryTransition: true,
+  audience: 'founder',
 };
 
 export const BOOK_STUDIO_RAIL_ITEM: MaiaRailItem = {
@@ -98,6 +99,7 @@ export const BOOK_STUDIO_RAIL_ITEM: MaiaRailItem = {
   classification: 'studio',
   tooltip: 'Editorial workspace for Soullab Press',
   isBoundaryTransition: true,
+  audience: 'founder',
 };
 
 export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
@@ -108,6 +110,7 @@ export const CIRCLES_RAIL_ITEM: MaiaRailItem = {
   classification: 'studio',
   tooltip: 'Enter shared field',
   isBoundaryTransition: true,
+  audience: 'founder',
 };
 
 export const ASTROLOGY_RAIL_ITEM: MaiaRailItem = {
@@ -128,6 +131,7 @@ export const LABTOOLS_RAIL_ITEM: MaiaRailItem = {
   classification: 'studio',
   tooltip: 'Consciousness tools & experiments',
   isBoundaryTransition: true,
+  audience: 'founder',
 };
 
 export const COMMUNITY_LIBRARY_RAIL_ITEM: MaiaRailItem = {
@@ -209,6 +213,17 @@ export function getBoundaryFromPathname(pathname: string): BoundaryId | null {
     }
   }
   return null;
+}
+
+/**
+ * Filter MAIA_BOUNDARIES by member visibility audience.
+ * Founder-only items are hidden from non-founders.
+ *
+ * Note: this controls rail icon visibility only. Server-side route auth
+ * is enforced separately via requireFounder() in each gated layout.
+ */
+export function getVisibleBoundaries(isFounder: boolean): MaiaRailItem[] {
+  return MAIA_BOUNDARIES.filter((b) => b.audience !== 'founder' || isFounder);
 }
 
 /** Get a world config by ID */

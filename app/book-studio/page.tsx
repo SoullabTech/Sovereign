@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { redirect } from 'next/navigation';
+import { requireFounder } from '@/lib/founder/founderAuth';
+import FounderGateScreen from '@/components/book-studio/FounderGateScreen';
 
 /**
  * Book Studio index — editorial workspace.
@@ -73,6 +76,14 @@ async function listDrafts(): Promise<{ slug: string; title: string }[]> {
 }
 
 export default async function BookStudioIndex() {
+  const auth = await requireFounder();
+  if (!auth.ok) {
+    if (auth.status === 401) {
+      redirect('/signin?next=/book-studio');
+    }
+    return <FounderGateScreen />;
+  }
+
   const drafts = await listDrafts();
 
   return (
