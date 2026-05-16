@@ -21,6 +21,7 @@ import {
   type ReactNode,
 } from 'react';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { findFirstClusterOffset } from '@/lib/voice/webmInit';
 
 // ---------------------------------------------------------------------------
 // Types (shared with Session Room page)
@@ -415,12 +416,23 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
         chunkStartTimeRef.current = Date.now();
         const idx = chunkIndexRef.current++;
 
-        // The first chunk from MediaRecorder contains the WebM container header
-        // (codec info, stream metadata). Subsequent chunks are raw audio fragments
-        // with no header, which Whisper cannot decode standalone. Prepend the init
-        // segment to every non-first chunk so each upload is a valid WebM file.
+        // The first chunk from MediaRecorder contains the WebM EBML/Segment header
+        // (codec info, stream metadata) followed by the first Cluster of audio data.
+        // Subsequent chunks are Cluster fragments with no header, which Whisper cannot
+        // decode standalone. We need to prepend the header bytes — NOT the first
+        // chunk's audio — to every non-first chunk.
+        //
+        // Storing the full first chunk (header + 5s of audio) and prepending it to
+        // every later chunk causes Whisper to re-transcribe that audio on every
+        // chunk, producing phantom-prefix segments that contaminate the continuity
+        // field. Extract bytes before the first Cluster element (ID 0x1F43B675) so
+        // only header bytes are prepended.
         if (idx === 0) {
-          webmInitChunkRef.current = event.data;
+          const firstBuf = new Uint8Array(await event.data.arrayBuffer());
+          const clusterOffset = findFirstClusterOffset(firstBuf);
+          webmInitChunkRef.current = clusterOffset > 0
+            ? new Blob([firstBuf.slice(0, clusterOffset)], { type: event.data.type })
+            : event.data; // fallback: Cluster ID not found, keep prior behavior
         }
         const initPrepended = idx > 0 && !!webmInitChunkRef.current;
         const audioToSend = (idx === 0 || !webmInitChunkRef.current)
