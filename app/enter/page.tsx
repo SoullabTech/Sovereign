@@ -121,7 +121,7 @@ export default function EnterPage() {
 
     // Case 3: Completely clean localStorage - brand new user
     console.log('[NAV] /enter -> /begin (reason: fresh install)');
-    router.replace('/begin');
+    router.replace('/signin');
   }, [router]);
 
   return (

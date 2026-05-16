@@ -55,7 +55,7 @@ export default function ResumePage() {
           } catch { /* ignore */ }
           // No local session hint — new user
           setPhase('unauthenticated');
-          setTimeout(() => router.push('/begin'), 1200);
+          setTimeout(() => router.push('/signin'), 1200);
           return;
         }
 
@@ -81,7 +81,7 @@ export default function ResumePage() {
       .catch(() => {
         // Network error — fall back to begin
         setPhase('unauthenticated');
-        setTimeout(() => router.push('/begin'), 1000);
+        setTimeout(() => router.push('/signin'), 1000);
       });
   }, [router]);
 

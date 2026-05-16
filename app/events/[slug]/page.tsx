@@ -186,7 +186,7 @@ export default function EventLandingPage() {
                   you&rsquo;ll need a MAIA account.
                 </p>
                 <button
-                  onClick={() => router.push('/begin')}
+                  onClick={() => router.push('/signin')}
                   className="mt-4 w-full py-3 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 transition-colors"
                 >
                   Create your MAIA account

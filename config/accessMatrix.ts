@@ -74,7 +74,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
 
   // Onboarding (pre-auth)
-  { exact: '/begin', public: true, notes: 'Begin journey entry — email magic link path' },
+  { exact: '/begin', public: true, notes: 'Legacy route — redirects to /signin (deprecated 2026-05-16)' },
   { exact: '/resume', public: true, notes: 'Universal onboarding recovery — computes next step from server state' },
   { exact: '/continue', public: true, notes: 'Alias for /resume' },
   { exact: '/test-elemental', public: true, notes: 'Passkey / invite code entry path' },

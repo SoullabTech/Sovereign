@@ -219,7 +219,7 @@ function FieldTalkContent() {
 
       if (!hasAnySessionData) {
         console.log('[Field] No session data — routing to /begin');
-        router.replace('/begin');
+        router.replace('/signin');
         return;
       }
 
@@ -229,7 +229,7 @@ function FieldTalkContent() {
         localStorage.removeItem('explorerId');
         localStorage.removeItem('explorerName');
         localStorage.removeItem('signup_completed');
-        router.replace('/begin');
+        router.replace('/signin');
         return;
       }
 

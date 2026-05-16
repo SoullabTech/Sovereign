@@ -48,7 +48,8 @@ export interface OnboardingMemberRow {
  *  4. onboarding_step === 'faq'  →  needs_faq, go to /faq
  *  5. onboarding_step === 'test-elemental'  →  needs_faq, go to /faq
  *     (passkey/email step is complete; FAQ is next regardless of path taken)
- *  6. anything else  →  needs_profile, go to /begin
+ *  6. anything else  →  needs_profile, go to /signin
+ *     (/begin was deprecated 2026-05-16; /signin is the canonical entry)
  */
 export function getNextOnboardingStep(
   member: OnboardingMemberRow | null | undefined
@@ -56,7 +57,7 @@ export function getNextOnboardingStep(
   if (!member) {
     return {
       phase: 'needs_profile',
-      path: '/begin',
+      path: '/signin',
       label: 'Create your profile to get started',
       ready: false,
     };
@@ -89,10 +90,10 @@ export function getNextOnboardingStep(
     };
   }
 
-  // Covers: null, 'begin', or any unknown value
+  // Covers: null, 'begin' (legacy step), or any unknown value
   return {
     phase: 'needs_profile',
-    path: '/begin',
+    path: '/signin',
     label: 'Complete your profile to continue',
     ready: false,
   };

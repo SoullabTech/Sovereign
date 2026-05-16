@@ -126,7 +126,7 @@ function MagicLinkSuccessContent() {
           </div>
           <p className="text-teal-900 font-light mb-4">Something went wrong with that link.</p>
           <button
-            onClick={() => router.push('/begin')}
+            onClick={() => router.push('/signin')}
             className="px-6 py-2 rounded-xl bg-teal-700 text-white text-sm font-medium hover:bg-teal-800 transition"
           >
             Try again

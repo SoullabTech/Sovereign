@@ -287,11 +287,11 @@ export default function SignupPage() {
       if (createdMember.onboarded) {
         router.push('/maia');
       } else {
-        router.push('/begin');
+        router.push('/signin');
       }
     } catch {
       // Non-blocking, just continue
-      router.push(createdMember.onboarded ? '/maia' : '/begin');
+      router.push(createdMember.onboarded ? '/maia' : '/signin');
     }
   }
 
@@ -300,7 +300,7 @@ export default function SignupPage() {
     if (createdMember?.onboarded) {
       router.push('/maia');
     } else {
-      router.push('/begin');
+      router.push('/signin');
     }
   }
 

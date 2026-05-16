@@ -129,11 +129,11 @@ export function useUserAuth() {
         router.replace('/signin');
       } else {
         // New user - start onboarding
-        router.replace('/begin');
+        router.replace('/signin');
       }
     } else if (!status.onboarded) {
       // Authenticated but hasn't completed onboarding
-      router.replace('/begin');
+      router.replace('/signin');
     } else {
       // Fully authenticated and onboarded
       router.replace('/maia');
