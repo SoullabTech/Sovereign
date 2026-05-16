@@ -3,6 +3,11 @@ import { getTranscriptSegments, addTranscriptSegment, getLastChunkTail, getRecen
 import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { isLikelyPhantomDuplicate } from '@/lib/scribe/transcriptCleaner';
 import { evaluate as evaluateSegmentGate } from '@/lib/supervision/segmentGate';
+import {
+  computeAverageNoSpeechProb,
+  isSilenceHallucination,
+  NO_SPEECH_PROB_THRESHOLD,
+} from '@/lib/supervision/silenceHallucinationGuard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +25,8 @@ interface WhisperResponse {
     end: number;
     text: string;
     confidence?: number;
+    /** Whisper's own per-segment probability that the audio is non-speech. */
+    no_speech_prob?: number;
   }>;
   language?: string;
 }
@@ -130,6 +137,7 @@ export async function POST(request: NextRequest) {
     let transcriptText = '';
     let confidence = 0.9;
     let language = 'en';
+    let averageNoSpeechProb: number | null = null;
 
     try {
       const whisperResponse = await fetch(`${WHISPER_URL}/v1/audio/transcriptions`, {
@@ -148,6 +156,9 @@ export async function POST(request: NextRequest) {
             0
           );
           confidence = totalConfidence / whisperResult.segments.length;
+          // Phase A.2 audio-side tuning: capture Whisper's own no-speech probability
+          // so we can reject silence-hallucinated coherent text before the text gate.
+          averageNoSpeechProb = computeAverageNoSpeechProb(whisperResult.segments);
         }
       } else {
         console.error('[TranscriptStream] Whisper error:', await whisperResponse.text());
@@ -156,6 +167,30 @@ export async function POST(request: NextRequest) {
       console.error('[TranscriptStream] Whisper connection error:', whisperError);
       // Fall back to browser transcription if provided
       transcriptText = formData.get('fallbackText') as string || '';
+    }
+
+    // Phase A.2 audio-side tuning — silence-hallucination guard.
+    // Whisper fabricates coherent dialogue from silence/low-signal audio (e.g.
+    // "We'll see you in the next one.", "What are you guys doing?"). These pass
+    // every text-side heuristic because they look like real speech. Use Whisper's
+    // own no_speech_prob field to reject the source before the candidate gate
+    // ever sees it. Field absence is treated as no signal (defer to text gate).
+    if (transcriptText && isSilenceHallucination(averageNoSpeechProb)) {
+      console.log(
+        `[TranscriptStream] Rejected chunk=${chunkIndex} as silence-hallucination ` +
+        `(no_speech_prob=${averageNoSpeechProb?.toFixed(2)} > ${NO_SPEECH_PROB_THRESHOLD}): ` +
+        `"${transcriptText.slice(0, 50)}..."`
+      );
+      return NextResponse.json({
+        success: true,
+        chunkIndex,
+        silenceSkipped: false,
+        noSpeechHallucinationRejected: true,
+        noSpeechProb: averageNoSpeechProb,
+        whisperPromptUsed: !!previousTail,
+        segment: null,
+        message: `Rejected as silence hallucination (no_speech_prob=${averageNoSpeechProb?.toFixed(2)})`,
+      });
     }
 
     // Only store if we have text
