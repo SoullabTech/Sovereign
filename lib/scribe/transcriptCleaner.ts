@@ -171,25 +171,75 @@ function wordOverlap(a: string, b: string): number {
  * Pre-persistence guard: should this newly transcribed segment be rejected as a
  * phantom duplicate or silence-text artifact before being INSERTed?
  *
- * Single-segment counterpart to detectPhantomPrefix (which is batch-oriented and
- * needs >=5 segments). Uses the same SIMILARITY_THRESHOLD and MIN_MEANINGFUL_LENGTH
- * constants so source-side and downstream cleaning agree on what counts as phantom.
+ * Phase A.2 dedup-comparator fix (2026-05-16, Kelly): the prior token-overlap
+ * comparator (`wordOverlap >= 0.70`) was collapsing *structurally parallel*
+ * utterances. "This is the second sentence of the test." vs "This is the third
+ * sentence of the test." share 7/8 words = 0.875 overlap and were falsely
+ * dropped as duplicates — even though "second"/"third" makes them semantically
+ * distinct utterances. The comparator was treating identity as lexical
+ * similarity instead of as exact replay.
  *
- * Returns true when the segment should be rejected: short-enough-to-be-silence/noise,
- * or near-identical to one of the recent segments (the shape of the audio-prepending
- * contamination this guard exists to stop from entering the continuity field).
+ * Real duplicate cases this guard MUST still catch:
+ *   - Exact normalized replay (WebSpeech phantom repetition).
+ *   - Whisper previousTail re-emission where a later chunk's text is a
+ *     normalized word-prefix of an already-persisted segment, or vice versa
+ *     (e.g. "This is the third sentence." precedes "This is the third sentence
+ *     of the test.").
+ *
+ * Real distinct cases this guard MUST NOT collapse:
+ *   - Parallel utterances differing in a single content word
+ *     ("second"/"third", "Monday"/"Tuesday", "first"/"second"/"third").
+ *
+ * Comparator: normalized exact-match OR one string is a word-aligned prefix
+ * of the other. No token-set overlap. No Jaccard threshold. Word-aligned
+ * prefix means the split happens at a space boundary in the normalized form,
+ * so a mid-word truncation like "this is the third sent" does not falsely
+ * match "I sent it yesterday".
+ *
+ * Returns true when the segment should be rejected: short-enough-to-be-
+ * silence/noise, exact replay of a recent segment, or a word-prefix replay
+ * of a recent segment.
  */
 export function isLikelyPhantomDuplicate(
   newText: string,
   recentTexts: string[],
 ): boolean {
-  const trimmed = newText.trim();
-  if (trimmed.length < MIN_MEANINGFUL_LENGTH) return true;
+  const a = normalizeForReplayCheck(newText);
+  if (!a) return true;
+  if (a.length < MIN_MEANINGFUL_LENGTH) return true;
   for (const recent of recentTexts) {
-    if (!recent) continue;
-    if (wordOverlap(trimmed, recent) >= SIMILARITY_THRESHOLD) return true;
+    const b = normalizeForReplayCheck(recent);
+    if (!b) continue;
+    if (a === b) return true;
+    if (isWordPrefix(a, b)) return true;
+    if (isWordPrefix(b, a)) return true;
   }
   return false;
+}
+
+/**
+ * Normalize for the replay comparator: lowercase, strip non-alphanumerics,
+ * collapse whitespace. Produces a single space-separated word string suitable
+ * for `===` equality and `startsWith(... + ' ')` prefix checks.
+ */
+function normalizeForReplayCheck(s: string): string {
+  if (!s) return '';
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * True when `short` is a word-aligned prefix of `long` in the normalized form.
+ * The boundary requirement prevents mid-word false positives ("sent" inside
+ * "sentence"). Identical strings are not a "prefix" in this sense — handle
+ * `a === b` separately.
+ */
+function isWordPrefix(short: string, long: string): boolean {
+  if (long.length <= short.length) return false;
+  return long.startsWith(short + ' ');
 }
 
 export interface TranscriptQualityMetrics {
