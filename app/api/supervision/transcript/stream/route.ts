@@ -10,7 +10,7 @@ import {
 } from '@/lib/supervision/silenceHallucinationGuard';
 import {
   consumeSkipPromptFlag,
-  markSilenceHallucination,
+  markContinuityBreak,
 } from '@/lib/supervision/promptContinuityState';
 
 export const runtime = 'nodejs';
@@ -287,7 +287,7 @@ export async function POST(request: NextRequest) {
       // Phase A.2 continuity-state reset (2026-05-16): silence resets
       // conversational continuity. Arm the one-shot skip-prompt flag so the
       // NEXT real chunk reaches Whisper without a now-stale previousTail.
-      markSilenceHallucination(sessionId);
+      markContinuityBreak(sessionId);
       return NextResponse.json({
         success: true,
         chunkIndex,
@@ -448,6 +448,13 @@ export async function POST(request: NextRequest) {
         },
       });
     }
+
+    // Phase A.2 QA (2026-05-17): whisper-no-text is also an absence-of-new-
+    // participation signal — mark the session for prompt-continuity reset on
+    // the next chunk. Telemetry from sentence 5→6 transition showed that
+    // without this, previousTail vocabulary biases the next real chunk
+    // (e.g. spoken "question" gets transcribed as "sentence").
+    markContinuityBreak(sessionId);
 
     logChunkDecision({
       sessionId,
