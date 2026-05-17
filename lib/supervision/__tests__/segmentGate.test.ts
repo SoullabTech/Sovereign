@@ -761,6 +761,83 @@ describe('segmentGate.evaluate — A.2 tuning: prefix-continuation + raised sile
   });
 });
 
+describe('segmentGate.evaluate — telemetry-guided tuning (2026-05-16): ellipsis is continuation, not terminator', () => {
+  // Live production telemetry showed chunks ending in "..." being finalized as
+  // fragments ("This is the...") because the sentence-terminator regex matched
+  // any trailing period. Ellipsis is a Whisper convention for mid-utterance
+  // chunk cut-offs — treat as continuation.
+
+  it('does NOT finalize a candidate ending in ellipsis "..."', () => {
+    const d = evaluate({
+      sessionId: SESSION_A,
+      newText: 'This is the...',
+      chunkIndex: 0,
+      startMs: 0,
+      endMs: 5000,
+      speaker: 'Speaker 1',
+      arrivedAt: 1000,
+    });
+    expect(d.shouldFinalize).toBe(false);
+    expect(d.shouldDiscard).toBe(false);
+    expect(d.reason).toBe('new-candidate-buffered');
+    expect(_peekCandidate(SESSION_A)?.text).toBe('This is the...');
+  });
+
+  it('does NOT finalize for a 4-dot ellipsis "...."', () => {
+    const d = evaluate({
+      sessionId: SESSION_A,
+      newText: 'But wait....',
+      chunkIndex: 0,
+      startMs: 0,
+      endMs: 5000,
+      speaker: 'Speaker 1',
+      arrivedAt: 1000,
+    });
+    expect(d.shouldFinalize).toBe(false);
+    expect(d.reason).toBe('new-candidate-buffered');
+  });
+
+  it('still finalizes a single-period sentence terminator', () => {
+    const d = evaluate({
+      sessionId: SESSION_A,
+      newText: 'This is a single sentence.',
+      chunkIndex: 0,
+      startMs: 0,
+      endMs: 5000,
+      speaker: 'Speaker 1',
+      arrivedAt: 1000,
+    });
+    expect(d.shouldFinalize).toBe(true);
+    expect(d.finalText).toBe('This is a single sentence.');
+  });
+
+  it('still finalizes on exclamation and question terminators', () => {
+    _resetAllCandidates();
+    const d1 = evaluate({
+      sessionId: SESSION_A,
+      newText: 'Wait a minute!',
+      chunkIndex: 0,
+      startMs: 0,
+      endMs: 5000,
+      speaker: 'Speaker 1',
+      arrivedAt: 1000,
+    });
+    expect(d1.shouldFinalize).toBe(true);
+
+    _resetAllCandidates();
+    const d2 = evaluate({
+      sessionId: SESSION_A,
+      newText: 'What about that?',
+      chunkIndex: 0,
+      startMs: 0,
+      endMs: 5000,
+      speaker: 'Speaker 1',
+      arrivedAt: 1000,
+    });
+    expect(d2.shouldFinalize).toBe(true);
+  });
+});
+
 describe('flushPendingCandidate', () => {
   it('finalizes a pending non-filler candidate', () => {
     evaluate({

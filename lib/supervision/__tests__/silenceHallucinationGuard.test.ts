@@ -107,6 +107,30 @@ describe('isSilenceHallucination — threshold override', () => {
   });
 });
 
+describe('telemetry-guided tuning (2026-05-16): threshold lowered 0.6 → 0.5', () => {
+  // Live production telemetry showed Whisper producing "Thank you very much."
+  // (a classic silence-hallucination from training data) with
+  // no_speech_prob ≈ 0.549 — just below the prior 0.6 threshold. Lowering
+  // to 0.5 catches this family.
+
+  it('rejects "Thank you very much" silence-hallucination at no_speech_prob=0.549', () => {
+    expect(isSilenceHallucination(0.549)).toBe(true);
+  });
+
+  it('rejects at exactly 0.51 (above new 0.5 threshold)', () => {
+    expect(isSilenceHallucination(0.51)).toBe(true);
+  });
+
+  it('still accepts low-confidence real speech at no_speech_prob=0.4', () => {
+    // Quieter real speech may have nsp around 0.3–0.4. Acceptable region.
+    expect(isSilenceHallucination(0.4)).toBe(false);
+  });
+
+  it('threshold constant is now 0.5', () => {
+    expect(NO_SPEECH_PROB_THRESHOLD).toBe(0.5);
+  });
+});
+
 describe('integration — Whisper response shape', () => {
   it('end-to-end: hallucinated segments with high no_speech_prob produce a rejection', () => {
     // Simulates the Whisper verbose_json shape the stream handler receives.

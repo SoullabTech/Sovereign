@@ -23,10 +23,18 @@
 
 /**
  * Threshold above which a chunk is presumed silence-hallucination.
+ *
  * Whisper convention: > 0.6 indicates the model believes the audio
- * contains no speech. Tunable per the canonical plan.
+ * contains no speech.
+ *
+ * 2026-05-16 telemetry-guided tuning: lowered 0.6 → 0.5 after live test
+ * showed the classic Whisper "Thank you very much." silence-hallucination
+ * arriving with no_speech_prob ≈ 0.549 — just below the old threshold. The
+ * 0.5 cutoff catches that family. Conservative-omission risk on quieter
+ * real speech accepted per Kelly's framing: *"You can tune upward from
+ * omission. You cannot trust a system that invents speech."*
  */
-export const NO_SPEECH_PROB_THRESHOLD = 0.6;
+export const NO_SPEECH_PROB_THRESHOLD = 0.5;
 
 interface SegmentWithNoSpeechProb {
   no_speech_prob?: number;
