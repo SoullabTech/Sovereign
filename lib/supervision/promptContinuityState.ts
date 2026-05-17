@@ -1,11 +1,12 @@
 /**
  * lib/supervision/promptContinuityState.ts
  *
- * Phase A.2 — continuity-state reset (2026-05-16).
+ * Phase A.2 — continuity-state reset (2026-05-16, widened 2026-05-17).
  *
  * Per-session one-shot flag: "skip Whisper previousTail prompt for the
- * next chunk." Set when a chunk is rejected as silence-hallucination.
- * Consumed exactly once on the next chunk arrival.
+ * next chunk." Set when a chunk represents an absence of new participation
+ * — either silence-hallucination OR whisper-no-text. Consumed exactly once
+ * on the next chunk arrival.
  *
  * Rationale (Kelly, 2026-05-16): silence resets conversational continuity.
  * `getLastChunkTail` is a pure DB read with no awareness of intervening
@@ -14,39 +15,43 @@
  * Architecture (matches segmentGate.ts):
  *   Module-scope Set keyed by sessionId. Process restart loses flags,
  *   which is fine: at worst one extra chunk gets the prior tail, and the
- *   next silence-hallucination event re-arms the flag immediately.
+ *   next continuity-break event re-arms the flag immediately.
  *
- * Scope (Kelly, 2026-05-16):
- *   - silence-hallucination only (narrow).
- *   - whisper-no-text is NOT marked, pending evidence of fragmentation
- *     after no-text chunks. Widen deliberately based on telemetry, not
- *     by default.
+ * Scope (Phase A.2 QA, 2026-05-17 — widened based on telemetry):
+ *   - silence-hallucination: set flag.
+ *   - whisper-no-text: set flag.
+ *   Both events signal absence of new participation, and should reset the
+ *   prompt continuity. Telemetry from session f35719bf (sentence 5→6
+ *   transition) showed prompt-continuity bleed when only whisper-no-text
+ *   chunks intervened between two real utterances: previousTail
+ *   "...sentence number five..." biased Whisper to transcribe a spoken
+ *   "question" as "sentence" on the next real chunk.
  *
  * Telemetry: existing `whisperPromptUsed` field in the gate telemetry log
  * is sufficient to verify post-patch behavior. Expected shape after a
- * silence-hallucination rejection:
- *   chunk N    → silence-hallucination, whisperPromptUsed: true   (this chunk)
- *   chunk N+1  → real speech,           whisperPromptUsed: false  (flag consumed)
- *   chunk N+2  → real speech,           whisperPromptUsed: true   (continuity resumed)
+ * continuity-break rejection:
+ *   chunk N    → silence-hallucination or whisper-no-text, promptUsed: true
+ *   chunk N+1  → real speech,                              promptUsed: false  (flag consumed)
+ *   chunk N+2  → real speech,                              promptUsed: true   (continuity resumed)
  */
 
 const sessionsToSkipPrompt = new Set<string>();
 
 /**
  * Mark this session to skip the Whisper previousTail prompt on the NEXT
- * chunk. Called from the silence-hallucination branch of the transcript
- * stream handler.
+ * chunk. Called when a chunk represents absence of new participation —
+ * silence-hallucination rejection OR whisper-no-text.
  */
-export function markSilenceHallucination(sessionId: string): void {
+export function markContinuityBreak(sessionId: string): void {
   sessionsToSkipPrompt.add(sessionId);
 }
 
 /**
  * Read-and-consume the skip-prompt flag for this session.
  *
- * Returns true exactly once after each `markSilenceHallucination`, then
+ * Returns true exactly once after each `markContinuityBreak`, then
  * false until the next mark. One-shot semantics: the flag exists only to
- * reset continuity across a single silence boundary.
+ * reset continuity across a single silence/no-text boundary.
  */
 export function consumeSkipPromptFlag(sessionId: string): boolean {
   return sessionsToSkipPrompt.delete(sessionId);
