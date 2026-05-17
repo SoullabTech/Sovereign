@@ -161,7 +161,15 @@ function wordOverlap(a: string, b: string): number {
 }
 
 function endsWithSentenceTerminator(text: string): boolean {
-  return /[.!?]['")\]\s]*$/.test(text.trim());
+  const trimmed = text.trim();
+  // 2026-05-16 telemetry-guided tuning: ellipsis ("..." or "....") is a
+  // CONTINUATION marker — Whisper produces it when a chunk ends mid-utterance,
+  // not when a sentence terminates. Treating it as a terminator caused chunks
+  // like "This is the..." to finalize as fragments, orphaning the actual sentence
+  // continuation in the next chunk. Reject ellipsis explicitly before testing
+  // for a normal terminator.
+  if (/\.{2,}['")\]\s]*$/.test(trimmed)) return false;
+  return /[.!?]['")\]\s]*$/.test(trimmed);
 }
 
 function isFillerOnly(text: string): boolean {
