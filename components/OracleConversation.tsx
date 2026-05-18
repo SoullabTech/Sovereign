@@ -17,6 +17,8 @@ import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/us
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
+import { VoiceDebugOverlay } from './voice/VoiceDebugOverlay';
+import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
@@ -7213,6 +7215,11 @@ I'm not sure what I'm feeling yet.`;
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
+              // PR 10 diagnostic: first marker in the voice trace.
+              // If this never appears in the on-screen overlay when the user
+              // taps the holoflower, the click event isn't reaching here at
+              // all (event wiring / pointer-events / overlay z-index issue).
+              pushVoiceDebug('🎯 holoflower tap');
               console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
 
               // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
@@ -7894,6 +7901,11 @@ I'm not sure what I'm feeling yet.`;
       </motion.div>
         </TransformationalPresence>
       </div>
+
+      {/* 🐛 PR 10 diagnostic overlay — auto-renders only on Capacitor native.
+          Surfaces the voice debug bus contents so a tester can screenshot
+          the trace when voice fails. Remove once Android voice is stable. */}
+      <VoiceDebugOverlay />
 
       {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
       {isPwaVoice && (
