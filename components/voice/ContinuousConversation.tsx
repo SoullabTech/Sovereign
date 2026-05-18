@@ -1502,21 +1502,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       if (shouldUseNative) {
         console.log('📱 [ContinuousConversation] Using NATIVE speech recognition for platform:', platform);
 
-        // 🛡️ CRASH PREVENTION: Stop any existing recognition first
-        // This prevents "already listening" crashes on iOS
+        // 🛡️ CRASH PREVENTION (iOS only): Stop any existing recognition first.
+        // The original comment for this block read "This prevents 'already
+        // listening' crashes on iOS" — Android was running through the same
+        // call by accident.
         //
-        // PR 13 diagnostic markers (2026-05-18): Tara's Pixel 8a Android 16
-        // trace stops cold after "📍 path: native" with no "Checking
-        // availability…" marker downstream. Hypothesis: NativeSpeechRecognition.stop()
-        // is hanging silently on this device (Capacitor 8 plugin behavior).
-        // These two markers prove or refute that.
-        try {
-          addDebug('🛑 stop() calling');
-          await NativeSpeechRecognition.stop();
-          addDebug('🛑 stop() returned');
-          console.log('🛑 [Native] Pre-emptively stopped any existing recognition');
-        } catch {
-          // Ignore errors - recognition may not have been running
+        // PR 13 diagnostic markers (2026-05-18) confirmed the hypothesis:
+        // Tara's Pixel 8a / Android 16 trace (round 8) showed "🛑 stop()
+        // calling" fire and then nothing — no "🛑 stop() returned", no
+        // catch, no error. The Capacitor 8 SpeechRecognition plugin's stop()
+        // never resolves on that device when there is nothing to stop, so
+        // the entire start path hangs inside the await.
+        //
+        // PR 14 fix (Option A, per Kelly): gate the call to iOS, where it
+        // was always intended to run. Android proceeds directly to
+        // ensureNativeSpeechReady(), which is the actual permissions/
+        // availability path. No timeout race, no fallback wiring, no iOS
+        // behavior change. Diagnostic markers retained inside the iOS
+        // branch (and a new "skipped on Android" marker added) so the next
+        // round-9 trace shows whether Android now reaches ready().
+        if (platform === 'ios') {
+          try {
+            addDebug('🛑 stop() calling');
+            await NativeSpeechRecognition.stop();
+            addDebug('🛑 stop() returned');
+            console.log('🛑 [Native] Pre-emptively stopped any existing recognition');
+          } catch {
+            // Ignore errors - recognition may not have been running
+          }
+        } else {
+          addDebug('⏭️ stop() skipped on Android');
         }
 
         // ─── Android native-failure fallback helper ─────────────────────────
