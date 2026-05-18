@@ -115,6 +115,41 @@ soullab.life {
         respond "" 204
     }
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Beta tester APK distribution (added 2026-05-18 for Tara's Pixel 8a + Samsung tablet round)
+    # ───────────────────────────────────────────────────────────────────────────
+    # Why this exists:
+    #   Google Drive's preview path serves APK files with an inferred MIME based
+    #   on a thumbnail render, not the .apk extension. On Samsung tablets in
+    #   particular, Android's intent resolver then offers ONLY image apps to
+    #   "open" the file (Gallery, Photos, Canva) instead of the package
+    #   installer. Three consecutive tester rounds (rounds 6, 7, 8) failed on
+    #   the tablet for this reason — never an app bug, always the delivery.
+    #
+    # What this does:
+    #   - Serves /beta/**/*.apk directly from /srv/beta inside the container,
+    #     bound to ./beta on the host.
+    #   - Sets Content-Type: application/vnd.android.package-archive (the
+    #     canonical APK MIME), bypassing every intermediate MIME-guessing layer.
+    #   - Forces Content-Disposition: attachment so Android downloads rather
+    #     than previews. Combined with the correct MIME, the bytes hit the
+    #     package installer cleanly.
+    #   - Cache-Control: no-store — same filename across rebuilds always
+    #     serves fresh bytes; no stale-APK risk for testers.
+    #
+    # Must be declared BEFORE @html_pages, which would otherwise match /beta/*.
+    # ═══════════════════════════════════════════════════════════════════════════
+    @beta_apk {
+        path_regexp ^/beta/.+\.apk$
+    }
+    handle @beta_apk {
+        root * /srv
+        header Content-Type "application/vnd.android.package-archive"
+        header Content-Disposition "attachment"
+        header Cache-Control "no-store"
+        file_server
+    }
+
     # SSE/Streaming endpoints - disable compression and buffering
     # NOTE: CORS headers are handled by Next.js API routes
     @streaming {

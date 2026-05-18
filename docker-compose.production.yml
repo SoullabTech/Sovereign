@@ -47,6 +47,12 @@ services:
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Beta tester APK serve — read-only bind mount.
+      # Files in ./beta on the host are exposed at /srv/beta inside the
+      # container, served by the @beta_apk handler in Caddyfile with the
+      # correct application/vnd.android.package-archive MIME.
+      # See Caddyfile for the rationale (Drive's preview path mangles MIME).
+      - ./beta:/srv/beta:ro
       - caddy_data:/data
       - caddy_config:/config
     env_file:

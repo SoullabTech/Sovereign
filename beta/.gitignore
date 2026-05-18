@@ -1,0 +1,6 @@
+# APK binaries staged for tester distribution — never commit to git.
+# Caddy serves these directly from disk at /beta/*.apk via the
+# @beta_apk handler in ../Caddyfile. Copy fresh builds to the
+# appropriate per-tester subdirectory on minisforum before announcing
+# a new URL.
+*.apk
