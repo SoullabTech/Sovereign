@@ -60,7 +60,11 @@ export function VoiceDebugOverlay() {
       <div
         style={{
           position: 'fixed',
-          bottom: 8,
+          // Sit above Android's system gesture bar + the in-app SOULLAB pill.
+          // Tara's 2026-05-18 screenshot (Pixel 8a Android 16) showed the
+          // lower 2–3 trace lines obscured by overlapping UI. ~140px clears
+          // both on common Android devices.
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 140px)',
           left: 8,
           zIndex: 99998,
           maxWidth: 280,
@@ -83,7 +87,11 @@ export function VoiceDebugOverlay() {
     <div
       style={{
         position: 'fixed',
-        bottom: 8,
+        // Sit above Android's system gesture bar + the in-app SOULLAB pill.
+        // Tara's 2026-05-18 screenshot (Pixel 8a Android 16) showed the
+        // lower 2–3 trace lines obscured by overlapping UI. ~140px clears
+        // both on common Android devices.
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 140px)',
         left: 8,
         zIndex: 99998,
         maxWidth: 280,
