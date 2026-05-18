@@ -9,6 +9,7 @@ import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-communi
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 import { logVoiceEvent, resetVoiceSession } from '@/lib/voice/voiceDiagnostics';
+import { pushVoiceDebug } from '@/lib/voice/voiceDebugBus';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 // =============================================================================
@@ -191,6 +192,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     const fullMsg = `[${timestamp}] ${msg}`;
     console.log('🐛 [DEBUG]', msg);
     setDebugLog(prev => [...prev.slice(-14), fullMsg]); // Keep last 15 messages for better diagnosis
+    // Mirror to the global voice debug bus so VoiceDebugOverlay (rendered
+    // by OracleConversation) surfaces it on Capacitor native. The bus is a
+    // no-op on web. PR 10 diagnostic instrumentation.
+    pushVoiceDebug(msg);
   }, []);
 
   const recognitionRef = useRef<any>(null);
@@ -1475,6 +1480,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log('📱 [ContinuousConversation] Platform:', platform, 'shouldUseNative:', shouldUseNative);
     console.log('📱 [ContinuousConversation] Capacitor.isNativePlatform():', Capacitor.isNativePlatform());
     addDebug(`Platform: ${platform}, native: ${shouldUseNative}`);
+    addDebug(`📍 path: ${shouldUseNative ? 'native' : 'web'}`);
 
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
     // EXCEPTION: forceOverride allows bypassing this during user interrupt
@@ -1515,6 +1521,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // iOS native path is unaffected (helper no-ops when platform !== 'android').
         const tryAndroidFallback = async (reason: string): Promise<boolean> => {
           if (platform !== 'android') return false;
+          addDebug(`🔁 fallback attempted: ${reason.slice(0, 40)}`);
           console.log('🔁 [Android] Native voice unavailable — MediaRecorder fallback', { reason });
           logVoiceEvent('ios_voice_error', { where: 'native_fallback_attempt', name: reason.slice(0, 60) });
 
@@ -1522,6 +1529,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           try {
             stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           } catch (err: any) {
+            addDebug(`❌ fallback: getUserMedia failed (${err?.name || 'unknown'})`);
             console.warn('🚫 [Android fallback] getUserMedia failed:', err?.name);
             return false;
           }
@@ -1529,18 +1537,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           setIsListening(true);
           isListeningRef.current = true;
           setMicState('LISTENING', 'android_native_fallback');
+          addDebug('🎙️ fallback: stream acquired, recording…');
 
           try {
             const { recordAndTranscribe } = await import('@/lib/voice/androidVoiceFallback');
             const result = await recordAndTranscribe(stream);
             if (result.ok && result.transcript) {
+              addDebug(`✅ fallback succeeded: ${result.transcript.length} chars`);
               console.log(`✅ [Android fallback] Transcript: ${result.transcript.length} chars, ${result.durationMs}ms`);
               isProcessingRef.current = true;
               onTranscript(result.transcript);
               return true;
             }
+            addDebug(`❌ fallback failed: ${result.reason || 'unknown'}`);
             console.warn(`❌ [Android fallback] Failed: ${result.reason}`);
           } catch (err: any) {
+            addDebug(`💥 fallback threw: ${err?.name || 'unknown'}`);
             console.error('💥 [Android fallback] Threw:', err);
           } finally {
             stream.getTracks().forEach((t) => t.stop());
