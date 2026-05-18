@@ -294,27 +294,31 @@ hide_incompatible_pages() {
 
     find "$PROJECT_ROOT/app" -name "page.tsx" -type f 2>/dev/null | while IFS= read -r file; do
         local rel_path="${file#$PROJECT_ROOT/}"
+        local page_dir="$(dirname "$file")"
+        local page_rel_dir="$(dirname "$rel_path")"
 
-        # Only care about dynamic routes (paths with [param])
+        # Step 1: Scan EVERY route (flat + dynamic-segment) for the flags
+        # that disqualify static export. `dynamic = 'force-dynamic'`,
+        # `cookies()`, and `headers()` make a page unrenderable at build
+        # time regardless of route shape.
+        #
+        # Surfaced 2026-05-15 when /begin (a flat route, not [param]) was
+        # deprecated via force-dynamic for runtime redirect (PR #352).
+        # The previous scan only checked [param] routes, so flat
+        # force-dynamic pages slipped through and crashed the static export.
+        # PR #342 had fixed the [param] variant of this bug; this fixes
+        # the flat-route variant.
+        if grep -qE "(cookies\(|headers\(|export const dynamic.*=.*['\"]force-dynamic['\"])" "$file" 2>/dev/null; then
+            log_warn "  Will exclude (dynamic API): $rel_path"
+            echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
+            continue
+        fi
+
+        # Step 2: Dynamic-segment-only checks. Routes containing [param]
+        # need either generateStaticParams (so Next.js knows which paths to
+        # pre-render) or must be excluded. Flat routes don't need this.
         case "$rel_path" in
             *\[*\]*)
-                local page_dir="$(dirname "$file")"
-                local page_rel_dir="$(dirname "$rel_path")"
-
-                # Check force-dynamic / cookies / headers FIRST. These flags
-                # disqualify a page from static export regardless of whether
-                # generateStaticParams is also declared — Next.js treats
-                # `dynamic = 'force-dynamic'` as overriding any static-params
-                # intent. Without this ordering, pages like
-                # /field/[slug]/book that have BOTH (force-dynamic +
-                # generateStaticParams() { return []; }) fall through to the
-                # "compatible" shortcut below and crash the static export.
-                if grep -qE "(cookies\(|headers\(|export const dynamic.*=.*['\"]force-dynamic['\"])" "$file" 2>/dev/null; then
-                    log_warn "  Will exclude (dynamic API): $rel_path"
-                    echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
-                    continue
-                fi
-
                 # Already has generateStaticParams (and no force-dynamic)? Compatible.
                 if grep -q "generateStaticParams" "$file" 2>/dev/null; then
                     continue
