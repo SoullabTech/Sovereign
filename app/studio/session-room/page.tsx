@@ -52,6 +52,7 @@ import {
 import { apiFetch } from '@/lib/http/apiBase';
 import { cleanTranscriptTexts } from '@/lib/scribe/transcriptCleaner';
 import { repairTranscriptTexts } from '@/lib/scribe/transcriptRepair';
+import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 import { SessionReviewChat } from '@/components/studio/SessionReviewChat';
 import { ShareToCircleModal } from '@/components/circles/ShareToCircleModal';
 import { useOfferToCircle } from '@/lib/circles/useOfferToCircle';
@@ -194,6 +195,7 @@ export default function SessionRoomPage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [localSessionTitle, setLocalSessionTitle] = useState('');
   const [captureTabAudio, setCaptureTabAudio] = useState(false);
+  const [blockedFeedbackSent, setBlockedFeedbackSent] = useState(false);
 
   // Past sessions / history review
   const [pastSessions, setPastSessions] = useState<PastSession[]>([]);
@@ -245,6 +247,35 @@ export default function SessionRoomPage() {
   const needsConsent = container === 'witness' || container === 'practitioner';
   const canStart = !needsConsent || consentConfirmed;
   const containerMarkers = CONTAINER_CONFIG[container].markers;
+
+  // Feature-detect browser tab-audio capture. getDisplayMedia is absent in
+  // Capacitor/iOS WebView, older Safari, and some embedded webviews. When
+  // missing, we hide the "Add meeting audio" toggle so users aren't offered
+  // a feature their environment can't deliver.
+  const displayMediaSupported = useMemo(
+    () =>
+      typeof navigator !== 'undefined' &&
+      !!navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getDisplayMedia === 'function',
+    [],
+  );
+
+  // If a previously-set toggle persists in an unsupported environment, coerce off.
+  useEffect(() => {
+    if (!displayMediaSupported && captureTabAudio) setCaptureTabAudio(false);
+  }, [displayMediaSupported, captureTabAudio]);
+
+  // Emit listening telemetry once per mount if the browser cannot offer the
+  // browser-tab path. Aggregate signal helps determine whether the native-app
+  // gap (Capacitor/iOS WebView, older Safari) is real before scoping a
+  // companion app. Doctrine: participation before infrastructure.
+  const unsupportedEmittedRef = useRef(false);
+  useEffect(() => {
+    if (!displayMediaSupported && !unsupportedEmittedRef.current) {
+      unsupportedEmittedRef.current = true;
+      logMeetingAudioEvent('meeting_audio_unsupported');
+    }
+  }, [displayMediaSupported]);
 
   // Fetch bookings when practitioner container is selected
   useEffect(() => {
@@ -592,6 +623,12 @@ ${insightsSection}
                           ? 'All participants must consent before recording begins. MAIA will observe without taking sides.'
                           : 'Client has consented to this session being recorded for professional review.'}
                       </p>
+                      {captureTabAudio && (
+                        <p className="text-[11px] text-amber-300/80 mt-1.5">
+                          Meeting audio will also be captured — make sure everyone on the
+                          call has been told the session is being recorded.
+                        </p>
+                      )}
                     </div>
                   </label>
                 </motion.div>
@@ -687,25 +724,35 @@ ${insightsSection}
 
             {/* Tab audio capture toggle */}
             <div className="mb-4">
-              <label className="flex items-start gap-3 p-3 rounded-xl bg-[#1e1e38] border border-slate-800/50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={captureTabAudio}
-                  onChange={(e) => setCaptureTabAudio(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-teal-500 focus:ring-teal-500/50"
-                />
-                <div>
-                  <div className="text-sm text-white flex items-center gap-1.5">
-                    <Monitor className="w-3.5 h-3.5 text-teal-400" />
-                    Capture session audio (both sides)
+              {displayMediaSupported ? (
+                <label className="flex items-start gap-3 p-3 rounded-xl bg-[#1e1e38] border border-slate-800/50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={captureTabAudio}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setCaptureTabAudio(next);
+                      if (next) {
+                        logMeetingAudioEvent('meeting_audio_toggle_enabled', {
+                          container: localContainer,
+                        });
+                      }
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-800 text-teal-500 focus:ring-teal-500/50"
+                  />
+                  <div>
+                    <div className="text-sm text-white flex items-center gap-1.5">
+                      <Monitor className="w-3.5 h-3.5 text-teal-400" />
+                      Add meeting audio
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Recommended: use the browser version of Teams, Zoom, or Meet.
+                      Choose the meeting tab and enable &quot;Share tab audio.&quot;
+                      Desktop meeting apps may require advanced audio routing.
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Records audio from your video call (Meet, Zoom, Teams) alongside your mic.
-                    You&apos;ll choose which tab to capture after clicking Start.
-                    Best in Chrome — enable &quot;Share tab audio&quot; when prompted.
-                  </p>
-                </div>
-              </label>
+                </label>
+              ) : null}
             </div>
 
             {/* Session Support (AI participation) */}
@@ -800,9 +847,42 @@ ${insightsSection}
               </p>
             )}
 
+            {ctx.tabAudioError && (
+              <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-200/90 flex-1">{ctx.tabAudioError}</p>
+                  <button
+                    onClick={() => {
+                      ctx.clearTabAudioError();
+                      setBlockedFeedbackSent(false);
+                    }}
+                    className="text-[10px] uppercase tracking-wider text-amber-300/70 hover:text-amber-200"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+                {!blockedFeedbackSent ? (
+                  <button
+                    onClick={() => {
+                      setBlockedFeedbackSent(true);
+                      logMeetingAudioEvent('meeting_audio_blocked_feedback');
+                    }}
+                    className="mt-1.5 ml-5.5 text-[11px] text-amber-300/70 hover:text-amber-200 underline-offset-2 hover:underline"
+                  >
+                    Using a desktop meeting app? Let us know this didn&apos;t work.
+                  </button>
+                ) : (
+                  <p className="mt-1.5 ml-5.5 text-[11px] text-amber-300/60 italic">
+                    Thanks — noted.
+                  </p>
+                )}
+              </div>
+            )}
+
             <p className="text-center text-xs text-slate-600 mt-3">
               Your browser will request microphone access.
-              {captureTabAudio && ' You\'ll also be asked to select a tab for session audio.'}
+              {captureTabAudio && ' You\'ll also be asked to pick a meeting tab — remember to enable "Share tab audio".'}
               {' '}All transcription runs locally.
             </p>
 

@@ -22,6 +22,7 @@ import {
 } from 'react';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { findFirstClusterOffset } from '@/lib/voice/webmInit';
+import { logMeetingAudioEvent } from '@/lib/studio/meetingAudioTelemetry';
 
 // ---------------------------------------------------------------------------
 // Types (shared with Session Room page)
@@ -100,6 +101,7 @@ interface RecordingContextValue {
   audioLevels: AudioLevels;
   connectionStatus: ConnectionStatus;
   hasTabAudio: boolean;
+  tabAudioError: string | null;
 
   // Live data
   segments: TranscriptSegment[];
@@ -115,6 +117,7 @@ interface RecordingContextValue {
   addMarker: (markerType: string, note?: string) => Promise<void>;
   sendMaiaPrompt: (text: string) => Promise<LivePromptExchange | null>;
   resetSession: () => void;
+  clearTabAudioError: () => void;
 }
 
 const RecordingContext = createContext<RecordingContextValue | null>(null);
@@ -155,6 +158,13 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   const [audioLevels, setAudioLevels] = useState<AudioLevels>({ mic: 0, tab: 0, combined: 0 });
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
   const [hasTabAudio, setHasTabAudio] = useState(false);
+  const [tabAudioError, setTabAudioError] = useState<string | null>(null);
+
+  // Unique handle so we can detect if the user accidentally selects the Session Room
+  // tab itself (which would create a recursive feedback loop). Exposed via
+  // navigator.mediaDevices.setCaptureHandleConfig when supported. Stable per provider
+  // mount so the comparison inside getDisplayMedia is reliable.
+  const captureHandleRef = useRef(`session-room-${Math.random().toString(36).slice(2)}`);
 
   // Live data
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
@@ -192,6 +202,30 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
   useEffect(() => { scribeSessionIdRef.current = scribeSessionId; }, [scribeSessionId]);
   useEffect(() => { bookingIdRef.current = bookingId; }, [bookingId]);
   useEffect(() => { containerRef.current = container; }, [container]);
+
+  // Register capture handle so we can identify the Session Room tab inside the
+  // getDisplayMedia picker result. Experimental API — feature-detect and silently
+  // skip when unavailable. Self-capture detection is defense-in-depth, not the
+  // only guard; user-visible UI also warns against selecting this tab.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices) return;
+    const md = navigator.mediaDevices as MediaDevices & {
+      setCaptureHandleConfig?: (config: object | null) => void;
+    };
+    if (typeof md.setCaptureHandleConfig !== 'function') return;
+    try {
+      md.setCaptureHandleConfig({
+        handle: captureHandleRef.current,
+        exposeOrigin: true,
+        permittedOrigins: ['*'],
+      });
+    } catch {
+      // Some browsers throw if called from a non-top-level frame — non-fatal.
+    }
+    return () => {
+      try { md.setCaptureHandleConfig?.(null); } catch { /* no-op */ }
+    };
+  }, []);
 
   // ── Audio level analysis ────────────────────────────────────────────────
 
@@ -279,26 +313,83 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     // 2. Optionally get tab audio
     let tabStream: MediaStream | null = null;
     if (captureTabAudio) {
-      try {
-        tabStream = await navigator.mediaDevices.getDisplayMedia({
-          video: false,
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-          },
-        } as DisplayMediaStreamOptions);
-        tabStreamRef.current = tabStream;
-        setHasTabAudio(true);
-
-        // Handle tab stream ending (user stops sharing)
-        tabStream.getAudioTracks()[0]?.addEventListener('ended', () => {
-          console.log('[RecordingContext] Tab audio track ended');
-          setHasTabAudio(false);
-        });
-      } catch (err) {
-        console.warn('[RecordingContext] Tab audio not available:', err);
+      setTabAudioError(null);
+      if (typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+        setTabAudioError(
+          'Meeting-audio capture is not supported in this browser. Continuing with mic only.',
+        );
         setHasTabAudio(false);
+      } else {
+        try {
+          // We request video so the picker works reliably across browsers and so
+          // we can read getCaptureHandle() on the video track to detect self-
+          // capture. The video track is stopped immediately after the guards
+          // pass — only audio is kept.
+          const candidate = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            },
+          });
+
+          // Self-capture guard: if the user selected the Session Room tab itself
+          // we would create a recursive feedback loop (mic → tab playback → mic).
+          const videoTrack = candidate.getVideoTracks()[0];
+          const trackWithHandle = videoTrack as MediaStreamTrack & {
+            getCaptureHandle?: () => { handle?: string } | null;
+          };
+          const handle =
+            typeof trackWithHandle?.getCaptureHandle === 'function'
+              ? trackWithHandle.getCaptureHandle()
+              : null;
+
+          if (handle?.handle === captureHandleRef.current) {
+            candidate.getTracks().forEach((t) => t.stop());
+            setTabAudioError(
+              'You selected the Session Room tab. Please choose your meeting tab instead.',
+            );
+            setHasTabAudio(false);
+            logMeetingAudioEvent('meeting_audio_self_capture_blocked');
+          } else if (candidate.getAudioTracks().length === 0) {
+            // No-audio-track guard: user forgot the "Share tab audio" checkbox,
+            // or the chosen source has no audio output.
+            candidate.getTracks().forEach((t) => t.stop());
+            setTabAudioError(
+              'No audio was shared from that tab. Re-pick a tab and enable "Share tab audio".',
+            );
+            setHasTabAudio(false);
+            logMeetingAudioEvent('meeting_audio_no_track');
+          } else {
+            // Drop video tracks immediately — we only need audio for transcription.
+            // Reduces privacy footprint (no incidental screen contents observed).
+            candidate.getVideoTracks().forEach((t) => t.stop());
+
+            tabStream = candidate;
+            tabStreamRef.current = candidate;
+            setHasTabAudio(true);
+
+            // Handle tab stream ending (user stops sharing mid-session)
+            candidate.getAudioTracks()[0]?.addEventListener('ended', () => {
+              console.log('[RecordingContext] Tab audio track ended');
+              setHasTabAudio(false);
+              setTabAudioError('Meeting audio stopped. Mic capture continues.');
+            });
+          }
+        } catch (err) {
+          const errName = (err as Error | undefined)?.name;
+          // NotAllowedError / AbortError → user cancelled picker. Silent fallback.
+          if (errName === 'NotAllowedError' || errName === 'AbortError') {
+            logMeetingAudioEvent('meeting_audio_picker_cancelled', {
+              reason: errName,
+            });
+          } else {
+            console.warn('[RecordingContext] Tab audio not available:', err);
+            setTabAudioError('Meeting audio unavailable. Continuing with mic only.');
+          }
+          setHasTabAudio(false);
+        }
       }
     }
 
@@ -640,8 +731,11 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     setInsights([]);
     setMarkers([]);
     setMaiaExchanges([]);
+    setTabAudioError(null);
     setPhase('idle');
   }, []);
+
+  const clearTabAudioError = useCallback(() => setTabAudioError(null), []);
 
   // ── Markers ─────────────────────────────────────────────────────────────
 
@@ -728,6 +822,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     audioLevels,
     connectionStatus,
     hasTabAudio,
+    tabAudioError,
     segments,
     insights,
     markers,
@@ -739,6 +834,7 @@ export function RecordingContextProvider({ children }: { children: ReactNode }) 
     addMarker,
     sendMaiaPrompt,
     resetSession,
+    clearTabAudioError,
   };
 
   return (

@@ -6,9 +6,8 @@
  * Displays: duration, audio levels (mic + tab), pause/stop, link back to Session Room
  */
 
-import { useContext } from 'react';
 import Link from 'next/link';
-import { Pause, Play, Square, Radio } from 'lucide-react';
+import { Pause, Play, Square, Radio, AlertCircle, X } from 'lucide-react';
 import { useRecordingContext } from '@/lib/studio/RecordingContext';
 
 function AudioLevelBar({ level, label }: { level: number; label: string }) {
@@ -45,6 +44,8 @@ export function RecordingBanner() {
     duration,
     audioLevels,
     hasTabAudio,
+    tabAudioError,
+    clearTabAudioError,
     pauseSession,
     resumeSession,
     stopSession,
@@ -77,6 +78,24 @@ export function RecordingBanner() {
         <AudioLevelBar level={audioLevels.mic} label="Mic" />
         {hasTabAudio && <AudioLevelBar level={audioLevels.tab} label="Tab" />}
       </div>
+
+      {/* Tab-audio status chip — surfaces mid-session warnings (e.g. presenter
+          stopped sharing). Stays compact so it doesn't disrupt the banner. */}
+      {tabAudioError && (
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/30">
+          <AlertCircle className="w-3 h-3 text-amber-400" />
+          <span className="text-[11px] text-amber-200/90 max-w-[280px] truncate" title={tabAudioError}>
+            {tabAudioError}
+          </span>
+          <button
+            onClick={clearTabAudioError}
+            className="text-amber-300/70 hover:text-amber-200"
+            title="Dismiss"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       {/* Divider */}
       <div className="w-px h-4 bg-slate-700" />

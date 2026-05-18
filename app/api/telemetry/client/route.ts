@@ -49,6 +49,16 @@ const ALLOWED_EVENTS = new Set([
   'ios_voice_result_empty',
   'ios_voice_error',
   'ios_voice_listening_stopped',
+  // Add Meeting Audio — listening posture telemetry. Aggregate signal only,
+  // used to determine whether the native desktop meeting-app gap is real
+  // before considering a companion app. Doctrine: participation before
+  // infrastructure (see project_maia_ux_doctrine + project_add_meeting_audio_posture).
+  'meeting_audio_unsupported',
+  'meeting_audio_toggle_enabled',
+  'meeting_audio_picker_cancelled',
+  'meeting_audio_no_track',
+  'meeting_audio_self_capture_blocked',
+  'meeting_audio_blocked_feedback',
 ] as const);
 
 type AllowedEvent = typeof ALLOWED_EVENTS extends Set<infer T> ? T : never;
