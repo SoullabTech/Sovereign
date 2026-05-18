@@ -1504,8 +1504,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         // 🛡️ CRASH PREVENTION: Stop any existing recognition first
         // This prevents "already listening" crashes on iOS
+        //
+        // PR 13 diagnostic markers (2026-05-18): Tara's Pixel 8a Android 16
+        // trace stops cold after "📍 path: native" with no "Checking
+        // availability…" marker downstream. Hypothesis: NativeSpeechRecognition.stop()
+        // is hanging silently on this device (Capacitor 8 plugin behavior).
+        // These two markers prove or refute that.
         try {
+          addDebug('🛑 stop() calling');
           await NativeSpeechRecognition.stop();
+          addDebug('🛑 stop() returned');
           console.log('🛑 [Native] Pre-emptively stopped any existing recognition');
         } catch {
           // Ignore errors - recognition may not have been running
@@ -1565,6 +1573,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         };
 
         // 🎛️ CRITICAL: Ensure permissions before showing "Listening..."
+        addDebug('🎛️ ready() calling');
         const ready = await ensureNativeSpeechReady();
         if (!ready.ok) {
           console.warn('🚫 [Native] Not starting recognition:', ready.reason);
