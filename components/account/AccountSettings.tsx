@@ -1,5 +1,17 @@
 'use client';
 
+/**
+ * AccountSettings — Member identity + control surface
+ *
+ * Contribution surfaces (Sustaining Circle, Seva, tier membership) live on /patrons,
+ * not here. Account = where the member controls presence, privacy, settings,
+ * feedback, and exit. An identity-control surface should never carry a membership
+ * card or contribution prompt as peer-weight content.
+ *
+ * The paid-feature gate referencing profile.membership.tier (cloud audio backup)
+ * is preserved as actual contribution functionality, not a UI affordance.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { apiUrl, apiBaseUrl, BUILD_STAMP } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
@@ -7,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
   Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
-  Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
+  Mail, Clock, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
   Star, MapPin, Search, ExternalLink, Globe
 } from 'lucide-react';
 import Link from 'next/link';
@@ -95,7 +107,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'voice' | 'data-privacy' | 'sovereignty' | 'continuity' | 'patterns' | 'notifications' | 'privacy' | 'connections' | 'data' | 'portals' | 'messaging' | 'scheduling';
 
 interface PractitionerProject {
   id: string;
@@ -136,14 +148,6 @@ const ARCHETYPE_OPTIONS = [
   { id: 'AUTO' as ArchetypeId, name: 'Auto', emoji: '✨' },
 ];
 
-const CIRCLE_TIERS = {
-  explorer: { name: 'Explorer', emoji: '🌱', color: 'text-stone-400' },
-  sustainer: { name: 'Sustainer', emoji: '🕯️', color: 'text-amber-400' },
-  guardian: { name: 'Guardian', emoji: '🛡️', color: 'text-teal-400' },
-  elder: { name: 'Elder', emoji: '🌳', color: 'text-green-400' },
-  pioneer: { name: 'Pioneer', emoji: '⭐', color: 'text-purple-400' },
-};
-
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practitionerOnly?: boolean }[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'account', label: 'Account', icon: Lock },
@@ -158,7 +162,6 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; practit
   { id: 'patterns', label: 'Patterns', icon: BookOpen },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
-  { id: 'membership', label: 'Membership', icon: Crown },
   { id: 'messaging', label: 'Sovereign Messaging', icon: MessageSquare },
   { id: 'connections', label: 'Connections', icon: LinkIcon },
   { id: 'data', label: 'Your Data', icon: Download },
@@ -2298,79 +2301,6 @@ export function AccountSettings() {
     </div>
   );
 
-  const renderMembership = () => {
-    const tier = profile?.membership?.tier || 'explorer';
-    const tierInfo = CIRCLE_TIERS[tier as keyof typeof CIRCLE_TIERS] || CIRCLE_TIERS.explorer;
-
-    return (
-      <div className="space-y-6">
-        {/* Current Tier */}
-        <div className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-xl border border-amber-500/20">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-3xl">{tierInfo.emoji}</span>
-            <div>
-              <div className={`text-xl font-medium ${tierInfo.color}`}>{tierInfo.name}</div>
-              <div className="text-sm text-stone-400">
-                {profile?.membership?.joinedAt
-                  ? `Since ${new Date(profile.membership.joinedAt).toLocaleDateString()}`
-                  : 'Current tier'}
-              </div>
-            </div>
-          </div>
-          {profile?.membership?.amount ? (
-            <div className="text-sm text-stone-400">
-              Contributing ${profile.membership.amount}/month
-            </div>
-          ) : null}
-        </div>
-
-        {/* Tier Benefits */}
-        <div>
-          <h4 className="text-sm font-medium text-stone-300 mb-3">All Members Receive</h4>
-          <ul className="space-y-2 text-sm text-stone-400">
-            <li className="flex items-center gap-2">
-              <Check size={14} className="text-emerald-400" />
-              Full MAIA access with all features
-            </li>
-            <li className="flex items-center gap-2">
-              <Check size={14} className="text-emerald-400" />
-              Community Commons access
-            </li>
-            <li className="flex items-center gap-2">
-              <Check size={14} className="text-emerald-400" />
-              Consciousness Lab tools
-            </li>
-          </ul>
-        </div>
-
-        {/* Contribution CTA */}
-        <div className="p-5 bg-white/5 rounded-xl border border-white/10 space-y-3">
-          <p className="text-sm text-stone-400">
-            MAIA is sustained by its members. No ads, no data harvesting — just people who believe this work matters.
-          </p>
-          <motion.button
-            onClick={() => window.location.href = '/patrons'}
-            className="w-full py-3 bg-gradient-to-r from-amber-500/20 to-purple-500/20 hover:from-amber-500/30 hover:to-purple-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors"
-            whileTap={{ scale: 0.98 }}
-          >
-            <Sparkles className="inline w-4 h-4 mr-2" />
-            Choose your monthly offering
-          </motion.button>
-        </div>
-
-        {/* Stewardship Link */}
-        <div className="text-center">
-          <Link
-            href="/maia/stewardship"
-            className="text-sm text-stone-400 hover:text-stone-300 transition-colors"
-          >
-            Why support matters →
-          </Link>
-        </div>
-      </div>
-    );
-  };
-
   const renderPortals = () => (
     <div className="space-y-6">
       <p className="text-sm text-stone-400 mb-4">
@@ -2894,7 +2824,6 @@ export function AccountSettings() {
             )}
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
-            {activeSection === 'membership' && renderMembership()}
             {activeSection === 'scheduling' && (
               <div className="space-y-6">
                 <div>
