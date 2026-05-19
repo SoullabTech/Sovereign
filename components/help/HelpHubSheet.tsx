@@ -1,22 +1,36 @@
 'use client';
 
+/**
+ * HelpHubSheet — Member orientation surface
+ *
+ * Help is a member surface, not an admin/QA surface. It exists to orient
+ * gently, not to recruit the member into platform maintenance. Diagnostic
+ * tooling (TestFlight rituals, voice-loop pipeline tips, build/issue
+ * indicators) belongs to admin/monitor surfaces and is summoned explicitly
+ * — never ambient here.
+ *
+ * The decision test for any future Help entry: does this help the member
+ * orient and continue, or does it teach them the system may be unstable?
+ * Only the first belongs.
+ *
+ * See: project_surface_typology.md, feedback_doctrine_propagation_depth.md
+ */
+
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, HelpCircle, Mic, ClipboardCheck, BookOpen } from 'lucide-react';
+import { X, HelpCircle, Mic, BookOpen } from 'lucide-react';
 
 type HelpHubSheetProps = {
   isOpen: boolean;
   onClose: () => void;
   onOpenVoiceHelp: () => void;
-  onOpenTestFlightHelp: () => void;
 };
 
 export default function HelpHubSheet({
   isOpen,
   onClose,
   onOpenVoiceHelp,
-  onOpenTestFlightHelp,
 }: HelpHubSheetProps) {
   const router = useRouter();
 
@@ -114,7 +128,7 @@ export default function HelpHubSheet({
                           Voice Help
                         </div>
                         <div className="text-xs text-amber-100/70">
-                          "Listening..." but not hearing you? Fix in 30 seconds.
+                          Trouble with voice? Quick steps to reconnect.
                         </div>
                       </div>
                     </div>
@@ -122,36 +136,6 @@ export default function HelpHubSheet({
                       Open →
                     </div>
                   </button>
-
-                  <button
-                    onClick={() => {
-                      onClose();
-                      requestAnimationFrame(() => onOpenTestFlightHelp());
-                    }}
-                    className="group flex w-full items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-left hover:bg-amber-500/15"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/20 bg-black/30">
-                        <ClipboardCheck className="h-4 w-4 text-amber-300" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-amber-50">
-                          TestFlight Quick Test
-                        </div>
-                        <div className="text-xs text-amber-100/70">
-                          1-minute ritual: Update → Voice Loop → Report.
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-amber-200/70 group-hover:text-amber-200">
-                      Open →
-                    </div>
-                  </button>
-                </div>
-
-                <div className="mt-4 rounded-2xl border border-amber-500/15 bg-black/25 p-3 text-xs text-amber-100/70">
-                  Tip: If voice fails, run the <span className="text-amber-100">Voice Loop</span> first —
-                  it catches the "Talk → MAIA speaks → Talk again" break instantly.
                 </div>
               </div>
             </div>

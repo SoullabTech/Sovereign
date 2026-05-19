@@ -98,12 +98,17 @@ export function MaiaModalManager({
 }: MaiaModalManagerProps) {
   return (
     <>
-      {/* --- Help group --- */}
+      {/* --- Help group ---
+       * HelpHubSheet is a member orientation surface and does not expose
+       * admin/QA tooling. TestFlightHelpSheet remains mounted so it can be
+       * reached from Beta Center / admin surfaces; the trigger pathway
+       * (showTestFlightHelp + onOpenTestFlightHelp) is preserved for that
+       * future wiring. See: project_surface_typology.md
+       */}
       <HelpHubSheet
         isOpen={showHelpHub}
         onClose={onCloseHelpHub}
         onOpenVoiceHelp={onOpenVoiceHelp}
-        onOpenTestFlightHelp={onOpenTestFlightHelp}
       />
       <VoiceHelpSheet isOpen={showVoiceHelp} onClose={onCloseVoiceHelp} />
       <TestFlightHelpSheet isOpen={showTestFlightHelp} onClose={onCloseTestFlightHelp} />

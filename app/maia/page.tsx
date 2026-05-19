@@ -1718,12 +1718,13 @@ function MAIAPageContent() {
           }}
         />
 
-        {/* Help Hub Sheet */}
+        {/* Help Hub Sheet — member orientation surface only.
+            TestFlight/QA tooling lives on admin surfaces (BetaTesterHub),
+            not Help. See: project_surface_typology.md */}
         <HelpHubSheet
           isOpen={showHelpHub}
           onClose={() => setShowHelpHub(false)}
           onOpenVoiceHelp={() => setShowVoiceHelp(true)}
-          onOpenTestFlightHelp={() => setShowTestFlightHelp(true)}
         />
 
         {/* Voice Help Sheet */}
