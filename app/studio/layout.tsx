@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -79,6 +79,7 @@ export default function StudioLayout({
   const [initialStudioMode, setInitialStudioMode] = useState<StudioMode>('practice');
   const [portalTypeRef, setPortalTypeRef] = useState<PortalType>('generalist');
   const [enabledModulesRef, setEnabledModulesRef] = useState<ModuleSlug[] | null>(null);
+  const studioModeRef = useRef<StudioMode>('practice');
 
   // Skip practitioner check on /studio/create page
   const isCreatePage = pathname === '/studio/create';
@@ -112,6 +113,7 @@ export default function StudioLayout({
           setPortalTypeRef(portalType);
           setEnabledModulesRef(enabledModules);
           setInitialStudioMode(serverMode);
+          studioModeRef.current = serverMode;
           setVisibleModules(getVisibleModules(enabledModules, portalType, serverMode));
 
           // Personal-mode users who land on /studio go to /studio/field
@@ -136,10 +138,23 @@ export default function StudioLayout({
 
   // Callback for StudioModeWatcher — re-filters nav when mode changes
   const handleModeChange = useCallback((mode: StudioMode) => {
+    studioModeRef.current = mode;
     if (isPractitioner) {
       setVisibleModules(getVisibleModules(enabledModulesRef, portalTypeRef, mode));
     }
   }, [isPractitioner, enabledModulesRef, portalTypeRef]);
+
+  // Listen for module-save events from settings page → refresh sidebar live
+  useEffect(() => {
+    function onModulesUpdated(e: Event) {
+      const detail = (e as CustomEvent<ModuleSlug[]>).detail;
+      if (!Array.isArray(detail)) return;
+      setEnabledModulesRef(detail);
+      setVisibleModules(getVisibleModules(detail, portalTypeRef, studioModeRef.current));
+    }
+    window.addEventListener('studio:modules-updated', onModulesUpdated);
+    return () => window.removeEventListener('studio:modules-updated', onModulesUpdated);
+  }, [portalTypeRef]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);

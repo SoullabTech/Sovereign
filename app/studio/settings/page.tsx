@@ -38,6 +38,7 @@ import { apiFetch } from '@/lib/http/apiBase';
 import { getLocalMemberId } from '@/lib/auth/getLocalMemberId';
 import {
   MODULE_DEFINITIONS,
+  ALL_MODULE_SLUGS,
   getModulesByCategory,
   getDefaultModules,
   CATEGORY_LABELS,
@@ -396,7 +397,14 @@ function SettingsContent() {
         const response = await apiFetch('/api/studio/modules');
         const data = await response.json();
         setModulePortalType(data.portalType ?? 'generalist');
-        setEnabledModules(new Set(data.resolvedModules ?? []));
+        // Drop slugs no longer in the registry — DB may carry stale entries
+        // from previous schema versions (e.g. notebook, ideas, today, schedule,
+        // availability). Including them would 400 on the next PATCH.
+        const validSet = new Set<string>(ALL_MODULE_SLUGS);
+        const cleaned: ModuleSlug[] = (data.resolvedModules ?? []).filter(
+          (s: string): s is ModuleSlug => validSet.has(s),
+        );
+        setEnabledModules(new Set(cleaned));
         setModulesIsDefault(data.isDefault ?? true);
       } catch {
         // fallback
@@ -421,14 +429,23 @@ function SettingsContent() {
   async function saveModules() {
     setModulesSaving(true);
     try {
-      await apiFetch('/api/studio/modules', {
+      const modulesArray = Array.from(enabledModules);
+      const response = await apiFetch('/api/studio/modules', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabledModules: Array.from(enabledModules) }),
+        body: JSON.stringify({ enabledModules: modulesArray }),
       });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        console.error('[Settings] Save modules failed:', response.status, text);
+        return;
+      }
       setModulesIsDefault(false);
-    } catch {
-      // handle error
+      window.dispatchEvent(
+        new CustomEvent('studio:modules-updated', { detail: modulesArray }),
+      );
+    } catch (error) {
+      console.error('[Settings] Save modules error:', error);
     } finally {
       setModulesSaving(false);
     }
