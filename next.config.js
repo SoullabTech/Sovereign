@@ -13,6 +13,13 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Member surface ≠ admin/monitor surface. Next's dev indicator (the "N" pill
+  // with issue/build-activity counts) is a diagnostic artifact and does not
+  // belong in the ambient field, even during local dev. Diagnostics remain
+  // available via devtools/console; they should never be ambient chrome.
+  // See: docs/canon/MAIA_SOVEREIGNTY_INVARIANTS.md (observable on intent,
+  // invisible by default).
+  devIndicators: false,
   env: {
     NEXT_PUBLIC_BUILD_SHA: BUILD_SHA,
     NEXT_PUBLIC_BUILD_DATE: BUILD_DATE,
